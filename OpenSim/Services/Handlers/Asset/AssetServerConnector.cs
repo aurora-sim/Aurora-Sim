@@ -57,6 +57,7 @@ namespace OpenSim.Services
                 return;
 
             m_registry = registry;
+            m_registry.RegisterModuleInterface<AssetServiceConnector> (this);
 
             IConfig serverConfig = config.Configs[m_ConfigName];
             m_allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;

@@ -61,7 +61,7 @@ namespace OpenSim.Services
                 return;
             
             m_registry = registry;
-
+            m_registry.RegisterModuleInterface<InventoryInConnector> (this);
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
@@ -89,7 +89,7 @@ namespace OpenSim.Services
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
+            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
@@ -98,7 +98,7 @@ namespace OpenSim.Services
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
+            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
 
             return url;
         }
@@ -112,7 +112,7 @@ namespace OpenSim.Services
         #endregion
     }
 
-    public class XInventoryConnectorPostHandler : BaseStreamHandler
+    public class InventoryConnectorPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -120,7 +120,7 @@ namespace OpenSim.Services
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public XInventoryConnectorPostHandler (string url, IInventoryService service, string SessionID, IRegistryCore registry) :
+        public InventoryConnectorPostHandler (string url, IInventoryService service, string SessionID, IRegistryCore registry) :
                 base("POST", url)
         {
             m_InventoryService = service;
@@ -153,77 +153,77 @@ namespace OpenSim.Services
                 switch (method)
                 {
                     case "GETROOTFOLDER":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetRootFolder(request);
                     case "GETFOLDERFORTYPE":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolderForType(request);
                     case "GETFOLDERCONTENT":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolderContent(request);
                     case "GETFOLDERITEMS":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolderItems(request);
                     case "ADDFOLDER":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleAddFolder(request);
                     case "UPDATEFOLDER":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleUpdateFolder(request);
                     case "MOVEFOLDER":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleMoveFolder(request);
                     case "DELETEFOLDERS":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleDeleteFolders(request);
                     case "PURGEFOLDER":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandlePurgeFolder(request);
                     case "ADDITEM":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleAddItem(request);
                     case "UPDATEITEM":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleUpdateItem(request);
                     case "MOVEITEMS":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleMoveItems(request);
                     case "DELETEITEMS":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return HandleDeleteItems(request);
                     case "GETITEM":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetItem(request);
                     case "GETFOLDER":
-                        if (urlModule != null)
+                        if (m_SessionID != "" && urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return HandleGetFolder(request);
@@ -305,7 +305,8 @@ namespace OpenSim.Services
             int type = 0;
             Int32.TryParse (request["TYPE"].ToString (), out type);
             int invtype = 0;
-            Int32.TryParse (request["INVTYPE"].ToString (), out invtype);
+            if(request.ContainsKey("INVTYPE"))
+                Int32.TryParse (request["INVTYPE"].ToString (), out invtype);
             InventoryFolderBase folder = m_InventoryService.GetFolderForType (principal, (InventoryType)invtype, (AssetType)type);
             if (folder != null)
                 result["folder"] = EncodeFolder(folder);

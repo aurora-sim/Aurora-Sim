@@ -66,7 +66,7 @@ namespace OpenSim.Services
 
             IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
-            if (urlModule != null)
+            if (m_SessionID != "" && urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Update", ThreatLevel.Full))
                     return new byte[0];
             string[] p = SplitParams(path);

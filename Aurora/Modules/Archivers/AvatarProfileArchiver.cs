@@ -127,21 +127,6 @@ namespace Aurora.Modules
             UDA.UserTitle = results["UserTitle"].ToString();
             UDA.Email = results["Email"].ToString();
             UDA.Created = int.Parse(results["Created"].ToString());
-            if (results.ContainsKey("ServiceURLs") && results["ServiceURLs"] != null)
-            {
-                UDA.ServiceURLs = new Dictionary<string, object>();
-                string str = results["ServiceURLs"].ToString();
-                if (str != string.Empty)
-                {
-                    string[] parts = str.Split(new char[] { ';' });
-                    foreach (string s in parts)
-                    {
-                        string[] parts2 = s.Split(new char[] { '*' });
-                        if (parts2.Length == 2)
-                            UDA.ServiceURLs[parts2[0]] = parts2[1];
-                    }
-                }
-            }
             UserAccountService.StoreUserAccount(UDA);
 
             replyData = WebUtils.ParseXmlResponse(file[2]);

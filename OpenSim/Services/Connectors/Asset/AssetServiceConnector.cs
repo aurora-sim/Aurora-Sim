@@ -47,6 +47,16 @@ namespace OpenSim.Services.Connectors
 
         private IRegistryCore m_registry;
         protected IImprovedAssetCache m_Cache = null;
+        private string m_serverURL = "";
+
+        public AssetServicesConnector ()
+        {
+        }
+
+        public AssetServicesConnector (string url)
+        {
+            m_serverURL = url;
+        }
 
         public IAssetService InnerService
         {
@@ -68,6 +78,8 @@ namespace OpenSim.Services.Connectors
                 return true;
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id + "/exists";
@@ -85,6 +97,8 @@ namespace OpenSim.Services.Connectors
         {
             AssetBase asset = null;
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -125,6 +139,8 @@ namespace OpenSim.Services.Connectors
             }
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id + "/metadata";
@@ -148,6 +164,8 @@ namespace OpenSim.Services.Connectors
             }
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 RestClient rc = new RestClient(m_ServerURI);
@@ -177,6 +195,8 @@ namespace OpenSim.Services.Connectors
         public virtual bool Get(string id, Object sender, AssetRetrieved handler)
         {
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -224,6 +244,8 @@ namespace OpenSim.Services.Connectors
 
             string newID = string.Empty;
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/";
@@ -271,6 +293,8 @@ namespace OpenSim.Services.Connectors
             asset.Data = data;
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -290,6 +314,8 @@ namespace OpenSim.Services.Connectors
         public virtual bool Delete(string id)
         {
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;

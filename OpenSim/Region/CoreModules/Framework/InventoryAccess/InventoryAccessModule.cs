@@ -610,9 +610,13 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         //We don't do multiple objects here
                         return null;
                     }
-
+                    string xml = "";
+                    if (doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration)
+                        xml = doc.FirstChild.NextSibling.OuterXml;
+                    else
+                        xml = doc.FirstChild.OuterXml;
                     SceneObjectGroup group
-                                = SceneObjectSerializer.FromOriginalXmlFormat(itemId, doc.FirstChild.OuterXml, m_scene);
+                                = SceneObjectSerializer.FromOriginalXmlFormat(itemId, xml, m_scene);
                     if (group == null)
                         return group;
 

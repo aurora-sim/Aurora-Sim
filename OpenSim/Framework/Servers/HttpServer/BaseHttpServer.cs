@@ -582,7 +582,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 int tickdiff = Environment.TickCount - tickstart;
                 if (m_log.IsEnabled(log4net.Core.Level.Trace))
-                    m_log.TraceFormat("[BASE HTTP SERVER]: request for {0}, {2} took {1} ms", RawUrl, tickdiff, HTTPMethod);
+                    m_log.TraceFormat("[BASE HTTP SERVER]: request for {0} on port {3}, {2} took {1} ms", RawUrl, tickdiff, HTTPMethod, Port);
                 // Every month or so this will wrap and give bad numbers, not really a problem
                 // since its just for reporting, 500ms limit can be adjusted
                 if (tickdiff > 500)
@@ -782,7 +782,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     byte[] buf = Encoding.UTF8.GetBytes("Not found");
                     response.KeepAlive = false;
 
-                    m_log.ErrorFormat("[BASE HTTP SERVER]: Handler not found for http request {0}", request.RawUrl);
+                    m_log.ErrorFormat("[BASE HTTP SERVER]: Handler not found for http request {0}, port {1}", request.RawUrl, Port);
 
                     response.SendChunked = false;
                     response.ContentLength64 = buf.Length;

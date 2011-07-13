@@ -2846,14 +2846,6 @@ namespace OpenSim.CoreApplicationPlugins
             if (null == account)
             {
                 account = new UserAccount(scopeID, firstName + " " + lastName, email);
-                if (account.ServiceURLs == null || (account.ServiceURLs != null && account.ServiceURLs.Count == 0))
-                {
-                    account.ServiceURLs = new Dictionary<string, object>();
-                    account.ServiceURLs["HomeURI"] = string.Empty;
-                    account.ServiceURLs["GatekeeperURI"] = string.Empty;
-                    account.ServiceURLs["InventoryServerURI"] = string.Empty;
-                    account.ServiceURLs["AssetServerURI"] = string.Empty;
-                }
 
                 if (userAccountService.StoreUserAccount(account))
                 {
