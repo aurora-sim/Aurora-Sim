@@ -174,6 +174,9 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
+            if (!lastPresencesDInView.ContainsKey (presence.UUID))
+                return;//Only send updates if they are in view
+
             QueuePresenceForUpdateInternal (presence, flags);
         }
 
@@ -186,7 +189,15 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
-            SendFullUpdateForPresence (presence);
+            if (!lastPresencesDInView.ContainsKey (presence.UUID))
+            {
+                lastPresencesInView.Add (presence);
+                lastPresencesDInView.Add (presence.UUID, presence);
+            }
+            else
+                return;
+
+            AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
         }
 
         private void QueuePresenceForUpdateInternal (IScenePresence presence, PrimUpdateFlags flags)
@@ -203,6 +214,11 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
+            AddPresenceUpdate (presence, flags);
+        }
+
+        private void AddPresenceUpdate (IScenePresence presence, PrimUpdateFlags flags)
+        {
             lock (m_presenceUpdatesToSendLock)
             {
 #if UseRemovingEntityUpdates
@@ -428,26 +444,29 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected void SendFullUpdateForPresence (IScenePresence presence)
         {
-            m_presence.ControllingClient.SendAvatarDataImmediate (presence);
-            //Send the animations too
-            presence.Animator.SendAnimPackToClient (m_presence.ControllingClient);
-            //Send the presence of this agent to us
-            IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-            if(module != null)
-                module.SendAppearanceToAgent(m_presence);
-            //We need to send all attachments of this avatar as well
-            IAttachmentsModule attmodule = m_presence.Scene.RequestModuleInterface<IAttachmentsModule>();
-            if (attmodule != null)
+            Util.FireAndForget (delegate (object o)
             {
-                ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar (m_presence.UUID);
-                foreach (ISceneEntity entity in entities)
+                m_presence.ControllingClient.SendAvatarDataImmediate (presence);
+                //Send the animations too
+                presence.Animator.SendAnimPackToClient (m_presence.ControllingClient);
+                //Send the presence of this agent to us
+                IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                if (module != null)
+                    module.SendAppearanceToAgent (m_presence);
+                //We need to send all attachments of this avatar as well
+                IAttachmentsModule attmodule = m_presence.Scene.RequestModuleInterface<IAttachmentsModule> ();
+                if (attmodule != null)
                 {
-                    foreach (ISceneChildEntity child in entity.ChildrenEntities ())
+                    ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar (m_presence.UUID);
+                    foreach (ISceneEntity entity in entities)
                     {
-                        QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
+                        foreach (ISceneChildEntity child in entity.ChildrenEntities ())
+                        {
+                            QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
+                        }
                     }
                 }
-            }
+            });
         }
 
         #endregion
@@ -556,8 +575,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
                             }
                             m_EntitiesInPacketQueue.Add (update.Entity.UUID);*/
-                            updates.Add (update);
                             m_presenceUpdatesToSend.RemoveAt (0);
+                            if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
+                                SendFullUpdateForPresence ((IScenePresence)update.Entity);
+                            else
+                                updates.Add (update);
 #else
                             EntityUpdate update = m_presenceUpdatesToSend.Dequeue ();
                             updates.Add (update);
