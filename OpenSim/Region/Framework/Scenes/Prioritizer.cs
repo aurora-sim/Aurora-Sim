@@ -113,7 +113,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (entity is IScenePresence)
             {
-                if (client.CurrentParcel.LandData.Private)
+                if (client.CurrentParcel != null && 
+                    client.CurrentParcel.LandData.Private)
                 {
                     //We need to check whether this presence is sitting on anything, so that we can check from the object's
                     // position, rather than the offset position of the object that the avatar is sitting on

@@ -648,9 +648,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 group.RootChild.PhysActor = null;
             }
 
-            group.AbsolutePosition = attachPos;
             group.RootChild.AttachedPos = attachPos;
             group.RootChild.IsAttachment = true;
+            group.AbsolutePosition = attachPos;
 
             group.RootChild.SetParentLocalId (presence.LocalId);
             group.SetAttachmentPoint(Convert.ToByte(AttachmentPt));
