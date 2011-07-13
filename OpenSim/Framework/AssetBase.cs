@@ -259,6 +259,7 @@ namespace OpenSim.Framework
         private bool m_local;
         private bool m_temporary;
         private string m_creatorid;
+        private string m_URL;
         private AssetFlags m_flags;
 
         public UUID FullID
@@ -289,6 +290,12 @@ namespace OpenSim.Framework
                 else
                     m_id = value;
             }
+        }
+
+        public string URL
+        {
+            get { return m_URL; }
+            set { m_URL = value; }
         }
 
         public string Name
