@@ -556,7 +556,7 @@ textures 1
             appearance.InitialHasWearablesBeenSent = true;
 
             // This agent just became root. We are going to tell everyone about it.
-            appearance.SendAvatarDataToAllAgents ();
+            appearance.SendAvatarDataToAllAgents (true);
 
             if (ValidateBakedTextureCache(sp.ControllingClient))
                 appearance.SendAppearanceToAgent (sp);
@@ -573,7 +573,7 @@ textures 1
             // This agent just became root. We are going to tell everyone about it. The process of
             // getting other avatars information was initiated in the constructor... don't do it 
             // again here... 
-            appearance.SendAvatarDataToAllAgents ();
+            appearance.SendAvatarDataToAllAgents (true);
 
             //Tell us about everyone else as well now that we are here
             appearance.SendOtherAgentsAppearanceToMe ();
@@ -874,7 +874,7 @@ textures 1
             appearance.Appearance.Serial++;
             sp.ControllingClient.SendWearables (appearance.Appearance.Wearables, appearance.Appearance.Serial);
             Thread.Sleep (100);
-            appearance.SendAvatarDataToAllAgents ();
+            appearance.SendAvatarDataToAllAgents (true);
             Thread.Sleep (100);
             appearance.SendAppearanceToAgent (sp);
             Thread.Sleep (100);
@@ -946,7 +946,7 @@ textures 1
             /// Send this agent's avatar data to all other root and child agents in the scene
             /// This agent must be root. This avatar will receive its own update. 
             /// </summary>
-            public void SendAvatarDataToAllAgents ()
+            public void SendAvatarDataToAllAgents (bool sendAppearance)
             {
                 // only send update from root agents to other clients; children are only "listening posts"
                 if (m_sp.IsChildAgent)
@@ -958,7 +958,7 @@ textures 1
                 int count = 0;
                 m_sp.Scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
                 {
-                    SendAvatarDataToAgent (scenePresence);
+                    SendAvatarDataToAgent (scenePresence, sendAppearance);
                     count++;
                 });
 
@@ -988,7 +988,7 @@ textures 1
 
                     IAvatarAppearanceModule appearance = scenePresence.RequestModuleInterface<IAvatarAppearanceModule> ();
                     if (appearance != null)
-                        appearance.SendAvatarDataToAgent (m_sp);
+                        appearance.SendAvatarDataToAgent (m_sp, true);
                     count++;
                 });
 
@@ -1003,10 +1003,13 @@ textures 1
             /// Send avatar data to an agent.
             /// </summary>
             /// <param name="avatar"></param>
-            public void SendAvatarDataToAgent (IScenePresence avatar)
+            public void SendAvatarDataToAgent (IScenePresence avatar, bool sendAppearance)
             {
                 //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
-                avatar.SceneViewer.QueuePresenceForFullUpdate (m_sp);
+                if (!sendAppearance)
+                    avatar.ControllingClient.SendAvatarDataImmediate (m_sp);
+                else
+                    avatar.SceneViewer.QueuePresenceForFullUpdate (m_sp);
             }
 
             /// <summary>
@@ -1110,7 +1113,7 @@ textures 1
                     // This agent just became roo t. We are going to tell everyone about it. The process of
                     // getting other avatars information was initiated in the constructor... don't do it 
                     // again here... 
-                    SendAvatarDataToAllAgents ();
+                    SendAvatarDataToAllAgents (true);
 
                     //Tell us about everyone else as well now that we are here
                     SendOtherAgentsAppearanceToMe ();

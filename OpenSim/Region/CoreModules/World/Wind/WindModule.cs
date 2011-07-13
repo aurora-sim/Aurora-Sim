@@ -39,7 +39,7 @@ using OpenSim.Region.CoreModules.World.Wind;
 
 namespace OpenSim.Region.CoreModules
 {
-    public class WindModule : IWindModule
+    public class WindModule : IWindModule, INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

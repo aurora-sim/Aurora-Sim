@@ -212,10 +212,10 @@ namespace OpenSim.Framework
         AvatarAppearance Appearance { get; set; }
         bool InitialHasWearablesBeenSent { get; set; }
         void SendAppearanceToAgent (IScenePresence sp);
-        void SendAvatarDataToAgent (IScenePresence sp);
+        void SendAvatarDataToAgent (IScenePresence sp, bool sendAppearance);
         void SendOtherAgentsAppearanceToMe ();
         void SendAppearanceToAllOtherAgents ();
-        void SendAvatarDataToAllAgents ();
+        void SendAvatarDataToAllAgents (bool sendAppearance);
     }
 
     public interface IScriptControllerModule

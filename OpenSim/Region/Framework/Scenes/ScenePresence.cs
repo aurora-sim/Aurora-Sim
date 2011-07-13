@@ -891,7 +891,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (appearance != null)
             {
                 //Send updates to everyone about us
-                appearance.SendAvatarDataToAllAgents ();
+                appearance.SendAvatarDataToAllAgents (true);
                 agent.Appearance = appearance.Appearance;
             }
 
@@ -1590,7 +1590,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentID = UUID.Zero;
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (appearance != null)
-                    appearance.SendAvatarDataToAllAgents ();
+                    appearance.SendAvatarDataToAllAgents (false);
                 m_requestedSitTargetUUID = UUID.Zero;
                 m_sitting = false;
             }
@@ -1672,7 +1672,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
             if (appearance != null)
-                appearance.SendAvatarDataToAllAgents();
+                appearance.SendAvatarDataToAllAgents (false);
             Animator.TrySetMovementAnimation(m_nextSitAnimation);
         }
 
@@ -1908,7 +1908,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.TrySetMovementAnimation(sitAnimation);
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (appearance != null)
-                    appearance.SendAvatarDataToAllAgents();
+                    appearance.SendAvatarDataToAllAgents (false);
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
                 // [Update] We do now.

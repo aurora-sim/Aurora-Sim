@@ -164,7 +164,7 @@ namespace Aurora.BotManager
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
             appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
-            appearance.SendAvatarDataToAllAgents ();
+            appearance.SendAvatarDataToAllAgents (true);
             appearance.SendAppearanceToAllOtherAgents ();
             appearance.SendOtherAgentsAppearanceToMe ();
             IAvatarFactory avFactory = scene.RequestModuleInterface<IAvatarFactory> ();

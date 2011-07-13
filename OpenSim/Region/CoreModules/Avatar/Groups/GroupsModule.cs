@@ -1511,7 +1511,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         {
                             IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
                             if(appearance != null)
-                                appearance.SendAvatarDataToAllAgents ();
+                                appearance.SendAvatarDataToAllAgents (false);
                         }
                     }
                     return;
