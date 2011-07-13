@@ -150,7 +150,7 @@ namespace OpenSim.Services.RobustCompat
                     clientService.RemoveCAPS (m_scene.RegionInfo.RegionHandle);
                     service.CreateCAPS(circuit.AgentID, CapsUtil.GetCapsSeedPath(circuit.CapsPath),
                         m_scene.RegionInfo.RegionHandle, true, circuit, m_scene.RegionInfo.HttpPort); //We ONLY use root agents because of OpenSim's inability to send the correct data
-                    MainConsole.Instance.Output ("setting up on " + circuit.CapsPath);
+                    MainConsole.Instance.Output ("setting up on " + clientService.HostUri + CapsUtil.GetCapsSeedPath (circuit.CapsPath));
                     IClientCapsService clientCaps = service.GetClientCapsService(circuit.AgentID);
                     if (clientCaps != null)
                     {
