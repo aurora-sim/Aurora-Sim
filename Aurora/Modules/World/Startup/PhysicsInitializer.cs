@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules
             PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
             physicsPluginManager.LoadPluginsFromAssemblies(Util.BasePathCombine(Path));
 
-            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo);
+            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo, scene);
             scene.PhysicsScene = pScene;
         }
 

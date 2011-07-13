@@ -57,7 +57,7 @@ namespace OpenSim.Framework
                 OnCollisionEvent (actor, collidedActor, contact);
         }
 
-        public abstract void Initialise(IMesher meshmerizer, RegionInfo region);
+        public abstract void Initialise (IMesher meshmerizer, RegionInfo region, IRegistryCore registry);
         public abstract void PostInitialise(IConfigSource config);
 
         public abstract PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint LocalID, UUID UUID);
@@ -215,7 +215,7 @@ namespace OpenSim.Framework
         private static int m_workIndicator;
 
 
-        public override void Initialise (IMesher meshmerizer, RegionInfo region)
+        public override void Initialise (IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
         {
             // Does nothing right now
         }

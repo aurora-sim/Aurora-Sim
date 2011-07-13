@@ -137,7 +137,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_gravity = new btVector3(0, 0, gravityz);
         }
 
-        public override void Initialise(IMesher meshmerizer, RegionInfo region)
+        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
         {
             mesher = meshmerizer;
             m_region = region;

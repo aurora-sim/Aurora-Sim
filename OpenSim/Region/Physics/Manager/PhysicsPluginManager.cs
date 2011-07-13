@@ -60,7 +60,7 @@ namespace OpenSim.Region.Physics.Manager
         /// <param name="meshEngineName"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, RegionInfo region)
+        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, RegionInfo region, IRegistryCore registry)
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
@@ -88,7 +88,7 @@ namespace OpenSim.Region.Physics.Manager
             {
                 m_log.Info("[Physics]: Loading physics engine: " + physEngineName);
                 PhysicsScene result = _PhysPlugins[physEngineName].GetScene(region.RegionName);
-                result.Initialise(meshEngine, region);
+                result.Initialise(meshEngine, region, registry);
                 result.PostInitialise(config);
                 return result;
             }

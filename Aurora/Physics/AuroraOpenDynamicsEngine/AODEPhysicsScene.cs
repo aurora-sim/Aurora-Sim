@@ -203,6 +203,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly PhysicsActor PANull = new NullObjectPhysicsActor();
         private float step_time = 0.0f;
         private RegionInfo m_region;
+        private IRegistryCore m_registry;
+        private IWindModule m_windModule = null;
 
         public RegionInfo Region
         {
@@ -385,10 +387,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #endif
 
         // Initialize the mesh plugin
-        public override void Initialise(IMesher meshmerizer, RegionInfo region)
+        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
         {
             mesher = meshmerizer;
             m_region = region;
+            m_registry = registry;
             WorldExtents = new Vector2(region.RegionSizeX, region.RegionSizeY);
         }
 
@@ -2695,6 +2698,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             pointGravityInUse = true;
             m_pointGravityPositions[identifier] = pointGrav;
+        }
+
+        #endregion
+
+        #region Wind Calcs
+
+        public void AddWindForce (float mass, d.Vector3 AbsolutePosition, ref Vector3 force)
+        {
+            if (m_windModule == null)
+                m_windModule = m_registry.RequestModuleInterface<IWindModule> ();
+
+            if (m_windModule == null)
+                return;
+            Vector3 windSpeed = m_windModule.WindSpeed ((int)AbsolutePosition.X, (int)AbsolutePosition.Y, (int)AbsolutePosition.Z);
+            force = (windSpeed) / (mass);
+            //force /= 20f;//Constant that doesn't make it too windy
         }
 
         #endregion

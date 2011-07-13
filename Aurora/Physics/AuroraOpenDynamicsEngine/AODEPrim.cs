@@ -1599,11 +1599,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // m_buoyancy: (unlimited value) <0=Falls fast; 0=1g; 1=0g; >1 = floats up 
                     // gravityz multiplier = 1 - m_buoyancy
                     float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
-                    Vector3 gravForce = new Vector3();
+                    Vector3 gravForce = new Vector3 ();
                     _parent_scene.CalculateGravity (Mass, dcpos, true, gravModifier, ref gravForce);
-                    fx += gravForce.X;
-                    fy += gravForce.Y;
-                    fz += gravForce.Z;
+                    Vector3 windForce = new Vector3 ();
+                    _parent_scene.AddWindForce (Mass, dcpos, ref windForce);
+                    fx += windForce.X;
+                    fy += windForce.Y;
+                    fz += windForce.Z;
 
                     #region PID
                     if (_parent_entity.PIDActive)
@@ -1780,6 +1782,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy *= m_mass;
                     fz *= m_mass;
 
+                    fx += gravForce.X;
+                    fy += gravForce.Y;
+                    fz += gravForce.Z;
+                    
                     fx += m_force.X;
                     fy += m_force.Y;
                     fz += m_force.Z;
