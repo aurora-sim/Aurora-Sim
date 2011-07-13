@@ -458,6 +458,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_lastName = account.LastName;
                 m_Name = account.Name;
             }
+            else
+            {
+                m_firstName = sessionInfo.firstname;
+                m_lastName = sessionInfo.lastname;
+                m_Name = sessionInfo.firstname + " " + sessionInfo.lastname;
+            }
             m_startpos = sessionInfo.startpos;
 
             m_udpServer = udpServer;

@@ -355,8 +355,13 @@ namespace Aurora.Modules
             IScenePresence Sp = scene.GetScenePresence(userID);
             if (account == null)
             {
-                reason = "Failed authentication.";
-                return false; //NO!
+                IUserAgentService uas = scene.RequestModuleInterface<IUserAgentService> ();
+                AgentCircuitData circuit = ((Scene)scene).AuthenticateHandler.AgentCircuitsByUUID[userID];
+                if (uas == null || !uas.VerifyAgent (circuit))
+                {
+                    reason = "Failed authentication.";
+                    return false; //NO!
+                }
             }
 
             
@@ -598,7 +603,8 @@ namespace Aurora.Modules
 
             if ((ILO.LandData.Flags & (int)ParcelFlags.DenyAnonymous) != 0)
             {
-                if ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile)
+                if (account != null &&
+                    (account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile)
                 {
                     reason = "You may not enter this region.";
                     return false;
@@ -636,12 +642,13 @@ namespace Aurora.Modules
             #region Incoming Agent Checks
 
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, agent.AgentID);
-
+            bool foreign = false;
             IScenePresence Sp = scene.GetScenePresence(agent.AgentID);
             if (account == null)
             {
-                reason = "Failed authentication.";
-                return false; //NO!
+                IUserAgentService uas = scene.RequestModuleInterface<IUserAgentService> ();
+                if (uas != null)//SOO hate doing this...
+                    foreign = true;
             }
 
             if (LoginsDisabled)
@@ -665,7 +672,7 @@ namespace Aurora.Modules
             }
 
             //Gods tp freely
-            if ((Sp != null && Sp.GodLevel != 0) || account.UserLevel != 0)
+            if ((Sp != null && Sp.GodLevel != 0) || (account != null && account.UserLevel != 0))
             {
                 reason = "";
                 return true;
@@ -697,7 +704,7 @@ namespace Aurora.Modules
 
                 OpenSim.Services.Interfaces.UserInfo pinfo = presence.GetUserInfo(agent.AgentID.ToString());
 
-                if (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint)TeleportFlags.ViaLogin) == 0)))
+                if (!foreign && (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint)TeleportFlags.ViaLogin) == 0))))
                 {
                     reason = String.Format("Failed to verify user presence in the grid for {0}, access denied to region {1}.", account.Name, scene.RegionInfo.RegionName);
                     return false;
@@ -789,26 +796,26 @@ namespace Aurora.Modules
                 return true;
             }
 
-            if (ES.DenyAnonymous && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile))
+            if (account != null && ES.DenyAnonymous && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
-            if (ES.DenyIdentified && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile))
+            if (account != null && ES.DenyIdentified && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile) == (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
-            if (ES.DenyTransacted && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse) == (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse))
+            if (account != null && ES.DenyTransacted && ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse) == (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
             long m_Day = 25 * 60 * 60; //Find out day length in seconds
-            if (scene.RegionInfo.RegionSettings.MinimumAge != 0 && (account.Created - Util.UnixTimeSinceEpoch()) < (scene.RegionInfo.RegionSettings.MinimumAge * m_Day))
+            if (account != null && scene.RegionInfo.RegionSettings.MinimumAge != 0 && (account.Created - Util.UnixTimeSinceEpoch ()) < (scene.RegionInfo.RegionSettings.MinimumAge * m_Day))
             {
                 reason = "You may not enter this region.";
                 return false;

@@ -375,6 +375,8 @@ namespace OpenSim.Services.Connectors.Simulation
                 return destination.ServerURI + destination.GenericMap["SimulationObject"].AsString ();
             else
             {
+                if(destination.ServerURI == null)
+                    destination.ServerURI = "http://" + destination.ExternalHostName + ":" + destination.HttpPort;
                 string url = destination.ServerURI.EndsWith ("/") ? destination.ServerURI.Remove (destination.ServerURI.Length - 1, 1) : destination.ServerURI;
                 return url + (isAgent ? AgentPath () : ObjectPath ());
             }

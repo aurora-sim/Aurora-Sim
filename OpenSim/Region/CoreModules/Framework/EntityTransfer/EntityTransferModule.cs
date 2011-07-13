@@ -303,6 +303,11 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
+                    AgentCircuitData oldCircuit = ((Scene)sp.Scene).AuthenticateHandler.AgentCircuitsByUUID[sp.UUID];
+                    agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
+                    agentCircuit.firstname = oldCircuit.firstname;
+                    agentCircuit.lastname = oldCircuit.lastname;
+                    agentCircuit.ServiceSessionID = oldCircuit.ServiceSessionID;
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
@@ -475,15 +480,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             //OpenSim.Services.Interfaces.PresenceInfo pinfo = m_aScene.PresenceService.GetAgent(client.SessionId);
             UserInfo uinfo = client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(client.AgentId.ToString());
-
+            IUserAgentService uas = client.Scene.RequestModuleInterface<IUserAgentService> ();
+                
             if (uinfo != null)
             {
                 GridRegion regionInfo = client.Scene.GridService.GetRegionByUUID(UUID.Zero, uinfo.HomeRegionID);
                 if (regionInfo == null)
                 {
-                    // can't find the Home region: Tell viewer and abort
-                    client.SendTeleportFailed("Your home region could not be found.");
-                    return;
+                    Vector3 position = Vector3.Zero, lookAt = Vector3.Zero;
+                    if (uas != null)
+                        regionInfo = uas.GetHomeRegion (((Scene)client.Scene).AuthenticateHandler.AgentCircuitsByUUID[client.AgentId], out position, out lookAt);
+                    if (regionInfo == null)
+                    {
+                        //can't find the Home region: Tell viewer and abort
+                        client.SendTeleportFailed ("Your home region could not be found.");
+                        return;
+                    }
                 }
                 m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})",
                     regionInfo.RegionName, regionInfo.RegionID, regionInfo.RegionLocX / Constants.RegionSize, regionInfo.RegionLocY / Constants.RegionSize);
