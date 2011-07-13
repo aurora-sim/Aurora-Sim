@@ -41,7 +41,7 @@ using OpenMetaverse;
 
 namespace OpenSim.Services
 {
-    public class XInventoryInConnector : IService, IGridRegistrationUrlModule
+    public class InventoryInConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
         
@@ -76,11 +76,20 @@ namespace OpenSim.Services
             get { return "InventoryServerURI"; }
         }
 
+        public IInventoryService GetInventoryService ()
+        {
+            //Try the external service first!
+            IInventoryService service = m_registry.RequestModuleInterface<IExternalInventoryService> ();
+            if (service != null)
+                return service;
+            return m_registry.RequestModuleInterface<IInventoryService> ();
+        }
+
         public void AddExistingUrlForClient (string SessionID, string url, uint port)
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, m_registry.RequestModuleInterface<IInventoryService> (), SessionID, m_registry));
+            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
@@ -89,7 +98,7 @@ namespace OpenSim.Services
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, m_registry.RequestModuleInterface<IInventoryService> (), SessionID, m_registry));
+            server.AddStreamHandler (new XInventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
 
             return url;
         }

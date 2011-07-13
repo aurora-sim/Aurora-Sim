@@ -66,10 +66,9 @@ namespace OpenSim.Services.InventoryService
             if (invConfig != null)
                 m_AllowDelete = invConfig.GetBoolean ("AllowDelete", true);
 
-            registry.RegisterModuleInterface<IInventoryService>(this);
-
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand ("fix inventory", "fix inventory", "If the user's inventory has been corrupted, this function will attempt to fix it", FixInventory);
+            registry.RegisterModuleInterface<IInventoryService> (this);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -80,7 +79,7 @@ namespace OpenSim.Services.InventoryService
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup()
         {
         }
 

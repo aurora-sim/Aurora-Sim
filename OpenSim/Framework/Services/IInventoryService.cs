@@ -40,6 +40,11 @@ namespace OpenSim.Services.Interfaces
     public delegate void InventoryReceiptCallback(
         ICollection<InventoryFolderImpl> folders, ICollection<InventoryItemBase> items);
 
+    public interface IExternalInventoryService : IInventoryService
+    {
+        //This is the same as the normal inventory interface, but it is used to load the inventory service for external transactions (outside of this simulator/grid)
+    }
+
     public interface IInventoryService
     {
         /// <summary>

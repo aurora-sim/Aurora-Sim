@@ -56,7 +56,7 @@ namespace OpenSim.Services.AssetService
             get { return this; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
@@ -64,7 +64,7 @@ namespace OpenSim.Services.AssetService
             Configure(config, registry);
         }
 
-        public void Configure(IConfigSource config, IRegistryCore registry)
+        public virtual void Configure (IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             string dllName = String.Empty;
@@ -120,15 +120,15 @@ namespace OpenSim.Services.AssetService
             m_log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
         }
 
-        public AssetBase Get(string id)
+        public virtual AssetBase Get (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
@@ -143,7 +143,7 @@ namespace OpenSim.Services.AssetService
             return asset;
         }
 
-        public AssetBase GetCached(string id)
+        public virtual AssetBase GetCached (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
@@ -151,7 +151,7 @@ namespace OpenSim.Services.AssetService
             return null;
         }
 
-        public AssetMetadata GetMetadata(string id)
+        public virtual AssetMetadata GetMetadata (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
@@ -169,7 +169,7 @@ namespace OpenSim.Services.AssetService
             return null;
         }
 
-        public byte[] GetData(string id)
+        public virtual byte[] GetData (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
             if (cache != null)
@@ -184,12 +184,12 @@ namespace OpenSim.Services.AssetService
             return asset.Data;
         }
 
-        public bool GetExists(string id)
+        public virtual bool GetExists (string id)
         {
             return m_Database.ExistsAsset (id);
         }
 
-        public bool Get(string id, Object sender, AssetRetrieved handler)
+        public virtual bool Get (string id, Object sender, AssetRetrieved handler)
         {
             //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
 
@@ -205,7 +205,7 @@ namespace OpenSim.Services.AssetService
             return true;
         }
 
-        public string Store(AssetBase asset)
+        public virtual string Store (AssetBase asset)
         {
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             m_Database.StoreAsset (asset);
@@ -219,12 +219,12 @@ namespace OpenSim.Services.AssetService
             return asset.ID;
         }
 
-        public bool UpdateContent(string id, byte[] data)
+        public virtual bool UpdateContent (string id, byte[] data)
         {
             return false;
         }
 
-        public bool Delete(string id)
+        public virtual bool Delete (string id)
         {
             m_log.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             AssetBase asset = m_Database.GetAsset (id);
