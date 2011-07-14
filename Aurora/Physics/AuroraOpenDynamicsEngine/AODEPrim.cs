@@ -1977,7 +1977,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (cpos.X > ((int)_parent_scene.WorldExtents.X - 0.05f) ||
                         cpos.X < 0f ||
                         cpos.Y > ((int)_parent_scene.WorldExtents.Y - 0.05f) ||
-                        cpos.Y < 0f)
+                        cpos.Y < 0f ||
+                        cpos.Z < -100 ||
+                        cpos.Z > 100000)
                     {
 
                         if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)

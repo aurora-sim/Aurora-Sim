@@ -105,5 +105,18 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="uUID"></param>
         void ValidateAttachments(UUID uUID);
+
+        /// <summary>
+        /// Attaches all attachments that the avatar has (is called when the user enters the region)
+        /// and if a tp fails into another region
+        /// </summary>
+        /// <param name="presence"></param>
+        void RezAttachments (IScenePresence presence);
+
+        /// <summary>
+        /// Removes all attachments for the given client, this is called whenever the agent is about to leave the region
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        void DetachAndSaveAllAttachments (IClientAPI remoteClient);
     }
 }

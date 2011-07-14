@@ -320,6 +320,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         // Fix the agent status
                         sp.IsChildAgent = false;
+                        //Fix user's attachments
+                        attModule.RezAttachments (sp);
                         if(map != null)
                             sp.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
                         else
@@ -613,6 +615,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 result = map["Success"].AsBoolean();
                             if (!result)
                             {
+                                //Fix user's attachments
+                                attModule.RezAttachments (agent);
                                 if (map != null)
                                 {
                                     if (map.ContainsKey("Note") && !map["Note"].AsBoolean ())

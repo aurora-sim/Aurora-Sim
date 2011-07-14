@@ -136,7 +136,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 DetachAndSaveAllAttachments (client);
         }
 
-        protected void RezAttachments (IScenePresence presence)
+        public void RezAttachments (IScenePresence presence)
         {
             IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
             if (null == appearance.Appearance)
@@ -513,23 +513,29 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         /// <param name="avatarID">The avatar who's attachments will be checked</param>
         public void ValidateAttachments(UUID avatarID)
         {
-            ISceneEntity    [] attachments = GetAttachmentsForAvatar (avatarID);
+            ISceneEntity[] attachments = GetAttachmentsForAvatar (avatarID);
+
             IScenePresence presence = m_scene.GetScenePresence (avatarID);
             if (presence == null)
                 return;
+
+            IBackupModule backupModule = presence.Scene.RequestModuleInterface<IBackupModule> ();
             if (attachments.Length > 0)
             {
                 for (int i = 0; i < attachments.Length; i++)
                 {
                     if (attachments[i].IsDeleted)
                     {
-                        presence.ControllingClient.SendAlertMessage("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
-                        DetachSingleAttachmentToInventory(attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient);
-                        continue;
+                        presence.ControllingClient.SendAlertMessage ("System: A broken attachment was found, removing it from your avatar. Your attachments may be wrong.");
+                        DetachSingleAttachmentToInventory (attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient);
                     }
-                    //Save it and prep it for transfer
-                    DetachSingleAttachmentGroupToInventoryInternal (attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient, false, attachments[i]);
+                    else
+                    {
+                        //Save it and prep it for transfer
+                        DetachSingleAttachmentGroupToInventoryInternal (attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient, false, attachments[i]);
+                    }
                 }
+                backupModule.DeleteSceneObjects (attachments, true);
             }
         }
 
@@ -761,7 +767,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        protected void DetachAndSaveAllAttachments (IClientAPI remoteClient)
+        public void DetachAndSaveAllAttachments (IClientAPI remoteClient)
         {
             // We can NOT use the dictionaries here, as we are looking
             // for an entity by the fromAssetID, which is NOT the prim UUID
@@ -770,6 +776,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             foreach (ISceneEntity group in attachments)
             {
                 DetachSingleAttachmentGroupToInventoryInternal (group.RootChild.FromUserInventoryItemID, remoteClient, false, group);
+                //And from storage as well so that they don't end up at 0,0,0
+                IBackupModule backup = remoteClient.Scene.RequestModuleInterface<IBackupModule> ();
+                if (backup != null)
+                    backup.DeleteSceneObjects (new ISceneEntity[1] { group }, false);
             }
         }
 
