@@ -52,7 +52,7 @@ namespace OpenSim.Services
 
         #region IService Members
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
@@ -62,11 +62,11 @@ namespace OpenSim.Services
             registry.RegisterModuleInterface<IAgentInfoService>(this);
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
             m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
         }
@@ -85,7 +85,7 @@ namespace OpenSim.Services
             get { return this; }
         }
 
-        public UserInfo GetUserInfo(string userID)
+        public virtual UserInfo GetUserInfo(string userID)
         {
             return GetUserInfo (userID, true);
         }
@@ -100,7 +100,7 @@ namespace OpenSim.Services
             return info;
         }
 
-        public UserInfo[] GetUserInfos(string[] userIDs)
+        public virtual UserInfo[] GetUserInfos (string[] userIDs)
         {
             UserInfo[] infos = new UserInfo[userIDs.Length];
             for (int i = 0; i < userIDs.Length; i++)
@@ -110,7 +110,7 @@ namespace OpenSim.Services
             return infos;
         }
 
-        public string[] GetAgentsLocations(string[] userIDs)
+        public virtual string[] GetAgentsLocations (string requestor, string[] userIDs)
         {
             string[] infos = new string[userIDs.Length];
             for (int i = 0; i < userIDs.Length; i++)
@@ -124,18 +124,18 @@ namespace OpenSim.Services
             return infos;
         }
 
-        public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
+        public virtual bool SetHomePosition (string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             m_agentInfoConnector.SetHomePosition(userID, homeID, homePosition, homeLookAt);
             return true;
         }
 
-        public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public virtual void SetLastPosition (string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
-        public void LockLoggedInStatus(string userID, bool locked)
+        public virtual void LockLoggedInStatus (string userID, bool locked)
         {
             if(locked && !m_lockedUsers.Contains(userID))
                 m_lockedUsers.Add(userID);
@@ -143,7 +143,7 @@ namespace OpenSim.Services
                 m_lockedUsers.Remove(userID);
         }
 
-        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
+        public virtual void SetLoggedIn (string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
             UserInfo userInfo = GetUserInfo (userID, false);//We are changing the status, so don't look
             if (userInfo == null)
@@ -180,7 +180,7 @@ namespace OpenSim.Services
             }
         }
 
-        public void Save(UserInfo userInfo)
+        public virtual void Save (UserInfo userInfo)
         {
             m_agentInfoConnector.Set(userInfo);
         }

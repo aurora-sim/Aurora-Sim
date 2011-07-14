@@ -141,7 +141,7 @@ namespace OpenSim.Services.Connectors
             return retVal.ToArray();
         }
 
-        public string[] GetAgentsLocations(string[] userIDs)
+        public string[] GetAgentsLocations(string requestor, string[] userIDs)
         {
             List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
             List<string> retVal = new List<string>();
@@ -154,6 +154,7 @@ namespace OpenSim.Services.Connectors
                     requestArray.Add(userIDs[i]);
                 }
                 request["userIDs"] = requestArray;
+                request["requestor"] = requestor;
                 request["Method"] = "GetAgentsLocations";
                 OSDMap result = WebUtils.PostToService(url, request, true, false);
                 try

@@ -150,10 +150,10 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Get the HTTP URLs for all root agents of the given users
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
+        /// <param name="requestor"></param>
+        /// <param name="userIDs"></param>
         /// <returns></returns>
-        string[] GetAgentsLocations(string[] userIDs);
+        string[] GetAgentsLocations(string requestor, string[] userIDs);
 
         /// <summary>
         /// Set the home position of the given user
