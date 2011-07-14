@@ -286,6 +286,7 @@ namespace OpenSim.Services.Connectors
                         { "InvType", item.InvType.ToString() },
                         { "Folder", item.Folder.ToString() },
                         { "CreatorId", item.CreatorId.ToString() },
+                        { "CreatorData", /*item.CreatorData.ToString()*/"" },
                         { "Description", item.Description.ToString() },
                         { "NextPermissions", item.NextPermissions.ToString() },
                         { "CurrentPermissions", item.CurrentPermissions.ToString() },
