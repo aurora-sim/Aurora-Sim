@@ -117,6 +117,19 @@ namespace OpenSim.Framework
         }
         protected UUID m_creatorIdAsUuid = UUID.Zero;
 
+        protected string m_creatorData = string.Empty;
+        public string CreatorData // = <profile url>;<name>
+        {
+            get
+            {
+                return m_creatorData;
+            }
+            set
+            {
+                m_creatorData = value;
+            }
+        }
+
         /// <value>
         /// The description of the inventory item (must be less than 64 characters)
         /// </value>

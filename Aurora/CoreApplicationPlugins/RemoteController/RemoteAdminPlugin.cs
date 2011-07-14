@@ -1598,6 +1598,7 @@ namespace OpenSim.CoreApplicationPlugins
                         destinationItem.Description = item.Description;
                         destinationItem.InvType = item.InvType;
                         destinationItem.CreatorId = item.CreatorId;
+                        destinationItem.CreatorData = item.CreatorData;
                         destinationItem.CreatorIdAsUuid = item.CreatorIdAsUuid;
                         destinationItem.NextPermissions = item.NextPermissions;
                         destinationItem.CurrentPermissions = item.CurrentPermissions;
@@ -1651,6 +1652,7 @@ namespace OpenSim.CoreApplicationPlugins
                         destinationItem.Description = item.Description;
                         destinationItem.InvType = item.InvType;
                         destinationItem.CreatorId = item.CreatorId;
+                        destinationItem.CreatorData = item.CreatorData;
                         destinationItem.CreatorIdAsUuid = item.CreatorIdAsUuid;
                         destinationItem.NextPermissions = item.NextPermissions;
                         destinationItem.CurrentPermissions = item.CurrentPermissions;
@@ -1757,6 +1759,7 @@ namespace OpenSim.CoreApplicationPlugins
                     destinationItem.Description = item.Description;
                     destinationItem.InvType = item.InvType;
                     destinationItem.CreatorId = item.CreatorId;
+                    destinationItem.CreatorData = item.CreatorData;
                     destinationItem.CreatorIdAsUuid = item.CreatorIdAsUuid;
                     destinationItem.NextPermissions = item.NextPermissions;
                     destinationItem.CurrentPermissions = item.CurrentPermissions;

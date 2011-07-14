@@ -583,8 +583,9 @@ namespace OpenSim.Services
             ret["AssetID"] = item.AssetID.ToString();
             ret["AssetType"] = item.AssetType.ToString();
             ret["BasePermissions"] = item.BasePermissions.ToString();
-            ret["CreationDate"] = item.CreationDate.ToString();
-            ret["CreatorId"] = item.CreatorId.ToString();
+            ret["CreationDate"] = item.CreationDate.ToString ();
+            ret["CreatorId"] = item.CreatorId.ToString ();
+            ret["CreatorData"] = item.CreatorData.ToString ();
             ret["CurrentPermissions"] = item.CurrentPermissions.ToString();
             ret["Description"] = item.Description.ToString();
             ret["EveryOnePermissions"] = item.EveryOnePermissions.ToString();
@@ -630,6 +631,7 @@ namespace OpenSim.Services
             item.InvType = int.Parse(data["InvType"].ToString());
             item.Folder = new UUID(data["Folder"].ToString());
             item.CreatorId = data["CreatorId"].ToString();
+            item.CreatorData = data["CreatorData"].ToString ();
             item.Description = data["Description"].ToString();
             item.NextPermissions = uint.Parse(data["NextPermissions"].ToString());
             item.CurrentPermissions = uint.Parse(data["CurrentPermissions"].ToString());

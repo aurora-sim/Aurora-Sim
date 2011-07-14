@@ -286,7 +286,7 @@ namespace OpenSim.Services.Connectors
                         { "InvType", item.InvType.ToString() },
                         { "Folder", item.Folder.ToString() },
                         { "CreatorId", item.CreatorId.ToString() },
-                        { "CreatorData", /*item.CreatorData.ToString()*/"" },
+                        { "CreatorData", item.CreatorData.ToString() },
                         { "Description", item.Description.ToString() },
                         { "NextPermissions", item.NextPermissions.ToString() },
                         { "CurrentPermissions", item.CurrentPermissions.ToString() },
@@ -322,6 +322,7 @@ namespace OpenSim.Services.Connectors
                         { "InvType", item.InvType.ToString() },
                         { "Folder", item.Folder.ToString() },
                         { "CreatorId", item.CreatorId.ToString() },
+                        { "CreatorData", item.CreatorData.ToString() },
                         { "Description", item.Description.ToString() },
                         { "NextPermissions", item.NextPermissions.ToString() },
                         { "CurrentPermissions", item.CurrentPermissions.ToString() },
@@ -534,8 +535,9 @@ namespace OpenSim.Services.Connectors
                 item.Owner = new UUID(data["Owner"].ToString());
                 item.ID = new UUID(data["ID"].ToString());
                 item.InvType = int.Parse(data["InvType"].ToString());
-                item.Folder = new UUID(data["Folder"].ToString());
-                item.CreatorId = data["CreatorId"].ToString();
+                item.Folder = new UUID (data["Folder"].ToString ());
+                item.CreatorId = data["CreatorId"].ToString ();
+                item.CreatorData = data["CreatorData"].ToString ();
                 item.Description = data["Description"].ToString();
                 item.NextPermissions = uint.Parse(data["NextPermissions"].ToString());
                 item.CurrentPermissions = uint.Parse(data["CurrentPermissions"].ToString());
