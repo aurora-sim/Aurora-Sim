@@ -482,7 +482,9 @@ namespace OpenSim.Services.Connectors
         {
             sendData["METHOD"] = method;
 
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
+            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("InventoryServerURI");
+            if (m_url != "")
+                serverURIs = new List<string> (new string[1] { m_url });
             foreach (string m_ServerURI in serverURIs)
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -553,6 +555,20 @@ namespace OpenSim.Services.Connectors
 
             return item;
         }
+
+        #region Constructors
+
+        public XInventoryServicesConnector ()
+        {
+        }
+
+        private string m_url;
+        public XInventoryServicesConnector (string url)
+        {
+            m_url = url;
+        }
+
+        #endregion
 
         #region IService Members
 
