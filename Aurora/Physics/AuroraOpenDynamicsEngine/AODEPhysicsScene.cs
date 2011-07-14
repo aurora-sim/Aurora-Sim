@@ -2422,7 +2422,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 const float scale = (1f / (float)Constants.TerrainCompression);
                 const float offset = 0.0f;
-                float thickness = (float)hfmin;
+                float thickness = 0.01f;
                 const int wrap = 0;
 
                 IntPtr HeightmapData = d.GeomHeightfieldDataCreate ();
@@ -2432,7 +2432,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                  heightmapHeightSamples, heightmapWidthSamples, scale,
                                                  offset, thickness, wrap);
 
-                d.GeomHeightfieldDataSetBounds (HeightmapData, hfmin, (float)hfmax + 1.0f);
+                d.GeomHeightfieldDataSetBounds (HeightmapData, hfmin - 1.0f, hfmax + 1.0f);
                 RegionTerrain = d.CreateHeightfield (space, HeightmapData, 1);
 
                 if (RegionTerrain != IntPtr.Zero)

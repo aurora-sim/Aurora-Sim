@@ -1800,6 +1800,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (m_pushForce != Vector3.Zero)
                     {
                         forceUpdate = true;
+                        _zeroFlag = false;
                         m_previousForceIsSame = 0;
                     }
 
@@ -1850,11 +1851,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     //Keep us out of terrain if possible
                     float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
-                    float ourBasePos = (dcpos.Z - (Size.Z / 2));
+                    Vector3 rotSize = Size * Orientation;
+                    float ourBasePos = (dcpos.Z + (rotSize.Z / 2));
                     if (!_parent_entity.VolumeDetectActive && terrainHeight > ourBasePos)
                     {
                         //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
-                        fz += gravForce.Z * -2.5f * (terrainHeight - (ourBasePos - (Size.Z / 2)));//Get us up, but don't shoot us up
+                        fz += gravForce.Z * -1 * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
+                        if (Math.Abs (fz) < 1)
+                            fz = 0.05f;
                         forceUpdate = true;
                         if(m_previousForceIsSame != 0)
                             m_previousForceIsSame = 0;
@@ -1927,13 +1931,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (Body != IntPtr.Zero)
                         {
                             //ODE autodisables not moving prims, accept it and reenable when we need to
-                            if (!d.BodyIsEnabled (Body))
+                            if (!_zeroFlag && !d.BodyIsEnabled (Body))
                                 d.BodyEnable (Body);
                             if (fx != 0 || fy != 0 || fz != 0)
                             {
-                                if (Math.Abs(m_PreviousForce.X - fx) > 0.01f ||
-                                    Math.Abs(m_PreviousForce.Y - fy) > 0.01f ||
-                                    Math.Abs(m_PreviousForce.Z - fz) > 0.01f ||
+                                if (Math.Abs(m_PreviousForce.X - fx) > 0.03f ||
+                                    Math.Abs(m_PreviousForce.Y - fy) > 0.03f ||
+                                    Math.Abs(m_PreviousForce.Z - fz) > 0.03f ||
                                     m_isSelected)
                                     m_previousForceIsSame = 0;
                                 else if (!m_isSelected)
@@ -2077,7 +2081,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         && (Math.Abs (vel.Z) < 0.01)
                         && (Math.Abs (rotvel.X) < 0.001)
                         && (Math.Abs (rotvel.Y) < 0.001)
-                        && (Math.Abs (rotvel.Z) < 0.001)) ||
+                        && (Math.Abs (rotvel.Z) < 0.001)) &&
                         m_previousForceIsSame > previousForceSameMax)
                         && m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
@@ -2094,6 +2098,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (_zeroFlag)
                     {
+                        m_lastposition = _position;
+                        m_lastorientation = _orientation;
+
                         _velocity.X = 0.0f;
                         _velocity.Y = 0.0f;
                         _velocity.Z = 0.0f;
@@ -2108,11 +2115,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         // better let ode keep dealing with small values --Ubit
                         //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
-                        d.BodySetLinearVel (Body, 0, 0, 0);
+                        d.BodySetLinearVel (Body, 0, 0, 0.01f);
                         d.BodySetAngularVel (Body, 0, 0, 0);
-                        //Physical prims fall through things if this is set
-                        //if (d.BodyIsEnabled (Body))
-                        //    d.BodyDisable (Body);
+                        //Physical prims fall through things if this is set when things are moving, so only do it if we are almost stopped
+                        if ((Math.Abs (vel.X) < 0.01)
+                        && (Math.Abs (vel.Y) < 0.01)
+                        && (Math.Abs (vel.Z) < 0.01))
+                        {
+                            if (d.BodyIsEnabled (Body))
+                                d.BodyDisable (Body);
+                        }
 
                         if (m_lastUpdateSent > 0)
                         {
