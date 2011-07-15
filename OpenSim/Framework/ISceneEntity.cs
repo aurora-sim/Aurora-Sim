@@ -413,6 +413,8 @@ namespace OpenSim.Framework
 
         UUID CreatorID { get; set; }
 
+        string CreatorData { get; set; }
+
         Quaternion GetWorldRotation ();
 
         PhysicsObject PhysActor { get; set; }

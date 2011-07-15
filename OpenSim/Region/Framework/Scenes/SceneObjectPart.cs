@@ -631,6 +631,7 @@ namespace OpenSim.Region.Framework.Scenes
         private UndoStack<UndoState> m_undo = new UndoStack<UndoState>(5);
         private UndoStack<UndoState> m_redo = new UndoStack<UndoState>(5);
         private UUID _creatorID;
+        private string m_creatorData = string.Empty;
 
         private int m_passTouches;
 
@@ -934,15 +935,67 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// A relic from when we we thought that prims contained folder objects. In 
-        /// reality, prim == folder
-        /// Exposing this is not particularly good, but it's one of the least evils at the moment to see
-        /// folder id from prim inventory item data, since it's not (yet) actually stored with the prim.
+        /// Data about the creator in the form profile_url;name
         /// </summary>
-        public UUID FolderID
+        public string CreatorData
         {
-            get { return UUID; }
-            set { } // Don't allow assignment, or legacy prims wil b0rk - but we need the setter for legacy serialization.
+            get
+            {
+                return m_creatorData;
+            }
+            set
+            {
+                m_creatorData = value;
+            }
+        }
+
+        /// <summary>
+        /// Used by the DB layer to retrieve / store the entire user identification.
+        /// The identification can either be a simple UUID or a string of the form
+        /// uuid[;profile_url[;name]]
+        /// </summary>
+        public string CreatorIdentification
+        {
+            get
+            {
+                if (m_creatorData != null && m_creatorData != string.Empty)
+                    return _creatorID.ToString () + ';' + m_creatorData;
+                else
+                    return _creatorID.ToString ();
+            }
+            set
+            {
+                if ((value == null) || (value != null && value == string.Empty))
+                {
+                    m_creatorData = string.Empty;
+                    return;
+                }
+
+                if (!value.Contains (";")) // plain UUID
+                {
+                    UUID uuid = UUID.Zero;
+                    UUID.TryParse (value, out uuid);
+                    _creatorID = uuid;
+                }
+                else // <uuid>[;<endpoint>[;name]]
+                {
+                    string name = "Unknown User";
+                    string[] parts = value.Split (';');
+                    if (parts.Length >= 1)
+                    {
+                        UUID uuid = UUID.Zero;
+                        UUID.TryParse (parts[0], out uuid);
+                        _creatorID = uuid;
+                    }
+                    if (parts.Length >= 2)
+                        m_creatorData = parts[1];
+                    if (parts.Length >= 3)
+                        name = parts[2];
+
+                    m_creatorData += ';' + name;
+
+                }
+            }
         }
 
         /// <value>

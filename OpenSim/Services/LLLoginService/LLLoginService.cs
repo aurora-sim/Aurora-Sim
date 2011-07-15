@@ -1357,6 +1357,7 @@ namespace AvatarArchives
             InventoryItemBase itemCopy = new InventoryItemBase();
             itemCopy.Owner = recipient;
             itemCopy.CreatorId = item.CreatorId;
+            itemCopy.CreatorData = item.CreatorData;
             itemCopy.ID = UUID.Random();
             itemCopy.AssetID = item.AssetID;
             itemCopy.Description = item.Description;

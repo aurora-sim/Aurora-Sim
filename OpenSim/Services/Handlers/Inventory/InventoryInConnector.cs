@@ -584,7 +584,14 @@ namespace OpenSim.Services
             ret["AssetType"] = item.AssetType.ToString();
             ret["BasePermissions"] = item.BasePermissions.ToString();
             ret["CreationDate"] = item.CreationDate.ToString ();
-            ret["CreatorId"] = item.CreatorId.ToString ();
+            if (item.CreatorId != null)
+                ret["CreatorId"] = item.CreatorId.ToString ();
+            else
+                ret["CreatorId"] = String.Empty;
+            if (item.CreatorData != null)
+                ret["CreatorData"] = item.CreatorData;
+            else
+                ret["CreatorData"] = String.Empty;
             ret["CreatorData"] = item.CreatorData.ToString ();
             ret["CurrentPermissions"] = item.CurrentPermissions.ToString();
             ret["Description"] = item.Description.ToString();

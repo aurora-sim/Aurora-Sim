@@ -276,6 +276,9 @@ namespace OpenSim.Services.Connectors
             if (item == null)
                 return false;
 
+            if (item.CreatorData == null)
+                item.CreatorData = String.Empty;
+
             Dictionary<string, object> ret = MakeRequest("ADDITEM",
                     new Dictionary<string,object> {
                         { "AssetID", item.AssetID.ToString() },
@@ -311,6 +314,9 @@ namespace OpenSim.Services.Connectors
         {
             if (item == null)
                 return false;
+
+            if (item.CreatorData == null)
+                item.CreatorData = String.Empty;
 
             Dictionary<string, object> ret = MakeRequest("UPDATEITEM",
                     new Dictionary<string,object> {
@@ -537,8 +543,11 @@ namespace OpenSim.Services.Connectors
                 item.InvType = int.Parse(data["InvType"].ToString());
                 item.Folder = new UUID (data["Folder"].ToString ());
                 item.CreatorId = data["CreatorId"].ToString ();
-                item.CreatorData = data["CreatorData"].ToString ();
-                item.Description = data["Description"].ToString();
+                if (data.ContainsKey ("CreatorData"))
+                    item.CreatorData = data["CreatorData"].ToString ();
+                else
+                    item.CreatorData = String.Empty;
+                item.Description = data["Description"].ToString ();
                 item.NextPermissions = uint.Parse(data["NextPermissions"].ToString());
                 item.CurrentPermissions = uint.Parse(data["CurrentPermissions"].ToString());
                 item.BasePermissions = uint.Parse(data["BasePermissions"].ToString());

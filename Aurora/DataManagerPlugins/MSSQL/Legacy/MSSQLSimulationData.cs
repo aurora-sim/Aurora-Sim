@@ -1199,7 +1199,7 @@ VALUES
             taskItem.Name = (string)inventoryRow["name"];
             taskItem.Description = (string)inventoryRow["description"];
             taskItem.CreationDate = Convert.ToUInt32(inventoryRow["creationDate"]);
-            taskItem.CreatorID = new UUID((Guid)inventoryRow["creatorID"]);
+            taskItem.CreatorIdentification = inventoryRow["creatorID"].ToString();
             taskItem.OwnerID = new UUID((Guid)inventoryRow["ownerID"]);
             taskItem.LastOwnerID = new UUID((Guid)inventoryRow["lastOwnerID"]);
             taskItem.GroupID = new UUID((Guid)inventoryRow["groupID"]);
@@ -1239,7 +1239,7 @@ VALUES
             parameters.Add(_Database.CreateParameter("name", taskItem.Name));
             parameters.Add(_Database.CreateParameter("description", taskItem.Description));
             parameters.Add(_Database.CreateParameter("creationDate", taskItem.CreationDate));
-            parameters.Add(_Database.CreateParameter("creatorID", taskItem.CreatorID));
+            parameters.Add (_Database.CreateParameter ("creatorID", taskItem.CreatorIdentification));
             parameters.Add(_Database.CreateParameter("ownerID", taskItem.OwnerID));
             parameters.Add(_Database.CreateParameter("lastOwnerID", taskItem.LastOwnerID));
             parameters.Add(_Database.CreateParameter("groupID", taskItem.GroupID));

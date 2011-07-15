@@ -178,6 +178,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             //We save the groups so that we can back them up later
             List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
 
+            IUserManagement UserManager = m_scene.RequestModuleInterface<IUserManagement> ();
             try
             {
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
@@ -215,7 +216,15 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         
                         foreach (SceneObjectPart part in sceneObject.ChildrenList)
                         {
-                            if (!ResolveUserUuid(part.CreatorID))
+                            if (part.CreatorData == null || part.CreatorData == string.Empty)
+                            {
+                                if (!ResolveUserUuid (part.CreatorID))
+                                    part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                            }
+                            if (UserManager != null)
+                                UserManager.AddUser (part.CreatorID, part.CreatorData);
+
+                            if (!ResolveUserUuid (part.CreatorID))
                                 part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
                             if (!ResolveUserUuid(part.OwnerID))
@@ -244,6 +253,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                     {
                                         kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                     }
+                                    if (UserManager != null)
+                                        UserManager.AddUser (kvp.Value.CreatorID, kvp.Value.CreatorData);
                                 }
                             }
                         }
