@@ -396,7 +396,7 @@ namespace OpenSim.Services.MessagingService
         public virtual bool InformClientOfNeighbor (UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, ref GridRegion neighbor,
             uint TeleportFlags, AgentData agentData, out string reason)
         {
-            if (neighbor == null)
+            if (neighbor == null || neighbor.RegionHandle == 0)
             {
                 reason = "Could not find neighbor to inform";
                 return false;

@@ -451,7 +451,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <param name="remoteClient"></param>
         /// <param name="regionHandle"></param>
         /// <param name="position"></param>
-        public void RequestTeleportLandmark(IClientAPI remoteClient, UUID regionID, Vector3 position)
+        public void RequestTeleportLandmark (IClientAPI remoteClient, UUID regionID, string gatekeeperURL, Vector3 position)
         {
             GridRegion info = null;
             try
@@ -464,9 +464,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
             if (info == null)
             {
-                // can't find the region: Tell viewer and abort
-                remoteClient.SendTeleportFailed("The teleport destination could not be found.");
-                return;
+                if (gatekeeperURL != null && gatekeeperURL != string.Empty)
+                {
+                    info = new GridRegion ();
+                    info.ServerURI = gatekeeperURL;
+                    info.RegionID = regionID;
+                    info.Flags = (int)(Aurora.Framework.RegionFlags.Foreign | Aurora.Framework.RegionFlags.Hyperlink);
+                }
+                else
+                {
+                    // can't find the region: Tell viewer and abort
+                    remoteClient.SendTeleportFailed ("The teleport destination could not be found.");
+                    return;
+                }
             }
 
             RequestTeleportLocation(remoteClient, info, position, Vector3.Zero, (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaLandmark));
