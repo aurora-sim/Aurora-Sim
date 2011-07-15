@@ -565,7 +565,7 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        private string m_url;
+        private string m_url = "";
         public XInventoryServicesConnector (string url)
         {
             m_url = url;
