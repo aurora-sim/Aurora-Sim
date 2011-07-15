@@ -41,8 +41,9 @@ namespace OpenSim.Services.Friends
     public class FriendsService : IFriendsService, IService
     {
         protected IFriendsData m_Database = null;
+        protected IRegistryCore m_registry = null;
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
@@ -52,38 +53,38 @@ namespace OpenSim.Services.Friends
             get { return this; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            registry.RegisterModuleInterface<IFriendsService>(this);
+            registry.RegisterModuleInterface<IFriendsService> (this);
+            m_registry = registry;
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
             m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData> ();
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
         }
 
-        public FriendInfo[] GetFriends(UUID PrincipalID)
+        public virtual FriendInfo[] GetFriends (UUID PrincipalID)
         {
             return m_Database.GetFriends(PrincipalID);
         }
 
-        public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
+        public virtual bool StoreFriend (UUID PrincipalID, string Friend, int flags)
         {
             return m_Database.Store(PrincipalID, Friend, flags, 0);
         }
 
-        public bool Delete(UUID PrincipalID, string Friend)
+        public virtual bool Delete (UUID PrincipalID, string Friend)
         {
             return m_Database.Delete(PrincipalID, Friend);
         }
-
     }
 }

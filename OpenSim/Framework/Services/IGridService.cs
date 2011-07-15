@@ -413,7 +413,8 @@ namespace OpenSim.Services.Interfaces
             kvp["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             kvp["serverHttpPort"] = HttpPort.ToString();
             kvp["serverURI"] = ServerURI;
-            kvp["serverPort"] = InternalEndPoint.Port.ToString();
+            if(InternalEndPoint != null)
+                kvp["serverPort"] = InternalEndPoint.Port.ToString();
             kvp["regionMapTexture"] = TerrainImage.ToString();
             kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
             kvp["access"] = Access.ToString();
