@@ -615,16 +615,16 @@ namespace OpenSim.Region.Framework.Scenes
             //See whether we have a gatekeeperURL
             string gatekeeperdata = "";
             IConfigurationService configService = m_scene.RequestModuleInterface<IConfigurationService> ();
-            List<string> gatekeeperURLs = configService.FindValueOf ("GatekeeperURL");
+            List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
             string gatekeeperURL = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + "/";//Assume the default
-            if (gatekeeperURLs.Count > 0)//Then check whether we were given one
-                gatekeeperURL = gatekeeperURLs[0];
+            if (mainGridURLs.Count > 0)//Then check whether we were given one
+                gatekeeperURL = mainGridURLs[0];
             //We have one!
             UserAccount account = m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, presence.UUID);
             if (account == null)
                 name = "HG " + name;//We don't have an account for them, add the HG ref 
             name += " @ " + gatekeeperURL;
-            gatekeeperdata = string.Format ("gatekeeper {5}\n", gatekeeperURL);
+            gatekeeperdata = string.Format ("gatekeeper {0}\n", gatekeeperURL);
             Vector3 pos = presence.AbsolutePosition;
             string strdata = String.Format (
                 "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}\n{5}",

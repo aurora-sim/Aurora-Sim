@@ -562,7 +562,10 @@ namespace OpenSim.Services.MessagingService
                     IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                     if (GridService != null)
                     {
+                        GridRegion oldRegion = destination;
                         destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
+                        if (destination == null)//If its not in this grid
+                            destination = oldRegion;
                         //Inform the client of the neighbor if needed
                         circuit.child = false; //Force child status to the correct type
 
