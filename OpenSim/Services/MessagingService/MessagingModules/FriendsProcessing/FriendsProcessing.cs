@@ -87,9 +87,15 @@ namespace OpenSim.Services.MessagingService
 
                     FriendInfo[] friends = friendsService.GetFriends (us);
                     List<UUID> OnlineFriends = new List<UUID>();
+                    List<string> previouslyContactedURLs = new List<string>();
                     foreach (FriendInfo friend in friends)
                     {
-                        UUID FriendToInform = UUID.Parse(friend.Friend);
+                        if (friend.TheirFlags == -1 || friend.MyFlags == -1)
+                            continue;//Not validiated yet!
+                        UUID FriendToInform = UUID.Zero;
+                        string url, first, last, secret;
+                        if (!UUID.TryParse (friend.Friend, out FriendToInform))
+                            HGUtil.ParseUniversalUserIdentifier (friend.Friend, out FriendToInform, out url, out first, out last, out secret);
                         //Now find their caps service so that we can find where they are root (and if they are logged in)
                         IClientCapsService clientCaps = capsService.GetClientCapsService(FriendToInform);
                         if (clientCaps != null)
@@ -119,13 +125,20 @@ namespace OpenSim.Services.MessagingService
                                     OnlineFriends.Add (FriendToInform);
                                     //Post!
                                     GridRegion r = gridService.GetRegionByUUID (UUID.Zero, friendinfo.CurrentRegionID);
-                                    if(r != null)
+                                    if (r != null)
                                         asyncPoster.Post (r.RegionHandle, SyncMessageHelper.AgentStatusChange (us, FriendToInform, isOnline));
+                                }
+                                else
+                                {
+                                    IUserAgentService uas = m_registry.RequestModuleInterface<IUserAgentService> ();
+                                    bool online = uas.RemoteStatusNotification (friend, us, isOnline);
+                                    if (online)
+                                        OnlineFriends.Add (FriendToInform);
                                 }
                             }
                         }
                     }
-                    //If they are online, send all friends online statuses to them
+                    //If the user is coming online, send all their friends online statuses to them
                     if (isOnline)
                     {
                         GridRegion ourRegion = gridService.GetRegionByUUID(UUID.Zero, UUID.Parse(info[2].ToString()));
