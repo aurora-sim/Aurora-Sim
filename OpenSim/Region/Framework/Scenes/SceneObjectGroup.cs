@@ -352,12 +352,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<ISceneChildEntity> ChildrenEntities ()
         {
-            lock (m_partsList)
+            lock (m_partsLock)
             {
-                return new List<ISceneChildEntity> (m_partsList.ConvertAll<ISceneChildEntity> (delegate (SceneObjectPart part)
-                    {
-                        return part;
-                    }));
+                List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
+                foreach (SceneObjectPart part in m_partsList)
+                    entities.Add ((ISceneChildEntity)part);
+                return entities;
             }
         }
 

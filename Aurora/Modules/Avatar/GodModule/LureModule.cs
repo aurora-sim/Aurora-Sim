@@ -34,6 +34,8 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
@@ -43,6 +45,7 @@ namespace Aurora.Modules
 	public class LureModule : ISharedRegionModule
     {
         #region Declares
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private List<Scene> m_scenes = new List<Scene>();
@@ -50,6 +53,7 @@ namespace Aurora.Modules
 		private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
         private bool m_allowGodTeleports = true;
+        private ExpiringCache<UUID, GridInstantMessage> m_PendingLures = new ExpiringCache<UUID, GridInstantMessage> ();
 
         #endregion
 
@@ -143,7 +147,10 @@ namespace Aurora.Modules
                 client.Scene.RegionInfo.RegionHandle,
 				(uint)presence.AbsolutePosition.X,
 				(uint)presence.AbsolutePosition.Y,
-				(uint)presence.AbsolutePosition.Z);
+                (uint)presence.AbsolutePosition.Z);
+
+            string mainGridURL = GetMainGridURL ();
+            message += "@" + mainGridURL;//Add it to the message
 
 			GridInstantMessage m;
 
@@ -177,10 +184,10 @@ namespace Aurora.Modules
 				                           message, dest, false, presence.AbsolutePosition,
 				                           new Byte[0]);
 			}
+            m_PendingLures.Add (m.imSessionID, m, 7200); // 2 hours
 			if (m_TransferModule != null)
 			{
-				m_TransferModule.SendInstantMessage(m,
-				                                    delegate(bool success) { });
+				m_TransferModule.SendInstantMessage(m);
 			}
 		}
 
@@ -200,27 +207,53 @@ namespace Aurora.Modules
             IEntityTransferModule entityTransfer = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
             if (entityTransfer != null)
             {
+                GridInstantMessage im;
+                if (m_PendingLures.TryGetValue (lureID, out im))
+                {
+                    string[] parts = im.message.Split (new char[] { '@' });
+                    if (parts.Length > 1)
+                    {
+                        string url = parts[parts.Length - 1]; // the last part
+                        if (url.Trim (new char[] { '/' }) != GetMainGridURL ().Trim (new char[] { '/' }))
+                        {
+                            GridRegion gatekeeper = new GridRegion ();
+                            gatekeeper.ServerURI = url;
+                            gatekeeper.RegionID = im.RegionID;
+                            gatekeeper.Flags = (int)(Aurora.Framework.RegionFlags.Foreign | Aurora.Framework.RegionFlags.Hyperlink);
+                            entityTransfer.RequestTeleportLocation (client, gatekeeper, position,
+                                Vector3.Zero, teleportFlags);
+                            return;
+                        }
+                    }
+                }
                 entityTransfer.RequestTeleportLocation(client, handle, position,
                                       Vector3.Zero, teleportFlags);
             }
         }
 
-        #endregion
+        private string GetMainGridURL ()
+        {
+            IConfigurationService configService = m_scenes[0].RequestModuleInterface<IConfigurationService> ();
+            List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
+            string mainGridURL = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + "/";//Assume the default
+            if (mainGridURLs.Count > 0)//Then check whether we were given one
+                mainGridURL = mainGridURLs[0];
+            return mainGridURL;
+        }
 
-        #region GridInstantMessage
+        void OnGridInstantMessage (GridInstantMessage im)
+        {
+            if (im.dialog == (byte)InstantMessageDialog.RequestTeleport)
+            {
+                UUID sessionID = new UUID (im.imSessionID);
+                m_log.DebugFormat ("[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID, im.RegionID, im.message);
+                m_PendingLures.Add (sessionID, im, 7200); // 2 hours
 
-        private void OnGridInstantMessage(GridInstantMessage msg)
-		{
-			// Forward remote teleport requests
-			//
-			if (msg.dialog != 22)
-				return;
-
-			if (m_TransferModule != null)
-			{
-				m_TransferModule.SendInstantMessage(msg,
-				                                    delegate(bool success) { });
-			}
+                // Forward. We do this, because the IM module explicitly rejects
+                // IMs of this type
+                if (m_TransferModule != null)
+                    m_TransferModule.SendInstantMessage (im);
+            }
         }
 
         #endregion

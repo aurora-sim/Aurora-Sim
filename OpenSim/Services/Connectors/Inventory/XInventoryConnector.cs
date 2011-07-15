@@ -276,6 +276,9 @@ namespace OpenSim.Services.Connectors
             if (item == null)
                 return false;
 
+            if (item.CreatorData == null)
+                item.CreatorData = String.Empty;
+
             Dictionary<string, object> ret = MakeRequest("ADDITEM",
                     new Dictionary<string,object> {
                         { "AssetID", item.AssetID.ToString() },
@@ -286,6 +289,7 @@ namespace OpenSim.Services.Connectors
                         { "InvType", item.InvType.ToString() },
                         { "Folder", item.Folder.ToString() },
                         { "CreatorId", item.CreatorId.ToString() },
+                        { "CreatorData", item.CreatorData.ToString() },
                         { "Description", item.Description.ToString() },
                         { "NextPermissions", item.NextPermissions.ToString() },
                         { "CurrentPermissions", item.CurrentPermissions.ToString() },
@@ -311,6 +315,9 @@ namespace OpenSim.Services.Connectors
             if (item == null)
                 return false;
 
+            if (item.CreatorData == null)
+                item.CreatorData = String.Empty;
+
             Dictionary<string, object> ret = MakeRequest("UPDATEITEM",
                     new Dictionary<string,object> {
                         { "AssetID", item.AssetID.ToString() },
@@ -321,6 +328,7 @@ namespace OpenSim.Services.Connectors
                         { "InvType", item.InvType.ToString() },
                         { "Folder", item.Folder.ToString() },
                         { "CreatorId", item.CreatorId.ToString() },
+                        { "CreatorData", item.CreatorData.ToString() },
                         { "Description", item.Description.ToString() },
                         { "NextPermissions", item.NextPermissions.ToString() },
                         { "CurrentPermissions", item.CurrentPermissions.ToString() },
@@ -482,7 +490,9 @@ namespace OpenSim.Services.Connectors
         {
             sendData["METHOD"] = method;
 
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("InventoryServerURI");
+            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("InventoryServerURI");
+            if (m_url != "")
+                serverURIs = new List<string> (new string[1] { m_url });
             foreach (string m_ServerURI in serverURIs)
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -531,9 +541,13 @@ namespace OpenSim.Services.Connectors
                 item.Owner = new UUID(data["Owner"].ToString());
                 item.ID = new UUID(data["ID"].ToString());
                 item.InvType = int.Parse(data["InvType"].ToString());
-                item.Folder = new UUID(data["Folder"].ToString());
-                item.CreatorId = data["CreatorId"].ToString();
-                item.Description = data["Description"].ToString();
+                item.Folder = new UUID (data["Folder"].ToString ());
+                item.CreatorId = data["CreatorId"].ToString ();
+                if (data.ContainsKey ("CreatorData"))
+                    item.CreatorData = data["CreatorData"].ToString ();
+                else
+                    item.CreatorData = String.Empty;
+                item.Description = data["Description"].ToString ();
                 item.NextPermissions = uint.Parse(data["NextPermissions"].ToString());
                 item.CurrentPermissions = uint.Parse(data["CurrentPermissions"].ToString());
                 item.BasePermissions = uint.Parse(data["BasePermissions"].ToString());
@@ -553,6 +567,20 @@ namespace OpenSim.Services.Connectors
 
             return item;
         }
+
+        #region Constructors
+
+        public XInventoryServicesConnector ()
+        {
+        }
+
+        private string m_url = "";
+        public XInventoryServicesConnector (string url)
+        {
+            m_url = url;
+        }
+
+        #endregion
 
         #region IService Members
 

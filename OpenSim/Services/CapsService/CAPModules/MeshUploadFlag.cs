@@ -90,6 +90,7 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            m_service.RemoveStreamHandler ("MeshUploadFlag", "GET");
         }
 
         public void EnteringRegion()

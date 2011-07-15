@@ -135,6 +135,8 @@ namespace Aurora.BotManager
                     }
                     return true;
                 }
+                else if (m_listOfPositions.Count == 0)
+                    return false;
                 else if (FollowIndefinitely)
                 {
                     CurrentPos = 0; //Reset the position to the beginning if we have run out of positions

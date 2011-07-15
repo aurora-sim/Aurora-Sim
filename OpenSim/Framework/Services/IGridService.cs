@@ -374,7 +374,7 @@ namespace OpenSim.Services.Interfaces
         {
             get
             {
-                if (m_remoteEndPoint == null)
+                if (m_remoteEndPoint == null && m_externalHostName != null && m_internalEndPoint != null)
                     m_remoteEndPoint = Util.ResolveEndPoint(m_externalHostName, m_internalEndPoint.Port);
 
                 return m_remoteEndPoint;
@@ -413,7 +413,8 @@ namespace OpenSim.Services.Interfaces
             kvp["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             kvp["serverHttpPort"] = HttpPort.ToString();
             kvp["serverURI"] = ServerURI;
-            kvp["serverPort"] = InternalEndPoint.Port.ToString();
+            if(InternalEndPoint != null)
+                kvp["serverPort"] = InternalEndPoint.Port.ToString();
             kvp["regionMapTexture"] = TerrainImage.ToString();
             kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
             kvp["access"] = Access.ToString();
@@ -518,8 +519,11 @@ namespace OpenSim.Services.Interfaces
             map["GenericMap"] = GenericMap;
 
             // We send it along too so that it doesn't need resolved on the other end
-            map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
-            map["remoteEndPointPort"] = ExternalEndPoint.Port;
+            if (ExternalEndPoint != null)
+            {
+                map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes ();
+                map["remoteEndPointPort"] = ExternalEndPoint.Port;
+            }
 
             return map;
         }

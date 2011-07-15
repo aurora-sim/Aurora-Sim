@@ -88,7 +88,8 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService> ();
+                List<string> m_ServerURIs = configService.FindValueOf ("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",

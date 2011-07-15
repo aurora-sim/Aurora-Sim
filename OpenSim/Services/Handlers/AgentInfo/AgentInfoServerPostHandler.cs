@@ -156,13 +156,14 @@ namespace OpenSim.Services
         private byte[] GetAgentsLocations(OSDMap request)
         {
             OSDArray userIDs = (OSDArray)request["userIDs"];
+            string requestor = request["requestor"].AsString ();
             string[] users = new string[userIDs.Count];
             for (int i = 0; i < userIDs.Count; i++)
             {
                 users[i] = userIDs[i];
             }
 
-            string[] result = m_AgentInfoService.GetAgentsLocations(users);
+            string[] result = m_AgentInfoService.GetAgentsLocations(requestor, users);
 
             OSDArray resultArray = new OSDArray();
             foreach (string info in result)

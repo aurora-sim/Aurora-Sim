@@ -32,6 +32,7 @@ using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -146,18 +147,31 @@ namespace OpenSim.Services.RobustCompat
                     OSDMap param = (OSDMap)obj[0];
                     AgentCircuitData circuit = (AgentCircuitData)obj[1];
                     circuit.child = false;//ONLY USE ROOT AGENTS
-                    IClientCapsService clientService = service.GetOrCreateClientCapsService (circuit.AgentID);
-                    clientService.RemoveCAPS (m_scene.RegionInfo.RegionHandle);
-                    service.CreateCAPS(circuit.AgentID, CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                        m_scene.RegionInfo.RegionHandle, true, circuit, m_scene.RegionInfo.HttpPort); //We ONLY use root agents because of OpenSim's inability to send the correct data
-                    MainConsole.Instance.Output ("setting up on " + clientService.HostUri + CapsUtil.GetCapsSeedPath (circuit.CapsPath));
-                    IClientCapsService clientCaps = service.GetClientCapsService(circuit.AgentID);
-                    if (clientCaps != null)
+                    if (circuit.ServiceURLs != null && circuit.ServiceURLs.ContainsKey ("IncomingCAPSHandler"))
                     {
-                        IRegionClientCapsService regionCaps = clientCaps.GetCapsService(m_scene.RegionInfo.RegionHandle);
-                        if (regionCaps != null)
+                        //Used by incoming (home) agents from HG
+                        MainServer.Instance.AddStreamHandler (new RestStreamHandler ("POST", CapsUtil.GetCapsSeedPath (circuit.CapsPath),
+                            delegate (string request, string path, string param2,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                            {
+                                return CapsRequest (request, path, param2, httpRequest, httpResponse, circuit.ServiceURLs["IncomingCAPSHandler"].ToString ());
+                            }));
+                    }
+                    else
+                    {
+                        IClientCapsService clientService = service.GetOrCreateClientCapsService (circuit.AgentID);
+                        clientService.RemoveCAPS (m_scene.RegionInfo.RegionHandle);
+                        service.CreateCAPS (circuit.AgentID, CapsUtil.GetCapsSeedPath (circuit.CapsPath),
+                            m_scene.RegionInfo.RegionHandle, true, circuit, m_scene.RegionInfo.HttpPort); //We ONLY use root agents because of OpenSim's inability to send the correct data
+                        MainConsole.Instance.Output ("setting up on " + clientService.HostUri + CapsUtil.GetCapsSeedPath (circuit.CapsPath));
+                        IClientCapsService clientCaps = service.GetClientCapsService (circuit.AgentID);
+                        if (clientCaps != null)
                         {
-                            regionCaps.AddCAPS((OSDMap)param["CapsUrls"]);
+                            IRegionClientCapsService regionCaps = clientCaps.GetCapsService (m_scene.RegionInfo.RegionHandle);
+                            if (regionCaps != null)
+                            {
+                                regionCaps.AddCAPS ((OSDMap)param["CapsUrls"]);
+                            }
                         }
                     }
                 }
@@ -197,6 +211,17 @@ namespace OpenSim.Services.RobustCompat
         public Type ReplaceableInterface
         {
             get { return null; }
+        }
+
+        #endregion
+
+        #region Virtual caps handler
+
+        public virtual string CapsRequest (string request, string path, string param,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse, string url)
+        {
+            OSDMap response = WebUtils.PostToService (url, new OSDMap (), true, false, true);
+            return OSDParser.SerializeLLSDXmlString (response);
         }
 
         #endregion

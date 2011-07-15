@@ -396,7 +396,7 @@ namespace OpenSim.Services.MessagingService
         public virtual bool InformClientOfNeighbor (UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, ref GridRegion neighbor,
             uint TeleportFlags, AgentData agentData, out string reason)
         {
-            if (neighbor == null)
+            if (neighbor == null || neighbor.RegionHandle == 0)
             {
                 reason = "Could not find neighbor to inform";
                 return false;
@@ -562,7 +562,10 @@ namespace OpenSim.Services.MessagingService
                     IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                     if (GridService != null)
                     {
+                        GridRegion oldRegion = destination;
                         destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
+                        if (destination == null)//If its not in this grid
+                            destination = oldRegion;
                         //Inform the client of the neighbor if needed
                         circuit.child = false; //Force child status to the correct type
 

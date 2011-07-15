@@ -486,12 +486,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="nextOwnerMask"></param>
         /// <param name="creationDate"></param>
         protected void CreateNewInventoryItem(
-            IClientAPI remoteClient, string creatorID, UUID folderID, string name, uint flags, uint callbackID, AssetBase asset, sbyte invType,
+            IClientAPI remoteClient, string creatorID, string creatorData, UUID folderID, string name, uint flags, uint callbackID, AssetBase asset, sbyte invType,
             uint baseMask, uint currentMask, uint everyoneMask, uint nextOwnerMask, uint groupMask, int creationDate)
         {
             InventoryItemBase item = new InventoryItemBase();
             item.Owner = remoteClient.AgentId;
             item.CreatorId = creatorID;
+            item.CreatorData = creatorData;
             item.ID = UUID.Random();
             item.AssetID = asset.ID;
             item.Description = asset.Description;
@@ -565,13 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
                         {
-                            Vector3 pos = presence.AbsolutePosition;
-                            string strdata = String.Format(
-                                "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}\n",
-                                presence.Scene.RegionInfo.RegionID,
-                                pos.X, pos.Y, pos.Z,
-                                presence.Scene.RegionInfo.RegionHandle);
-                            data = Encoding.ASCII.GetBytes(strdata);
+                            data = BuildLandmark (presence, ref name);
                         }
                         else
                         {
@@ -592,7 +587,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_scene.AssetService.Store(asset);
 
                     CreateNewInventoryItem(
-                        remoteClient, remoteClient.AgentId.ToString(), folderID, name, 0, callbackID, asset, invType,
+                        remoteClient, remoteClient.AgentId.ToString(), "", folderID, name, 0, callbackID, asset, invType,
                         (uint)PermissionMask.All, (uint)PermissionMask.All, 0, nextOwnerMask, 0, creationDate);
                 }
                 else
@@ -612,6 +607,31 @@ namespace OpenSim.Region.Framework.Scenes
                         name, invType, assetType, wearableType, nextOwnerMask);
                 }
             }
+        }
+
+        private byte[] BuildLandmark (IScenePresence presence, ref string name)
+        {
+            //See whether we have a gatekeeperURL
+            string gatekeeperdata = "";
+            IConfigurationService configService = m_scene.RequestModuleInterface<IConfigurationService> ();
+            List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
+            string gatekeeperURL = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + "/";//Assume the default
+            if (mainGridURLs.Count > 0)//Then check whether we were given one
+                gatekeeperURL = mainGridURLs[0];
+            //We have one!
+            UserAccount account = m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, presence.UUID);
+            if (account == null)
+                name = "HG " + name;//We don't have an account for them, add the HG ref 
+            name += " @ " + gatekeeperURL;
+            gatekeeperdata = string.Format ("gatekeeper {0}\n", gatekeeperURL);
+            Vector3 pos = presence.AbsolutePosition;
+            string strdata = String.Format (
+                "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}\n{5}",
+                presence.Scene.RegionInfo.RegionID,
+                pos.X, pos.Y, pos.Z,
+                presence.Scene.RegionInfo.RegionHandle,
+                gatekeeperdata);
+            return Encoding.ASCII.GetBytes (strdata);
         }
 
         /// <summary>
@@ -651,7 +671,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AssetBase asset = new AssetBase {ID = olditemID, Type = type, Name = name, Description = description};
 
                 CreateNewInventoryItem(
-                    remoteClient, remoteClient.AgentId.ToString(), folderID, name, 0, callbackID, asset, invType,
+                    remoteClient, remoteClient.AgentId.ToString(), "", folderID, name, 0, callbackID, asset, invType,
                     (uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All,
                     (uint)PermissionMask.All, (uint)PermissionMask.All, Util.UnixTimeSinceEpoch());
             }
@@ -723,7 +743,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (remoteClient.AgentId == oldAgentID)
                 {
                     CreateNewInventoryItem(
-                        remoteClient, item.CreatorId, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
+                        remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
                         item.BasePermissions, item.CurrentPermissions, item.EveryOnePermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
                 }
                 else
@@ -732,7 +752,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (((item.CurrentPermissions & (uint)PermissionMask.Transfer) != 0) && (m_scene.Permissions.BypassPermissions() || m_scene.Permissions.CanCopyUserInventory(remoteClient.AgentId, oldItemID)))
                     {
                         CreateNewInventoryItem(
-                            remoteClient, item.CreatorId, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
+                            remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
                             item.NextPermissions, item.NextPermissions, item.EveryOnePermissions & item.NextPermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
                     }
                 }
@@ -1202,6 +1222,7 @@ namespace OpenSim.Region.Framework.Scenes
                 taskItem.InvType = itemBase.InvType;
                 taskItem.OwnerID = itemBase.Owner;
                 taskItem.CreatorID = itemBase.CreatorIdAsUuid;
+                taskItem.CreatorData = itemBase.CreatorData;
                 taskItem.BasePermissions = itemBase.BasePermissions;
                 taskItem.CurrentPermissions = itemBase.CurrentPermissions;
                 taskItem.EveryonePermissions = itemBase.EveryOnePermissions;
@@ -1257,8 +1278,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             InventoryItemBase agentItem = new InventoryItemBase();
 
-            agentItem.ID = UUID.Random();
-            agentItem.CreatorId = taskItem.CreatorID.ToString();
+            agentItem.ID = UUID.Random ();
+            agentItem.CreatorId = taskItem.CreatorID.ToString ();
+            agentItem.CreatorData = taskItem.CreatorData;
             agentItem.Owner = destAgent;
             agentItem.AssetID = taskItem.AssetID;
             agentItem.Description = taskItem.Description;
@@ -1409,10 +1431,15 @@ namespace OpenSim.Region.Framework.Scenes
                         return null;
                 }
 
+                IUserManagement uman = m_scene.RequestModuleInterface<IUserManagement> ();
+                if (uman != null)
+                    uman.AddUser (item.CreatorIdAsUuid, item.CreatorData);
+
                 // Insert a copy of the item into the recipient
                 InventoryItemBase itemCopy = new InventoryItemBase();
                 itemCopy.Owner = recipient;
                 itemCopy.CreatorId = item.CreatorId;
+                itemCopy.CreatorData = item.CreatorData;
                 itemCopy.ID = UUID.Random();
                 itemCopy.AssetID = item.AssetID;
                 itemCopy.Description = item.Description;
@@ -1699,8 +1726,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             TaskInventoryItem destTaskItem = new TaskInventoryItem();
 
-            destTaskItem.ItemID = UUID.Random();
+            destTaskItem.ItemID = UUID.Random ();
             destTaskItem.CreatorID = srcTaskItem.CreatorID;
+            destTaskItem.CreatorData = srcTaskItem.CreatorData;
             destTaskItem.AssetID = srcTaskItem.AssetID;
             destTaskItem.GroupID = destPart.GroupID;
             destTaskItem.OwnerID = destPart.OwnerID;
@@ -1829,8 +1857,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             TaskInventoryItem destTaskItem = new TaskInventoryItem();
 
-            destTaskItem.ItemID = UUID.Random();
+            destTaskItem.ItemID = UUID.Random ();
             destTaskItem.CreatorID = srcTaskItem.CreatorID;
+            destTaskItem.CreatorData = srcTaskItem.CreatorData;
             destTaskItem.AssetID = srcTaskItem.AssetID;
             destTaskItem.GroupID = destPart.GroupID;
             destTaskItem.OwnerID = destPart.OwnerID;

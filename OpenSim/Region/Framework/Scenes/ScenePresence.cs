@@ -1215,6 +1215,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //Poke the animator a bit
                     Animator.GetMovementAnimation ();
+                    m_bodyRot = bodyRotation;
+                    AddNewMovement (Vector3.Zero, bodyRotation);
                     return;
                 }
                 if (agentData.UseClientAgentPosition)

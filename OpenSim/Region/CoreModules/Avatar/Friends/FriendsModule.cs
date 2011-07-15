@@ -265,7 +265,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             foreach (FriendInfo fi in friends)
             {
                 if (fi.TheirFlags == -1)
-                    outstanding.Add(fi.Friend);
+                    outstanding.Add (fi.Friend);
+                UUID friendID;
+                string url = "", first = "", last = "", secret = "";
+                if (HGUtil.ParseUniversalUserIdentifier (fi.Friend, out friendID, out url, out first, out last, out secret))
+                {
+                    IUserManagement userManagement = m_Scenes[0].RequestModuleInterface<IUserManagement> ();
+                    if (userManagement != null)
+                        userManagement.AddUser (friendID, fi.Friend);
+                }
             }
 
             GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID, (byte)InstantMessageDialog.FriendshipOffered,
@@ -274,13 +282,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             foreach (string fid in outstanding)
             {
                 UUID fromAgentID;
+                string url = "", first = "", last = "", secret = "";
                 if (!UUID.TryParse(fid, out fromAgentID))
-                    continue;
+                    if(!HGUtil.ParseUniversalUserIdentifier(fid, out fromAgentID, out url, out first, out last, out secret))
+                        continue;
 
                 UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, fromAgentID);
 
                 im.fromAgentID = fromAgentID;
-                im.fromAgentName = account.Name;
+                if (account != null)
+                    im.fromAgentName = account.Name;
+                else
+                    im.fromAgentName = first + " " + last;
                 im.offline = 1;
                 im.imSessionID = im.fromAgentID;
 
@@ -427,7 +440,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             {
                 UserAccount account = ((Scene)client.Scene).UserAccountService.GetUserAccount(UUID.Zero, friendID);
                 UUID folderID = ((Scene)client.Scene).InventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CallingCard).ID;
-                ccmodule.CreateCallingCard(client, friendID, folderID, account.Name);
+                if(account != null)
+                    ccmodule.CreateCallingCard(client, friendID, folderID, account.Name);
             }
                 
             // Try Local

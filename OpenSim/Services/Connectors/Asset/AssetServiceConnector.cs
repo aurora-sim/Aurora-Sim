@@ -96,7 +96,7 @@ namespace OpenSim.Services.Connectors
         public virtual AssetBase Get(string id)
         {
             AssetBase asset = null;
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string> (new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)

@@ -1689,7 +1689,7 @@ namespace OpenSim.Data.SQLite
             taskItem.Name = row["name"].ToString();
             taskItem.Description = row["description"].ToString();
             taskItem.CreationDate = Convert.ToUInt32(row["creationDate"].ToString());
-            taskItem.CreatorID = new UUID(row["creatorID"].ToString());
+            taskItem.CreatorIdentification = row["creatorID"].ToString();
             taskItem.OwnerID = new UUID(row["ownerID"].ToString());
             taskItem.LastOwnerID = new UUID(row["lastOwnerID"].ToString());
             taskItem.GroupID = new UUID(row["groupID"].ToString());
@@ -2036,7 +2036,7 @@ namespace OpenSim.Data.SQLite
             cmd.Parameters.AddWithValue(":name", item.Name);
             cmd.Parameters.AddWithValue(":description", item.Description);
             cmd.Parameters.AddWithValue(":creationDate", item.CreationDate);
-            cmd.Parameters.AddWithValue(":creatorID", item.CreatorID.ToString());
+            cmd.Parameters.AddWithValue (":creatorID", item.CreatorIdentification.ToString ());
             cmd.Parameters.AddWithValue(":ownerID", item.OwnerID.ToString());
             cmd.Parameters.AddWithValue(":lastOwnerID", item.LastOwnerID.ToString());
             cmd.Parameters.AddWithValue(":groupID", item.GroupID.ToString());

@@ -68,6 +68,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </value>
         private Stream m_loadStream;
 
+        /// <summary>
+        /// Record the creator id that should be associated with an asset.  This is used to adjust asset creator ids
+        /// after OSP resolution (since OSP creators are only stored in the item
+        /// </summary>
+        protected Dictionary<UUID, UUID> m_creatorIdForAssetId = new Dictionary<UUID, UUID> ();
+
         public InventoryArchiveReadRequest(
             IRegistryCore registry, UserAccount userInfo, string invPath, string loadPath, bool merge)
             : this(
@@ -395,16 +401,26 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 item.CreatorIdAsUuid = ospResolvedId;
 
-                // XXX: For now, don't preserve the OSPA in the creator id (which actually gets persisted to the
+                // Don't preserve the OSPA in the creator id (which actually gets persisted to the
                 // database).  Instead, replace with the UUID that we found.
-                item.CreatorId = ospResolvedId.ToString();
+                item.CreatorId = ospResolvedId.ToString ();
+
+                item.CreatorData = string.Empty;
             }
-            else
+            else if (item.CreatorData == null || item.CreatorData == String.Empty)
             {
-                item.CreatorIdAsUuid = m_userInfo.PrincipalID;
+                item.CreatorId = m_userInfo.PrincipalID.ToString ();
+                item.CreatorIdAsUuid = new UUID (item.CreatorId);
             }
-            
+
             item.Owner = m_userInfo.PrincipalID;
+
+            // Record the creator id for the item's asset so that we can use it later, if necessary, when the asset
+            // is loaded.
+            // FIXME: This relies on the items coming before the assets in the TAR file.  Need to create stronger
+            // checks for this, and maybe even an external tool for creating OARs which enforces this, rather than
+            // relying on native tar tools.
+            m_creatorIdForAssetId[item.AssetID] = item.CreatorIdAsUuid;
 
             // Reset folder ID to the one in which we want to load it
             item.Folder = loadFolder.ID;
@@ -487,7 +503,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 if (assetType == (sbyte)AssetType.Unknown)
                     m_log.WarnFormat("[INVENTORY ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
+                else if (assetType == (sbyte)AssetType.Object)
+                {
+                    if (m_creatorIdForAssetId.ContainsKey (UUID.Parse(uuid)))
+                    {
+                        string xmlData = Utils.BytesToString (data);
+                        List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup> ();
 
+                        sceneObjects.Add (OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat (xmlData, m_registry));
+
+                        foreach (SceneObjectGroup sog in sceneObjects)
+                            foreach (SceneObjectPart sop in sog.Parts)
+                                if (sop.CreatorData == null || sop.CreatorData == "")
+                                    sop.CreatorID = m_creatorIdForAssetId[UUID.Parse (uuid)];
+
+                        data = Utils.StringToBytes (OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.ToOriginalXmlFormat (sceneObjects[0]));
+                    }
+                }
                 //m_log.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
 
                 AssetBase asset = new AssetBase(UUID.Parse(uuid), "RandomName", (AssetType) assetType, UUID.Zero)

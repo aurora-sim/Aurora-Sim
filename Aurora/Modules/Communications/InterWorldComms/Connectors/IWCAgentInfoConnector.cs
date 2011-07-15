@@ -112,10 +112,10 @@ namespace Aurora.Modules
             return info;
         }
 
-        public string[] GetAgentsLocations(string[] userIDs)
+        public string[] GetAgentsLocations(string requestor, string[] userIDs)
         {
-            string[] info = m_localService.GetAgentsLocations(userIDs);
-            string[] info2 = m_remoteService.GetAgentsLocations (userIDs);
+            string[] info = m_localService.GetAgentsLocations (requestor, userIDs);
+            string[] info2 = m_remoteService.GetAgentsLocations (requestor, userIDs);
             if (info == null)
                 info = info2;
             else

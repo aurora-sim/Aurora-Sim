@@ -725,7 +725,10 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
                 }
                 else
+                {
+                    remoteClient.SendAlertMessage ("Failed to find the item you requested.");
                     return null;
+                }
             }
             if (group == null && doc.FirstChild.OuterXml.StartsWith ("<groups>"))
             {
@@ -733,7 +736,10 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 if (Groups.Count != 0)
                     return Groups[0];
                 else
+                {
+                    remoteClient.SendAlertMessage ("Failed to find the item you requested.");
                     return null;
+                }
             }
 
             string reason;
@@ -1076,6 +1082,13 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             IInventoryService invService = m_scene.RequestModuleInterface<IInventoryService> ();
             InventoryItemBase assetRequestItem = new InventoryItemBase (itemID, agentID);
             assetRequestItem = invService.GetItem (assetRequestItem);
+
+            if (assetRequestItem.CreatorData != null && assetRequestItem.CreatorData != string.Empty)
+            {
+                IUserManagement userManagement = m_scene.RequestModuleInterface<IUserManagement> ();
+                if (userManagement != null)
+                    userManagement.AddUser (assetRequestItem.CreatorIdAsUuid, assetRequestItem.CreatorData);
+            }
             return assetRequestItem;
         }
 

@@ -47,13 +47,13 @@ namespace Aurora.Services.DataService
 {
     public class LocalInventoryConnector : IInventoryData
     {
-        private IGenericData GD = null;
-        private string m_foldersrealm = "inventoryfolders";
-        private string m_itemsrealm = "inventoryitems";
+        protected IGenericData GD = null;
+        protected string m_foldersrealm = "inventoryfolders";
+        protected string m_itemsrealm = "inventoryitems";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public virtual void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AuthConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString ("InventoryConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
@@ -78,13 +78,13 @@ namespace Aurora.Services.DataService
 
         #region IInventoryData Members
 
-        public List<InventoryFolderBase> GetFolders(string[] fields, string[] vals)
+        public virtual List<InventoryFolderBase> GetFolders (string[] fields, string[] vals)
         {
             Dictionary<string, List<string>> retVal = GD.QueryNames (fields, vals, m_foldersrealm, "*");
             return ParseInventoryFolders (ref retVal);
         }
 
-        public List<InventoryItemBase> GetItems(string[] fields, string[] vals)
+        public virtual List<InventoryItemBase> GetItems (string[] fields, string[] vals)
         {
             string query = "";
             for (int i = 0; i < fields.Length; i++)
@@ -119,7 +119,7 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public OSDArray GetLLSDItems(string[] fields, string[] vals)
+        public virtual OSDArray GetLLSDItems (string[] fields, string[] vals)
         {
             string query = "";
             for (int i = 0; i < fields.Length; i++)
@@ -154,7 +154,7 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public bool HasAssetForUser (UUID userID, UUID assetID)
+        public virtual bool HasAssetForUser (UUID userID, UUID assetID)
         {
             List<string> q = GD.Query (new string[2] { "assetID", "avatarID" }, new object[2] { assetID, userID }, m_itemsrealm, "*");
             if(q != null && q.Count > 0)
@@ -162,7 +162,7 @@ namespace Aurora.Services.DataService
             return false;
         }
 
-        public string GetItemNameByAsset (UUID assetID)
+        public virtual string GetItemNameByAsset (UUID assetID)
         {
             List<string> q = GD.Query (new string[1] { "assetID" }, new object[1] { assetID }, m_itemsrealm, "inventoryName");
             if (q != null && q.Count > 0)
@@ -232,7 +232,7 @@ namespace Aurora.Services.DataService
             return array;
         }
 
-        public byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID)
+        public virtual byte[] FetchInventoryReply (OSDArray fetchRequest, UUID AgentID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
             contents.WriteStartMap("llsd"); //Start llsd
@@ -677,7 +677,7 @@ namespace Aurora.Services.DataService
                 item.NextPermissions = uint.Parse(retVal["inventoryNextPermissions"].ToString());
                 item.CurrentPermissions = uint.Parse(retVal["inventoryCurrentPermissions"].ToString());
                 item.InvType = int.Parse(retVal["invType"].ToString());
-                item.CreatorId = retVal["creatorID"].ToString();
+                item.CreatorIdentification = retVal["creatorID"].ToString();
                 item.BasePermissions = uint.Parse(retVal["inventoryBasePermissions"].ToString());
                 item.EveryOnePermissions = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
                 item.SalePrice = int.Parse(retVal["salePrice"].ToString());
@@ -696,14 +696,14 @@ namespace Aurora.Services.DataService
             return items;
         }
 
-        public bool StoreFolder (InventoryFolderBase folder)
+        public virtual bool StoreFolder (InventoryFolderBase folder)
         {
             GD.Delete(m_foldersrealm, new string[1] { "folderID" }, new object[1] { folder.ID });
             return GD.Insert(m_foldersrealm, new string[6]{"folderName","type","version","folderID","agentID","parentFolderID"},
                 new object[6]{folder.Name, folder.Type, folder.Version, folder.ID, folder.Owner, folder.ParentID});
         }
 
-        public bool StoreItem (InventoryItemBase item)
+        public virtual bool StoreItem (InventoryItemBase item)
         {
             GD.Delete(m_itemsrealm, new string[1] { "inventoryID" }, new object[1] { item.ID });
             return GD.Insert (m_itemsrealm, new string[20]{"assetID","assetType","inventoryName","inventoryDescription",
@@ -711,41 +711,41 @@ namespace Aurora.Services.DataService
                 "inventoryEveryOnePermissions","salePrice","saleType","creationDate","groupID","groupOwned",
                 "flags","inventoryID","avatarID","parentFolderID","inventoryGroupPermissions"}, new object[20]{
                     item.AssetID, item.AssetType, item.Name, item.Description, item.NextPermissions, item.CurrentPermissions,
-                    item.InvType, item.CreatorId, item.BasePermissions, item.EveryOnePermissions, item.SalePrice, item.SaleType,
+                    item.InvType, item.CreatorIdentification, item.BasePermissions, item.EveryOnePermissions, item.SalePrice, item.SaleType,
                     item.CreationDate, item.GroupID, item.GroupOwned ? "1" : "0", item.Flags, item.ID, item.Owner,
                     item.Folder, item.GroupPermissions});
         }
 
-        public bool DeleteFolders (string field, string val)
+        public virtual bool DeleteFolders (string field, string val)
         {
             return GD.Delete (m_foldersrealm, new string[1] { field }, new object[1] { val });
         }
 
-        public bool DeleteItems (string field, string val)
+        public virtual bool DeleteItems (string field, string val)
         {
             return GD.Delete (m_itemsrealm, new string[1] { field }, new object[1] { val });
         }
 
-        public bool MoveItem (string id, string newParent)
+        public virtual bool MoveItem (string id, string newParent)
         {
             return GD.Update (m_itemsrealm, new object[1] { newParent }, new string[1] { "parentFolderID" },
                 new string[1] { "inventoryID" }, new object[1] { id });
         }
 
-        public void IncrementFolder (UUID folderID)
+        public virtual void IncrementFolder (UUID folderID)
         {
             GD.Update (m_foldersrealm, new object[1] { folderID.ToString() }, new string[1] { "folderID" },
                 new string[1] { "version" }, new object[1] { "version + 1" });
         }
 
-        public void IncrementFolderByItem (UUID itemID)
+        public virtual void IncrementFolderByItem (UUID itemID)
         {
             List<string> values = GD.Query ("inventoryID", itemID, m_itemsrealm, "parentFolderID");
             if (values.Count > 0)
                 IncrementFolder(UUID.Parse (values[0]));
         }
 
-        public InventoryItemBase[] GetActiveGestures (UUID principalID)
+        public virtual InventoryItemBase[] GetActiveGestures (UUID principalID)
         {
             string query = String.Format ("where {0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType", (int)AssetType.Gesture);
 

@@ -1526,7 +1526,7 @@ namespace OpenSim.Data.MySQL
             taskItem.Name          = (String)row["name"];
             taskItem.Description   = (String)row["description"];
             taskItem.CreationDate  = Convert.ToUInt32(row["creationDate"]);
-            taskItem.CreatorID     = DBGuid.FromDB(row["creatorID"]);
+            taskItem.CreatorIdentification = row["creatorID"].ToString();
             taskItem.OwnerID       = DBGuid.FromDB(row["ownerID"]);
             taskItem.LastOwnerID   = DBGuid.FromDB(row["lastOwnerID"]);
             taskItem.GroupID       = DBGuid.FromDB(row["groupID"]);
@@ -1849,7 +1849,7 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("name", taskItem.Name);
             cmd.Parameters.AddWithValue("description", taskItem.Description);
             cmd.Parameters.AddWithValue("creationDate", taskItem.CreationDate);
-            cmd.Parameters.AddWithValue("creatorID", taskItem.CreatorID);
+            cmd.Parameters.AddWithValue ("creatorID", taskItem.CreatorIdentification);
             cmd.Parameters.AddWithValue("ownerID", taskItem.OwnerID);
             cmd.Parameters.AddWithValue("lastOwnerID", taskItem.LastOwnerID);
             cmd.Parameters.AddWithValue("groupID", taskItem.GroupID);
