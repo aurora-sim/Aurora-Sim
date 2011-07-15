@@ -380,8 +380,11 @@ namespace Aurora.BotManager
             }
             m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
+            if (m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp)
+                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            else
+                OnBotAgentUpdate (m_movementFlag, Quaternion.Identity);
 
-            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
 
@@ -422,7 +425,8 @@ namespace Aurora.BotManager
                 m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
             }
 
-            OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            if (m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp)
+                OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
         }
 
