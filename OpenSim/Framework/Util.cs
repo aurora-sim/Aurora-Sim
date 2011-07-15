@@ -545,6 +545,11 @@ namespace OpenSim.Framework
         /// <returns>An IP address, or null</returns>
         public static IPAddress GetHostFromDNS(string dnsAddress)
         {
+            dnsAddress = dnsAddress.Replace ("http://", "").Replace ("https://", "");
+            if (dnsAddress.EndsWith ("/"))
+                dnsAddress = dnsAddress.Remove (dnsAddress.Length - 1);
+            if (dnsAddress.Contains (":"))
+                dnsAddress = dnsAddress.Split (':')[0];
             IPAddress ipa;
             if (m_dnsCache.TryGetValue (dnsAddress, out ipa))
                 return ipa;
