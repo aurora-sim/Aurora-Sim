@@ -86,6 +86,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float CAPSULE_RADIUS = 0.37f;
         public float CAPSULE_LENGTH = 2.140599f;
         private bool flying = false;
+        private bool realFlying = false;
         private bool m_iscolliding = false;
 
         int m_colliderfilter = 0;
@@ -265,7 +266,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool Flying
         {
             get { return flying; }
-            set { flying = value; }
+            set 
+            {
+                realFlying = value;
+                flying = value; 
+            }
         }
 
         /// <summary>
@@ -970,7 +975,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (m_iscolliding)
                 {
-                    if (!flying)
+                    if (!realFlying)//If there is a ground collision, it sets flying to false, so check against real flying
                     {
                         // We're standing or walking on something
                         if (_target_velocity.X != 0.0f)
@@ -985,6 +990,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         // We're flying and colliding with something
                         vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.5f;
                         vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.5f;
+                        if(_target_velocity.Z > 0)
+                            vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D * 0.5f;
                     }
                 }
                 else
