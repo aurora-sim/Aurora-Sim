@@ -355,12 +355,21 @@ namespace Aurora.Framework
                 try
                 {
                     //Ask what is my ip for it
-                    externalIp = utf8.GetString (webClient.DownloadData ("http://automation.whatismyip.com/n09230945.asp"));
+                    externalIp = utf8.GetString (webClient.DownloadData ("http://checkip.dyndns.org/"));
+                    //Remove the HTML stuff
+                    externalIp = externalIp.Remove (0, 76).Split(new string[1]{"</body>"}, StringSplitOptions.RemoveEmptyEntries)[0];
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    m_log.Error("FAILED TO GET EXTERNAL HOST NAME: " + ex.ToString() + ", setting to internal...");
-                    externalIp = "127.0.0.1";
+                    try
+                    {
+                        externalIp = utf8.GetString (webClient.DownloadData ("http://automation.whatismyip.com/n09230945.asp"));
+                    }
+                    catch (Exception iex)
+                    {
+                        m_log.Error ("FAILED TO GET EXTERNAL HOST NAME: " + iex.ToString () + ", setting to internal...");
+                        externalIp = "127.0.0.1";
+                    }
                 }
                 CachedExternalIP = externalIp;
                 return externalIp;

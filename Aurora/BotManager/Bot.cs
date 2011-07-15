@@ -383,7 +383,7 @@ namespace Aurora.BotManager
             if (m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp)
                 OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
             else
-                OnBotAgentUpdate (m_movementFlag, Quaternion.Identity);
+                OnBotAgentUpdate ((uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP, Quaternion.Identity);
 
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
