@@ -533,10 +533,10 @@ namespace OpenSim.Services.CapsService
                 List<UUID> textures = new List<UUID> ();
                 for (int i = 0; i < texture_list.Count; i++)
                 {
-                    AssetBase textureAsset = new AssetBase (UUID.Random (), assetName, (sbyte)AssetType.Texture, m_service.AgentID.ToString ());
+                    AssetBase textureAsset = new AssetBase (UUID.Random (), assetName, AssetType.Texture, m_service.AgentID);
                     textureAsset.Data = texture_list[i].AsBinary ();
                     m_assetService.Store (textureAsset);
-                    textures.Add(textureAsset.FullID);
+                    textures.Add(textureAsset.ID);
                 }
                 for (int i = 0; i < mesh_list.Count; i++)
                 {
@@ -580,12 +580,12 @@ namespace OpenSim.Services.CapsService
                     }
                     pbs.TextureEntry = textureEntry.GetBytes();
 
-                    AssetBase meshAsset = new AssetBase (UUID.Random (), assetName, (sbyte)AssetType.Mesh, m_service.AgentID.ToString ());
+                    AssetBase meshAsset = new AssetBase (UUID.Random (), assetName, AssetType.Mesh, m_service.AgentID);
                     meshAsset.Data = mesh_list[i].AsBinary ();
                     m_assetService.Store (meshAsset);
                     
                     pbs.SculptEntry = true;
-                    pbs.SculptTexture = meshAsset.FullID;
+                    pbs.SculptTexture = meshAsset.ID;
                     pbs.SculptType = (byte)SculptType.Mesh;
                     pbs.SculptData = meshAsset.Data;
 
@@ -668,15 +668,14 @@ namespace OpenSim.Services.CapsService
                         break;
                 }
             }
-            AssetBase asset = new AssetBase(assetID, assetName, assType, m_service.AgentID.ToString());
-            asset.Data = data;
+            AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
             m_assetService.Store(asset);
 
             InventoryItemBase item = new InventoryItemBase();
             item.Owner = m_service.AgentID;
             item.CreatorId = m_service.AgentID.ToString();
             item.ID = inventoryItem;
-            item.AssetID = asset.FullID;
+            item.AssetID = asset.ID;
             item.Description = assetDescription;
             item.Name = assetName;
             item.AssetType = assType;

@@ -134,7 +134,7 @@ namespace OpenSim.Services.AvatarService
                     //Remove the old baked textures then from the DB as we don't want to keep them around
                     foreach (UUID texture in wearable.GetItems().Values)
                     {
-                        service.Delete(texture.ToString());
+                        service.Delete(texture);
                     }
                 }
                 return;

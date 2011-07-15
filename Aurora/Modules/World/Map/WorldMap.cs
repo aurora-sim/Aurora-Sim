@@ -900,19 +900,17 @@ namespace Aurora.Modules
             AssetBase Mapasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainImageID,
                 "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                (sbyte)AssetType.Simstate,
-                m_scene.RegionInfo.RegionID.ToString());
+                AssetType.Simstate,
+                m_scene.RegionInfo.RegionID);
             Mapasset.Description = m_scene.RegionInfo.RegionName;
-            Mapasset.Temporary = false;
             Mapasset.Flags = AssetFlags.Deletable;
 
             AssetBase Terrainasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID,
                 "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                (sbyte)AssetType.Simstate,
-                m_scene.RegionInfo.RegionID.ToString());
+                AssetType.Simstate,
+                m_scene.RegionInfo.RegionID);
             Terrainasset.Description = m_scene.RegionInfo.RegionName;
-            Terrainasset.Temporary = false;
             Terrainasset.Flags = AssetFlags.Deletable;
 
             m_scene.RegionInfo.RegionSettings.Save();
@@ -953,9 +951,9 @@ namespace Aurora.Modules
 
             //Delete the old assets
             if(lastMapRegionUUID != UUID.Zero)
-                m_scene.AssetService.Delete(lastMapRegionUUID.ToString());
+                m_scene.AssetService.Delete(lastMapRegionUUID);
             if (lastTerrainRegionUUID != UUID.Zero)
-                m_scene.AssetService.Delete(lastTerrainRegionUUID.ToString());
+                m_scene.AssetService.Delete(lastTerrainRegionUUID);
 
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);

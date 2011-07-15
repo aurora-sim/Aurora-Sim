@@ -94,7 +94,7 @@ namespace OpenSim.Services
                 {
                     bool RetVal = m_AssetService.GetExists(p[0]);
                     XmlSerializer xs =
-                                   new XmlSerializer(typeof(AssetMetadata));
+                                   new XmlSerializer(typeof(AssetBase));
                     result = WebUtils.SerializeResult(xs, RetVal);
 
                     if (result == null)
@@ -117,12 +117,12 @@ namespace OpenSim.Services
             }
             else if (p.Length > 1 && p[1] == "metadata")
             {
-                AssetMetadata metadata = m_AssetService.GetMetadata(p[0]);
+                AssetBase metadata = m_AssetService.GetMetadata(p[0]);
 
                 if (metadata != null)
                 {
                     XmlSerializer xs =
-                            new XmlSerializer(typeof(AssetMetadata));
+                            new XmlSerializer(typeof(AssetBase));
                     result = WebUtils.SerializeResult(xs, metadata);
 
                     httpResponse.StatusCode = (int)HttpStatusCode.OK;

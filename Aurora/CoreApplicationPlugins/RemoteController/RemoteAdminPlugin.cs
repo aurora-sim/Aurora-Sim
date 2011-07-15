@@ -1850,11 +1850,24 @@ namespace OpenSim.CoreApplicationPlugins
                     assets = doc.GetElementsByTagName("RequiredAsset");
                     foreach (XmlNode assetNode in assets)
                     {
-                        AssetBase asset = new AssetBase(UUID.Random(), GetStringAttribute(assetNode, "name", ""), SByte.Parse(GetStringAttribute(assetNode, "type", "")), UUID.Zero.ToString());
-                        asset.Description = GetStringAttribute(assetNode,"desc","");
-                        asset.Local       = Boolean.Parse(GetStringAttribute(assetNode,"local",""));
-                        asset.Temporary   = Boolean.Parse(GetStringAttribute(assetNode,"temporary",""));
-                        asset.Data        = Convert.FromBase64String(assetNode.InnerText);
+                        AssetBase asset = new AssetBase(UUID.Random(), GetStringAttribute(assetNode, "name", ""),
+                                                        (AssetType)
+                                                        SByte.Parse(GetStringAttribute(assetNode, "type", "")),
+                                                        UUID.Zero)
+                                              {
+                                                  Description = GetStringAttribute(assetNode, "desc", ""),
+                                                  Data = Convert.FromBase64String(assetNode.InnerText),
+                                                  Flags = ((Boolean.Parse(GetStringAttribute(assetNode, "local", "")))
+                                                               ? AssetFlags.Local
+                                                               : AssetFlags.Normal) |
+                                                          ((Boolean.Parse(GetStringAttribute(assetNode, "temporary", "")))
+                                                               ? AssetFlags.Temperary
+                                                               : AssetFlags.Normal)
+                                              };
+
+
+
+
                         assetService.Store(asset);
                     }
 

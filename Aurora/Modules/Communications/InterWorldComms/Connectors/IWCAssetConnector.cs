@@ -104,9 +104,9 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public AssetMetadata GetMetadata(string id)
+        public AssetBase GetMetadata(string id)
         {
-            AssetMetadata asset = m_localService.GetMetadata(id);
+            AssetBase asset = m_localService.GetMetadata(id);
             if (asset == null)
                 asset = m_remoteService.GetMetadata(id);
             return asset;
@@ -144,14 +144,14 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public string Store(AssetBase asset)
+        public UUID Store(AssetBase asset)
         {
-            string retVal = m_localService.Store(asset);
+            UUID retVal = m_localService.Store(asset);
             //m_remoteService.Store(asset);
             return retVal;
         }
 
-        public bool UpdateContent(string id, byte[] data)
+        public bool UpdateContent(UUID id, byte[] data)
         {
             bool asset = m_localService.UpdateContent(id, data);
             if (!asset)
@@ -159,7 +159,7 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public bool Delete(string id)
+        public bool Delete(UUID id)
         {
             bool asset = m_localService.Delete(id);
             if (!asset)

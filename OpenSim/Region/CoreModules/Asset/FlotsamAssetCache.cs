@@ -252,9 +252,9 @@ namespace Flotsam.RegionModules.AssetCache
         {
             if (asset != null)
             {
-                UpdateMemoryCache(asset.ID, asset);
+                UpdateMemoryCache(asset.ID.ToString(), asset);
 
-                string filename = GetFileName(asset.ID);
+                string filename = GetFileName(asset.ID.ToString());
 
                 try
                 {
@@ -861,10 +861,11 @@ namespace Flotsam.RegionModules.AssetCache
         #region IAssetService Members
 
 
-        public AssetMetadata GetMetadata(string id)
+        public AssetBase GetMetadata(string id)
         {
             AssetBase asset = Get(id);
-            return asset.Metadata;
+            asset.Data = new byte[]{};
+            return asset;
         }
 
         public byte[] GetData(string id)
@@ -880,11 +881,11 @@ namespace Flotsam.RegionModules.AssetCache
             return true;
         }
 
-        public string Store(AssetBase asset)
+        public UUID Store(AssetBase asset)
         {
-            if (asset.FullID == UUID.Zero)
+            if (asset.ID == UUID.Zero)
             {
-                asset.FullID = UUID.Random();
+                asset.ID = UUID.Random();
             }
 
             Cache(asset);
@@ -893,17 +894,17 @@ namespace Flotsam.RegionModules.AssetCache
 
         }
 
-        public bool UpdateContent(string id, byte[] data)
+        public bool UpdateContent(UUID id, byte[] data)
         {
-            AssetBase asset = Get(id);
+            AssetBase asset = Get(id.ToString());
             asset.Data = data;
             Cache(asset);
             return true;
         }
 
-        public bool Delete(string id)
+        public bool Delete(UUID id)
         {
-            Expire(id);
+            Expire(id.ToString());
             return true;
         }
 

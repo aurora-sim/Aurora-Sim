@@ -331,9 +331,9 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             {
                 string assetID = "j2kCache_" + AssetId.ToString();
 
-                AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, (sbyte)AssetType.Notecard, m_scene.RegionInfo.RegionID.ToString());
-                layerDecodeAsset.Local = true;
-                layerDecodeAsset.Temporary = true;
+                AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, AssetType.Notecard,
+                                                           m_scene.RegionInfo.RegionID)
+                                                 {Flags = AssetFlags.Local | AssetFlags.Temperary};
 
                 #region Serialize Layer Data
 

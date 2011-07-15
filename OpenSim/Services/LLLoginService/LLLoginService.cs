@@ -1505,9 +1505,9 @@ namespace AvatarArchives
             {
                 OSDMap assetData = new OSDMap();
                 m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
-                CreateMetaDataMap(asset.Metadata, assetData);
+                CreateMetaDataMap(asset, assetData);
                 assetData.Add("AssetData", OSD.FromBinary(asset.Data));
-                assetMap[asset.ID] = assetData;
+                assetMap[asset.ID.ToString()] = assetData;
             }
             else
             {
@@ -1516,13 +1516,13 @@ namespace AvatarArchives
             }
         }
 
-        private void CreateMetaDataMap(AssetMetadata data, OSDMap map)
+        private void CreateMetaDataMap(AssetBase data, OSDMap map)
         {
-            map["ContentType"] = OSD.FromString(data.ContentType);
+            map["ContentType"] = OSD.FromString(data.TypeString);
             map["CreationDate"] = OSD.FromDate(data.CreationDate);
-            map["CreatorID"] = OSD.FromString(data.CreatorID);
+            map["CreatorID"] = OSD.FromUUID(data.CreatorID);
             map["Description"] = OSD.FromString(data.Description);
-            map["ID"] = OSD.FromString(data.ID);
+            map["ID"] = OSD.FromUUID(data.ID);
             map["Name"] = OSD.FromString(data.Name);
             map["Type"] = OSD.FromInteger(data.Type);
         }
@@ -1531,22 +1531,13 @@ namespace AvatarArchives
         {
             AssetBase asset = new AssetBase();
             asset.Data = map["AssetData"].AsBinary();
-
-            AssetMetadata md = new AssetMetadata();
-            md.ContentType = map["ContentType"].AsString();
-            md.CreationDate = map["CreationDate"].AsDate();
-            md.CreatorID = map["CreatorID"].AsString();
-            md.Description = map["Description"].AsString();
-            md.ID = map["ID"].AsString();
-            md.Name = map["Name"].AsString();
-            md.Type = (sbyte)map["Type"].AsInteger();
-
-            asset.Metadata = md;
-            asset.ID = md.ID;
-            asset.FullID = UUID.Parse(md.ID);
-            asset.Name = md.Name;
-            asset.Type = md.Type;
-
+            asset.TypeString = map["ContentType"].AsString();
+            asset.CreationDate = map["CreationDate"].AsDate();
+            asset.CreatorID = map["CreatorID"].AsUUID();
+            asset.Description = map["Description"].AsString();
+            asset.ID = map["ID"].AsUUID();
+            asset.Name = map["Name"].AsString();
+            asset.Type = map["Type"].AsInteger();
             return asset;
         }
 
@@ -1576,8 +1567,8 @@ namespace AvatarArchives
                 if (asset == null) //Don't overwrite
                 {
                     asset = LoadAssetBase(assetMap);
-                    UUID oldassetID = UUID.Parse(asset.ID);
-                    UUID newAssetID = UUID.Parse(AssetService.Store(asset));
+                    UUID oldassetID = asset.ID;
+                    UUID newAssetID = AssetService.Store(asset);
                     //Fix the IDs
                     AvatarWearable[] wearables = new AvatarWearable[appearance.Wearables.Length];
                     appearance.Wearables.CopyTo(wearables, 0);

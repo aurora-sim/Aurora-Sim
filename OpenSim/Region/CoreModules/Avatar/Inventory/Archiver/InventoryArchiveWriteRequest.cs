@@ -299,7 +299,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 foreach (AssetBase asset in m_assetsToAdd)
                 {
-                    m_assetUuids[asset.FullID] = (AssetType)asset.Type;
+                    m_assetUuids[asset.ID] = (AssetType)asset.Type;
                 }
                 new AssetsRequest(
                     new AssetsArchiver(m_archiveWriter), m_assetUuids,

@@ -250,7 +250,7 @@ namespace OpenSim.Region.CoreModules.Asset
 //                m_log.DebugFormat("[CENOME ASSET CACHE]: Caching asset {0}", asset.ID);
                 
                 long size = asset.Data != null ? asset.Data.Length : 1;
-                m_cache.Set(asset.ID, asset, size);
+                m_cache.Set(asset.ID.ToString(), asset, size);
                 m_cachedCount++;
             }
 

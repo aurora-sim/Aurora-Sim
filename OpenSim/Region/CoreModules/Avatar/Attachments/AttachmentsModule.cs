@@ -862,7 +862,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (item != null)
                 {
                     AssetBase asset = new AssetBase(UUID.Random(), grp.Name,
-                        (sbyte)AssetType.Object, remoteClient.AgentId.ToString());
+                        AssetType.Object, remoteClient.AgentId);
                     asset.Description = grp.RootChild.Description;
                     asset.Data = Utils.StringToBytes(sceneObjectXml);
                     m_scene.AssetService.Store(asset);
@@ -875,7 +875,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         item.Folder = folder.ID;
                     }
 
-                    item.AssetID = asset.FullID;
+                    item.AssetID = asset.ID;
                     item.Description = asset.Description;
                     item.Name = asset.Name;
                     item.AssetType = asset.Type;

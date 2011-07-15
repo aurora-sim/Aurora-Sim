@@ -229,13 +229,12 @@ namespace OpenSim.Services.CapsService
                         }
                         else
                         {
-                            AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, (sbyte)AssetType.Texture, texture.Metadata.CreatorID);
+                            AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, (sbyte)AssetType.Texture, texture.CreatorID);
                             newTexture.Data = ConvertTextureData(texture, format);
                             if (newTexture.Data.Length == 0)
                                 return false; // !!! Caller try another codec, please!
 
-                            newTexture.Flags = AssetFlags.Collectable;
-                            newTexture.Temporary = true;
+                            newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temperary;
                             m_assetService.Store(newTexture);
                             WriteTextureData(httpRequest, httpResponse, newTexture, format);
                             newTexture = null;
@@ -296,7 +295,7 @@ namespace OpenSim.Services.CapsService
                         response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 
                     response.ContentLength = len;
-                    response.ContentType = texture.Metadata.ContentType;
+                    response.ContentType = texture.TypeString;
                     response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
 
                     response.Body.Write(texture.Data, start, len);
@@ -312,9 +311,9 @@ namespace OpenSim.Services.CapsService
                 // Full content request
                 response.StatusCode = (int)System.Net.HttpStatusCode.OK;
                 response.ContentLength = texture.Data.Length;
-                response.ContentType = texture.Metadata.ContentType;
+                response.ContentType = texture.TypeString;
                 if (format == DefaultFormat)
-                    response.ContentType = texture.Metadata.ContentType;
+                    response.ContentType = texture.TypeString;
                 else
                     response.ContentType = "image/" + format;
                 response.Body.Write(texture.Data, 0, texture.Data.Length);
@@ -503,11 +502,9 @@ namespace OpenSim.Services.CapsService
         {
             m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset;
-            asset = new AssetBase(assetID, "Baked Texture", (sbyte)AssetType.Texture, m_service.AgentID.ToString());
+            asset = new AssetBase(assetID, "Baked Texture", AssetType.Texture, m_service.AgentID);
             asset.Data = data;
-            asset.Temporary = true;
-            asset.Flags = AssetFlags.Deletable;
-            asset.Local = false;
+            asset.Flags = AssetFlags.Deletable | AssetFlags.Temperary;
 
             m_assetService.Store(asset);
         }

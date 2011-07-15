@@ -243,18 +243,17 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                     return false;
                 }
 
-                AssetBase asset = new AssetBase(UUID.Random(), part.Name,
-                    (sbyte)AssetType.Object, group.OwnerID.ToString());
-                asset.Description = part.Description;
-                asset.Data = Utils.StringToBytes(sceneObjectXml);
-                m_scene.AssetService.Store(asset);
+                    AssetBase asset = new AssetBase(UUID.Random(), part.Name,
+                                                    AssetType.Object, group.OwnerID)
+                                          {Description = part.Description, Data = Utils.StringToBytes(sceneObjectXml)};
+                    m_scene.AssetService.Store(asset);
 
                 InventoryItemBase item = new InventoryItemBase();
                 item.CreatorId = part.CreatorID.ToString();
 
                 item.ID = UUID.Random();
                 item.Owner = remoteClient.AgentId;
-                item.AssetID = asset.FullID;
+                item.AssetID = asset.ID;
                 item.Description = asset.Description;
                 item.Name = asset.Name;
                 item.AssetType = asset.Type;

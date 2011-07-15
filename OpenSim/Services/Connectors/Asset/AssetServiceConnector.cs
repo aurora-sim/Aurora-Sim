@@ -128,14 +128,18 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public virtual AssetMetadata GetMetadata(string id)
+        public virtual AssetBase GetMetadata(string id)
         {
             if (m_Cache != null)
             {
                 AssetBase fullAsset = m_Cache.Get(id);
 
                 if (fullAsset != null)
-                    return fullAsset.Metadata;
+                {
+                    // thinking I should not include the data since this use to request metadata
+                    fullAsset.Data = new byte[]{};
+                    return fullAsset;
+                }
             }
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
@@ -145,8 +149,8 @@ namespace OpenSim.Services.Connectors
             {
                 string uri = m_ServerURI + "/" + id + "/metadata";
 
-                AssetMetadata asset = SynchronousRestObjectRequester.
-                        MakeRequest<int, AssetMetadata>("GET", uri, 0);
+                AssetBase asset = SynchronousRestObjectRequester.
+                        MakeRequest<int, AssetBase>("GET", uri, 0);
                 if (asset != null)
                     return asset;
             }
@@ -232,9 +236,9 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public virtual string Store(AssetBase asset)
+        public virtual UUID Store(AssetBase asset)
         {
-            if (asset.Local)
+            if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
             {
                 if (m_Cache != null)
                     m_Cache.Cache(asset);
@@ -242,7 +246,7 @@ namespace OpenSim.Services.Connectors
                 return asset.ID;
             }
 
-            string newID = string.Empty;
+            UUID newID = UUID.Zero;
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string> (new string[1] { m_serverURL });
@@ -252,20 +256,19 @@ namespace OpenSim.Services.Connectors
 
                 try
                 {
-                    newID = SynchronousRestObjectRequester.
-                            MakeRequest<AssetBase, string>("POST", uri, asset);
+                    UUID.TryParse(SynchronousRestObjectRequester.
+                            MakeRequest<AssetBase, string>("POST", uri, asset), out newID);
                 }
                 catch (Exception e)
                 {
                     m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
                 }
 
-                if (newID != String.Empty)
+                if (newID != UUID.Zero)
                 {
                     // Placing this here, so that this work with old asset servers that don't send any reply back
                     // SynchronousRestObjectRequester returns somethins that is not an empty string
-                    if (newID != null)
-                        asset.ID = newID;
+                    asset.ID =  newID;
 
                     if (m_Cache != null)
                         m_Cache.Cache(asset);
@@ -274,21 +277,18 @@ namespace OpenSim.Services.Connectors
             return newID;
         }
 
-        public virtual bool UpdateContent(string id, byte[] data)
+        public virtual bool UpdateContent(UUID id, byte[] data)
         {
             AssetBase asset = null;
 
             if (m_Cache != null)
-                asset = m_Cache.Get(id);
+                asset = m_Cache.Get(id.ToString());
 
             if (asset == null)
             {
-                AssetMetadata metadata = GetMetadata(id);
-                if (metadata == null)
+                asset = GetMetadata(id.ToString());
+                if (asset == null)
                     return false;
-
-                asset = new AssetBase(metadata.FullID, metadata.Name, metadata.Type, UUID.Zero.ToString());
-                asset.Metadata = metadata;
             }
             asset.Data = data;
 
@@ -311,7 +311,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public virtual bool Delete(string id)
+        public virtual bool Delete(UUID id)
         {
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
@@ -324,7 +324,7 @@ namespace OpenSim.Services.Connectors
                         MakeRequest<int, bool>("DELETE", uri, 0);
             }
             if (m_Cache != null)
-                m_Cache.Expire(id);
+                m_Cache.Expire(id.ToString());
 
             return true;
         }

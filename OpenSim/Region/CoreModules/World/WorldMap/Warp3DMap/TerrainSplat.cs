@@ -156,15 +156,11 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                                 {
                                     Data = data,
                                     Description = "PNG",
-                                    Flags = AssetFlags.Collectable,
-                                    FullID = cacheID,
-                                    ID = cacheID.ToString (),
-                                    Local = true,
+                                    Flags = AssetFlags.Collectable | AssetFlags.Temperary | AssetFlags.Local,
+                                    ID = cacheID,
                                     Name = String.Empty,
-                                    Temporary = true,
-                                    Type = (sbyte)AssetType.Unknown
+                                    TypeString = "image/png"
                                 };
-                                newAsset.Metadata.ContentType = "image/png";
                                 assetService.Store (newAsset);
                             }
                         }

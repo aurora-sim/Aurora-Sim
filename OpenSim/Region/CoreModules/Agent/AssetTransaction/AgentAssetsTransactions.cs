@@ -176,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                     asset.Name = item.Name;
                     asset.Description = item.Description;
                     asset.Type = (sbyte)item.Type;
-                    item.AssetID = asset.FullID;
+                    item.AssetID = asset.ID;
 
                     IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
                     if (monitorModule != null)
@@ -217,14 +217,14 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                     asset = GetTransactionAsset(transactionID);
                 }
 
-                if (asset != null && asset.FullID == assetID)
+                if (asset != null && asset.ID == assetID)
                 {
                     // Assets never get updated, new ones get created
-                    asset.FullID = UUID.Random();
+                    asset.ID = UUID.Random();
                     asset.Name = item.Name;
                     asset.Description = item.Description;
                     asset.Type = (sbyte)item.AssetType;
-                    item.AssetID = asset.FullID;
+                    item.AssetID = asset.ID;
 
                     Manager.MyScene.AssetService.Store(asset);
                 }

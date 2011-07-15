@@ -50,14 +50,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public UUID SaveBitmap(Bitmap data, bool lossless, bool temporary)
         {
-            AssetBase asset = new AssetBase(UUID.Random(), "MRMDynamicImage", (sbyte)AssetType.Texture, m_scene.RegionInfo.RegionID.ToString());
-            asset.Data = OpenJPEG.EncodeFromImage(data, lossless);
-            asset.Description = "MRM Image";
-            asset.Local = false;
-            asset.Temporary = temporary;
+            AssetBase asset = new AssetBase(UUID.Random(), "MRMDynamicImage", AssetType.Texture,
+                                            m_scene.RegionInfo.RegionID)
+                                  {
+                                      Data = OpenJPEG.EncodeFromImage(data, lossless),
+                                      Description = "MRM Image",
+                                      Flags = (temporary) ? AssetFlags.Temperary : 0
+                                  };
             m_scene.AssetService.Store(asset);
 
-            return asset.FullID;
+            return asset.ID;
         }
 
         public Bitmap LoadBitmap(UUID assetID)

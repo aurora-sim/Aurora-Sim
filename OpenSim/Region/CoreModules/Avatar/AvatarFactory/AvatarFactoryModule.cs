@@ -692,8 +692,8 @@ textures 1
                         if (m_underPantsUUID == UUID.Zero)
                         {
                             m_underPantsUUID = UUID.Random ();
-                            AssetBase asset = new AssetBase (m_underPantsUUID.ToString (), "Default Underpants", (sbyte)AssetType.Clothing, UUID.Zero.ToString ());
-                            asset.Data = Utils.StringToBytes (m_defaultUnderPants);
+                            AssetBase asset = new AssetBase(m_underPantsUUID, "Default Underpants", AssetType.Clothing,
+                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderPants)};
                             m_scene.AssetService.Store (asset);
                         }
                         item.CreatorId = UUID.Zero.ToString ();
@@ -719,8 +719,8 @@ textures 1
                         if (m_underShirtUUID == UUID.Zero)
                         {
                             m_underShirtUUID = UUID.Random ();
-                            AssetBase asset = new AssetBase (m_underShirtUUID.ToString (), "Default Undershirt", (sbyte)AssetType.Clothing, UUID.Zero.ToString ());
-                            asset.Data = Utils.StringToBytes (m_defaultUnderShirt);
+                            AssetBase asset = new AssetBase(m_underShirtUUID, "Default Undershirt", AssetType.Clothing,
+                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderShirt)};
                             m_scene.AssetService.Store (asset);
                         }
                         item.CreatorId = UUID.Zero.ToString ();
