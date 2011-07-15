@@ -131,9 +131,12 @@ namespace OpenSim.Services.MessagingService
                                 else
                                 {
                                     IUserAgentService uas = m_registry.RequestModuleInterface<IUserAgentService> ();
-                                    bool online = uas.RemoteStatusNotification (friend, us, isOnline);
-                                    if (online)
-                                        OnlineFriends.Add (FriendToInform);
+                                    if (uas != null)
+                                    {
+                                        bool online = uas.RemoteStatusNotification (friend, us, isOnline);
+                                        if (online)
+                                            OnlineFriends.Add (FriendToInform);
+                                    }
                                 }
                             }
                         }
