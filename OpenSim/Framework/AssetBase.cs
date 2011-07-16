@@ -53,44 +53,62 @@ namespace OpenSim.Framework
     public class AssetBase : IDisposable
     {
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private byte[] myData = new byte[] { };
+        private string idString = "";
+
         #region Initiation
 
         // This is needed for .NET serialization!!!
         // Do NOT "Optimize" away!
         public AssetBase()
         {
-            DatabaseTable = "assets";
-            HostUri = "";
-
-            ID = UUID.Zero;
-            TypeAsset = AssetType.Unknown;
-            CreatorID = UUID.Zero;
+            SimpleInitialize();
         }
 
         public AssetBase(string assetID)
         {
-            ID = UUID.Parse(assetID);
+            SimpleInitialize();
+            IDString = assetID;
         }
 
         public AssetBase(UUID assetID)
         {
+            SimpleInitialize();
             ID = assetID;
         }
 
         public AssetBase(string assetID, string name, AssetType assetType, UUID creatorID)
         {
-            Initiate(UUID.Parse(assetID), name, assetType, creatorID);
+            Initiate(assetID, name, assetType, creatorID);
         }
 
         public AssetBase(UUID assetID, string name, AssetType assetType, UUID creatorID)
         {
-            Initiate(assetID, name, assetType, creatorID);
+            Initiate(assetID.ToString(), name, assetType, creatorID);
         }
 
-        public void Initiate(UUID assetID, string name, AssetType assetType, UUID creatorID)
+        private void SimpleInitialize()
         {
             DatabaseTable = "assets";
+            ID = UUID.Zero;
+            TypeAsset = AssetType.Unknown;
+            CreatorID = UUID.Zero;
+            OwnerID = UUID.Zero;
+            Description = "";
+            Name = "";
             HostUri = "";
+            LastAccessed = DateTime.Now;
+            CreationDate = DateTime.Now;
+            HashCode = "";
+            ParentID = UUID.Zero;
+            MetaOnly = true;
+            Data = new byte[] { };
+            Flags = AssetFlags.Normal;
+        }
+
+        public void Initiate(string assetID, string name, AssetType assetType, UUID creatorID)
+        {
+            SimpleInitialize();
             if (assetType == AssetType.Unknown)
             {
                 System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(true);
@@ -98,7 +116,7 @@ namespace OpenSim.Framework
                                   name, assetID, trace);
             }
 
-            ID = assetID;
+            IDString = assetID;
             Name = name;
             TypeAsset = assetType;
             CreatorID = creatorID;
@@ -158,22 +176,48 @@ namespace OpenSim.Framework
             }
         }
 
+        #endregion
+
+        #region properties
+
         public string TypeString
         {
             get { return SLUtil.SLAssetTypeToContentType((int)TypeAsset); }
             set { TypeAsset = (AssetType)SLUtil.ContentTypeToSLAssetType(value); }
         }
 
-        #endregion
+        public virtual byte[] Data
+        {
+            get { return myData; }
+            set
+            {
+                myData = value;
+                MetaOnly = (myData.Length >= 1);
+            }
+        }
 
-        #region properties
-
-        public virtual byte[] Data { get; set; }
         public UUID ID { get; set; }
+        // This is only used for cache
+        public string IDString
+        {
+            get { return idString.Length > 0 ? idString : ID.ToString(); }
+            set
+            {
+                UUID k;
+                if (UUID.TryParse(value, out k))
+                    ID = k;
+                else if ((value.Length >= 37) && (UUID.TryParse(value.Substring(value.Length - 36), out k)))
+                {
+                    ID = k;
+                    idString = value;
+                }
+                else idString = value;
+            }
+        }
         public string Name { get; set; }
         public string Description { get; set; }
         public AssetType TypeAsset { get; set; }
-        public int Type { get { return (int) TypeAsset; } set { TypeAsset = (AssetType)value; } }
+        public int Type { get { return (int)TypeAsset; } set { TypeAsset = (AssetType)value; } }
         public AssetFlags Flags { get; set; }
         public string DatabaseTable { get; set; }
         public UUID OwnerID { get; set; }
@@ -184,6 +228,8 @@ namespace OpenSim.Framework
         public string HashCode { get; set; }
         public UUID ParentID { get; set; }
         public bool MetaOnly { get; set; }
+
+
 
         public override string ToString()
         {

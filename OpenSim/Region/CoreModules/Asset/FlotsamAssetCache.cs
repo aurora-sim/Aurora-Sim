@@ -252,9 +252,9 @@ namespace Flotsam.RegionModules.AssetCache
         {
             if (asset != null)
             {
-                UpdateMemoryCache(asset.ID.ToString(), asset);
+                UpdateMemoryCache(asset.IDString, asset);
 
-                string filename = GetFileName(asset.ID.ToString());
+                string filename = GetFileName(asset.IDString);
 
                 try
                 {
