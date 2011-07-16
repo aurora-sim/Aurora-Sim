@@ -1444,8 +1444,12 @@ namespace OpenSim.Region.Framework.Scenes
                         // nesting this check because LengthSquared() is expensive and we don't 
                         // want to do it every step when flying.
                         //The == Zero and Z > 0.1 are to stop people from flying and then falling down because the physics engine hasn't calculted the push yet
-                        if (Velocity != Vector3.Zero && Math.Abs(Velocity.Z) > 0.15 && (Velocity.LengthSquared() <= LAND_VELOCITYMAG_MAX))
-                            StopFlying();
+                        float lengthSquared = Velocity.LengthSquared();
+                        if (Velocity != Vector3.Zero && Math.Abs (Velocity.Z) > 0.05 && (lengthSquared <= LAND_VELOCITYMAG_MAX))
+                        {
+                            StopFlying ();
+                            SendPhysicsTerseUpdateToAllClients ();
+                        }
                     }
                 }
 
