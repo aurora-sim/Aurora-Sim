@@ -228,12 +228,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             if (m_addLSLAPI)
             {
-                foreach (IScriptApi api in m_compiler.ScriptEngine.GetAPIs())
+                foreach (KeyValuePair<string, IScriptApi> functionName in m_compiler.ScriptEngine.GetAllFunctionNamesAPIs ())
                 {
-                    foreach (string functionName in m_compiler.ScriptEngine.GetFunctionNames(api))
-                    {
-                        compileScript = compileScript.Replace(functionName, "((" + api.InterfaceName + ")m_apis[\"" + api.Name + "\"])." + functionName);
-                    }
+                    compileScript = compileScript.Replace (functionName.Key, "((" + functionName.Value.InterfaceName + ")m_apis[\"" + functionName.Value.Name + "\"])." + functionName);
                 }
             }
 

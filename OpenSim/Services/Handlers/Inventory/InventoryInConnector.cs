@@ -76,11 +76,11 @@ namespace OpenSim.Services
             get { return "InventoryServerURI"; }
         }
 
-        public IInventoryService GetInventoryService ()
+        public IInventoryService GetInventoryService (bool isSecure)
         {
             //Try the external service first!
             IInventoryService service = m_registry.RequestModuleInterface<IExternalInventoryService> ();
-            if (service != null)
+            if (!isSecure && service != null)
                 return service;
             return m_registry.RequestModuleInterface<IInventoryService> ();
         }
@@ -89,7 +89,7 @@ namespace OpenSim.Services
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
+            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (SessionID == ""), SessionID, m_registry));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
@@ -98,7 +98,7 @@ namespace OpenSim.Services
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (), SessionID, m_registry));
+            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (SessionID == ""), SessionID, m_registry));
 
             return url;
         }

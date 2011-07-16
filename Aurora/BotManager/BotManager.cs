@@ -254,6 +254,12 @@ namespace Aurora.BotManager
             m_botTags[tag].Add (Bot);
         }
 
+        public void RemoveTagFromBot (UUID Bot, string tag)
+        {
+            if (m_botTags.ContainsKey (tag))
+                m_botTags[tag].Remove (Bot);
+        }
+
         public List<UUID> GetBotsWithTag (string tag)
         {
             if (!m_botTags.ContainsKey (tag))
@@ -266,8 +272,12 @@ namespace Aurora.BotManager
             List<UUID> bots = GetBotsWithTag(tag);
             foreach(UUID bot in bots)
             {
-                IScene s = m_bots[bot].Scene;
-                RemoveAvatar (bot, s);
+                if (m_bots.ContainsKey (bot))
+                {
+                    RemoveTagFromBot (bot, tag);
+                    IScene s = m_bots[bot].Scene;
+                    RemoveAvatar (bot, s);
+                }
             }
         }
 

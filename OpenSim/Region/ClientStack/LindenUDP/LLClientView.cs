@@ -4653,7 +4653,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IScenePresence presence = (IScenePresence)entity;
 
                 attachPoint = 0;
-                if (presence.PhysicsActor != null && presence.PhysicsActor.Flying)
+                if (presence.PhysicsActor != null && presence.PhysicsActor.Flying && !presence.PhysicsActor.IsColliding)
                     presence.CollisionPlane = Vector4.UnitW;//We have to do this, otherwise the last ground one will be what we have, and it can cause the client to think that it shouldn't fly down, which will cause the agent to fall instead
                 collisionPlane = presence.CollisionPlane;
                 position = presence.OffsetPosition;

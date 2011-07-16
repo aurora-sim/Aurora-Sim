@@ -258,17 +258,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             ResetCounters();
             m_compiler = compiler;
 
-            IScriptApi[] apis = compiler.ScriptEngine.GetAPIs();
-
-            foreach (IScriptApi api in apis)
-            {
-                List<string> FunctionNames = compiler.ScriptEngine.GetFunctionNames(api);
-                foreach (string functionName in FunctionNames)
-                {
-                    if (!m_apiFunctions.ContainsKey(functionName))
-                        m_apiFunctions.Add(functionName, api);
-                }
-            }
+            m_apiFunctions = compiler.ScriptEngine.GetAllFunctionNamesAPIs();
         }
 
         /// <summary>

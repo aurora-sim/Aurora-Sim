@@ -47,7 +47,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         /// </summary>
         protected IScript m_Script;
 
-        protected Dictionary<string, scriptEvents> m_eventFlagsMap = new Dictionary<string, scriptEvents>();
+        //Only use one copy please, it doesn't change
+        protected static Dictionary<string, scriptEvents> m_eventFlagsMap = new Dictionary<string, scriptEvents>();
         protected Dictionary<Guid, IEnumerator> m_enumerators = new Dictionary<Guid, IEnumerator>();
 
         [Flags]

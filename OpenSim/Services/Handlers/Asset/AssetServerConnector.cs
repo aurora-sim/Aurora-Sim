@@ -76,10 +76,10 @@ namespace OpenSim.Services
             get { return "AssetServerURI"; }
         }
 
-        public IAssetService GetService ()
+        public IAssetService GetService (bool isSecure)
         {
             IAssetService assetService = m_registry.RequestModuleInterface<IExternalAssetService> ();
-            if (assetService != null)
+            if (!isSecure && assetService != null)
                 return assetService;
             return m_registry.RequestModuleInterface<IAssetService> ();
         }
@@ -88,9 +88,9 @@ namespace OpenSim.Services
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new AssetServerGetHandler (GetService ().InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerPostHandler (GetService ().InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerDeleteHandler (GetService ().InnerService, m_allowDelete, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerGetHandler (GetService (SessionID == "").InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerPostHandler (GetService (SessionID == "").InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerDeleteHandler (GetService (SessionID == "").InnerService, m_allowDelete, url, SessionID, m_registry));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
@@ -98,9 +98,9 @@ namespace OpenSim.Services
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
             string url = "/assets" + UUID.Random();
 
-            server.AddStreamHandler (new AssetServerGetHandler (GetService ().InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerPostHandler (GetService ().InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerDeleteHandler (GetService ().InnerService, m_allowDelete, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerGetHandler (GetService (SessionID == "").InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerPostHandler (GetService (SessionID == "").InnerService, url, SessionID, m_registry));
+            server.AddStreamHandler (new AssetServerDeleteHandler (GetService (SessionID == "").InnerService, m_allowDelete, url, SessionID, m_registry));
 
             return url;
         }

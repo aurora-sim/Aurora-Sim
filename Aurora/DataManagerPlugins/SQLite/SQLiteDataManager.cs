@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#define Experimental
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -92,8 +92,12 @@ namespace Aurora.DataManager.SQLite
         {
             try
             {
+#if Experimental
+                var newConnection = m_Connection;
+#else
                 var newConnection =
                     (SqliteConnection)((ICloneable)m_Connection).Clone();
+#endif
                 if (newConnection.State != ConnectionState.Open)
                     newConnection.Open();
                 cmd.Connection = newConnection;
@@ -110,14 +114,45 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
+        protected SqliteCommand PrepReader(string query)
+        {
+            try
+            {
+/*#if Experimental
+                var newConnection = m_Connection;
+#else*/
+                var newConnection =
+                    (SqliteConnection)((ICloneable)m_Connection).Clone();
+//#endif
+                if (newConnection.State != ConnectionState.Open)
+                    newConnection.Open ();
+                var cmd = newConnection.CreateCommand ();
+                cmd.CommandText = query; 
+                return cmd;
+            }
+            catch (Mono.Data.Sqlite.SqliteException ex)
+            {
+                //throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return null;
+        }
+
         protected int ExecuteNonQuery(SqliteCommand cmd)
         {
             try
             {
                 lock (m_Connection)
                 {
-                    var newConnection =
-                        (SqliteConnection)((ICloneable)m_Connection).Clone();
+#if Experimental
+                    var newConnection = m_Connection;
+#else
+                var newConnection =
+                    (SqliteConnection)((ICloneable)m_Connection).Clone();
+#endif
                     if (newConnection.State != ConnectionState.Open)
                         newConnection.Open();
                     cmd.Connection = newConnection;
@@ -151,7 +186,6 @@ namespace Aurora.DataManager.SQLite
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
         {
-            var cmd = new SqliteCommand();
             string query = "";
             if (keyRow == "")
             {
@@ -163,8 +197,7 @@ namespace Aurora.DataManager.SQLite
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
-            cmd.CommandText = query;
-            PrepReader(ref cmd);
+            SqliteCommand cmd = PrepReader (query);
             using (IDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
@@ -192,12 +225,10 @@ namespace Aurora.DataManager.SQLite
 
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
-            var cmd = new SqliteCommand();
             string query = "";
             query = String.Format("select {0} from {1} where {2}",
                                       wantedValue, table, whereClause);
-            cmd.CommandText = query;
-            PrepReader(ref cmd);
+            var cmd = PrepReader (query);
             using (IDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
@@ -217,12 +248,10 @@ namespace Aurora.DataManager.SQLite
 
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
-            var cmd = new SqliteCommand();
             string query = "";
             query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
-            cmd.CommandText = query;
-            PrepReader(ref cmd);
+            var cmd = PrepReader (query);
             using (IDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
@@ -242,18 +271,15 @@ namespace Aurora.DataManager.SQLite
 
         public override IDataReader QueryData(string whereClause, string table, string wantedValue)
         {
-            var cmd = new SqliteCommand();
             string query = "";
             query = String.Format("select {0} from {1} {2}",
                                       wantedValue, table, whereClause);
-            cmd.CommandText = query;
-            PrepReader (ref cmd);
+            var cmd = PrepReader (query);
             return cmd.ExecuteReader();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order)
         {
-            var cmd = new SqliteCommand();
             string query = "";
             if (keyRow == "")
             {
@@ -265,8 +291,7 @@ namespace Aurora.DataManager.SQLite
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
                                       wantedValue, table, keyRow, keyValue.ToString());
             }
-            cmd.CommandText = query + Order;
-            PrepReader(ref cmd);
+            var cmd = PrepReader (query);
             using (IDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
@@ -294,7 +319,6 @@ namespace Aurora.DataManager.SQLite
 
         public override List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
-            var cmd = new SqliteCommand ();
             string query = String.Format ("select {0} from {1} where ",
                                       wantedValue, table);
             int i = 0;
@@ -304,8 +328,7 @@ namespace Aurora.DataManager.SQLite
                 i++;
             }
             query = query.Remove (query.Length - 5);
-            cmd.CommandText = query;
-            PrepReader(ref cmd);
+            var cmd = PrepReader (query);
             using (IDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
@@ -329,7 +352,6 @@ namespace Aurora.DataManager.SQLite
 
         public override Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
-            var cmd = new SqliteCommand ();
             string query = String.Format ("select {0} from {1} where ",
                                       wantedValue, table);
             int i = 0;
@@ -339,8 +361,7 @@ namespace Aurora.DataManager.SQLite
                 i++;
             }
             query = query.Remove (query.Length - 5);
-            cmd.CommandText = query;
-            PrepReader(ref cmd);
+            var cmd = PrepReader (query);
             using (IDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new Dictionary<string, List<string>>();
@@ -602,9 +623,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool TableExists(string tableName)
         {
-            var cmd = new SqliteCommand();
-            cmd.CommandText = "SELECT name FROM sqlite_master WHERE name='" + tableName + "'";
-            PrepReader(ref cmd);
+            var cmd = PrepReader ("SELECT name FROM sqlite_master WHERE name='" + tableName + "'");
             using (IDataReader rdr = cmd.ExecuteReader())
             {
                 if (rdr.Read())
@@ -847,10 +866,7 @@ namespace Aurora.DataManager.SQLite
         {
             var defs = new List<ColumnDefinition>();
 
-
-            var cmd = new SqliteCommand();
-            cmd.CommandText = string.Format("PRAGMA table_info({0})", tableName);
-            PrepReader(ref cmd);
+            var cmd = PrepReader (string.Format("PRAGMA table_info({0})", tableName));
             using (IDataReader rdr = cmd.ExecuteReader())
             {
                 while (rdr.Read())

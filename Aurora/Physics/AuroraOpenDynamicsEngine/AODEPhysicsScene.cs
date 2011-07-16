@@ -1351,7 +1351,79 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // Recovered for use by fly height. Kitto Flora
         public float GetTerrainHeightAtXY (float x, float y)
         {
-            return m_channel[(int)x, (int)y];
+            // warning this code assumes terrain grid as 1m size
+
+            if (x < 0)
+                x = 0;
+            if (y < 0)
+                y = 0;
+
+            int ix;
+            int iy;
+            float dx;
+            float dy;
+
+            if (x < m_region.RegionSizeX - 1)
+            {
+                ix = (int)x;
+                dx = x - (float)ix;
+            }
+            else
+            {
+                ix = (int)m_region.RegionSizeX - 1;
+                dx = 0;
+            }
+            if (y < m_region.RegionSizeY - 1)
+            {
+                iy = (int)y;
+                dy = y - (float)iy;
+            }
+            else
+            {
+                iy = (int)m_region.RegionSizeY - 1;
+                dy = 0;
+            }
+
+            float h0;
+            float h1;
+            float h2;
+
+            float invterrainscale = 1.0f / Constants.TerrainCompression;
+
+            iy *= m_region.RegionSizeX;
+
+            if ((dx + dy) <= 1.0f)
+            {
+                h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix]) * invterrainscale;
+
+                if (dx > 0)
+                    h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * dx;
+                else
+                    h1 = 0;
+
+                if (dy > 0)
+                    h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
+                else
+                    h2 = 0;
+
+                return h0 + h1 + h2;
+            }
+            else
+            {
+                h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
+
+                if (dx > 0)
+                    h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
+                else
+                    h1 = 0;
+
+                if (dy > 0)
+                    h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
+                else
+                    h2 = 0;
+
+                return h0 + h1 + h2;
+            }
         }
         // End recovered. Kitto Flora
 
@@ -2206,6 +2278,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         continue;
 
                                     obj.SendCollisions();
+                                }
+                                foreach (AuroraODECharacter av in _characters)
+                                {
+                                    if (av == null)
+                                        continue;
+
+                                    av.SendCollisions ();
                                 }
                             }
                         }
