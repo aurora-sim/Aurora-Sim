@@ -51,7 +51,6 @@ namespace OpenSim.Services.MessagingService
 
         protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IRegistryCore m_registry;
-        protected bool m_useCallbacks = true;
         protected bool VariableRegionSight = false;
         protected int MaxVariableRegionSight = 512;
         protected bool m_enabled = true;
@@ -67,7 +66,6 @@ namespace OpenSim.Services.MessagingService
             if (agentConfig != null)
             {
                 m_enabled = agentConfig.GetString ("Module", "AgentProcessing") == "AgentProcessing";
-                m_useCallbacks = agentConfig.GetBoolean ("UseCallbacks", m_useCallbacks);
                 VariableRegionSight = agentConfig.GetBoolean ("UseVariableRegionSightDistance", VariableRegionSight);
                 MaxVariableRegionSight = agentConfig.GetInt ("MaxDistanceVariableRegionSightDistance", MaxVariableRegionSight);
             }
@@ -339,8 +337,9 @@ namespace OpenSim.Services.MessagingService
                     AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy ();
                     regionCircuitData.child = true; //Fix child agent status
                     string reason; //Tell the region about it
+                    bool useCallbacks = false;
                     if (!InformClientOfNeighbor (regionClientCaps.AgentID, regionClientCaps.RegionHandle,
-                        regionCircuitData, ref requestingRegion, (uint)TeleportFlags.Default, null, out reason))
+                        regionCircuitData, ref requestingRegion, (uint)TeleportFlags.Default, null, out reason, out useCallbacks))
                         informed = false;
                     else
                         usersInformed.Add (regionClientCaps.AgentID);
@@ -374,8 +373,9 @@ namespace OpenSim.Services.MessagingService
                     AgentCircuitData regionCircuitData = circuit.Copy ();
                     GridRegion nCopy = neighbor;
                     regionCircuitData.child = true; //Fix child agent status
+                    bool useCallbacks = false;
                     if (!InformClientOfNeighbor (AgentID, requestingRegion, regionCircuitData, ref nCopy,
-                        (uint)TeleportFlags.Default, null, out reason))
+                        (uint)TeleportFlags.Default, null, out reason, out useCallbacks))
                         informed = false;
                 }
                 count++;
@@ -394,8 +394,9 @@ namespace OpenSim.Services.MessagingService
         /// <param name="regionHandle"></param>
         /// <param name="endPoint"></param>
         public virtual bool InformClientOfNeighbor (UUID AgentID, ulong requestingRegion, AgentCircuitData circuitData, ref GridRegion neighbor,
-            uint TeleportFlags, AgentData agentData, out string reason)
+            uint TeleportFlags, AgentData agentData, out string reason, out bool useCallbacks)
         {
+            useCallbacks = true;
             if (neighbor == null || neighbor.RegionHandle == 0)
             {
                 reason = "Could not find neighbor to inform";
@@ -473,17 +474,10 @@ namespace OpenSim.Services.MessagingService
                     }
                     else
                     {
-                        if (m_useCallbacks)
-                        {
-                            //We failed, give up
-                            m_log.Error ("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName + ", no response came back");
-                            clientCaps.RemoveCAPS (neighbor.RegionHandle);
-                            oldRegionService = null;
-                            return false;
-                        }
                         //We are assuming an OpenSim region now!
                         #region OpenSim teleport compatibility!
 
+                        useCallbacks = false;//OpenSim can't send us back a message, don't try it!
                         otherRegionsCapsURL = "http://" + otherRegionService.Region.ExternalEndPoint.ToString() + 
                             CapsUtil.GetCapsSeedPath(circuitData.CapsPath);
                         otherRegionService.CapsUrl = otherRegionsCapsURL;
@@ -508,7 +502,7 @@ namespace OpenSim.Services.MessagingService
                         neighbor.RegionSizeY,
                         requestingRegion);
 
-                    if (!m_useCallbacks)
+                    if (!useCallbacks)
                         Thread.Sleep (3000); //Give it a bit of time, only for OpenSim...
 
                     m_log.Info("[AgentProcessing]: Completed inform client about neighbor " + neighbor.RegionName);
@@ -558,19 +552,19 @@ namespace OpenSim.Services.MessagingService
                         return false;
                     }
 
+                    bool useCallbacks = false;
                     //Note: we have to pull the new grid region info as the one from the region cannot be trusted
+                    GridRegion oldRegion = destination;
                     IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                     if (GridService != null)
                     {
-                        GridRegion oldRegion = destination;
                         destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
                         if (destination == null)//If its not in this grid
                             destination = oldRegion;
                         //Inform the client of the neighbor if needed
                         circuit.child = false; //Force child status to the correct type
-
                         if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref destination, TeleportFlags,
-                            agentData, out reason))
+                            agentData, out reason, out useCallbacks))
                         {
                             ResetFromTransit(AgentID);
                             return false;
@@ -596,7 +590,10 @@ namespace OpenSim.Services.MessagingService
                     // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
                     // that the client contacted the destination before we send the attachments and close things here.
 
-                    result = WaitForCallback(AgentID, out callWasCanceled);
+                    if (useCallbacks)
+                        result = WaitForCallback (AgentID, out callWasCanceled);
+                    else
+                        result = true;
                     if (!result)
                     {
                         //It says it failed, lets call the sim and check
@@ -629,7 +626,8 @@ namespace OpenSim.Services.MessagingService
                         regionCaps.RootAgent = false;
 
                         // Next, let's close the child agent connections that are too far away.
-                        CloseNeighborAgents (regionCaps.Region, destination, AgentID);
+                        if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
+                            CloseNeighborAgents (regionCaps.Region, destination, AgentID);
                         reason = "";
                     }
                 }
@@ -649,8 +647,6 @@ namespace OpenSim.Services.MessagingService
         private int CloseNeighborCall = 0;
         public virtual void CloseNeighborAgents (GridRegion oldRegion, GridRegion destination, UUID AgentID)
         {
-            if (!m_useCallbacks)
-                return;
             CloseNeighborCall++;
             int CloseNeighborCallNum = CloseNeighborCall;
             Util.FireAndForget(delegate(object o)
@@ -746,11 +742,6 @@ namespace OpenSim.Services.MessagingService
 
         protected bool WaitForCallback(UUID AgentID, out bool callWasCanceled)
         {
-            if (!m_useCallbacks)
-            {
-                callWasCanceled = false;
-                return true;
-            }
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
 
             int count = 1000;
@@ -775,8 +766,6 @@ namespace OpenSim.Services.MessagingService
 
         protected bool WaitForCallback(UUID AgentID)
         {
-            if (!m_useCallbacks)
-                return true;
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
 
             int count = 100;
