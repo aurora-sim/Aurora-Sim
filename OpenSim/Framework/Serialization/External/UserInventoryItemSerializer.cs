@@ -62,7 +62,13 @@ namespace OpenSim.Framework.Serialization.External
             item.ID = UUID.Parse(xtr.ReadElementString("ID"));
             item.InvType = Convert.ToInt32(xtr.ReadElementString("InvType"));
             item.CreatorId = xtr.ReadElementString ("CreatorUUID");
-            item.CreatorData = xtr.ReadElementString ("CreatorData");
+            try
+            {
+                item.CreatorData = xtr.ReadElementString ("CreatorData");
+            }
+            catch
+            {
+            }
             item.CreationDate = Convert.ToInt32 (xtr.ReadElementString ("CreationDate"));
             item.Owner = UUID.Parse(xtr.ReadElementString("Owner"));
             item.Description = xtr.ReadElementString("Description");
@@ -104,7 +110,7 @@ namespace OpenSim.Framework.Serialization.External
             item.ID                     = UUID.Parse(       xtr.ReadElementString("ID"));
             item.InvType                = Convert.ToInt32(  xtr.ReadElementString("InvType"));            
             item.CreatorId              =                   xtr.ReadElementString("CreatorUUID");         
-            item.CreatorData              =                   xtr.ReadElementString("CreatorData");
+            item.CreatorData            =                   xtr.ReadElementString("CreatorData");
             item.CreationDate           = Convert.ToInt32(  xtr.ReadElementString("CreationDate"));
             item.Owner                  = UUID.Parse(       xtr.ReadElementString("Owner"));
             item.Description            =                   xtr.ReadElementString("Description");
