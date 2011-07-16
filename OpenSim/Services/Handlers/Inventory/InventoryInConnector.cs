@@ -89,7 +89,7 @@ namespace OpenSim.Services
         {
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (SessionID == ""), SessionID, m_registry));
+            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (SessionID != ""), SessionID, m_registry));
         }
 
         public string GetUrlForRegisteringClient (string SessionID, uint port)
@@ -98,7 +98,7 @@ namespace OpenSim.Services
 
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (SessionID == ""), SessionID, m_registry));
+            server.AddStreamHandler (new InventoryConnectorPostHandler (url, GetInventoryService (SessionID != ""), SessionID, m_registry));
 
             return url;
         }

@@ -147,12 +147,12 @@ namespace Aurora.DataManager.SQLite
             {
                 lock (m_Connection)
                 {
-#if Experimental
+/*#if Experimental
                     var newConnection = m_Connection;
-#else
-                var newConnection =
-                    (SqliteConnection)((ICloneable)m_Connection).Clone();
-#endif
+#else*/
+                    var newConnection =
+                        (SqliteConnection)((ICloneable)m_Connection).Clone();
+//#endif
                     if (newConnection.State != ConnectionState.Open)
                         newConnection.Open();
                     cmd.Connection = newConnection;
