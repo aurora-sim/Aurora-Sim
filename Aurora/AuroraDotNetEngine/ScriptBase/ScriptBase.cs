@@ -161,8 +161,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         private Dictionary<string, object> m_InitialValues =
                 new Dictionary<string, object>();
-        private Dictionary<string, FieldInfo> m_Fields =
-                new Dictionary<string, FieldInfo>();
         public Dictionary<string, IScriptApi> m_apis = new Dictionary<string, IScriptApi>();
 
         public void InitApi(IScriptApi data)
@@ -191,11 +189,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             Dictionary<string, object> vars = new Dictionary<string, object>();
 
-            if (m_Fields == null)
-                return vars;
-
-            m_Fields.Clear();
-
             Type t = GetType();
 
             FieldInfo[] fields = t.GetFields(BindingFlags.NonPublic |
@@ -205,8 +198,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
             foreach (FieldInfo field in fields)
             {
-                m_Fields[field.Name] = field;
-
                 if (field.FieldType == typeof(LSL_Types.list)) // ref type, copy
                 {
                     LSL_Types.list v = (LSL_Types.list)field.GetValue(this);
@@ -233,6 +224,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     vars[field.Name] = field.GetValue(this);
                 }
             }
+            fields = null;
+            t = null;
 
             return vars;
         }
@@ -245,36 +238,45 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             if (!m_useStateSaves)
                 return;
-            foreach (KeyValuePair<string, object> var in vars)
+            Type t = GetType ();
+            FieldInfo[] fields = t.GetFields(BindingFlags.NonPublic |
+                                             BindingFlags.Public |
+                                             BindingFlags.Instance |
+                                             BindingFlags.DeclaredOnly);
+
+            foreach (FieldInfo field in fields)
             {
-                if (m_Fields.ContainsKey (var.Key))
+                if (vars.ContainsKey (field.Name))
                 {
-                    if (m_Fields[var.Key].FieldType == typeof (LSL_Types.list))
+                    object newVal = vars[field.Name];
+                    if (field.FieldType == typeof (LSL_Types.list))
                     {
-                        LSL_Types.list v = (LSL_Types.list)m_Fields[var.Key].GetValue (this);
-                        Object[] data = ((LSL_Types.list)(var.Value)).Data;
+                        LSL_Types.list v = (LSL_Types.list)field.GetValue (this);
+                        Object[] data = ((LSL_Types.list)(newVal)).Data;
                         v.Data = new Object[data.Length];
                         Array.Copy (data, 0, v.Data, 0, data.Length);
-                        m_Fields[var.Key].SetValue (this, v);
+                        field.SetValue (this, v);
                     }
 
-                    else if (m_Fields[var.Key].FieldType == typeof (LSL_Types.LSLInteger) ||
-                            m_Fields[var.Key].FieldType == typeof (LSL_Types.LSLString) ||
-                            m_Fields[var.Key].FieldType == typeof (LSL_Types.LSLFloat) ||
-                            m_Fields[var.Key].FieldType == typeof (Int32) ||
-                            m_Fields[var.Key].FieldType == typeof (Double) ||
-                            m_Fields[var.Key].FieldType == typeof (Single) ||
-                            m_Fields[var.Key].FieldType == typeof (String) ||
-                            m_Fields[var.Key].FieldType == typeof (Byte) ||
-                            m_Fields[var.Key].FieldType == typeof (short) ||
-                            m_Fields[var.Key].FieldType == typeof (LSL_Types.Vector3) ||
-                            m_Fields[var.Key].FieldType == typeof (LSL_Types.Quaternion)
+                    else if (field.FieldType == typeof (LSL_Types.LSLInteger) ||
+                            field.FieldType == typeof (LSL_Types.LSLString) ||
+                            field.FieldType == typeof (LSL_Types.LSLFloat) ||
+                            field.FieldType == typeof (Int32) ||
+                            field.FieldType == typeof (Double) ||
+                            field.FieldType == typeof (Single) ||
+                            field.FieldType == typeof (String) ||
+                            field.FieldType == typeof (Byte) ||
+                            field.FieldType == typeof (short) ||
+                            field.FieldType == typeof (LSL_Types.Vector3) ||
+                            field.FieldType == typeof (LSL_Types.Quaternion)
                         )
                     {
-                        m_Fields[var.Key].SetValue (this, var.Value);
+                        field.SetValue (this, newVal);
                     }
                 }
             }
+            fields = null;
+            t = null;
         }
 
         public string GetShortType(object o)
@@ -321,11 +323,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             if (!m_useStateSaves)
                 return vars;
 
-            if (m_Fields == null)
-                return vars;
-
-            m_Fields.Clear ();
-
             Type t = GetType ();
 
             FieldInfo[] fields = t.GetFields (BindingFlags.NonPublic |
@@ -335,8 +332,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
             foreach (FieldInfo field in fields)
             {
-                m_Fields[field.Name] = field;
-
                 if (field.FieldType == typeof (LSL_Types.list)) // ref type, copy
                 {
                     string tmp = "";
@@ -381,6 +376,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     vars[field.Name] = field.GetValue (this).ToString ();
                 }
             }
+            fields = null;
+            t = null;
 
             return vars;
         }
@@ -495,80 +492,84 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 return;
             m_lastStateSaveValues = vars;
             m_stateSaveRequired = false; //If something is setting the vars, we don't need to do a state save, as this came from a state save 
-            foreach (KeyValuePair<string, object> var in vars)
+            Type t = GetType ();
+
+            FieldInfo[] fields = t.GetFields (BindingFlags.NonPublic |
+                                             BindingFlags.Public |
+                                             BindingFlags.Instance |
+                                             BindingFlags.DeclaredOnly);
+
+            foreach (FieldInfo field in fields)
             {
-                if (m_Fields.ContainsKey (var.Key))
+                if (vars.ContainsKey (field.Name))
                 {
-                    try
+                    object var = vars[field.Name];
+                    if (field.FieldType == typeof (LSL_Types.list))
                     {
-                        if (m_Fields[var.Key].FieldType == typeof (LSL_Types.list))
-                        {
-                            string val = var.Value.ToString ();
-                            int end;
-                            LSL_Types.list v = ParseValueToList (val, 0, out end);
-                            m_Fields[var.Key].SetValue (this, v);
-                        }
-
-                        else if (m_Fields[var.Key].FieldType == typeof (LSL_Types.LSLInteger))
-                        {
-                            int val = int.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, new LSL_Types.LSLInteger (val));
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (LSL_Types.LSLString))
-                        {
-                            string val = var.Value.ToString ();
-                            m_Fields[var.Key].SetValue (this, new LSL_Types.LSLString (val));
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (LSL_Types.LSLFloat))
-                        {
-                            float val = float.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, new LSL_Types.LSLFloat (val));
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (Int32))
-                        {
-                            Int32 val = Int32.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (Double))
-                        {
-                            Double val = Double.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (Single))
-                        {
-                            Single val = Single.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (String))
-                        {
-                            String val = var.Value.ToString ();
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (Byte))
-                        {
-                            Byte val = Byte.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (short))
-                        {
-                            short val = short.Parse (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (LSL_Types.Quaternion))
-                        {
-                            LSL_Types.Quaternion val = new LSL_Types.Quaternion (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-                        else if (m_Fields[var.Key].FieldType == typeof (LSL_Types.Vector3))
-                        {
-                            LSL_Types.Vector3 val = new LSL_Types.Vector3 (var.Value.ToString ());
-                            m_Fields[var.Key].SetValue (this, val);
-                        }
-
+                        string val = var.ToString ();
+                        int end;
+                        LSL_Types.list v = ParseValueToList (val, 0, out end);
+                        field.SetValue (this, v);
                     }
-                    catch (Exception) { }
+                    else if (field.FieldType == typeof (LSL_Types.LSLInteger))
+                    {
+                        int val = int.Parse (var.ToString ());
+                        field.SetValue (this, new LSL_Types.LSLInteger (val));
+                    }
+                    else if (field.FieldType == typeof (LSL_Types.LSLString))
+                    {
+                        string val = var.ToString ();
+                        field.SetValue (this, new LSL_Types.LSLString (val));
+                    }
+                    else if (field.FieldType == typeof (LSL_Types.LSLFloat))
+                    {
+                        float val = float.Parse (var.ToString ());
+                        field.SetValue (this, new LSL_Types.LSLFloat (val));
+                    }
+                    else if (field.FieldType == typeof (Int32))
+                    {
+                        Int32 val = Int32.Parse (var.ToString ());
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (Double))
+                    {
+                        Double val = Double.Parse (var.ToString ());
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (Single))
+                    {
+                        Single val = Single.Parse (var.ToString ());
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (String))
+                    {
+                        String val = var.ToString ();
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (Byte))
+                    {
+                        Byte val = Byte.Parse (var.ToString ());
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (short))
+                    {
+                        short val = short.Parse (var.ToString ());
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (LSL_Types.Quaternion))
+                    {
+                        LSL_Types.Quaternion val = new LSL_Types.Quaternion (var.ToString ());
+                        field.SetValue (this, val);
+                    }
+                    else if (field.FieldType == typeof (LSL_Types.Vector3))
+                    {
+                        LSL_Types.Vector3 val = new LSL_Types.Vector3 (var.ToString ());
+                        field.SetValue (this, val);
+                    }
                 }
             }
+            fields = null;
+            t = null;
         }
 
         public void ResetVars()

@@ -381,7 +381,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Sets up the APIs for the script
         /// </summary>
-        internal void SetApis()
+        /// <param name="setInitialResetValues">Get the initial reset values needed to reset the script</param>
+        internal void SetApis(bool setInitialResetValues)
         {
             Apis = new Dictionary<string, IScriptApi>();
 
@@ -391,7 +392,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Apis[api.Name].Initialize(m_ScriptEngine, Part, Part.LocalId, ItemID, ScriptEngine.ScriptProtection);
                 Script.InitApi(api);
             }
-            Script.UpdateInitialValues();
+            if(setInitialResetValues)
+                Script.UpdateInitialValues();
         }
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
@@ -517,7 +519,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //Deserialize the most important pieces first
                 Source = LastStateSave.Source;
             }
-            if (Source == "")
+            if (Source == "" || Source == null)
             {
                 AssetBase asset = Part.ParentEntity.Scene.AssetService.Get (InventoryItem.AssetID.ToString ());
                 if (null == asset)
@@ -532,7 +534,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 Source = Utils.BytesToString (asset.Data);
             }
-            if (Source == "")
+            if (Source == "" || Source == null)
             {
                 m_log.ErrorFormat (
                     "[ScriptData]: " +
@@ -691,6 +693,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEngine.ScriptProtection.AddNewScript (this);
                 return false;
             }
+            Source = null;//Don't keep it in memory, we don't need it anymore
             Compiled = true;//We compiled successfully
 
             //ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
@@ -704,7 +707,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (useDebug)
                 m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " + (DateTime.Now.ToUniversalTime() - StartTime).TotalSeconds);
 
-            SetApis();
+            SetApis (LastStateSave == null);
 
             //Set the event flags
             Part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));

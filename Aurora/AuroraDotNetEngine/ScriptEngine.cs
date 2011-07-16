@@ -1076,7 +1076,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     CreateFromData(SD.Part.UUID, SD.ItemID, SD.Part.UUID, Plugins);
 
                     SD.World = newPart.ParentGroup.Scene;
-                    SD.SetApis();
+                    SD.SetApis(true);
 
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, false);
 
@@ -1160,9 +1160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (IScriptApi api in m_APIs)
                 {
                     if (ScriptProtection.CheckAPI(api.Name))
-                    {
                         internalApis.Add(api);
-                    }
                 }
                 m_APIs = internalApis.ToArray();
             }
@@ -1176,16 +1174,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return apis;
         }
 
-        public List<string> GetAllFunctionNames()
+        public List<string> GetAllFunctionNames ()
         {
-            List<string> FunctionNames = new List<string>();
+            List<string> FunctionNames = new List<string> ();
 
-            IScriptApi[] apis = GetAPIs();
+            IScriptApi[] apis = GetAPIs ();
             foreach (IScriptApi api in apis)
             {
-                FunctionNames.AddRange(GetFunctionNames(api));
+                FunctionNames.AddRange (GetFunctionNames (api));
             }
 
+            return FunctionNames;
+        }
+
+        private static Dictionary<string, IScriptApi> m_apiFunctionNamesCache = new Dictionary<string, IScriptApi> ();
+        public Dictionary<string, IScriptApi> GetAllFunctionNamesAPIs ()
+        {
+            if (m_apiFunctionNamesCache.Count > 0)
+                return m_apiFunctionNamesCache;
+            Dictionary<string, IScriptApi> FunctionNames = new Dictionary<string, IScriptApi> ();
+
+            IScriptApi[] apis = m_APIs.Length == 0 ? GetAPIs () : m_APIs;
+            foreach (IScriptApi api in apis)
+            {
+                foreach (string functionName in GetFunctionNames (api))
+                {   
+                    if(!FunctionNames.ContainsKey(functionName))
+                        FunctionNames.Add(functionName, api);
+                }
+            }
+            m_apiFunctionNamesCache = FunctionNames;
             return FunctionNames;
         }
 
@@ -1198,6 +1216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase))
                     FunctionNames.Add(member.Name);
             }
+            members = null;
             return FunctionNames;
         }
 

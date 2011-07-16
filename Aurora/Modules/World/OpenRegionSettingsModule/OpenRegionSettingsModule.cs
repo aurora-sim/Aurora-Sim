@@ -629,7 +629,7 @@ namespace Aurora.Modules
                 m_settings.SayDistance = chatmodule.SayDistance;
                 m_settings.ShoutDistance = chatmodule.ShoutDistance;
             }
-            IScriptModule scriptmodule = scene.RequestModuleInterface<IScriptModule>();
+            /*IScriptModule scriptmodule = scene.RequestModuleInterface<IScriptModule>();
             if (scriptmodule != null)
             {
                 List<string> FunctionNames = scriptmodule.GetAllFunctionNames();
@@ -637,7 +637,7 @@ namespace Aurora.Modules
                 {
                     m_settings.LSLCommands.Add(OSD.FromString(FunctionName));
                 }
-            }
+            }*/
         }
 
         public string Name
