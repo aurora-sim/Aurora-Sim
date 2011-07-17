@@ -178,11 +178,14 @@ namespace Aurora.Services.DataService
             DateTime timeNow = DateTime.Now.ToUniversalTime ();
             if (checkOnlineStatus && m_checkLastSeen && user.IsOnline && (timeLastSeen.AddHours (1) < timeNow))
             {
-                m_log.Warn("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour " +
-                    "(since " + timeLastSeen.ToLocalTime ().ToString () + ", time elapsed " + (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours + " hours)! Logging them out.");
-                user.IsOnline = false;
-                Set(user);
-                onlineStatusChanged = true;
+                if (user.CurrentRegionID != AgentInfoHelpers.LOGIN_STATUS_LOCKED)//The login status can be locked with this so that it cannot be changed with this method
+                {
+                    m_log.Warn ("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour " +
+                        "(since " + timeLastSeen.ToLocalTime ().ToString () + ", time elapsed " + (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours + " hours)! Logging them out.");
+                    user.IsOnline = false;
+                    Set (user);
+                    onlineStatusChanged = true;
+                }
             }
             return user;
         }

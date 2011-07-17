@@ -354,7 +354,10 @@ namespace OpenSim.Services.CapsService
             string assetName = map["name"].AsString();
             string assetDes = map["description"].AsString();
             UUID parentFolder = map["folder_id"].AsUUID();
-            string inventory_type = map["inventory_type"].AsString();
+            string inventory_type = map["inventory_type"].AsString ();
+            uint everyone_mask = map["everyone_mask"].AsUInteger ();
+            uint group_mask = map["group_mask"].AsUInteger ();
+            uint next_owner_mask = map["next_owner_mask"].AsUInteger ();
 
             UUID newAsset = UUID.Random();
             UUID newInvItem = UUID.Random();
@@ -363,7 +366,8 @@ namespace OpenSim.Services.CapsService
                 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this);
+                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
+                                  group_mask, next_owner_mask);
             m_service.AddStreamHandler("Upload" + uploaderPath,
                 new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
@@ -410,7 +414,10 @@ namespace OpenSim.Services.CapsService
             string assetName = map["name"].AsString();
             string assetDes = map["description"].AsString();
             UUID parentFolder = map["folder_id"].AsUUID();
-            string inventory_type = map["inventory_type"].AsString();
+            string inventory_type = map["inventory_type"].AsString ();
+            uint everyone_mask = map["everyone_mask"].AsUInteger ();
+            uint group_mask = map["group_mask"].AsUInteger ();
+            uint next_owner_mask = map["next_owner_mask"].AsUInteger ();
 
             UUID newAsset = UUID.Random();
             UUID newInvItem = UUID.Random();
@@ -419,7 +426,8 @@ namespace OpenSim.Services.CapsService
                 
             AssetUploader uploader =
                 new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this);
+                                  asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
+                                  group_mask, next_owner_mask);
             m_service.AddStreamHandler("Upload" + uploaderPath,
                 new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
@@ -447,9 +455,14 @@ namespace OpenSim.Services.CapsService
             private string m_assetType = String.Empty;
             private InventoryCAPS m_invCaps;
 
+            private uint m_everyone_mask = 0;
+            private uint m_group_mask = 0;
+            private uint m_next_owner_mask = 0;
+
             public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
                                  UUID parentFolderID, string invType, string assetType, string path,
-                                 string method, IRegionClientCapsService caps, InventoryCAPS invCaps)
+                                 string method, IRegionClientCapsService caps, InventoryCAPS invCaps,
+                                 uint everyone_mask, uint group_mask, uint next_owner_mask)
             {
                 m_assetName = assetName;
                 m_assetDes = description;
@@ -462,6 +475,9 @@ namespace OpenSim.Services.CapsService
                 clientCaps = caps;
                 uploadMethod = method;
                 m_invCaps = invCaps;
+                m_everyone_mask = everyone_mask;
+                m_group_mask = group_mask;
+                m_next_owner_mask = next_owner_mask;
             }
 
             /// <summary>
@@ -483,7 +499,8 @@ namespace OpenSim.Services.CapsService
 
                 clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
-                m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
+                m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder,
+                    data, m_invType, m_assetType, m_everyone_mask, m_group_mask, m_next_owner_mask);
                 
                 return res;
             }
@@ -497,7 +514,7 @@ namespace OpenSim.Services.CapsService
         /// <param name="data"></param>
         public void UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
                                           UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
-                                          string assetType)
+                                          string assetType, uint everyone_mask, uint group_mask, uint next_owner_mask)
         {
             sbyte assType = 0;
             sbyte inType = 0;
@@ -642,9 +659,6 @@ namespace OpenSim.Services.CapsService
                     grp.ChildrenList[i].SetOffsetPosition (offset);
                     Vector3 abs = grp.ChildrenList[i].AbsolutePosition;
                     Vector3 currentPos = positions[i];
-                    if (abs != currentPos)
-                    {
-                    }
                 }
                 //grp.Rotation = rotations[0];
                 for (int i = 0; i < rotations.Count; i++)
@@ -683,8 +697,9 @@ namespace OpenSim.Services.CapsService
             item.Folder = parentFolder;
             item.CurrentPermissions = (uint)PermissionMask.All;
             item.BasePermissions = (uint)PermissionMask.All;
-            item.EveryOnePermissions = 0;
-            item.NextPermissions = (uint)(PermissionMask.Move | PermissionMask.Modify | PermissionMask.Transfer);
+            item.EveryOnePermissions = everyone_mask;
+            item.NextPermissions = next_owner_mask;
+            item.GroupPermissions = group_mask;
             item.CreationDate = Util.UnixTimeSinceEpoch();
 
             m_inventoryService.AddItem(item);

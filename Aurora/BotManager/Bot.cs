@@ -93,6 +93,7 @@ namespace Aurora.BotManager
         public AuroraEventManager EventManager = new AuroraEventManager ();
 
         private BotState m_currentState = BotState.Idle;
+        private BotState m_previousState = BotState.Idle;
         public BotState State
         {
             get { return m_currentState; }
@@ -132,7 +133,6 @@ namespace Aurora.BotManager
 
         #endregion
 
-        private BotState m_previousState = BotState.Idle;
 
         private System.Timers.Timer m_frames;
         private int m_frame = 0;

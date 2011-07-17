@@ -886,7 +886,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             AgentCircuitData agent = ControllingClient.RequestClientInfo ();
             agent.startpos = AbsolutePosition;
-            agent.child = true;
             IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
             if (appearance != null)
             {

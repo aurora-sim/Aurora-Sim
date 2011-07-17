@@ -146,7 +146,9 @@ namespace OpenSim.Services.RobustCompat
                     object[] obj = (object[])parameters;
                     OSDMap param = (OSDMap)obj[0];
                     AgentCircuitData circuit = (AgentCircuitData)obj[1];
-                    circuit.child = false;//ONLY USE ROOT AGENTS
+                    if (circuit.reallyischild)//If Aurora is sending this, it'll show that it really is a child agent
+                        return null;
+                    circuit.child = false;//ONLY USE ROOT AGENTS, SINCE OPENSIM SENDS CHILD == TRUE ALL THE TIME
                     if (circuit.ServiceURLs != null && circuit.ServiceURLs.ContainsKey ("IncomingCAPSHandler"))
                     {
                         //Used by incoming (home) agents from HG

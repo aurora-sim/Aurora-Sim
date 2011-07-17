@@ -636,13 +636,31 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 }
 
                 // Update local cache
-                FriendInfo[] friends = GetFriends(friendID);
+                FriendInfo[] friends = GetFriends (friendID);
                 lock (m_Friends)
                 {
                     foreach (FriendInfo finfo in friends)
                     {
-                        if (finfo.Friend == userID.ToString())
+                        if (finfo.Friend == userID.ToString ())
                             finfo.TheirFlags = rights;
+                    }
+                }
+                friends = GetFriends (userID);
+                lock (m_Friends)
+                {
+                    foreach (FriendInfo finfo in friends)
+                    {
+                        if (finfo.Friend == friendID.ToString ())
+                            finfo.MyFlags = rights;
+                    }
+                }
+                //Add primFlag updates for all the prims in the sim with the owner, so that the new permissions are set up correctly
+                IScenePresence friendSP = friendClient.Scene.GetScenePresence(friendClient.AgentId);
+                foreach (ISceneEntity entity in friendClient.Scene.Entities.GetEntities ())
+                {
+                    if (entity.OwnerID == userID)
+                    {
+                        entity.ScheduleGroupUpdateToAvatar (friendSP, PrimUpdateFlags.PrimFlags);
                     }
                 }
 

@@ -29,6 +29,8 @@ using System;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSLInteger = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
+using LSLFloat = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
+using LSLString = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
@@ -381,6 +383,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PRIM_SCULPT_TYPE_TORUS = 2;
         public static readonly LSLInteger PRIM_SCULPT_TYPE_PLANE = 3;
         public static readonly LSLInteger PRIM_SCULPT_TYPE_CYLINDER = 4;
+        //Aurora-Sim const only
+        public static readonly LSLInteger PRIM_SCULPT_TYPE_MESH = 5;
+        //???
+        public static readonly LSLInteger PRIM_SCULPT_FLAG_INVERT = 64;
+        public static readonly LSLInteger PRIM_SCULPT_FLAG_MIRROR = 128;
 
         public static readonly LSLInteger MASK_BASE = 0;
         public static readonly LSLInteger MASK_OWNER = 1;
@@ -477,14 +484,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PAYMENT_INFO_ON_FILE = 0x1;
         public static readonly LSLInteger PAYMENT_INFO_USED = 0x2;
 
-        public static readonly string NULL_KEY = "00000000-0000-0000-0000-000000000000";
-        public static readonly string EOF = "\n\n\n";
-        public static readonly double PI = 3.1415926535897932384626433832795;
-        public static readonly double TWO_PI = 6.283185307179586476925286766559;
-        public static readonly double PI_BY_TWO = 1.5707963267948966192313216916398;
-        public static readonly double DEG_TO_RAD = 0.01745329238f;
-        public static readonly double RAD_TO_DEG = 57.29578f;
-        public static readonly double SQRT2 = 1.4142135623730950488016887242097;
+        public static readonly LSLString NULL_KEY = "00000000-0000-0000-0000-000000000000";
+        public static readonly LSLString EOF = "\n\n\n";
+        public static readonly LSLFloat PI = 3.1415926535897932384626433832795;
+        public static readonly LSLFloat TWO_PI = 6.283185307179586476925286766559;
+        public static readonly LSLFloat PI_BY_TWO = 1.5707963267948966192313216916398;
+        public static readonly LSLFloat DEG_TO_RAD = 0.01745329238f;
+        public static readonly LSLFloat RAD_TO_DEG = 57.29578f;
+        public static readonly LSLFloat SQRT2 = 1.4142135623730950488016887242097;
         public static readonly LSLInteger STRING_TRIM_HEAD = 1;
         public static readonly LSLInteger STRING_TRIM_TAIL = 2;
         public static readonly LSLInteger STRING_TRIM = 3;
@@ -559,7 +566,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PARCEL_DETAILS_GROUP = 3;
         public static readonly LSLInteger PARCEL_DETAILS_AREA = 4;
         public static readonly LSLInteger PARCEL_DETAILS_ID = 5;
-        public static readonly LSLInteger PARCEL_DETAILS_PRIVACY = 6;
+        public static readonly LSLInteger PARCEL_DETAILS_PRIVACY = 6;//Old name
+        public static readonly LSLInteger PARCEL_DETAILS_SEE_AVATARS = 6;
 
         // constants for llSetClickAction
         public static readonly LSLInteger CLICK_ACTION_NONE = 0;
@@ -577,11 +585,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly vector TOUCH_INVALID_VECTOR = ZERO_VECTOR;
 
         // Constants for default textures
-        public const string TEXTURE_BLANK = "5748decc-f629-461c-9a36-a35a221fe21f";
-        public const string TEXTURE_DEFAULT = "89556747-24cb-43ed-920b-47caed15465f";
-        public const string TEXTURE_PLYWOOD = "89556747-24cb-43ed-920b-47caed15465f";
-        public const string TEXTURE_TRANSPARENT = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
-        public const string TEXTURE_MEDIA = "8b5fec65-8d8d-9dc5-cda8-8fdf2716e361";
+        public static readonly LSLString TEXTURE_BLANK = "5748decc-f629-461c-9a36-a35a221fe21f";
+        public static readonly LSLString TEXTURE_DEFAULT = "89556747-24cb-43ed-920b-47caed15465f";
+        public static readonly LSLString TEXTURE_PLYWOOD = "89556747-24cb-43ed-920b-47caed15465f";
+        public static readonly LSLString TEXTURE_TRANSPARENT = "8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
+        public static readonly LSLString TEXTURE_MEDIA = "8b5fec65-8d8d-9dc5-cda8-8fdf2716e361";
         
         // Constants for osGetRegionStats
         public static readonly LSLInteger STATS_TIME_DILATION = 0;
@@ -608,8 +616,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger STATS_PENDING_UPLOADS = 20;
         public static readonly LSLInteger STATS_UNACKED_BYTES = 24;
 
-        public const string URL_REQUEST_GRANTED = "URL_REQUEST_GRANTED";
-        public const string URL_REQUEST_DENIED = "URL_REQUEST_DENIED";
+        public static readonly LSLString URL_REQUEST_GRANTED = "URL_REQUEST_GRANTED";
+        public static readonly LSLString URL_REQUEST_DENIED = "URL_REQUEST_DENIED";
 
         public static readonly LSLInteger PASS_IF_NOT_HANDLED = 0;
         public static readonly LSLInteger PASS_ALWAYS = 1;

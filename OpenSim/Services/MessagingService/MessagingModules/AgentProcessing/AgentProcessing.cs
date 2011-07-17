@@ -336,6 +336,7 @@ namespace OpenSim.Services.MessagingService
 
                     AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy ();
                     regionCircuitData.child = true; //Fix child agent status
+                    regionCircuitData.reallyischild = true;
                     string reason; //Tell the region about it
                     bool useCallbacks = false;
                     if (!InformClientOfNeighbor (regionClientCaps.AgentID, regionClientCaps.RegionHandle,
@@ -373,6 +374,7 @@ namespace OpenSim.Services.MessagingService
                     AgentCircuitData regionCircuitData = circuit.Copy ();
                     GridRegion nCopy = neighbor;
                     regionCircuitData.child = true; //Fix child agent status
+                    regionCircuitData.reallyischild = true;
                     bool useCallbacks = false;
                     if (!InformClientOfNeighbor (AgentID, requestingRegion, regionCircuitData, ref nCopy,
                         (uint)TeleportFlags.Default, null, out reason, out useCallbacks))

@@ -1885,8 +1885,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         /// <param name="pbs"></param>
         /// <returns></returns>
-        public bool needsMeshing(PrimitiveBaseShape pbs)
+        public bool needsMeshing(ISceneChildEntity entity)
         {
+            PrimitiveBaseShape pbs = entity.Shape;
             // most of this is redundant now as the mesher will return null if it cant mesh a prim
             // but we still need to check for sculptie meshing being enabled so this is the most
             // convenient place to do it for now...
@@ -1911,8 +1912,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #endif
                 return false;
             }
-            else if (pbs.SculptType != (byte)SculptType.None)
-                return true;
+            else if (pbs.SculptType != (byte)SculptType.Mesh &&
+                pbs.SculptType != (byte)SculptType.None)
+                return true;//Sculpty, mesh it
+            else if (pbs.SculptType == (byte)SculptType.Mesh)
+            {
+                //Mesh, we need to see what the prims says to do with it
+                if (entity.PhysicsType == (byte)OpenMetaverse.PhysicsShapeType.Prim)
+                    return false;//Supposed to be a simple box, nothing more
+                else
+                    return true;//Mesh it!
+            }
 
             // if it's a standard box or sphere with no cuts, hollows, twist or top shear, return false since ODE can use an internal representation for the prim
             if (!forceSimplePrimMeshing)
