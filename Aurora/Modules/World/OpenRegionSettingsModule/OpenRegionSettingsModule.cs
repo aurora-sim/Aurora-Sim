@@ -73,6 +73,7 @@ namespace Aurora.Modules
         private int m_MaximumInventoryItemsTransfer = -1;
         private bool m_DisplayMinimap = true;
         private bool m_RenderWater = true;
+        private float m_TerrainDetailScale = 16f;
         private bool m_AllowPhysicalPrims = true;
         private bool m_ClampPrimSizes = true;
         private bool m_ForceDrawDistance = true;
@@ -201,6 +202,16 @@ namespace Aurora.Modules
             set { m_RenderWater = value; }
         }
 
+        public float TerrainDetailScale
+        {
+            get { return m_TerrainDetailScale; }
+            set 
+            {
+                if(value >= 1f)
+                    m_TerrainDetailScale = value; 
+            }
+        }
+
         public int MaximumInventoryItemsTransfer
         {
             get
@@ -306,6 +317,7 @@ namespace Aurora.Modules
             MaximumLinkCountPhys = rm["MaxLinkCountPhys"].AsInteger();
             MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
             RenderWater = rm["RenderWater"].AsInteger() == 1;
+            TerrainDetailScale = (float)rm["TerrainDetailScale"].AsReal();
             MaximumInventoryItemsTransfer = rm["MaxInventoryItemsTransfer"].AsInteger();
             DisplayMinimap = rm["AllowMinimap"].AsInteger() == 1;
             AllowPhysicalPrims = rm["AllowPhysicalPrims"].AsInteger() == 1;
@@ -352,6 +364,8 @@ namespace Aurora.Modules
             body.Add("LSLFunctions", LSLCommands);
 
             body.Add("RenderWater", OSD.FromInteger(RenderWater ? 1 : 0));
+
+            body.Add("TerrainDetailScale", OSD.FromReal (TerrainDetailScale));
 
             body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(MaximumInventoryItemsTransfer));
 
@@ -482,12 +496,15 @@ namespace Aurora.Modules
             set { m_settings.RenderWater = value; }
         }
 
+        public float TerrainDetailScale
+        {
+            get { return m_settings.TerrainDetailScale; }
+            set { m_settings.TerrainDetailScale = value; }
+        }
+
         public int MaximumInventoryItemsTransfer
         {
-            get
-            {
-                return m_settings.MaximumInventoryItemsTransfer;
-            }
+            get { return m_settings.MaximumInventoryItemsTransfer; }
             set { m_settings.MaximumInventoryItemsTransfer = value; }
         }
 
@@ -697,8 +714,9 @@ namespace Aurora.Modules
             m_settings.MaximumLinkCountPhys = (int)rm["max_link_count_phys"].AsReal();
             m_settings.MaximumPhysPrimScale = (float)rm["max_phys_prim_scale"].AsReal();
             m_settings.MaximumPrimScale = (float)rm["max_prim_scale"].AsReal();
-            m_settings.MinimumPrimScale = (float)rm["min_prim_scale"].AsReal();
-            m_settings.RenderWater = rm["render_water"].AsBoolean();
+            m_settings.MinimumPrimScale = (float)rm["min_prim_scale"].AsReal ();
+            m_settings.RenderWater = rm["render_water"].AsBoolean ();
+            m_settings.TerrainDetailScale = (float)rm["terrain_detail_scale"].AsReal ();
             m_settings.ShowTags = (int)rm["show_tags"].AsReal();
             m_settings.MaxGroups = (int)rm["max_groups"].AsReal();
             m_settings.AllowParcelWindLight = rm["allow_parcel_windlight"].AsBoolean();
@@ -852,7 +870,7 @@ namespace Aurora.Modules
 
             body.Add ("RenderWater", OSD.FromInteger (m_settings.RenderWater ? 1 : 0));
 
-            body.Add ("TerrainDetailScale", OSD.FromInteger (1));
+            body.Add ("TerrainDetailScale", OSD.FromReal (m_settings.TerrainDetailScale));
 
             if (m_settings.MaximumInventoryItemsTransfer != -1)
                 body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(m_settings.MaximumInventoryItemsTransfer));
