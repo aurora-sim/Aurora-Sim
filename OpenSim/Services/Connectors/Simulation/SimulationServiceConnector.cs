@@ -292,7 +292,7 @@ namespace OpenSim.Services.Connectors.Simulation
         public bool CreateObject(GridRegion destination, ISceneObject sog)
         {
             // Try local first
-            if (m_localBackend.CreateObject(destination, sog))
+            if (m_localBackend != null && m_localBackend.CreateObject (destination, sog))
             {
                 //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
                 return true;
@@ -300,7 +300,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
             // else do the remote thing
             bool successful = false;
-            if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
+            if (m_localBackend == null || !m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 string uri = MakeUri(destination, false) + sog.UUID + "/";
                 //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
