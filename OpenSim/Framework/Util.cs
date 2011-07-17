@@ -870,6 +870,33 @@ namespace OpenSim.Framework
             return ret;
         }
 
+        public static void Compress7ZipFile(string path, string destination)
+        {
+            ProcessStartInfo p = new ProcessStartInfo();string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+            if (pa != null)
+            {
+                p.FileName = Path.Combine(pa, "7za.exe");
+                p.Arguments = "a -y -tgzip \"" + destination + "\" \"" + path + "\" -mx=9";
+                p.WindowStyle = ProcessWindowStyle.Hidden;
+                Process x = Process.Start(p);
+                x.WaitForExit();
+            }
+        }
+
+        public static void UnCompress7ZipFile(string path, string destination)
+        {
+            ProcessStartInfo p = new ProcessStartInfo();
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+            if (pa != null)
+            {
+                p.FileName = Path.Combine(pa, "7za.exe");
+                p.Arguments = "e -y \"" + path + "\" -o\"" + destination + "\" -mx=9";
+                p.WindowStyle = ProcessWindowStyle.Hidden;
+                Process x = Process.Start(p);
+                x.WaitForExit();
+            }
+        }
+
         public static string Compress(string text)
         {
             byte[] buffer = Util.UTF8.GetBytes(text);

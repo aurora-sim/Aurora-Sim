@@ -37,7 +37,7 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
         public AuroraAssetMigrator_0()
         {
             Version = new Version(0, 0, 0);
-            MigrationName = "AuroraAsset";
+            MigrationName = "BlackholeAsset";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
@@ -284,7 +284,6 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("creator_id", ColumnTypes.String36, true)
                 ));
 
-            AddSchema("auroraassets_manual_migration", ColDefs(ColDef("version", ColumnTypes.String36, true)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
