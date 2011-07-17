@@ -9995,7 +9995,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         break;
                     case 6: // DATA_SIM_STATUS
                         if (info != null)
-                            reply = "up"; // Duh!
+                        {
+                            if ((info.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) != 0)
+                                reply = "up";
+                            else
+                                reply = "down";
+                        }
+                        //if() starting
+                        //if() stopping
+                        //if() crashed
                         else
                             reply = "unknown";
                         break;
