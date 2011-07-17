@@ -1343,7 +1343,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (_mesh == null)
             {
-                if (_parent_scene.needsMeshing (_pbs))
+                if (_parent_scene.needsMeshing (_parent_entity))
                 {
                     // Don't need to re-enable body..   it's done in SetMesh
                     _mesh = _parent_scene.mesher.CreateMesh (_parent_entity.Name, _pbs, _size, _parent_scene.meshSculptLOD, IsPhysical);
@@ -2343,7 +2343,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _size.Z = 0.01f;
             // Construction of new prim
 
-            if (_parent_scene.needsMeshing (_pbs))
+            if (_parent_scene.needsMeshing (_parent_entity))
             {
                 // Don't need to re-enable body..   it's done in SetMesh
                 float meshlod = _parent_scene.meshSculptLOD;
