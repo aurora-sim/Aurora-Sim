@@ -381,6 +381,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PRIM_SCULPT_TYPE_TORUS = 2;
         public static readonly LSLInteger PRIM_SCULPT_TYPE_PLANE = 3;
         public static readonly LSLInteger PRIM_SCULPT_TYPE_CYLINDER = 4;
+        //Aurora-Sim const only
+        public static readonly LSLInteger PRIM_SCULPT_TYPE_MESH = 5;
+        //???
+        public static readonly LSLInteger PRIM_SCULPT_FLAG_INVERT = 64;
+        public static readonly LSLInteger PRIM_SCULPT_FLAG_MIRROR = 128;
 
         public static readonly LSLInteger MASK_BASE = 0;
         public static readonly LSLInteger MASK_OWNER = 1;

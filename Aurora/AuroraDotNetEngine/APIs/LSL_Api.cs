@@ -8080,18 +8080,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             shapeBlock.PathScaleX = 100;
             shapeBlock.PathScaleY = 150;
 
-            if (type != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_CYLINDER &&
-                type != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_PLANE &&
-                type != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE &&
-                type != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_TORUS)
+            int onlytype = (type & 7);//Removes the sculpt flags according to libOMV
+            if (onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_CYLINDER &&
+                onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_PLANE &&
+                onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE &&
+                onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_TORUS &&
+                onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_MESH)
             {
                 // default
-                type = (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE;
+                type |= (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE;
             }
 
             // retain pathcurve
             shapeBlock.PathCurve = part.Shape.PathCurve;
-
             part.Shape.SetSculptProperties((byte)type, sculptId);
             part.Shape.SculptEntry = true;
             part.UpdateShape(shapeBlock);
