@@ -62,12 +62,6 @@ namespace OpenSim.Region.CoreModules
 
         private bool ready = false;
 
-        // This solves a chick before the egg problem
-        // the local SunFixedHour and SunFixed variables MUST be updated
-        // at least once with the proper Region Settings before we start
-        // updating those region settings in GenSunPos()
-        private bool receivedEstateToolsSunUpdate = false;
-
         // Configurable values
         private string m_RegionMode               = "SL";
 
@@ -132,6 +126,11 @@ namespace OpenSim.Region.CoreModules
         // Used to fix the sun in the sky so it doesn't move based on current time
         private bool m_SunFixed = false;
         private float m_SunFixedHour = 0f;
+        // This solves a chick before the egg problem
+        // the local SunFixedHour and SunFixed variables MUST be updated
+        // at least once with the proper Region Settings before we start
+        // updating those region settings in GenSunPos()
+        private bool m_sunIsReadyToRun = false;
 
         private const int TICKS_PER_SECOND = 10000000;
         private IConfigSource m_config;
@@ -157,6 +156,8 @@ namespace OpenSim.Region.CoreModules
         /// </summary>
         private void GenSunPos()
         {
+            if (!m_sunIsReadyToRun)
+                return;//We havn't set up the time for this region yet!
             // Time in seconds since UTC to use to calculate sun position.
             PosTime = CurrentTime;
 
@@ -256,14 +257,6 @@ namespace OpenSim.Region.CoreModules
             else
             {
                 Velocity = (Velocity * Tilt) * (1.0f / Magnitude);
-            }
-
-            // Update RegionInfo with new Sun Position and Hour
-            // set estate settings for region access to sun position
-            if (receivedEstateToolsSunUpdate)
-            {
-                m_scene.RegionInfo.RegionSettings.SunVector = Position;
-                m_scene.RegionInfo.RegionSettings.SunPosition = GetCurrentTimeAsLindenSunHour();
             }
         }
 
@@ -453,6 +446,7 @@ namespace OpenSim.Region.CoreModules
                 m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
                 m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
             }
+            m_sunIsReadyToRun = true;
         }
 
         public string Name
@@ -535,8 +529,6 @@ namespace OpenSim.Region.CoreModules
 
                 //m_log.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
                 //m_log.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
-
-                receivedEstateToolsSunUpdate = true;
 
                 // Generate shared values
                 GenSunPos();
