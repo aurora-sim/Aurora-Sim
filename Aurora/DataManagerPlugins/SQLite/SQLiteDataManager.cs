@@ -130,7 +130,7 @@ namespace Aurora.DataManager.SQLite
                 cmd.CommandText = query; 
                 return cmd;
             }
-            catch (Mono.Data.Sqlite.SqliteException ex)
+            catch (Mono.Data.Sqlite.SqliteException)
             {
                 //throw ex;
             }

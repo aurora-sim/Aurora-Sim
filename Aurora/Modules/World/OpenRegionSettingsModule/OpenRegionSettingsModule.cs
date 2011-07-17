@@ -850,7 +850,9 @@ namespace Aurora.Modules
             body.Add("SayDistance", OSD.FromReal(m_settings.WhisperDistance));
             body.Add("ShoutDistance", OSD.FromReal(m_settings.WhisperDistance));
 
-            body.Add("RenderWater", OSD.FromInteger(m_settings.RenderWater ? 1 : 0));
+            body.Add ("RenderWater", OSD.FromInteger (m_settings.RenderWater ? 1 : 0));
+
+            body.Add ("TerrainDetailScale", OSD.FromInteger (1));
 
             if (m_settings.MaximumInventoryItemsTransfer != -1)
                 body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(m_settings.MaximumInventoryItemsTransfer));

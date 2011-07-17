@@ -62,9 +62,14 @@ namespace OpenSim.Framework
         public string CapsPath = String.Empty;
 
         /// <summary>
-        /// Root agent, or Child agent
+        /// Root agent, or Child agent, check realischild if you want to know though, this can be wrong
         /// </summary>
         public bool child;
+
+        /// <summary>
+        /// The real child boolean, OpenSim always sends false, so we read this for Aurora regions
+        /// </summary>
+        public bool reallyischild;
 
         /// <summary>
         /// Number given to the client when they log-in that they provide 
@@ -134,8 +139,9 @@ namespace OpenSim.Framework
         {
             OSDMap args = new OSDMap();
             args["agent_id"] = OSD.FromUUID(AgentID);
-            args["caps_path"] = OSD.FromString(CapsPath);
-            args["child"] = OSD.FromBoolean(child);
+            args["caps_path"] = OSD.FromString (CapsPath);
+            args["child"] = OSD.FromBoolean (child);
+            args["reallyischild"] = OSD.FromBoolean (reallyischild);
             args["circuit_code"] = OSD.FromString(circuitcode.ToString());
             args["secure_session_id"] = OSD.FromUUID(SecureSessionID);
             args["session_id"] = OSD.FromUUID(SessionID);
@@ -178,6 +184,7 @@ namespace OpenSim.Framework
             Copy.Appearance = Appearance;
             Copy.CapsPath = CapsPath;
             Copy.child = child;
+            Copy.reallyischild = reallyischild;
             Copy.circuitcode = circuitcode;
             Copy.IPAddress = IPAddress;
             Copy.SecureSessionID = SecureSessionID;
@@ -202,7 +209,8 @@ namespace OpenSim.Framework
                 AgentID = args["agent_id"].AsUUID();
             if (args["caps_path"] != null)
                 CapsPath = args["caps_path"].AsString();
-
+            if (args["reallyischild"] != null)
+                reallyischild = args["reallyischild"].AsBoolean ();
             if (args["child"] != null)
                 child = args["child"].AsBoolean();
             if (args["circuit_code"] != null)

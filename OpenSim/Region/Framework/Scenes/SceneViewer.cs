@@ -787,6 +787,9 @@ namespace OpenSim.Region.Framework.Scenes
             //Don't reset the prim... the client is just in a child region now, we don't want to resent them all the prims
             //Reset the culler so that it doesn't cache too much
             m_culler.Reset ();
+            //Gotta remove this so that if the client comes back, we don't have any issues with sending them another update
+            lastPresencesInView.Remove (m_presence);
+            lastPresencesDInView.Remove (m_presence.UUID);
         }
 
         /// <summary>
