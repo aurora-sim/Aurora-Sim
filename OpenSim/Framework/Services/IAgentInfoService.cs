@@ -129,6 +129,11 @@ namespace OpenSim.Services.Interfaces
         }
     }
 
+    public class AgentInfoHelpers
+    {
+        public static UUID LOGIN_STATUS_LOCKED = UUID.Parse ("11111111-2222-3333-4444-555555555555");
+    }
+
     public interface IAgentInfoService
     {
         /// <summary>
