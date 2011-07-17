@@ -39,7 +39,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     internal class CSReservedWords
     {
         private static List<string> reservedWords = new List<string>(new string[] {
-                                          "abstract","as",
+                                          "abstract","as","async",
                                           "base","bool","break","byte",
                                           "case","catch","char","checked","class","const","continue",
                                           "decimal","default","delegate",

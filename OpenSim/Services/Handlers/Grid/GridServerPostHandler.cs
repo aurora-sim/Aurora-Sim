@@ -770,7 +770,10 @@ namespace OpenSim.Services
         {
             if (region == null)
                 return null;
+            bool regionOnline = (region.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) != 0;
             region.Flags = 0;
+            if (regionOnline)
+                region.Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
             region.SessionID = UUID.Zero;
             region.LastSeen = 0;
             region.AuthToken = "";
