@@ -221,9 +221,12 @@ namespace OpenSim.Services.MessagingService
 
                     OSDMap result = new OSDMap();
                     string reason = "";
-                    result["Success"] = TeleportAgent(destination, TeleportFlags, DrawDistance,
+                    result["Success"] = TeleportAgent(ref destination, TeleportFlags, DrawDistance,
                         Circuit, AgentData, AgentID, requestingRegion, out reason);
                     result["Reason"] = reason;
+                    //Remove the region flags, not the regions problem
+                    destination.Flags = 0;
+                    result["Destination"] = destination.ToOSD();//Send back the new destination
                     return result;
                 }
             }
@@ -526,7 +529,7 @@ namespace OpenSim.Services.MessagingService
 
         #region Teleporting
 
-        public virtual bool TeleportAgent (GridRegion destination, uint TeleportFlags, int DrawDistance,
+        public virtual bool TeleportAgent (ref GridRegion destination, uint TeleportFlags, int DrawDistance,
             AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
             out string reason)
         {
@@ -985,6 +988,84 @@ namespace OpenSim.Services.MessagingService
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region Login initial agent
+
+        public virtual bool LoginAgent (GridRegion region, AgentCircuitData aCircuit, out string reason)
+        {
+            bool success = false;
+            reason = "Could not find the simulation service";
+            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService> ();
+            ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
+            if (SimulationService != null)
+            {
+                // The client is in the region, we need to make sure it gets the right Caps
+                // If CreateAgent is successful, it passes back a OSDMap of params that the client 
+                //    wants to inform us about, and it includes the Caps SEED url for the region
+                IRegionClientCapsService regionClientCaps = null;
+                if (capsService != null)
+                {
+                    //Remove any previous users
+                    string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath ();
+                    capsService.CreateCAPS (aCircuit.AgentID, CapsUtil.GetCapsSeedPath (ServerCapsBase), region.RegionHandle, true, aCircuit);
+
+                    regionClientCaps = capsService.GetClientCapsService (aCircuit.AgentID).GetCapsService (region.RegionHandle);
+                }
+
+                ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService> ();
+                if (commsService != null)
+                    commsService.GetUrlsForUser (region, aCircuit.AgentID);//Make sure that we make userURLs if we need to
+
+                // As we are creating the agent, we must also initialize the CapsService for the agent
+                success = SimulationService.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out reason);
+                if (!success) // If it failed, do not set up any CapsService for the client
+                {
+                    if (reason != "")
+                    {
+                        try
+                        {
+                            OSDMap reasonMap = OSDParser.DeserializeJson (reason) as OSDMap;
+                            if (reasonMap != null && reasonMap.ContainsKey ("Reason"))
+                                reason = reasonMap["Reason"].AsString ();
+                        }
+                        catch
+                        {
+                            //If its already not JSON, it'll throw an exception, catch it
+                        }
+                    }
+                    //Delete the Caps!
+                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
+                    if (agentProcessor != null && capsService != null)
+                        agentProcessor.LogoutAgent (regionClientCaps);
+                    else if (capsService != null)
+                        capsService.RemoveCAPS (aCircuit.AgentID);
+                    return success;
+                }
+
+                if (capsService != null && reason != "")
+                {
+                    try
+                    {
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
+                        OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
+                        regionClientCaps.AddCAPS (SimSeedCaps);
+                    }
+                    catch
+                    {
+                        //Delete the Caps!
+                        IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
+                        if (agentProcessor != null && capsService != null)
+                            agentProcessor.LogoutAgent (regionClientCaps);
+                        else if (capsService != null)
+                            capsService.RemoveCAPS (aCircuit.AgentID);
+                        success = false;
+                    }
+                }
+            }
+            return success;
         }
 
         #endregion

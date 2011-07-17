@@ -322,11 +322,22 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         sp.IsChildAgent = false;
                         //Fix user's attachments
                         attModule.RezAttachments (sp);
-                        if(map != null)
-                            sp.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                        if (map != null)
+                            sp.ControllingClient.SendTeleportFailed (map["Reason"].AsString ());
                         else
                             sp.ControllingClient.SendTeleportFailed ("Teleport Failed");
                         return;
+                    }
+                    else
+                    {
+                        //Get the new destintation, it may have changed
+                        finalDestination = new GridRegion ();
+                        finalDestination.FromOSD ((OSDMap)map["Destination"]);
+                        if(string.IsNullOrEmpty(finalDestination.ServerURI))//Fix the serverURL
+                            finalDestination.ServerURI = (finalDestination.ExternalHostName.StartsWith("http://") ? 
+                                finalDestination.ExternalHostName : 
+                                ("http://" + finalDestination.ExternalHostName)) +
+                                ":" + finalDestination.HttpPort;
                     }
                 }
             }

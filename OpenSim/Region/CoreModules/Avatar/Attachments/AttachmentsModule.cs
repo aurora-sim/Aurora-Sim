@@ -514,6 +514,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public void ValidateAttachments(UUID avatarID)
         {
             ISceneEntity[] attachments = GetAttachmentsForAvatar (avatarID);
+            m_scene.AuroraEventManager.FireGenericEventHandler ("DetachingAllAttachments", attachments);
 
             IScenePresence presence = m_scene.GetScenePresence (avatarID);
             if (presence == null)

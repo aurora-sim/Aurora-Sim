@@ -71,11 +71,12 @@ namespace OpenSim.Services.RobustCompat
             scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
         }
 
+        private Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]> ();
         public object DetachingAllAttachments (string funct, object param)
         {
             ISceneEntity[] attachments = (ISceneEntity[])param;
-            foreach (ISceneEntity attachment in attachments)
-                m_scene.SimulationService.CreateObject (new Interfaces.GridRegion (m_scene.RegionInfo), (ISceneObject)attachment);
+            if(attachments.Length > 0)
+                m_userAttachments[attachments[0].OwnerID] = attachments; 
             return null;
         }
 
@@ -85,8 +86,16 @@ namespace OpenSim.Services.RobustCompat
             IScenePresence sp = (IScenePresence)parameters[1];
             OpenSim.Services.Interfaces.GridRegion dest = (OpenSim.Services.Interfaces.GridRegion)parameters[0];
             IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule> ();
-            foreach (ISceneEntity attachment in att.GetAttachmentsForAvatar (sp.UUID))
-                m_scene.SimulationService.CreateObject (dest, (ISceneObject)attachment);
+            if (m_userAttachments.ContainsKey(sp.UUID))
+            {
+                foreach (ISceneEntity attachment in m_userAttachments[sp.UUID])
+                {
+                    OpenSim.Services.Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
+                    attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
+                    //Now send it to them
+                    ssc.CreateObject (dest, (ISceneObject)attachment);
+                }
+            }
             return null;
         }
 

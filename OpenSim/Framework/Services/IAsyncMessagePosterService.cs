@@ -109,6 +109,14 @@ namespace OpenSim.Services.Interfaces
         void LogoutAgent(IRegionClientCapsService regionCaps);
 
         /// <summary>
+        /// Called by the login service, adds an agent to the region without firing any EQM messages
+        /// </summary>
+        /// <param name="region"></param>
+        /// <param name="aCircuit"></param>
+        /// <param name="reason"></param>
+        bool LoginAgent (GridRegion region, AgentCircuitData aCircuit, out string reason);
+
+        /// <summary>
         /// Logout all agents in the given region
         /// </summary>
         /// <param name="requestingRegion"></param>
@@ -143,7 +151,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="requestingRegion"></param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        bool TeleportAgent(GridRegion destination, uint TeleportFlags, int DrawDistance,
+        bool TeleportAgent(ref GridRegion destination, uint TeleportFlags, int DrawDistance,
             AgentCircuitData circuit, AgentData agentData, UUID AgentID, ulong requestingRegion,
             out string reason);
 
