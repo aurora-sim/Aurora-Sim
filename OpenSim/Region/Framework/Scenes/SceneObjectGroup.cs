@@ -2543,6 +2543,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         public void Resize(Vector3 scale, uint localID)
         {
+            CheckSculptAndLoad ();//Grab the mesh again if it is a sculpty/mesh as we remove it after the first mesh is built
             IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (WSModule != null)
             {
@@ -2612,6 +2613,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart part = (SceneObjectPart)GetChildPart (localID);
             if (part != null)
             {
+                CheckSculptAndLoad ();//Grab the mesh again if it is a sculpty/mesh as we remove it after the first mesh is built
                 part.IgnoreUndoUpdate = true;
 
                 IOpenRegionSettingsModule WSModule = Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
