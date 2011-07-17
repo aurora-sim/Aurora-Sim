@@ -365,6 +365,8 @@ namespace Aurora.Modules
         {
             //Find the event
             EventData data = directoryService.GetEventInfo(queryEventID.ToString());
+            if (data == null)
+                return;
             //Send the event
             remoteClient.SendEventInfoReply(data);
         }
@@ -494,7 +496,7 @@ namespace Aurora.Modules
                 foreach (DirLandReplyData landDir in Landdata)
                 {
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
-                    if (landdata.Maturity == 0)
+                    if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
                     foreach (Scene scene in m_Scenes)
                     {
@@ -561,7 +563,8 @@ namespace Aurora.Modules
                 {
                     //Get more info on the event
                     EventData eventdata = directoryService.GetEventInfo(eventData.eventID.ToString());
-                    
+                    if (eventdata == null)
+                        continue;//Can't do anything about it
                     Vector3 globalPos = eventdata.globalPos;
                     mapitem = new mapItemReply();
                     
