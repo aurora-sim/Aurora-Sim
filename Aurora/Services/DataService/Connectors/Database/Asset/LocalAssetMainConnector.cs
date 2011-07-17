@@ -117,7 +117,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return null;
         }
 
-        public void StoreAsset(AssetBase asset)
+        public bool StoreAsset(AssetBase asset)
         {
             try
             {
@@ -133,6 +133,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 m_Log.ErrorFormat("[ASSET DB]: MySQL failure creating asset {0} with name \"{1}\". Error: {2}",
                     asset.ID, asset.Name, e.Message);
             }
+            return true;
         }
 
         public void UpdateContent(UUID id, byte[] asset)

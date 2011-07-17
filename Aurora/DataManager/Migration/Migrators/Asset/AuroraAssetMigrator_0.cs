@@ -279,6 +279,11 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                ColDef("host_uri", ColumnTypes.String1024)
                ));
 
+            AddSchema("auroraassets_tasks", ColDefs(ColDef("id", ColumnTypes.String36, true),
+                ColDef("task_type", ColumnTypes.String64),
+                ColDef("task_values", ColumnTypes.String36)
+                ));
+
             AddSchema("auroraassets_temp", ColDefs(ColDef("id", ColumnTypes.String36, true),
                 ColDef("hash_code", ColumnTypes.String64, true),
                 ColDef("creator_id", ColumnTypes.String36, true)
