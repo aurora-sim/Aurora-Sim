@@ -76,7 +76,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_map = import;
-            m_Width = m_scene.RegionInfo.RegionSizeX;
+            m_Width = (int)Math.Sqrt(import.Length);
             taint = new bool[m_Width, m_Width];
             if ((m_Width != scene.RegionInfo.RegionSizeX ||
                 m_Width != scene.RegionInfo.RegionSizeY) &&
