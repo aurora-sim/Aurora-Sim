@@ -94,16 +94,20 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             string databaseTable = "auroraassets_" + uuid.ToString().Substring(0, 1);
             IDataReader dr = null;
             AssetBase asset;
+            if (uuid == UUID.Parse("00000000-0000-1111-9999-000000000003"))
+            {
+                uuid = uuid;
+            }
             try
             {
                 dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
-                                    "id, hash_code, parent_id, creator_id, name, description, assetType, create_time, access_time, asset_flags, owner_id, host_uri");
+                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, owner_id, host_uri");
                 asset = LoadAssetFromDR(dr);
                 if (asset == null)
                 {
                     databaseTable = "auroraassets_old";
                     dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
-                                    "id, hash_code, parent_id, creator_id, name, description, assetType, create_time, access_time, asset_flags, owner_id, host_uri");
+                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, owner_id, host_uri");
                     asset = LoadAssetFromDR(dr);
                     if (asset != null) StoreAsset(asset);
                 }
