@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using Aurora.Framework;
 using log4net;
 using OpenMetaverse;
@@ -27,7 +29,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTiers = 3;
         private const int m_CacheDirectoryTierLen = 1;
         private readonly System.Timers.Timer taskTimer = new System.Timers.Timer();
+
+        private AuroraThreadPool m_CmdThreadpool;
+
         private int convertCount;
+        private int convertCountDupe;
+        private int convertCountParentFix;
+        private int migrationTaskCount;
+        private int migrationTaskCountOn;
+        private int displayCount;
+        Stopwatch sw = new Stopwatch();
 
         #region Implementation of IAuroraDataPlugin
 
@@ -67,6 +78,19 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 taskTimer.Elapsed += t_Elapsed;
                 taskTimer.Start();
 
+                if (needsConversion)
+                {
+                    AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo
+                    {
+                        priority = ThreadPriority.Normal,
+                        Threads = 40,
+                        MaxSleepTime = 100,
+                        SleepIncrementTime = 1,
+                        Name = "Asset conversion thread"
+                    };
+                    m_CmdThreadpool = new AuroraThreadPool(info);
+                }
+
             }
         }
 
@@ -94,10 +118,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             string databaseTable = "auroraassets_" + uuid.ToString().Substring(0, 1);
             IDataReader dr = null;
             AssetBase asset;
-            if (uuid == UUID.Parse("00000000-0000-1111-9999-000000000003"))
-            {
-                uuid = uuid;
-            }
             try
             {
                 dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
@@ -192,7 +212,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         #region Store Asset
         public bool StoreAsset(AssetBase asset)
         {
-            ResetTimer(1);
             try
             {
                 string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
@@ -266,19 +285,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public bool ExistsAsset(UUID uuid)
         {
-            return ExistsAsset(uuid, 0);
-        }
-
-        public bool ExistsAsset(UUID uuid, int tryCount)
-        {
             ResetTimer(1);
             try
             {
                 bool result = m_Gd.Query("id", uuid, "auroraassets_" + uuid.ToString().Substring(0, 1), "id").Count > 0;
-                if ((!result) && (tryCount == 0))
+                if (!result)
+                    result = m_Gd.Query("id", uuid, "auroraassets_old", "id").Count > 0;
+                if (!result)
                 {
-                    Convert2BH(uuid);
-                    return ExistsAsset(uuid, 1);
+                    AssetBase a = Convert2BH(uuid);
+                    return a != null;
                 }
                 return result;
             }
@@ -288,7 +304,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     "[ASSETS DB]: MySql failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
-
         }
 
         #endregion
@@ -358,6 +373,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             asset.Flags |= AssetFlags.Local;
                         if (bool.Parse(dr["temporary"].ToString())) asset.Flags |= AssetFlags.Temperary;
 
+                        if (File.Exists(GetFileName(Convert.ToBase64String(new SHA256Managed().ComputeHash(asset.Data)) + asset.Data.Length, false)))
+                            convertCountDupe++;
+
                         asset.HashCode = WriteFile(asset.ID, asset.Data);
 
                         List<string> check1 = m_Gd.Query(
@@ -370,6 +388,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         }
                         else if ((check1 != null) && (check1[0] != asset.ID.ToString()))
                         {
+                            convertCountParentFix++;
                             asset.ParentID = new UUID(check1[0]);
 
                             m_Gd.Update("inventoryitems", new object[] { asset.ParentID }, new[] { "assetID" },
@@ -379,6 +398,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;
+                        migrationTaskCountOn++;
                     }
                     dr.Close();
                     dr = null;
@@ -399,7 +419,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region File Management
 
-        public string WriteFile(UUID assetid, byte[] data)
+        public string WriteFile(UUID assetid, byte[] data, int tryCount)
         {
             bool alreadyWriten = false;
             Stream stream = null;
@@ -414,9 +434,28 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                 if (!alreadyWriten)
                 {
-                    stream = File.Open(filename, FileMode.Create);
-                    bformatter.Serialize(stream, data);
-                    stream.Close();
+                    try
+                    {
+                        stream = File.Open(filename, FileMode.Create);
+                        bformatter.Serialize(stream, data);
+                        stream.Close();
+                        stream = null;
+                    }
+                    catch (System.IO.IOException e)
+                    {
+                        if (stream != null) stream.Close();
+                        stream = null;
+                        if (tryCount <= 2)
+                        {
+                            Thread.Sleep(4000);
+                            WriteFile(assetid, data, tryCount++);
+                        }
+                        else
+                        {
+                            m_Log.Error("[AssetDataPlugin] Error writing Asset File " + assetid, e);
+                        }
+                    }
+
                     stream = null;
                     string filenameForBackup = GetFileName(hashCode, true) + ".7z";
                     directory = Path.GetDirectoryName(filenameForBackup);
@@ -435,6 +474,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     stream.Close();
             }
             return hashCode;
+        }
+
+        public string WriteFile(UUID assetid, byte[] data)
+        {
+            return WriteFile(assetid, data, 0);
         }
 
         private Byte[] LoadFile(string hashCode)
@@ -524,11 +568,24 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             taskTimer.Stop();
             if (needsConversion)
             {
-                List<string> toConvert = m_Gd.Query(" 1 = 1 LIMIT 1 ", "assets", "id");
-                if (toConvert.Count == 1) Convert2BH(UUID.Parse(toConvert[0]));
-
-                if ((convertCount.ToString().Length >= 3) && (convertCount.ToString().Substring(convertCount.ToString().Length - 3) == "000"))
-                    m_Log.Info("[Blackhole Assets] Converted " + convertCount + " assets.");
+                if (!sw.IsRunning) sw.Start();
+                displayCount++;
+                List<string> toConvert = m_Gd.Query(" 1 = 1 LIMIT 5 ", "assets", "id");
+                if (toConvert.Count >= 1)
+                {
+                    foreach (string assetkey in toConvert)
+                        Convert2BH(UUID.Parse(assetkey));
+                }
+                if (displayCount == 100)
+                {
+                    sw.Stop();
+                    m_Log.Info("[Blackhole Assets] Converted:" + convertCount + " DupeContent:" + convertCountDupe +
+                               " Dupe4Creator:" + convertCountParentFix);
+                    m_Log.Info("[Blackhole Assets] 500 in " + sw.Elapsed.Minutes + ":" + sw.Elapsed.Seconds);
+                    displayCount = 0;
+                    sw.Reset();
+                    sw.Start();
+                }
 
                 ResetTimer(2);
                 return;
