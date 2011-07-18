@@ -64,7 +64,8 @@ namespace OpenSim.CoreApplicationPlugins
                 string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
                 //Pull the xml from the website
                 string XmlData = Utilities.ReadExternalWebsite(WebSite);
-
+                if (string.IsNullOrEmpty (XmlData))
+                    return;
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(XmlData);
 

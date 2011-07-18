@@ -62,6 +62,8 @@ namespace Aurora.Modules.FileBasedSimulationData
         protected List<ISceneEntity> m_groups = new List<ISceneEntity> ();
         protected byte[] m_terrain;
         protected byte[] m_revertTerrain;
+        protected byte[] m_oldstyleterrain;
+        protected byte[] m_oldstylerevertTerrain;
         //For backwards compat
         protected short[] m_shortterrain;
         //For backwards compat
@@ -320,17 +322,25 @@ namespace Aurora.Modules.FileBasedSimulationData
                 }
                 else if (filePath.StartsWith ("terrain/"))
                 {
-                    m_terrain = data;
+                    m_oldstyleterrain = data;
                 }
                 else if (filePath.StartsWith ("revertterrain/"))
                 {
+                    m_oldstylerevertTerrain = data;
+                }
+                else if (filePath.StartsWith ("newstyleterrain/"))
+                {
+                    m_terrain = data;
+                }
+                else if (filePath.StartsWith ("newstylerevertterrain/"))
+                {
                     m_revertTerrain = data;
                 }
-                else if (filePath.StartsWith ("water/"))
+                else if (filePath.StartsWith ("newstylewater/"))
                 {
                     m_water = data;
                 }
-                else if (filePath.StartsWith ("revertwater/"))
+                else if (filePath.StartsWith ("newstylerevertwater/"))
                 {
                     m_revertWater = data;
                 }
@@ -444,31 +454,54 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 ITerrainChannel channel = new TerrainChannel (false, scene);
                 if (m_revertTerrain == null)
                 {
-                    if (m_shortrevertTerrain != null)
-                        terrainModule.TerrainRevertMap = new TerrainChannel (m_shortterrain, scene);
-                    return null;
+                    if (m_shortrevertTerrain != null)//OpenSim style
+                        terrainModule.TerrainRevertMap = new TerrainChannel (m_shortrevertTerrain, scene);
+                    else if (m_oldstylerevertTerrain != null)
+                    {
+                        MemoryStream ms = new MemoryStream (m_oldstylerevertTerrain);
+                        if (terrainModule != null)
+                            terrainModule.LoadRevertMapFromStream (".r32", ms, 0, 0);
+                    }
                 }
-                MemoryStream ms = new MemoryStream (m_revertTerrain);
-                if (terrainModule != null)
-                    terrainModule.LoadRevertMapFromStream (".r32", ms, 0, 0);
+                else
+                    //New style
+                    terrainModule.TerrainRevertMap = ReadFromData (m_revertTerrain, scene);
+                
                 m_revertTerrain = null;
+                m_oldstylerevertTerrain = null;
+                m_shortrevertTerrain = null;
                 return null;
             }
             else
             {
                 if (m_terrain == null)
                 {
-                    if (m_shortterrain != null)
+                    if (m_shortterrain != null)//OpenSim style
                         terrainModule.TerrainMap = new TerrainChannel (m_shortterrain, scene);
-                    return null;
+                    else if (m_oldstyleterrain != null)
+                    {//Old style
+                        ITerrainChannel channel = new TerrainChannel (false, scene);
+                        MemoryStream ms = new MemoryStream (m_oldstyleterrain);
+                        if (terrainModule != null)
+                            terrainModule.LoadFromStream (".r32", ms, 0, 0);
+                    }
                 }
-                ITerrainChannel channel = new TerrainChannel (false, scene);
-                MemoryStream ms = new MemoryStream (m_terrain);
-                if (terrainModule != null)
-                    terrainModule.LoadFromStream (".r32", ms, 0, 0);
+                else
+                    //New style
+                    terrainModule.TerrainMap = ReadFromData (m_terrain, scene);
+
                 m_terrain = null;
+                m_oldstyleterrain = null;
+                m_shortterrain = null;
                 return null;
             }
+        }
+
+        private ITerrainChannel ReadFromData(byte[] data, IScene scene)
+        {
+            short[] sdata = new short[data.Length / 2];
+            System.Buffer.BlockCopy (data, 0, sdata, 0, data.Length);
+            return new TerrainChannel (sdata, scene);
         }
 
         public virtual short[] LoadWater (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
@@ -478,10 +511,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
             {
                 if (m_revertWater == null)
                     return null;
-                ITerrainChannel channel = new TerrainChannel (false, scene);
-                MemoryStream ms = new MemoryStream (m_revertWater);
-                if (terrainModule != null)
-                    terrainModule.LoadWaterRevertMapFromStream (".r32", ms, 0, 0);
+                terrainModule.TerrainWaterRevertMap = ReadFromData (m_revertWater, scene);
                 m_revertWater = null;
                 return null;
             }
@@ -489,10 +519,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
             {
                 if (m_water == null)
                     return null;
-                ITerrainChannel channel = new TerrainChannel (false, scene);
-                MemoryStream ms = new MemoryStream (m_water);
-                if (terrainModule != null)
-                    terrainModule.LoadWaterFromStream (".r32", ms, 0, 0);
+                terrainModule.TerrainWaterMap = ReadFromData (m_water, scene);
                 m_water = null;
                 return null;
             }
