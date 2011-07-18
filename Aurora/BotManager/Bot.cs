@@ -222,17 +222,10 @@ namespace Aurora.BotManager
 
         #region Initialize/Close
 
-        public void Initialize()
+        public void Initialize (IScenePresence SP)
         {
-            List<IScenePresence> avatars = m_scene.GetScenePresences ();
-            foreach (IScenePresence avatar in avatars)
-            {
-                if (avatar.ControllingClient == this)
-                {
-                    m_scenePresence = avatar;
-                    break;
-                }
-            }
+            m_scenePresence = SP;
+            m_scenePresence.DrawDistance = 1024f;
             m_frames.Start ();
         }
 

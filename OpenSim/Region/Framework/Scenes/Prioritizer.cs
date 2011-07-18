@@ -69,6 +69,8 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_cachedXOffset = 0;
         private int m_cachedYOffset = 0;
         private float m_sizeToForceDualCulling = 10f;
+        private int m_lastCached = 0;
+        private Dictionary<IEntity, bool> m_previousCulled = new Dictionary<IEntity, bool> ();
 
         public bool UseCulling
         {
@@ -94,18 +96,37 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ICuller Members
 
-        public bool ShowEntityToClient (IScenePresence client, IEntity entity)
+        public bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene)
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims
 
-            if (m_useDistanceCulling && !DistanceCulling (client, entity))
+            bool cull = false;
+            if (m_previousCulled.TryGetValue (entity, out cull))
+            {
+                if (Util.EnvironmentTickCountSubtract (m_lastCached) > 5 * 1000)//Only recheck every 5 seconds
+                {
+                    m_lastCached = Util.EnvironmentTickCount ();
+                    m_previousCulled.Clear ();
+                }
+                else
+                    return cull;
+            }
+
+            if (m_useDistanceCulling && !DistanceCulling (client, entity, scene))
+            {
+                m_previousCulled[entity] = false;
                 return false;
+            }
 
             if (!ParcelPrivateCulling (client, entity))
+            {
+                m_previousCulled[entity] = false;
                 return false;
+            }
 
             //No more, guess its fine
+            m_previousCulled[entity] = true;
             return true;
         }
 
@@ -126,9 +147,8 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool DistanceCulling (IScenePresence client, IEntity entity)
+        public bool DistanceCulling (IScenePresence client, IEntity entity, IScene scene)
         {
-            IScene scene = client.Scene;
             float DD = client.DrawDistance;
             if (DD < 32) //Limit to a small distance
                 DD = 32;
@@ -167,8 +187,10 @@ namespace OpenSim.Region.Framework.Scenes
                     posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
             }
             Vector3 entityPosToCheckFrom = Vector3.Zero;
+            bool doHeavyCulling = false;
             if (entity is ISceneEntity)
             {
+                doHeavyCulling = true;
                 //We need to check whether this object is an attachment, and if so, set it so that we check from the avatar's
                 // position, rather than from the offset of the attachment
                 ISceneEntity sEntity = (ISceneEntity)entity;
@@ -199,6 +221,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom) >
                 DD * DD) //Use squares to make it faster than having to do the sqrt
             {
+                if (!doHeavyCulling)
+                    return false;//Don't do the hardcore checks
                 ISceneEntity childEntity = (entity as ISceneEntity);
                 if (childEntity != null && HardCullingCheck(childEntity))
                 {

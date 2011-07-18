@@ -53,6 +53,7 @@ namespace OpenSim.Region.Framework.Scenes
         private const double MINVIEWDSTEPSQ = MINVIEWDSTEP * MINVIEWDSTEP;
 
         protected IScenePresence m_presence;
+        protected IScene m_scene;
         /// <summary>
         /// Have we sent all of the objects in the sim that the client can see for the first time?
         /// </summary>
@@ -106,6 +107,7 @@ namespace OpenSim.Region.Framework.Scenes
         public SceneViewer (IScenePresence presence)
         {
             m_presence = presence;
+            m_scene = presence.Scene;
             m_presence.OnSignificantClientMovement += SignificantClientMovement;
             m_presence.Scene.AuroraEventManager.RegisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
             m_presence.Scene.AuroraEventManager.RegisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
@@ -167,22 +169,22 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence))
+            if (!lastPresencesDInView.ContainsKey (presence.UUID))
+                return;//Only send updates if they are in view
+            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
                 lastPresencesInView.Remove (presence);
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
-            if (!lastPresencesDInView.ContainsKey (presence.UUID))
-                return;//Only send updates if they are in view
 
             QueuePresenceForUpdateInternal (presence, flags);
         }
 
         public void QueuePresenceForFullUpdate (IScenePresence presence)
         {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence))
+            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
                 lastPresencesInView.Remove (presence);
@@ -229,8 +231,8 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if ((o.Flags & flags) == o.Flags)
                         return; //Same, leave it alone!
-                    o.Flags = o.Flags | flags;
-                    m_presenceUpdatesToSend.Remove (presence.UUID);
+                    o.Flags |= flags;
+                    return;//All done, its updated
                 }
 
                 if (m_presence.UUID == presence.UUID) //Its us, set us first!
@@ -245,7 +247,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation)
         {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence))
+            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
                 lastPresencesInView.Remove (presence);
@@ -266,7 +268,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, part.ParentEntity))
+            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, part.ParentEntity, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
                 lastGrpsInView.Remove (part.ParentEntity);
@@ -308,7 +310,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (ISceneChildEntity entity in entities)
                 {
-                    if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, entity.ParentEntity))
+                    if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, entity.ParentEntity, m_scene))
                         continue; // if 2 far ignore
 
                     m_objectPropertiesToSend.Remove(entity.UUID);
@@ -385,7 +387,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (m_culler != null)
                     {
-                        if (!m_culler.ShowEntityToClient (m_presence, e))
+                        if (!m_culler.ShowEntityToClient (m_presence, e, m_scene))
                             continue;
                         NewGrpsInView.Add (e);
                     }
@@ -425,7 +427,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (presence != null && presence.UUID != m_presence.UUID)
                 {
                     //Check for culling here!
-                    if (!m_culler.ShowEntityToClient (m_presence, presence))
+                    if (!m_culler.ShowEntityToClient (m_presence, presence, m_scene))
                         continue; // if 2 far ignore
 
                     NewPresencesInView.Add (presence);
@@ -520,7 +522,7 @@ namespace OpenSim.Region.Framework.Scenes
                             //Check for culling here!
                             if (m_culler != null)
                             {
-                                if (!m_culler.ShowEntityToClient (m_presence, e))
+                                if (!m_culler.ShowEntityToClient (m_presence, e, m_scene))
                                     continue;
                                 NewGrpsInView.Add (e);
                             }
