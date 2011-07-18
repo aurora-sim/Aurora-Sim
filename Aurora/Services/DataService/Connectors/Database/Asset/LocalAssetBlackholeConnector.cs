@@ -101,6 +101,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 asset = LoadAssetFromDR(dr);
                 if (asset == null)
                 {
+                    databaseTable = "auroraassets_old";
+                    dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
+                                    "id, hash_code, parent_id, creator_id, name, description, assetType, create_time, access_time, asset_flags, owner_id, host_uri");
+                    asset = LoadAssetFromDR(dr);
+                    if (asset != null) StoreAsset(asset);
+                }
+                if (asset == null)
+                {
                     if (needsConversion)
                     {
                         asset = Convert2BH(uuid);
@@ -291,7 +299,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             ResetTimer(1);
             try
             {
-                return m_Gd.Delete("assets", "id = '" + id + "'");
+                if (!m_Gd.Delete("auroraassets_" + id.ToString().Substring(0, 1), "id = '" + id + "'"))
+                    m_Gd.Delete("auroraassets_old", "id = '" + id + "'");
+                return true;
             }
             catch (Exception e)
             {
@@ -348,20 +358,21 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                         List<string> check1 = m_Gd.Query(
                             "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
-                            "' and id != '" +
-                            asset.ID + "'", "auroraassets_temp", "id");
+                            "'", "auroraassets_temp", "id");
                         if ((check1 != null) && (check1.Count == 0))
                         {
                             m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
                                         new object[] { asset.ID, asset.HashCode, asset.CreatorID });
                         }
-                        else if (check1 != null)
+                        else if ((check1 != null) && (check1[0] != asset.ID.ToString()))
                         {
                             asset.ParentID = new UUID(check1[0]);
 
                             m_Gd.Update("inventoryitems", new object[] { asset.ParentID }, new[] { "assetID" },
                                 new[] { "assetID" }, new object[] { asset.ID });
                         }
+                        else asset.ParentID = asset.ID;
+
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;
                     }
