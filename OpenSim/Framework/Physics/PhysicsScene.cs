@@ -87,7 +87,7 @@ namespace OpenSim.Framework
 
         public abstract void SetTerrain (ITerrainChannel channel, short[] heightMap);
 
-        public abstract void SetWaterLevel(short[] map);
+        public abstract void SetWaterLevel (double height, short[] map);
 
         public abstract void Dispose();
 
@@ -238,7 +238,7 @@ namespace OpenSim.Framework
         {
         }
 
-        public override void SetWaterLevel (short[] map)
+        public override void SetWaterLevel (double height, short[] map)
         {
         }
 

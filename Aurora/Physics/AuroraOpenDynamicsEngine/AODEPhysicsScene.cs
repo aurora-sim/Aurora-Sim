@@ -187,6 +187,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private ITerrainChannel m_channel = null;
         private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
         private short[] WaterHeightFieldHeight;
+        private double WaterHeight = -1;
         public bool m_EnableAutoConfig = true;
         public bool m_allowJump = true;
         public bool m_usepreJump = true;
@@ -2562,12 +2563,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public double GetWaterLevel(float x, float y)
         {
+            if (WaterHeight != -1)
+                return WaterHeight;
             return WaterHeightFieldHeight[(int)y * Region.RegionSizeX + (int)x];
         }
 
-        public override void SetWaterLevel(short[] map)
+        public override void SetWaterLevel (double height, short[] map)
         {
             WaterHeightFieldHeight = map;
+            WaterHeight = height;
         }
 
         #endregion

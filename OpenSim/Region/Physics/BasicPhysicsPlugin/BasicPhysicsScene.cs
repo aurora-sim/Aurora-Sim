@@ -158,7 +158,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return fps;
         }
 
-        public override void SetWaterLevel(short[] map)
+        public override void SetWaterLevel (double height, short[] map)
         {
         }
 
