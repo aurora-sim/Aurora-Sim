@@ -97,8 +97,8 @@ namespace OpenSim.Framework
             Description = "";
             Name = "";
             HostUri = "";
-            LastAccessed = DateTime.Now;
-            CreationDate = DateTime.Now;
+            LastAccessed = DateTime.UtcNow;
+            CreationDate = DateTime.UtcNow;
             HashCode = "";
             ParentID = UUID.Zero;
             MetaOnly = true;
