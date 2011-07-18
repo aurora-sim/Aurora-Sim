@@ -541,6 +541,7 @@ namespace Aurora.BotManager
             Vector3 pos;
             TravelMode state;
             bool teleport;
+            m_closeToPoint = m_scenePresence.PhysicsActor.Flying ? 1.5f : 1.0f;
             if (m_nodeGraph.GetNextPosition (m_scenePresence.AbsolutePosition, m_closeToPoint, 60, out pos, out state, out teleport))
             {
                 if (state == TravelMode.Fly)

@@ -11415,21 +11415,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 foreach (object o in param.Data)
                 {
-                    if((int)o == ScriptBaseClass.PARCEL_DETAILS_NAME)
+                    if((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_NAME)
                         ret.Add (new LSL_String (land.Name));
-                    else if((int)o == ScriptBaseClass.PARCEL_DETAILS_DESC)
+                    else if ((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_DESC)
                         ret.Add (new LSL_String (land.Description));
-                    else if ((int)o == ScriptBaseClass.PARCEL_DETAILS_OWNER)
+                    else if ((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_OWNER)
                         ret.Add (new LSL_Key (land.OwnerID.ToString ()));
-                    else if ((int)o == ScriptBaseClass.PARCEL_DETAILS_GROUP)
+                    else if ((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_GROUP)
                         ret.Add (new LSL_Key (land.GroupID.ToString ()));
-                    else if ((int)o == ScriptBaseClass.PARCEL_DETAILS_AREA)
+                    else if ((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_AREA)
                         ret.Add(new LSL_Integer(land.Area));
-                    else if ((int)o == ScriptBaseClass.PARCEL_DETAILS_ID)
+                    else if ((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_ID)
                         //Returning the InfoUUID so that we can use this for landmarks outside of this region
                         // http://wiki.secondlife.com/wiki/PARCEL_DETAILS_ID
                         ret.Add (new LSL_Key (land.InfoUUID.ToString ()));
-                    else if ((int)o == ScriptBaseClass.PARCEL_DETAILS_PRIVACY)
+                    else if ((LSL_Integer)o == ScriptBaseClass.PARCEL_DETAILS_PRIVACY)
                         ret.Add (new LSL_Integer (land.Private ? 1 : 0));
                     else
                         ret.Add (new LSL_Integer (0));
