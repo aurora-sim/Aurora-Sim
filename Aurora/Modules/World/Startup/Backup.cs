@@ -70,7 +70,7 @@ namespace Aurora.Modules
 
         public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            if (MainConsole.Instance != null)
+            if (MainConsole.Instance != null && m_backup.Count == 0)//Only add them once
             {
                 MainConsole.Instance.Commands.AddCommand ("backup", "backup", "Persist objects to the database now, if [all], will force the persistence of all prims", RunCommand);
                 MainConsole.Instance.Commands.AddCommand ("disable backup", "disable backup", "Disables persistance until reenabled", DisableBackup);
@@ -570,39 +570,34 @@ namespace Aurora.Modules
                 m_log.Info("[Archive]: Finished writing parcels to archive");
                 m_log.Info ("[Archive]: Writing terrain to archive");
 
-                writer.WriteDir ("terrain");
-                writer.WriteDir ("revertterrain");
+                writer.WriteDir ("newstyleterrain");
+                writer.WriteDir ("newstylerevertterrain");
 
-                writer.WriteDir ("water");
-                writer.WriteDir ("revertwater");
+                writer.WriteDir ("newstylewater");
+                writer.WriteDir ("newstylerevertwater");
 
                 ITerrainModule tModule = scene.RequestModuleInterface<ITerrainModule> ();
                 if (tModule != null)
                 {
                     try
                     {
-                        MemoryStream s = new MemoryStream ();
-                        tModule.SaveToStream (tModule.TerrainMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                        writer.WriteFile ("terrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                        s.Close ();
-                        s = null;
-                        s = new MemoryStream ();
-                        tModule.SaveToStream (tModule.TerrainRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                        writer.WriteFile ("revertterrain/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                        s.Close ();
-                        s = null;
+                        byte[] sdata = WriteTerrainToStream (tModule.TerrainMap);
+                        writer.WriteFile ("newstyleterrain/" + scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                        sdata = null;
+
+                        sdata = WriteTerrainToStream (tModule.TerrainRevertMap);
+                        writer.WriteFile ("newstylerevertterrain/" + scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                        sdata = null;
+
                         if (tModule.TerrainWaterMap != null)
                         {
-                            s = new MemoryStream ();
-                            tModule.SaveToStream (tModule.TerrainWaterMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                            writer.WriteFile ("water/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                            s.Close ();
-                            s = null;
-                            s = new MemoryStream ();
-                            tModule.SaveToStream (tModule.TerrainWaterRevertMap, scene.RegionInfo.RegionID.ToString () + ".r32", s);
-                            writer.WriteFile ("revertwater/" + scene.RegionInfo.RegionID.ToString () + ".r32", s.ToArray ());
-                            s.Close ();
-                            s = null;
+                            sdata = WriteTerrainToStream (tModule.TerrainWaterMap);
+                            writer.WriteFile ("newstylewater/" + scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                            sdata = null;
+                            
+                            sdata = WriteTerrainToStream (tModule.TerrainWaterRevertMap);
+                            writer.WriteFile ("newstylerevertwater/" + scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                            sdata = null;
                         }
                     }
                     catch (Exception ex)
@@ -679,16 +674,12 @@ namespace Aurora.Modules
                 m_log.Info("[Archive]: Finished writing assets for entities to archive");
             }
 
-            private byte[] ShortToByte(short[] ter)
+            private static byte[] WriteTerrainToStream (ITerrainChannel tModule)
             {
-                byte[] heightmap = new byte[ter.Length * sizeof(short)];
-                int ii = 0;
-                for (int i = 0; i < ter.Length; i++)
-                {
-                    Utils.Int16ToBytes(ter[i], heightmap, ii);
-                    ii += 2;
-                }
-                return heightmap;
+                int tMapSize = tModule.Height * tModule.Height;
+                byte[] sdata = new byte[tMapSize * 2];
+                System.Buffer.BlockCopy (tModule.GetSerialised (tModule.Scene), 0, sdata, 0, sdata.Length);
+                return sdata;
             }
 
             private void RetrievedAsset(string id, Object sender, AssetBase asset)
@@ -791,6 +782,28 @@ namespace Aurora.Modules
                         m_parcels.Add(parcel);
                     }
                 }
+                #region New Style Terrain Loading
+                else if (filePath.StartsWith ("newstyleterrain/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    terrainModule.TerrainMap = ReadTerrain (data);
+                }
+                else if (filePath.StartsWith ("newstylerevertterrain/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    terrainModule.TerrainRevertMap = ReadTerrain (data);
+                }
+                else if (filePath.StartsWith ("newstylewater/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    terrainModule.TerrainWaterMap = ReadTerrain (data);
+                }
+                else if (filePath.StartsWith ("newstylerevertwater/"))
+                {
+                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    terrainModule.TerrainWaterRevertMap = ReadTerrain (data);
+                }
+                #endregion
                 else if (filePath.StartsWith ("terrain/"))
                 {
                     ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
@@ -823,19 +836,19 @@ namespace Aurora.Modules
                     terrainModule.LoadWaterRevertMapFromStream (filePath, ms, 0, 0);
                     ms.Close ();
                 }
-                else if (filePath.StartsWith("entities/"))
+                else if (filePath.StartsWith ("entities/"))
                 {
-                    MemoryStream ms = new MemoryStream(data);
-                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format(ms, (Scene)scene);
+                    MemoryStream ms = new MemoryStream (data);
+                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
                     foreach (SceneObjectPart part in sceneObject.ChildrenList)
                     {
-                        if (!ResolveUserUuid(part.CreatorID))
+                        if (!ResolveUserUuid (part.CreatorID))
                             part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-                        if (!ResolveUserUuid(part.OwnerID))
+                        if (!ResolveUserUuid (part.OwnerID))
                             part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-                        if (!ResolveUserUuid(part.LastOwnerID))
+                        if (!ResolveUserUuid (part.LastOwnerID))
                             part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
                         // Fix ownership/creator of inventory items
@@ -846,11 +859,11 @@ namespace Aurora.Modules
                             TaskInventoryDictionary inv = part.TaskInventory;
                             foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
                             {
-                                if (!ResolveUserUuid(kvp.Value.OwnerID))
+                                if (!ResolveUserUuid (kvp.Value.OwnerID))
                                 {
                                     kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                 }
-                                if (!ResolveUserUuid(kvp.Value.CreatorID))
+                                if (!ResolveUserUuid (kvp.Value.CreatorID))
                                 {
                                     kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                 }
@@ -858,14 +871,21 @@ namespace Aurora.Modules
                         }
                     }
 
-                    if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
+                    if (m_scene.SceneGraph.AddPrimToScene (sceneObject))
                     {
                         sceneObject.HasGroupChanged = true;
                         sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
-                        sceneObject.CreateScriptInstances(0, false, 0, UUID.Zero);
-                        sceneObject.ResumeScripts();
+                        sceneObject.CreateScriptInstances (0, false, 0, UUID.Zero);
+                        sceneObject.ResumeScripts ();
                     }
                 }
+            }
+
+            private ITerrainChannel ReadTerrain (byte[] data)
+            {
+                short[] sdata = new short[data.Length / 2];
+                System.Buffer.BlockCopy (data, 0, sdata, 0, data.Length);
+                return new TerrainChannel (sdata, m_scene);
             }
 
             private bool ResolveUserUuid (UUID uuid)

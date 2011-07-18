@@ -514,7 +514,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                         foreach (SceneObjectGroup sog in sceneObjects)
                             foreach (SceneObjectPart sop in sog.Parts)
-                                if (sop.CreatorData == null || sop.CreatorData == "")
+                                if (string.IsNullOrEmpty(sop.CreatorData))
                                     sop.CreatorID = m_creatorIdForAssetId[UUID.Parse (uuid)];
 
                         data = Utils.StringToBytes (OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.ToOriginalXmlFormat (sceneObjects[0]));

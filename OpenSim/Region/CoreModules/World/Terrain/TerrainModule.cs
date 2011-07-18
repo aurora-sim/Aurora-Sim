@@ -237,14 +237,15 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         public void UpdateWaterHeight(double height)
         {
             short[] waterMap;
+            int regionSize = m_scene.RegionInfo.RegionSizeX;
             if (m_waterChannel == null)
             {
-                waterMap = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY];
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                waterMap = new short[regionSize * regionSize];
+                for (int x = 0; x < regionSize; x++)
                 {
-                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+                    for (int y = 0; y < regionSize; y++)
                     {
-                        waterMap[y * m_scene.RegionInfo.RegionSizeX + x] = (short)height;
+                        waterMap[y * regionSize + x] = (short)height;
                     }
                 }
             }

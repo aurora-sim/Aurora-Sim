@@ -669,15 +669,17 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             Vector3 scale = new Vector3 (0.5f, 0.5f, 0.5f);
 
-
-            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
-                      RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                      BypassRayCast, bRayEndIsIntersection, true, scale, false);
-
             System.Xml.XmlDocument doc;
             InventoryItemBase item = new InventoryItemBase (itemID, remoteClient.AgentId);
             item = m_scene.InventoryService.GetItem (item);
             SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
+
+            //OOBsize is only half the size of the prim
+            Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse(group.GroupRotation);
+            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
+                      RayStart, RayEnd, RayTargetID, Quaternion.Identity,
+                      BypassRayCast, bRayEndIsIntersection, true, newSize, false);
+
             if (doc == null)
             {
                 //No asset, check task inventory
@@ -767,9 +769,10 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
             //  Set it's position in world.
             float offsetHeight = 0;
+            //The OOBsize is only half the size, x2
             pos = m_scene.SceneGraph.GetNewRezLocation (
                 RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox (out offsetHeight), false);
+                BypassRayCast, bRayEndIsIntersection, true, newSize, false);
             pos.Z += offsetHeight;
             group.AbsolutePosition = pos;
             //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
