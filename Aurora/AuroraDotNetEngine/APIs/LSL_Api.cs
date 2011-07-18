@@ -2572,7 +2572,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetVel()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            Vector3 tmp = m_host.Velocity;
+            Vector3 tmp = m_host.IsAttachment ? m_host.ParentEntity.Scene.GetScenePresence(m_host.AttachedAvatar).Velocity : m_host.Velocity;
             return new LSL_Vector(tmp.X, tmp.Y, tmp.Z);
         }
 

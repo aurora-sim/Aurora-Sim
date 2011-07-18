@@ -264,7 +264,7 @@ namespace Aurora.BotManager
         {
             if (!m_botTags.ContainsKey (tag))
                 return new List<UUID> ();
-            return m_botTags[tag];
+            return new List<UUID> (m_botTags[tag]);
         }
 
         public void RemoveBots (string tag)

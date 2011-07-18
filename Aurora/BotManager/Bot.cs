@@ -311,7 +311,8 @@ namespace Aurora.BotManager
         {
             State = BotState.Idle;
             //Clear out any nodes
-            m_nodeGraph.Clear ();
+            if(clearPath)
+                m_nodeGraph.Clear ();
             //Send the stop message
             m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
             if (fly)
@@ -563,8 +564,6 @@ namespace Aurora.BotManager
         public void PauseMovement ()
         {
             m_paused = true;
-            //Stop movement
-            WalkTo (m_scenePresence.AbsolutePosition);
         }
 
         public void ResumeMovement ()
