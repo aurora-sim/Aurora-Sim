@@ -149,7 +149,7 @@ namespace OpenSim.Framework
         /// <param name="client"></param>
         /// <param name="entity"></param>
         /// <returns></returns>
-        bool ShowEntityToClient (IScenePresence client, IEntity entity);
+        bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene);
     }
 
     public interface IAnimator

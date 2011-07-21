@@ -182,11 +182,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
         private d.ContactGeom[] contacts;
         public IntPtr RegionTerrain;
-        private readonly Dictionary<IntPtr, short[]> TerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
-        private readonly Dictionary<IntPtr, short[]> ODETerrainHeightFieldHeights = new Dictionary<IntPtr, short[]> ();
+        private short[] TerrainHeightFieldHeights = null;
+        private short[] ODETerrainHeightFieldHeights = null;
         private ITerrainChannel m_channel = null;
-        private readonly Dictionary<IntPtr, float[]> TerrainHeightFieldlimits = new Dictionary<IntPtr, float[]>();
+        private float[] TerrainHeightFieldlimits = null;
         private short[] WaterHeightFieldHeight;
+        private double WaterHeight = -1;
         public bool m_EnableAutoConfig = true;
         public bool m_allowJump = true;
         public bool m_usepreJump = true;
@@ -1258,7 +1259,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // assumes 1m terrain resolution
 
-            if (geom == IntPtr.Zero || TerrainHeightFieldHeights.Count == 0)
+            if (geom == IntPtr.Zero || TerrainHeightFieldHeights == null)
                 return false;
 
             d.Vector3 pos;
@@ -1286,9 +1287,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             int minx, maxx, miny, maxy;
 
-            if (aabb.MaxZ < TerrainHeightFieldlimits[RegionTerrain][0])
+            if (aabb.MaxZ < TerrainHeightFieldlimits[0])
                 return true;
-            if (aabb.MinZ > TerrainHeightFieldlimits[RegionTerrain][1])
+            if (aabb.MinZ > TerrainHeightFieldlimits[1])
                 return false;
 
             minx = (int)(aabb.MinX - offsetX);
@@ -1322,13 +1323,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 for (i = centerx; i < maxx; i++)
                 {
-                    if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
+                    if (TerrainHeightFieldHeights[j + i] >= minh)
                         return true;
                 }
                 i = minx;
                 while (i < centerx)
                 {
-                    if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
+                    if (TerrainHeightFieldHeights[j + i] >= minh)
                         return true;
                     i++;
                 }
@@ -1339,7 +1340,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 for (i = minx; i < maxx; i++)
                 {
-                    if (TerrainHeightFieldHeights[RegionTerrain][j + i] >= minh)
+                    if (TerrainHeightFieldHeights[j + i] >= minh)
                         return true;
                 }
                 j += Region.RegionSizeX;
@@ -1394,15 +1395,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if ((dx + dy) <= 1.0f)
             {
-                h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix]) * invterrainscale;
+                h0 = ((float)TerrainHeightFieldHeights[iy + ix]) * invterrainscale;
 
                 if (dx > 0)
-                    h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * dx;
+                    h1 = (((float)TerrainHeightFieldHeights[iy + ix + 1]) * invterrainscale - h0) * dx;
                 else
                     h1 = 0;
 
                 if (dy > 0)
-                    h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
+                    h2 = (((float)TerrainHeightFieldHeights[iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * dy;
                 else
                     h2 = 0;
 
@@ -1410,15 +1411,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                h0 = ((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
+                h0 = ((float)TerrainHeightFieldHeights[iy + m_region.RegionSizeX + ix + 1]) * invterrainscale;
 
                 if (dx > 0)
-                    h1 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
+                    h1 = (((float)TerrainHeightFieldHeights[iy + ix + 1]) * invterrainscale - h0) * (1 - dy);
                 else
                     h1 = 0;
 
                 if (dy > 0)
-                    h2 = (((float)TerrainHeightFieldHeights[RegionTerrain][iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
+                    h2 = (((float)TerrainHeightFieldHeights[iy + m_region.RegionSizeX + ix]) * invterrainscale - h0) * (1 - dx);
                 else
                     h2 = 0;
 
@@ -2442,8 +2443,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             m_channel = channel;
             bool needToCreateHeightmapinODE = false;
-            short[] _heightmap;
-            if (!ODETerrainHeightFieldHeights.TryGetValue (RegionTerrain, out _heightmap))
+            short[] _heightmap = ODETerrainHeightFieldHeights;
+            if (ODETerrainHeightFieldHeights == null)
             {
                 needToCreateHeightmapinODE = true;//We don't have any terrain yet, we need to generate one
                 _heightmap = new short[((m_region.RegionSizeX + 3) * (m_region.RegionSizeY + 3))];
@@ -2486,9 +2487,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             needToCreateHeightmapinODE = true;//ODE seems to have issues with not rebuilding :(
-            TerrainHeightFieldHeights.Remove (RegionTerrain);
-            TerrainHeightFieldlimits.Remove (RegionTerrain);
-            ODETerrainHeightFieldHeights.Remove (RegionTerrain);
             if (RegionTerrain != IntPtr.Zero)
             {
                 d.SpaceRemove (space, RegionTerrain);
@@ -2496,15 +2494,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             if (!needToCreateHeightmapinODE)
             {
-                TerrainHeightFieldHeights.Remove (RegionTerrain);
-                TerrainHeightFieldlimits.Remove (RegionTerrain);
-                ODETerrainHeightFieldHeights.Remove (RegionTerrain);
+                TerrainHeightFieldHeights = null;
+                TerrainHeightFieldlimits = null;
+                ODETerrainHeightFieldHeights = null;
                 float[] heighlimits = new float[2];
                 heighlimits[0] = hfmin;
                 heighlimits[1] = hfmax;
-                TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
-                TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
-                ODETerrainHeightFieldHeights.Add (RegionTerrain, _heightmap);
+                TerrainHeightFieldHeights = heightMap;
+                TerrainHeightFieldlimits = heighlimits;
+                ODETerrainHeightFieldHeights = _heightmap;
                 return;//If we have already done this once, we don't need to do it again
             }
             lock (OdeLock)
@@ -2554,20 +2552,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 heighlimits[0] = hfmin;
                 heighlimits[1] = hfmax;
 
-                TerrainHeightFieldHeights.Add (RegionTerrain, heightMap);
-                ODETerrainHeightFieldHeights.Add (RegionTerrain, _heightmap);
-                TerrainHeightFieldlimits.Add (RegionTerrain, heighlimits);
+                TerrainHeightFieldHeights = heightMap;
+                ODETerrainHeightFieldHeights = _heightmap;
+                TerrainHeightFieldlimits = heighlimits;
             }
         }
 
         public double GetWaterLevel(float x, float y)
         {
+            if (WaterHeight != -1)
+                return WaterHeight;
             return WaterHeightFieldHeight[(int)y * Region.RegionSizeX + (int)x];
         }
 
-        public override void SetWaterLevel(short[] map)
+        public override void SetWaterLevel (double height, short[] map)
         {
             WaterHeightFieldHeight = map;
+            WaterHeight = height;
         }
 
         #endregion

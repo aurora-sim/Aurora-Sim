@@ -156,8 +156,8 @@ namespace Aurora.BotManager
             scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
             scene.AddNewClient (m_character);
-            m_character.Initialize ();
             IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
+            m_character.Initialize (SP);
             SP.MakeRootAgent (m_character.StartPos, false);
             //Move them
             SP.Teleport (startPos);

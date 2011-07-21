@@ -58,8 +58,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void CreateDefaultTerrain()
         {
+            m_map = null;
+            taint = null;
             m_map = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
             taint = new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
+            m_Width = m_scene.RegionInfo.RegionSizeX;
 
             int x;
             for (x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
@@ -76,7 +79,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_map = import;
-            m_Width = m_scene.RegionInfo.RegionSizeX;
+            m_Width = (int)Math.Sqrt(import.Length);
             taint = new bool[m_Width, m_Width];
             if ((m_Width != scene.RegionInfo.RegionSizeX ||
                 m_Width != scene.RegionInfo.RegionSizeY) &&

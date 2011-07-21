@@ -553,7 +553,10 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                         //m_log.Info("[Debug BASE HTTP SERVER]: Generic XMLRPC");
                         // generic login request.
-                        HandleXmlRpcRequests(request, response);
+                        if (!HandleXmlRpcRequests (request, response))
+                        {
+                            SendHTML404 (response, "");
+                        }
 
                         return;
                 }
@@ -694,7 +697,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// </summary>
         /// <param name="request"></param>
         /// <param name="response"></param>
-        private void HandleXmlRpcRequests(OSHttpRequest request, OSHttpResponse response)
+        private bool HandleXmlRpcRequests(OSHttpRequest request, OSHttpResponse response)
         {
             Stream requestStream = request.InputStream;
 
@@ -771,6 +774,40 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
 
                     responseString = XmlRpcResponseSerializer.Singleton.Serialize(xmlRpcResponse);
+
+                    response.ContentType = "text/xml";
+
+                    byte[] buffer = Encoding.UTF8.GetBytes (responseString);
+
+                    response.SendChunked = false;
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentEncoding = Encoding.UTF8;
+                    try
+                    {
+                        response.OutputStream.Write (buffer, 0, buffer.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.Warn ("[BASE HTTP SERVER]: Error - " + ex.ToString ());
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            response.Send ();
+                            //response.FreeContext();
+                        }
+                        catch (SocketException e)
+                        {
+                            // This has to be here to prevent a Linux/Mono crash
+                            m_log.WarnFormat ("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+                        }
+                        catch (IOException e)
+                        {
+                            m_log.Warn ("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString ());
+                        }
+                    }
+                    return true;
                 }
                 else
                 {
@@ -813,43 +850,12 @@ namespace OpenSim.Framework.Servers.HttpServer
                             m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
                         }
                     }
-                    return;
+                    return true;
                     //responseString = "Error";
                 }
             }
 
-            response.ContentType = "text/xml";
-
-            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
-            try
-            {
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            catch (Exception ex)
-            {
-                m_log.Warn("[BASE HTTP SERVER]: Error - " + ex.ToString());
-            }
-            finally
-            {
-                try
-                {
-                    response.Send();
-                    //response.FreeContext();
-                }
-                catch (SocketException e)
-                {
-                    // This has to be here to prevent a Linux/Mono crash
-                    m_log.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                }
-                catch (IOException e)
-                {
-                    m_log.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e.ToString());
-                }
-            }
+            return false;
         }
 
         private void HandleLLSDRequests(OSHttpRequest request, OSHttpResponse response)

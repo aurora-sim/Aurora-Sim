@@ -222,17 +222,10 @@ namespace Aurora.BotManager
 
         #region Initialize/Close
 
-        public void Initialize()
+        public void Initialize (IScenePresence SP)
         {
-            List<IScenePresence> avatars = m_scene.GetScenePresences ();
-            foreach (IScenePresence avatar in avatars)
-            {
-                if (avatar.ControllingClient == this)
-                {
-                    m_scenePresence = avatar;
-                    break;
-                }
-            }
+            m_scenePresence = SP;
+            m_scenePresence.DrawDistance = 1024f;
             m_frames.Start ();
         }
 
@@ -548,6 +541,7 @@ namespace Aurora.BotManager
             Vector3 pos;
             TravelMode state;
             bool teleport;
+            m_closeToPoint = m_scenePresence.PhysicsActor.Flying ? 1.5f : 1.0f;
             if (m_nodeGraph.GetNextPosition (m_scenePresence.AbsolutePosition, m_closeToPoint, 60, out pos, out state, out teleport))
             {
                 if (state == TravelMode.Fly)

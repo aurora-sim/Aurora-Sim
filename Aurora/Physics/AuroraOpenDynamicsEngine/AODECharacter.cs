@@ -871,7 +871,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     else
                     {
-                        _target_velocity /= 5;
                         vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
                     }
                 }

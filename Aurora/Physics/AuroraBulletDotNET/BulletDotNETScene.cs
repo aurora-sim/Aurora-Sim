@@ -576,7 +576,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
             m_world.addRigidBody(TerrainBody);
         }
 
-        public override void SetWaterLevel(short[] map)
+        public override void SetWaterLevel(double height, short[] map)
         {
             
         }

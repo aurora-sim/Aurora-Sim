@@ -466,7 +466,9 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 else
                     //New style
                     terrainModule.TerrainRevertMap = ReadFromData (m_revertTerrain, scene);
-                
+                //Make sure the size is right!
+                if (terrainModule.TerrainRevertMap.Height != scene.RegionInfo.RegionSizeX)
+                    terrainModule.TerrainRevertMap = null;
                 m_revertTerrain = null;
                 m_oldstylerevertTerrain = null;
                 m_shortrevertTerrain = null;
@@ -489,7 +491,6 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 else
                     //New style
                     terrainModule.TerrainMap = ReadFromData (m_terrain, scene);
-
                 m_terrain = null;
                 m_oldstyleterrain = null;
                 m_shortterrain = null;
@@ -512,6 +513,9 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 if (m_revertWater == null)
                     return null;
                 terrainModule.TerrainWaterRevertMap = ReadFromData (m_revertWater, scene);
+                //Make sure the size is right!
+                if (terrainModule.TerrainWaterRevertMap.Height != scene.RegionInfo.RegionSizeX)
+                    terrainModule.TerrainWaterRevertMap = null;
                 m_revertWater = null;
                 return null;
             }
@@ -520,6 +524,9 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 if (m_water == null)
                     return null;
                 terrainModule.TerrainWaterMap = ReadFromData (m_water, scene);
+                //Make sure the size is right!
+                if (terrainModule.TerrainWaterMap.Height != scene.RegionInfo.RegionSizeX)
+                    terrainModule.TerrainWaterMap = null;
                 m_water = null;
                 return null;
             }
