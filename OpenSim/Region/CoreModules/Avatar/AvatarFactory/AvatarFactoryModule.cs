@@ -419,7 +419,7 @@ textures 1
         /// <param name="idx"></param>
         private bool CheckBakedTextureAsset(IClientAPI client, UUID textureID, int idx)
         {
-            if (m_scene.AssetService.Get(textureID.ToString()) == null)
+            if (m_scene.AssetService.Get (textureID.ToString ()) == null)
             {
                 m_log.WarnFormat("[AvatarFactory]: Missing baked texture {0} ({1}) for avatar {2}",
                                  textureID, idx, client.Name);

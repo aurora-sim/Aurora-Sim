@@ -618,10 +618,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             
             //Check the versionID so that we can kill events
-            if (QIS.VersionID != Interlocked.Read(ref QIS.ID.VersionID))
+            if (QIS.functionName != "link_message" && 
+                QIS.VersionID != Interlocked.Read(ref QIS.ID.VersionID))
             {
                 m_log.WarnFormat ("FOUND BAD VERSION ID, OLD {0}, NEW {1}, FUNCTION NAME {2}", QIS.VersionID, Interlocked.Read(ref QIS.ID.VersionID), QIS.functionName);
-                return;
+                //return;
             }
 
             if (!EventSchProcessQIS(ref QIS)) //Execute the event

@@ -140,10 +140,11 @@ namespace OpenSim.Services.AssetService
             string url = string.Empty;
             if (StringToUrlAndAssetID (id, out url, out id))
             {
-                IAssetService connector = GetConnector (url);
+                IAssetService connector = GetConnector (url + "/assets/");
                 AssetBase casset = connector.Get (id);
                 FixAssetID (ref casset);
-                return casset;
+                if(casset != null)
+                    return casset;
             }
 
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache> ();
@@ -203,9 +204,9 @@ namespace OpenSim.Services.AssetService
                     if (connectorType == "opensim-simian")
                         connector = new OpenSim.Services.Connectors.SimianGrid.SimianAssetServiceConnector (url);
                     else
-                        connector = new OpenSim.Services.Connectors.AssetServicesConnector (url);
+                        connector = new OpenSim.Services.Connectors.AssetServicesConnector (url + "/assets");
 
-                    m_connectors.Add (url, connector);
+                    m_connectors[url] = connector;
                 }
             }
             return connector;

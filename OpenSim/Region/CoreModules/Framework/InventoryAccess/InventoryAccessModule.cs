@@ -605,7 +605,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     doc = new System.Xml.XmlDocument();
                     doc.LoadXml(xmlData);
 
-                    if (doc.FirstChild.OuterXml.StartsWith("<groups>"))
+                    if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
+                        doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))
                     {
                         //We don't do multiple objects here
                         return null;
@@ -726,15 +727,12 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                     group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
                 }
-                else
-                {
-                    remoteClient.SendAlertMessage ("Failed to find the item you requested.");
-                    return null;
-                }
             }
-            if (group == null && doc.FirstChild.OuterXml.StartsWith ("<groups>"))
+            if (group == null && (doc.FirstChild.OuterXml.StartsWith ("<groups>") ||
+                doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>")))
             {
-                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (doc.FirstChild.ChildNodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
+                XmlNodeList nodes = doc.FirstChild.OuterXml.StartsWith ("<groups>") ? doc.FirstChild.ChildNodes : doc.FirstChild.NextSibling.ChildNodes;
+                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
                 if (Groups.Count != 0)
                     return Groups[0];
                 else
