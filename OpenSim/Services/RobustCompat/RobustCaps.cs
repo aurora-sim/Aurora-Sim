@@ -94,6 +94,7 @@ namespace OpenSim.Services.RobustCompat
                     attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
                     //Now send it to them
                     ssc.CreateObject (dest, (ISceneObject)attachment);
+                    attachment.IsDeleted = true;
                 }
             }
             return null;

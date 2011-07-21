@@ -675,11 +675,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             item = m_scene.InventoryService.GetItem (item);
             SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
 
-            //OOBsize is only half the size of the prim
-            Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse(group.GroupRotation);
             Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
                       RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                      BypassRayCast, bRayEndIsIntersection, true, newSize, false);
+                      BypassRayCast, bRayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
 
             if (doc == null)
             {
@@ -768,6 +766,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             //  Set it's position in world.
             float offsetHeight = 0;
             //The OOBsize is only half the size, x2
+            Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse (group.GroupRotation);
             pos = m_scene.SceneGraph.GetNewRezLocation (
                 RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                 BypassRayCast, bRayEndIsIntersection, true, newSize, false);
