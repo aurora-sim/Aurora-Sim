@@ -2243,7 +2243,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             //It takes care of permission checks in the module
-            m_groupData.AddAgentToGroup (UUID.Parse (AgentID.m_string), m_host.OwnerID, groupRecord.GroupID, roleID);
+            m_groupData.AddAgentToGroup(m_host.OwnerID, UUID.Parse(AgentID.m_string), groupRecord.GroupID, roleID);
             return 1;
         }
 
