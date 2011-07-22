@@ -5388,7 +5388,10 @@ namespace OpenSim.Region.Framework.Scenes
             if (IsTemporary)
                 AddFlag(PrimFlags.TemporaryOnRez);
             else
-                RemFlag(PrimFlags.TemporaryOnRez);
+                RemFlag (PrimFlags.TemporaryOnRez);
+
+            if (UsePhysics != wasUsingPhysics)//Fire the event
+                ParentGroup.Scene.AuroraEventManager.FireGenericEventHandler ("ObjectChangedPhysicalStatus", ParentGroup);
 
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.PrimFlags);
