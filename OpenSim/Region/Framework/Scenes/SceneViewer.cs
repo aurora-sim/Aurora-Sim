@@ -584,6 +584,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
 #if UseDictionaryForEntityUpdates
                         Dictionary<UUID, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator ();
+                        e.MoveNext ();
                         List<UUID> entitiesToRemove = new List<UUID> ();
 #endif
                         int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
