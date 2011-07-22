@@ -179,8 +179,9 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
-            if (!lastPresencesDInView.ContainsKey (presence.UUID))
-                return;//Only send updates if they are in view
+            //Is this really necessary? -7/21
+            //if (!lastPresencesDInView.ContainsKey (presence.UUID))
+            //    return;//Only send updates if they are in view
 
             QueuePresenceForUpdateInternal (presence, flags);
         }
@@ -599,7 +600,7 @@ namespace OpenSim.Region.Framework.Scenes
                             else
                                 updates.Add (update);
 #elif UseDictionaryForEntityUpdates
-                            EntityUpdate update = m_presenceUpdatesToSend.First ().Value;
+                            EntityUpdate update = m_presenceUpdatesToSend.GetEnumerator ().Current.Value;
                             m_presenceUpdatesToSend.Remove (update.Entity.UUID);
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
                                 SendFullUpdateForPresence ((IScenePresence)update.Entity);
