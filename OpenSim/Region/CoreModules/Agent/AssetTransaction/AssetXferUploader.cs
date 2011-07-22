@@ -157,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
                 networkMonitor.AddPendingUploads(-1);
             }
 
@@ -224,7 +224,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), "Network Monitor");
+                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
                 networkMonitor.AddPendingUploads(-1);
             }
 

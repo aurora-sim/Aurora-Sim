@@ -750,7 +750,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence.ControllingClient.SendPrimUpdate (updates);
 
             //Add the time to the stats tracker
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
                 reporter.AddAgentTime (Util.EnvironmentTickCountSubtract (AgentMS));
 

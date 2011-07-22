@@ -232,7 +232,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IMonitorModule module = m_client.Scene.RequestModuleInterface<IMonitorModule>();
             if (module != null)
             {
-                IImageFrameTimeMonitor monitor = (IImageFrameTimeMonitor)module.GetMonitor(m_client.Scene.RegionInfo.RegionID.ToString(), "Images Frame Time");
+                IImageFrameTimeMonitor monitor = (IImageFrameTimeMonitor)module.GetMonitor(m_client.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ImagesFrameTime);
                 monitor.AddImageTime(EndTime);
             }
 

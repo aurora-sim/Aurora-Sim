@@ -282,8 +282,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             /// <returns></returns>
             public IMonitor GetMonitor(string Name)
             {
-                if (m_monitors.ContainsKey(Name))
-                    return m_monitors[Name];
+                IMonitor m;
+                if (m_monitors.TryGetValue(Name, out m))
+                    return m;
                 return null;
             }
 
@@ -438,19 +439,19 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX / Constants.RegionSize;
                     rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY / Constants.RegionSize;
 
-                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor("SimFrameStats");
-                    ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor("Time Dilation");
-                    ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)GetMonitor("Total Frame Time");
-                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor)GetMonitor("Sleep Frame Time");
-                    ITimeMonitor otherFrameMonitor = (ITimeMonitor)GetMonitor("Other Frame Time");
-                    IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)GetMonitor("Total Physics Frame Time");
-                    ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)GetMonitor("Physics Sync Frame Time");
-                    ITimeMonitor physicsTimeFrameMonitor = (ITimeMonitor)GetMonitor("Physics Update Frame Time");
-                    IAgentUpdateMonitor agentUpdateFrameMonitor = (IAgentUpdateMonitor)GetMonitor("Agent Update Count");
-                    INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor("Network Monitor");
-                    IMonitor imagesMonitor = GetMonitor("Images Frame Time");
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)GetMonitor("Script Frame Time");
-                    IScriptCountMonitor totalScriptMonitor = (IScriptCountMonitor)GetMonitor("Total Script Count");
+                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor(MonitorModuleHelper.SimFrameStats);
+                    ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor(MonitorModuleHelper.TimeDilation);
+                    ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)GetMonitor(MonitorModuleHelper.TotalFrameTime);
+                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.SleepFrameTime);
+                    ITimeMonitor otherFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.OtherFrameTime);
+                    IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)GetMonitor(MonitorModuleHelper.TotalPhysicsFrameTime);
+                    ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.PhysicsSyncFrameTime);
+                    ITimeMonitor physicsTimeFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.PhysicsUpdateFrameTime);
+                    IAgentUpdateMonitor agentUpdateFrameMonitor = (IAgentUpdateMonitor)GetMonitor(MonitorModuleHelper.AgentUpdateCount);
+                    INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor(MonitorModuleHelper.NetworkMonitor);
+                    IMonitor imagesMonitor = GetMonitor(MonitorModuleHelper.ImagesFrameTime);
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.ScriptFrameTime);
+                    IScriptCountMonitor totalScriptMonitor = (IScriptCountMonitor)GetMonitor(MonitorModuleHelper.TotalScriptCount);
                     
                     #region various statistic googly moogly
 
@@ -627,28 +628,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             /// </summary>
             public void ResetValues()
             {
-                ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)GetMonitor("Total Frame Time");
-                totalFrameMonitor.ResetStats();
-                SimFrameMonitor simMonitor = (SimFrameMonitor)GetMonitor("SimFrameStats");
-                simMonitor.ResetStats();
-                PhysicsFrameMonitor physMonitor = (PhysicsFrameMonitor)GetMonitor("Total Physics Frame Time");
-                physMonitor.ResetStats();
-                AgentUpdateMonitor agentUpdateMonitor = (AgentUpdateMonitor)GetMonitor("Agent Update Count");
-                agentUpdateMonitor.ResetStats();
-                ObjectUpdateMonitor objectUpdateMonitor = (ObjectUpdateMonitor)GetMonitor("PrimUpdates");
-                objectUpdateMonitor.ResetStats();
-                ImageFrameTimeMonitor imagesMonitor = (ImageFrameTimeMonitor)GetMonitor("Images Frame Time");
-                imagesMonitor.ResetStats();
-                ITimeMonitor physicsUpdateTime = (ITimeMonitor)GetMonitor("Physics Update Frame Time");
-                physicsUpdateTime.ResetStats();
-                ITimeMonitor physicsSyncTime = (ITimeMonitor)GetMonitor("Physics Sync Frame Time");
-                physicsSyncTime.ResetStats();
-                ITimeMonitor OtherFrameMonitor = (ITimeMonitor)GetMonitor("Other Frame Time");
-                OtherFrameMonitor.ResetStats();
-                ITimeMonitor SleepFrameMonitor = (ITimeMonitor)GetMonitor("Sleep Frame Time");
-                SleepFrameMonitor.ResetStats();
-                ScriptFrameTimeMonitor ScriptFrameTime = (ScriptFrameTimeMonitor)GetMonitor("Script Frame Time");
-                ScriptFrameTime.ResetStats();
+                foreach (IMonitor m in m_monitors.Values)
+                {
+                    m.ResetStats ();
+                }
             }
 
             /// <summary>

@@ -56,11 +56,15 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return (int)GetValue() + "ms ago";
         }
 
-        #endregion
-
         public void SetValue(int value)
         {
             MonitorLastFrameTick = value;
         }
+
+        public void ResetStats ()
+        {
+        }
+
+        #endregion
     }
 }

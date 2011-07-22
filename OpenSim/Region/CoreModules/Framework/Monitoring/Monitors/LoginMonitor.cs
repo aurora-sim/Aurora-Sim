@@ -132,6 +132,10 @@ Abnormal client thread terminations: {6}",
             logoutsToday++;
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

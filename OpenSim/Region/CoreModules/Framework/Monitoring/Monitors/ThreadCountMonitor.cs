@@ -48,6 +48,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return (int)GetValue() + " Thread(s) (Global)";
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

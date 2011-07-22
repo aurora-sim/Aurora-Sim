@@ -44,6 +44,27 @@ namespace OpenSim.Framework
 
     public delegate void SendStatResult(SimStats stats);
 
+    public class MonitorModuleHelper
+    {
+        public static string SimFrameStats = "SimFrameStats";
+        public static string TimeDilation = "Time Dilation";
+        public static string TotalFrameTime = "Total Frame Time";
+        public static string SleepFrameTime = "Sleep Frame Time";
+        public static string OtherFrameTime = "Other Frame Time";
+        public static string TotalPhysicsFrameTime = "Total Physics Frame Time";
+        public static string PhysicsSyncFrameTime = "Physics Sync Frame Time";
+        public static string PhysicsUpdateFrameTime = "Physics Update Frame Time";
+        public static string AgentUpdateCount = "Agent Update Count";
+        public static string NetworkMonitor = "Network Monitor";
+        public static string ImagesFrameTime = "Images Frame Time";
+        public static string ScriptFrameTime = "Script Frame Time";
+        public static string TotalScriptCount = "Total Script Count";
+        public static string LoginMonitor = "LoginMonitor";
+        public static string AssetMonitor = "AssetMonitor";
+        public static string LastCompletedFrameAt = "Last Completed Frame At";
+        public static string PrimUpdates = "PrimUpdates";
+    }
+
     public interface IMonitorModule
     {
         /// <summary>
@@ -86,6 +107,11 @@ namespace OpenSim.Framework
         /// </summary>
         /// <returns></returns>
         string GetFriendlyValue();
+
+        /// <summary>
+        /// Resets any per stats beat stats that may need done
+        /// </summary>
+        void ResetStats ();
     }
 
     public delegate void Alert(Type reporter, string reason, bool fatal);
@@ -112,7 +138,6 @@ namespace OpenSim.Framework
     public interface ITimeMonitor : IMonitor
     {
         void AddTime(int time);
-        void ResetStats();
     }
 
     public interface IAssetMonitor
@@ -257,11 +282,6 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="frames"></param>
         void AddFPS(int frames);
-
-        /// <summary>
-        /// Reset the stats
-        /// </summary>
-        void ResetStats();
     }
 
     public interface ISimFrameMonitor
@@ -281,11 +301,6 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="frames"></param>
         void AddFPS(int frames);
-
-        /// <summary>
-        /// Reset the stats
-        /// </summary>
-        void ResetStats();
     }
 
     public interface IImageFrameTimeMonitor
@@ -295,11 +310,6 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="time">time in milliseconds</param>
         void AddImageTime(int time);
-
-        /// <summary>
-        /// Reset the stats
-        /// </summary>
-        void ResetStats();
     }
 
     public interface ITotalFrameTimeMonitor : IMonitor
@@ -309,11 +319,6 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="time">time in milliseconds</param>
         void AddFrameTime(int time);
-
-        /// <summary>
-        /// Reset the stats
-        /// </summary>
-        void ResetStats();
     }
 
     public interface IObjectUpdateMonitor
@@ -328,11 +333,6 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="frames"></param>
         void AddLimitedPrims(int prims);
-
-        /// <summary>
-        /// Reset the stats
-        /// </summary>
-        void ResetStats();
     }
 
     public interface IAgentUpdateMonitor

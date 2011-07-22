@@ -87,6 +87,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return ActiveScripts + " active script(s), " + ScriptEPS + " event(s) per second";
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

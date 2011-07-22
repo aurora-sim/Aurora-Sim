@@ -226,7 +226,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 foreach (Scene scene in m_ScriptEngine.Worlds)
                 {
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), "Script Frame Time");
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
             }
@@ -264,7 +264,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 foreach (Scene scene in m_ScriptEngine.Worlds)
                 {
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), "Script Frame Time");
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
             }

@@ -3988,7 +3988,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     IMonitorModule m = ParentGroup.Scene.RequestModuleInterface<IMonitorModule> ();
                     if (m != null && ParentGroup.Scene.RegionInfo != null)
-                        ((IObjectUpdateMonitor)m.GetMonitor (ParentGroup.Scene.RegionInfo.RegionID.ToString (), "PrimUpdates")).AddLimitedPrims (1);
+                        ((IObjectUpdateMonitor)m.GetMonitor (ParentGroup.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.PrimUpdates)).AddLimitedPrims (1);
                     return false;
                 }
                 return true;

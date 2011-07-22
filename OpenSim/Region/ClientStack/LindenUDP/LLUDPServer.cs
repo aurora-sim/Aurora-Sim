@@ -443,7 +443,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 m_log.Warn("[LLUDPSERVER]: Ack timeout, disconnecting " + udpClient.AgentID);
 
-                ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
+                ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
                 if (monitor != null)
                 {
                     monitor.AddAbnormalClientThreadTermination();
@@ -958,7 +958,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             client.SendLogoutPacket();
             if (client.IsActive)
                 RemoveClient(((LLClientView)client).UDPClient);
-            ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", "LoginMonitor");
+            ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
             if (monitor != null)
             {
                 monitor.AddLogout();

@@ -962,7 +962,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -992,7 +992,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -1035,7 +1035,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -1065,7 +1065,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
