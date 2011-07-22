@@ -155,7 +155,6 @@ namespace OpenSim.Framework.Serialization.External
             writer.WriteStartElement ("CreatorUUID");
             writer.WriteString (inventoryItem.CreatorId);
             writer.WriteEndElement ();
-            writer.WriteEndElement ();
             writer.WriteStartElement ("CreatorData");
             writer.WriteString (inventoryItem.CreatorData);
             writer.WriteEndElement ();
