@@ -352,13 +352,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<ISceneChildEntity> ChildrenEntities ()
         {
-            lock (m_partsLock)
-            {
-                List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
-                foreach (SceneObjectPart part in m_partsList)
-                    entities.Add ((ISceneChildEntity)part);
-                return entities;
-            }
+            List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
+            foreach (SceneObjectPart part in new List<SceneObjectPart> (m_partsList))
+                entities.Add ((ISceneChildEntity)part);
+            return entities;
         }
 
         public List<UUID> SitTargetAvatar

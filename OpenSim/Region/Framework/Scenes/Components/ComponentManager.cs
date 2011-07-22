@@ -458,7 +458,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
     /// </summary>
     public class DefaultComponents : IComponent
     {
-        Dictionary<UUID, OSD> m_states = new Dictionary<UUID, OSD>();
+        private Dictionary<UUID, OSD> m_states = new Dictionary<UUID, OSD>();
+        private object m_statesLock = new object ();
         public string m_name;
         public object m_defaultValue = null;
 
@@ -480,12 +481,15 @@ namespace OpenSim.Region.Framework.Scenes.Components
 
         public virtual OSD GetState(UUID obj)
         {
-            if (m_states.ContainsKey (obj))
+            OSD o = null;
+            lock (m_statesLock)
             {
-                OSD o = m_states[obj];
-                if (o == m_defaultValue)
-                    return null;
-                return o;
+                if (m_states.TryGetValue (obj, out o))
+                {
+                    if (o == m_defaultValue)
+                        return null;
+                    return o;
+                }
             }
 
             return new OSD();
@@ -493,12 +497,14 @@ namespace OpenSim.Region.Framework.Scenes.Components
 
         public virtual void SetState (UUID obj, OSD osd)
         {
-            m_states[obj] = osd;
+            lock(m_statesLock)
+                m_states[obj] = osd;
         }
 
         public virtual void RemoveState (UUID obj)
         {
-            m_states.Remove (obj);
+            lock (m_statesLock)
+                m_states.Remove (obj);
         }
     }
 }
