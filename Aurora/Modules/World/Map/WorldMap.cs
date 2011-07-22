@@ -960,12 +960,14 @@ namespace Aurora.Modules
             if (terraindata != null)
             {
                 Terrainasset.Data = terraindata;
+                Terrainasset.FillHash();
                 m_scene.AssetService.Store (Terrainasset);
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
+                Mapasset.FillHash();
                 m_scene.AssetService.Store (Mapasset);
             }
 

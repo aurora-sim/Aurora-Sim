@@ -161,6 +161,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                                     Name = String.Empty,
                                     TypeString = "image/png"
                                 };
+                                newAsset.FillHash();
                                 assetService.Store (newAsset);
                             }
                         }

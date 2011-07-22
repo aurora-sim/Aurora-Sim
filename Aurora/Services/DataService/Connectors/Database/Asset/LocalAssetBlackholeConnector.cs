@@ -217,8 +217,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
                 if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
                 if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
+                
+                if (asset.HashCode != "")
+                {
+                    List<string> re = m_Gd.Query("id", asset.ID, database, "hash_code");
+                    if (re.Count == 1)
+                        asset.HashCode = re[0];
+                }
+                
                 string newHash = WriteFile(asset.ID, asset.Data);
-                if (asset.HashCode != newHash)
+
+                if ((asset.HashCode != "") && (asset.HashCode != newHash))
                 {
                     m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
                 }
@@ -592,7 +601,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             List<string> taskCheck = m_Gd.Query(" 1 = 1 LIMIT 1 ", "auroraassets_tasks",
                                                 "id, task_type, task_values");
-            if (taskCheck.Count == 1)
+            if (taskCheck.Count == 3)
             {
                 string task_id = taskCheck[0];
                 string task_type = taskCheck[1];

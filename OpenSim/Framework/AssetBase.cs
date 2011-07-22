@@ -27,6 +27,7 @@
 
 using System;
 using System.Reflection;
+using System.Security.Cryptography;
 using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -229,7 +230,14 @@ namespace OpenSim.Framework
         public UUID ParentID { get; set; }
         public bool MetaOnly { get; set; }
 
-
+        // should run this if your filling out a new asset
+        // ensures we don't try to pull it from the database when saving the asset
+        // because we need to know if it changed.
+        public string FillHash()
+        {
+            HashCode = Convert.ToBase64String(new SHA256Managed().ComputeHash(myData)) + myData.Length;
+            return HashCode;
+        }
 
         public override string ToString()
         {

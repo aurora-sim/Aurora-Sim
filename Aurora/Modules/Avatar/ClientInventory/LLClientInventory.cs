@@ -584,6 +584,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType)assetType,
                                                     remoteClient.AgentId) {Data = data, Description = description};
+                    asset.FillHash();
                     m_scene.AssetService.Store(asset);
 
                     CreateNewInventoryItem(
@@ -1209,6 +1210,7 @@ namespace OpenSim.Region.Framework.Scenes
                                           Description = itemBase.Description,
                                           Data = Encoding.ASCII.GetBytes(DefaultLSLScript)
                                       };
+                asset.FillHash();
                 m_scene.AssetService.Store(asset);
 
                 TaskInventoryItem taskItem = new TaskInventoryItem();

@@ -1868,7 +1868,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                                : AssetFlags.Normal)
                                               };
 
-
+                        asset.FillHash();
 
 
                         assetService.Store(asset);

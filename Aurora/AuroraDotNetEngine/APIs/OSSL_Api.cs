@@ -1644,7 +1644,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // Create new asset
-            AssetBase asset = new AssetBase(UUID.Random(), notecardName, (sbyte)AssetType.Notecard, m_host.OwnerID.ToString());
+            AssetBase asset = new AssetBase(UUID.Random(), notecardName, AssetType.Notecard, m_host.OwnerID);
             asset.Description = "Script Generated Notecard";
             string notecardData = String.Empty;
 
@@ -1658,6 +1658,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             + textLength.ToString() + "\n" + notecardData + "}\n";
 
             asset.Data = Util.UTF8.GetBytes(notecardData);
+            asset.FillHash();
             World.AssetService.Store(asset);
 
             // Create Task Entry
@@ -1683,7 +1684,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             taskItem.SaleType = 0;
             taskItem.PermsGranter = UUID.Zero;
             taskItem.PermsMask = 0;
-            taskItem.AssetID = asset.FullID;
+            taskItem.AssetID = asset.ID;
 
             m_host.Inventory.AddInventoryItem(taskItem, false);
         }

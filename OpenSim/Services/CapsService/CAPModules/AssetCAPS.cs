@@ -235,6 +235,7 @@ namespace OpenSim.Services.CapsService
                                 return false; // !!! Caller try another codec, please!
 
                             newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temperary;
+                            newTexture.FillHash();
                             m_assetService.Store(newTexture);
                             WriteTextureData(httpRequest, httpResponse, newTexture, format);
                             newTexture = null;

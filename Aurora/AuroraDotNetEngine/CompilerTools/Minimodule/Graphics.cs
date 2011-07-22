@@ -57,6 +57,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                                       Description = "MRM Image",
                                       Flags = (temporary) ? AssetFlags.Temperary : 0
                                   };
+            asset.FillHash();
             m_scene.AssetService.Store(asset);
 
             return asset.ID;

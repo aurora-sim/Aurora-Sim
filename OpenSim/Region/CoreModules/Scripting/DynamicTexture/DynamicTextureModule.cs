@@ -357,6 +357,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     asset.Data = assetData;
                     asset.Description = String.Format("URL image : {0}", Url);
                     if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temperary;
+                    asset.FillHash();
                     scene.AssetService.Store(asset);
                 }
 
