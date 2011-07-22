@@ -582,6 +582,10 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
+#if UseDictionaryForEntityUpdates
+                        Dictionary<UUID, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator ();
+                        List<UUID> entitiesToRemove = new List<UUID> ();
+#endif
                         int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
@@ -600,12 +604,13 @@ namespace OpenSim.Region.Framework.Scenes
                             else
                                 updates.Add (update);
 #elif UseDictionaryForEntityUpdates
-                            EntityUpdate update = m_presenceUpdatesToSend.GetEnumerator ().Current.Value;
-                            m_presenceUpdatesToSend.Remove (update.Entity.UUID);
+                            EntityUpdate update = e.Current.Value;
+                            entitiesToRemove.Add (update.Entity.UUID);//Remove it later
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
                                 SendFullUpdateForPresence ((IScenePresence)update.Entity);
                             else
                                 updates.Add (update);
+                            e.MoveNext ();
 #else
                             EntityUpdate update = m_presenceUpdatesToSend.Dequeue ();
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
@@ -614,6 +619,12 @@ namespace OpenSim.Region.Framework.Scenes
                                 updates.Add (update);
 #endif
                         }
+#if UseDictionaryForEntityUpdates
+                        foreach (UUID id in entitiesToRemove)
+                        {
+                            m_presenceUpdatesToSend.Remove (id);
+                        }
+#endif
                     }
                     catch (Exception ex)
                     {
