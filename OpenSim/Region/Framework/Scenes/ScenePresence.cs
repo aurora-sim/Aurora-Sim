@@ -2561,6 +2561,21 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.UpdateMovementAnimations ();
         }
 
+        #region Cached Attachments
+
+        private List<ISceneEntity> m_cachedAttachments = new List<ISceneEntity> ();
+        public void RemoveAttachment (ISceneEntity group)
+        {
+            m_cachedAttachments.Remove (group);
+        }
+
+        public void AddAttachment (ISceneEntity group)
+        {
+            m_cachedAttachments.Add (group);
+        }
+
+        #endregion
+
         // Event called by the physics plugin to tell the avatar about a collision.
         private void PhysicsCollisionUpdate(EventArgs e)
         {
@@ -2573,57 +2588,22 @@ namespace OpenSim.Region.Framework.Scenes
             if (coldata.Keys.Count > 0)
             {
                 //Fire events for attachments
-                IAttachmentsModule attModule = Scene.RequestModuleInterface<IAttachmentsModule> ();
-                if (attModule != null)
+                foreach (ISceneEntity grp in m_cachedAttachments)
                 {
-                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (UUID);
-                    foreach (ISceneEntity grp in attachments)
-                    {
-                        grp.FireAttachmentCollisionEvents (e);
-                    }
+                    grp.FireAttachmentCollisionEvents (e);
                 }
             }
 
-            List<uint> thisHitColliders = new List<uint>();
-            List<uint> endedColliders = new List<uint>();
-            List<uint> startedColliders = new List<uint>();
-
-            // calculate things that started colliding this time
-            // and build up list of colliders this time
-            foreach (uint localid in coldata.Keys)
+            //This is only used for collision sounds, which we have disabled ATM because they hit the client hard
+            /*//add the items that started colliding this time to the last colliders list.
+            foreach (uint localID in coldata.Keys)
             {
-                thisHitColliders.Add(localid);
-                if (!m_lastColliders.Contains(localid))
-                {
-                    startedColliders.Add(localid);
-                }
-            }
-
-            // calculate things that ended colliding
-            foreach (uint localID in m_lastColliders)
-            {
-                if (!thisHitColliders.Contains(localID))
-                {
-                    endedColliders.Add(localID);
-                }
-            }
-
-            //add the items that started colliding this time to the last colliders list.
-            foreach (uint localID in startedColliders)
-            {
-                m_lastColliders.Add(localID);
                 //Play collision sounds
                 if (localID != 0 && CollisionSoundID == UUID.Zero && !IsChildAgent)
                 {
                     CollisionSoundID = Sounds.OBJECT_COLLISION;
                 }
-            }
-
-            // remove things that ended colliding from the last colliders list
-            foreach (uint localID in endedColliders)
-            {
-                m_lastColliders.Remove(localID);
-            }
+            }*/
 
             if (coldata.Count != 0 && Animator != null)
             {
@@ -2666,8 +2646,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
-        private readonly List<uint> m_lastColliders = new List<uint>();
 
         public void PushForce(Vector3 impulse)
         {

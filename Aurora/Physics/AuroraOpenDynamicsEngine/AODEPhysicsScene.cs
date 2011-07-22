@@ -106,6 +106,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float gravityx = 0f;
         public float gravityy = 0f;
         public float gravityz = -9.8f;
+        public Vector3 gravityVector = new Vector3 ();
+        public Vector3 gravityVectorNormalized = new Vector3 ();
         public bool m_hasSetUpPrims = false;
         private const int maxContactsbeforedeath = 10000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
@@ -421,7 +423,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     gravityx = physicsconfig.GetFloat("world_gravityx", 0f);
                     gravityy = physicsconfig.GetFloat("world_gravityy", 0f);
-                    gravityz = physicsconfig.GetFloat("world_gravityz", -9.8f);
+                    gravityz = physicsconfig.GetFloat ("world_gravityz", -9.8f);
+                    //Set the vectors as well
+                    gravityVector = new Vector3 (gravityx, gravityy, gravityz);
+                    gravityVectorNormalized = gravityVector;
+                    gravityVectorNormalized.Normalize ();
 
                     m_avDecayTime = physicsconfig.GetFloat("avDecayTime", m_avDecayTime);
                     m_avStopDecaying = physicsconfig.GetFloat("avStopDecaying", m_avStopDecaying);
@@ -2764,7 +2770,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             gravityx = forceX;
             gravityy = forceY;
             gravityz = forceZ;
-
+            //Set the vectors as well
+            gravityVector = new Vector3 (gravityx, gravityy, gravityz);
+            gravityVectorNormalized = gravityVector;
+            gravityVectorNormalized.Normalize ();
 
             //Fix the ODE gravity too
             d.WorldSetGravity (world, gravityx, gravityy, gravityz);

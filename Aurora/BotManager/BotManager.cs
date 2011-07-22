@@ -163,13 +163,10 @@ namespace Aurora.BotManager
             SP.Teleport (startPos);
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
+            appearance.InitialHasWearablesBeenSent = true;
             appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
             appearance.SendAvatarDataToAllAgents (true);
             appearance.SendAppearanceToAllOtherAgents ();
-            appearance.SendOtherAgentsAppearanceToMe ();
-            IAvatarFactory avFactory = scene.RequestModuleInterface<IAvatarFactory> ();
-            if (avFactory != null)
-                avFactory.QueueInitialAppearanceSend (SP.UUID);
 
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, m_character);

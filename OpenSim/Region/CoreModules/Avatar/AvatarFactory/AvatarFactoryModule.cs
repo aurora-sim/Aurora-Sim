@@ -1093,11 +1093,9 @@ textures 1
                     return;
                 if (!m_InitialHasWearablesBeenSent)
                 {
-                    m_InitialHasWearablesBeenSent = true;
-                    m_log.Warn ("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name + " was added and appearance was not sent, force sending now.");
-
                     //Force send!
                     m_InitialHasWearablesBeenSent = true;
+                    m_log.Warn ("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name + " was added and appearance was not sent, force sending now.");
 
                     m_sp.ControllingClient.SendWearables (Appearance.Wearables, Appearance.Serial);
 

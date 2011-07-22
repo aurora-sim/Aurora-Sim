@@ -24,7 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#define UseRemovingEntityUpdates
+//#define UseRemovingEntityUpdates
+#define UseDictionaryForEntityUpdates
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -69,6 +70,8 @@ namespace OpenSim.Region.Framework.Scenes
         private object m_objectUpdatesToSendLock = new object ();
 #if UseRemovingEntityUpdates
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
+#elif UseDictionaryForEntityUpdates
+        private Dictionary<UUID, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
 #else
         private Queue<EntityUpdate> m_presenceUpdatesToSend = new Queue<EntityUpdate>();
 #endif
@@ -169,8 +172,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (!lastPresencesDInView.ContainsKey (presence.UUID))
-                return;//Only send updates if they are in view
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
@@ -178,6 +179,8 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
+            if (!lastPresencesDInView.ContainsKey (presence.UUID))
+                return;//Only send updates if they are in view
 
             QueuePresenceForUpdateInternal (presence, flags);
         }
@@ -196,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesInView.Add (presence);
                 lastPresencesDInView.Add (presence.UUID, presence);
             }
-            else
+            else//Only send one full update please!
                 return;
 
             AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
@@ -239,6 +242,19 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presenceUpdatesToSend.Insert (0, presence.UUID, o);
                 else //Not us, set at the end
                     m_presenceUpdatesToSend.Insert (m_presenceUpdatesToSend.Count, presence.UUID, o);
+#elif UseDictionaryForEntityUpdates
+                EntityUpdate o = null;
+                if(!m_presenceUpdatesToSend.TryGetValue(presence.UUID, out o))
+                    o = new EntityUpdate (presence, flags);
+                else
+                {
+                    if ((o.Flags & flags) == o.Flags)
+                        return; //Same, leave it alone!
+                    o.Flags |= flags;
+                    return;//All done, its updated, no need to readd
+                }
+
+                m_presenceUpdatesToSend[presence.UUID] = o;
 #else
                 m_presenceUpdatesToSend.Enqueue (new EntityUpdate (presence, flags));
 #endif
@@ -582,9 +598,19 @@ namespace OpenSim.Region.Framework.Scenes
                                 SendFullUpdateForPresence ((IScenePresence)update.Entity);
                             else
                                 updates.Add (update);
+#elif UseDictionaryForEntityUpdates
+                            EntityUpdate update = m_presenceUpdatesToSend.First ().Value;
+                            m_presenceUpdatesToSend.Remove (update.Entity.UUID);
+                            if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
+                                SendFullUpdateForPresence ((IScenePresence)update.Entity);
+                            else
+                                updates.Add (update);
 #else
                             EntityUpdate update = m_presenceUpdatesToSend.Dequeue ();
-                            updates.Add (update);
+                            if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
+                                SendFullUpdateForPresence ((IScenePresence)update.Entity);
+                            else
+                                updates.Add (update);
 #endif
                         }
                     }
