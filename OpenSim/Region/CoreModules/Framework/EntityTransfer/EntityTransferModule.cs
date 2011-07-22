@@ -793,12 +793,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     // We remove the object here
                     try
                     {
-                        foreach (SceneObjectPart part in grp.ChildrenList)
+                        foreach (ISceneChildEntity part in grp.ChildrenEntities())
                         {
-                            lock (part.SitTargetAvatar)
-                            {
-                                part.SitTargetAvatar.Clear();
-                            }
+                            part.SitTargetAvatar.Clear();
                         }
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
