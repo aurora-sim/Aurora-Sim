@@ -451,6 +451,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override void ForceSetVelocity (Vector3 velocity)
+        {
+            _velocity = velocity;
+            m_lastVelocity = velocity;
+        }
+
+        public override void ForceSetPosition (Vector3 position)
+        {
+            _position = position;
+            m_lastPosition = position;
+        }
+
         /// <summary>
         /// This adds to the force that will be used for moving the avatar in the next physics heartbeat iteration.
         /// </summary>

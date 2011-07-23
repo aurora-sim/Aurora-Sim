@@ -33,6 +33,16 @@ namespace Aurora.Modules
                 m_activePrims[prm.UUID] = state;
             }
 
+            public void AddAvatar (PhysicsCharacter prm)
+            {
+                PhysicsState state = new PhysicsState ();
+                state.Position = prm.Position;
+                state.AngularVelocity = prm.RotationalVelocity;
+                state.LinearVelocity = prm.Velocity;
+                state.Rotation = prm.Orientation;
+                m_activePrims[prm.UUID] = state;
+            }
+
             public void Reload (IScene scene, float direction)
             {
                 foreach (KeyValuePair<UUID, PhysicsState> kvp in m_activePrims)
@@ -40,12 +50,29 @@ namespace Aurora.Modules
                     ISceneChildEntity childPrim = scene.GetSceneObjectPart (kvp.Key);
                     if (childPrim != null && childPrim.PhysActor != null)
                         ResetPrim (childPrim.PhysActor, kvp.Value, direction);
+                    else
+                    {
+                        IScenePresence sp = scene.GetScenePresence (kvp.Key);
+                        if (sp != null)
+                            ResetAvatar (sp.PhysicsActor, kvp.Value, direction);
+                    }
                 }
             }
 
             private void ResetPrim (PhysicsObject physicsObject, PhysicsState physicsState, float direction)
             {
                 physicsObject.Position = physicsState.Position;
+                physicsObject.Orientation = physicsState.Rotation;
+                physicsObject.RotationalVelocity = physicsState.AngularVelocity * direction;
+                physicsObject.Velocity = physicsState.LinearVelocity * direction;
+                physicsObject.ForceSetVelocity (physicsState.LinearVelocity * direction);
+                physicsObject.RequestPhysicsterseUpdate ();
+            }
+
+            private void ResetAvatar (PhysicsCharacter physicsObject, PhysicsState physicsState, float direction)
+            {
+                physicsObject.Position = physicsState.Position;
+                physicsObject.ForceSetPosition (physicsState.Position);
                 physicsObject.Orientation = physicsState.Rotation;
                 physicsObject.RotationalVelocity = physicsState.AngularVelocity * direction;
                 physicsObject.Velocity = physicsState.LinearVelocity * direction;
@@ -111,6 +138,11 @@ namespace Aurora.Modules
             foreach (PhysicsObject prm in m_scene.PhysicsScene.ActiveObjects)
             {
                 state.AddPrim (prm);
+            }
+            foreach (IScenePresence sp in m_scene.GetScenePresences())
+            {
+                if(!sp.IsChildAgent)
+                    state.AddAvatar (sp.PhysicsActor);
             }
             return state;
         }

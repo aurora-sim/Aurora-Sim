@@ -1010,10 +1010,6 @@ namespace OpenSim.Framework
         public virtual void ClearVelocity ()
         {
         }
-
-        public virtual void ForceSetVelocity (Vector3 velocity)
-        {
-        }
     }
 
     public abstract class PhysicsActor
@@ -1120,6 +1116,14 @@ namespace OpenSim.Framework
 
         public abstract void SendCollisions ();
         public abstract void AddCollisionEvent (uint localID, ContactPoint contact);
+
+        public virtual void ForceSetVelocity (Vector3 velocity)
+        {
+        }
+
+        public virtual void ForceSetPosition (Vector3 position)
+        {
+        }
     }
 
     public enum ScriptControlled : uint
