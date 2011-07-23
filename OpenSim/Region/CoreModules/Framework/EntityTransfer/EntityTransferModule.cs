@@ -672,7 +672,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 m_log.Warn("[EntityTransferModule]: Exception in crossing: " + ex.ToString());
             }
             // In any case
-            agent.SuccessfulTransit();
+            agent.SuccessfulCrossingTransit(crossingRegion);
             return agent;
         }
 

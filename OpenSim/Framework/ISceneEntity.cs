@@ -161,6 +161,7 @@ namespace OpenSim.Framework
         void TeleportWithMomentum (Vector3 value);
         void DoMoveToPosition (object iClientAPI, string p, List<string> coords);
         void SuccessfulTransit ();
+        void SuccessfulCrossingTransit (GridRegion CrossingRegion);
         void FailedTransit ();
         void FailedCrossingTransit (GridRegion failedCrossingRegion);
         void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
