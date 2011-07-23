@@ -204,6 +204,8 @@ namespace Aurora.Modules.RegionLoader
             RegionStatus.BackColor = Color.Red;
             putOnline.Enabled = true;
             takeOffline.Enabled = false;
+            resetRegion.Enabled = false;
+            deleteRegion.Enabled = true;
         }
 
         private void SetOnlineStatus ()
@@ -212,6 +214,8 @@ namespace Aurora.Modules.RegionLoader
             RegionStatus.BackColor = Color.LightGreen;
             putOnline.Enabled = false;
             takeOffline.Enabled = true;
+            resetRegion.Enabled = true;
+            deleteRegion.Enabled = true;
         }
 
         private new void Update()
@@ -409,26 +413,6 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             }
         }
 
-        private void deleteregion_Click(object sender, EventArgs e)
-        {
-            if(CurrentRegionID == UUID.Zero)
-            {
-                MessageBox.Show("Select a region before attempting to delete.");
-                return;
-            }
-            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
-            if (region != null) //It never should be, but who knows
-            {
-                DialogResult r = Utilities.InputBox("Are you sure?", "Are you sure you want to delete this region?");
-                if (r == DialogResult.OK)
-                {
-                    m_connector.Delete(region);
-                    //Update the regions in the list box as well
-                    RefreshCurrentRegions();
-                }
-            }
-        }
-
         private void startupType_TextChanged (object sender, EventArgs e)
         {
             if (!m_changingRegion)
@@ -467,6 +451,30 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             m_sceneManager.TryGetScene(CurrentRegionID, out scene);
             m_sceneManager.CloseRegion (scene);
             SetOfflineStatus ();
+        }
+
+        private void resetRegion_Click (object sender, EventArgs e)
+        {
+            IScene scene;
+            m_sceneManager.TryGetScene (CurrentRegionID, out scene);
+            DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to reset this region (deletes all prims and reverts terrain)?");
+            if (r == DialogResult.OK)
+                m_sceneManager.ResetRegion (scene);
+        }
+
+        private void deleteregion_Click (object sender, EventArgs e)
+        {
+            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
+            if (region != null) //It never should be, but who knows
+            {
+                DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
+                if (r == DialogResult.OK)
+                {
+                    m_connector.Delete (region);
+                    //Update the regions in the list box as well
+                    RefreshCurrentRegions ();
+                }
+            }
         }
     }
 }

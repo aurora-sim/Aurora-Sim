@@ -114,9 +114,12 @@ namespace Aurora.Modules.RegionLoader
             this.tabControl1 = new System.Windows.Forms.TabControl ();
             this.tabPage1 = new System.Windows.Forms.TabPage ();
             this.groupBox5 = new System.Windows.Forms.GroupBox ();
+            this.resetRegion = new System.Windows.Forms.Button ();
+            this.deleteRegion = new System.Windows.Forms.Button ();
+            this.putOnline = new System.Windows.Forms.Button ();
+            this.takeOffline = new System.Windows.Forms.Button ();
             this.RegionStatus = new System.Windows.Forms.TextBox ();
             this.label38 = new System.Windows.Forms.Label ();
-            this.button13 = new System.Windows.Forms.Button ();
             this.groupBox4 = new System.Windows.Forms.GroupBox ();
             this.ExportFileName = new System.Windows.Forms.TextBox ();
             this.label6 = new System.Windows.Forms.Label ();
@@ -173,8 +176,6 @@ namespace Aurora.Modules.RegionLoader
             this.textBox11 = new System.Windows.Forms.TextBox ();
             this.label30 = new System.Windows.Forms.Label ();
             this.tabPage2 = new System.Windows.Forms.TabPage ();
-            this.takeOffline = new System.Windows.Forms.Button ();
-            this.putOnline = new System.Windows.Forms.Button ();
             this.groupBox1.SuspendLayout ();
             this.groupBox2.SuspendLayout ();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit ();
@@ -763,7 +764,6 @@ namespace Aurora.Modules.RegionLoader
             // tabPage1
             // 
             this.tabPage1.Controls.Add (this.groupBox5);
-            this.tabPage1.Controls.Add (this.button13);
             this.tabPage1.Controls.Add (this.groupBox4);
             this.tabPage1.Controls.Add (this.RegionListBox);
             this.tabPage1.Controls.Add (this.SearchForRegionByName);
@@ -780,6 +780,8 @@ namespace Aurora.Modules.RegionLoader
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add (this.resetRegion);
+            this.groupBox5.Controls.Add (this.deleteRegion);
             this.groupBox5.Controls.Add (this.putOnline);
             this.groupBox5.Controls.Add (this.takeOffline);
             this.groupBox5.Controls.Add (this.RegionStatus);
@@ -790,6 +792,49 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox5.TabIndex = 37;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Region Controller";
+            // 
+            // resetRegion
+            // 
+            this.resetRegion.Enabled = false;
+            this.resetRegion.Location = new System.Drawing.Point (9, 81);
+            this.resetRegion.Name = "resetRegion";
+            this.resetRegion.Size = new System.Drawing.Size (89, 23);
+            this.resetRegion.TabIndex = 4;
+            this.resetRegion.Text = "Reset Region";
+            this.resetRegion.UseVisualStyleBackColor = true;
+            this.resetRegion.Click += new System.EventHandler (this.resetRegion_Click);
+            // 
+            // deleteRegion
+            // 
+            this.deleteRegion.Location = new System.Drawing.Point (116, 81);
+            this.deleteRegion.Name = "deleteRegion";
+            this.deleteRegion.Size = new System.Drawing.Size (89, 23);
+            this.deleteRegion.TabIndex = 36;
+            this.deleteRegion.Text = "Delete Region";
+            this.deleteRegion.UseVisualStyleBackColor = true;
+            this.deleteRegion.Click += new System.EventHandler (this.deleteregion_Click);
+            // 
+            // putOnline
+            // 
+            this.putOnline.Enabled = false;
+            this.putOnline.Location = new System.Drawing.Point (9, 52);
+            this.putOnline.Name = "putOnline";
+            this.putOnline.Size = new System.Drawing.Size (75, 23);
+            this.putOnline.TabIndex = 3;
+            this.putOnline.Text = "Put Online";
+            this.putOnline.UseVisualStyleBackColor = true;
+            this.putOnline.Click += new System.EventHandler (this.putOnline_Click);
+            // 
+            // takeOffline
+            // 
+            this.takeOffline.Enabled = false;
+            this.takeOffline.Location = new System.Drawing.Point (130, 52);
+            this.takeOffline.Name = "takeOffline";
+            this.takeOffline.Size = new System.Drawing.Size (75, 23);
+            this.takeOffline.TabIndex = 2;
+            this.takeOffline.Text = "Take Offline";
+            this.takeOffline.UseVisualStyleBackColor = true;
+            this.takeOffline.Click += new System.EventHandler (this.takeOffline_Click);
             // 
             // RegionStatus
             // 
@@ -809,16 +854,6 @@ namespace Aurora.Modules.RegionLoader
             this.label38.Size = new System.Drawing.Size (37, 13);
             this.label38.TabIndex = 0;
             this.label38.Text = "Status";
-            // 
-            // button13
-            // 
-            this.button13.Location = new System.Drawing.Point (570, 272);
-            this.button13.Name = "button13";
-            this.button13.Size = new System.Drawing.Size (75, 23);
-            this.button13.TabIndex = 36;
-            this.button13.Text = "Delete";
-            this.button13.UseVisualStyleBackColor = true;
-            this.button13.Click += new System.EventHandler (this.deleteregion_Click);
             // 
             // groupBox4
             // 
@@ -1408,26 +1443,6 @@ namespace Aurora.Modules.RegionLoader
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // takeOffline
-            // 
-            this.takeOffline.Location = new System.Drawing.Point (130, 52);
-            this.takeOffline.Name = "takeOffline";
-            this.takeOffline.Size = new System.Drawing.Size (75, 23);
-            this.takeOffline.TabIndex = 2;
-            this.takeOffline.Text = "Take Offline";
-            this.takeOffline.UseVisualStyleBackColor = true;
-            this.takeOffline.Click += new System.EventHandler (this.takeOffline_Click);
-            // 
-            // putOnline
-            // 
-            this.putOnline.Location = new System.Drawing.Point (9, 52);
-            this.putOnline.Name = "putOnline";
-            this.putOnline.Size = new System.Drawing.Size (75, 23);
-            this.putOnline.TabIndex = 3;
-            this.putOnline.Text = "Put Online";
-            this.putOnline.UseVisualStyleBackColor = true;
-            this.putOnline.Click += new System.EventHandler (this.putOnline_Click);
-            // 
             // RegionManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF (6F, 13F);
@@ -1554,7 +1569,7 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Button button12;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TextBox StartupNumberBox;
-        private System.Windows.Forms.Button button13;
+        private System.Windows.Forms.Button deleteRegion;
         private System.Windows.Forms.Button RSizeYHelp;
         private System.Windows.Forms.TextBox RegionSizeY;
         private System.Windows.Forms.Label label32;
@@ -1581,5 +1596,6 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Label label38;
         private System.Windows.Forms.Button putOnline;
         private System.Windows.Forms.Button takeOffline;
+        private System.Windows.Forms.Button resetRegion;
     }
 }
