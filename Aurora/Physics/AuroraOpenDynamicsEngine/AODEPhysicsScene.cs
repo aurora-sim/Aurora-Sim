@@ -107,7 +107,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public Vector3 gravityVector = new Vector3 ();
         public Vector3 gravityVectorNormalized = new Vector3 ();
         public bool m_hasSetUpPrims = false;
-        private const int maxContactsbeforedeath = 10000;
+        private const int maxContactsbeforedeath = 5000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
         private float contactsurfacelayer = 0.001f;
