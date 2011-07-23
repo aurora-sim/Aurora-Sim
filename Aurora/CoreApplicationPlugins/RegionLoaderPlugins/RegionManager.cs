@@ -449,7 +449,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         {
             IScene scene;
             m_sceneManager.TryGetScene(CurrentRegionID, out scene);
-            m_sceneManager.CloseRegion (scene);
+            m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
             SetOfflineStatus ();
         }
 

@@ -851,7 +851,7 @@ namespace OpenSim.CoreApplicationPlugins
                         if (!manager.TryGetScene(regionID, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionID));
 
-                        manager.CloseRegion(scene);
+                        manager.CloseRegion (scene, ShutdownType.Immediate, 0);
 
                         responseData["success"] = true;
                         responseData["region_id"] = regionID;
@@ -867,7 +867,7 @@ namespace OpenSim.CoreApplicationPlugins
                         if (!manager.TryGetScene(regionName, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                        manager.CloseRegion(scene);
+                        manager.CloseRegion (scene, ShutdownType.Immediate, 0);
 
                         responseData["success"] = true;
                         responseData["region_name"] = regionName;

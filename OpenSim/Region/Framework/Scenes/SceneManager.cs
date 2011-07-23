@@ -42,6 +42,8 @@ using Nini.Config;
 using OpenSim;
 using Aurora.Simulation.Base;
 using Aurora.Framework;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -50,6 +52,16 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate void NewScene (IScene scene);
     public delegate void NoParam ();
 
+    #endregion
+
+    #region Enums
+
+    public enum ShutdownType
+    {
+        Immediate,
+        Delayed
+    }
+    
     #endregion
 
     /// <summary>
@@ -206,7 +218,7 @@ namespace OpenSim.Region.Framework.Scenes
             for (int i = 0; i < scenes.Length; i++)
             {
                 // close scene/region
-                CloseRegion(scenes[i]);
+                CloseRegion (scenes[i], ShutdownType.Immediate, 0);
             }
         }
 
@@ -483,7 +495,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RestartRegion (IScene scene)
         {
-            CloseRegion (scene);
+            CloseRegion (scene, ShutdownType.Immediate, 0);
             StartNewRegion (scene.RegionInfo);
         }
 
@@ -502,7 +514,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (backup != null)
                 backup.DeleteAllSceneObjects();
 
-            CloseRegion(scene);
+            CloseRegion (scene, ShutdownType.Immediate, 0);
 
             if (!cleanup)
                 return;
@@ -518,18 +530,39 @@ namespace OpenSim.Region.Framework.Scenes
         /// Shuts down a region and removes it from all running modules
         /// </summary>
         /// <param name="scene"></param>
+        /// <param name="type"></param>
+        /// <param name="seconds"></param>
         /// <returns></returns>
-        public void CloseRegion (IScene scene)
+        public void CloseRegion (IScene scene, ShutdownType type, int seconds)
+        {
+            if (type == ShutdownType.Immediate)
+            {
+                InnerCloseRegion (scene);
+            }
+            else
+            {
+                Timer t = new Timer (seconds * 1000);//Millisecond conversion
+                t.Elapsed +=
+                    delegate (object sender, ElapsedEventArgs e)
+                    {
+                        CloseRegion (scene, ShutdownType.Immediate, 0);
+                    };
+                t.AutoReset = false;
+                t.Start ();
+            }
+        }
+
+        private void InnerCloseRegion (IScene scene)
         {
             //Make sure that if we are set on the console, that we are removed from it
-            if ((MainConsole.Instance.ConsoleScene != null) && 
+            if ((MainConsole.Instance.ConsoleScene != null) &&
                 (MainConsole.Instance.ConsoleScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
                 ChangeConsoleRegion ("root");
 
-            m_localScenes.Remove(scene);
-            scene.Close();
+            m_localScenes.Remove (scene);
+            scene.Close ();
 
-            CloseModules(scene);
+            CloseModules (scene);
         }
 
         #endregion
