@@ -265,7 +265,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 foreach (IScene scene in m_ScriptEngine.Worlds)
                 {
                     ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                    if(scriptMonitor != null)
+                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
             }
 

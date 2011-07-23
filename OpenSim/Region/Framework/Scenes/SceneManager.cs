@@ -538,7 +538,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule> ();
 
-        public void StartModules(IScene scene)
+        protected void StartModules(IScene scene)
         {
             //Run all the initialization
             //First, Initialize the SharedRegionStartupModule
@@ -572,7 +572,7 @@ namespace OpenSim.Region.Framework.Scenes
                 OnAddedScene (scene);
         }
 
-        public void StartupCompleteModules()
+        protected void StartupCompleteModules()
         {
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
@@ -580,7 +580,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void CloseModules (IScene scene)
+        protected void CloseModules (IScene scene)
         {
             IRegionModulesController controller;
             if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface<IRegionModulesController> (out controller))
@@ -833,7 +833,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="command">The first argument of the parameter (the command)</param>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        public void RunCommand(string[] cmdparams)
+        private void RunCommand (string[] cmdparams)
         {
             List<string> args = new List<string>(cmdparams);
             if (args.Count < 1)
@@ -960,7 +960,7 @@ namespace OpenSim.Region.Framework.Scenes
             );
         }
 
-        public void HandleShowUsers (string[] cmd)
+        private void HandleShowUsers (string[] cmd)
         {
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);
@@ -1001,7 +1001,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_log.Info (String.Empty);
         }
 
-        public void HandleShowRegions (string[] cmd)
+        private void HandleShowRegions (string[] cmd)
         {
             ForEachScene (delegate (IScene scene)
             {
@@ -1009,7 +1009,7 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
-        public void HandleShowMaturity (string[] cmd)
+        private void HandleShowMaturity (string[] cmd)
         {
             ForEachCurrentScene (delegate (IScene scene)
             {
@@ -1030,12 +1030,12 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
-        public void SendCommandToPluginModules(string[] cmdparams)
+        private void SendCommandToPluginModules (string[] cmdparams)
         {
             ForEachCurrentScene(delegate(IScene scene) { scene.EventManager.TriggerOnPluginConsole(cmdparams); });
         }
 
-        public void SetBypassPermissionsOnCurrentScene(bool bypassPermissions)
+        private void SetBypassPermissionsOnCurrentScene (bool bypassPermissions)
         {
             ForEachCurrentScene(delegate(IScene scene) { scene.Permissions.SetBypassPermissions(bypassPermissions); });
         }

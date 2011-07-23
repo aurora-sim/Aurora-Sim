@@ -53,14 +53,17 @@ namespace Aurora.Modules.RegionLoader
         public event NewRegion OnNewRegion;
         private bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
+        private RegionInfo CurrentRegion = null;
         private ISimulationBase m_OpenSimBase;
         private IRegionInfoConnector m_connector = null;
         private bool m_changingRegion = false;
         private bool m_textHasChanged = false;
+        private SceneManager m_sceneManager;
 
         public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
         {
             m_OpenSimBase = baseOpenSim;
+            m_sceneManager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager> ();
             m_connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             KillAfterRegionCreation = killOnCreate;
             InitializeComponent();
@@ -159,11 +162,16 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("Region was not found!");
                 return;
             }
+            ChangeRegionInfo (region);
+        }
+
+        private void ChangeRegionInfo (RegionInfo region)
+        {
             m_changingRegion = true;
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
-            textBox6.Text = region.ObjectCapacity.ToString();
-            uint maturityLevel = Util.ConvertAccessLevelToMaturity(region.AccessLevel);
+            textBox6.Text = region.ObjectCapacity.ToString ();
+            uint maturityLevel = Util.ConvertAccessLevelToMaturity (region.AccessLevel);
             if (maturityLevel == 0)
                 textBox4.Text = "PG";
             else if (maturityLevel == 1)
@@ -175,14 +183,36 @@ namespace Aurora.Modules.RegionLoader
                 textBox9.Text = "DEFAULT";
             else
                 textBox9.Text = region.ExternalHostName;
-            textBox7.Text = region.HttpPort.ToString();
-            textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
-            textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
+            textBox7.Text = region.HttpPort.ToString ();
+            textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString ();
+            textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString ();
             textBox1.Text = region.RegionName;
             RegionSizeX.Text = region.RegionSizeX.ToString ();
             RegionSizeY.Text = region.RegionSizeY.ToString ();
-            startupType.SelectedIndex = ConvertStartupType(region.Startup);
+            startupType.SelectedIndex = ConvertStartupType (region.Startup);
+            IScene scene;
+            if (m_sceneManager.TryGetScene (region.RegionID, out scene))
+                SetOnlineStatus ();
+            else
+                SetOfflineStatus ();
+
             m_changingRegion = false;
+        }
+
+        private void SetOfflineStatus ()
+        {
+            RegionStatus.Text = "Offline";
+            RegionStatus.BackColor = Color.Red;
+            putOnline.Enabled = true;
+            takeOffline.Enabled = false;
+        }
+
+        private void SetOnlineStatus ()
+        {
+            RegionStatus.Text = "Online";
+            RegionStatus.BackColor = Color.LightGreen;
+            putOnline.Enabled = false;
+            takeOffline.Enabled = true;
         }
 
         private new void Update()
@@ -253,31 +283,7 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("Region was not found!");
                 return;
             }
-            m_changingRegion = true;
-            CurrentRegionID = region.RegionID;
-            textBox11.Text = region.RegionType;
-            textBox6.Text = region.ObjectCapacity.ToString();
-            int maturityLevel = region.RegionSettings.Maturity;
-            if (maturityLevel == 0)
-                textBox4.Text = "PG";
-            else if (maturityLevel == 1)
-                textBox4.Text = "Mature";
-            else
-                textBox4.Text = "Adult";
-            DisabledEdit.Checked = region.Disabled;
-            if (region.FindExternalAutomatically)
-                textBox9.Text = "DEFAULT";
-            else
-                textBox9.Text = region.ExternalHostName;
-            textBox7.Text = region.InternalEndPoint.Port.ToString();
-            textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString();
-            textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString();
-            textBox1.Text = region.RegionName;
-            RegionSizeX.Text = region.RegionSizeX.ToString();
-            RegionSizeY.Text = region.RegionSizeY.ToString();
-            StartupNumberBox.Text = region.NumberStartup.ToString ();
-            startupType.SelectedIndex = ConvertStartupType(region.Startup);
-            m_changingRegion = false;
+            ChangeRegionInfo (region);
         }
 
         private int ConvertStartupType (StartupType startupType)
@@ -404,7 +410,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             }
         }
 
-        private void button13_Click(object sender, EventArgs e)
+        private void deleteregion_Click(object sender, EventArgs e)
         {
             if(CurrentRegionID == UUID.Zero)
             {
@@ -447,6 +453,21 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 Update ();
                 m_textHasChanged = false;
             }
+        }
+
+        private void putOnline_Click (object sender, EventArgs e)
+        {
+            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
+            m_sceneManager.StartNewRegion (region);
+            SetOnlineStatus ();
+        }
+
+        private void takeOffline_Click (object sender, EventArgs e)
+        {
+            IScene scene;
+            m_sceneManager.TryGetScene(CurrentRegionID, out scene);
+            m_sceneManager.CloseRegion (scene);
+            SetOfflineStatus ();
         }
     }
 }
