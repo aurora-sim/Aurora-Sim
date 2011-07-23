@@ -964,7 +964,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -994,7 +994,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -1037,7 +1037,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -1067,7 +1067,7 @@ textures 1
                     count++;
                 });
 
-                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+                IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_sp.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_sp.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
                 if (reporter != null)
                 {
                     reporter.AddAgentUpdates (count);
@@ -1095,11 +1095,9 @@ textures 1
                     return;
                 if (!m_InitialHasWearablesBeenSent)
                 {
-                    m_InitialHasWearablesBeenSent = true;
-                    m_log.Warn ("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name + " was added and appearance was not sent, force sending now.");
-
                     //Force send!
                     m_InitialHasWearablesBeenSent = true;
+                    m_log.Warn ("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name + " was added and appearance was not sent, force sending now.");
 
                     m_sp.ControllingClient.SendWearables (Appearance.Wearables, Appearance.Serial);
 

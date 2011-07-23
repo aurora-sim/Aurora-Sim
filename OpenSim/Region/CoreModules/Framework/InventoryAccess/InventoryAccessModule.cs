@@ -606,7 +606,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     doc.LoadXml(xmlData);
 
                     if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
-                        doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))
+                        (doc.FirstChild.NextSibling != null &&
+                        doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>")))
                     {
                         //We don't do multiple objects here
                         return null;
@@ -727,7 +728,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
             }
             if (group == null && (doc.FirstChild.OuterXml.StartsWith ("<groups>") ||
-                doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>")))
+                (doc.FirstChild.NextSibling != null &&
+                doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))))
             {
                 XmlNodeList nodes = doc.FirstChild.OuterXml.StartsWith ("<groups>") ? doc.FirstChild.ChildNodes : doc.FirstChild.NextSibling.ChildNodes;
                 List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);

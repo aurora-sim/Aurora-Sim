@@ -400,7 +400,7 @@ namespace Flotsam.RegionModules.AssetCache
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} unnessesary requests due to requests for assets that are currently downloading.", m_RequestsForInprogress);
                 
             }
-            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", "AssetMonitor");
+            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.AssetMonitor);
             if (monitor != null)
             {
                 monitor.AddAsset(asset);
@@ -459,7 +459,7 @@ namespace Flotsam.RegionModules.AssetCache
             if (m_MemoryCacheEnabled)
                 m_MemoryCache.Clear();
 
-            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", "AssetMonitor");
+            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.AssetMonitor);
             if (monitor != null)
             {
                 monitor.ClearAssetCacheStatistics();

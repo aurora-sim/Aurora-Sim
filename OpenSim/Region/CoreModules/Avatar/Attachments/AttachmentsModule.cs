@@ -664,7 +664,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
             if (attPlugin != null)
-                attPlugin.AddAttachment(group);
+            {
+                attPlugin.AddAttachment (group);
+                presence.AddAttachment (group);
+            }
 
             // Killing it here will cause the client to deselect it
             // It then reappears on the avatar, deselected
@@ -799,6 +802,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments> ();
                 if (attModule != null)
                     attModule.RemoveAttachment (group);
+                presence.RemoveAttachment (group);
             }
 
             m_log.Debug ("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint ()).ToString ());
