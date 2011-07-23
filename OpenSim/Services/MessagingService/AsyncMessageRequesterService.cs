@@ -113,7 +113,7 @@ namespace OpenSim.Services.MessagingService
 
         void requestAsyncMessages(object sender, ElapsedEventArgs e)
         {
-            if (m_locked)
+            if (m_locked || m_scenes.Count == 0)
                 return;
             m_locked = true;
             OSDMap message = CreateWebRequest();
