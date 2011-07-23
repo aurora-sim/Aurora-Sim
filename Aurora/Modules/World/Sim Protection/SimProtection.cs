@@ -122,7 +122,7 @@ namespace Aurora.Modules
                 return;
             m_scene = scene;
             BaseRateFramesPerSecond = scene.BaseSimFPS;
-            m_statsReporter =  (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "SimFrameStats");
+            m_statsReporter =  (ISimFrameMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
             if (m_statsReporter == null)
             {
                 m_log.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");

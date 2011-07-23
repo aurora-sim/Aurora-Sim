@@ -49,6 +49,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return (int)(GetValue() / (1024 * 1024)) + "MB (Global)";
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

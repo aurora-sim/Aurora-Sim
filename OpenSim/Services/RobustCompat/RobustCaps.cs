@@ -88,14 +88,17 @@ namespace OpenSim.Services.RobustCompat
             IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule> ();
             if (m_userAttachments.ContainsKey(sp.UUID))
             {
-                foreach (ISceneEntity attachment in m_userAttachments[sp.UUID])
+                Util.FireAndForget (delegate (object o)
                 {
-                    OpenSim.Services.Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
-                    attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
-                    //Now send it to them
-                    ssc.CreateObject (dest, (ISceneObject)attachment);
-                    attachment.IsDeleted = true;
-                }
+                    foreach (ISceneEntity attachment in m_userAttachments[sp.UUID])
+                    {
+                        OpenSim.Services.Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
+                        attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
+                        //Now send it to them
+                        ssc.CreateObject (dest, (ISceneObject)attachment);
+                        attachment.IsDeleted = true;
+                    }
+                });
             }
             return null;
         }

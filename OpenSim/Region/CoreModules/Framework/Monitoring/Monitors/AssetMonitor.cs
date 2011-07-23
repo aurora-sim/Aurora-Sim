@@ -170,6 +170,10 @@ Asset service request failures: {6}" + Environment.NewLine,
             blockedMissingTextureRequests++;
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

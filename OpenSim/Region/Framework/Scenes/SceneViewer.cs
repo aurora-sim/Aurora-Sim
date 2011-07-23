@@ -24,7 +24,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#define UseRemovingEntityUpdates
+//#define UseRemovingEntityUpdates
+#define UseDictionaryForEntityUpdates
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -69,6 +70,8 @@ namespace OpenSim.Region.Framework.Scenes
         private object m_objectUpdatesToSendLock = new object ();
 #if UseRemovingEntityUpdates
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
+#elif UseDictionaryForEntityUpdates
+        private Dictionary<UUID, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
 #else
         private Queue<EntityUpdate> m_presenceUpdatesToSend = new Queue<EntityUpdate>();
 #endif
@@ -169,8 +172,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (!lastPresencesDInView.ContainsKey (presence.UUID))
-                return;//Only send updates if they are in view
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
@@ -178,6 +179,9 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
+            //Is this really necessary? -7/21
+            //if (!lastPresencesDInView.ContainsKey (presence.UUID))
+            //    return;//Only send updates if they are in view
 
             QueuePresenceForUpdateInternal (presence, flags);
         }
@@ -196,7 +200,7 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesInView.Add (presence);
                 lastPresencesDInView.Add (presence.UUID, presence);
             }
-            else
+            else//Only send one full update please!
                 return;
 
             AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
@@ -239,6 +243,19 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presenceUpdatesToSend.Insert (0, presence.UUID, o);
                 else //Not us, set at the end
                     m_presenceUpdatesToSend.Insert (m_presenceUpdatesToSend.Count, presence.UUID, o);
+#elif UseDictionaryForEntityUpdates
+                EntityUpdate o = null;
+                if(!m_presenceUpdatesToSend.TryGetValue(presence.UUID, out o))
+                    o = new EntityUpdate (presence, flags);
+                else
+                {
+                    if ((o.Flags & flags) == o.Flags)
+                        return; //Same, leave it alone!
+                    o.Flags |= flags;
+                    return;//All done, its updated, no need to readd
+                }
+
+                m_presenceUpdatesToSend[presence.UUID] = o;
 #else
                 m_presenceUpdatesToSend.Enqueue (new EntityUpdate (presence, flags));
 #endif
@@ -396,7 +413,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                     rootitem.Value = rootupdate;
-                    rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
+                    rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
                     m_entsqueue.Enqueue (rootitem);
 
                     foreach (ISceneChildEntity child in e.ChildrenEntities ())
@@ -407,6 +424,8 @@ namespace OpenSim.Region.Framework.Scenes
                         PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                         item.Value = update;
                         item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
+                        if (item.Priority >= rootitem.Priority + 10)
+                            item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
                         m_entsqueue.Enqueue (item);
                     }
                 }
@@ -462,9 +481,11 @@ namespace OpenSim.Region.Framework.Scenes
                     ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar (m_presence.UUID);
                     foreach (ISceneEntity entity in entities)
                     {
+                        QueuePartForUpdate (entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                         foreach (ISceneChildEntity child in entity.ChildrenEntities ())
                         {
-                            QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
+                            if(!child.IsRoot)
+                                QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
                         }
                     }
                 }
@@ -531,7 +552,7 @@ namespace OpenSim.Region.Framework.Scenes
                             EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
                             PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                             rootitem.Value = rootupdate;
-                            rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
+                            rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
                             m_entsqueue.Enqueue (rootitem);
 
                             foreach (ISceneChildEntity child in e.ChildrenEntities ())
@@ -542,6 +563,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                                 item.Value = update;
                                 item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
+                                if (item.Priority >= rootitem.Priority + 10)
+                                    item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
                                 m_entsqueue.Enqueue (item);
                             }
                         }
@@ -565,6 +588,11 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
+#if UseDictionaryForEntityUpdates
+                        Dictionary<UUID, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator ();
+                        e.MoveNext ();
+                        List<UUID> entitiesToRemove = new List<UUID> ();
+#endif
                         int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
@@ -582,11 +610,28 @@ namespace OpenSim.Region.Framework.Scenes
                                 SendFullUpdateForPresence ((IScenePresence)update.Entity);
                             else
                                 updates.Add (update);
+#elif UseDictionaryForEntityUpdates
+                            EntityUpdate update = e.Current.Value;
+                            entitiesToRemove.Add (update.Entity.UUID);//Remove it later
+                            if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
+                                SendFullUpdateForPresence ((IScenePresence)update.Entity);
+                            else
+                                updates.Add (update);
+                            e.MoveNext ();
 #else
                             EntityUpdate update = m_presenceUpdatesToSend.Dequeue ();
-                            updates.Add (update);
+                            if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
+                                SendFullUpdateForPresence ((IScenePresence)update.Entity);
+                            else
+                                updates.Add (update);
 #endif
                         }
+#if UseDictionaryForEntityUpdates
+                        foreach (UUID id in entitiesToRemove)
+                        {
+                            m_presenceUpdatesToSend.Remove (id);
+                        }
+#endif
                     }
                     catch (Exception ex)
                     {
@@ -711,7 +756,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence.ControllingClient.SendPrimUpdate (updates);
 
             //Add the time to the stats tracker
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), "Agent Update Count");
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
                 reporter.AddAgentTime (Util.EnvironmentTickCountSubtract (AgentMS));
 

@@ -176,11 +176,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             {
                 List<UUID> Teammates = new List<UUID>();
                 if (Teams.TryGetValue (Team, out Teammates))
-                {
                     Teams.Remove (Team);
-                    Teammates.Add (AgentID);
-                    Teams.Add (Team, Teammates);
-                }
+                else
+                    Teammates = new List<UUID> ();
+                Teammates.Add (AgentID);
+                Teams.Add (Team, Teammates);
             }
         }
 

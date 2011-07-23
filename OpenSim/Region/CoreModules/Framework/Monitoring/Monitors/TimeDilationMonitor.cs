@@ -71,6 +71,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
                 m_scene.TimeDilation = 1.0f;
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

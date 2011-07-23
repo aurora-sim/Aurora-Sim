@@ -1467,7 +1467,7 @@ namespace OpenSim.Region.Framework.Scenes
             //if (update_movementflag && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) == 0) && (m_parentID == UUID.Zero) && !SitGround)
             //    Animator.UpdateMovementAnimations();
 
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
@@ -2076,7 +2076,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scene.ForEachScenePresence(SendTerseUpdateToClient);
 
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
             {
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
@@ -2103,7 +2103,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_perfMonMS = Util.EnvironmentTickCount();
             m_controllingClient.SendCoarseLocationUpdate(avatarUUIDs, coarseLocations);
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), "Agent Update Count");
+            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
                 reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(m_perfMonMS));
         }
@@ -2224,7 +2224,8 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (m_failedNeighborCrossing.ContainsKey (neighborRegion.RegionID))
                             {
-                                if (m_failedNeighborCrossing[neighborRegion.RegionID] - Util.UnixTimeSinceEpoch () > 10)
+                                int diff = Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]);
+                                if (diff > 10 * 1000)
                                     m_failedNeighborCrossing.Remove (neighborRegion.RegionID); //Only allow it to retry every 10 seconds
                                 else
                                     return false;
@@ -2287,10 +2288,17 @@ namespace OpenSim.Region.Framework.Scenes
             m_inTransit = false;
         }
 
+        public void SuccessfulCrossingTransit (GridRegion crossingRegion)
+        {
+            m_inTransit = false;
+            //We got there fine, remove it
+            m_failedNeighborCrossing.Remove(crossingRegion.RegionID);
+        }
+
         public void FailedCrossingTransit (GridRegion failedCrossingRegion)
         {
             m_inTransit = false;
-            m_failedNeighborCrossing[failedCrossingRegion.RegionID] = Util.UnixTimeSinceEpoch();
+            m_failedNeighborCrossing[failedCrossingRegion.RegionID] = Util.EnvironmentTickCount();
         }
 
         private void Reset()
@@ -2561,6 +2569,21 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.UpdateMovementAnimations ();
         }
 
+        #region Cached Attachments
+
+        private List<ISceneEntity> m_cachedAttachments = new List<ISceneEntity> ();
+        public void RemoveAttachment (ISceneEntity group)
+        {
+            m_cachedAttachments.Remove (group);
+        }
+
+        public void AddAttachment (ISceneEntity group)
+        {
+            m_cachedAttachments.Add (group);
+        }
+
+        #endregion
+
         // Event called by the physics plugin to tell the avatar about a collision.
         private void PhysicsCollisionUpdate(EventArgs e)
         {
@@ -2573,57 +2596,22 @@ namespace OpenSim.Region.Framework.Scenes
             if (coldata.Keys.Count > 0)
             {
                 //Fire events for attachments
-                IAttachmentsModule attModule = Scene.RequestModuleInterface<IAttachmentsModule> ();
-                if (attModule != null)
+                foreach (ISceneEntity grp in m_cachedAttachments)
                 {
-                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (UUID);
-                    foreach (ISceneEntity grp in attachments)
-                    {
-                        grp.FireAttachmentCollisionEvents (e);
-                    }
+                    grp.FireAttachmentCollisionEvents (e);
                 }
             }
 
-            List<uint> thisHitColliders = new List<uint>();
-            List<uint> endedColliders = new List<uint>();
-            List<uint> startedColliders = new List<uint>();
-
-            // calculate things that started colliding this time
-            // and build up list of colliders this time
-            foreach (uint localid in coldata.Keys)
+            //This is only used for collision sounds, which we have disabled ATM because they hit the client hard
+            /*//add the items that started colliding this time to the last colliders list.
+            foreach (uint localID in coldata.Keys)
             {
-                thisHitColliders.Add(localid);
-                if (!m_lastColliders.Contains(localid))
-                {
-                    startedColliders.Add(localid);
-                }
-            }
-
-            // calculate things that ended colliding
-            foreach (uint localID in m_lastColliders)
-            {
-                if (!thisHitColliders.Contains(localID))
-                {
-                    endedColliders.Add(localID);
-                }
-            }
-
-            //add the items that started colliding this time to the last colliders list.
-            foreach (uint localID in startedColliders)
-            {
-                m_lastColliders.Add(localID);
                 //Play collision sounds
                 if (localID != 0 && CollisionSoundID == UUID.Zero && !IsChildAgent)
                 {
                     CollisionSoundID = Sounds.OBJECT_COLLISION;
                 }
-            }
-
-            // remove things that ended colliding from the last colliders list
-            foreach (uint localID in endedColliders)
-            {
-                m_lastColliders.Remove(localID);
-            }
+            }*/
 
             if (coldata.Count != 0 && Animator != null)
             {
@@ -2666,8 +2654,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-
-        private readonly List<uint> m_lastColliders = new List<uint>();
 
         public void PushForce(Vector3 impulse)
         {

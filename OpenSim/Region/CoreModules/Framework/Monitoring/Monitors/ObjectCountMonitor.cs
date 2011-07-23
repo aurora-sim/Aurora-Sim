@@ -58,6 +58,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
                 m_scene.RequestModuleInterface<IEntityCountModule>().ActiveObjects + " active Object(s)";
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }

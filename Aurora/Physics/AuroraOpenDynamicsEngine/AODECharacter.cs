@@ -155,7 +155,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //            _orientation = rotation;
 //            _lastorientation = rotation;
 
-            if (pos.IsFinite())
+            if (IsFinite(pos))
             {
                 if (pos.Z > 9999999f || pos.Z <-90f)
                 {
@@ -207,6 +207,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
                 m_UpdateTimecntr = .1f;
             m_name = avName;
+        }
+
+        private bool IsFinite (Vector3 pos)
+        {
+            return !(pos.X == float.PositiveInfinity || pos.X == float.NegativeInfinity || pos.X == float.NaN ||
+                pos.Y == float.PositiveInfinity || pos.Y == float.NegativeInfinity || pos.Y == float.NaN ||
+                pos.Z == float.PositiveInfinity || pos.Z == float.NegativeInfinity || pos.Z == float.NaN);
         }
 
         #endregion
@@ -326,7 +333,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (Body == IntPtr.Zero || Shell == IntPtr.Zero)
                 {
-                    if (value.IsFinite())
+                    if (IsFinite(value))
                     {
                         if (value.Z > 9999999f || value.Z <-90f)
                         {
@@ -365,7 +372,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return new Vector3(CAPSULE_RADIUS * 2, CAPSULE_RADIUS * 2, CAPSULE_LENGTH); }
             set
             {
-                if (value.IsFinite())
+                if (IsFinite(value))
                 {
                     Vector3 SetSize = value;
 
@@ -432,7 +439,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             set
             {
-                if (value.IsFinite())
+                if (IsFinite(value))
                 {
                     m_pidControllerActive = true;
                     _target_velocity = value;
@@ -650,17 +657,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Move
 
+        private Vector3 m_lastAvatarTilt = Vector3.Zero;//Makes it so that we don't set the motion to the same place > 1 time
         private void AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3 movementVector, Vector3 gravity)
         {
-            if (gravity == Vector3.Zero)
-                gravity = new Vector3 (0, 0, -1f);
             movementVector.Z = 0f;
             float magnitude = (float)Math.Sqrt ((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
             if (magnitude < 0.1f)
                 return;
 
-            gravity.Normalize ();
-            Quaternion rot = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravity);
+            Quaternion rot = Quaternion.Identity;
+            if (gravity == Vector3.Zero)
+                gravity = new Vector3 (0, 0, -1f);
+            else if (gravity != _parent_scene.gravityVectorNormalized)
+            {
+                gravity.Normalize ();
+                rot = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravity);
+            }
             // normalize the velocity vector
             float invMagnitude = 1.0f / magnitude;
             movementVector.X *= invMagnitude;
@@ -713,13 +725,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float yTiltComponent = -movementVector.Y * 0.1131371f;
             float zTiltComponent = -movementVector.Z * 0.1131371f;
 
-            //m_log.Debug("[PHYSICS] changing avatar tilt");
-            d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, xTiltComponent);
-            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
-            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, yTiltComponent);
-            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
-            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, zTiltComponent);
-            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
+            if (m_lastAvatarTilt.X != xTiltComponent ||
+                m_lastAvatarTilt.Y != yTiltComponent ||
+                m_lastAvatarTilt.Z != zTiltComponent)//Only do it if it has changed
+            {
+                m_lastAvatarTilt = new Vector3 (xTiltComponent, yTiltComponent, zTiltComponent);
+                //m_log.Debug("[PHYSICS] changing avatar tilt");
+                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, xTiltComponent);
+                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
+                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, yTiltComponent);
+                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
+                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, zTiltComponent);
+                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
+            }
         }
       
         /// <summary>
@@ -775,7 +793,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             Vector3 localPos = new Vector3 ((float)tempPos.X, (float)tempPos.Y, (float)tempPos.Z);
 
-            if (!localPos.IsFinite ())
+            if (!IsFinite(localPos))
             {
                 m_log.Warn ("[PHYSICS]: Avatar Position is non-finite!");
                 defects.Add (this);
@@ -1156,7 +1174,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Apply the force
 
-            if (vec.IsFinite ())
+            if (IsFinite(vec))
             {
                 if (vec.X < 100000000 && vec.Y < 10000000 && vec.Z < 10000000) //Checks for crazy, going to NaN us values
                 {
@@ -1177,7 +1195,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     else
                         doForce (vec);
                      
-                    if (!_zeroFlag)
+                    if (!_zeroFlag && (!flying || m_iscolliding))
                         AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
@@ -1461,7 +1479,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void AddForce(Vector3 force, bool pushforce)
         {
-            if (force.IsFinite())
+            if (IsFinite(force))
             {
                 if (pushforce)
                 {
@@ -1544,10 +1562,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!IsPhysical)
                 return;//Not physical, its not supposed to be here
 
-            if (CollisionEventsThisFrame != null)
-                base.SendCollisionUpdate (CollisionEventsThisFrame);
+            base.SendCollisionUpdate (CollisionEventsThisFrame);
 
-            CollisionEventsThisFrame = new CollisionEventUpdate ();
+            CollisionEventsThisFrame.Clear ();
         }
 
         public override bool SubscribedEvents()

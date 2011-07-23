@@ -51,20 +51,17 @@ namespace OpenSim.Framework
 
         public int m_colliderType;
         public int m_GenericStartEnd;
-        //public uint m_LocalID;
         public Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
 
-        public CollisionEventUpdate(uint localID, int colliderType, int GenericStartEnd, Dictionary<uint, ContactPoint> objCollisionList)
+        public CollisionEventUpdate(uint localID, int colliderType, Dictionary<uint, ContactPoint> objCollisionList)
         {
             m_colliderType = colliderType;
-            m_GenericStartEnd = GenericStartEnd;
             m_objCollisionList = objCollisionList;
         }
 
         public CollisionEventUpdate()
         {
             m_colliderType = (int) ActorTypes.Unknown;
-            m_GenericStartEnd = 1;
             m_objCollisionList = new Dictionary<uint, ContactPoint>();
         }
 
@@ -72,12 +69,6 @@ namespace OpenSim.Framework
         {
             get { return m_colliderType; }
             set { m_colliderType = value; }
-        }
-
-        public int GenericStartEnd
-        {
-            get { return m_GenericStartEnd; }
-            set { m_GenericStartEnd = value; }
         }
 
         public void addCollider(uint localID, ContactPoint contact)
@@ -90,6 +81,15 @@ namespace OpenSim.Framework
                 if (oldCol.PenetrationDepth < contact.PenetrationDepth)
                     m_objCollisionList[localID] = contact;
             }
+        }
+
+        /// <summary>
+        /// Reset all the info about this collider
+        /// </summary>
+        public void Clear ()
+        {
+            m_colliderType = (int)ActorTypes.Unknown;
+            m_objCollisionList.Clear ();
         }
     }
 

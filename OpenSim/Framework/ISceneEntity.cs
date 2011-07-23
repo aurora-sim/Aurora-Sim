@@ -161,6 +161,7 @@ namespace OpenSim.Framework
         void TeleportWithMomentum (Vector3 value);
         void DoMoveToPosition (object iClientAPI, string p, List<string> coords);
         void SuccessfulTransit ();
+        void SuccessfulCrossingTransit (GridRegion CrossingRegion);
         void FailedTransit ();
         void FailedCrossingTransit (GridRegion failedCrossingRegion);
         void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
@@ -202,6 +203,9 @@ namespace OpenSim.Framework
         Vector3 GetAbsolutePosition ();
 
         void AddChildAgentUpdateTaint ();
+
+        void RemoveAttachment (ISceneEntity group);
+        void AddAttachment (ISceneEntity group);
     }
 
     public interface IAvatarAppearanceModule

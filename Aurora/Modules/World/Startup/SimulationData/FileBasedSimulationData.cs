@@ -467,7 +467,8 @@ More configuration options and info can be found in the Configuration/Data/FileB
                     //New style
                     terrainModule.TerrainRevertMap = ReadFromData (m_revertTerrain, scene);
                 //Make sure the size is right!
-                if (terrainModule.TerrainRevertMap.Height != scene.RegionInfo.RegionSizeX)
+                if (terrainModule.TerrainRevertMap != null &&
+                    terrainModule.TerrainRevertMap.Height != scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainRevertMap = null;
                 m_revertTerrain = null;
                 m_oldstylerevertTerrain = null;
@@ -491,6 +492,10 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 else
                     //New style
                     terrainModule.TerrainMap = ReadFromData (m_terrain, scene);
+                //Make sure the size is right!
+                if (terrainModule.TerrainMap != null &&
+                    terrainModule.TerrainMap.Height != scene.RegionInfo.RegionSizeX)
+                    terrainModule.TerrainMap = null;
                 m_terrain = null;
                 m_oldstyleterrain = null;
                 m_shortterrain = null;

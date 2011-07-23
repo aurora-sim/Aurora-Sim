@@ -57,6 +57,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return m_scene.RequestModuleInterface<IEntityCountModule>().RootAgents + " agent(s)";
         }
 
+        public void ResetStats ()
+        {
+        }
+
         #endregion
     }
 }
