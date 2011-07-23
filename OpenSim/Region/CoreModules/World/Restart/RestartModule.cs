@@ -294,11 +294,8 @@ namespace OpenSim.Region.CoreModules.World.Region
                     return;
                 }
             }
-            m_log.Error("[Scene]: Closing...");
-            m_scene.RequestModuleInterface<SceneManager>().CloseRegion(m_scene);
-
             m_log.Error("[Scene]: Restaring Now");
-            m_scene.RequestModuleInterface<SceneManager>().HandleRestart (m_scene);
+            m_scene.RequestModuleInterface<SceneManager>().RestartRegion (m_scene);
         }
     }
 }

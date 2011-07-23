@@ -2386,14 +2386,17 @@ namespace OpenSim.CoreApplicationPlugins
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    IScene scene;
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2478,23 +2481,27 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
                     (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
-                if (requestData.Contains("region_uuid"))
+                IScene scene;
+                if (requestData.Contains ("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                IScene scene = manager.CurrentOrFirstScene;
+                scene = manager.CurrentOrFirstScene;
                 scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
                 scene.RegionInfo.EstateSettings.Save();
             }
@@ -2537,14 +2544,17 @@ namespace OpenSim.CoreApplicationPlugins
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    IScene scene;
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2623,14 +2633,17 @@ namespace OpenSim.CoreApplicationPlugins
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    IScene scene;
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2706,23 +2719,26 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
                     (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
-                if (requestData.Contains("region_uuid"))
+                IScene scene;
+                if (requestData.Contains ("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                IScene scene = manager.CurrentOrFirstScene;
+                scene = manager.CurrentOrFirstScene;
                 UUID[] accessControlList = scene.RegionInfo.EstateSettings.EstateAccess;
                 Hashtable users = new Hashtable();
 
