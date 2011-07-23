@@ -27,14 +27,14 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IRegionModulesController
     {
-        void AddRegionToModules(Scene scene);
-        void RemoveRegionFromModules (Scene scene);
+        void AddRegionToModules(IScene scene);
+        void RemoveRegionFromModules (IScene scene);
         List<IRegionModuleBase> AllModules { get; }
     }
 }

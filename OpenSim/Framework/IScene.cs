@@ -71,7 +71,7 @@ namespace OpenSim.Framework
         PhysicsScene PhysicsScene { get; }
         ISceneGraph SceneGraph { get; }
         AgentCircuitManager AuthenticateHandler { get; }
-        IConfigSource Config { get; }
+        IConfigSource Config { get; set; }
         ISimulationDataStore SimulationDataService { get; }
 
         #endregion

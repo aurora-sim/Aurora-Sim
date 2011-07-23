@@ -592,14 +592,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     region.InternalEndPoint.Port = Convert.ToInt32(requestData["listen_port"]);
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
-                    if (manager.TryGetScene(region.InternalEndPoint, out scene))
-                        throw new Exception(
-                            String.Format(
-                                "region internal IP {0} and port {1} already in use by region {2}",
-                                region.InternalEndPoint.Address,
-                                region.InternalEndPoint.Port,
-                                scene.ToString()));
-
+                    
                     region.ExternalHostName = (string)requestData["external_address"];
 
                     // default place for region configuration files is in the
@@ -2839,7 +2832,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <param name="email"></param>
         private UserAccount CreateUser(UUID scopeID, string firstName, string lastName, string password, string email)
         {
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
             IUserAccountService userAccountService = scene.UserAccountService;
             IGridService gridService = scene.GridService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
@@ -2910,7 +2903,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <param name="password"></param>
         private bool ChangeUserPassword(string firstName, string lastName, string password)
         {
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
             IUserAccountService userAccountService = scene.UserAccountService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
 

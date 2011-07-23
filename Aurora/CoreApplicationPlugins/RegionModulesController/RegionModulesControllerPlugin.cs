@@ -353,16 +353,16 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        protected Dictionary<Scene, Dictionary<string, IRegionModuleBase>> RegionModules = new Dictionary<Scene, Dictionary<string, IRegionModuleBase>>();
+        protected Dictionary<IScene, Dictionary<string, IRegionModuleBase>> RegionModules = new Dictionary<Scene, Dictionary<string, IRegionModuleBase>>();
 
-        private void AddRegionModule(Scene scene, string p, IRegionModuleBase module)
+        private void AddRegionModule(IScene scene, string p, IRegionModuleBase module)
         {
             if (!RegionModules.ContainsKey(scene))
                 RegionModules.Add(scene, new Dictionary<string, IRegionModuleBase>());
             RegionModules[scene][p] = module;
         }
 
-        public void RemoveRegionFromModules (Scene scene)
+        public void RemoveRegionFromModules (IScene scene)
         {
             foreach (IRegionModuleBase module in RegionModules[scene].Values)
             {
