@@ -806,6 +806,7 @@ namespace Aurora.Modules.RegionLoader
             // 
             // deleteRegion
             // 
+            this.deleteRegion.Enabled = false;
             this.deleteRegion.Location = new System.Drawing.Point (116, 81);
             this.deleteRegion.Name = "deleteRegion";
             this.deleteRegion.Size = new System.Drawing.Size (89, 23);
