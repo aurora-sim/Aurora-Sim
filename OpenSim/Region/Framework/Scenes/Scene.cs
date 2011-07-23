@@ -568,6 +568,7 @@ namespace OpenSim.Region.Framework.Scenes
             IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
             if (physicsState != null)
                 physicsState.SavePhysicsState ();
+
             //Then clear all the velocity and stuff on objects
             foreach (PhysicsObject o in this.PhysicsScene.ActiveObjects)
             {

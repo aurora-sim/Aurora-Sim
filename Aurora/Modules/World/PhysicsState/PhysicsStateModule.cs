@@ -6,6 +6,7 @@ using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
+using System.Timers;
 
 namespace Aurora.Modules
 {
@@ -32,27 +33,31 @@ namespace Aurora.Modules
                 m_activePrims[prm.UUID] = state;
             }
 
-            public void Reload (IScene scene)
+            public void Reload (IScene scene, float direction)
             {
                 foreach (KeyValuePair<UUID, PhysicsState> kvp in m_activePrims)
                 {
                     ISceneChildEntity childPrim = scene.GetSceneObjectPart (kvp.Key);
                     if (childPrim != null && childPrim.PhysActor != null)
-                        ResetPrim (childPrim.PhysActor, kvp.Value);
+                        ResetPrim (childPrim.PhysActor, kvp.Value, direction);
                 }
             }
 
-            private void ResetPrim (PhysicsObject physicsObject, PhysicsState physicsState)
+            private void ResetPrim (PhysicsObject physicsObject, PhysicsState physicsState, float direction)
             {
                 physicsObject.Position = physicsState.Position;
                 physicsObject.Orientation = physicsState.Rotation;
-                physicsObject.RotationalVelocity = physicsState.AngularVelocity;
-                physicsObject.Velocity = physicsState.LinearVelocity;
+                physicsObject.RotationalVelocity = physicsState.AngularVelocity * direction;
+                physicsObject.Velocity = physicsState.LinearVelocity * direction;
             }
         }
 
         private WorldPhysicsState m_lastWorldPhysicsState = null;
         private IScene m_scene;
+        private int m_lastRevertedTo = 0;
+        private bool m_isReversing = false;
+        private bool m_isSavingRevertStates = false;
+        private List<WorldPhysicsState> m_timeReversal = new List<WorldPhysicsState> ();
 
         public void Initialise (IConfigSource source)
         {
@@ -62,6 +67,9 @@ namespace Aurora.Modules
         {
             scene.RegisterModuleInterface<IPhysicsStateModule> (this);
             m_scene = scene;
+            Timer timeReversal = new Timer (250);
+            timeReversal.Elapsed += new ElapsedEventHandler (timeReversal_Elapsed);
+            timeReversal.Start ();
         }
 
         public void RegionLoaded (IScene scene)
@@ -88,18 +96,59 @@ namespace Aurora.Modules
 
         public void SavePhysicsState ()
         {
-            m_lastWorldPhysicsState = new WorldPhysicsState ();
+            m_lastWorldPhysicsState = MakePhysicsState ();
+        }
+
+        private WorldPhysicsState MakePhysicsState ()
+        {
+            WorldPhysicsState state = new WorldPhysicsState ();
             //Add all active objects in the scene
             foreach (PhysicsObject prm in m_scene.PhysicsScene.ActiveObjects)
             {
-                m_lastWorldPhysicsState.AddPrim (prm);
+                state.AddPrim (prm);
             }
+            return state;
         }
 
         public void ResetToLastSavedState ()
         {
             if(m_lastWorldPhysicsState != null)
-                m_lastWorldPhysicsState.Reload (m_scene);
+                m_lastWorldPhysicsState.Reload (m_scene, 1);
+        }
+
+        void timeReversal_Elapsed (object sender, ElapsedEventArgs e)
+        {
+            if (!m_isSavingRevertStates)
+                return;//Only save if we are running this
+            m_timeReversal.Add (MakePhysicsState ());
+            if (m_isReversing)
+            {
+                if (m_lastRevertedTo == 0)
+                    m_lastRevertedTo = m_timeReversal.Count - 1;
+                m_timeReversal[m_lastRevertedTo].Reload (m_scene, -1f);//Do the velocity in reverse with -1
+                m_lastRevertedTo--;
+            }
+        }
+
+        public void StartSavingPhysicsTimeReversalStates ()
+        {
+            m_isSavingRevertStates = true;
+        }
+
+        public void StopSavingPhysicsTimeReversalStates ()
+        {
+            m_isSavingRevertStates = false;
+            m_timeReversal.Clear ();
+        }
+
+        public void StartPhysicsTimeReversal ()
+        {
+            m_isReversing = true;
+        }
+
+        public void StopPhysicsTimeReversal ()
+        {
+            m_isReversing = false;
         }
     }
 }
