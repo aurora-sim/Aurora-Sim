@@ -87,6 +87,20 @@ namespace OpenSim.Framework
 
         #endregion
 
+        #region Physics methods
+
+        /// <summary>
+        /// Reload the last saved physics state to the Physics Scene
+        /// </summary>
+        void StartPhysicsScene ();
+
+        /// <summary>
+        /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
+        /// </summary>
+        void StopPhysicsScene ();
+
+        #endregion
+
         #region Client Methods
 
         ClientManager ClientManager { get; }

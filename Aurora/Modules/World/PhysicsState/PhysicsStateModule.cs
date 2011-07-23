@@ -125,7 +125,7 @@ namespace Aurora.Modules
         {
             if (!m_isSavingRevertStates)
                 return;//Only save if we are running this
-            if(!m_isReversing)
+            if(!m_isReversing)//Only save new states if we are going forward
                 m_timeReversal.Add (MakePhysicsState ());
             else
             {
@@ -134,7 +134,12 @@ namespace Aurora.Modules
                 m_timeReversal[m_lastRevertedTo].Reload (m_scene, -1f);//Do the velocity in reverse with -1
                 m_lastRevertedTo--;
                 if (m_lastRevertedTo < 0)
-                    StopPhysicsTimeReversal ();//Stop it from restarting..
+                {
+                    m_isSavingRevertStates = false;
+                    m_lastRevertedTo = -100;
+                    m_isReversing = false;
+                    m_scene.StopPhysicsScene ();//Stop physics from moving too
+                }
             }
         }
 

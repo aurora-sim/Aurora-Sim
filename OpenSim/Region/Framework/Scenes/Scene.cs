@@ -551,7 +551,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Reload the last saved physics state to the Physics Scene
         /// </summary>
-        private void StartPhysicsScene ()
+        public void StartPhysicsScene ()
         {
             //Save how all the prims are moving so that we can resume it when we turn it back on
             IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
@@ -562,7 +562,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
         /// </summary>
-        private void StopPhysicsScene ()
+        public void StopPhysicsScene ()
         {
             //Save how all the prims are moving so that we can resume it when we turn it back on
             IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
