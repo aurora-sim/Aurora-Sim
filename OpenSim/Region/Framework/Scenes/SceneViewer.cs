@@ -413,7 +413,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                     rootitem.Value = rootupdate;
-                    rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
+                    rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
                     m_entsqueue.Enqueue (rootitem);
 
                     foreach (ISceneChildEntity child in e.ChildrenEntities ())
@@ -424,6 +424,8 @@ namespace OpenSim.Region.Framework.Scenes
                         PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                         item.Value = update;
                         item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
+                        if (item.Priority >= rootitem.Priority + 10)
+                            item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
                         m_entsqueue.Enqueue (item);
                     }
                 }
@@ -479,9 +481,11 @@ namespace OpenSim.Region.Framework.Scenes
                     ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar (m_presence.UUID);
                     foreach (ISceneEntity entity in entities)
                     {
+                        QueuePartForUpdate (entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                         foreach (ISceneChildEntity child in entity.ChildrenEntities ())
                         {
-                            QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
+                            if(!child.IsRoot)
+                                QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
                         }
                     }
                 }
@@ -548,7 +552,7 @@ namespace OpenSim.Region.Framework.Scenes
                             EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
                             PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
                             rootitem.Value = rootupdate;
-                            rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild);
+                            rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
                             m_entsqueue.Enqueue (rootitem);
 
                             foreach (ISceneChildEntity child in e.ChildrenEntities ())
@@ -559,6 +563,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
                                 item.Value = update;
                                 item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
+                                if (item.Priority >= rootitem.Priority + 10)
+                                    item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
                                 m_entsqueue.Enqueue (item);
                             }
                         }
