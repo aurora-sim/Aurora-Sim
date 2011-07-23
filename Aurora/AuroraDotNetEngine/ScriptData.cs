@@ -760,7 +760,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
 
-            if (functionName == "control" || functionName=="state_entry" || functionName =="on_rez")
+            if (functionName == "control" || functionName == "state_entry" || functionName == "on_rez" || functionName == "link_message")
             {
                 //For vehicles, otherwise breaks them. DO NOT REMOVE UNLESS YOU FIND A BETTER WAY TO FIX
                 return true;

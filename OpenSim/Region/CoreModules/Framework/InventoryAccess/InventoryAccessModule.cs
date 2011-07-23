@@ -605,7 +605,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     doc = new System.Xml.XmlDocument();
                     doc.LoadXml(xmlData);
 
-                    if (doc.FirstChild.OuterXml.StartsWith("<groups>"))
+                    if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
+                        doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))
                     {
                         //We don't do multiple objects here
                         return null;
@@ -674,11 +675,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             item = m_scene.InventoryService.GetItem (item);
             SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
 
-            //OOBsize is only half the size of the prim
-            Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse(group.GroupRotation);
             Vector3 pos = m_scene.SceneGraph.GetNewRezLocation (
                       RayStart, RayEnd, RayTargetID, Quaternion.Identity,
-                      BypassRayCast, bRayEndIsIntersection, true, newSize, false);
+                      BypassRayCast, bRayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false);
 
             if (doc == null)
             {
@@ -726,15 +725,12 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                     group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
                 }
-                else
-                {
-                    remoteClient.SendAlertMessage ("Failed to find the item you requested.");
-                    return null;
-                }
             }
-            if (group == null && doc.FirstChild.OuterXml.StartsWith ("<groups>"))
+            if (group == null && (doc.FirstChild.OuterXml.StartsWith ("<groups>") ||
+                doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>")))
             {
-                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (doc.FirstChild.ChildNodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
+                XmlNodeList nodes = doc.FirstChild.OuterXml.StartsWith ("<groups>") ? doc.FirstChild.ChildNodes : doc.FirstChild.NextSibling.ChildNodes;
+                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
                 if (Groups.Count != 0)
                     return Groups[0];
                 else
@@ -770,6 +766,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             //  Set it's position in world.
             float offsetHeight = 0;
             //The OOBsize is only half the size, x2
+            Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse (group.GroupRotation);
             pos = m_scene.SceneGraph.GetNewRezLocation (
                 RayStart, RayEnd, RayTargetID, Quaternion.Identity,
                 BypassRayCast, bRayEndIsIntersection, true, newSize, false);

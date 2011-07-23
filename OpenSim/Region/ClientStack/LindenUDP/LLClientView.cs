@@ -1282,6 +1282,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (currentAgentCircuit != null)
             {
                 agentData.IPAddress = currentAgentCircuit.IPAddress;
+                agentData.ServiceURLs = currentAgentCircuit.ServiceURLs;
             }
 
             return agentData;
