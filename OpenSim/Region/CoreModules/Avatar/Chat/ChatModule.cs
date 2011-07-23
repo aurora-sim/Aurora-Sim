@@ -48,13 +48,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         private int m_saydistance = 30;
         private int m_shoutdistance = 100;
         private int m_whisperdistance = 10;
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
 
         internal object m_syncy = new object();
 
         internal IConfig m_config;
 
         #region ISharedRegionModule Members
+
         public virtual void Initialise(IConfigSource config)
         {
             m_config = config.Configs["Chat"];
@@ -78,7 +79,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             m_shoutdistance = config.Configs["Chat"].GetInt("shout_distance", m_shoutdistance);
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_enabled) return;
 
@@ -98,11 +99,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_enabled) return;
 

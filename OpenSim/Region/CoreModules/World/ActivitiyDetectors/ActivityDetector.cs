@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Timer m_presenceUpdateTimer = null;
-        private List<Scene> m_scenes = new List<Scene> ();
+        private List<IScene> m_scenes = new List<IScene> ();
         private List<UUID> m_zombieAgents = new List<UUID> ();
         
         public void Initialise(IConfigSource source)
@@ -60,14 +60,14 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.AuroraEventManager.RegisterEventHandler ("AgentIsAZombie", OnGenericEvent);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             ISyncMessagePosterService syncMessage = scene.RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessage != null)
@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules
             m_scenes.Remove (scene);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             scene.EventManager.OnStartupFullyComplete += EventManager_OnStartupFullyComplete;
             m_scenes.Add (scene);

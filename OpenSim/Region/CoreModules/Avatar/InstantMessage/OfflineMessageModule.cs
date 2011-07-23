@@ -44,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool enabled = true;
-        private List<Scene> m_SceneList = new List<Scene>();
+        private List<IScene> m_SceneList = new List<IScene> ();
         private string m_RestURL = String.Empty;
         private bool m_ForwardOfflineGroupMessages = true;
 
@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_ForwardOfflineGroupMessages = cnf.GetBoolean("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!enabled)
                 return;
@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!enabled)
                 return;
@@ -106,7 +106,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 scene.RequestModuleInterface<IMessageTransferModule>().OnUndeliveredMessage += UndeliveredMessage;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!enabled)
                 return;

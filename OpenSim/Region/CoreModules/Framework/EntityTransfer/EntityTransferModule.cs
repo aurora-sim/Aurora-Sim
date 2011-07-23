@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected bool m_Enabled = false;
-        protected List<Scene> m_scenes = new List<Scene> ();
+        protected List<IScene> m_scenes = new List<IScene> ();
         private Dictionary<IScene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<IScene, Dictionary<UUID, AgentData>> ();
         
         #endregion
@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -123,7 +123,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -135,7 +135,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 

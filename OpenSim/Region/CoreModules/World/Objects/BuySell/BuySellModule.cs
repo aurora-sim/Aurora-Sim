@@ -43,30 +43,30 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
     public class BuySellModule : IBuySellModule, INonSharedRegionModule
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected Scene m_scene = null;
+
+        protected IScene m_scene = null;
         protected IDialogModule m_dialogModule;
         
         public string Name { get { return "Object BuySell Module"; } }
         public Type ReplaceableInterface { get { return null; } }
 
         public void Initialise(IConfigSource source) {}
-        
-        public void AddRegion(Scene scene)
+
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IBuySellModule>(this);
             m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
         }
-        
-        public void RemoveRegion(Scene scene) 
+
+        public void RemoveRegion (IScene scene) 
         {
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
         }
-        
-        public void RegionLoaded(Scene scene) 
+
+        public void RegionLoaded (IScene scene) 
         {
             m_dialogModule = scene.RequestModuleInterface<IDialogModule>();
         }

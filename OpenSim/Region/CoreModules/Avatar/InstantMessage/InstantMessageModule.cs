@@ -47,8 +47,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         /// Is this module enabled?
         /// </value>
         private bool m_enabled = false;
-        
-        private readonly List<Scene> m_scenes = new List<Scene>();
+
+        private readonly List<IScene> m_scenes = new List<IScene> ();
 
         #region IRegionModule Members
 
@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_enabled = true;
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -94,7 +94,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             client.OnInstantMessage += OnInstantMessage;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -117,7 +117,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_enabled)
                 return;

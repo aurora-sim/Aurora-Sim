@@ -47,13 +47,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private static readonly ILog m_log = LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected List<Scene> m_Scenes = new List<Scene>();
+        protected List<IScene> m_Scenes = new List<IScene> ();
 
         public void Initialise(IConfigSource config)
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_Scenes.Add(scene);
 
@@ -61,11 +61,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_Scenes.Remove(scene);
 

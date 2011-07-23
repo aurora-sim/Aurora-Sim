@@ -33,9 +33,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     class ObjectCountMonitor : IMonitor
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
 
-        public ObjectCountMonitor(Scene scene)
+        public ObjectCountMonitor(IScene scene)
         {
             m_scene = scene;
         }

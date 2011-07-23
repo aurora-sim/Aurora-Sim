@@ -47,7 +47,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
     public class ObjectAdd : INonSharedRegionModule
     {
-        private Scene m_scene;
+        private IScene m_scene;
         
         #region IRegionModule Members
 
@@ -56,18 +56,18 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

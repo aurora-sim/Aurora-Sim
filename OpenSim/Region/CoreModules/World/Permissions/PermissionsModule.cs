@@ -43,8 +43,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
     public class PermissionsModule : INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-                
-        protected Scene m_scene;
+
+        protected IScene m_scene;
         private IConfig PermissionsConfig = null;
 
         #region Constants
@@ -168,7 +168,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return;
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -322,12 +322,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             //if (m_friendsModule == null)
             //    m_log.Warn("[PERMISSIONS]: Friends module not found, friend permissions will not work");

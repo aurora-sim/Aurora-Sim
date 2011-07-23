@@ -46,7 +46,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_ScriptEngine = ScriptEngine;
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_modules.Add (scene.RequestModuleInterface<IXMLRPC> ());
         }

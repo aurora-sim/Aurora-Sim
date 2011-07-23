@@ -65,8 +65,8 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
         private string m_InterObjectHostname = "lsl.opensim.local";
 
         // Scenes by Region Handle
-        private Dictionary<ulong, Scene> m_Scenes =
-            new Dictionary<ulong, Scene>();
+        private Dictionary<ulong, IScene> m_Scenes =
+            new Dictionary<ulong, IScene> ();
 
         private bool m_Enabled = false;
         private bool m_localOnly = true;
@@ -132,7 +132,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             // It's a go!
             if (m_Enabled)
@@ -157,12 +157,12 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

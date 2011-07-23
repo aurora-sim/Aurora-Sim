@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private static readonly string remoteParcelRequestPath = "0009/";
 
-        private Scene m_scene;
+        private IScene m_scene;
 
         /// <value>
         /// Local land ids at specified region co-ordinates (region size / 4)
@@ -308,7 +308,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -341,11 +341,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.RegisterModuleInterface<IParcelManagementModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             List<ILandObject> parcels = AllParcels ();
             foreach (ILandObject land in parcels)
@@ -1323,7 +1323,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             //If we are still here, then they are subdividing within one piece of land
             //Check owner
             IClientAPI client;
-            m_scene.TryGetClient(attempting_user_id, out client);
+            m_scene.ClientManager.TryGetValue(attempting_user_id, out client);
 
             if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, startLandObject) ||
                 (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
@@ -1382,7 +1382,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private void join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
         {
             IClientAPI client;
-            m_scene.TryGetClient(attempting_user_id, out client);
+            m_scene.ClientManager.TryGetValue(attempting_user_id, out client);
             if (client == null)
                 return;
             end_x -= 4;
@@ -1891,7 +1891,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private string ProcessParcelMediaURLFilterList(string request, string path, string param, UUID agentID)
         {
             IClientAPI client;
-            if (!m_scene.TryGetClient(agentID, out client))
+            if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
                 m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());
@@ -1911,7 +1911,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID)
         {
             IClientAPI client;
-            if (!m_scene.TryGetClient(agentID, out client))
+            if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
                 m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());

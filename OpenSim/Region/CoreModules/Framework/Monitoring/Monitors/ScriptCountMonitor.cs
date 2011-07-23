@@ -33,7 +33,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     class ScriptCountMonitor : IScriptCountMonitor
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
 
         public int ActiveScripts
         {
@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             }
         }
 
-        public ScriptCountMonitor(Scene scene)
+        public ScriptCountMonitor(IScene scene)
         {
             m_scene = scene;
         }

@@ -71,7 +71,7 @@ namespace Aurora.Modules
         protected Dictionary<UUID, PhysicsStats> m_lastPhysicsStats = new Dictionary<UUID, PhysicsStats>();
         protected Dictionary<UUID, PhysicsStats> m_currentPhysicsStats = new Dictionary<UUID, PhysicsStats>();
         protected Timer m_physicsStatTimer;
-        protected List<Scene> m_scenes = new List<Scene>();
+        protected List<IScene> m_scenes = new List<IScene> ();
         public bool m_collectingStats = false;
         protected int m_waitingForCollectionOfStats = 0;
 
@@ -107,7 +107,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scenes.Add (scene);
             scene.RegisterModuleInterface<IPhysicsMonitor> (this);
@@ -122,13 +122,13 @@ namespace Aurora.Modules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scenes.Remove(scene);
             scene.UnregisterModuleInterface<IPhysicsMonitor>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
@@ -136,10 +136,10 @@ namespace Aurora.Modules
 
         protected virtual void PhysicsStatsCommand(string[] cmd)
         {
-            List<Scene> scenesToRun = new List<Scene>();
+            List<IScene> scenesToRun = new List<IScene> ();
             if (cmd.Length == 3)
             {
-                foreach (Scene scene in m_scenes)
+                foreach (IScene scene in m_scenes)
                 {
                     if (scene.RegionInfo.RegionName == cmd[2])
                         scenesToRun.Add(scene);
@@ -174,10 +174,10 @@ namespace Aurora.Modules
 
         protected virtual void PhysicsProfilerCommand(string[] cmd)
         {
-            List<Scene> scenesToRun = new List<Scene>();
+            List<IScene> scenesToRun = new List<IScene> ();
             if (cmd.Length == 3)
             {
-                foreach (Scene scene in m_scenes)
+                foreach (IScene scene in m_scenes)
                 {
                     if (scene.RegionInfo.RegionName == cmd[2])
                         scenesToRun.Add(scene);
@@ -219,10 +219,10 @@ namespace Aurora.Modules
 
         protected virtual void CurrentPhysicsStatsCommand(string[] cmd)
         {
-            List<Scene> scenesToRun = new List<Scene>();
+            List<IScene> scenesToRun = new List<IScene> ();
             if (cmd.Length == 3)
             {
-                foreach (Scene scene in m_scenes)
+                foreach (IScene scene in m_scenes)
                 {
                     if (scene.RegionInfo.RegionName == cmd[2])
                         scenesToRun.Add(scene);

@@ -50,7 +50,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         public const int DISP_EXPIRE = 1;
         public const int DISP_TEMP   = 2;
 
-        private Dictionary<UUID, Scene> RegisteredScenes = new Dictionary<UUID, Scene>();
+        private Dictionary<UUID, IScene> RegisteredScenes = new Dictionary<UUID, IScene> ();
 
         private Dictionary<string, IDynamicTextureRender> RenderPlugins =
             new Dictionary<string, IDynamicTextureRender>();
@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             {
                 if (RegisteredScenes.ContainsKey(updater.SimUUID))
                 {
-                    Scene scene = RegisteredScenes[updater.SimUUID];
+                    IScene scene = RegisteredScenes[updater.SimUUID];
                     updater.DataReceived(data, scene);
                 }
             }
@@ -219,9 +219,8 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
-
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
                 RegisteredScenes.Add(scene.RegionInfo.RegionID, scene);
@@ -229,12 +228,12 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }
@@ -294,7 +293,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             /// <summary>
             /// Called once new texture data has been received for this updater.
             /// </summary>
-            public void DataReceived(byte[] data, Scene scene)
+            public void DataReceived (byte[] data, IScene scene)
             {
                 ISceneChildEntity part = scene.GetSceneObjectPart (PrimID);
 
@@ -410,7 +409,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 }
             }
 
-            private byte[] BlendTextures(byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha, Scene scene)
+            private byte[] BlendTextures (byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha, IScene scene)
             {
                 Image image = scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(frontImage);
 

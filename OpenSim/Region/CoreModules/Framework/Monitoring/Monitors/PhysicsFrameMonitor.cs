@@ -38,7 +38,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public float LastReportedPhysicsFPS { get { return lastReportedPhysicsFPS; } set { lastReportedPhysicsFPS = value; } }
         public float PhysicsFPS { get { return physicsFPS; } }
 
-        public PhysicsFrameMonitor(Scene scene)
+        public PhysicsFrameMonitor(IScene scene)
         {
         }
 

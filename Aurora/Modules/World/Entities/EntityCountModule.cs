@@ -82,7 +82,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.RegisterModuleInterface<IEntityCountModule>(this);
 
@@ -97,11 +97,11 @@ namespace Aurora.Modules
             scene.AuroraEventManager.RegisterEventHandler("ObjectChangedPhysicalStatus", OnGenericEvent);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

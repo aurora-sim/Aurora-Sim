@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         public bool m_enabled = true;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected List<Scene> m_Scenes = new List<Scene>();
+        protected List<IScene> m_Scenes = new List<IScene> ();
 
         protected Dictionary<UUID, UserFriendData> m_Friends =
                 new Dictionary<UUID, UserFriendData>();
@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -184,11 +184,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             return null;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_enabled)
                 return;

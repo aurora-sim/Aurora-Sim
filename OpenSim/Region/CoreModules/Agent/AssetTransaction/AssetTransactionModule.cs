@@ -40,13 +40,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
     public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        private readonly Dictionary<UUID, Scene> RegisteredScenes = new Dictionary<UUID, Scene>();
+
+        private readonly Dictionary<UUID, IScene> RegisteredScenes = new Dictionary<UUID, IScene> ();
         private bool m_dumpAssetsToFile = false;
-        private Scene m_scene = null;
+        private IScene m_scene = null;
 
         //[Obsolete] //As long as this is being used to get objects that are not region specific, this is fine to use
-        public Scene MyScene
+        public IScene MyScene
         {
             get{ return m_scene;}
         }
@@ -69,7 +69,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -89,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 m_scene = scene;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -103,7 +103,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

@@ -38,8 +38,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
-
-//using Cairo;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 {
@@ -48,7 +47,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_name = "VectorRenderModule";
-        private Scene m_scene;
+        private IScene m_scene;
         private IDynamicTextureManager m_textureManager;
         private Graphics m_graph;
         private string m_fontName = "Arial";
@@ -121,7 +120,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_scene == null)
             {
@@ -135,12 +134,12 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)

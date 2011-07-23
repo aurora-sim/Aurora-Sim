@@ -49,24 +49,24 @@ namespace Aurora.Modules
     {
         //private static readonly ILog m_log =
         //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
+        private IScene m_scene;
 
         public void Initialise (IConfigSource pSource)
         {
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion (Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
         }
 
-        public void RegionLoaded (Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

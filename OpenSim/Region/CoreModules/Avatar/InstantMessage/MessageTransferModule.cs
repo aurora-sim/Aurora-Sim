@@ -48,7 +48,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool m_Enabled = false;
-        protected List<Scene> m_Scenes = new List<Scene>();
+        protected List<IScene> m_Scenes = new List<IScene> ();
         
         public event UndeliveredMessage OnUndeliveredMessage;
         private MessageResultNotification m_result = delegate(bool success) { };
@@ -66,7 +66,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_Enabled = true;
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -88,11 +88,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 "grid_instant_message", processXMLRPCGridInstantMessage);
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;

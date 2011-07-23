@@ -47,7 +47,7 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected bool m_enabled = true;
         protected IMuteListModule m_muteListModule = null;
             
@@ -67,7 +67,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -85,11 +85,11 @@ namespace Aurora.Modules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_muteListModule = m_scene.RequestModuleInterface<IMuteListModule>();
         }

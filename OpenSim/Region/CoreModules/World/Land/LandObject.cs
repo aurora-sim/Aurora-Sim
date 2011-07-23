@@ -50,7 +50,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private int m_lastSeqId = 0;
 
         protected LandData m_landData = new LandData();
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected IParcelManagementModule m_parcelManagementModule;
 
         public bool[,] LandBitmap
@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region Constructors
 
-        public LandObject(UUID owner_id, bool is_group_owned, Scene scene)
+        public LandObject (UUID owner_id, bool is_group_owned, IScene scene)
         {
             m_scene = scene;
 

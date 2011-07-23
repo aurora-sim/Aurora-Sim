@@ -50,17 +50,17 @@ namespace Aurora.Modules.Avatar.AvatarModules
         {
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.EventManager.OnNewPresence += EventManager_OnNewPresence;
             scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
         }
 
-        public void RegionLoaded (Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion (Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.EventManager.OnNewPresence -= EventManager_OnNewPresence;
             scene.EventManager.OnRemovePresence -= EventManager_OnRemovePresence;

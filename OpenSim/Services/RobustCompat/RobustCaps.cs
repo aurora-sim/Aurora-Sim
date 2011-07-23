@@ -45,7 +45,7 @@ namespace OpenSim.Services.RobustCompat
     {
         #region Declares
 
-        private Scene m_scene;
+        private IScene m_scene;
         private bool m_enabled = false;
 
         #endregion
@@ -57,7 +57,7 @@ namespace OpenSim.Services.RobustCompat
             m_enabled = source.Configs["Handlers"].GetBoolean("RobustCompatibility", m_enabled);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -206,11 +206,11 @@ namespace OpenSim.Services.RobustCompat
             return null;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

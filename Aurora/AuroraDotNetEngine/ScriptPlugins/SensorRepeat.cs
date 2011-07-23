@@ -52,7 +52,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             usemaximumToReturn = engine.Config.GetBoolean("UseSensorMaxResults", true);
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
         }
 

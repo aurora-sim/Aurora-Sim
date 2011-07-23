@@ -44,7 +44,7 @@ namespace Aurora.Modules
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        protected List<Scene> m_scenes = new List<Scene>();
+        protected List<IScene> m_scenes = new List<IScene> ();
         protected bool m_Enabled = true;
         protected Dictionary<UUID, UUID> m_pendingCallingcardRequests = new Dictionary<UUID, UUID>();
 
@@ -59,7 +59,7 @@ namespace Aurora.Modules
                 m_Enabled = ccmModuleConfig.GetBoolean("Enabled", true);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -70,7 +70,7 @@ namespace Aurora.Modules
             scene.RegisterModuleInterface<ICallingCardModule>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -83,7 +83,7 @@ namespace Aurora.Modules
             scene.UnregisterModuleInterface<ICallingCardModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_Enabled)
                 return;

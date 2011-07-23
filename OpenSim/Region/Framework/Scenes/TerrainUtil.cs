@@ -45,12 +45,12 @@ namespace OpenSim.Region.Framework.Scenes
             return size * size - ((x - rx) * (x - rx) + (y - ry) * (y - ry));
         }
 
-        public static float GetBilinearInterpolate(float x, float y, ITerrainChannel map, List<Scene> scenes)
+        public static float GetBilinearInterpolate (float x, float y, ITerrainChannel map, List<IScene> scenes)
         {
             int w = map.Width;
             int h = map.Height;
 
-            Scene scene = null;
+            IScene scene = null;
 
             if (x > w - 2)
             {
@@ -129,11 +129,11 @@ namespace OpenSim.Region.Framework.Scenes
             return hi;
         }
 
-        private static Scene FindScene(ITerrainChannel map, List<Scene> scenes, int X, int Y)
+        private static IScene FindScene (ITerrainChannel map, List<IScene> scenes, int X, int Y)
         {
             int RegX = map.Scene.RegionInfo.RegionLocX + X;
             int RegY = map.Scene.RegionInfo.RegionLocY + Y;
-            foreach (Scene scene in scenes)
+            foreach (IScene scene in scenes)
             {
                 if (scene.RegionInfo.RegionLocX == RegX &&
                     scene.RegionInfo.RegionLocY == RegY)

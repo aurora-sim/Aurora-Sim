@@ -34,6 +34,7 @@ using NDesk.Options;
 using Nini.Config;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {
@@ -45,7 +46,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         private static readonly ILog m_log = 
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Scene m_scene;
+        private IScene m_scene;
 
         /// <value>
         /// The file used to load and save an opensimulator archive if no filename has been specified
@@ -68,18 +69,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             //m_log.Debug("[ARCHIVER] Initialising");
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IRegionArchiverModule>(this);
             //m_log.DebugFormat("[ARCHIVER]: Enabled for region {0}", scene.RegionInfo.RegionName);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

@@ -48,7 +48,7 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
 
 		private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
@@ -69,7 +69,7 @@ namespace Aurora.Modules
             }
 		}
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -82,7 +82,7 @@ namespace Aurora.Modules
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -95,7 +95,7 @@ namespace Aurora.Modules
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_Enabled)
                 return;

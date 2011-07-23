@@ -139,7 +139,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         #endregion
 
 
-        private Scene m_scene;
+        private IScene m_scene;
         // private IConfigSource m_config; // not used currently
 
         // mapping from texture UUIDs to averaged color. This will contain all the textures in the sim.
@@ -147,7 +147,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Dictionary<UUID, Color> m_mapping;
 
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialise (IScene scene, IConfigSource source)
         {
             m_scene = scene;
             // m_config = source; // not used currently

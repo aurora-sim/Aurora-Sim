@@ -48,14 +48,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
         /// <summary>Special UUID for actions that apply to all agents</summary>
         private static readonly UUID ALL_AGENTS = new UUID("44e87126-e794-4ded-05b3-7c42da3d5cdb");
 
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected IDialogModule m_dialogModule;
         
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IGodsModule>(this);
@@ -64,7 +64,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.UnregisterModuleInterface<IGodsModule>(this);
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
@@ -72,7 +72,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
         }

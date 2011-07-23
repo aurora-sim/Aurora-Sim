@@ -43,10 +43,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Scene m_scene;
+        private IScene m_scene;
         //private IConfigSource m_config; // not used currently
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialise (IScene scene, IConfigSource config)
         {
             m_scene = scene;
             // m_config = config; // not used currently

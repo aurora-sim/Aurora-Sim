@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules
 
         private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
         private bool DeleteLoopInUse = false;
-        private Scene m_scene;
+        private IScene m_scene;
 
         #region INonSharedRegionModule Members
 
@@ -84,18 +84,18 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.RegisterModuleInterface<IAsyncSceneObjectGroupDeleter>(this);
             m_scene = scene;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.UnregisterModuleInterface<IAsyncSceneObjectGroupDeleter>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

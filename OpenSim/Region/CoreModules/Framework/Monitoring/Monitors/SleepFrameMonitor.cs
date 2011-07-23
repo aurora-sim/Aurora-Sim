@@ -34,7 +34,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private int SleepFrame;
 
-        public SleepFrameMonitor(Scene scene)
+        public SleepFrameMonitor(IScene scene)
         {
         }
 

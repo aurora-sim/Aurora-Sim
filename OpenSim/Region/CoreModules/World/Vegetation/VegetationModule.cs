@@ -39,8 +39,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
     public class VegetationModule : INonSharedRegionModule, IVegetationModule
     { 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected Scene m_scene;
+
+        protected IScene m_scene;
         
         protected static readonly PCode[] creationCapabilities = new PCode[] { PCode.Grass, PCode.NewTree, PCode.Tree };
         public PCode[] CreationCapabilities { get { return creationCapabilities; } }
@@ -49,19 +49,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IVegetationModule>(this);
             m_scene.SceneGraph.RegisterEntityCreatorModule(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

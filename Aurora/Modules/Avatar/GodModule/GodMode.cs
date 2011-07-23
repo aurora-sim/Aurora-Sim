@@ -49,7 +49,7 @@ namespace Aurora.Modules
         #region Declares 
 
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
         private IConfigSource m_config;
         private bool m_Enabled = true;
         private string m_oar_directory = "";
@@ -74,7 +74,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -86,7 +86,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -98,7 +98,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
@@ -150,7 +150,7 @@ namespace Aurora.Modules
             //Just rebuild the map
             if (Method == "refreshmapvisibility")
             {
-                if (((Scene)client.Scene).Permissions.IsGod(client.AgentId))
+                if (client.Scene.Permissions.IsGod(client.AgentId))
                 {
                     //Rebuild the map tile
                     IWorldMapModule mapModule;
@@ -168,9 +168,9 @@ namespace Aurora.Modules
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
             //Check for god perms
-            if (((Scene)client.Scene).Permissions.IsGod(client.AgentId))
+            if (client.Scene.Permissions.IsGod(client.AgentId))
             {
-                Scene scene = (Scene)MainConsole.Instance.ConsoleScene; //Switch back later
+                IScene scene = MainConsole.Instance.ConsoleScene; //Switch back later
                 MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
                 MainConsole.Instance.RunCommand("save oar " + m_oar_directory + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".statesave.oar");
                 if (scene == null) 

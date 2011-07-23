@@ -43,7 +43,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #region Constructor
 
-        public ObjectUpdateMonitor(Scene scene)
+        public ObjectUpdateMonitor(IScene scene)
         {
         }
 

@@ -35,10 +35,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     class TimeDilationMonitor : ITimeDilationMonitor
     {
-        private readonly Scene m_scene;
+        private readonly IScene m_scene;
         private AveragingClass m_average = new AveragingClass (5);
 
-        public TimeDilationMonitor(Scene scene)
+        public TimeDilationMonitor(IScene scene)
         {
             m_scene = scene;
         }

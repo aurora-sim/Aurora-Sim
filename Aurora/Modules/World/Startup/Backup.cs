@@ -58,7 +58,7 @@ namespace Aurora.Modules
                 = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected SceneManager m_manager;
-        protected Dictionary<Scene, InternalSceneBackup> m_backup = new Dictionary<Scene, InternalSceneBackup>();
+        protected Dictionary<IScene, InternalSceneBackup> m_backup = new Dictionary<IScene, InternalSceneBackup>();
         // the minimum time that must elapse before a changed object will be considered for persisted
         public static long m_dontPersistBefore = 60;
         // the maximum time that must elapse before a changed object will be considered for persisted
@@ -68,7 +68,7 @@ namespace Aurora.Modules
 
         #region ISharedRegionStartupModule Members
 
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             if (MainConsole.Instance != null && m_backup.Count == 0)//Only add them once
             {
@@ -90,15 +90,15 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_manager = scene.RequestModuleInterface<SceneManager>();
             m_backup[scene].FinishStartup();
@@ -109,7 +109,7 @@ namespace Aurora.Modules
             EnableBackup (null);
         }
 
-        public void Close(Scene scene)
+        public void Close(IScene scene)
         {
         }
 
@@ -158,7 +158,7 @@ namespace Aurora.Modules
 
             protected static readonly ILog m_log
                 = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-            protected Scene m_scene;
+            protected IScene m_scene;
             protected bool m_LoadingPrims = false;
             protected bool m_haveLoadedPrims = false;
             protected bool m_haveLoadedParcels = false;
@@ -167,7 +167,7 @@ namespace Aurora.Modules
 
             #region Constructor
 
-            public InternalSceneBackup (Scene scene)
+            public InternalSceneBackup (IScene scene)
             {
                 m_scene = scene;
                 m_scene.StackModuleInterface<IAuroraBackupModule> (this);

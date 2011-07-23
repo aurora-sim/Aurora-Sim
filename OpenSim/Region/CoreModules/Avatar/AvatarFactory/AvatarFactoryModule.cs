@@ -48,7 +48,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene = null;
+        private IScene m_scene = null;
 
         private int m_savetime = 5; // seconds to wait before saving changed appearance
         private int m_sendtime = 2; // seconds to wait before sending changed appearance
@@ -150,7 +150,7 @@ textures 1
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
@@ -171,7 +171,7 @@ textures 1
             m_updateTimer.Elapsed += HandleAppearanceUpdateTimer;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.UnregisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient -= NewClient;
@@ -180,7 +180,7 @@ textures 1
             scene.EventManager.OnRemovePresence -= EventManager_OnRemovePresence;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

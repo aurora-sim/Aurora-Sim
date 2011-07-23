@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         private List<UUID> CombatAllowedAgents = new List<UUID>();
         public bool ForceRequireCombatPermission = true;
         public bool DisallowTeleportingForCombatants = true;
-        public Scene m_scene;
+        public IScene m_scene;
         public bool AllowTeamKilling;
         public bool AllowTeams;
         public bool SendTeamKillerInfo;
@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_enabled)
             {
@@ -114,7 +114,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (m_enabled)
             {
@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             }
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

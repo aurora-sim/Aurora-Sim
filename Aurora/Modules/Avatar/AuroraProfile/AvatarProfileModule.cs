@@ -70,7 +70,7 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileFrontend = null;
         private IFriendsModule m_friendsModule;
-        private List<Scene> m_Scenes = new List<Scene>();
+        private List<IScene> m_Scenes = new List<IScene> ();
         private bool m_ProfileEnabled = true;
 
         #endregion
@@ -91,7 +91,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_ProfileEnabled)
                 return;
@@ -105,7 +105,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_ProfileEnabled)
                 return;
@@ -115,7 +115,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_friendsModule = scene.RequestModuleInterface<IFriendsModule>();
         }

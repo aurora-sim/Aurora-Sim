@@ -44,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public float PendingDownloads { get { return pendingDownloads; } }
         public float PendingUploads { get { return pendingUploads; } }
 
-        public NetworkMonitor(Scene scene)
+        public NetworkMonitor(IScene scene)
         {
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;

@@ -57,7 +57,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Scene m_Scene;
+        private IScene m_Scene;
         private Dictionary<UUID, PrimCounts> m_PrimCounts =
                 new Dictionary<UUID, PrimCounts>();
         private Dictionary<UUID, UUID> m_OwnerMap =
@@ -82,7 +82,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_Scene = scene;
 
@@ -98,11 +98,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_Scene.AuroraEventManager.RegisterEventHandler ("ObjectEnteringNewParcel", OnGenericEvent);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_Scene.UnregisterModuleInterface<IPrimCountModule>(this);
 

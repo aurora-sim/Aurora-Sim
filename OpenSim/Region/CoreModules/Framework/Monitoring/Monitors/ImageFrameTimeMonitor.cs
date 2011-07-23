@@ -35,7 +35,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private int MonitorImageFrameTick;
 
-        public ImageFrameTimeMonitor(Scene scene)
+        public ImageFrameTimeMonitor(IScene scene)
         {
         }
 

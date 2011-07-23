@@ -49,7 +49,7 @@ namespace Aurora.Modules
     public class AuroraAvatarProfileArchiver : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
+        private IScene m_scene;
         private IUserAccountService UserAccountService
         {
             get { return m_scene.UserAccountService; }
@@ -59,7 +59,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
@@ -75,12 +75,12 @@ namespace Aurora.Modules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

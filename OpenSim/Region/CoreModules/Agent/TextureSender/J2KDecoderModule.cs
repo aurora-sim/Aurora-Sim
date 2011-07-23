@@ -59,7 +59,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         /// <summary>Cache that will store decoded JPEG2000 layer boundary data</summary>
         private IImprovedAssetCache m_cache;
         /// <summary>Reference to a scene (doesn't matter which one as long as it can load the cache module)</summary>
-        private Scene m_scene;
+        private IScene m_scene;
         private bool m_useCache = true;
 
         #region IRegionModule
@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
@@ -91,12 +91,12 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             scene.RegisterModuleInterface<IJ2KDecoder>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_cache = m_scene.RequestModuleInterface<IImprovedAssetCache>();
         }

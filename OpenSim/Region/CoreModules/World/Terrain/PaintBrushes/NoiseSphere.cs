@@ -37,7 +37,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scenes)
+        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scenes)
         {
             int n = (int)(BrushSize + 0.5f);
             if (BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down

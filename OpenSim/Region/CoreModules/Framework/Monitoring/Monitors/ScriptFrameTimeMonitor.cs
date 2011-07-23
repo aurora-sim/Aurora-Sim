@@ -34,7 +34,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private int MonitorScriptFrameTime;
 
-        public ScriptFrameTimeMonitor(Scene scene)
+        public ScriptFrameTimeMonitor(IScene scene)
         {
         }
 

@@ -52,7 +52,7 @@ namespace Aurora.Modules
         #region Declarations
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
+        private IScene m_scene;
         private bool m_enableWindlight = true;
         private Dictionary<float, RegionLightShareData> m_WindlightSettings = new Dictionary<float, RegionLightShareData>();
         private Dictionary<UUID, UUID> m_preivouslySentWindLight = new Dictionary<UUID, UUID>();
@@ -75,7 +75,7 @@ namespace Aurora.Modules
                 m_enableWindlight = LightShareConfig.GetBoolean("Enable", true);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enableWindlight)
                 return;
@@ -100,7 +100,7 @@ namespace Aurora.Modules
             m_preivouslySentWindLight.Remove(clientID);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.UnregisterModuleInterface<IWindLightSettingsModule>(this);
             
@@ -111,7 +111,7 @@ namespace Aurora.Modules
             scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringNewParcel;
         }
 
-        public void RegionLoaded(Scene scene){}
+        public void RegionLoaded (IScene scene) { }
 
         public Type ReplaceableInterface{get { return null; }}
 

@@ -49,13 +49,13 @@ namespace Aurora.Modules.World.Auction
     {
         //private static readonly ILog m_log =
         //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
+        private IScene m_scene;
 
         public void Initialise(IConfigSource pSource)
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -63,14 +63,14 @@ namespace Aurora.Modules.World.Auction
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
             m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
             m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
@@ -188,7 +188,7 @@ namespace Aurora.Modules.World.Auction
                             item = inventoryModule.GiveInventoryItem(agentID, agentID, ItemID, FolderID);
 
                         IClientAPI client;
-                        m_scene.TryGetClient(agentID, out client);
+                        m_scene.ClientManager.TryGetValue(agentID, out client);
                         client.SendBulkUpdateInventory(item);
                     }
                 }

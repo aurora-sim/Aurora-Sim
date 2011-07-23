@@ -84,12 +84,12 @@ namespace Aurora.Modules
             set { m_maxChatDistance = value; }
         }
 
-        public List<Scene> Scenes
+        public List<IScene> Scenes
         {
             get { return m_scenes; }
         }
 
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
 
         private IMuteListConnector MuteListConnector;
         internal IConfig m_config;
@@ -152,7 +152,7 @@ namespace Aurora.Modules
             }
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_enabled) return;
 
@@ -172,7 +172,7 @@ namespace Aurora.Modules
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
             if (!m_enabled) return;
 
@@ -194,7 +194,7 @@ namespace Aurora.Modules
             }
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_enabled) return;
 

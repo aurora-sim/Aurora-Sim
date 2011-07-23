@@ -34,7 +34,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private float physicsSyncTime;
 
-        public PhysicsSyncFrameMonitor(Scene scene)
+        public PhysicsSyncFrameMonitor(IScene scene)
         {
         }
 

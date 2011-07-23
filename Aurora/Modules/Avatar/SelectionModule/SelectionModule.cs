@@ -71,7 +71,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
@@ -79,11 +79,11 @@ namespace Aurora.Modules
             scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.EventManager.OnNewClient -= EventManager_OnNewClient;
             scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;

@@ -59,7 +59,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                         for (l = 0 - area; l < area; l += step)
                         {
                             avgsteps++;
-                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, new System.Collections.Generic.List<Scene>());
+                            average += TerrainUtil.GetBilinearInterpolate (x + n, y + l, map, new System.Collections.Generic.List<IScene> ());
                         }
                     }
 

@@ -66,11 +66,11 @@ namespace OpenSim.Services.MessagingService
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             IConfig handlerConfig = scene.Config.Configs["Handlers"];
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
@@ -88,7 +88,7 @@ namespace OpenSim.Services.MessagingService
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using OpenMetaverse;
 
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 {
@@ -69,7 +70,7 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 
         #region IWindModelPlugin Members
 
-        public void WindConfig(OpenSim.Region.Framework.Scenes.Scene scene, Nini.Config.IConfig windConfig)
+        public void WindConfig (IScene scene, Nini.Config.IConfig windConfig)
         {
             if (windConfig != null)
             {

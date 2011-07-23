@@ -59,7 +59,7 @@ namespace OpenSim.Region.Framework.Scenes
         public event NewScene OnAddedScene;
         public event NewScene OnCloseScene;
 
-        private List<IScene> m_localScenes;
+        private List<IScene> m_localScenes = new List<IScene>();
         private ISimulationBase m_OpenSimBase;
         private IConfigSource m_config = null;
         public IConfigSource ConfigSource
@@ -815,7 +815,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (irm.Name.ToLower () == cmdparams[1].ToLower ())
                     {
                         m_log.Info (String.Format ("Unloading module: {0}", irm.Name));
-                        foreach (Scene scene in Scenes)
+                        foreach (IScene scene in Scenes)
                             irm.RemoveRegion (scene);
                         irm.Close ();
                     }

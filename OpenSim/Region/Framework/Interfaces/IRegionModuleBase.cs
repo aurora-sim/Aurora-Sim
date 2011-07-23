@@ -27,6 +27,7 @@
 
 using System;
 using Nini.Config;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -50,7 +51,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene">
         /// A <see cref="Scene"/>
         /// </param>
-        void AddRegion(Scene scene);
+        void AddRegion(IScene scene);
 
         /// <summary>
         /// This will be called once for every scene loaded. In a shared module
@@ -63,7 +64,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene">
         /// A <see cref="Scene"/>
         /// </param>
-        void RegionLoaded(Scene scene);
+        void RegionLoaded(IScene scene);
 
         /// <summary>
         /// This is called whenever a <see cref="Scene"/> is removed. For shared modules, this can happen several times.
@@ -72,7 +73,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene">
         /// A <see cref="Scene"/>
         /// </param>
-        void RemoveRegion(Scene scene);
+        void RemoveRegion(IScene scene);
 
         /// <summary>
         /// This is the inverse to <see cref="Initialise"/>. After a Close(), this instance won't be usable anymore.

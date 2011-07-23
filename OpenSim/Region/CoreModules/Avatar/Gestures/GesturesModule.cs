@@ -41,14 +41,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
     public class GesturesModule : INonSharedRegionModule
     { 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected Scene m_scene;
+
+        protected IScene m_scene;
         
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -56,13 +56,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
             m_scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

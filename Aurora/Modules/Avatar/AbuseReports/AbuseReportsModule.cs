@@ -54,7 +54,7 @@ namespace Aurora.Modules
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool m_enabled = false;
-        private List<Scene> m_SceneList = new List<Scene>();
+        private List<IScene> m_SceneList = new List<IScene> ();
         
         public void Initialise(IConfigSource source)
         {
@@ -63,7 +63,7 @@ namespace Aurora.Modules
                 m_enabled = cnf.GetBoolean("Enabled", true);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -89,7 +89,7 @@ namespace Aurora.Modules
             client.OnUserReport -= UserReport;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -105,7 +105,7 @@ namespace Aurora.Modules
             //scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

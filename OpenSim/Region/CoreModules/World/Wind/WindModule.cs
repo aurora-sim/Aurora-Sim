@@ -47,7 +47,7 @@ namespace OpenSim.Region.CoreModules
         private uint m_frameLastUpdateClientArray = 0;
         private int m_frameUpdateRate = 150;
         //private Random m_rndnums = new Random(Environment.TickCount);
-        private Scene m_scene = null;
+        private IScene m_scene = null;
         private bool m_ready = false;
 
         private bool m_enabled = false;
@@ -82,14 +82,13 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             if (m_enabled)
             {
                 //m_log.InfoFormat("[WIND] Enabled with an update rate of {0} frames.", m_frameUpdateRate);
 
-                m_scene = scene;
                 m_frame = 0;
 
                 // Register all the Wind Model Plug-ins
@@ -156,7 +155,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (m_enabled)
             {
@@ -172,7 +171,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

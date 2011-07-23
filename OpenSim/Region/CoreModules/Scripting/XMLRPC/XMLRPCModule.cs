@@ -89,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         private Dictionary<UUID, RPCRequestInfo> m_rpcPending;
         private Dictionary<UUID, RPCRequestInfo> m_rpcPendingResponses;
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
         private IScriptModule m_scriptModule;
         private int RemoteReplyScriptTimeout = 9000;
         private int RemoteReplyScriptWait = 300;
@@ -114,7 +114,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_scenes.Contains(scene))
             {
@@ -125,11 +125,11 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (IsEnabled())
             {

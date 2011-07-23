@@ -52,7 +52,7 @@ namespace Aurora.Modules.World.SimConsole
     {
         #region Declares
 
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
         private bool m_enabled = false;
         private Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access> ();
         private Dictionary<string, Access> m_userKeys = new Dictionary<string, Access> ();
@@ -100,7 +100,7 @@ namespace Aurora.Modules.World.SimConsole
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -110,11 +110,11 @@ namespace Aurora.Modules.World.SimConsole
             m_scenes.Add(scene);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

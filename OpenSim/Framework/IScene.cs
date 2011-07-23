@@ -68,7 +68,7 @@ namespace OpenSim.Framework
         EntityManager Entities { get; }
         EventManager EventManager { get; }
         ScenePermissions Permissions { get; }
-        PhysicsScene PhysicsScene { get; }
+        PhysicsScene PhysicsScene { get; set; }
         ISceneGraph SceneGraph { get; }
         AgentCircuitManager AuthenticateHandler { get; }
         IConfigSource Config { get; set; }
@@ -81,7 +81,7 @@ namespace OpenSim.Framework
         void Initialize (RegionInfo regionInfo);
         void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();
-        bool ShouldRunHeartbeat { get; }
+        bool ShouldRunHeartbeat { get; set; }
         void Close ();
 
         #endregion
@@ -123,7 +123,8 @@ namespace OpenSim.Framework
 
         bool ShuttingDown { get; }
         object SyncRoot { get; }
-        float TimeDilation { get; }
+        float TimeDilation { get; set; }
+        uint Frame { get; }
 
         #endregion
 
@@ -144,5 +145,8 @@ namespace OpenSim.Framework
         List<ISceneEntity> PhysicsReturns { get; }
 
         #endregion
+
+
+        ISceneEntity GetGroupByPrim (uint objectLocalID);
     }
 }

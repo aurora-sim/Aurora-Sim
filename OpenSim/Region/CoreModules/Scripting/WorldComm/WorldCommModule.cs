@@ -94,7 +94,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         private ListenerManager m_listenerManager;
         private Queue m_pending;
         private Queue m_pendingQ;
-        private Scene m_scene;
+        private IScene m_scene;
         private IScriptModule m_scriptModule;
         private int m_whisperdistance = 10;
         private int m_saydistance = 30;
@@ -127,7 +127,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_pending = Queue.Synchronized(m_pendingQ);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IWorldComm>(this);
@@ -136,12 +136,12 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_scene.EventManager.OnChatBroadcast += DeliverClientMessage;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

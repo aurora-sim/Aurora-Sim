@@ -52,7 +52,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected bool m_Enabled = false;
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected ILLClientInventory m_LLCLientInventoryModule;
 
         #region INonSharedRegionModule
@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         {
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -112,14 +112,14 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         {
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
             m_scene = null;
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 

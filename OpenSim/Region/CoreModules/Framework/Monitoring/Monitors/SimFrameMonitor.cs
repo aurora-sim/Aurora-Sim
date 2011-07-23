@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #region Constructor
 
-        public SimFrameMonitor(Scene scene)
+        public SimFrameMonitor(IScene scene)
         {
         }
 

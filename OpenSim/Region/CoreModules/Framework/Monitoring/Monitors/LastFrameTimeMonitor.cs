@@ -35,7 +35,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private int MonitorLastFrameTick;
 
-        public LastFrameTimeMonitor(Scene scene)
+        public LastFrameTimeMonitor(IScene scene)
         {
         }
 

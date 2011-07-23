@@ -55,7 +55,7 @@ namespace Aurora.Modules
         #region Declares
         private IConfigSource m_config;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene>();
         private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
         private Timer m_timer;
         private Dictionary<UUID, List<GridRegion>> m_knownNeighbors = new Dictionary<UUID, List<GridRegion>> ();
@@ -64,7 +64,7 @@ namespace Aurora.Modules
 
         #region ISharedRegionStartupModule Members
 
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_scenes.Add(scene);
             //Register the interface
@@ -173,15 +173,15 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             scene.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += RegisterRegionWithGridModule_OnMessageReceived;
         }
@@ -190,7 +190,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void Close(Scene scene)
+        public void Close(IScene scene)
         {
             //Deregister the interface
             scene.UnregisterModuleInterface<IGridRegisterModule>(this);

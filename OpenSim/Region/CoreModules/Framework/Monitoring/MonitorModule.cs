@@ -110,7 +110,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
             protected Dictionary<string, IMonitor> m_monitors = new Dictionary<string, IMonitor>();
             protected Dictionary<string, IAlert> m_alerts = new Dictionary<string, IAlert>();
-            protected Scene m_currentScene = null;
+            protected IScene m_currentScene = null;
             private Timer m_report = new Timer();
             // Sending a stats update every 2 seconds-
             private int statsUpdatesEveryMS = 2000;
@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             ///   add all the given monitors and alerts, and start the stats heartbeat.
             /// </summary>
             /// <param name="scene"></param>
-            public void AddScene(Scene scene)
+            public void AddScene(IScene scene)
             {
                 if (scene != null)
                 {
@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             /// Add the monitors that are for each scene
             /// </summary>
             /// <param name="scene"></param>
-            protected void AddRegionMonitors(Scene scene)
+            protected void AddRegionMonitors(IScene scene)
             {
                 AddMonitor(new AgentCountMonitor(scene));
                 AddMonitor(new AgentUpdateMonitor(scene));
@@ -715,7 +715,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 m_log.Info ("");
 
                 //Then dump for each scene
-                manager.ForEachCurrentScene(delegate(Scene scene)
+                manager.ForEachCurrentScene(delegate(IScene scene)
                 {
                     m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
                     m_log.Info ("");
@@ -807,7 +807,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             if (manager != null)
             {
                 manager.ForEachScene(
-                    delegate(Scene scene)
+                    delegate(IScene scene)
                     {
                         scene.ForEachClient(
                             delegate(IClientAPI client)
@@ -972,7 +972,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
         }
 
-        public void OnAddedScene(Scene scene)
+        public void OnAddedScene(IScene scene)
         {
             if (m_registry.ContainsKey(scene.RegionInfo.RegionID.ToString()))
             {
@@ -987,7 +987,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             scene.RegisterModuleInterface<IMonitorModule>(this);
         }
 
-        public void OnCloseScene(Scene scene)
+        public void OnCloseScene(IScene scene)
         {
             m_registry.Remove(scene.RegionInfo.RegionID.ToString());
         }

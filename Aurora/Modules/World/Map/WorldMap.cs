@@ -62,7 +62,7 @@ namespace Aurora.Modules
         //private static readonly UUID STOP_UUID = UUID.Random();
 
         //private IConfig m_config;
-        protected Scene m_scene;
+        protected IScene m_scene;
         private byte[] myMapImageJPEG;
         protected bool m_Enabled = false;
         private IConfigSource m_config;
@@ -102,7 +102,7 @@ namespace Aurora.Modules
             }
 		}
 
-		public virtual void AddRegion (Scene scene)
+        public virtual void AddRegion (IScene scene)
 		{
             if (!m_Enabled)
                 return;
@@ -138,7 +138,7 @@ namespace Aurora.Modules
             }
 		}
 
-		public virtual void RemoveRegion (Scene scene)
+        public virtual void RemoveRegion (IScene scene)
 		{
 			if (!m_Enabled)
 				return;
@@ -166,7 +166,7 @@ namespace Aurora.Modules
             }
 		}
 
-		public virtual void RegionLoaded (Scene scene)
+        public virtual void RegionLoaded (IScene scene)
 		{
             if (!m_Enabled)
                 return;

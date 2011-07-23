@@ -108,7 +108,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_HttpServer == null)
             {
@@ -120,11 +120,11 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             scene.RegisterModuleInterface<IUrlModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

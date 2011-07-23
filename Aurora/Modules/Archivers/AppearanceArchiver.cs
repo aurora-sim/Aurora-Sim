@@ -49,7 +49,7 @@ namespace Aurora.Modules
     public class AuroraAvatarAppearanceArchiver : ISharedRegionModule, IAvatarAppearanceArchiver
 	{
 		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-		private Scene m_scene;
+        private IScene m_scene;
         private IInventoryService InventoryService;
         private IAssetService AssetService;
         private IUserAccountService UserAccountService;
@@ -59,7 +59,7 @@ namespace Aurora.Modules
         {
 		}
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
@@ -71,12 +71,12 @@ namespace Aurora.Modules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             InventoryService = m_scene.InventoryService;
             AssetService = m_scene.AssetService;

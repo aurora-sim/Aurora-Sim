@@ -58,7 +58,7 @@ namespace Aurora.Modules.World.On_Demand
     {
         #region Declares
 
-        private Scene m_scene;
+        private IScene m_scene;
         private int m_waitTime = 0;
         private bool m_isShuttingDown = false;
         private bool m_isStartingUp = false;
@@ -73,7 +73,7 @@ namespace Aurora.Modules.World.On_Demand
         {
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (scene.RegionInfo.Startup != StartupType.Normal)
             {
@@ -87,11 +87,11 @@ namespace Aurora.Modules.World.On_Demand
             }
         }
 
-        public void RegionLoaded (Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion (Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
