@@ -80,12 +80,10 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
 
             lock (m_SceneList)
-            {
-                m_SceneList.Add(scene);
+                m_SceneList.Add (scene);
 
-                scene.EventManager.OnNewClient += OnNewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-            }
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
         public void RegionLoaded (IScene scene)
@@ -112,9 +110,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
 
             lock (m_SceneList)
-            {
                 m_SceneList.Remove(scene);
-            }
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;

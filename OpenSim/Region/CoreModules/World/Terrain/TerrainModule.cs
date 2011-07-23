@@ -181,6 +181,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         public void RemoveRegion (IScene scene)
         {
+            m_scenes.Remove (scene);
             lock (m_scene)
             {
                 // remove the event-handlers

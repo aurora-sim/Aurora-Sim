@@ -116,6 +116,7 @@ namespace Aurora.Modules.World.SimConsole
 
         public void RemoveRegion (IScene scene)
         {
+            m_scenes.Remove (scene);
         }
 
         public void Close()

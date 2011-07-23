@@ -98,9 +98,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
 
             lock (m_Scenes)
-            {
                 m_Scenes.Remove(scene);
-            }
         }
 
         public virtual void Close()

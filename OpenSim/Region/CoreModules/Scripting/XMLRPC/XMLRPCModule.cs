@@ -116,17 +116,17 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         public void AddRegion (IScene scene)
         {
-            if (!m_scenes.Contains(scene))
-            {
-                m_scenes.Add(scene);
+            m_scenes.Add (scene);
 
-                scene.RegisterModuleInterface<IXMLRPC>(this);
-                m_scriptModule = scene.RequestModuleInterface<IScriptModule> ();
-            }
+            scene.RegisterModuleInterface<IXMLRPC> (this);
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule> ();
         }
 
         public void RemoveRegion (IScene scene)
         {
+            m_scenes.Remove (scene);
+
+            scene.UnregisterModuleInterface<IXMLRPC> (this);
         }
 
         public void RegionLoaded (IScene scene)

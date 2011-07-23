@@ -103,11 +103,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
         public void RemoveRegion (IScene scene)
         {
+            m_Scenelist.Remove (scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnClientClosed -= ClientLoggedOut;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
-            m_Scenelist.Remove(scene);
         }
 
         public void PostInitialise()

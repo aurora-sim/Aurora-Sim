@@ -193,7 +193,8 @@ namespace Aurora.Modules
         public void Close(IScene scene)
         {
             //Deregister the interface
-            scene.UnregisterModuleInterface<IGridRegisterModule>(this);
+            scene.UnregisterModuleInterface<IGridRegisterModule> (this);
+            m_scenes.Remove (scene);
 
             m_log.InfoFormat("[RegisterRegionWithGrid]: Deregistering region {0} from the grid...", scene.RegionInfo.RegionName);
 

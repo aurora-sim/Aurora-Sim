@@ -115,9 +115,8 @@ namespace Aurora.Modules
                 return;
 
             lock (m_SceneList)
-            {
                 m_SceneList.Remove(scene);
-            }
+
             if (m_TransferModule != null)
             {
                 scene.EventManager.OnNewClient -= OnNewClient;

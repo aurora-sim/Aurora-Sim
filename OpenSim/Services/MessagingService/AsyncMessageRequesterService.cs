@@ -90,6 +90,7 @@ namespace OpenSim.Services.MessagingService
 
         public void RemoveRegion (IScene scene)
         {
+            m_scenes.Remove (scene);
         }
 
         public void Close()

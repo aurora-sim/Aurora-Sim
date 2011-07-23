@@ -64,8 +64,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
 
-            if (!m_scenes.Contains(scene))
-                m_scenes.Add(scene);
+            m_scenes.Add(scene);
 
             scene.RegisterModuleInterface<ICallingCardModule>(this);
         }
@@ -75,8 +74,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
 
-            if (m_scenes.Contains(scene))
-                m_scenes.Remove(scene);
+            m_scenes.Remove(scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
 
@@ -285,16 +283,13 @@ namespace Aurora.Modules
         /// <returns></returns>
         private IScene GetClientScene(UUID agentId)
         {
-            lock (m_scenes)
+            foreach (IScene scene in m_scenes)
             {
-                foreach (IScene scene in m_scenes)
+                IScenePresence presence = scene.GetScenePresence (agentId);
+                if (presence != null)
                 {
-                    IScenePresence presence = scene.GetScenePresence (agentId);
-                    if (presence != null)
-                    {
-                        if (!presence.IsChildAgent)
-                            return scene;
-                    }
+                    if (!presence.IsChildAgent)
+                        return scene;
                 }
             }
             return null;

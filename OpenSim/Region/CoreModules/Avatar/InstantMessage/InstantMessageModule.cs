@@ -74,13 +74,10 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             lock (m_scenes)
             {
-                if (!m_scenes.Contains(scene))
-                {
-                    m_scenes.Add(scene);
-                    scene.EventManager.OnNewClient += EventManager_OnNewClient;
-                    scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
-                    scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
-                }
+                m_scenes.Add (scene);
+                scene.EventManager.OnNewClient += EventManager_OnNewClient;
+                scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
+                scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             }
         }
 
@@ -123,9 +120,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
 
             lock (m_scenes)
-            {
                 m_scenes.Remove(scene);
-            }
         }
 
         public void PostInitialise()

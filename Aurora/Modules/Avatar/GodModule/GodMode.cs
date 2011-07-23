@@ -79,8 +79,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
 
-            if(!m_scenes.Contains(scene))
-                m_scenes.Add(scene);
+            m_scenes.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
@@ -91,8 +90,7 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
 
-            if (m_scenes.Contains(scene))
-                m_scenes.Remove(scene);
+            m_scenes.Remove(scene);
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;

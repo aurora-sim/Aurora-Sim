@@ -85,14 +85,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             lock (m_syncy)
             {
-                if (!m_scenes.Contains(scene))
-                {
-                    m_scenes.Add(scene);
-                    scene.EventManager.OnNewClient += OnNewClient;
-                    scene.EventManager.OnClosingClient += OnClosingClient;
-                    scene.EventManager.OnChatFromWorld += OnChatFromWorld;
-                    scene.EventManager.OnChatBroadcast += OnChatBroadcast;
-                }
+                m_scenes.Add (scene);
+                scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
+                scene.EventManager.OnChatFromWorld += OnChatFromWorld;
+                scene.EventManager.OnChatBroadcast += OnChatBroadcast;
             }
 
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
@@ -109,14 +106,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             lock (m_syncy)
             {
-                if (m_scenes.Contains(scene))
-                {
-                    scene.EventManager.OnNewClient -= OnNewClient;
-                    scene.EventManager.OnClosingClient -= OnClosingClient;
-                    scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
-                    scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
-                    m_scenes.Remove(scene);
-                }
+                scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnClosingClient -= OnClosingClient;
+                scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
+                scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
+                m_scenes.Remove (scene);
             }
         }
         

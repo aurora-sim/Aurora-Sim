@@ -246,8 +246,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!m_enabled)
                 return;
 
-        	m_Scenes.Add(scene);
-
             //Register the console commands
             if (FirstStartup)
             {
@@ -283,6 +281,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             if (!m_enabled)
                 return;
+
+            m_Scenes.Add (scene);
 
             //Must come AFTER the script plugins setup! Otherwise you'll get weird errors from the plugins
             if (MaintenanceThread == null)

@@ -154,20 +154,18 @@ namespace Aurora.Modules
 
         public virtual void AddRegion (IScene scene)
         {
-            if (!m_enabled) return;
+            if (!m_enabled)
+                return;
 
-            if (!m_scenes.Contains(scene))
-            {
-                m_scenes.Add(scene);
-                scene.EventManager.OnNewClient += OnNewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnRegisterCaps += RegisterCaps;
-                scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
+            m_scenes.Add (scene);
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnRegisterCaps += RegisterCaps;
+            scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
 
-                scene.RegisterModuleInterface<IMuteListModule>(this);
-                scene.RegisterModuleInterface<IChatModule>(this);
-                FindChatPlugins();
-            }
+            scene.RegisterModuleInterface<IMuteListModule> (this);
+            scene.RegisterModuleInterface<IChatModule> (this);
+            FindChatPlugins ();
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
@@ -196,19 +194,17 @@ namespace Aurora.Modules
 
         public virtual void RemoveRegion (IScene scene)
         {
-            if (!m_enabled) return;
+            if (!m_enabled)
+                return;
 
-            if (m_scenes.Contains(scene))
-            {
-                scene.EventManager.OnNewClient -= OnNewClient;
-                scene.EventManager.OnClosingClient -= OnClosingClient;
-                scene.EventManager.OnRegisterCaps -= RegisterCaps;
-                scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnRegisterCaps -= RegisterCaps;
+            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
 
-                m_scenes.Remove(scene);
-                scene.UnregisterModuleInterface<IMuteListModule>(this);
-                scene.UnregisterModuleInterface<IChatModule>(this);
-            }
+            m_scenes.Remove (scene);
+            scene.UnregisterModuleInterface<IMuteListModule> (this);
+            scene.UnregisterModuleInterface<IChatModule> (this);
         }
 
         public virtual void Close()

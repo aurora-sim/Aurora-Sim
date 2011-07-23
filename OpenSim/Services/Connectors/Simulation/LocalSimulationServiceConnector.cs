@@ -102,10 +102,7 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             lock (m_sceneList)
             {
-                if (m_sceneList.Contains(scene))
-                {
-                    m_sceneList.Remove(scene);
-                }
+                m_sceneList.Remove(scene);
             }
         }
 
@@ -115,12 +112,9 @@ namespace OpenSim.Services.Connectors.Simulation
         /// <param name="scene"></param>
         public void Init(IScene scene)
         {
-            if (!m_sceneList.Contains(scene))
+            lock (m_sceneList)
             {
-                lock (m_sceneList)
-                {
-                    m_sceneList.Add(scene);
-                }
+                m_sceneList.Add (scene);
             }
         }
 

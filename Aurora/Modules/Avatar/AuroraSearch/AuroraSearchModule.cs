@@ -78,8 +78,7 @@ namespace Aurora.Modules
             if (!m_SearchEnabled)
                 return;
 
-            if (!m_Scenes.Contains(scene))
-                m_Scenes.Add(scene);
+            m_Scenes.Add(scene);
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
@@ -89,8 +88,7 @@ namespace Aurora.Modules
             if (!m_SearchEnabled)
                 return;
 
-            if (m_Scenes.Contains(scene))
-                m_Scenes.Remove(scene);
+            m_Scenes.Remove(scene);
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
