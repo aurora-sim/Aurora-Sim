@@ -613,8 +613,9 @@ namespace OpenSim.Services.MessagingService
                                 AgentID + ". Resetting.");
                         }
                         //Close the agent at the place we just created if it isn't a neighbor
-                        if (IsOutsideView (regionCaps.RegionX, destination.RegionLocX, regionCaps.Region.RegionSizeX, destination.RegionSizeX,
-                            regionCaps.RegionY, destination.RegionLocY, regionCaps.Region.RegionSizeY, destination.RegionSizeY))
+                        // 7/22 -- Kill the agent no matter what, it obviously is having issues getting there
+                        //if (IsOutsideView (regionCaps.RegionX, destination.RegionLocX, regionCaps.Region.RegionSizeX, destination.RegionSizeX,
+                        //    regionCaps.RegionY, destination.RegionLocY, regionCaps.Region.RegionSizeY, destination.RegionSizeY))
                         {
                             SimulationService.CloseAgent (destination, AgentID);
                             clientCaps.RemoveCAPS (destination.RegionHandle);

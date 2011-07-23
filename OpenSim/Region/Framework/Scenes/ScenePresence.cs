@@ -2224,7 +2224,8 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (m_failedNeighborCrossing.ContainsKey (neighborRegion.RegionID))
                             {
-                                if (Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]) > 10)
+                                int diff = Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]);
+                                if (diff > 10 * 1000)
                                     m_failedNeighborCrossing.Remove (neighborRegion.RegionID); //Only allow it to retry every 10 seconds
                                 else
                                     return false;
@@ -2297,7 +2298,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void FailedCrossingTransit (GridRegion failedCrossingRegion)
         {
             m_inTransit = false;
-            m_failedNeighborCrossing[failedCrossingRegion.RegionID] = Util.UnixTimeSinceEpoch();
+            m_failedNeighborCrossing[failedCrossingRegion.RegionID] = Util.EnvironmentTickCount();
         }
 
         private void Reset()
