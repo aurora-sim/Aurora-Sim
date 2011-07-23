@@ -123,7 +123,7 @@ namespace Aurora.Modules
         /// <param name="cmdparams">Additional arguments passed to the command</param>
         public void RunCommand (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            m_manager.ForEachCurrentScene (delegate (IScene scene)
             {
                 scene.AuroraEventManager.FireGenericEventHandler ("Backup", null);
             });
@@ -131,7 +131,7 @@ namespace Aurora.Modules
 
         public void DisableBackup (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            m_manager.ForEachCurrentScene (delegate (IScene scene)
             {
                 scene.SimulationDataService.SaveBackups = false;
             });
@@ -140,7 +140,7 @@ namespace Aurora.Modules
 
         public void EnableBackup (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            m_manager.ForEachCurrentScene (delegate (IScene scene)
             {
                 scene.SimulationDataService.SaveBackups = true;
             });
@@ -202,7 +202,7 @@ namespace Aurora.Modules
                 string mode = cmd[2];
                 string o = cmd[3];
 
-                List<SceneObjectGroup> deletes = new List<SceneObjectGroup> ();
+                List<ISceneEntity> deletes = new List<ISceneEntity> ();
 
                 UUID match;
 
@@ -211,7 +211,7 @@ namespace Aurora.Modules
                     case "owner":
                         if (!UUID.TryParse (o, out match))
                             return;
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
                                     if (g.OwnerID == match && !g.IsAttachment)
                                         deletes.Add (g);
@@ -220,31 +220,31 @@ namespace Aurora.Modules
                     case "creator":
                         if (!UUID.TryParse (o, out match))
                             return;
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
-                                    if (g.RootPart.CreatorID == match && !g.IsAttachment)
+                                    if (g.RootChild.CreatorID == match && !g.IsAttachment)
                                         deletes.Add (g);
                                 });
                         break;
                     case "uuid":
                         if (!UUID.TryParse (o, out match))
                             return;
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
                                     if (g.UUID == match && !g.IsAttachment)
                                         deletes.Add (g);
                                 });
                         break;
                     case "name":
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
-                                    if (g.RootPart.Name == o && !g.IsAttachment)
+                                    if (g.RootChild.Name == o && !g.IsAttachment)
                                         deletes.Add (g);
                                 });
                         break;
                 }
 
-                foreach (SceneObjectGroup g in deletes)
+                foreach (ISceneEntity g in deletes)
                     DeleteSceneObject (g, true, true);
             }
 
@@ -475,7 +475,7 @@ namespace Aurora.Modules
             /// <param name="group">Object Id</param>
             /// <param name="DeleteScripts">Remove the scripts from the ScriptEngine as well</param>
             /// <param name="removeFromDatabase">Remove from the database?</param>
-            protected bool DeleteSceneObject(SceneObjectGroup group, bool DeleteScripts, bool removeFromDatabase)
+            protected bool DeleteSceneObject(ISceneEntity group, bool DeleteScripts, bool removeFromDatabase)
             {
                 //m_log.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
 
@@ -502,7 +502,7 @@ namespace Aurora.Modules
                     group.RemoveScriptInstances(true);
                 }
 
-                foreach (SceneObjectPart part in group.ChildrenList)
+                foreach (ISceneChildEntity part in group.ChildrenEntities())
                 {
                     if (part.PhysActor != null)
                     {
@@ -519,8 +519,8 @@ namespace Aurora.Modules
                     // We need to keep track of this state in case this group is still queued for backup.
                     group.IsDeleted = true;
                     //Clear the update schedule HERE so that IsDeleted will not have to fire as well
-                    
-                    foreach (SceneObjectPart part in group.ChildrenList)
+
+                    foreach (ISceneChildEntity part in group.ChildrenEntities ())
                     {
                         //Make sure it isn't going to be updated again
                         part.ClearUpdateSchedule ();

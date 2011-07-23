@@ -139,6 +139,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool ShouldRunHeartbeat
         {
             get { return m_ShouldRunHeartbeat; }
+            set { m_ShouldRunHeartbeat = value; }
         }
 
         #endregion
@@ -768,9 +769,9 @@ namespace OpenSim.Region.Framework.Scenes
             return m_clientManager.TryGetValue(remoteEndPoint, out client);
         }
 
-        public void ForEachSOG(Action<SceneObjectGroup> action)
+        public void ForEachSceneEntity (Action<ISceneEntity> action)
         {
-            m_sceneGraph.ForEachSOG(action);
+            m_sceneGraph.ForEachSceneEntity (action);
         }
 
         #endregion

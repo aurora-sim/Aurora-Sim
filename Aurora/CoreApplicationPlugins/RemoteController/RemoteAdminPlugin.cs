@@ -223,7 +223,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 UUID regionID = new UUID((string)requestData["regionID"]);
 
-                Scene rebootedScene;
+                IScene rebootedScene;
 
                 responseData["success"] = false;
                 responseData["accepted"] = true;
@@ -282,7 +282,7 @@ namespace OpenSim.CoreApplicationPlugins
                 response.Value = responseData;
 
                 manager.ForEachScene(
-                    delegate(Scene scene)
+                    delegate(IScene scene)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
                             if (dialogModule != null)
@@ -334,7 +334,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 responseData["accepted"] = true;
 
-                Scene region = null;
+                IScene region = null;
 
                 if (!manager.TryGetScene(regionID, out region))
                     throw new Exception("1: unable to get a scene with that name");
@@ -411,7 +411,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
 
                 manager.ForEachScene(
-                    delegate(Scene scene)
+                    delegate(IScene scene)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
                             if (dialogModule != null)
@@ -548,7 +548,7 @@ namespace OpenSim.CoreApplicationPlugins
                         throw new Exception(String.Format("cannot instantiate new region, server capacity {0} already reached; delete regions first",
                                                           m_regionLimit));
                     // extract or generate region ID now
-                    Scene scene = null;
+                    IScene scene = null;
                     UUID regionID = UUID.Zero;
                     if (requestData.ContainsKey("region_id") &&
                         !String.IsNullOrEmpty((string)requestData["region_id"]))
@@ -671,7 +671,7 @@ namespace OpenSim.CoreApplicationPlugins
                             string ownerFirst = (string)requestData["estate_owner_first"];
                             string ownerLast = (string)requestData["estate_owner_last"];
 
-                            Scene currentOrFirst = manager.CurrentOrFirstScene;
+                            IScene currentOrFirst = manager.CurrentOrFirstScene;
                             IUserAccountService accountService = currentOrFirst.UserAccountService;
                             UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
                                                                                ownerFirst, ownerLast);
@@ -781,7 +781,7 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
                     CheckStringParameters(request, new string[] {"password", "region_name"});
 
-                    Scene scene = null;
+                    IScene scene = null;
                     string regionName = (string) requestData["region_name"];
                     if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
@@ -842,7 +842,7 @@ namespace OpenSim.CoreApplicationPlugins
             m_log.Info("[RADMIN]: CloseRegion: new request");
             XmlRpcResponse response = new XmlRpcResponse();
             Hashtable responseData = new Hashtable();
-            Scene scene = null;
+            IScene scene = null;
 
             lock (m_requestLock)
             {
@@ -946,7 +946,7 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
                     CheckStringParameters(request, new string[] {"password", "region_name"});
 
-                    Scene scene = null;
+                    IScene scene = null;
                     string regionName = (string) requestData["region_name"];
                     if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
@@ -1079,7 +1079,7 @@ namespace OpenSim.CoreApplicationPlugins
                     if (requestData.Contains("user_email"))
                         email = (string)requestData["user_email"];
 
-                    Scene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
 
                     UserAccount account = CreateUser(scopeID, firstName, lastName, password, email);
@@ -1326,7 +1326,7 @@ namespace OpenSim.CoreApplicationPlugins
             //        if (requestData.ContainsKey("about_virtual_world"))
             //            aboutAvatar = (string)requestData["about_virtual_world"];
 
-                    Scene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
                     UserAccount account = scene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
 
@@ -1459,7 +1459,7 @@ namespace OpenSim.CoreApplicationPlugins
                 return;
             }
 
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
             UUID scopeID = scene.RegionInfo.ScopeID;
             UserAccount modelProfile = scene.UserAccountService.GetUserAccount(scopeID, modelSpecifiers[0], modelSpecifiers[1]);
 
@@ -1488,7 +1488,7 @@ namespace OpenSim.CoreApplicationPlugins
         private void EstablishAppearance(UUID destination, UUID source)
         {
             m_log.DebugFormat("[RADMIN] Initializing inventory for {0} from {1}", destination, source);
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
 
             // If the model has no associated appearance we're done.
             AvatarAppearance avatarAppearance = scene.AvatarService.GetAppearance(source);
@@ -1843,7 +1843,7 @@ namespace OpenSim.CoreApplicationPlugins
                     bool include = false;
                     bool select  = false;
 
-                    Scene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     IInventoryService inventoryService = scene.InventoryService;
                     IAssetService assetService = scene.AssetService;
 
@@ -2182,7 +2182,7 @@ namespace OpenSim.CoreApplicationPlugins
                         (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     string filename = (string) requestData["filename"];
-                    Scene scene = null;
+                    IScene scene = null;
                     if (requestData.Contains("region_uuid"))
                     {
                         UUID region_uuid = (UUID) (string) requestData["region_uuid"];
@@ -2282,7 +2282,7 @@ namespace OpenSim.CoreApplicationPlugins
                     (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 string filename = (string) requestData["filename"];
-                Scene scene = null;
+                IScene scene = null;
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];

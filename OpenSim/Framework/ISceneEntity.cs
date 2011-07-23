@@ -383,6 +383,8 @@ namespace OpenSim.Framework
         void BackupPreparation();
 
         void ClearXMLRepresentation ();
+
+        void RemoveScriptInstances (bool p);
     }
 
     public interface IEntity
@@ -780,6 +782,8 @@ namespace OpenSim.Framework
         }
 
         void GenerateRotationalVelocityFromOmega ();
+
+        void ClearUpdateSchedule ();
     }
 
     public interface ISceneGraph

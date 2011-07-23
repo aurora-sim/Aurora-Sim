@@ -72,6 +72,7 @@ namespace OpenSim.Framework
         ISceneGraph SceneGraph { get; }
         AgentCircuitManager AuthenticateHandler { get; }
         IConfigSource Config { get; }
+        ISimulationDataStore SimulationDataService { get; }
 
         #endregion
 
@@ -103,6 +104,7 @@ namespace OpenSim.Framework
 
         void ForEachClient (Action<IClientAPI> action);
         void ForEachScenePresence (Action<IScenePresence> action);
+        void ForEachSceneEntity (Action<ISceneEntity> action);
 
         #endregion
 

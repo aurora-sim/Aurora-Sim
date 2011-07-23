@@ -9672,7 +9672,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         UUID.TryParse(Utils.BytesToString(messagePacket.ParamList[0].Parameter), out Prey);
                         IClientAPI client;
-                        m_scene.TryGetClient(Prey, out client);
+                        m_scene.ClientManager.TryGetValue(Prey, out client);
                         if (client == null)
                             return true;
                         client.Kick("The Aurora Manager has kicked you");

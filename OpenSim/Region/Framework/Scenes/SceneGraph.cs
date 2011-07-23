@@ -504,14 +504,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// Performs action on all scene object groups.
         /// </summary>
         /// <param name="action"></param>
-        protected internal void ForEachSOG(Action<SceneObjectGroup> action)
+        protected internal void ForEachSceneEntity(Action<ISceneEntity> action)
         {
             ISceneEntity[] objlist = Entities.GetEntities ();
             foreach (ISceneEntity obj in objlist)
             {
                 try
                 {
-                    action(obj as SceneObjectGroup);
+                    action(obj);
                 }
                 catch (Exception e)
                 {
