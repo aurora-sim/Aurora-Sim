@@ -67,11 +67,28 @@ namespace OpenSim.Framework
             //
             string gitCommitFileName = ".version";
 
-            if (File.Exists(gitCommitFileName))
+            string pathToGitFile = Path.Combine (Environment.CurrentDirectory, Path.Combine("..\\", Path.Combine(".git", "logs")));
+            if (File.Exists (gitCommitFileName))
             {
-                StreamReader CommitFile = File.OpenText(gitCommitFileName);
-                versionString = CommitFile.ReadLine();
-                CommitFile.Close();
+                StreamReader CommitFile = File.OpenText (gitCommitFileName);
+                versionString = CommitFile.ReadLine ();
+                CommitFile.Close ();
+            }
+            else if (Directory.Exists (pathToGitFile))
+            {
+                string gitFile = Path.Combine (pathToGitFile, "HEAD");
+                if (File.Exists (gitFile))
+                {
+                    string[] lines = File.ReadAllLines (gitFile);
+                    string lastLine = lines[lines.Length - 1];
+                    string[] splitLastLine = lastLine.Split (new string[2]{" ", "\t"}, StringSplitOptions.RemoveEmptyEntries);
+                    versionString = "Aurora-" + splitLastLine[1].Substring (0, 6)/*First 6 digits of the commit hash*/ +
+                        " " + splitLastLine[5] /*Time zone info*/;
+                    FileStream s = File.Open (gitCommitFileName, FileMode.Create);
+                    byte[] data = System.Text.Encoding.UTF8.GetBytes(versionString);
+                    s.Write (data, 0, data.Length);
+                    s.Close ();
+                }
             }
             return versionString;
         }
