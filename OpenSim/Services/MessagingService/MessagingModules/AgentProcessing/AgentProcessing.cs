@@ -539,6 +539,7 @@ namespace OpenSim.Services.MessagingService
             if (regionCaps == null || !regionCaps.RootAgent)
             {
                 reason = "";
+                ResetFromTransit (AgentID);
                 return false;
             }
 

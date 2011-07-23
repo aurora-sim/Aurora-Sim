@@ -71,7 +71,7 @@ namespace OpenSim.Region.Framework.Scenes
         public int AllRegions = 0;
         protected ISimulationDataStore m_simulationDataService;
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
-        protected List<IClientNetworkServer> m_clientServers = new List<IClientNetworkServer>();
+        protected Dictionary<UUID, IClientNetworkServer> m_clientServers = new Dictionary<UUID, IClientNetworkServer> ();
         
         public ISimulationDataStore SimulationDataService
         {
@@ -79,16 +79,14 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_simulationDataService = value; }
         }
 
-        public List<IClientNetworkServer> ClientServers
-        {
-            get { return m_clientServers; }
-        }
-
         public List<Scene> Scenes
         {
             get { return m_localScenes; }
         }
 
+        /// <summary>
+        /// Scheduled for deletion!
+        /// </summary>
         public Scene CurrentScene
         {
             get { return m_currentScene; }
@@ -589,7 +587,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             StartModules(scene);
 
-            m_clientServers.Add(clientServer);
+            m_clientServers.Add (scene.RegionInfo.RegionID, clientServer);
 
             //Do this here so that we don't have issues later when startup complete messages start coming in
             m_localScenes.Add(scene);
@@ -597,7 +595,11 @@ namespace OpenSim.Region.Framework.Scenes
             return scene;
         }
 
-        public ISimulationDataStore GetSimulationDataStore()
+        /// <summary>
+        /// Gets a new copy of the simulation data store, keep one per region
+        /// </summary>
+        /// <returns></returns>
+        public ISimulationDataStore GetNewSimulationDataStore()
         {
             return m_simulationDataService.Copy();
         }
@@ -661,25 +663,10 @@ namespace OpenSim.Region.Framework.Scenes
         public void ShutdownClientServer(RegionInfo whichRegion)
         {
             // Close and remove the clientserver for a region
-            bool foundClientServer = false;
-            int clientServerElement = 0;
-            uint x, y;
-            Utils.LongToUInts(whichRegion.RegionHandle, out x, out y);
-
-            for (int i = 0; i < m_clientServers.Count; i++)
+            if (m_clientServers.ContainsKey(whichRegion.RegionID))
             {
-                if (m_clientServers[i].HandlesRegion(x, y))
-                {
-                    clientServerElement = i;
-                    foundClientServer = true;
-                    break;
-                }
-            }
-
-            if (foundClientServer)
-            {
-                m_clientServers[clientServerElement].Stop();
-                m_clientServers.RemoveAt(clientServerElement);
+                m_clientServers[whichRegion.RegionID].Stop ();
+                m_clientServers.Remove (whichRegion.RegionID);
             }
         }
 

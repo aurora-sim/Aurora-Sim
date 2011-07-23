@@ -2502,7 +2502,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = manager.CurrentScene;
+                IScene scene = manager.CurrentOrFirstScene;
                 scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
                 scene.RegionInfo.EstateSettings.Save();
             }
@@ -2564,7 +2564,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
                     IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
-                    Scene scene = manager.CurrentScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2651,7 +2651,7 @@ namespace OpenSim.CoreApplicationPlugins
                     UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
                     IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
                     //UserProfileCacheService ups = m_application.CommunicationsManager.UserProfileCacheService;
-                    Scene scene = manager.CurrentScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2730,7 +2730,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = manager.CurrentScene;
+                IScene scene = manager.CurrentOrFirstScene;
                 UUID[] accessControlList = scene.RegionInfo.EstateSettings.EstateAccess;
                 Hashtable users = new Hashtable();
 

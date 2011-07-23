@@ -80,12 +80,14 @@ namespace OpenSim.Framework
         void Initialize (RegionInfo regionInfo);
         void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();
+        bool ShouldRunHeartbeat { get; }
         void Close ();
 
         #endregion
 
         #region Client Methods
 
+        ClientManager ClientManager { get; }
         void AddNewClient (IClientAPI client);
         IScenePresence GetScenePresence (UUID uUID);
         List<IScenePresence> GetScenePresences ();

@@ -85,10 +85,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>Manages authentication for agent circuits</summary>
         public AgentCircuitManager m_circuitManager;
         /// <summary>Reference to the scene this UDP server is attached to</summary>
-        public Scene m_scene;
-        /// <summary>The X/Y coordinates of the scene this UDP server is attached to</summary>
-        private uint m_x;
-        private uint m_y;
+        public IScene m_scene;
         /// <summary>The size of the receive buffer for the UDP socket. This value
         /// is passed up to the operating system and used in the system networking
         /// stack. Use zero to leave this value as the default</summary>
@@ -208,8 +205,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             if (m_scene == null)
                 throw new InvalidOperationException("[LLUDPSERVER]: Cannot LLUDPServer.Start() without an IScene reference");
-            if (!m_scene.ShouldRunHeartbeat)
-                return;
+            
             //m_log.Info("[LLUDPSERVER]: Starting the LLUDP server in " + (m_asyncPacketHandling ? "asynchronous" : "synchronous") + " mode");
 
             base.Start(m_recvBufferSize, m_asyncPacketHandling);
@@ -251,12 +247,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             m_scene = (Scene)scene;
-            Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out m_x, out m_y);
-        }
-
-        public bool HandlesRegion(uint x, uint y)
-        {
-            return x == m_x && y == m_y;
         }
 
         public void BroadcastPacket(Packet packet, ThrottleOutPacketType category, bool sendToPausedAgents, bool allowSplitting, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
@@ -638,7 +628,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             // Determine which agent this packet came from
             IClientAPI client;
-            if (!m_scene.TryGetClient(address, out client) || !(client is LLClientView))
+            if (!m_scene.ClientManager.TryGetValue (address, out client) || !(client is LLClientView))
             {
                 if(client != null)
                     m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type + " packet from an unrecognized source: " + address + " in " + m_scene.RegionInfo.RegionName);
@@ -944,7 +934,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             // Remove this client from the scene
             IClientAPI client;
-            if (m_scene.TryGetClient(udpClient.AgentID, out client))
+            if (m_scene.ClientManager.TryGetValue (udpClient.AgentID, out client))
             {
                 client.IsLoggingOut = true;
                 IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
@@ -1123,7 +1113,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             // Make sure this client is still alive
-            if (m_scene.TryGetClient(udpClient.AgentID, out client))
+            if (m_scene.ClientManager.TryGetValue (udpClient.AgentID, out client))
             {
                 try
                 {

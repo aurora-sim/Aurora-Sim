@@ -354,7 +354,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         protected Dictionary<PacketType, PacketProcessor> m_packetHandlers = new Dictionary<PacketType, PacketProcessor>();
         protected Dictionary<string, GenericMessage> m_genericPacketHandlers = new Dictionary<string, GenericMessage>(); //PauPaw:Local Generic Message handlers
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected LLImageManager m_imageManager;
         protected string m_firstName;
         protected string m_lastName;
@@ -430,7 +430,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Constructor
         /// </summary>
-        public LLClientView(EndPoint remoteEP, Scene scene, LLUDPServer udpServer, LLUDPClient udpClient, AgentCircuitData sessionInfo,
+        public LLClientView(EndPoint remoteEP, IScene scene, LLUDPServer udpServer, LLUDPClient udpClient, AgentCircuitData sessionInfo,
             UUID agentId, UUID sessionId, uint circuitCode)
         {
             InitDefaultAnimations();

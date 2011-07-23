@@ -62,6 +62,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected readonly ClientManager m_clientManager = new ClientManager();
 
+        public ClientManager ClientManager
+        {
+            get { return m_clientManager; }
+        }
+
         protected RegionInfo m_regInfo;
         protected IClientNetworkServer m_clientServer;
 
@@ -130,7 +135,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         private volatile bool shuttingdown = false;
 
-        public bool ShouldRunHeartbeat = true;
+        private bool m_ShouldRunHeartbeat = true;
+        public bool ShouldRunHeartbeat
+        {
+            get { return m_ShouldRunHeartbeat; }
+        }
 
         #endregion
 
@@ -292,7 +301,7 @@ namespace OpenSim.Region.Framework.Scenes
             clientServer.AddScene (this);
 
             m_sceneManager = RequestModuleInterface<SceneManager> ();
-            m_simDataStore = m_sceneManager.GetSimulationDataStore ();
+            m_simDataStore = m_sceneManager.GetNewSimulationDataStore ();
 
             m_config = m_sceneManager.ConfigSource;
             m_authenticateHandler = authen;
@@ -380,7 +389,7 @@ namespace OpenSim.Region.Framework.Scenes
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
             }
-            ShouldRunHeartbeat = false; //Stop the heartbeat
+            m_ShouldRunHeartbeat = false; //Stop the heartbeat
             //Now close the tracker
             monitor.Stop();
 
