@@ -359,7 +359,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
             scene.ForEachClient(delegate(IClientAPI client)
             {
-                client.SendKillObject (scene.RegionInfo.RegionHandle, new IEntity[] { entity });
+                if(client.AgentId != entity.UUID)
+                    client.SendKillObject (scene.RegionInfo.RegionHandle, new IEntity[] { entity });
             });
         }
 

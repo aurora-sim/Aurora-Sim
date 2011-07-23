@@ -854,6 +854,10 @@ namespace OpenSim.Region.Framework.Scenes
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
                 Name, m_scene.RegionInfo.RegionName);
 
+            // On the next prim update, all objects will be sent
+            //
+            m_sceneViewer.Reset ();
+
             AddToPhysicalScene(isFlying, false);
             //m_physicsActor.Position += m_savedVelocity * 0.25f;
             m_physicsActor.Velocity = m_savedVelocity * 0.25f;
@@ -869,10 +873,6 @@ namespace OpenSim.Region.Framework.Scenes
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
             // elsewhere anyway
             // Animator.SendAnimPack();
-
-            // On the next prim update, all objects will be sent
-            //
-            m_sceneViewer.Reset();
 
             IsChildAgent = false;
 
@@ -921,7 +921,8 @@ namespace OpenSim.Region.Framework.Scenes
                  Name, UUID, m_scene.RegionInfo.RegionName);
 
             IsChildAgent = true;
-            RemoveFromPhysicalScene();
+            RemoveFromPhysicalScene ();
+            m_sceneViewer.Reset ();
 
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)

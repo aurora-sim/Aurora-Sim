@@ -524,57 +524,66 @@ namespace OpenSim.Region.Framework.Scenes
                 //If they are not in this region, we check to make sure that we allow seeing into neighbors
                 if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && m_prioritizer != null)
                 {
-                    m_SentInitialObjects = true;
-                    ISceneEntity[] allEntities = m_presence.Scene.Entities.GetEntities ();
-                    PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (allEntities.Length, DoubleComparer);
-                    List<ISceneEntity> NewGrpsInView = new List<ISceneEntity> ();
-                    // build a prioritized list of things we need to send
-
-                    foreach (ISceneEntity e in allEntities)
+                    try
                     {
-                        if (e != null && e is SceneObjectGroup)
+                        m_SentInitialObjects = true;
+                        ISceneEntity[] allEntities = m_presence.Scene.Entities.GetEntities ();
+                        PriorityQueue<EntityUpdate, double> m_entsqueue = new PriorityQueue<EntityUpdate, double> (allEntities.Length, DoubleComparer);
+                        List<ISceneEntity> NewGrpsInView = new List<ISceneEntity> ();
+                        // build a prioritized list of things we need to send
+
+                        foreach (ISceneEntity e in allEntities)
                         {
-                            if (e.IsDeleted)
-                                continue;
-
-                            if (lastGrpsInView.Contains (e))
-                                continue;
-
-                            //Check for culling here!
-                            if (m_culler != null)
+                            if (e != null && e is SceneObjectGroup)
                             {
-                                if (!m_culler.ShowEntityToClient (m_presence, e, m_scene))
+                                if (e.IsDeleted)
                                     continue;
-                                NewGrpsInView.Add (e);
-                            }
 
-                            //Send the root object first!
-                            EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
-                            PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
-                            rootitem.Value = rootupdate;
-                            rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
-                            m_entsqueue.Enqueue (rootitem);
+                                if (lastGrpsInView.Contains (e))
+                                    continue;
 
-                            foreach (ISceneChildEntity child in e.ChildrenEntities ())
-                            {
-                                if (child == e.RootChild)
-                                    continue; //Already sent
-                                EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
-                                PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
-                                item.Value = update;
-                                item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
-                                if (item.Priority >= rootitem.Priority + 10)
-                                    item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
-                                m_entsqueue.Enqueue (item);
+                                //Check for culling here!
+                                if (m_culler != null)
+                                {
+                                    if (!m_culler.ShowEntityToClient (m_presence, e, m_scene))
+                                        continue;
+                                    NewGrpsInView.Add (e);
+                                }
+
+                                //Send the root object first!
+                                EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.FullUpdate);
+                                PriorityQueueItem<EntityUpdate, double> rootitem = new PriorityQueueItem<EntityUpdate, double> ();
+                                rootitem.Value = rootupdate;
+                                rootitem.Priority = m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
+                                m_entsqueue.Enqueue (rootitem);
+
+                                foreach (ISceneChildEntity child in e.ChildrenEntities ())
+                                {
+                                    if (child == e.RootChild)
+                                        continue; //Already sent
+                                    EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
+                                    PriorityQueueItem<EntityUpdate, double> item = new PriorityQueueItem<EntityUpdate, double> ();
+                                    item.Value = update;
+                                    item.Priority = m_prioritizer.GetUpdatePriority (m_presence, child);
+                                    if (item.Priority >= rootitem.Priority + 10)
+                                        item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
+                                    m_entsqueue.Enqueue (item);
+                                }
                             }
                         }
+                        //Merge the last seen lists
+                        lastGrpsInView.UnionWith (NewGrpsInView);
+                        NewGrpsInView.Clear ();
+                        allEntities = null;
+                        // send them 
+                        SendQueued (m_entsqueue);
                     }
-                    //Merge the last seen lists
-                    lastGrpsInView.UnionWith (NewGrpsInView);
-                    NewGrpsInView.Clear ();
-                    allEntities = null;
-                    // send them 
-                    SendQueued (m_entsqueue);
+                    catch(Exception ex)
+                    {
+                        m_log.Warn ("[SceneViewer]: Exception occured in sending initial prims, " + ex.ToString ());
+                        //An exception occured, don't fail to send all the prims to the client
+                        m_SentInitialObjects = false;
+                    }
                 }
             }
 

@@ -151,6 +151,7 @@ namespace Aurora.Modules
         {
             if(m_lastWorldPhysicsState != null)
                 m_lastWorldPhysicsState.Reload (m_scene, 1);
+            m_lastWorldPhysicsState = null;
         }
 
         void timeReversal_Elapsed (object sender, ElapsedEventArgs e)

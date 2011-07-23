@@ -577,7 +577,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             foreach (IScenePresence sp in this.GetScenePresences ())
             {
-                sp.Velocity = Vector3.Zero;
+                sp.PhysicsActor.ForceSetVelocity (Vector3.Zero);
                 sp.SendTerseUpdateToAllClients ();
             }
         }
@@ -678,9 +678,12 @@ namespace OpenSim.Region.Framework.Scenes
             ForEachClient (
                 delegate (IClientAPI client)
                 {
-                    //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                    try { client.SendKillObject (presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
-                    catch (NullReferenceException) { }
+                    if (client.AgentId != presence.UUID)
+                    {
+                        //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
+                        try { client.SendKillObject (presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
+                        catch (NullReferenceException) { }
+                    }
                 });
 
             // Remove the avatar from the scene

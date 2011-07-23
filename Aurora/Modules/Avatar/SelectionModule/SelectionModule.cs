@@ -214,7 +214,9 @@ namespace Aurora.Modules
                 }
             }
             IScenePresence SP;
-            scene.TryGetScenePresence(remoteClient.AgentId, out SP);
+            scene.TryGetScenePresence (remoteClient.AgentId, out SP);
+            if (SP == null)
+                return;
             if (EntitiesToUpdate.Count != 0)
             {
                 SP.SceneViewer.QueuePartsForPropertiesUpdate (EntitiesToUpdate.ToArray ());
