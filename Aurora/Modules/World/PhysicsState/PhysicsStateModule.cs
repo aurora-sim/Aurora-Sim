@@ -49,12 +49,14 @@ namespace Aurora.Modules
                 physicsObject.Orientation = physicsState.Rotation;
                 physicsObject.RotationalVelocity = physicsState.AngularVelocity * direction;
                 physicsObject.Velocity = physicsState.LinearVelocity * direction;
+                physicsObject.ForceSetVelocity (physicsState.LinearVelocity * direction);
+                physicsObject.RequestPhysicsterseUpdate ();
             }
         }
 
         private WorldPhysicsState m_lastWorldPhysicsState = null;
         private IScene m_scene;
-        private int m_lastRevertedTo = 0;
+        private int m_lastRevertedTo = -100;
         private bool m_isReversing = false;
         private bool m_isSavingRevertStates = false;
         private List<WorldPhysicsState> m_timeReversal = new List<WorldPhysicsState> ();
@@ -96,7 +98,10 @@ namespace Aurora.Modules
 
         public void SavePhysicsState ()
         {
-            m_lastWorldPhysicsState = MakePhysicsState ();
+            if (m_isReversing)
+                m_lastWorldPhysicsState = null;
+            else
+                m_lastWorldPhysicsState = MakePhysicsState ();
         }
 
         private WorldPhysicsState MakePhysicsState ()
@@ -120,13 +125,16 @@ namespace Aurora.Modules
         {
             if (!m_isSavingRevertStates)
                 return;//Only save if we are running this
-            m_timeReversal.Add (MakePhysicsState ());
-            if (m_isReversing)
+            if(!m_isReversing)
+                m_timeReversal.Add (MakePhysicsState ());
+            else
             {
-                if (m_lastRevertedTo == 0)
+                if (m_lastRevertedTo == -100)
                     m_lastRevertedTo = m_timeReversal.Count - 1;
                 m_timeReversal[m_lastRevertedTo].Reload (m_scene, -1f);//Do the velocity in reverse with -1
                 m_lastRevertedTo--;
+                if (m_lastRevertedTo < 0)
+                    StopPhysicsTimeReversal ();//Stop it from restarting..
             }
         }
 
@@ -143,11 +151,15 @@ namespace Aurora.Modules
 
         public void StartPhysicsTimeReversal ()
         {
+            m_lastRevertedTo = -100;
             m_isReversing = true;
+            m_scene.RegionInfo.RegionSettings.DisablePhysics = true;
         }
 
         public void StopPhysicsTimeReversal ()
         {
+            m_lastRevertedTo = -100;
+            m_scene.RegionInfo.RegionSettings.DisablePhysics = false;
             m_isReversing = false;
         }
     }

@@ -1010,6 +1010,10 @@ namespace OpenSim.Framework
         public virtual void ClearVelocity ()
         {
         }
+
+        public virtual void ForceSetVelocity (Vector3 velocity)
+        {
+        }
     }
 
     public abstract class PhysicsActor

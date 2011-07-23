@@ -681,6 +681,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint (true, new Vector3 ((float)pos.x, (float)pos.y, (float)pos.z),
                     (float)xForce, (float)yForce, (float)zForce, 0, (float)radius.value, ident.value);
             }
+            else if (name == ScriptBaseClass.START_TIME_REVERSAL_SAVING)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StartSavingPhysicsTimeReversalStates ();
+            }
+            else if (name == ScriptBaseClass.STOP_TIME_REVERSAL_SAVING)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StopSavingPhysicsTimeReversalStates ();
+            }
+            else if (name == ScriptBaseClass.START_TIME_REVERSAL)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StartPhysicsTimeReversal ();
+            }
+            else if (name == ScriptBaseClass.STOP_TIME_REVERSAL)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StopPhysicsTimeReversal ();
+            }
         }
 
         #region Helpers

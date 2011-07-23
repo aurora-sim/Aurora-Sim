@@ -318,6 +318,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.BodySetLinearVel (Body, 0, 0, 0);
         }
 
+        public override void ForceSetVelocity (Vector3 velocity)
+        {
+            _velocity = velocity;
+            m_lastVelocity = velocity;
+            d.BodySetLinearVel (Body, velocity.X, velocity.Y, velocity.Z);
+        }
+
         public void SetGeom (IntPtr geom)
         {
             prev_geom = prim_geom;
