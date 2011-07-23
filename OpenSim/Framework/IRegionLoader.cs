@@ -77,4 +77,20 @@ namespace OpenSim.Framework
         /// <returns></returns>
         bool FailedToStartRegions(string reason);
     }
+
+    public interface ISceneLoader
+    {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
+        /// <summary>
+        /// Create a basic IScene reference with the given RegionInfo
+        /// </summary>
+        /// <param name="regionInfo"></param>
+        /// <returns></returns>
+        IScene CreateScene (RegionInfo regionInfo);
+    }
 }

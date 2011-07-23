@@ -405,7 +405,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
                 m_log.Debug ("[LOADREGIONS]: Creating Region: " + regionName);
                 SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-                manager.CreateRegion (LoadRegionFromFile (regionName, regionFile, false, m_configSource, regionName));
+                manager.StartNewRegion (LoadRegionFromFile (regionName, regionFile, false, m_configSource, regionName));
             }
             else
             {

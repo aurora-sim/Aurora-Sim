@@ -81,6 +81,7 @@ namespace OpenSim.Framework
         void Initialize (RegionInfo regionInfo);
         void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
         void StartHeartbeat ();
+        void FinishedStartup (string p, List<string> list);
         bool ShouldRunHeartbeat { get; set; }
         void Close ();
 
@@ -112,6 +113,7 @@ namespace OpenSim.Framework
 
         ISceneChildEntity GetSceneObjectPart (uint localID);
         ISceneChildEntity GetSceneObjectPart (UUID objectID);
+        ISceneEntity GetGroupByPrim (uint objectLocalID);
         bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
 
         #endregion
@@ -145,8 +147,5 @@ namespace OpenSim.Framework
         List<ISceneEntity> PhysicsReturns { get; }
 
         #endregion
-
-
-        ISceneEntity GetGroupByPrim (uint objectLocalID);
     }
 }

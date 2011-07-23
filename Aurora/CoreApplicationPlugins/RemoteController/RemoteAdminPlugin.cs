@@ -686,8 +686,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     // Create the region and perform any initial initialization
 
-                    IScene newScene;
-                    manager.CreateRegion(region, out newScene);
+                    IScene newScene = manager.StartNewRegion(region);
 
                     // If an access specification was provided, use it.
                     // Otherwise accept the default.

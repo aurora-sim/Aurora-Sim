@@ -373,6 +373,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_log.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
+            m_clientServer.Stop ();
             SimulationDataService.Shutdown ();
 
             // Kick all ROOT agents with the message, 'The simulator is going down'

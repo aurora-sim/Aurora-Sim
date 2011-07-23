@@ -70,7 +70,6 @@ namespace OpenSim.Region.Framework.Scenes
         public int AllRegions = 0;
         protected ISimulationDataStore m_simulationDataService;
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
-        protected Dictionary<UUID, IClientNetworkServer> m_clientServers = new Dictionary<UUID, IClientNetworkServer> ();
         
         public ISimulationDataStore SimulationDataService
         {
@@ -270,9 +269,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool TrySetCurrentScene(string regionName)
         {
-            if ((String.Compare(regionName, "root") == 0)
-                || (String.Compare(regionName, "..") == 0)
-                || (String.Compare(regionName, "/") == 0))
+            if ((String.Compare(regionName, "root") == 0))
             {
                 MainConsole.Instance.ConsoleScene = null;
                 return true;
@@ -398,10 +395,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add a region
 
-        public void CreateRegion (RegionInfo regionInfo)
+        public IScene StartNewRegion (RegionInfo regionInfo)
         {
-            IScene scene;
-            CreateRegion (regionInfo, out scene);
+            ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader> ();
+            if (sceneLoader == null)
+                throw new Exception ("No Scene Loader Interface!");
+
+            //Get the new scene from the interface
+            IScene scene = sceneLoader.CreateScene (regionInfo);
+            StartNewRegion (scene);
+            return scene;
         }
 
         /// <summary>
@@ -411,12 +414,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="portadd_flag"></param>
         /// <param name="do_post_init"></param>
         /// <returns></returns>
-        public void CreateRegion(RegionInfo regionInfo, out IScene m_scene)
+        public void StartNewRegion(IScene scene)
         {
-            // set the initial ports
-            regionInfo.HttpPort = MainServer.Instance.Port;
+            StartModules (scene);
 
-            Scene scene = SetupScene(regionInfo, m_config);
+            //Do this here so that we don't have issues later when startup complete messages start coming in
+            m_localScenes.Add (scene);
+
+            // set the initial ports
+            scene.RegionInfo.HttpPort = MainServer.Instance.Port;
 
             m_log.Info("[Modules]: Loading region modules");
             IRegionModulesController controller;
@@ -435,48 +441,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Tell the scene that the startup is complete 
             // Note: this event is added in the scene constructor
             scene.FinishedStartup("Startup", new List<string>());
-
-            m_scene = scene;
-        }
-
-        /// <summary>
-        /// Create a scene and its initial base structures.
-        /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="proxyOffset"></param>
-        /// <param name="configSource"></param>
-        /// <param name="clientServer"> </param>
-        /// <returns></returns>
-        protected Scene SetupScene(RegionInfo regionInfo, IConfigSource configSource)
-        {
-            AgentCircuitManager circuitManager = new AgentCircuitManager();
-            IPAddress listenIP = regionInfo.InternalEndPoint.Address;
-            if (!IPAddress.TryParse(regionInfo.InternalEndPoint.Address.ToString(), out listenIP))
-                listenIP = IPAddress.Parse("0.0.0.0");
-
-            uint port = (uint)regionInfo.InternalEndPoint.Port;
-
-            string ClientstackDll = m_config.Configs["Startup"].GetString("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
-
-            IClientNetworkServer clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer> (Util.BasePathCombine(ClientstackDll));
-            clientServer.Initialise(
-                    listenIP, ref port, 0, regionInfo.m_allow_alternate_ports,
-                    m_config, circuitManager);
-
-            regionInfo.InternalEndPoint.Port = (int)port;
-
-            Scene scene = new Scene ();
-            scene.AddModuleInterfaces (m_OpenSimBase.ApplicationRegistry.GetInterfaces ());
-            scene.Initialize (regionInfo, circuitManager, clientServer);
-
-            StartModules(scene);
-
-            m_clientServers.Add (scene.RegionInfo.RegionID, clientServer);
-
-            //Do this here so that we don't have issues later when startup complete messages start coming in
-            m_localScenes.Add(scene);
-
-            return scene;
         }
 
         /// <summary>
@@ -518,25 +482,13 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleRestart(IScene scene)
         {
             CloseModules(scene);
-            ShutdownClientServer (scene);
             m_localScenes.Remove (scene);
-            IScene iscene;
-            CreateRegion (scene.RegionInfo, out iscene);
+            StartNewRegion (scene.RegionInfo);
         }
 
         #endregion
 
         #region Shutdown regions
-
-        public void ShutdownClientServer(IScene region)
-        {
-            // Close and remove the clientserver for a region
-            if (m_clientServers.ContainsKey (region.RegionInfo.RegionID))
-            {
-                m_clientServers[region.RegionInfo.RegionID].Stop ();
-                m_clientServers.Remove (region.RegionInfo.RegionID);
-            }
-        }
 
         public void RemoveRegion (IScene scene, bool cleanup)
         {
@@ -567,7 +519,7 @@ namespace OpenSim.Region.Framework.Scenes
             // root level
             if ((MainConsole.Instance.ConsoleScene != null) && (MainConsole.Instance.ConsoleScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
             {
-                TrySetCurrentScene("..");
+                TrySetCurrentScene ("root");
             }
 
             m_localScenes.Remove(scene);
@@ -579,7 +531,6 @@ namespace OpenSim.Region.Framework.Scenes
                 controller.RemoveRegionFromModules(scene);
 
             CloseModules(scene);
-            ShutdownClientServer(scene);
         }
 
         #endregion
