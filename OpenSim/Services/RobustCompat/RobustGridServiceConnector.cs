@@ -83,7 +83,7 @@ namespace OpenSim.Services.RobustCompat
             SceneManager manager = m_registry.RequestModuleInterface<SceneManager> ();
             if (manager != null)
             {
-                foreach (Scene scene in manager.Scenes)
+                foreach (IScene scene in manager.Scenes)
                 {
                     if (scene.RegionInfo.RegionID == gridRegion.RegionID)
                     {

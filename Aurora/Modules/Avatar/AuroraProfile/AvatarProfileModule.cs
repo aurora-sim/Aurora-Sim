@@ -630,9 +630,9 @@ namespace Aurora.Modules
 
         #region Helpers
 
-        private Scene GetRegionUserIsIn(UUID uUID)
+        private IScene GetRegionUserIsIn(UUID uUID)
         {
-            foreach (Scene scene in m_Scenes)
+            foreach (IScene scene in m_Scenes)
             {
                 if (scene.GetScenePresence(uUID) != null)
                     return scene;
@@ -657,7 +657,7 @@ namespace Aurora.Modules
 
         public IScenePresence findScenePresence(UUID avID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 IScenePresence SP = s.GetScenePresence(avID);
                 if (SP != null)

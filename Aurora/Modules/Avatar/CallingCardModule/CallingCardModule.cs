@@ -267,7 +267,7 @@ namespace Aurora.Modules
         /// <returns></returns>
         public IClientAPI LocateClientObject(UUID agentID)
         {
-            Scene scene = GetClientScene(agentID);
+            IScene scene = GetClientScene(agentID);
             if (scene == null)
                 return null;
 
@@ -283,11 +283,11 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="agentId"></param>
         /// <returns></returns>
-        private Scene GetClientScene(UUID agentId)
+        private IScene GetClientScene(UUID agentId)
         {
             lock (m_scenes)
             {
-                foreach (Scene scene in m_scenes)
+                foreach (IScene scene in m_scenes)
                 {
                     IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null)

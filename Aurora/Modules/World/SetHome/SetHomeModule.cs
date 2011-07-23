@@ -213,9 +213,7 @@ namespace Aurora.Modules.World.Auction
         /// <param name="flags"></param>
         public void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags)
         {
-            Scene scene = (Scene)remoteClient.Scene;
-            if (scene == null)
-                return;
+            IScene scene = remoteClient.Scene;
 
             IScenePresence SP = scene.GetScenePresence (remoteClient.AgentId);
             IDialogModule module = scene.RequestModuleInterface<IDialogModule>();

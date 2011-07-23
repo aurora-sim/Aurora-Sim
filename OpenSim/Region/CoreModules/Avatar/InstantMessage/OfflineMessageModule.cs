@@ -142,9 +142,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
         }
 
-        private Scene FindScene(UUID agentID)
+        private IScene FindScene(UUID agentID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         private IClientAPI FindClient(UUID agentID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
@@ -193,7 +193,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     // Needed for proper state management for stored group
                     // invitations
                     //
-                    Scene s = FindScene(client.AgentId);
+                    IScene s = FindScene(client.AgentId);
                     if (s != null)
                         s.EventManager.TriggerIncomingInstantMessage(im);
                 }

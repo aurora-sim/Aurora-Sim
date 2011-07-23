@@ -1222,7 +1222,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
                 return;
-            if (((Scene)client.Scene).RegionInfo.RegionID != m_scene.RegionInfo.RegionID)
+            if (client.Scene.RegionInfo.RegionID != m_scene.RegionInfo.RegionID)
                 return;
             string parameter1 = Parameters[0];
             if (Method == "terrain")

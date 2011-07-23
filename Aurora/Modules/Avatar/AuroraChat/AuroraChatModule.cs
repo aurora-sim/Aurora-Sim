@@ -415,12 +415,6 @@ namespace Aurora.Modules
                 case ChatSourceType.Agent:
                     if (scene != null)
                     {
-                        if (!(scene is Scene))
-                        {
-                            m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                                             scene.RegionInfo.RegionName, c.Sender.AgentId);
-                            return;
-                        }
                         IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
                         if (avatar != null && message == "")
                         {
@@ -450,7 +444,7 @@ namespace Aurora.Modules
 
             // m_log.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
-            foreach (Scene s in m_scenes)
+            foreach (IScene s in m_scenes)
             {
                 List<IScenePresence> ScenePresences = s.GetScenePresences ();
                 foreach (IScenePresence presence in ScenePresences)
@@ -510,7 +504,7 @@ namespace Aurora.Modules
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
-                IScenePresence avatar = (c.Scene as Scene).GetScenePresence (c.Sender.AgentId);
+                IScenePresence avatar = c.Scene.GetScenePresence (c.Sender.AgentId);
                 fromID = c.Sender.AgentId;
                 fromName = avatar.Name;
                 sourceType = ChatSourceType.Agent;
@@ -518,7 +512,7 @@ namespace Aurora.Modules
 
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
-            ((Scene)c.Scene).ForEachScenePresence(
+            c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)
                 {
                     // ignore chat from child agents
@@ -930,9 +924,9 @@ namespace Aurora.Modules
             }
         }
 
-        private Scene findScene(UUID agentID)
+        private IScene findScene(UUID agentID)
         {
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 IScenePresence SP = scene.GetScenePresence (agentID);
                 if (SP != null && !SP.IsChildAgent)
@@ -948,7 +942,7 @@ namespace Aurora.Modules
         /// <returns></returns>
         public IScenePresence findScenePresence (UUID avID)
         {
-            foreach (Scene s in m_scenes)
+            foreach (IScene s in m_scenes)
             {
                 IScenePresence SP = s.GetScenePresence (avID);
                 if (SP != null)

@@ -141,11 +141,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             client.OnInstantMessage -= OnInstantMessage;
         }
 
-        private Scene FindClientScene(UUID agentId)
+        private IScene FindClientScene(UUID agentId)
         {
             lock (m_Scenelist)
             {
-                foreach (Scene scene in m_Scenelist)
+                foreach (IScene scene in m_Scenelist)
                 {
                     IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null)
@@ -159,7 +159,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
         {
             //m_log.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
             
-            Scene scene = FindClientScene(client.AgentId);
+            IScene scene = FindClientScene(client.AgentId);
 
             if (scene == null) // Something seriously wrong here.
                 return;
@@ -358,7 +358,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
         {
             // Check if this is ours to handle
             //
-            Scene scene = FindClientScene(msg.toAgentID);
+            IScene scene = FindClientScene(msg.toAgentID);
 
             if (scene == null)
                 return;

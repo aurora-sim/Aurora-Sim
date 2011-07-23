@@ -139,8 +139,8 @@ namespace Aurora.Modules
             ISyncMessagePosterService syncMessagePoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessagePoster != null)
             {
-                List<Scene> FailedScenes = new List<Scene> ();
-                foreach (Scene scene in m_scenes)
+                List<IScene> FailedScenes = new List<IScene> ();
+                foreach (IScene scene in m_scenes)
                 {
                     OSDMap map = new OSDMap();
                     map["Method"] = "RegisterHandlers";

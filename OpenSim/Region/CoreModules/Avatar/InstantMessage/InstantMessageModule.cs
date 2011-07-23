@@ -223,7 +223,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 else
                     msg.fromAgentName = msg.fromAgentName + "(No account found for this user)";
 
-                foreach (Scene scene in m_scenes)
+                foreach (IScene scene in m_scenes)
                 {
                     IScenePresence presence = null;
                     if (scene.TryGetScenePresence (msg.toAgentID, out presence))

@@ -643,7 +643,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                 //Close them in the sim
                                 IEntityTransferModule transferModule = SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
                                 if (transferModule != null)
-                                    transferModule.IncomingCloseAgent ((Scene)SP.Scene, SP.UUID);
+                                    transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
                             }
                         }
                     }

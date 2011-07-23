@@ -58,7 +58,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
-        private Dictionary<UUID, Scene> m_scenes = new Dictionary<UUID, Scene>();
+        private Dictionary<UUID, IScene> m_scenes = new Dictionary<UUID, IScene>();
 
         public int MaxRegionSize
         {
@@ -106,14 +106,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
             SceneManager manager = registry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
-                foreach (Scene scene in manager.Scenes)
+                foreach (IScene scene in manager.Scenes)
                 {
                     m_scenes[scene.RegionInfo.RegionID] = scene;
                 }
             }
-            if (registry is Scene)
+            if (registry is IScene)
             {
-                Scene s = (Scene)registry;
+                IScene s = (IScene)registry;
                 m_scenes[s.RegionInfo.RegionID] = s;
             }
         }
@@ -145,7 +145,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             neighbors = new List<GridRegion> ();
             SessionID = UUID.Zero;
             // Generate and upload our map tile in PNG format to the SimianGrid AddMapTile service
-            Scene scene;
+            IScene scene;
             if (m_scenes.TryGetValue(regionInfo.RegionID, out scene))
                 UploadMapTile(scene);
             else

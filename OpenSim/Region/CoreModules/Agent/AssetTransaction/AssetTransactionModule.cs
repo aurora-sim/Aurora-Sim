@@ -302,7 +302,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 (AssetType)type == AssetType.Animation) &&
                 tempFile == false)
             {
-                Scene scene = (Scene)remoteClient.Scene;
+                IScene scene = remoteClient.Scene;
                 IMoneyModule mm = scene.RequestModuleInterface<IMoneyModule>();
 
                 if (mm != null)

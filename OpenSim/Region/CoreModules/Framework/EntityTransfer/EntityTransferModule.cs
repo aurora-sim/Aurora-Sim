@@ -303,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    AgentCircuitData oldCircuit = ((Scene)sp.Scene).AuthenticateHandler.AgentCircuitsByUUID[sp.UUID];
+                    AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.AgentCircuitsByUUID[sp.UUID];
                     agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
                     agentCircuit.firstname = oldCircuit.firstname;
                     agentCircuit.lastname = oldCircuit.lastname;
@@ -429,8 +429,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public void RequestTeleportLocation(IClientAPI remoteClient, ulong regionHandle, Vector3 position,
                                             Vector3 lookAt, uint teleportFlags)
         {
-            Scene scene = (Scene)remoteClient.Scene;
-            IScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence sp = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
                 Teleport(sp, regionHandle, position, lookAt, teleportFlags);
@@ -448,8 +447,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public void RequestTeleportLocation(IClientAPI remoteClient, GridRegion reg, Vector3 position,
                                             Vector3 lookAt, uint teleportFlags)
         {
-            Scene scene = (Scene)remoteClient.Scene;
-            IScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence sp = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
                 Teleport(sp, reg, position, lookAt, teleportFlags);
@@ -512,7 +510,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     Vector3 position = Vector3.Zero, lookAt = Vector3.Zero;
                     if (uas != null)
-                        regionInfo = uas.GetHomeRegion (((Scene)client.Scene).AuthenticateHandler.AgentCircuitsByUUID[client.AgentId], out position, out lookAt);
+                        regionInfo = uas.GetHomeRegion (client.Scene.AuthenticateHandler.AgentCircuitsByUUID[client.AgentId], out position, out lookAt);
                     if (regionInfo == null)
                     {
                         //can't find the Home region: Tell viewer and abort
@@ -866,7 +864,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns></returns>
         public virtual bool IncomingCreateObject(UUID regionID, ISceneObject sog)
         {
-            Scene scene = GetScene(regionID);
+            IScene scene = GetScene(regionID);
             if (scene == null)
                 return false;
             
@@ -918,7 +916,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="sceneObject"></param>
         /// <returns>True if the SceneObjectGroup was added, False if it was not</returns>
-        public bool AddSceneObject(Scene scene, SceneObjectGroup sceneObject)
+        public bool AddSceneObject(IScene scene, SceneObjectGroup sceneObject)
         {
             // If the user is banned, we won't let any of their objects
             // enter. Period.
@@ -975,9 +973,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="RegionID"></param>
         /// <returns></returns>
-        public Scene GetScene(UUID RegionID)
+        public IScene GetScene(UUID RegionID)
         {
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 if (scene.RegionInfo.RegionID == RegionID)
                     return scene;

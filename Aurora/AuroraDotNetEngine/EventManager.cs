@@ -159,7 +159,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             bool ret = true;
 
-            foreach (Scene scene in m_Scenes)
+            foreach (IScene scene in m_Scenes)
             {
                 if (scene.RegionInfo.RegionHandle == regionHandle)
                 {

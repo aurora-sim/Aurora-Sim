@@ -728,7 +728,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sendCourseLocationsMethod = SendCoarseLocationsDefault;
         }
 
-        public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
+        public ScenePresence(IClientAPI client, IScene world, RegionInfo reginfo)
             : this()
         {
             m_controllingClient = client;
@@ -1053,7 +1053,7 @@ namespace OpenSim.Region.Framework.Scenes
             string reason;
             Vector3 pos;
             //Get a good position and make sure that we exist in the grid
-            AgentCircuitData agent = ((Scene)m_scene).AuthenticateHandler.GetAgentCircuitData (UUID);
+            AgentCircuitData agent = m_scene.AuthenticateHandler.GetAgentCircuitData (UUID);
 
             if (!Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
             {
@@ -2444,7 +2444,7 @@ namespace OpenSim.Region.Framework.Scenes
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
                 if(cAgent.IsCrossing)
-                    ((Scene)m_scene).AuthenticateHandler.GetAgentCircuitData (UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
+                    m_scene.AuthenticateHandler.GetAgentCircuitData (UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (appearance != null)
                 {

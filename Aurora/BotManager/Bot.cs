@@ -80,7 +80,7 @@ namespace Aurora.BotManager
         private Quaternion m_bodyDirection = Quaternion.Identity;
 
         private UUID m_myID = UUID.Random();
-        private Scene m_scene;
+        private IScene m_scene;
         private IScenePresence m_scenePresence;
         private AgentCircuitData m_circuitData;
         /// <summary>
@@ -203,7 +203,7 @@ namespace Aurora.BotManager
         #region Constructor
 
         // creates new bot on the default location
-        public Bot(Scene scene, AgentCircuitData data, UUID creatorID)
+        public Bot(IScene scene, AgentCircuitData data, UUID creatorID)
         {
             RegisterInterfaces();
 

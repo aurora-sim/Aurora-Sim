@@ -239,14 +239,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_log.Error("[LLUDPSERVER]: AddScene() called on an LLUDPServer that already has a scene");
                 return;
             }
-
-            if (!(scene is Scene))
-            {
-                m_log.Error("[LLUDPSERVER]: AddScene() called with an unrecognized scene type " + scene.GetType());
-                return;
-            }
-
-            m_scene = (Scene)scene;
+            m_scene = scene;
         }
 
         public void BroadcastPacket(Packet packet, ThrottleOutPacketType category, bool sendToPausedAgents, bool allowSplitting, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)

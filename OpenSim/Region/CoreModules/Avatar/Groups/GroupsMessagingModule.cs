@@ -150,7 +150,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             if (m_debugEnabled) m_log.Debug("[GROUPS-MESSAGING]: Shutting down GroupsMessagingModule module.");
 
-            foreach (Scene scene in m_sceneList)
+            foreach (IScene scene in m_sceneList)
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
                 scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
@@ -520,7 +520,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             IClientAPI child = null;
 
             // Try root avatar first
-            foreach (Scene scene in m_sceneList)
+            foreach (IScene scene in m_sceneList)
             {
                 IScenePresence user;
                 if (scene.TryGetScenePresence (agentID, out user))

@@ -233,9 +233,6 @@ namespace OpenSim.Region.CoreModules.World.Region
 
         private void HandleRegionRestart(string[] args)
         {
-            if (!(MainConsole.Instance.ConsoleScene is Scene))
-                return;
-
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
 

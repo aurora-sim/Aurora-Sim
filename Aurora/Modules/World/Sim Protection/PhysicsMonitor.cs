@@ -161,7 +161,7 @@ namespace Aurora.Modules
                 Thread.Sleep(50);
             }
 
-            foreach (Scene scene in scenesToRun)
+            foreach (IScene scene in scenesToRun)
             {
                 PhysicsStats stats = null;
                 while (stats == null)
@@ -208,7 +208,7 @@ namespace Aurora.Modules
             Culture.SetCurrentCulture ();
             try
             {
-                List<Scene> scenesToRun = (List<Scene>)scenes;
+                List<IScene> scenesToRun = (List<IScene>)scenes;
                 System.Windows.Forms.Application.Run(new PhysicsProfilerForm(this, scenesToRun));
             }
             catch(Exception ex)
@@ -244,7 +244,7 @@ namespace Aurora.Modules
                 Thread.Sleep(50);
             }
 
-            foreach (Scene scene in scenesToRun)
+            foreach (IScene scene in scenesToRun)
             {
                 PhysicsStats stats = null;
                 while (stats == null)
@@ -255,7 +255,7 @@ namespace Aurora.Modules
             }
         }
 
-        protected virtual void DumpStatsToConsole(Scene scene, PhysicsStats stats)
+        protected virtual void DumpStatsToConsole(IScene scene, PhysicsStats stats)
         {
             m_log.Info("------  Physics Stats for region " + scene.RegionInfo.RegionName + "  ------");
             m_log.Info ("   All stats are in milliseconds spent per second.");

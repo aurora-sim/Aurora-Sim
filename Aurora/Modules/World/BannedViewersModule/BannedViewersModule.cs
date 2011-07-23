@@ -141,7 +141,7 @@ namespace Aurora.Modules
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
                                 IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
                                 if (transferModule != null)
-                                    transferModule.IncomingCloseAgent (((Scene)client.Scene), client.AgentId);
+                                    transferModule.IncomingCloseAgent (client.Scene, client.AgentId);
                                 break;
                             }
                             break;

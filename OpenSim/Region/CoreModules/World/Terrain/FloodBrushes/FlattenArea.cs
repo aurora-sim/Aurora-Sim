@@ -47,7 +47,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
             {
                 for (y = (int)south; y < (int)north; y++)
                 {
-                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                    if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
                     sum += map[x, y];
                     steps += 1;
@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
             {
                 for (y = (int)south; y < (int)north; y++)
                 {
-                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                    if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
                     map[x, y] = (map[x, y] * (1 - str)) + (avg * str);
                 }

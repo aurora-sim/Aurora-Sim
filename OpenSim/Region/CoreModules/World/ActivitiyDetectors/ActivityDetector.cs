@@ -97,7 +97,7 @@ namespace OpenSim.Region.CoreModules
             IAgentInfoService service = m_scenes[0].RequestModuleInterface<IAgentInfoService> ();
             if (service == null)
                 return;
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 foreach (IScenePresence sp in scene.GetScenePresences ())
                 {

@@ -133,7 +133,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
             // didn't check the client sent data against the object do any.   Since the base modules are the 
             // 'crowning glory' examples of good practice..
 
-            ISceneChildEntity part = ((Scene)remoteClient.Scene).GetSceneObjectPart (localID);
+            ISceneChildEntity part = remoteClient.Scene.GetSceneObjectPart (localID);
             if (part == null)
             {
                 remoteClient.SendAgentAlertMessage("Unable to buy now. The object was not found.", false);

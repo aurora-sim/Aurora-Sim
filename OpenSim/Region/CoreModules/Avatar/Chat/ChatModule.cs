@@ -154,8 +154,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
             IScenePresence avatar;
-            Scene scene = (Scene)c.Scene;
-            if ((avatar = scene.GetScenePresence(c.Sender.AgentId)) != null)
+            if ((avatar = c.Scene.GetScenePresence (c.Sender.AgentId)) != null)
                 c.Position = avatar.AbsolutePosition;
 
             return c;
@@ -166,8 +165,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             c = FixPositionOfChatMessage(c);
 
             // redistribute to interested subscribers
-            Scene scene = (Scene)c.Scene;
-            scene.EventManager.TriggerOnChatFromClient(sender, c);
+            c.Scene.EventManager.TriggerOnChatFromClient (sender, c);
 
             // early return if not on public or debug channel
             if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
@@ -205,13 +203,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             switch (sourceType) 
             {
             case ChatSourceType.Agent:
-                if (!(scene is Scene))
-                {
-                    m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                                     scene.RegionInfo.RegionName, c.Sender.AgentId);
-                    return;
-                }
-                IScenePresence avatar = (scene as Scene).GetScenePresence (c.Sender.AgentId);
+                IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
                 fromPos = avatar.AbsolutePosition;
                 fromName = avatar.Name;
                 fromID = c.Sender.AgentId;
@@ -229,7 +221,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             // m_log.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
-            foreach (Scene s in m_scenes)
+            foreach (IScene s in m_scenes)
             {
                 s.ForEachScenePresence(
                     delegate(IScenePresence presence)
@@ -264,7 +256,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
-                IScenePresence avatar = (c.Scene as Scene).GetScenePresence (c.Sender.AgentId);
+                IScenePresence avatar = c.Scene.GetScenePresence (c.Sender.AgentId);
                 fromID = c.Sender.AgentId;
                 fromName = avatar.Name;
                 sourceType = ChatSourceType.Agent;
@@ -276,7 +268,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
-            ((Scene)c.Scene).ForEachScenePresence(
+            c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)
                 {
                     // ignore chat from child agents

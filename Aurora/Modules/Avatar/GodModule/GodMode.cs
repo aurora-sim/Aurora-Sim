@@ -171,8 +171,8 @@ namespace Aurora.Modules
             if (client.Scene.Permissions.IsGod(client.AgentId))
             {
                 IScene scene = MainConsole.Instance.ConsoleScene; //Switch back later
-                MainConsole.Instance.RunCommand("change region " + ((Scene)client.Scene).RegionInfo.RegionName);
-                MainConsole.Instance.RunCommand("save oar " + m_oar_directory + ((Scene)client.Scene).RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".statesave.oar");
+                MainConsole.Instance.RunCommand("change region " + client.Scene.RegionInfo.RegionName);
+                MainConsole.Instance.RunCommand("save oar " + m_oar_directory + client.Scene.RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".statesave.oar");
                 if (scene == null) 
                     MainConsole.Instance.RunCommand ("change region root");
                 else
@@ -220,7 +220,7 @@ namespace Aurora.Modules
                     int Channel = new Random().Next(1000, 100000);
                     //Block the channel so NOONE can access it until the question is answered
                     comm.AddBlockedChannel(Channel);
-                    ChannelDirectory.Add(client.AgentId, new EstateChange() { Channel = Channel, EstateID = (uint)EstateID, OldEstateID = ((Scene)client.Scene).RegionInfo.EstateSettings.EstateID });
+                    ChannelDirectory.Add(client.AgentId, new EstateChange() { Channel = Channel, EstateID = (uint)EstateID, OldEstateID = client.Scene.RegionInfo.EstateSettings.EstateID });
                     //Set the ID temperarily, if it doesn't work, we will revert it later
                     client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
                     client.OnChatFromClient += OnChatFromClient;
@@ -228,7 +228,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(((Scene)client.Scene).RegionInfo.RegionID, (int)EstateID, Util.Md5Hash(Password));
+                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(client.Scene.RegionInfo.RegionID, (int)EstateID, Util.Md5Hash(Password));
                     if (!changed)
                         client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                     else
@@ -277,7 +277,7 @@ namespace Aurora.Modules
             //Tell the clients to update all references to the new settings
             foreach (IScenePresence sp in client.Scene.GetScenePresences ())
             {
-                HandleRegionInfoRequest(sp.ControllingClient, ((Scene)client.Scene));
+                HandleRegionInfoRequest(sp.ControllingClient, client.Scene);
             }
 
             //Update the grid server as well
@@ -311,29 +311,29 @@ namespace Aurora.Modules
                 {
                     ((IClientAPI)sender).OnChatFromClient -= OnChatFromClient;
                     ChannelDirectory.Remove(e.Sender.AgentId);
-                    IWorldComm comm = ((Scene)((IClientAPI)sender).Scene).RequestModuleInterface<IWorldComm>();
+                    IWorldComm comm = ((IClientAPI)sender).Scene.RequestModuleInterface<IWorldComm>();
                     //Unblock the channel now that we have the password
                     comm.RemoveBlockedChannel(Change.Channel);
 
                     string Password = Util.Md5Hash(e.Message);
                     //Try to switch estates
-                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(((Scene)((IClientAPI)sender).Scene).RegionInfo.RegionID, (int)Change.EstateID, Password);
+                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(((IClientAPI)sender).Scene.RegionInfo.RegionID, (int)Change.EstateID, Password);
                     if (!changed)
                     {
                         //Revert it, it didn't work
-                        ((Scene)((IClientAPI)sender).Scene).RegionInfo.EstateSettings.EstateID = Change.OldEstateID;
+                        ((IClientAPI)sender).Scene.RegionInfo.EstateSettings.EstateID = Change.OldEstateID;
                         ((IClientAPI)sender).SendAgentAlertMessage("Unable to connect to the given estate.", false);
                     }
                     else
                     {
-                        ((Scene)((IClientAPI)sender).Scene).RegionInfo.EstateSettings.EstateID = Change.EstateID;
-                        ((Scene)((IClientAPI)sender).Scene).RegionInfo.EstateSettings.Save();
+                        ((IClientAPI)sender).Scene.RegionInfo.EstateSettings.EstateID = Change.EstateID;
+                        ((IClientAPI)sender).Scene.RegionInfo.EstateSettings.Save();
                         ((IClientAPI)sender).SendAgentAlertMessage("Estate Updated.", false);
                     }
                     //Tell the clients to update all references to the new settings
                     foreach (IScenePresence sp in ((IClientAPI)sender).Scene.GetScenePresences ())
                     {
-                        HandleRegionInfoRequest(sp.ControllingClient, ((Scene)((IClientAPI)sender).Scene));
+                        HandleRegionInfoRequest(sp.ControllingClient, ((IClientAPI)sender).Scene);
                     }
                 }
             }
@@ -405,7 +405,7 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="remote_client"></param>
         /// <param name="m_scene"></param>
-        private void HandleRegionInfoRequest(IClientAPI remote_client, Scene m_scene)
+        private void HandleRegionInfoRequest(IClientAPI remote_client, IScene m_scene)
         {
             RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs();
             args.billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor;

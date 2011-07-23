@@ -172,7 +172,7 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient.Scene);
+            IScene scene = remoteClient.Scene;
             List<ISceneChildEntity> EntitiesToUpdate = new List<ISceneChildEntity>();
             SceneObjectPart prim = null;
             foreach (uint primLocalID in primLocalIDs)

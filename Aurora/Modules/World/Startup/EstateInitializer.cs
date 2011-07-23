@@ -289,7 +289,7 @@ namespace OpenSim.Region.CoreModules
                     m_log.Warn("Select a region before using this command.");
                     return;
                 }
-                Scene scene = (Scene)MainConsole.Instance.ConsoleScene;
+                IScene scene = MainConsole.Instance.ConsoleScene;
                 string removeFromEstate = MainConsole.Instance.CmdPrompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
                 if (removeFromEstate == "yes")
                 {

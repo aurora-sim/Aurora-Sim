@@ -209,7 +209,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (LUQueue.Count() == 0)
                 {
                     FiredStartupEvent = true;
-                    foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+                    foreach (IScene scene in m_ScriptEngine.Worlds)
                     {
                         scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
                                                                         m_ScriptEngine.ScriptErrorMessages);
@@ -224,7 +224,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                foreach (Scene scene in m_ScriptEngine.Worlds)
+                foreach (IScene scene in m_ScriptEngine.Worlds)
                 {
                     ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
@@ -262,7 +262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                foreach (Scene scene in m_ScriptEngine.Worlds)
+                foreach (IScene scene in m_ScriptEngine.Worlds)
                 {
                     ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));

@@ -279,13 +279,11 @@ namespace Aurora.Modules
 
         public IScenePresence findScenePresence (UUID avID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence SP = s.GetScenePresence (avID);
                 if (SP != null)
-                {
                     return SP;
-                }
             }
             return null;
         }

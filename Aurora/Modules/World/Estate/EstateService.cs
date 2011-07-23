@@ -108,14 +108,14 @@ namespace Aurora.Modules
                 return;
             }
 
-            IScenePresence SP = ((Scene)MainConsole.Instance.ConsoleScene).SceneGraph.GetScenePresence (cmdparams[2], cmdparams[3]);
+            IScenePresence SP = MainConsole.Instance.ConsoleScene.SceneGraph.GetScenePresence (cmdparams[2], cmdparams[3]);
             if (SP == null)
             {
                 m_log.Warn ("Could not find user");
                 return;
             }
             EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
-            AgentCircuitData circuitData = ((Scene)MainConsole.Instance.ConsoleScene).AuthenticateHandler.GetAgentCircuitData(SP.UUID);
+            AgentCircuitData circuitData = MainConsole.Instance.ConsoleScene.AuthenticateHandler.GetAgentCircuitData(SP.UUID);
 
             ES.AddBan (new EstateBan ()
             {
@@ -257,8 +257,8 @@ namespace Aurora.Modules
         {
             if (RegionConnector == null)
                 return;
-            IScenePresence Sp = ((Scene)client.Scene).GetScenePresence (client.AgentId);
-            if (!((Scene)client.Scene).Permissions.CanIssueEstateCommand(client.AgentId, false))
+            IScenePresence Sp = client.Scene.GetScenePresence (client.AgentId);
+            if (!client.Scene.Permissions.CanIssueEstateCommand(client.AgentId, false))
                 return;
 
             string parameter1 = Parameters[0];
@@ -356,7 +356,7 @@ namespace Aurora.Modules
             if (account == null)
             {
                 IUserAgentService uas = scene.RequestModuleInterface<IUserAgentService> ();
-                AgentCircuitData circuit = ((Scene)scene).AuthenticateHandler.AgentCircuitsByUUID[userID];
+                AgentCircuitData circuit = scene.AuthenticateHandler.AgentCircuitsByUUID[userID];
                 if (uas == null || !uas.VerifyAgent (circuit))
                 {
                     reason = "Failed authentication.";

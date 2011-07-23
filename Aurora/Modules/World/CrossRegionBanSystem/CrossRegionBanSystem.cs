@@ -187,7 +187,7 @@ namespace Aurora.Modules
                     foreach (object banUUID in valuevalue.Values)
                     {
                         UUID BanID = (UUID)banUUID;
-                        foreach (Scene scene in m_scenes)
+                        foreach (IScene scene in m_scenes)
                         {
                             bool found = false;
                             foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
@@ -210,7 +210,7 @@ namespace Aurora.Modules
                 }
             }
             //Update all the databases
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 scene.RegionInfo.EstateSettings.Save();
             }
@@ -220,7 +220,7 @@ namespace Aurora.Modules
         {
             Dictionary<string, object> Bans = new Dictionary<string, object>();
             int i = 0;
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
                 {

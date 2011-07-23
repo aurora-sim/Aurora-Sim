@@ -148,9 +148,9 @@ namespace Aurora.Modules
         {
         }
 
-        private Scene FindScene(UUID agentID)
+        private IScene FindScene(UUID agentID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
@@ -161,7 +161,7 @@ namespace Aurora.Modules
 
         private IClientAPI FindClient(UUID agentID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
@@ -197,7 +197,7 @@ namespace Aurora.Modules
                 // invitations
                 //
                 IM.offline = 1;
-                Scene s = FindScene(client.AgentId);
+                IScene s = FindScene(client.AgentId);
                 if (s != null)
                     s.EventManager.TriggerIncomingInstantMessage(IM);
             }

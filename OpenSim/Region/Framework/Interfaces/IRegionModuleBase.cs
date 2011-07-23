@@ -45,11 +45,11 @@ namespace OpenSim.Region.Framework.Interfaces
         void Initialise(IConfigSource source);
 
         /// <summary>
-        /// This is called whenever a <see cref="Scene"/> is added. For shared modules, this can happen several times.
+        /// This is called whenever a <see cref="IScene"/> is added. For shared modules, this can happen several times.
         /// For non-shared modules, this happens exactly once, after <see cref="Initialise"/> has been called.
         /// </summary>
         /// <param name="scene">
-        /// A <see cref="Scene"/>
+        /// A <see cref="IScene"/>
         /// </param>
         void AddRegion(IScene scene);
 
@@ -62,16 +62,16 @@ namespace OpenSim.Region.Framework.Interfaces
         /// another module's interface, or hook an event from another module.
         /// </summary>
         /// <param name="scene">
-        /// A <see cref="Scene"/>
+        /// A <see cref="IScene"/>
         /// </param>
         void RegionLoaded(IScene scene);
 
         /// <summary>
-        /// This is called whenever a <see cref="Scene"/> is removed. For shared modules, this can happen several times.
+        /// This is called whenever a <see cref="IScene"/> is removed. For shared modules, this can happen several times.
         /// For non-shared modules, this happens exactly once, if the scene this instance is associated with is removed.
         /// </summary>
         /// <param name="scene">
-        /// A <see cref="Scene"/>
+        /// A <see cref="IScene"/>
         /// </param>
         void RemoveRegion(IScene scene);
 

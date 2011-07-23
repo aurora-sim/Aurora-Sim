@@ -839,7 +839,7 @@ namespace Aurora.Modules
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
-                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
+                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, scene);
                     foreach (SceneObjectPart part in sceneObject.ChildrenList)
                     {
                         if (!ResolveUserUuid (part.CreatorID))

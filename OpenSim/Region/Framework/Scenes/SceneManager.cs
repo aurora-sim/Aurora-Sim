@@ -540,7 +540,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RemoveRegion (IScene scene, bool cleanup)
         {
-            IBackupModule backup = ((Scene)scene).RequestModuleInterface<IBackupModule>();
+            IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
                 backup.DeleteAllSceneObjects();
 

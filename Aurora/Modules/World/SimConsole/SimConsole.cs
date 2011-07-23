@@ -332,9 +332,9 @@ namespace Aurora.Modules.World.SimConsole
                 eq.Enqueue (item, AgentID, findScene(AgentID).RegionInfo.RegionHandle);
         }
 
-        private Scene findScene(UUID agentID)
+        private IScene findScene(UUID agentID)
         {
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 IScenePresence SP = scene.GetScenePresence (agentID);
                 if (SP != null && !SP.IsChildAgent)

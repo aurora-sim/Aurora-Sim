@@ -1415,7 +1415,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             IClientAPI child = null;
 
             // Try root avatar first
-            foreach (Scene scene in m_sceneList)
+            foreach (IScene scene in m_sceneList)
             {
                 IScenePresence user;
                 if (scene.TryGetScenePresence (agentID, out user))
@@ -1507,7 +1507,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             IScenePresence presence = null;
 
-            foreach (Scene scene in m_sceneList)
+            foreach (IScene scene in m_sceneList)
             {
                 presence = scene.GetScenePresence(AgentID);
                 if (presence != null)
@@ -1539,7 +1539,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             lock (m_sceneList)
             {
-                foreach (Scene scene in m_sceneList)
+                foreach (IScene scene in m_sceneList)
                 {
                     scene.ForEachClient(delegate(IClientAPI client) { SendAgentGroupDataUpdate(client, dataForClientID); });
                 }

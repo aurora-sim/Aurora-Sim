@@ -126,7 +126,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             //Check for local users first
             List<UUID> RemoveUsers = new List<UUID>();
-            foreach (Scene scene in m_Scenes)
+            foreach (IScene scene in m_Scenes)
             {
                 for(int i = 0; i < AgentsToSendTo.Count; i++)
                 {
@@ -153,7 +153,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             UUID toAgentID = im.toAgentID;
 
             //Look locally first
-            foreach (Scene scene in m_Scenes)
+            foreach (IScene scene in m_Scenes)
             {
                 IScenePresence user;
                 if (scene.TryGetScenePresence (toAgentID, out user))
@@ -373,7 +373,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     gim.dialog = (byte)InstantMessageDialog.RequestTeleport;
 
                 // Trigger the Instant message in the scene.
-                foreach (Scene scene in m_Scenes)
+                foreach (IScene scene in m_Scenes)
                 {
                     IScenePresence user;
                     if (scene.TryGetScenePresence (gim.toAgentID, out user))

@@ -405,7 +405,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (File.Exists(Dir))
             {
                 string defaultScript = File.ReadAllText(Dir);
-                foreach (Scene scene in m_Scenes)
+                foreach (IScene scene in m_Scenes)
                 {
                     ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
@@ -1331,7 +1331,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public ISceneChildEntity findPrim (UUID objectID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                 if (part != null)
@@ -1342,7 +1342,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public ISceneChildEntity findPrim(uint localID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)
@@ -1351,9 +1351,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
 
-        public Scene findPrimsScene(uint localID)
+        public IScene findPrimsScene(uint localID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)

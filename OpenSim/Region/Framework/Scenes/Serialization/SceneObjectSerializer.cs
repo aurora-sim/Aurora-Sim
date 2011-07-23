@@ -95,7 +95,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.LoadXml(xmlData);
                 parts = doc.GetElementsByTagName("RootPart");
 
-                Scene m_sceneForGroup = scene is Scene ? (Scene)scene : null;
+                IScene m_sceneForGroup = scene is IScene ? (IScene)scene : null;
                 SceneObjectGroup sceneObject;
                 if (parts.Count == 0)
                 {

@@ -44,7 +44,7 @@ namespace OpenSim.Services.Connectors.Simulation
     public class LocalSimulationServiceConnector : IService, ISimulationService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<Scene> m_sceneList = new List<Scene>();
+        private List<IScene> m_sceneList = new List<IScene>();
 
         #region IService Members
 
@@ -80,7 +80,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public IScene GetScene(ulong regionhandle)
         {
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionHandle == regionhandle)
                     return s;
@@ -98,9 +98,8 @@ namespace OpenSim.Services.Connectors.Simulation
         /// Can be called from other modules.
         /// </summary>
         /// <param name="scene"></param>
-        public void RemoveScene(IScene sscene)
+        public void RemoveScene(IScene scene)
         {
-            Scene scene = (Scene)sscene;
             lock (m_sceneList)
             {
                 if (m_sceneList.Contains(scene))
@@ -114,9 +113,8 @@ namespace OpenSim.Services.Connectors.Simulation
         /// Can be called from other modules.
         /// </summary>
         /// <param name="scene"></param>
-        public void Init(IScene sscene)
+        public void Init(IScene scene)
         {
-            Scene scene = (Scene)sscene;
             if (!m_sceneList.Contains(scene))
             {
                 lock (m_sceneList)
@@ -139,7 +137,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 return false;
             }
 
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionID == destination.RegionID)
                 {
@@ -166,7 +164,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 return false;
 
             bool retVal = false;
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                 if(transferModule != null)
@@ -186,7 +184,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 return false;
 
             bool retVal = false;
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 //m_log.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
@@ -207,7 +205,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionID == destination.RegionID)
                 {
@@ -226,7 +224,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionID == destination.RegionID)
                 {
@@ -249,7 +247,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
@@ -270,7 +268,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionHandle == destination.RegionHandle)
                 {
@@ -291,7 +289,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool IsLocalRegion(ulong regionhandle)
         {
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
                 if (s.RegionInfo.RegionHandle == regionhandle)
                     return true;
             return false;
@@ -299,7 +297,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool IsLocalRegion(UUID id)
         {
-            foreach (Scene s in m_sceneList)
+            foreach (IScene s in m_sceneList)
                 if (s.RegionInfo.RegionID == id)
                     return true;
             return false;

@@ -212,7 +212,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
         {
             lock (m_Scenes)
             {
-                foreach (Scene s in m_Scenes.Values)
+                foreach (IScene s in m_Scenes.Values)
                 {
                     ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                     if (part != null)
@@ -344,7 +344,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                     {
                         lock (m_Scenes)
                         {
-                            foreach (Scene s in m_Scenes.Values)
+                            foreach (IScene s in m_Scenes.Values)
                             {
                                 IScenePresence SP = s.GetScenePresence(part.OwnerID);
                                 if ((SP != null) && (!SP.IsChildAgent))

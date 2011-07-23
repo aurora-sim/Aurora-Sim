@@ -443,7 +443,7 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
-                    foreach (Scene scene in m_Scenes)
+                    foreach (IScene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
@@ -498,7 +498,7 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
-                    foreach (Scene scene in m_Scenes)
+                    foreach (IScene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
@@ -679,7 +679,7 @@ namespace Aurora.Modules
 
         public void ProcessAvatarPickerRequest(IClientAPI client, UUID avatarID, UUID RequestID, string query)
         {
-            Scene scene = (Scene)client.Scene;
+            IScene scene = client.Scene;
             List<UserAccount> accounts = scene.UserAccountService.GetUserAccounts(scene.RegionInfo.ScopeID, query);
 
             if (accounts == null)

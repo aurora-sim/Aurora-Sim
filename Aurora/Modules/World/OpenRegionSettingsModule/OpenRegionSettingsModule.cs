@@ -697,7 +697,7 @@ namespace Aurora.Modules
             if (SP == null)
                 return responsedata; //They don't exist
 
-            if (!((Scene)SP.Scene).Permissions.CanIssueEstateCommand(SP.UUID, false))
+            if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
                 return responsedata; // No permissions
 
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);

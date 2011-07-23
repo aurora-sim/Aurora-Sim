@@ -101,7 +101,7 @@ namespace Aurora.Modules
 
         private void SaveOAR(object sender, ElapsedEventArgs e)
         {
-            SaveNext((Scene)MainConsole.Instance.ConsoleScene, "AutomaticBackup");
+            SaveNext(MainConsole.Instance.ConsoleScene, "AutomaticBackup");
         }
 
         protected void SaveVersion(string module, string[] cmdparams)
@@ -117,12 +117,12 @@ namespace Aurora.Modules
                 Desc += param;
             }
 
-            SaveNext((Scene)MainConsole.Instance.ConsoleScene, Desc);
+            SaveNext(MainConsole.Instance.ConsoleScene, Desc);
         }
 
-        public void SaveNext(Scene nextScene, string Description)
+        public void SaveNext(IScene nextScene, string Description)
         {
-            Scene scene = (Scene)MainConsole.Instance.ConsoleScene; //Switch back later
+            IScene scene = MainConsole.Instance.ConsoleScene; //Switch back later
             MainConsole.Instance.RunCommand("change region " + nextScene.RegionInfo.RegionName);
             string tag = "";
             tag += "Region." + nextScene.RegionInfo.RegionName;

@@ -604,9 +604,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_ScriptEngine.MaintenanceThread.PokeThreads ();
         }
 
-        public Scene findPrimsScene(UUID objectID)
+        public IScene findPrimsScene(UUID objectID)
         {
-            foreach (Scene s in m_ScriptEngine.Worlds)
+            foreach (IScene s in m_ScriptEngine.Worlds)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                 if (part != null)
@@ -617,9 +617,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             return null;
         }
 
-        public Scene findPrimsScene(uint localID)
+        public IScene findPrimsScene(uint localID)
         {
-            foreach (Scene s in m_ScriptEngine.Worlds)
+            foreach (IScene s in m_ScriptEngine.Worlds)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)
