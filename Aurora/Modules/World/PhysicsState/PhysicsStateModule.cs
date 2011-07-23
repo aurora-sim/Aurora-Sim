@@ -139,6 +139,7 @@ namespace Aurora.Modules
                     m_lastRevertedTo = -100;
                     m_isReversing = false;
                     m_scene.StopPhysicsScene ();//Stop physics from moving too
+                    m_scene.RegionInfo.RegionSettings.DisablePhysics = true;
                 }
             }
         }
