@@ -432,6 +432,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat Methods
 
+        private bool m_lastPhysicsChange = false;
         private bool Update()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
@@ -510,7 +511,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                             if (monitor != null)
                                 monitor.AddPhysicsStats (RegionInfo.RegionID, PhysicsScene);
+                            if (m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
+                                StartPhysicsScene ();
                         }
+                        else if (m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
+                            StopPhysicsScene ();
+                        m_lastPhysicsChange = RegionInfo.RegionSettings.DisablePhysics;
                     }
 
                     //Now fix the sim stats
@@ -539,6 +545,39 @@ namespace OpenSim.Region.Framework.Scenes
                 sleepFrameMonitor.AddTime(maintc);
 
                 totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
+            }
+        }
+
+        /// <summary>
+        /// Reload the last saved physics state to the Physics Scene
+        /// </summary>
+        private void StartPhysicsScene ()
+        {
+            //Save how all the prims are moving so that we can resume it when we turn it back on
+            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
+            if (physicsState != null)
+                physicsState.ResetToLastSavedState ();
+        }
+
+        /// <summary>
+        /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
+        /// </summary>
+        private void StopPhysicsScene ()
+        {
+            //Save how all the prims are moving so that we can resume it when we turn it back on
+            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
+            if (physicsState != null)
+                physicsState.SavePhysicsState ();
+            //Then clear all the velocity and stuff on objects
+            foreach (PhysicsObject o in this.PhysicsScene.ActiveObjects)
+            {
+                o.ClearVelocity ();
+                o.RequestPhysicsterseUpdate ();
+            }
+            foreach (IScenePresence sp in this.GetScenePresences ())
+            {
+                sp.Velocity = Vector3.Zero;
+                sp.SendTerseUpdateToAllClients ();
             }
         }
 

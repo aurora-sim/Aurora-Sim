@@ -44,8 +44,6 @@ using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using OpenMetaverse;
 
-//using OpenSim.Region.Physics.OdePlugin.Meshing;
-
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     public sealed class AuroraODEPhysicsScene : PhysicsScene
@@ -166,6 +164,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
         private readonly object _activeprimsLock = new object ();
         private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
+        public override List<PhysicsObject> ActiveObjects
+        {
+            get { return new List<AuroraODEPrim> (_activeprims).ConvertAll<PhysicsObject>(delegate(AuroraODEPrim prim) { return prim; }); }
+        }
         private readonly HashSet<AuroraODECharacter> _taintedActors = new HashSet<AuroraODECharacter>();
         public struct AODEchangeitem
         {

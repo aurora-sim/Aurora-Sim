@@ -97,6 +97,8 @@ namespace OpenSim.Framework
 
         public abstract bool DisableCollisions { get; set; }
 
+        public virtual List<PhysicsObject> ActiveObjects { get { return null; } }
+
         public virtual bool UseUnderWaterPhysics
         {
             get { return false; }
@@ -213,7 +215,6 @@ namespace OpenSim.Framework
     public class NullPhysicsScene : PhysicsScene
     {
         private static int m_workIndicator;
-
 
         public override void Initialise (IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
         {

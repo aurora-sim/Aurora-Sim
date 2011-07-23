@@ -1006,7 +1006,10 @@ namespace OpenSim.Framework
         }
 
         public abstract Vector3 Acceleration { get; }
-        public abstract void AddAngularForce(Vector3 force, bool pushforce);
+        public abstract void AddAngularForce (Vector3 force, bool pushforce);
+        public virtual void ClearVelocity ()
+        {
+        }
     }
 
     public abstract class PhysicsActor

@@ -307,6 +307,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override void ClearVelocity ()
+        {
+            _velocity = Vector3.Zero;
+            _acceleration = Vector3.Zero;
+            m_rotationalVelocity = Vector3.Zero;
+            m_lastorientation = Orientation;
+            m_lastposition = Position;
+            m_lastVelocity = _velocity;
+            d.BodySetLinearVel (Body, 0, 0, 0);
+        }
+
         public void SetGeom (IntPtr geom)
         {
             prev_geom = prim_geom;

@@ -338,12 +338,13 @@ namespace Aurora.Modules
 
             public void Close()
             {
-                m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_SelectedUUID = null;
                 m_IsSelecting = false;
                 m_module = null;
                 m_EffectColor = null;
                 SendEffectPackets = 0;
+                if(m_presence != null)
+                    m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_presence = null;
             }
 
