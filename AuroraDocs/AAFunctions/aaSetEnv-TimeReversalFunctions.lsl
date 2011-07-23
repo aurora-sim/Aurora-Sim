@@ -1,3 +1,4 @@
+integer isReverting = true;
 default
 {
     state_entry()
@@ -8,16 +9,25 @@ default
     }
     touch_start(integer number)
     {
-        //Stop reversing time
-        llSetTimerEvent(0);
-        llSay(0, "Stopping the reversal...");
-        aaSetEnv(STOP_TIME_REVERSAL, []);
+        if(isReverting)
+        {
+            //Stop reversing time
+            llSetTimerEvent(0);
+            llSay(0, "Stopping the reversal...");
+            aaSetEnv(STOP_TIME_REVERSAL, []);
+        }
+        else
+        {
+            llResetScript();
+        }
+        isReverting = !isReverting;
     }
     timer()
     {
         //Start reversing the last 10s
         llSay(0, "Reversing the last 10 seconds...");
-		llSetTimerEvent(0);
+        isReverting = FALSE;
+        llSetTimerEvent(0);
         aaSetEnv(START_TIME_REVERSAL, []);
     }
 }
