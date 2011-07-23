@@ -373,7 +373,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_log.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
-            m_clientServer.Stop ();
             SimulationDataService.Shutdown ();
 
             // Kick all ROOT agents with the message, 'The simulator is going down'
@@ -383,10 +382,13 @@ namespace OpenSim.Region.Framework.Scenes
                     avatar.ControllingClient.Kick("The simulator is going down.");
             });
 
+            //Let things process and get sent for a bit
+            Thread.Sleep (1000);
+
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule> ();
             if (transferModule != null)
             {
-                foreach (IScenePresence avatar in GetScenePresences ())
+                foreach (IScenePresence avatar in new List<IScenePresence>(GetScenePresences ()))
                 {
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
@@ -401,7 +403,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Stop updating the scene objects and agents.
             shuttingdown = true;
 
-            m_sceneGraph.Close();
+            m_sceneGraph.Close ();
+            m_clientServer.Stop ();
         }
 
         #endregion

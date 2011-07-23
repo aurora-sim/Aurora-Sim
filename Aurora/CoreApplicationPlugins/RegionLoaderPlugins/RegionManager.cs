@@ -53,7 +53,6 @@ namespace Aurora.Modules.RegionLoader
         public event NewRegion OnNewRegion;
         private bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
-        private RegionInfo CurrentRegion = null;
         private ISimulationBase m_OpenSimBase;
         private IRegionInfoConnector m_connector = null;
         private bool m_changingRegion = false;
