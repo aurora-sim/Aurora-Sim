@@ -492,13 +492,17 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             RegionSelections.Items.Add ("None");//Add one for the default default
 
             if (!Directory.Exists (m_defaultRegionsLocation))
+            {
+                RegionSelections.SelectedIndex = 0;
                 return;
+            }
 
             string[] files = Directory.GetFiles (m_defaultRegionsLocation, "*.abackup");
             foreach (string file in files)
             {
                 RegionSelections.Items.Add (Path.GetFileNameWithoutExtension (file));//Remove the extension
             }
+            RegionSelections.SelectedIndex = 1;//Select the first one by default so that its pretty for the user
         }
 
         private void CopyOverDefaultRegion (string regionName)
