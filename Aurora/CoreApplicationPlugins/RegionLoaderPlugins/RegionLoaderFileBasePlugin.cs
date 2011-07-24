@@ -502,6 +502,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
+        public void DeleteAllRegionFiles ()
+        {
+            string regionConfigPath = Path.Combine (Util.configDir (), "Regions");
+            IConfig config = m_configSource.Configs["RegionStartup"];
+            if (config != null)
+                regionConfigPath = config.GetString ("RegionsDirectory", regionConfigPath).Trim ();
+            if (!Directory.Exists (regionConfigPath))
+                return;
+            Directory.Delete (regionConfigPath);
+        }
+
         public bool FailedToStartRegions(string reason)
         {
             //Can't deal with it

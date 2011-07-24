@@ -476,8 +476,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Warn("You must use this command on a region. Use 'change region' to change to the region you would like to change");
                 return;
             }
-            if (MainConsole.Instance.CmdPrompt ("Are you sure you want to reset the region?", "yes") != "yes")
-                return;
 
             IBackupModule backup = scene.RequestModuleInterface<IBackupModule> ();
             if(backup != null)
@@ -485,7 +483,11 @@ namespace OpenSim.Region.Framework.Scenes
             ITerrainModule module = scene.RequestModuleInterface<ITerrainModule> ();
             if (module != null)
                 module.ResetTerrain();//Then remove the terrain
-            
+            //Then reset the textures
+            scene.RegionInfo.RegionSettings.TerrainTexture1 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_1;
+            scene.RegionInfo.RegionSettings.TerrainTexture2 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_2;
+            scene.RegionInfo.RegionSettings.TerrainTexture3 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_3;
+            scene.RegionInfo.RegionSettings.TerrainTexture4 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_4;
             m_log.Warn ("Region " + scene.RegionInfo.RegionName + " was reset");
         }
 
@@ -882,7 +884,11 @@ namespace OpenSim.Region.Framework.Scenes
                 case "reset":
                     if (cmdparams.Length > 0)
                         if (cmdparams[0] == "region")
+                        {
+                            if (MainConsole.Instance.CmdPrompt ("Are you sure you want to reset the region?", "yes") != "yes")
+                                return;
                             ResetRegion (MainConsole.Instance.ConsoleScene);
+                        }
                     break;
                 case "command-script":
                     if (cmdparams.Length > 0)

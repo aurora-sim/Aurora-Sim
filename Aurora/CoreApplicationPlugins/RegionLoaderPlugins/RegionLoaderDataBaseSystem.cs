@@ -146,11 +146,28 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 if (regionsToConvert == null)
                     return;
 
+                bool changed = false;
                 //Now load all the regions into the database
                 IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
                 foreach (RegionInfo info in regionsToConvert)
                 {
-                    conn.UpdateRegionInfo(info);
+                    RegionInfo alreadyExists;
+                    if ((alreadyExists = conn.GetRegionInfo (info.RegionID)) == null)
+                    {
+                        changed = true;
+                        conn.UpdateRegionInfo (info);
+                    }
+                    else
+                    {
+                        //Update some atributes...
+                        alreadyExists.RegionName = info.RegionName;
+                        alreadyExists.RegionLocX = info.RegionLocX;
+                        alreadyExists.RegionLocY = info.RegionLocY;
+                        alreadyExists.RegionSizeX = info.RegionSizeX;
+                        alreadyExists.RegionSizeY = info.RegionSizeY;
+                        alreadyExists.ExternalHostName = info.ExternalHostName;
+                        conn.UpdateRegionInfo (alreadyExists);
+                    }
                 }
 
                 //Make sure all the regions got saved
@@ -160,10 +177,23 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if (conn.GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
-                //Something went really wrong here... so lets not destroy anything
-                if (foundAll && regionsToConvert.Length != 0)
+                //We found some new ones, they are all loaded
+                if (foundAll && regionsToConvert.Length != 0 && changed)
                 {
-                    MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                    try
+                    {
+                        MessageBox.Show ("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                        MessageBox.Show ("To change your region settings, type 'open region manager' on the console, and a GUI will pop up for you to use.");
+                        DialogResult t = Utilities.InputBox ("Remove .ini files", "Do you want to remove your old .ini files?");
+                        if (t == DialogResult.OK)
+                            system.DeleteAllRegionFiles ();
+                    }
+                    catch
+                    {
+                        //For people who only have consoles, no winforms
+                        MainConsole.Instance.Output ("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                        MainConsole.Instance.Output ("To change your region settings, well, you don't have Mono-Winforms installed. Get that, stick with just modifying the .ini files, or get something to modify the region database that isn't a GUI.");
+                    }
                 }
             }
             catch
