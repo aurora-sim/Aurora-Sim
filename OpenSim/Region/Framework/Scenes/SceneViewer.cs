@@ -469,6 +469,12 @@ namespace OpenSim.Region.Framework.Scenes
             NewPresencesInView.Clear();
         }
 
+        public void SendPresenceFullUpdate (IScenePresence presence)
+        {
+            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
+                m_presence.ControllingClient.SendAvatarDataImmediate (presence);
+        }
+
         protected void SendFullUpdateForPresence (IScenePresence presence)
         {
             Util.FireAndForget (delegate (object o)

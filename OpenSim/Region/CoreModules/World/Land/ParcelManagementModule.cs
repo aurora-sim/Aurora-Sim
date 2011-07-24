@@ -93,6 +93,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// </value>
         private int[,] m_landIDList;
         private bool UseDwell = true;
+        private bool m_usePrivateParcelAsBan = true;
         private List<UUID> m_hasSentParcelOverLay = new List<UUID>();
 
         /// <value>
@@ -305,6 +306,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryOnUpdate = config.GetBoolean("UpdateOnUpdate", m_UpdateDirectoryOnUpdate);
                 m_minutesBeforeTimer = config.GetInt("MinutesBeforeTimerUpdate", m_minutesBeforeTimer);
                 UseDwell = config.GetBoolean("AllowDwell", true);
+                m_usePrivateParcelAsBan = config.GetBoolean ("UsePrivateParcelAsBan", m_usePrivateParcelAsBan);
             }
         }
 

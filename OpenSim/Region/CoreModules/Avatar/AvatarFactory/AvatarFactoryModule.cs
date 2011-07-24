@@ -1007,7 +1007,7 @@ textures 1
             {
                 //m_log.WarnFormat("[SP] Send avatar data from {0} to {1}",m_uuid,avatar.ControllingClient.AgentId);
                 if (!sendAppearance)
-                    avatar.ControllingClient.SendAvatarDataImmediate (m_sp);
+                    avatar.SceneViewer.SendPresenceFullUpdate (m_sp);
                 else
                     avatar.SceneViewer.QueuePresenceForFullUpdate (m_sp);
             }
