@@ -7944,7 +7944,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         {
                             if (!invAccess.GetAgentInventoryItem(this, itemID, requestID))
                                 return false;
-
                         }
                         else
                             return false;
@@ -12423,6 +12422,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             req.RequestAssetID = requestID;
             req.TransferRequestID = transferRequest.TransferInfo.TransferID;
 
+            
             if (asset == null)
             {
                 SendFailedAsset(req, TransferPacketStatus.AssetUnknownSource);
