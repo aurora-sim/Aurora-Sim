@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") != "LocalConnectorBackHole")
+            if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") != "LocalConnectorBlackHole")
                 return;
             m_Gd = genericData;
             m_Enabled = true;
