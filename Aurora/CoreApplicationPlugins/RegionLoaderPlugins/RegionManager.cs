@@ -50,6 +50,7 @@ namespace Aurora.Modules.RegionLoader
         private static readonly ILog m_log
            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public delegate void NewRegion(RegionInfo info);
+        public delegate void NoOp();
         public event NewRegion OnNewRegion;
         private bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
@@ -59,6 +60,9 @@ namespace Aurora.Modules.RegionLoader
         private bool m_textHasChanged = false;
         private SceneManager m_sceneManager;
         private string m_defaultRegionsLocation = "DefaultRegions";
+
+        private System.Windows.Forms.Timer m_timer = new Timer ();
+        private List<NoOp> m_timerEvents = new List<NoOp> ();
 
         public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
         {
@@ -72,6 +76,19 @@ namespace Aurora.Modules.RegionLoader
             CStartupType.SelectedIndex = 1;
             RefreshCurrentRegions();
             GetDefaultRegions ();
+            m_timer.Interval = 100;
+            m_timer.Tick += m_timer_Tick;
+            m_timer.Start ();
+        }
+
+        void m_timer_Tick (object sender, EventArgs e)
+        {
+            lock (m_timerEvents)
+            {
+                foreach (NoOp o in m_timerEvents)
+                    o ();
+                m_timerEvents.Clear ();
+            }
         }
 
         private void RefreshCurrentRegions()
@@ -204,22 +221,54 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetOfflineStatus ()
         {
-            RegionStatus.Text = "Offline";
-            RegionStatus.BackColor = Color.Red;
-            putOnline.Enabled = true;
-            takeOffline.Enabled = false;
-            resetRegion.Enabled = false;
-            deleteRegion.Enabled = true;
+            m_timerEvents.Add (delegate ()
+            {
+                RegionStatus.Text = "Offline";
+                RegionStatus.BackColor = Color.Red;
+                putOnline.Enabled = true;
+                takeOffline.Enabled = false;
+                resetRegion.Enabled = false;
+                deleteRegion.Enabled = true;
+            });
         }
 
         private void SetOnlineStatus ()
         {
-            RegionStatus.Text = "Online";
-            RegionStatus.BackColor = Color.LightGreen;
-            putOnline.Enabled = false;
-            takeOffline.Enabled = true;
-            resetRegion.Enabled = true;
-            deleteRegion.Enabled = true;
+            m_timerEvents.Add (delegate ()
+            {
+                RegionStatus.Text = "Online";
+                RegionStatus.BackColor = Color.SpringGreen;
+                putOnline.Enabled = false;
+                takeOffline.Enabled = true;
+                resetRegion.Enabled = true;
+                deleteRegion.Enabled = true;
+            });
+        }
+
+        private void SetStoppingStatus ()
+        {
+            m_timerEvents.Add (delegate ()
+            {
+                RegionStatus.Text = "Stopping";
+                RegionStatus.BackColor = Color.LightPink;
+                putOnline.Enabled = false;
+                takeOffline.Enabled = false;
+                resetRegion.Enabled = false;
+                deleteRegion.Enabled = true;
+            });
+        }
+
+        private void SetStartingStatus ()
+        {
+            m_timerEvents.Add (delegate ()
+            {
+                RegionStatus.Text = "Starting";
+                RegionStatus.BackColor = Color.LightGreen;
+                putOnline.Enabled = false;
+                takeOffline.Enabled = false;
+                resetRegion.Enabled = false;
+                deleteRegion.Enabled = true;
+            });
         }
 
         private new void Update()
@@ -444,17 +493,25 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void putOnline_Click (object sender, EventArgs e)
         {
+            SetStartingStatus ();
             RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
-            m_sceneManager.StartNewRegion (region);
-            SetOnlineStatus ();
+            Util.FireAndForget (delegate (object o)
+            {
+                m_sceneManager.StartNewRegion (region);
+                SetOnlineStatus ();
+            });
         }
 
         private void takeOffline_Click (object sender, EventArgs e)
         {
             IScene scene;
-            m_sceneManager.TryGetScene(CurrentRegionID, out scene);
-            m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
-            SetOfflineStatus ();
+            SetStoppingStatus ();
+            Util.FireAndForget (delegate (object o)
+            {
+                m_sceneManager.TryGetScene (CurrentRegionID, out scene);
+                m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
+                SetOfflineStatus ();
+            });
         }
 
         private void resetRegion_Click (object sender, EventArgs e)
