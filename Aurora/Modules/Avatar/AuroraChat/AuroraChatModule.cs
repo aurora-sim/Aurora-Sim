@@ -406,12 +406,12 @@ namespace Aurora.Modules
 
             if (c.Channel == DEBUG_CHANNEL) c.Type = ChatTypeEnum.DebugChannel;
 
+            IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
             switch (sourceType)
             {
                 case ChatSourceType.Agent:
                     if (scene != null)
                     {
-                        IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
                         if (avatar != null && message == "")
                         {
                             fromPos = avatar.AbsolutePosition;
@@ -464,6 +464,10 @@ namespace Aurora.Modules
                         {
                             continue;
                         }
+                        if (sourceType == ChatSourceType.Agent &&
+                            (avatar.CurrentParcelUUID != presence.CurrentParcelUUID &&
+                            (avatar.CurrentParcel.LandData.Private || presence.CurrentParcel.LandData.Private)))
+                            continue; //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
                         TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
                     }
                 }
