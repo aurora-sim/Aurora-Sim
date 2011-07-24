@@ -60,7 +60,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTierLen = 1;
         private readonly System.Timers.Timer taskTimer = new System.Timers.Timer();
         private int NumberOfDaysForOldAssets = -30;
-        
+
+        // for debugging
+        private bool disableTimer = true;
+
         private int convertCount;
         private int convertCountDupe;
         private int convertCountParentFix;
@@ -261,24 +264,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
                 if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
 
-                // Ensure that the orgianl hashcode is there so we can tell if it chagned
-                if (asset.HashCode == "")
-                {
-                    List<string> re = m_Gd.Query("id", asset.ID, database, "hash_code");
-                    if (re.Count == 1) asset.HashCode = re[0];
-                }
-
                 // Get the new hashcode if this is not MataOnly Data
-                string newHash = !asset.MetaOnly ? WriteFile(asset.ID, asset.Data) : asset.HashCode;
+                if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
+                    asset.HashCode = WriteFile(asset.ID, asset.Data);
 
-                if ((asset.HashCode != "") && (asset.HashCode != newHash))
+                if ((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode))
                 {
                     // Assign the task to check to see if this hash file is being used anymore
                     m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
                 }
 
-                // Delete and save the new Hash
-                asset.HashCode = newHash;
+                // Delete and save the asset
                 Delete(asset.ID, false);
                 m_Gd.Insert(database,
                             new[]
@@ -395,8 +391,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     if (results.Count == 0) results = m_Gd.Query("id", id, "auroraassets_old", "hash_code");
                     if (results.Count == 1)
                     {
-                        m_Gd.Insert("auroraassets_tasks", new[] {"id", "task_type", "task_values"},
-                                    new object[] {UUID.Random(), "HASHCHECK", results[0]});
+                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
+                                    new object[] { UUID.Random(), "HASHCHECK", results[0] });
                     }
                 }
 
@@ -500,11 +496,24 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             Stream stream = null;
             BinaryFormatter bformatter = new BinaryFormatter();
+            byte[] results = new byte[] { };
             string filename = GetFileName(hashCode, false);
             try
             {
+                if (!File.Exists(filename))
+                {
+                    RestoreBackup(hashCode);
+                    if (!File.Exists(filename))
+                        return new byte[] { };
+                }
                 stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                return (Byte[])bformatter.Deserialize(stream);
+                results = (Byte[])bformatter.Deserialize(stream);
+                if (hashCode != Convert.ToBase64String(new SHA256Managed().ComputeHash(results)) + results.Length)
+                {
+                    // just want to see if this ever happens.. 
+                    m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash.");
+                }
+                return results;
             }
             catch
             {
@@ -537,17 +546,21 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private string GetFileName(string id, bool backup)
         {
-            // Would it be faster to just hash the darn thing?
-            id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
-
             string path = (backup) ? m_CacheDirectoryBackup : m_CacheDirectory;
-            for (int p = 1; p <= m_CacheDirectoryTiers; p++)
+            try
             {
-                string pathPart = id.Substring(0, m_CacheDirectoryTierLen);
-                path = Path.Combine(path, pathPart);
-                id = id.Substring(1);
+                id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
+                for (int p = 1; p <= m_CacheDirectoryTiers; p++)
+                {
+                    string pathPart = id.Substring(0, m_CacheDirectoryTierLen);
+                    path = Path.Combine(path, pathPart);
+                    id = id.Substring(1);
+                }
             }
-
+            catch (Exception ex)
+            {
+                m_Log.Error("[] Error while getting filename", ex);
+            }
             return Path.Combine(path, id + ".ass");
         }
 
@@ -679,7 +692,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             taskTimer.Stop();
             taskTimer.Interval = howLong;
-            taskTimer.Start();
+            if (!disableTimer)
+                taskTimer.Start();
         }
 
         /// <summary>
@@ -720,9 +734,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             if (File.Exists(GetFileName(task_value, true))) File.Delete(GetFileName(task_value, true));
                         }
                     }
-                    
+
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     m_Log.Error("[AssetDataPlugin] Background task error. Task " + task_type, ex);
                 }
@@ -765,7 +779,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                                     findOld[11]
                                                 });
                             if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count > 0)
-                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] {"id"}, new object[] {ass});
+                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] { "id" }, new object[] { ass });
                         }
                         ResetTimer(100);
                         return;

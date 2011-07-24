@@ -55,6 +55,7 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private byte[] myData = new byte[] { };
+        private string myHashCode = "";
         private string idString = "";
 
         #region Initiation
@@ -101,6 +102,7 @@ namespace OpenSim.Framework
             LastAccessed = DateTime.UtcNow;
             CreationDate = DateTime.UtcNow;
             HashCode = "";
+            LastHashCode = "";
             ParentID = UUID.Zero;
             MetaOnly = true;
             Data = new byte[] { };
@@ -194,6 +196,7 @@ namespace OpenSim.Framework
             {
                 myData = value;
                 MetaOnly = (myData.Length >= 1);
+                if (!MetaOnly) FillHash();
             }
         }
 
@@ -215,6 +218,22 @@ namespace OpenSim.Framework
                 else idString = value;
             }
         }
+
+        public string HashCode
+        {
+            get { return myHashCode; }
+            set
+            {
+                // ensure we keep the orginal hash from when it was loaded 
+                // so we can check if its being used anymore with any other assets
+                if ((LastHashCode == myHashCode) || (LastHashCode == ""))
+                    LastHashCode = myHashCode;
+                myHashCode = value;
+            }
+        }
+
+        public string LastHashCode { get; set; }
+
         public string Name { get; set; }
         public string Description { get; set; }
         public AssetType TypeAsset { get; set; }
@@ -226,7 +245,6 @@ namespace OpenSim.Framework
         public DateTime LastAccessed { get; set; }
         public DateTime CreationDate { get; set; }
         public UUID CreatorID { get; set; }
-        public string HashCode { get; set; }
         public UUID ParentID { get; set; }
         public bool MetaOnly { get; set; }
 
