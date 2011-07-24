@@ -104,13 +104,8 @@ namespace Aurora.Modules.RegionLoader
             this.button2 = new System.Windows.Forms.Button ();
             this.button1 = new System.Windows.Forms.Button ();
             this.groupBox2 = new System.Windows.Forms.GroupBox ();
-            this.radioButton2 = new System.Windows.Forms.RadioButton ();
-            this.label17 = new System.Windows.Forms.Label ();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox ();
-            this.radioButton1 = new System.Windows.Forms.RadioButton ();
-            this.label16 = new System.Windows.Forms.Label ();
             this.label15 = new System.Windows.Forms.Label ();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox ();
+            this.RegionSelectionsPicture = new System.Windows.Forms.PictureBox ();
             this.tabControl1 = new System.Windows.Forms.TabControl ();
             this.tabPage1 = new System.Windows.Forms.TabPage ();
             this.groupBox5 = new System.Windows.Forms.GroupBox ();
@@ -176,10 +171,11 @@ namespace Aurora.Modules.RegionLoader
             this.textBox11 = new System.Windows.Forms.TextBox ();
             this.label30 = new System.Windows.Forms.Label ();
             this.tabPage2 = new System.Windows.Forms.TabPage ();
+            this.RegionSelections = new System.Windows.Forms.ComboBox ();
+            this.label16 = new System.Windows.Forms.Label ();
             this.groupBox1.SuspendLayout ();
             this.groupBox2.SuspendLayout ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit ();
+            ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).BeginInit ();
             this.tabControl1.SuspendLayout ();
             this.tabPage1.SuspendLayout ();
             this.groupBox5.SuspendLayout ();
@@ -672,67 +668,16 @@ namespace Aurora.Modules.RegionLoader
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add (this.radioButton2);
-            this.groupBox2.Controls.Add (this.label17);
-            this.groupBox2.Controls.Add (this.pictureBox2);
-            this.groupBox2.Controls.Add (this.radioButton1);
             this.groupBox2.Controls.Add (this.label16);
+            this.groupBox2.Controls.Add (this.RegionSelections);
             this.groupBox2.Controls.Add (this.label15);
-            this.groupBox2.Controls.Add (this.pictureBox1);
+            this.groupBox2.Controls.Add (this.RegionSelectionsPicture);
             this.groupBox2.Location = new System.Drawing.Point (377, 8);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size (265, 284);
             this.groupBox2.TabIndex = 28;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Region Settings";
-            // 
-            // radioButton2
-            // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point (128, 132);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size (68, 17);
-            this.radioButton2.TabIndex = 6;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "Default 2";
-            this.radioButton2.UseVisualStyleBackColor = true;
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point (134, 65);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size (79, 13);
-            this.label17.TabIndex = 5;
-            this.label17.Text = "Coming Soon...";
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Location = new System.Drawing.Point (122, 45);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size (110, 81);
-            this.pictureBox2.TabIndex = 4;
-            this.pictureBox2.TabStop = false;
-            // 
-            // radioButton1
-            // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Location = new System.Drawing.Point (12, 132);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size (59, 17);
-            this.radioButton1.TabIndex = 3;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "Default";
-            this.radioButton1.UseVisualStyleBackColor = true;
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point (18, 65);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size (79, 13);
-            this.label16.TabIndex = 2;
-            this.label16.Text = "Coming Soon...";
             // 
             // label15
             // 
@@ -743,13 +688,13 @@ namespace Aurora.Modules.RegionLoader
             this.label15.TabIndex = 1;
             this.label15.Text = "Default Region Look";
             // 
-            // pictureBox1
+            // RegionSelectionsPicture
             // 
-            this.pictureBox1.Location = new System.Drawing.Point (6, 45);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size (110, 81);
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
+            this.RegionSelectionsPicture.Location = new System.Drawing.Point (6, 88);
+            this.RegionSelectionsPicture.Name = "RegionSelectionsPicture";
+            this.RegionSelectionsPicture.Size = new System.Drawing.Size (253, 190);
+            this.RegionSelectionsPicture.TabIndex = 0;
+            this.RegionSelectionsPicture.TabStop = false;
             // 
             // tabControl1
             // 
@@ -1444,6 +1389,24 @@ namespace Aurora.Modules.RegionLoader
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // RegionSelections
+            // 
+            this.RegionSelections.FormattingEnabled = true;
+            this.RegionSelections.Location = new System.Drawing.Point (138, 58);
+            this.RegionSelections.Name = "RegionSelections";
+            this.RegionSelections.Size = new System.Drawing.Size (121, 21);
+            this.RegionSelections.TabIndex = 2;
+            this.RegionSelections.SelectedIndexChanged += new System.EventHandler (this.RegionSelections_SelectedIndexChanged);
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point (6, 61);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size (130, 13);
+            this.label16.TabIndex = 3;
+            this.label16.Text = "Default Region Selections";
+            // 
             // RegionManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF (6F, 13F);
@@ -1458,8 +1421,7 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox1.PerformLayout ();
             this.groupBox2.ResumeLayout (false);
             this.groupBox2.PerformLayout ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit ();
+            ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).EndInit ();
             this.tabControl1.ResumeLayout (false);
             this.tabPage1.ResumeLayout (false);
             this.tabPage1.PerformLayout ();
@@ -1502,13 +1464,8 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.RadioButton radioButton2;
-        private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.PictureBox pictureBox2;
-        private System.Windows.Forms.RadioButton radioButton1;
-        private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.PictureBox RegionSelectionsPicture;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage1;
@@ -1598,5 +1555,7 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Button putOnline;
         private System.Windows.Forms.Button takeOffline;
         private System.Windows.Forms.Button resetRegion;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.ComboBox RegionSelections;
     }
 }

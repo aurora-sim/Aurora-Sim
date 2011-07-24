@@ -58,6 +58,7 @@ namespace Aurora.Modules.RegionLoader
         private bool m_changingRegion = false;
         private bool m_textHasChanged = false;
         private SceneManager m_sceneManager;
+        private string m_defaultRegionsLocation = "DefaultRegions";
 
         public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
         {
@@ -68,7 +69,9 @@ namespace Aurora.Modules.RegionLoader
             InitializeComponent();
             if (openCreatePageFirst)
                 tabControl1.SelectedTab = tabPage2;
+            CStartupType.SelectedIndex = 1;
             RefreshCurrentRegions();
+            GetDefaultRegions ();
         }
 
         private void RefreshCurrentRegions()
@@ -139,6 +142,7 @@ namespace Aurora.Modules.RegionLoader
             region.Startup = ConvertIntToStartupType(CStartupType.SelectedIndex);
 
             m_connector.UpdateRegionInfo(region);
+            CopyOverDefaultRegion (region.RegionName);
             if (KillAfterRegionCreation)
             {
                 System.Windows.Forms.Application.Exit();
@@ -476,5 +480,67 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 }
             }
         }
+
+        #region Default Region pieces
+
+        private void GetDefaultRegions ()
+        {
+            IConfig config = m_OpenSimBase.ConfigSource.Configs["RegionManager"];
+            if (config != null)
+                m_defaultRegionsLocation = config.GetString ("DefaultRegionsLocation", m_defaultRegionsLocation);
+
+            RegionSelections.Items.Add ("None");//Add one for the default default
+
+            if (!Directory.Exists (m_defaultRegionsLocation))
+                return;
+
+            string[] files = Directory.GetFiles (m_defaultRegionsLocation, "*.abackup");
+            foreach (string file in files)
+            {
+                RegionSelections.Items.Add (Path.GetFileNameWithoutExtension (file));//Remove the extension
+            }
+        }
+
+        private void CopyOverDefaultRegion (string regionName)
+        {
+            string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
+            name = Path.Combine (m_defaultRegionsLocation, name + ".backup");//Full name
+            if (!File.Exists (name))
+                return;//None selected
+
+            string loadAppenedFileName = "";
+            string newFilePath = "";
+            IConfig simData = m_OpenSimBase.ConfigSource.Configs["FileBasedSimulationData"];
+            if (simData != null)
+            {
+                loadAppenedFileName = simData.GetString ("ApendedLoadFileName", loadAppenedFileName);
+                newFilePath = simData.GetString ("LoadBackupDirectory", newFilePath);
+            }
+            string newFileName = Path.Combine(newFilePath, name + loadAppenedFileName + ".abackup");
+            File.Copy (name, newFileName);
+        }
+
+        private void RegionSelections_SelectedIndexChanged (object sender, EventArgs e)
+        {
+            string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
+            Image b = null;
+            if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".png")))
+                b = Bitmap.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".png"));
+            else if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".jpg")))
+                b = Bitmap.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpg"));
+            else if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".jpeg")))
+                b = Bitmap.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpeg"));
+            if (b == null)
+            {
+                RegionSelectionsPicture.Image = b;
+                return;
+            }
+            Bitmap result = new Bitmap(RegionSelectionsPicture.Width, RegionSelectionsPicture.Height);
+            using (Graphics g = Graphics.FromImage (result))
+                g.DrawImage(b, 0, 0, RegionSelectionsPicture.Width, RegionSelectionsPicture.Height);
+            RegionSelectionsPicture.Image = result;
+        }
+
+        #endregion
     }
 }
