@@ -62,7 +62,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private int NumberOfDaysForOldAssets = -30;
 
         // for debugging
-        private bool disableTimer = true;
+        private const bool disableTimer = false;
 
         private int convertCount;
         private int convertCountDupe;
@@ -264,9 +264,28 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
                 if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
 
+
+
                 // Get the new hashcode if this is not MataOnly Data
                 if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
                     asset.HashCode = WriteFile(asset.ID, asset.Data);
+
+                if (asset.ParentID == UUID.Zero)
+                {
+                    // most likely this has never been saved before or is some new asset
+                    // otherwise the parent id would hold a value and would have had this check done before
+                    List<string> check1 = m_Gd.Query(
+                        "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
+                        "'", "auroraassets_temp", "id");
+                    if (((check1 != null) && (check1.Count == 0)) || (check1 == null))
+                    {
+                        m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
+                                    new object[] { asset.ID, asset.HashCode, asset.CreatorID });
+                        asset.ParentID = asset.ID;
+                    }
+                    else
+                        asset.ParentID = UUID.Parse(check1[0]);
+                }
 
                 if ((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode))
                 {
@@ -607,17 +626,48 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             Description = dr["description"].ToString(),
                             CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
                             LastAccessed = DateTime.Now,
-                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1)
+                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
+                            MetaOnly = false
                         };
 
+                        // go through this asset and change all the guids to the parent IDs
+                        if (!asset.IsBinaryAsset)
+                        {
+                            const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
+                            string stringData = Utils.BytesToString(asset.Data);
+                            MatchCollection mc = Regex.Matches(stringData, sPattern);
+                            if (mc.Count >= 1)
+                            {
+                                foreach (Match match in mc)
+                                {
+                                    try
+                                    {
+                                        AssetBase mightBeAsset = GetAsset(UUID.Parse(match.Value), true, false);
+                                        if ((mightBeAsset != null) && (mightBeAsset.ParentID != UUID.Zero) && (mightBeAsset.ParentID != mightBeAsset.ID))
+                                        {
+                                            stringData = stringData.Replace(match.Value, mightBeAsset.ParentID.ToString());
+                                            asset.Data = Utils.StringToBytes(stringData);
+                                            // so it doesn't try to find the old file
+                                            asset.LastHashCode = asset.HashCode;
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        m_Log.Error("Errored", e);
+                                    }
+                                }
+                            }
+                        }
+
+
+
+                        // set the flags
                         if (dr["local"].ToString().Equals("1") || dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                             asset.Flags |= AssetFlags.Local;
                         if (bool.Parse(dr["temporary"].ToString())) asset.Flags |= AssetFlags.Temperary;
 
                         if (File.Exists(GetFileName(Convert.ToBase64String(new SHA256Managed().ComputeHash(asset.Data)) + asset.Data.Length, false)))
                             convertCountDupe++;
-
-                        asset.HashCode = WriteFile(asset.ID, asset.Data);
 
                         List<string> check1 = m_Gd.Query(
                             "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
@@ -636,36 +686,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 new[] { "assetID" }, new object[] { asset.ID });
                         }
                         else asset.ParentID = asset.ID;
-
-
-
-                        if (!asset.IsBinaryAsset)
-                        {
-                            const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
-                            string stringData = Utils.BytesToString(asset.Data);
-                            MatchCollection mc = Regex.Matches(stringData, sPattern);
-                            if (mc.Count >= 1)
-                            {
-                                foreach (Match match in mc)
-                                {
-                                    try
-                                    {
-                                        AssetBase mightBeAsset = GetAsset(UUID.Parse(match.Value), true, false);
-                                        if ((mightBeAsset != null) && (mightBeAsset.ParentID != UUID.Zero) && (mightBeAsset.ParentID != mightBeAsset.ID))
-                                        {
-                                            stringData = stringData.Replace(match.Value, mightBeAsset.ParentID.ToString());
-                                            asset.Data = Utils.StringToBytes(stringData);
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        m_Log.Error("Errored", e);
-                                    }
-                                }
-                            }
-
-                        }
-
 
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;
