@@ -458,7 +458,7 @@ namespace Aurora.Modules
             }
         }
 
-        private void AvatarEnteringNewParcel (IScenePresence SP, int localLandID, UUID regionID)
+        private void AvatarEnteringNewParcel (IScenePresence SP, ILandObject oldParcel)
         {
             //Send on new parcel
             IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();

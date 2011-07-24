@@ -110,6 +110,12 @@ namespace OpenSim.Framework
         /// Closes the SceneViewer
         /// </summary>
         void Close ();
+
+        /// <summary>
+        /// Removes an avatar from the 'in-view' list
+        /// </summary>
+        /// <param name="sp"></param>
+        void RemoveAvatarFromView (IScenePresence sp);
     }
 
     public class AnimationGroup

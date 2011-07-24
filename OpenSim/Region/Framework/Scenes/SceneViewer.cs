@@ -337,6 +337,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void RemoveAvatarFromView (IScenePresence sp)
+        {
+            lastPresencesInView.Remove (sp);
+            lastPresencesDInView.Remove (sp.UUID);
+        }
+
         #endregion
 
         #region Object Culling by draw distance

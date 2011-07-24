@@ -726,11 +726,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             //If a new land object is added or updated, we need to redo the check for the avatars invulnerability
             m_scene.ForEachScenePresence (delegate (IScenePresence sp)
             {
-                AvatarEnteringParcel (sp, 0, sp.Scene.RegionInfo.RegionID);
+                AvatarEnteringParcel (sp, null);
             });
         }
 
-        private void AvatarEnteringParcel (IScenePresence avatar, int localLandID, UUID regionID)
+        private void AvatarEnteringParcel (IScenePresence avatar, ILandObject oldParcel)
         {
             ILandObject obj = null;
             IParcelManagementModule parcelManagement = avatar.Scene.RequestModuleInterface<IParcelManagementModule> ();

@@ -134,12 +134,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (entity is IScenePresence)
             {
-                if (client.CurrentParcel != null && 
-                    client.CurrentParcel.LandData.Private)
+                IScenePresence pEntity = (IScenePresence)entity;
+                if ((client.CurrentParcel != null && 
+                    client.CurrentParcel.LandData.Private) ||
+                    (pEntity.CurrentParcel != null &&
+                    pEntity.CurrentParcel.LandData.Private))
                 {
                     //We need to check whether this presence is sitting on anything, so that we can check from the object's
                     // position, rather than the offset position of the object that the avatar is sitting on
-                    IScenePresence pEntity = (IScenePresence)entity;
                     if (pEntity.CurrentParcelUUID != client.CurrentParcelUUID)
                         return false;//Can't see avatar's outside the parcel
                 }

@@ -1224,7 +1224,7 @@ namespace OpenSim.Framework
         public delegate void LandObjectRemoved (UUID RegionID, UUID globalID);
         public event LandObjectRemoved OnLandObjectRemoved;
 
-        public delegate void AvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID);
+        public delegate void AvatarEnteringNewParcel (IScenePresence avatar, ILandObject oldParcel);
         public event AvatarEnteringNewParcel OnAvatarEnteringNewParcel;
 
         public delegate void SignificantClientMovement (IScenePresence sp);
@@ -1963,7 +1963,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerAvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID)
+        public void TriggerAvatarEnteringNewParcel (IScenePresence avatar, ILandObject oldParcel)
         {
             AvatarEnteringNewParcel handlerAvatarEnteringNewParcel = OnAvatarEnteringNewParcel;
             if (handlerAvatarEnteringNewParcel != null)
@@ -1972,7 +1972,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (avatar, localLandID, regionID);
+                        d (avatar, oldParcel);
                     }
                     catch (Exception e)
                     {
