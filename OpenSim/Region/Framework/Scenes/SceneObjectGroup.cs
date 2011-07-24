@@ -2223,7 +2223,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_rootPart.PhysActor.IsPhysical)
                     {
-                        if (!m_rootPart.BlockGrab)
+                        if (!m_rootPart.BlockGrab && !m_rootPart.BlockGrabObject)
                         {
                             Vector3 grabforce = pos - AbsolutePosition;
                             grabforce = grabforce * m_rootPart.PhysActor.Mass;

@@ -619,7 +619,7 @@ namespace OpenSim.Framework
 
         void SetReturnAtEdge (bool p);
 
-        void SetBlockGrab (bool p);
+        void SetBlockGrab (bool block, bool wholeObject);
 
         void SetVehicleFloatParam (int param, float p);
 
@@ -654,7 +654,7 @@ namespace OpenSim.Framework
         List<UUID> SitTargetAvatar { get; }
         Dictionary<int, string> CollisionFilter { get; }
 
-        bool GetBlockGrab ();
+        bool GetBlockGrab (bool wholeObjectBlock);
 
         bool RemFlag (PrimFlags primFlags);
 

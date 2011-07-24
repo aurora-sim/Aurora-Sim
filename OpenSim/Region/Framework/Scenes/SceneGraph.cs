@@ -654,7 +654,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;
-                if (obj.RootPart.BlockGrab)
+                if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
                     return;
                 // Currently only grab/touch for the single prim
                 // the client handles rez correctly
@@ -699,7 +699,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;
-                if (obj.RootPart.BlockGrab)
+                if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
                     return;
 
                 // If the touched prim handles touches, deliver it

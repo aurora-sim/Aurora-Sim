@@ -1453,9 +1453,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if ((status & ScriptBaseClass.STATUS_BLOCK_GRAB) == ScriptBaseClass.STATUS_BLOCK_GRAB)
             {
                 if (value != 0)
-                    m_host.SetBlockGrab(true);
+                    m_host.SetBlockGrab (true, false);
                 else
-                    m_host.SetBlockGrab(false);
+                    m_host.SetBlockGrab (false, false);
+            }
+
+            if ((status & ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT) == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
+            {
+                if (value != 0)
+                    m_host.SetBlockGrab (true, true);
+                else
+                    m_host.SetBlockGrab (false, true);
             }
 
             if ((status & ScriptBaseClass.STATUS_DIE_AT_EDGE) == ScriptBaseClass.STATUS_DIE_AT_EDGE)
@@ -1496,86 +1504,88 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (status == ScriptBaseClass.STATUS_PHYSICS)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics)
-                {
-                    return 1;
-                }
-                return 0;
+                    return new LSL_Integer (1);
+                return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_PHANTOM)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) == (uint)PrimFlags.Phantom)
-                {
-                    return 1;
-                }
-                return 0;
+                    return new LSL_Integer (1);
+                return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_CAST_SHADOWS)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.CastShadows) == (uint)PrimFlags.CastShadows)
-                {
-                    return 1;
-                }
-                return 0;
+                    return new LSL_Integer (1);
+                return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB)
             {
-                if (m_host.GetBlockGrab())
-                    return 1;
+                if (m_host.GetBlockGrab (false))
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
+            }
+
+            else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
+            {
+                if (m_host.GetBlockGrab (true))
+                    return new LSL_Integer (1);
+                else
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_DIE_AT_EDGE)
             {
                 if (m_host.GetDieAtEdge())
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_RETURN_AT_EDGE)
             {
                 if (m_host.GetReturnAtEdge())
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_ROTATE_X)
             {
                 if (m_host.GetAxisRotation(2) == 2)
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_ROTATE_Y)
             {
                 if (m_host.GetAxisRotation(4) == 4)
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_ROTATE_Z)
             {
                 if (m_host.GetAxisRotation(8) == 8)
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_SANDBOX)
             {
                 if (m_host.GetStatusSandbox())
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
-            return 0;
+            return new LSL_Integer (0);
         }
 
         public void llSetScale(LSL_Vector scale)
