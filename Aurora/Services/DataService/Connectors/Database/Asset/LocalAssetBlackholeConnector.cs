@@ -1,4 +1,31 @@
-﻿using System;
+﻿/*
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * See CONTRIBUTORS.TXT for a full list of copyright holders.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Aurora-Sim Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -6,6 +33,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Aurora.Framework;
 using log4net;
@@ -19,6 +47,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 {
     public class LocalAssetBlackholeConnector : IAssetDataPlugin
     {
+        #region Variables
+
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData m_Gd;
         private bool m_Enabled;
@@ -29,22 +59,26 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTiers = 3;
         private const int m_CacheDirectoryTierLen = 1;
         private readonly System.Timers.Timer taskTimer = new System.Timers.Timer();
-
-        private AuroraThreadPool m_CmdThreadpool;
-
+        private int NumberOfDaysForOldAssets = -30;
+        
         private int convertCount;
         private int convertCountDupe;
         private int convertCountParentFix;
-        private int migrationTaskCount;
-        private int migrationTaskCountOn;
         private int displayCount;
-        Stopwatch sw = new Stopwatch();
+        readonly Stopwatch sw = new Stopwatch();
+
+        #endregion
 
         #region Implementation of IAuroraDataPlugin
 
         public string Name
         {
             get { return "IAssetDataPlugin"; }
+        }
+
+        public void Initialise(string connect)
+        {
+
         }
 
         public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
@@ -59,7 +93,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             m_CacheDirectory = source.Configs["BlackHole"].GetString("CacheDirector", m_CacheDirectory);
             m_CacheDirectoryBackup = source.Configs["BlackHole"].GetString("BackupCacheDirector", m_CacheDirectoryBackup);
-
+            NumberOfDaysForOldAssets = source.Configs["BlackHole"].GetInt("AssetsAreOldAfterHowManyDays", 30) * -1;
             m_Enabled = true;
 
             if (source.Configs[Name] != null)
@@ -77,24 +111,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 taskTimer.Interval = 60000;
                 taskTimer.Elapsed += t_Elapsed;
                 taskTimer.Start();
-
-                if (needsConversion)
-                {
-                    AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo
-                    {
-                        priority = ThreadPriority.Normal,
-                        Threads = 40,
-                        MaxSleepTime = 100,
-                        SleepIncrementTime = 1,
-                        Name = "Asset conversion thread"
-                    };
-                    m_CmdThreadpool = new AuroraThreadPool(info);
-                }
-
             }
         }
-
-
 
         #endregion
 
@@ -102,22 +120,32 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region GetAsset
 
+        /// <summary>
+        /// Get a asset
+        /// </summary>
+        /// <param name="uuid">UUID of the asset requesting</param>
+        /// <returns>AssetBase</returns>
         public AssetBase GetAsset(UUID uuid)
         {
-            return GetAsset(uuid, false);
+            return GetAsset(uuid, false, true);
         }
 
+        /// <summary>
+        /// Get a asset without the actual data. You can always use MetaOnly Property to deterine if its there
+        /// </summary>
+        /// <param name="uuid">UUID of the asset requesting</param>
+        /// <returns>AssetBase without the actual asset data</returns>
         public AssetBase GetMeta(UUID uuid)
         {
-            return GetAsset(uuid, true);
+            return GetAsset(uuid, true, true);
         }
 
-        public AssetBase GetAsset(UUID uuid, bool metaOnly)
+        private AssetBase GetAsset(UUID uuid, bool metaOnly, bool displayMessages)
         {
-            ResetTimer(1);
+            ResetTimer(60000);
             string databaseTable = "auroraassets_" + uuid.ToString().Substring(0, 1);
             IDataReader dr = null;
-            AssetBase asset;
+            AssetBase asset = null;
             try
             {
                 dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
@@ -137,7 +165,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     {
                         asset = Convert2BH(uuid);
                         if (asset == null)
-                            m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
+                        {
+                            if (displayMessages)
+                                m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " +
+                                       uuid);
+                        }
                         else
                         {
                             if (metaOnly) asset.Data = new byte[] { };
@@ -145,7 +177,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         }
                     }
                     else
-                        m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
+                    {
+                        if (displayMessages)
+                            m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
+                    }
                 }
                 else if (!metaOnly)
                 {
@@ -157,8 +192,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Error ", e);
-                throw;
+                if (displayMessages)
+                    m_Log.Error("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Error ", e);
             }
             finally
             {
@@ -210,29 +245,41 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         #endregion
 
         #region Store Asset
+
+        /// <summary>
+        /// Stores the Asset in the database
+        /// </summary>
+        /// <param name="asset">Asset you wish to store</param>
+        /// <returns></returns>
         public bool StoreAsset(AssetBase asset)
         {
+            ResetTimer(60000);
             try
             {
+                // Ensure some data is correct
                 string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
                 if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
                 if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
-                
-                if (asset.HashCode != "")
+
+                // Ensure that the orgianl hashcode is there so we can tell if it chagned
+                if (asset.HashCode == "")
                 {
                     List<string> re = m_Gd.Query("id", asset.ID, database, "hash_code");
-                    if (re.Count == 1)
-                        asset.HashCode = re[0];
+                    if (re.Count == 1) asset.HashCode = re[0];
                 }
-                
-                string newHash = WriteFile(asset.ID, asset.Data);
+
+                // Get the new hashcode if this is not MataOnly Data
+                string newHash = !asset.MetaOnly ? WriteFile(asset.ID, asset.Data) : asset.HashCode;
 
                 if ((asset.HashCode != "") && (asset.HashCode != newHash))
                 {
+                    // Assign the task to check to see if this hash file is being used anymore
                     m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
                 }
+
+                // Delete and save the new Hash
                 asset.HashCode = newHash;
-                Delete(asset.ID);
+                Delete(asset.ID, false);
                 m_Gd.Insert(database,
                             new[]
                                 {
@@ -273,7 +320,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public void UpdateContent(UUID id, byte[] assetdata)
         {
-            ResetTimer(1);
+            ResetTimer(60000);
             string newHash = WriteFile(id, assetdata);
             List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0],
                                                     "hash_code");
@@ -292,9 +339,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region asset exists
 
+        /// <summary>
+        /// Check to see if a asset exists
+        /// </summary>
+        /// <param name="uuid">UUID of the asset you want to check</param>
+        /// <returns></returns>
         public bool ExistsAsset(UUID uuid)
         {
-            ResetTimer(1);
+            ResetTimer(60000);
             try
             {
                 bool result = m_Gd.Query("id", uuid, "auroraassets_" + uuid.ToString().Substring(0, 1), "id").Count > 0;
@@ -305,7 +357,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     AssetBase a = Convert2BH(uuid);
                     return a != null;
                 }
-                return result;
+                return true;
             }
             catch (Exception e)
             {
@@ -317,32 +369,57 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #endregion
 
-        public void Initialise(string connect)
-        {
+        #region Delete Asset
 
-        }
-
+        /// <summary>
+        /// Delete the asset from the database and file system
+        /// </summary>
+        /// <param name="id">UUID of the asset you wish to delete</param>
+        /// <returns></returns>
         public bool Delete(UUID id)
         {
-            ResetTimer(1);
+            return Delete(id, true);
+        }
+
+        private bool Delete(UUID id, bool assignHashCodeCheckTask)
+        {
+            ResetTimer(60000);
+            if (id == UUID.Zero) return true;
+            string tableName = "auroraassets_" + id.ToString().Substring(0, 1);
             try
             {
-                if (!m_Gd.Delete("auroraassets_" + id.ToString().Substring(0, 1), "id = '" + id + "'"))
-                    m_Gd.Delete("auroraassets_old", "id = '" + id + "'");
+                // assign a task to see if the hash code is being used anywhere else
+                if (assignHashCodeCheckTask)
+                {
+                    List<string> results = m_Gd.Query("id", id, tableName, "hash_code");
+                    if (results.Count == 0) results = m_Gd.Query("id", id, "auroraassets_old", "hash_code");
+                    if (results.Count == 1)
+                    {
+                        m_Gd.Insert("auroraassets_tasks", new[] {"id", "task_type", "task_values"},
+                                    new object[] {UUID.Random(), "HASHCHECK", results[0]});
+                    }
+                }
+
+                // delete the asset
+                m_Gd.Delete(tableName, "id = '" + id + "'");
+                // just for safe measure check here as well
+                m_Gd.Delete("auroraassets_old", "id = '" + id + "'");
                 return true;
             }
             catch (Exception e)
             {
-                m_Log.Error("[AssetDataPlugin] Delete - Error", e);
+                m_Log.Error("[AssetDataPlugin] Delete - Error for asset ID " + id, e);
                 return false;
             }
         }
 
         #endregion
 
+        #endregion
+
         #region util functions
 
-        public static DateTime UnixTimeStampToDateTime(int unixTimeStamp)
+        private static DateTime UnixTimeStampToDateTime(int unixTimeStamp)
         {
             // Unix timestamp is seconds past epoch
             DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
@@ -350,11 +427,153 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return dtDateTime;
         }
 
-        public bool ByteArraysEqual(byte[] b1, byte[] b2)
+        #endregion
+
+        #region File Management
+
+        private string WriteFile(UUID assetid, byte[] data, int tryCount)
         {
-            if (b1 == null || b2 == null) return false;
-            if (b1.Length != b2.Length) return false;
-            return (b1.SequenceEqual(b2));
+            bool alreadyWriten = false;
+            Stream stream = null;
+            BinaryFormatter bformatter = new BinaryFormatter();
+            string hashCode = Convert.ToBase64String(new SHA256Managed().ComputeHash(data)) + data.Length;
+            try
+            {
+                string filename = GetFileName(hashCode, false);
+                string directory = Path.GetDirectoryName(filename);
+                if (directory != null && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
+                if (File.Exists(filename)) alreadyWriten = true;
+
+                if (!alreadyWriten)
+                {
+                    try
+                    {
+                        stream = File.Open(filename, FileMode.Create);
+                        bformatter.Serialize(stream, data);
+                        stream.Close();
+                        stream = null;
+                    }
+                    catch (IOException e)
+                    {
+                        if (stream != null) stream.Close();
+                        stream = null;
+                        if (tryCount <= 2)
+                        {
+                            Thread.Sleep(4000);
+                            WriteFile(assetid, data, ++tryCount);
+                        }
+                        else
+                        {
+                            m_Log.Error("[AssetDataPlugin] Error writing Asset File " + assetid, e);
+                        }
+                    }
+                    string filenameForBackup = GetFileName(hashCode, true) + ".7z";
+                    directory = Path.GetDirectoryName(filenameForBackup);
+                    if (directory != null && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
+                    if (!File.Exists(filenameForBackup))
+                        Util.Compress7ZipFile(filename, filenameForBackup);
+                }
+            }
+            catch (Exception e)
+            {
+                m_Log.Error("[AssetDataPlugin]: WriteFile(" + assetid + ")", e);
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+            return hashCode;
+        }
+
+        private string WriteFile(UUID assetid, byte[] data)
+        {
+            return WriteFile(assetid, data, 0);
+        }
+
+        private Byte[] LoadFile(string hashCode)
+        {
+            return LoadFile(hashCode, false);
+        }
+
+        private Byte[] LoadFile(string hashCode, bool waserror)
+        {
+            Stream stream = null;
+            BinaryFormatter bformatter = new BinaryFormatter();
+            string filename = GetFileName(hashCode, false);
+            try
+            {
+                stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return (Byte[])bformatter.Deserialize(stream);
+            }
+            catch
+            {
+                if (stream != null) stream.Close();
+                stream = null;
+                if (!waserror)
+                {
+                    RestoreBackup(hashCode);
+                    return LoadFile(hashCode, true);
+                }
+                return null;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        private void RestoreBackup(string hashCode)
+        {
+            string backupfile = GetFileName(hashCode, true);
+            string file = GetFileName(hashCode, false);
+            if (File.Exists(backupfile))
+            {
+                File.Move(file, file + ".corrupt");
+                Util.UnCompress7ZipFile(backupfile + ".7z", Path.GetDirectoryName(file));
+                m_Log.Info("[AssetDataPlugin]: Restored backup asset file " + file);
+            }
+        }
+
+        private string GetFileName(string id, bool backup)
+        {
+            // Would it be faster to just hash the darn thing?
+            id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
+
+            string path = (backup) ? m_CacheDirectoryBackup : m_CacheDirectory;
+            for (int p = 1; p <= m_CacheDirectoryTiers; p++)
+            {
+                string pathPart = id.Substring(0, m_CacheDirectoryTierLen);
+                path = Path.Combine(path, pathPart);
+                id = id.Substring(1);
+            }
+
+            return Path.Combine(path, id + ".ass");
+        }
+
+        #endregion
+
+        #region Old Asset Migration To BlackHole
+        private void StartMigration()
+        {
+            if (!sw.IsRunning) sw.Start();
+            displayCount++;
+            List<string> toConvert = m_Gd.Query(" 1 = 1 LIMIT 5 ", "assets", "id");
+            if (toConvert.Count >= 1)
+            {
+                foreach (string assetkey in toConvert)
+                    Convert2BH(UUID.Parse(assetkey));
+            }
+            if (displayCount == 100)
+            {
+                sw.Stop();
+                m_Log.Info("[Blackhole Assets] Converted:" + convertCount + " DupeContent:" + convertCountDupe +
+                           " Dupe4Creator:" + convertCountParentFix);
+                m_Log.Info("[Blackhole Assets] 500 in " + sw.Elapsed.Minutes + ":" + sw.Elapsed.Seconds);
+                displayCount = 0;
+                sw.Reset();
+                sw.Start();
+            }
         }
 
         private AssetBase Convert2BH(UUID uuid)
@@ -405,9 +624,38 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         }
                         else asset.ParentID = asset.ID;
 
+
+
+                        if (!asset.IsBinaryAsset)
+                        {
+                            const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
+                            string stringData = Utils.BytesToString(asset.Data);
+                            MatchCollection mc = Regex.Matches(stringData, sPattern);
+                            if (mc.Count >= 1)
+                            {
+                                foreach (Match match in mc)
+                                {
+                                    try
+                                    {
+                                        AssetBase mightBeAsset = GetAsset(UUID.Parse(match.Value), true, false);
+                                        if ((mightBeAsset != null) && (mightBeAsset.ParentID != UUID.Zero) && (mightBeAsset.ParentID != mightBeAsset.ID))
+                                        {
+                                            stringData = stringData.Replace(match.Value, mightBeAsset.ParentID.ToString());
+                                            asset.Data = Utils.StringToBytes(stringData);
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        m_Log.Error("Errored", e);
+                                    }
+                                }
+                            }
+
+                        }
+
+
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;
-                        migrationTaskCountOn++;
                     }
                     dr.Close();
                     dr = null;
@@ -423,182 +671,33 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             return asset;
         }
-
-        #endregion
-
-        #region File Management
-
-        public string WriteFile(UUID assetid, byte[] data, int tryCount)
-        {
-            bool alreadyWriten = false;
-            Stream stream = null;
-            BinaryFormatter bformatter = new BinaryFormatter();
-            string hashCode = Convert.ToBase64String(new SHA256Managed().ComputeHash(data)) + data.Length;
-            try
-            {
-                string filename = GetFileName(hashCode, false);
-                string directory = Path.GetDirectoryName(filename);
-                if (directory != null && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
-                if (File.Exists(filename)) alreadyWriten = true;
-
-                if (!alreadyWriten)
-                {
-                    try
-                    {
-                        stream = File.Open(filename, FileMode.Create);
-                        bformatter.Serialize(stream, data);
-                        stream.Close();
-                        stream = null;
-                    }
-                    catch (System.IO.IOException e)
-                    {
-                        if (stream != null) stream.Close();
-                        stream = null;
-                        if (tryCount <= 2)
-                        {
-                            Thread.Sleep(4000);
-                            WriteFile(assetid, data, tryCount++);
-                        }
-                        else
-                        {
-                            m_Log.Error("[AssetDataPlugin] Error writing Asset File " + assetid, e);
-                        }
-                    }
-
-                    stream = null;
-                    string filenameForBackup = GetFileName(hashCode, true) + ".7z";
-                    directory = Path.GetDirectoryName(filenameForBackup);
-                    if (directory != null && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
-                    if (!File.Exists(filenameForBackup))
-                        Util.Compress7ZipFile(filename, filenameForBackup);
-                }
-            }
-            catch (Exception e)
-            {
-                m_Log.Error("[AssetDataPlugin]: WriteFile(" + assetid + ")", e);
-            }
-            finally
-            {
-                if (stream != null)
-                    stream.Close();
-            }
-            return hashCode;
-        }
-
-        public string WriteFile(UUID assetid, byte[] data)
-        {
-            return WriteFile(assetid, data, 0);
-        }
-
-        private Byte[] LoadFile(string hashCode)
-        {
-            return LoadFile(hashCode, false);
-        }
-
-        private Byte[] LoadFile(string hashCode, bool waserror)
-        {
-            Stream stream = null;
-            BinaryFormatter bformatter = new BinaryFormatter();
-            string filename = GetFileName(hashCode, false);
-            try
-            {
-                stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                return (Byte[])bformatter.Deserialize(stream);
-            }
-            catch
-            {
-                if (stream != null) stream.Close();
-                stream = null;
-                if (!waserror)
-                {
-                    RestoreBackup(hashCode);
-                    return LoadFile(hashCode, true);
-                }
-                return null;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
-        }
-
-        private void RestoreBackup(string hashCode)
-        {
-            string backupfile = GetFileName(hashCode, true);
-            string file = GetFileName(hashCode, false);
-            if (File.Exists(backupfile))
-            {
-                File.Move(file, file + ".corrupt");
-                Util.UnCompress7ZipFile(backupfile + ".7z", Path.GetDirectoryName(file));
-                m_Log.Info("[AssetDataPlugin]: Restored backup asset file " + file);
-            }
-        }
-
-        /// <summary>
-        /// Determines the filename for an AssetID stored in the file cache
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="backup"></param>
-        /// <returns></returns>
-        private string GetFileName(string id, bool backup)
-        {
-            // Would it be faster to just hash the darn thing?
-            id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
-
-            string path = (backup) ? m_CacheDirectoryBackup : m_CacheDirectory;
-            for (int p = 1; p <= m_CacheDirectoryTiers; p++)
-            {
-                string pathPart = id.Substring(0, m_CacheDirectoryTierLen);
-                path = Path.Combine(path, pathPart);
-                id = id.Substring(1);
-            }
-
-            return Path.Combine(path, id + ".ass");
-        }
-
         #endregion
 
         #region Timer
 
-        private void ResetTimer(int typeOfReset)
+        private void ResetTimer(int howLong)
         {
             taskTimer.Stop();
-            if (typeOfReset == 1)
-                taskTimer.Interval = 60000;
-            else if (typeOfReset == 2)
-                taskTimer.Interval = 50;
-            else
-                taskTimer.Interval = 2000;
+            taskTimer.Interval = howLong;
             taskTimer.Start();
         }
 
+        /// <summary>
+        /// Timer runs tasks in the background when not busy
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             taskTimer.Stop();
             if (needsConversion)
             {
-                if (!sw.IsRunning) sw.Start();
-                displayCount++;
-                List<string> toConvert = m_Gd.Query(" 1 = 1 LIMIT 5 ", "assets", "id");
-                if (toConvert.Count >= 1)
-                {
-                    foreach (string assetkey in toConvert)
-                        Convert2BH(UUID.Parse(assetkey));
-                }
-                if (displayCount == 100)
-                {
-                    sw.Stop();
-                    m_Log.Info("[Blackhole Assets] Converted:" + convertCount + " DupeContent:" + convertCountDupe +
-                               " Dupe4Creator:" + convertCountParentFix);
-                    m_Log.Info("[Blackhole Assets] 500 in " + sw.Elapsed.Minutes + ":" + sw.Elapsed.Seconds);
-                    displayCount = 0;
-                    sw.Reset();
-                    sw.Start();
-                }
-
-                ResetTimer(2);
+                StartMigration();
+                ResetTimer(100);
                 return;
             }
+
+            // check for task in the auroraassets_task table
             List<string> taskCheck = m_Gd.Query(" 1 = 1 LIMIT 1 ", "auroraassets_tasks",
                                                 "id, task_type, task_values");
             if (taskCheck.Count == 3)
@@ -607,49 +706,98 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 string task_type = taskCheck[1];
                 string task_value = taskCheck[2];
 
-                if (task_type == "HASHCHECK")
+                try
                 {
-                    int result =
-                        m_Gd.Query("hash_code", task_value, "auroraassets_old", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_9", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_8", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_7", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_6", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_5", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_4", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_3", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_2", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_1", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_0", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_f", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_e", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_d", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_c", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_b", "id").Count +
-                        m_Gd.Query("hash_code", task_value, "auroraassets_a", "id").Count;
-                    if (result == 0)
+                    //check if this hash file is still used anywhere
+                    if (task_type == "HASHCHECK")
                     {
-                        m_Log.Info("[AssetDataPlugin] Deleteing old asset files");
-                        if (File.Exists(GetFileName(task_value, false)))
-                            File.Delete(GetFileName(task_value, false));
-                        if (File.Exists(GetFileName(task_value, true))) File.Delete(GetFileName(task_value, true));
+                        int result = TaskGetHashCodeUseCount(task_value);
+                        if (result == 0)
+                        {
+                            m_Log.Info("[AssetDataPlugin] Deleteing old asset files");
+                            if (File.Exists(GetFileName(task_value, false)))
+                                File.Delete(GetFileName(task_value, false));
+                            if (File.Exists(GetFileName(task_value, true))) File.Delete(GetFileName(task_value, true));
+                        }
                     }
+                    
                 }
-                m_Gd.Delete("auroraassets_tasks", new[] { "id" }, new object[] { task_id });
+                catch(Exception ex)
+                {
+                    m_Log.Error("[AssetDataPlugin] Background task error. Task " + task_type, ex);
+                }
+                finally
+                {
+                    m_Gd.Delete("auroraassets_tasks", new[] { "id" }, new object[] { task_id });
+                    ResetTimer(500);
+                }
             }
             else
             {
-                List<string> findOld2 = m_Gd.Query(" access_time < " + Util.ToUnixTime(DateTime.UtcNow.AddDays(-30)) + " LIMIT 1 ", "auroraassets_" + UUID.Random().ToString().ToCharArray()[0],
-                                                   "id");
-                foreach (string ass in findOld2)
+                // check for old assets that have not been access for over 30 days
+                try
                 {
-                    List<string> findOld = m_Gd.Query(" id = '" + ass + "'", "auroraassets_" + ass.ToCharArray()[0], "id,hash_code,name,description,asset_type,create_time,access_time,asset_flags,creator_id,owner_id,host_uri,parent_id");
-                    m_Gd.Insert("auroraassets_old", new object[] { findOld[0], findOld[1], findOld[2], findOld[3], findOld[4], findOld[5], findOld[6], findOld[7], findOld[8], findOld[9], findOld[10], findOld[11] });
-                    if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count > 0)
-                        m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] { "id" }, new object[] { ass });
+                    List<string> findOld2 =
+                    m_Gd.Query(" access_time < " + Util.ToUnixTime(DateTime.UtcNow.AddDays(NumberOfDaysForOldAssets)) + " LIMIT 1 ",
+                               "auroraassets_" + UUID.Random().ToString().ToCharArray()[0],
+                               "id");
+                    if (findOld2.Count >= 1)
+                    {
+                        foreach (string ass in findOld2)
+                        {
+                            List<string> findOld = m_Gd.Query(" id = '" + ass + "'",
+                                                              "auroraassets_" + ass.ToCharArray()[0],
+                                                              "id,hash_code,name,description,asset_type,create_time,access_time,asset_flags,creator_id,owner_id,host_uri,parent_id");
+                            if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count == 0)
+                                m_Gd.Insert("auroraassets_old",
+                                            new[]
+                                                {
+                                                    "id", "hash_code", "name", "description", "asset_type",
+                                                    "create_time",
+                                                    "access_time", "asset_flags", "creator_id", "owner_id", "host_uri",
+                                                    "parent_id"
+                                                },
+                                            new object[]
+                                                {
+                                                    findOld[0], findOld[1], findOld[2], findOld[3], findOld[4],
+                                                    findOld[5],
+                                                    findOld[6], findOld[7], findOld[8], findOld[9], findOld[10],
+                                                    findOld[11]
+                                                });
+                            if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count > 0)
+                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] {"id"}, new object[] {ass});
+                        }
+                        ResetTimer(100);
+                        return;
+                    }
+                }
+                catch (Exception exx)
+                {
+                    m_Log.Error("[AssetDataPlugin] Background task retiring asset", exx);
                 }
             }
-            ResetTimer(0);
+            ResetTimer(60000);
+        }
+
+        private int TaskGetHashCodeUseCount(string hash_code)
+        {
+            return m_Gd.Query("hash_code", hash_code, "auroraassets_old", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_9", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_8", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_7", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_6", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_5", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_4", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_3", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_2", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_1", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_0", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_f", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_e", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_d", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_c", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_b", "id").Count +
+            m_Gd.Query("hash_code", hash_code, "auroraassets_a", "id").Count;
         }
 
         #endregion
