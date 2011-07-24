@@ -646,7 +646,7 @@ namespace Aurora.Modules
             if (m_friendsModule.GetFriendPerms(requested, friend) == -1) //They aren't a friend
             {
                 IScenePresence SP = findScenePresence(friend);
-                if (SP != null && SP.Scene.Permissions.IsAdministrator(friend)) //Check is admin
+                if (SP != null && SP.Scene.Permissions.IsGod (friend)) //Check is admin
                     return true;
 
                 return false;

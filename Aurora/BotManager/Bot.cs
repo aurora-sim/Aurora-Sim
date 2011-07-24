@@ -1436,7 +1436,7 @@ namespace Aurora.BotManager
             if (im.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport ||
                 im.dialog == (byte)InstantMessageDialog.RequestTeleport)
             {
-                if (m_avatarCreatorID == im.fromAgentID || this.Scene.Permissions.IsAdministrator (im.fromAgentID))
+                if (m_avatarCreatorID == im.fromAgentID || this.Scene.Permissions.IsGod (im.fromAgentID))
                 {
                     ulong handle = 0;
                     uint x = 128;

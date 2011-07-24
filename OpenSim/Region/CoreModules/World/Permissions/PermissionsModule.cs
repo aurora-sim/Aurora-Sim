@@ -473,7 +473,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// <returns></returns>
         protected bool IsAdministrator (UUID user)
         {
-            return InternalIsAdministrator (user, true);
+            return InternalIsAdministrator (user, false);
         }
 
         /// <summary>
@@ -527,8 +527,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 IScenePresence sp = m_scene.GetScenePresence (userID);
                 if (sp != null && sp.GodLevel == 0) //Allow null presences to be god always, as they are just gods
                     return false;
+                else if(sp != null)
+                    return true;//Only allow logged in users to have god mode
             }
-            return true;
+            return false;
         }
 
         protected bool IsFriendWithPerms(UUID user,UUID objectOwner)
@@ -973,7 +975,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return InternalIsAdministrator (user, false);
+            return InternalIsAdministrator (user, true);
         }
 
         private bool CanDuplicateObject (int objectCount, UUID objectID, UUID owner, IScene scene, Vector3 objectPosition)

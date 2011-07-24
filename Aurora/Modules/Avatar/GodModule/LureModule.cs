@@ -152,9 +152,9 @@ namespace Aurora.Modules
 
 			GridInstantMessage m;
 
-            if (m_allowGodTeleports && client.Scene.Permissions.IsAdministrator (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
+            if (m_allowGodTeleports && client.Scene.Permissions.IsGod (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
 			{
-                if (client.Scene.Permissions.IsAdministrator (targetid)) //if they are an admin
+                if (client.Scene.Permissions.IsGod (targetid)) //if they are an admin
 				{
                     //Gods do not tp other gods
                     m = new GridInstantMessage (client.Scene, client.AgentId,

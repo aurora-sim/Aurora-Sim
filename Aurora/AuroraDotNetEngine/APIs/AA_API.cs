@@ -197,7 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void aaSetConeOfSilence(LSL_Float radius)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASetConeOfSilence", m_host, "AA");
-            if(World.Permissions.IsAdministrator(m_host.OwnerID))
+            if (World.Permissions.IsGod (m_host.OwnerID))
                 m_host.SetConeOfSilence(radius.value);
         }
 
@@ -389,7 +389,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsAdministrator(AgentID))
+                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsGod(AgentID))
                     {
                         //If they have combat permission on, do it whether the threat level is enabled or not
                         SP.AllowMovement = false;
@@ -412,7 +412,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsAdministrator(AgentID))
+                    if (module.CheckCombatPermission (AgentID) || World.Permissions.IsGod (AgentID))
                     {
                         //If they have combat permission on, do it whether the threat level is enabled or not
                         SP.AllowMovement = true;

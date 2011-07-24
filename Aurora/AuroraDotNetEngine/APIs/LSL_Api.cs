@@ -5298,7 +5298,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (m_host.OwnerID == targetID) //People can push themselves
                         pushAllowed = true;
                     else
-                        pushAllowed = m_host.ParentEntity.Scene.Permissions.IsAdministrator (m_host.OwnerID);
+                        pushAllowed = m_host.ParentEntity.Scene.Permissions.IsGod (m_host.OwnerID);
                 }
                 else
                 {
