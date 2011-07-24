@@ -313,8 +313,13 @@ namespace Aurora.Services.DataService
                 return null;
             foreach (string val in RetVal)
             {
-                OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(val);
-                result.Add(estateInfo["EstateID"].AsInteger());
+                OSD oval = OSDParser.DeserializeLLSDXml (val);
+                if (oval is OSDMap)
+                {
+                    OSDMap estateInfo = (OSDMap)oval;
+                    if (estateInfo["EstateName"].AsString () == search)
+                        result.Add (estateInfo["EstateID"].AsInteger ());
+                }
             }
             return result;
         }
@@ -340,8 +345,14 @@ namespace Aurora.Services.DataService
                 return null;
             foreach (string val in RetVal)
             {
-                OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(val);
-                result.Add(LoadEstateSettings(estateInfo["EstateID"].AsInteger()));
+                OSD oval = OSDParser.DeserializeLLSDXml (val);
+                if (oval is OSDMap)
+                {
+                    OSDMap estateInfo = (OSDMap)oval;
+                    EstateSettings es = LoadEstateSettings (estateInfo["EstateID"].AsInteger ());
+                    if(es != null)
+                        result.Add (es);
+                }
             }
             return result;
         }

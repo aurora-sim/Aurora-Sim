@@ -272,7 +272,7 @@ namespace Aurora.Modules
             {
                 if (returnResponseFirstTime)
                 {
-                    m_log.Error ("[RegisterRegionWithGrid]: Registration of region with grid failed - " + error);
+                    m_log.Error ("[RegisterRegionWithGrid]: Registration of region with grid failed again - " + error);
                     return false;
                 }
 

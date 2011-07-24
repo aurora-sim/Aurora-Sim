@@ -205,9 +205,9 @@ namespace OpenSim.Services.GridService
             IConfig gridConfig = m_config.Configs["GridService"];
             
             //Get the range of this so that we get the full count and make sure that we are not overlapping smaller regions
-            List<GridRegion> regions = m_Database.Get(regionInfos.RegionLocX, regionInfos.RegionLocY,
+            List<GridRegion> regions = m_Database.Get (regionInfos.RegionLocX, regionInfos.RegionLocY,
                 regionInfos.RegionLocX + regionInfos.RegionSizeX - 1, regionInfos.RegionLocY + regionInfos.RegionSizeY - 1, regionInfos.ScopeID);
-
+            
             if (regions.Count > 1)
             {
                 //More than one region is here... it is overlapping stuff
@@ -449,8 +449,8 @@ namespace OpenSim.Services.GridService
             }
 
             m_log.DebugFormat("[GRID SERVICE]: Region {0} deregistered", regionID);
-            
-            if (!m_DeleteOnUnregister || (region.Flags & (int)RegionFlags.Persistent) != 0)
+
+            if (!m_DeleteOnUnregister || (region.Flags & (int)RegionFlags.Persistent) != 0 || !m_AllowNewRegistrations)
             {
                 region.Flags &= ~(int)RegionFlags.RegionOnline;
                 region.LastSeen = Util.UnixTimeSinceEpoch();
@@ -464,7 +464,6 @@ namespace OpenSim.Services.GridService
                 }
 
                 FixNeighbors (region, GetNeighbors (region), true);
-
                 return true;
 
             }
