@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
         public bool LoadEstateSettings(UUID regionID, out EstateSettings settings)
 		{
             settings = null;
-            List<string> estateID = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "Value");
+            List<string> estateID = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "`Value`");
             if (estateID.Count != 0)
                 settings = LoadEstateSettings(Convert.ToInt32(estateID[0]));
 			return true;
@@ -88,7 +88,7 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "`Value`");
             }
             catch
             {
@@ -144,7 +144,7 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateBans" }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateBans" }, "estates", "`Value`");
             }
             catch
             {
@@ -171,7 +171,7 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { EstateID, table }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { EstateID, table }, "estates", "`Value`");
             }
             catch
             {
@@ -274,7 +274,7 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateSettings" }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateSettings" }, "estates", "`Value`");
             }
             catch
             {
@@ -308,7 +308,7 @@ namespace Aurora.Services.DataService
         public List<int> GetEstates(string search)
         {
             List<int> result = new List<int>();
-            List<string> RetVal = GD.Query("", "", "estates", "Value", " where `Key` = 'EstateSettings' and Value LIKE '%<key>EstateName</key><string>" + search + "</string>%'");
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" + search + "</string>%'");
             if (RetVal.Count == 0)
                 return null;
             foreach (string val in RetVal)
@@ -322,7 +322,7 @@ namespace Aurora.Services.DataService
         public List<UUID> GetRegions(uint estateID)
         {
             List<UUID> result = new List<UUID>();
-            List<string> RetVal = GD.Query(new string[]{"Key","Value"}, new object[]{"EstateID",estateID}, "estates", "ID");
+            List<string> RetVal = GD.Query(new string[]{"`Key`","`Value`"}, new object[]{"EstateID",estateID}, "estates", "ID");
             if (RetVal.Count == 0)
                 return null;
             foreach (string val in RetVal)
@@ -335,7 +335,7 @@ namespace Aurora.Services.DataService
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
             List<EstateSettings> result = new List<EstateSettings>();
-            List<string> RetVal = GD.Query("", "", "estates", "Value", " where `Key` = 'EstateSettings' and Value LIKE '%<key>EstateOwner</key><uuid>" + OwnerID + "</uuid>%'");
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateOwner</key><uuid>" + OwnerID + "</uuid>%'");
             if (RetVal.Count == 0)
                 return null;
             foreach (string val in RetVal)
@@ -351,7 +351,7 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "`Value`");
             }
             catch
             {
@@ -364,7 +364,7 @@ namespace Aurora.Services.DataService
             if (estateInfo["EstatePass"].AsString() != password)
                 return false;
 
-            GD.Replace("estates", new string[] { "ID", "Key", "Value" },
+            GD.Replace("estates", new string[] { "ID", "`Key`", "`Value`" },
                 new object[] {
 				regionID,
                 "EstateID",
@@ -380,7 +380,7 @@ namespace Aurora.Services.DataService
             try
             {
                 //First make sure they are in the estate
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "`Value`");
             }
             catch
             {
@@ -391,7 +391,7 @@ namespace Aurora.Services.DataService
             try
             {
                 //Now pull the estate settings to check the password
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { query[0], "EstateSettings" }, "estates", "Value");
+                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { query[0], "EstateSettings" }, "estates", "`Value`");
             }
             catch
             {
@@ -402,7 +402,7 @@ namespace Aurora.Services.DataService
             if (estateInfo["EstatePass"].AsString() != password)
                 return false; //fakers!
 
-            GD.Delete("estates", new string[] { "ID", "Key" },
+            GD.Delete("estates", new string[] { "ID", "`Key`" },
                 new object[] {
 				regionID,
                 "EstateID"
