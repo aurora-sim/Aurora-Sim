@@ -86,7 +86,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static int GetGenericCount (UUID OwnerID, string Type, IGenericData GD)
         {
-            List<string> retVal = GD.Query (new string[] { "OwnerID", "Type" }, new object[] { OwnerID, Type }, "generics", "count()");
+            List<string> retVal = GD.Query (new string[] { "OwnerID", "Type" }, new object[] { OwnerID, Type }, "generics", "count(*)");
 
             if (retVal == null || retVal.Count == 0)
                 return 0;
@@ -103,7 +103,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static int GetGenericCount (UUID OwnerID, IGenericData GD)
         {
-            List<string> retVal = GD.Query (new string[] { "OwnerID" }, new object[] { OwnerID }, "generics", "count()");
+            List<string> retVal = GD.Query (new string[] { "OwnerID" }, new object[] { OwnerID }, "generics", "count(*)");
 
             if (retVal.Count == 0)
                 return 0;
