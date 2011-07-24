@@ -95,9 +95,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #endregion
 
-
-        private CollisionLocker ode;
-
         public float ODE_STEPSIZE = 0.020f;
         private float m_timeDilation = 1.0f;
 
@@ -351,10 +348,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// Sets many properties that ODE requires to be stable
         /// These settings need to be tweaked 'exactly' right or weird stuff happens.
         /// </summary>
-        public AuroraODEPhysicsScene(CollisionLocker dode, string sceneIdentifier)
+        public AuroraODEPhysicsScene(string sceneIdentifier)
         {
             OdeLock = new Object();
-            ode = dode;
             nearCallback = near;
             triCallback = TriCallback;
             lock (OdeLock)
@@ -674,7 +670,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             catch (SEHException)
             {
                 m_log.Error("[PHYSICS]: The Operating system shut down ODE because of corrupt memory.  This could be a result of really irregular terrain.  If this repeats continuously, restart using Basic Physics and terrain fill your terrain.  Restarting the sim.");
-                ode.drelease(world);
             }
             catch (Exception e)
             {
@@ -1538,7 +1533,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!WSModule.AllowPhysicalPrims)
                     physical = false;*/
             AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim (entity, this, false, ode);
+            newPrim = new AuroraODEPrim (entity, this, false);
 
             if(physical)
                 newPrim.IsPhysical = physical;
@@ -1612,46 +1607,43 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //Console.WriteLine("RemovePrimThreadLocked " +  prim.m_primName);
             lock (prim)
             {
-                remCollisionEventReporting(prim);
-                remActivePrim(prim);
-                lock (ode)
+                remCollisionEventReporting (prim);
+                remActivePrim (prim);
+                prim.m_frozen = true;
+                if (prim.prim_geom != IntPtr.Zero)
                 {
-                    prim.m_frozen = true;
-                    if (prim.prim_geom != IntPtr.Zero)
+                    prim.DestroyBody ();
+                    prim.IsPhysical = false;
+                    prim.m_targetSpace = IntPtr.Zero;
+                    try
                     {
-                        prim.DestroyBody();
-                        prim.IsPhysical = false;
-                        prim.m_targetSpace = IntPtr.Zero;
-                        try
+                        if (prim.prim_geom != IntPtr.Zero)
                         {
-                            if (prim.prim_geom != IntPtr.Zero)
-                            {
-                                d.GeomDestroy(prim.prim_geom);
-                                prim.prim_geom = IntPtr.Zero;
-                            }
-                            else
-                            {
-                                m_log.Warn("[PHYSICS]: Unable to remove prim from physics scene");
-                            }
+                            d.GeomDestroy (prim.prim_geom);
+                            prim.prim_geom = IntPtr.Zero;
                         }
-                        catch (AccessViolationException)
+                        else
                         {
-                            m_log.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
+                            m_log.Warn ("[PHYSICS]: Unable to remove prim from physics scene");
                         }
                     }
-                    if (!prim.childPrim)
+                    catch (AccessViolationException)
                     {
-                        lock (prim.childrenPrim)
-                        {
-                            foreach (AuroraODEPrim prm in prim.childrenPrim)
-                            {
-                                RemovePrimThreadLocked (prm);
-                            }
-                        }
+                        m_log.Info ("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
                     }
-                    lock (_prims)
-                        _prims.Remove (prim);
                 }
+                if (!prim.childPrim)
+                {
+                    lock (prim.childrenPrim)
+                    {
+                        foreach (AuroraODEPrim prm in prim.childrenPrim)
+                        {
+                            RemovePrimThreadLocked (prm);
+                        }
+                    }
+                }
+                lock (_prims)
+                    _prims.Remove (prim);
             }
         }
 
@@ -2317,7 +2309,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     catch (Exception e)
                     {
                         m_log.ErrorFormat ("[PHYSICS]: {0}, {1}, {2}", e.ToString (), e.TargetSite, e);
-                        ode.dunlock (world);
                     }
 
                     step_time -= ODE_STEPSIZE;

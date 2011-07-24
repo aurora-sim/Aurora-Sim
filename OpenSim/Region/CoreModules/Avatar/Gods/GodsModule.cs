@@ -152,7 +152,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                 }
 
                 // First check that this is the sim owner
-                if (m_scene.Permissions.IsGod(sp.UUID))
+                if (m_scene.Permissions.IsAdministrator(sp.UUID))
                 {
                     sp.GodLevel = sp.UserLevel;
                     if (sp.GodLevel == 0)
