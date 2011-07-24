@@ -154,6 +154,11 @@ namespace OpenSim.Region.CoreModules.World.Sound
                 if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
                     return;
 
+                if ((sp.CurrentParcelUUID != ILO.LandData.GlobalID &&
+                    (sp.CurrentParcel.LandData.Private || ILO.LandData.Private)))
+                    return; //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
+                        
+
                 // Scale by distance
                 if (radius == 0)
                     gain = (float)((double)gain * ((100.0 - dis) / 100.0));
