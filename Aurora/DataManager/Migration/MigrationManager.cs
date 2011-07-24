@@ -58,9 +58,8 @@ namespace Aurora.DataManager.Migration
                 if (m.MigrationName == null)
                     continue;
                 if (m.MigrationName == migratorName)
-                {
                     migrators.Add((Migrator)m);
-                }
+
             }
         }
 
@@ -150,32 +149,32 @@ namespace Aurora.DataManager.Migration
                     executed = true;
                 }
 
-                if (validateTables)
-                {
-                    //lets first validate where we think we are
-                    bool validated = currentMigrator.Validate(genericData);
+                //lets first validate where we think we are
+                bool validated = currentMigrator.Validate(genericData);
 
+                if (!validated && validateTables)
+                {
+                    //Try rerunning the migrator and then the validation
+                    //prepare restore point if something goes wrong
+                    m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, retrying...", currentMigrator.MigrationName, currentMigrator.Version));
+
+                    currentMigrator.Migrate (genericData);
+                    validated = currentMigrator.Validate (genericData);
                     if (!validated)
                     {
-                        //Try rerunning the migrator and then the validation
-                        //prepare restore point if something goes wrong
-                        m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, retrying...", currentMigrator.MigrationName, currentMigrator.Version));
-
+                        C5.Rec<string, ColumnDefinition[]> rec;
+                        currentMigrator.DebugTestThatAllTablesValidate (genericData, out rec);
+                        m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
+                        genericData.RenameTable (rec.X1, rec.X1 + "_broken");
                         currentMigrator.Migrate (genericData);
                         validated = currentMigrator.Validate (genericData);
                         if (!validated)
-                        {
-                            C5.Rec<string, ColumnDefinition[]> rec;
-                            currentMigrator.DebugTestThatAllTablesValidate (genericData, out rec);
-                            m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
-                            genericData.RenameTable (rec.X1, rec.X1 + "_broken");
-                            currentMigrator.Migrate (genericData);
-                            validated = currentMigrator.Validate (genericData);
-                            if (!validated)
-                                throw new MigrationOperationException (string.Format ("Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.MigrationName, currentMigrator.Version));
-                        }
+                            throw new MigrationOperationException (string.Format ("Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.MigrationName, currentMigrator.Version));
                     }
                 }
+                //else
+                //    m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, continueing...", currentMigrator.MigrationName, currentMigrator.Version));
+
 
                 bool restoreTaken = false;
                 //Loop through versions from start to end, migrating then validating
@@ -204,22 +203,17 @@ namespace Aurora.DataManager.Migration
                         throw new MigrationOperationException (string.Format ("Migrating to version {0} failed, {1}.", currentMigrator.Version, ex.ToString()));
                     }
                     executed = true;
-                    if (validateTables)
-                    {
-                        bool validated = executingMigrator.Validate(genericData);
+                    validated = executingMigrator.Validate(genericData);
 
-                        //if it doesn't validate, rollback
-                        if (!validated)
-                        {
-                            RollBackOperation();
-                            throw new MigrationOperationException(string.Format("Migrating to version {0} did not validate. Restoring to restore point.", currentMigrator.Version));
-                        }
+                    //if it doesn't validate, rollback
+                    if (!validated && validateTables)
+                    {
+                        RollBackOperation();
+                        throw new MigrationOperationException(string.Format("Migrating to version {0} did not validate. Restoring to restore point.", currentMigrator.Version));
                     }
 
                     if( executingMigrator.Version == operationDescription.EndVersion )
-                    {
                         break;
-                    }
 
                     executingMigrator = GetMigratorAfterVersion(executingMigrator.Version);
                 }

@@ -4760,7 +4760,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (inv.Value.Type == type || type == -1)
                     {
-                        count = count + 1;
+                        count++;
                     }
                 }
             }
@@ -4786,9 +4786,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             if (keys.Count == 0)
-            {
                 return String.Empty;
-            }
+
             keys.Sort();
             if (keys.Count > number)
             {

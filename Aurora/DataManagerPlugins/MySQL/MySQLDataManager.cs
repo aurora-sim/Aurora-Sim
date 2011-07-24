@@ -710,7 +710,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch(Exception e)
             {
-                m_log.Debug("[MySQLDataLoader] CreateTable", e);
+                m_log.Error ("[MySQLDataLoader] CreateTable", e);
             }
         }
 
@@ -764,7 +764,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch(Exception e)
             {
-                m_log.Debug("[MySQLDataLoader] UpdateTable", e);
+                m_log.Error ("[MySQLDataLoader] UpdateTable", e);
             }
         }
 
@@ -840,7 +840,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch(Exception e)
             {
-                m_log.Debug("[MySQLDataLoader] DropTable", e);
+                m_log.Error ("[MySQLDataLoader] DropTable", e);
             }
         }
 
@@ -853,7 +853,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch(Exception e)
             {
-                m_log.Debug("[MySQLDataLoader] ForceRenameTable", e);                
+                m_log.Error ("[MySQLDataLoader] ForceRenameTable", e);                
             }
         }
 
@@ -868,14 +868,12 @@ namespace Aurora.DataManager.MySQL
             }
             catch(Exception e)
             {
-                m_log.Debug("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e);
+                m_log.Error ("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e);
             }
         }
 
         public override bool TableExists(string table)
         {
-            table = table.ToLower ();
-            var ret = false;
             IDataReader reader = null;
             List<string> retVal = new List<string> ();
             try
@@ -886,12 +884,12 @@ namespace Aurora.DataManager.MySQL
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
-                            retVal.Add (reader.GetString (i));
+                            retVal.Add (reader.GetString (i).ToLower());
                         }
                     }
                 }
             }
-            catch (Exception e) { m_log.Debug("[MySQLDataLoader] TableExists", e); }
+            catch (Exception e) { m_log.Error("[MySQLDataLoader] TableExists", e); }
             finally
             {
                 try
@@ -902,13 +900,9 @@ namespace Aurora.DataManager.MySQL
                         //reader.Dispose ();
                     }
                 }
-                catch (Exception e) { m_log.Debug("[MySQLDataLoader] TableExists", e); }
+                catch (Exception e) { m_log.Error ("[MySQLDataLoader] TableExists", e); }
             }
-            if (retVal.Contains (table))
-            {
-                ret = true;
-            }
-            return ret;
+            return retVal.Contains (table.ToLower());
         }
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
@@ -929,7 +923,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch(Exception e)
             {
-                m_log.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e);
+                m_log.Error ("[MySQLDataLoader] ExtractColumnsFromTable", e);
             }
             finally
             {
