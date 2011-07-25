@@ -11707,7 +11707,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             for (float i = 0; i <= distance; i += 0.1f)
             {
                 posToCheck = startvector  + (dir * (i / (float)distance));
-                if (checkTerrain && channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)] < posToCheck.Z)
+                float groundHeight = channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)];
+                if (checkTerrain && groundHeight > posToCheck.Z)
                 {
                     ContactResult result = new ContactResult();
                     result.ConsumerID = 0;
@@ -11753,6 +11754,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (!found)
                     newResults.Add (result);
             }
+            castRaySort (startvector, ref newResults);
             foreach (ContactResult result in newResults)
             {
                 if ((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND &&
@@ -11769,7 +11771,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         list.Add(0);
                     list.Add(result.Pos);
                     if ((dataFlags & ScriptBaseClass.RC_GET_NORMAL) == ScriptBaseClass.RC_GET_NORMAL)
-                        list.Add(result.Normal);
+                        list.Add (result.Normal);
+                    refcount++;
                     continue; //Can't find it, so add UUID.Zero
                 }
 
@@ -11806,6 +11809,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add (refcount); //The status code, either the # of contacts, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
 
             return list;
+        }
+
+        private void castRaySort (Vector3 pos, ref List<ContactResult> list)
+        {
+            list.Sort (delegate (ContactResult a, ContactResult b)
+            {
+                return Vector3.DistanceSquared (a.Pos, pos).CompareTo (Vector3.DistanceSquared (b.Pos, pos));
+            });
         }
 
         public LSL_Key llGetNumberOfNotecardLines(string name)
