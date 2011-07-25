@@ -32,11 +32,11 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
-    public class GenericsMigrator_2 : Migrator
+    public class GenericsMigrator_3 : Migrator
     {
-        public GenericsMigrator_2()
+        public GenericsMigrator_3()
         {
-            Version = new Version(0, 0, 2);
+            Version = new Version(0, 0, 3);
             MigrationName = "Generics";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();

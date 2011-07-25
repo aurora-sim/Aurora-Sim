@@ -150,26 +150,29 @@ namespace Aurora.DataManager.Migration
                 }
 
                 //lets first validate where we think we are
-                bool validated = currentMigrator.Validate(genericData);
+                bool validated = currentMigrator == null ? false : currentMigrator.Validate (genericData);
 
-                if (!validated && validateTables)
+                if (!validated && validateTables && currentMigrator != null)
                 {
                     //Try rerunning the migrator and then the validation
                     //prepare restore point if something goes wrong
                     m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, retrying...", currentMigrator.MigrationName, currentMigrator.Version));
 
-                    currentMigrator.Migrate (genericData);
-                    validated = currentMigrator.Validate (genericData);
-                    if (!validated)
+                    if (currentMigrator == null)
                     {
-                        C5.Rec<string, ColumnDefinition[]> rec;
-                        currentMigrator.DebugTestThatAllTablesValidate (genericData, out rec);
-                        m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
-                        genericData.RenameTable (rec.X1, rec.X1 + "_broken");
                         currentMigrator.Migrate (genericData);
                         validated = currentMigrator.Validate (genericData);
                         if (!validated)
-                            throw new MigrationOperationException (string.Format ("Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.MigrationName, currentMigrator.Version));
+                        {
+                            C5.Rec<string, ColumnDefinition[]> rec;
+                            currentMigrator.DebugTestThatAllTablesValidate (genericData, out rec);
+                            m_log.Fatal (string.Format ("FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}", currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
+                            genericData.RenameTable (rec.X1, rec.X1 + "_broken");
+                            currentMigrator.Migrate (genericData);
+                            validated = currentMigrator.Validate (genericData);
+                            if (!validated)
+                                throw new MigrationOperationException (string.Format ("Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.", currentMigrator.MigrationName, currentMigrator.Version));
+                        }
                     }
                 }
                 //else
@@ -183,7 +186,7 @@ namespace Aurora.DataManager.Migration
                 //only restore if we are going to do something
                 if (executingMigrator != null)
                 {
-                    if (validateTables)
+                    if (validateTables && currentMigrator != null)
                     {
                         //prepare restore point if something goes wrong
                         restorePoint = currentMigrator.PrepareRestorePoint(genericData);
@@ -242,10 +245,12 @@ namespace Aurora.DataManager.Migration
         private Migrator GetMigratorByVersion(Version version)
         {
             if (version == null)
-            {
                 return null;
+            try
+            {
+                return (from m in migrators where m.Version == version select m).First ();
             }
-            return (from m in migrators where m.Version == version select m).First();
+            catch { return null; }
         }
     }
 }
