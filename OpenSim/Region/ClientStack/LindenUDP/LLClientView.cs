@@ -525,6 +525,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_udpServer != null)
                 m_udpServer.Flush(m_udpClient);
 
+            m_udpServer.RemoveClient (this);
+
             // Disable UDP handling for this client
             m_udpClient.Shutdown();
             

@@ -876,6 +876,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return sessionInfo != null;
         }
 
+        private List<IClientAPI> m_currentClients = new List<IClientAPI> ();
+        private void ForEachInternalClient (Action<IClientAPI> action)
+        {
+            IClientAPI[] clients = m_currentClients.ToArray ();
+            foreach (IClientAPI client in clients)
+                action (client);
+        }
+
+        public void RemoveClient (IClientAPI client)
+        {
+            m_currentClients.Remove (client);
+        }
+
         private bool AddNewClient(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint)
         {
             UUID agentID = useCircuitCode.CircuitCode.ID;
@@ -919,6 +932,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Start the IClientAPI
                 m_scene.AddNewClient(client);
+                m_currentClients.Add (client);
             }
             else
             {
@@ -1010,7 +1024,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Handle outgoing packets, resends, acknowledgements, and pings for each
                 // client. m_packetSent will be set to true if a packet is sent
-                m_scene.ForEachClient(clientPacketHandler);
+                ForEachInternalClient (clientPacketHandler);
 
                 // If nothing was sent, sleep for the minimum amount of time before a
                 // token bucket could get more tokens
