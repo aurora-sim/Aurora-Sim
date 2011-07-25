@@ -103,8 +103,18 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (infos.Length == 0 && m_default)
             {
                 //Load up the GUI to make a new region
-                RegionManager manager = new RegionManager(true, false, m_openSim);
-                System.Windows.Forms.Application.Run(manager);
+                try
+                {
+                    RegionManager manager = new RegionManager (true, false, m_openSim);
+                    System.Windows.Forms.Application.Run (manager);
+                }
+                catch
+                {
+                    //Probably no winforms
+                    RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
+                    system.Initialise (m_configSource, m_openSim);
+                    system.AddRegion (new string[0]);
+                }
                 return LoadRegions();
             }
             else if (infos.Length == 0)
@@ -120,8 +130,18 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {
-            RegionManager manager = new RegionManager(false, true, m_openSim);
-            System.Windows.Forms.Application.Run(manager);
+            try
+            {
+                RegionManager manager = new RegionManager (false, true, m_openSim);
+                System.Windows.Forms.Application.Run (manager);
+            }
+            catch
+            {
+                //Probably no winforms
+                RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
+                system.Initialise (m_configSource, m_openSim);
+                system.AddRegion (new string[0]);
+            }
         }
 
         protected void OpenRegionManager(string[] cmdparams)
@@ -155,6 +175,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if ((alreadyExists = conn.GetRegionInfo (info.RegionID)) == null)
                     {
                         changed = true;
+                        info.Disabled = false;
                         conn.UpdateRegionInfo (info);
                     }
                     else
@@ -166,6 +187,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         alreadyExists.RegionSizeX = info.RegionSizeX;
                         alreadyExists.RegionSizeY = info.RegionSizeY;
                         alreadyExists.ExternalHostName = info.ExternalHostName;
+                        alreadyExists.Disabled = false;
                         conn.UpdateRegionInfo (alreadyExists);
                     }
                 }
