@@ -80,6 +80,8 @@ namespace OpenSim.Services.RobustCompat
 
         private GridRegion FixGridRegion (GridRegion gridRegion)
         {
+            if (gridRegion == null)
+                return null;
             SceneManager manager = m_registry.RequestModuleInterface<SceneManager> ();
             if (manager != null)
             {

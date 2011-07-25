@@ -659,7 +659,8 @@ namespace OpenSim.Services.MessagingService
                         regionCaps.RootAgent = false;
 
                         // Next, let's close the child agent connections that are too far away.
-                        if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
+                        //if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
+                        //Why? OpenSim regions need closed too, even if the protocol is kinda stupid
                             CloseNeighborAgents (regionCaps.Region, destination, AgentID);
                         reason = "";
                     }
