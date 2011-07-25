@@ -195,7 +195,7 @@ namespace OpenSim.Framework
             set
             {
                 myData = value;
-                MetaOnly = (myData.Length >= 1);
+                MetaOnly = (myData.Length == 0);
                 if (!MetaOnly) FillHash();
             }
         }

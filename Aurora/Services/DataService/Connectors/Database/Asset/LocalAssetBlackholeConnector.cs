@@ -224,8 +224,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             HashCode = dr["hash_code"].ToString(),
                             HostUri = dr["host_uri"].ToString(),
                             LastAccessed = DateTime.UtcNow,
-                            OwnerID = UUID.Parse(dr["owner_id"].ToString()),
-                            ParentID = UUID.Parse(dr["parent_id"].ToString())
+                            OwnerID = (dr["parent_id"].ToString() == "") ? UUID.Zero : UUID.Parse(dr["owner_id"].ToString()),
+                            ParentID = (dr["parent_id"].ToString() == "") ? UUID.Parse(dr["id"].ToString()) : UUID.Parse(dr["parent_id"].ToString())
                         };
                     }
                 }
@@ -399,7 +399,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private bool Delete(UUID id, bool assignHashCodeCheckTask)
         {
             ResetTimer(60000);
-            if (id == UUID.Zero) return true;
             string tableName = "auroraassets_" + id.ToString().Substring(0, 1);
             try
             {
@@ -627,7 +626,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
                             LastAccessed = DateTime.Now,
                             DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
-                            MetaOnly = false
+                            MetaOnly = false,
+                            ParentID = UUID.Parse(dr["id"].ToString())
                         };
 
                         // go through this asset and change all the guids to the parent IDs
@@ -642,13 +642,19 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 {
                                     try
                                     {
-                                        AssetBase mightBeAsset = GetAsset(UUID.Parse(match.Value), true, false);
-                                        if ((mightBeAsset != null) && (mightBeAsset.ParentID != UUID.Zero) && (mightBeAsset.ParentID != mightBeAsset.ID))
+                                        UUID theMatch = UUID.Parse(match.Value);
+                                        if (theMatch != UUID.Zero)
                                         {
-                                            stringData = stringData.Replace(match.Value, mightBeAsset.ParentID.ToString());
-                                            asset.Data = Utils.StringToBytes(stringData);
-                                            // so it doesn't try to find the old file
-                                            asset.LastHashCode = asset.HashCode;
+                                            AssetBase mightBeAsset = GetAsset(theMatch, true, false);
+                                            if ((mightBeAsset != null) && (mightBeAsset.ParentID != UUID.Zero) &&
+                                                (mightBeAsset.ParentID != mightBeAsset.ID))
+                                            {
+                                                stringData = stringData.Replace(match.Value,
+                                                                                mightBeAsset.ParentID.ToString());
+                                                asset.Data = Utils.StringToBytes(stringData);
+                                                // so it doesn't try to find the old file
+                                                asset.LastHashCode = asset.HashCode;
+                                            }
                                         }
                                     }
                                     catch (Exception e)
@@ -669,6 +675,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         if (File.Exists(GetFileName(Convert.ToBase64String(new SHA256Managed().ComputeHash(asset.Data)) + asset.Data.Length, false)))
                             convertCountDupe++;
 
+                        // check to see if this asset should have a parent ID
                         List<string> check1 = m_Gd.Query(
                             "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
                             "'", "auroraassets_temp", "id");
@@ -686,6 +693,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 new[] { "assetID" }, new object[] { asset.ID });
                         }
                         else asset.ParentID = asset.ID;
+
 
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;
