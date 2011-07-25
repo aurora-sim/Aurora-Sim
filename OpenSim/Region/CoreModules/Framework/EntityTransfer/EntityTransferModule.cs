@@ -1071,6 +1071,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns></returns>
         private int GetUDPPort (IScene scene)
         {
+            if (scene.RegionInfo.UDPPorts.Count == 0)
+                return scene.RegionInfo.InternalEndPoint.Port;
             lock (m_lastUsedPort)
             {
                 if (!m_lastUsedPort.ContainsKey (scene))
