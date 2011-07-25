@@ -406,7 +406,7 @@ namespace Aurora.Modules
 
             if (c.Channel == DEBUG_CHANNEL) c.Type = ChatTypeEnum.DebugChannel;
 
-            IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
+            IScenePresence avatar = (scene != null && c.Sender != null) ? scene.GetScenePresence (c.Sender.AgentId) : null;
             switch (sourceType)
             {
                 case ChatSourceType.Agent:
