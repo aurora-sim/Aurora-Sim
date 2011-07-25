@@ -153,7 +153,7 @@ namespace OpenSim.Framework
         void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
         void CopyTo (AgentData agent);
         void MakeRootAgent(Vector3 pos, bool isFlying);
-        void MakeChildAgent ();
+        void MakeChildAgent (GridRegion destindation);
         void Close ();
 
 
@@ -1279,7 +1279,7 @@ namespace OpenSim.Framework
         public event ScriptColliding OnScriptLandColliding;
         public event ScriptColliding OnScriptLandColliderEnd;
 
-        public delegate void OnMakeChildAgentDelegate (IScenePresence presence);
+        public delegate void OnMakeChildAgentDelegate (IScenePresence presence, GridRegion destination);
         public event OnMakeChildAgentDelegate OnMakeChildAgent;
 
         public delegate void OnMakeRootAgentDelegate (IScenePresence presence);
@@ -2047,7 +2047,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerOnMakeChildAgent (IScenePresence presence)
+        public void TriggerOnMakeChildAgent (IScenePresence presence, GridRegion destination)
         {
             OnMakeChildAgentDelegate handlerMakeChildAgent = OnMakeChildAgent;
             if (handlerMakeChildAgent != null)
@@ -2056,7 +2056,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (presence);
+                        d (presence, destination);
                     }
                     catch (Exception e)
                     {

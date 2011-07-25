@@ -125,7 +125,7 @@ namespace Aurora.Modules
 
         #region Agents
 
-        protected void OnMakeChildAgent (IScenePresence presence)
+        protected void OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //Switch child agent to root agent
             m_rootAgents--;

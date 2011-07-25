@@ -64,11 +64,19 @@ namespace OpenSim.Services.RobustCompat
             m_scene = scene;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
+            scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
             scene.AuroraEventManager.RegisterEventHandler ("NewUserConnection", OnGenericEvent);
             scene.AuroraEventManager.RegisterEventHandler ("UserStatusChange", OnGenericEvent);
 
             scene.AuroraEventManager.RegisterEventHandler ("DetachingAllAttachments", DetachingAllAttachments);
             scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
+        }
+
+        void EventManager_OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        {
+            //IAgentProcessing agentProcessing = presence.Scene.RequestModuleInterface<IAgentProcessing> ();
+            //if(agentProcessing != null)
+            //    if(agentProcessing.is
         }
 
         private Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]> ();

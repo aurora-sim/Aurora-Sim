@@ -906,7 +906,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// It doesn't get called for a teleport.  Reason being, an agent that
         /// teleports out may not end up anywhere near this region
         /// </summary>
-        public void MakeChildAgent()
+        public void MakeChildAgent(GridRegion destindation)
         {
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
@@ -927,7 +927,7 @@ namespace OpenSim.Region.Framework.Scenes
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
                 attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
-            m_scene.EventManager.TriggerOnMakeChildAgent(this);
+            m_scene.EventManager.TriggerOnMakeChildAgent(this, destindation);
 
             Reset();
         }

@@ -352,7 +352,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             KillEntity(sp.Scene, sp);
 
             //Make it a child agent for now... the grid will kill us later if we need to close
-            sp.MakeChildAgent();
+            sp.MakeChildAgent(finalDestination);
         }
 
         protected void KillEntity (IScene scene, IEntity entity)
@@ -654,7 +654,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         }
                     }
                     //We're killing the animator and the physics actor, so we don't need to worry about agent.PhysicsActor.IsPhysical
-                    agent.MakeChildAgent();
+                    agent.MakeChildAgent(crossingRegion);
 
                     //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
                     // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim

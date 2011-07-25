@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             Util.FireAndForget(delegate(object o) { RezAttachments(presence); });
         }
 
-        protected void MakeChildAgent (IScenePresence presence)
+        protected void MakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
             DetachAndSaveAllAttachments (presence.ControllingClient);
