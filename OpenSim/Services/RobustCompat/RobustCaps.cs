@@ -144,6 +144,10 @@ namespace OpenSim.Services.RobustCompat
                         regionCaps.Close();
                         clientCaps.RemoveCAPS(m_scene.RegionInfo.RegionHandle);
                     }
+                    if (client.IsLoggingOut)
+                    {
+                        clientCaps.Close ();
+                    }
                 }
             }
 

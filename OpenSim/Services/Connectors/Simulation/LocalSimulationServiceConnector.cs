@@ -124,7 +124,9 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out int requestedUDPPort, out string reason)
         {
-            requestedUDPPort = destination.ExternalEndPoint.Port;
+            requestedUDPPort = 0;
+            if(destination.ExternalEndPoint != null)    
+                requestedUDPPort = destination.ExternalEndPoint.Port;
             if (destination == null)
             {
                 reason = "Given destination was null";
