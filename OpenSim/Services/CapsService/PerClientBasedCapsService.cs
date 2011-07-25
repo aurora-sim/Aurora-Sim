@@ -57,10 +57,16 @@ namespace OpenSim.Services.CapsService
         protected bool m_inTeleport = false;
         protected bool m_requestToCancelTeleport = false;
         protected bool m_callbackHasCome = false;
+        protected IPEndPoint m_clientEndPoint = null;
 
         public UUID AgentID
         {
             get { return m_agentID; }
+        }
+
+        public IPEndPoint ClientEndPoint
+        {
+            get { return m_clientEndPoint; }
         }
 
         public UserAccount AccountInfo
@@ -127,6 +133,15 @@ namespace OpenSim.Services.CapsService
         /// <param name="regionHandle"></param>
         protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, AgentCircuitData circuitData, uint port)
         {
+            if (m_clientEndPoint == null && circuitData.ClientIPEndPoint != null)
+                m_clientEndPoint = circuitData.ClientIPEndPoint;
+            if (m_clientEndPoint == null)
+            {
+                ///Should only happen in grid HG/OpenSim situtations
+                IPAddress test = null;
+                if (IPAddress.TryParse (circuitData.IPAddress, out test))
+                    m_clientEndPoint = new IPEndPoint (test, 0);//Dunno the port, so leave it alone
+            }
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
             {
                 //Now add this client to the region caps

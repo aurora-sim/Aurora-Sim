@@ -28,6 +28,7 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Net;
 using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -126,6 +127,11 @@ namespace OpenSim.Framework
         /// Agent's account last name OPENSIM
         /// </summary>
         public string lastname;
+
+        /// <summary>
+        /// IntenalUseOnly - Kept by the server to tell where the client originated from
+        /// </summary>
+        public IPEndPoint ClientIPEndPoint;
 
         public AgentCircuitData()
         {
