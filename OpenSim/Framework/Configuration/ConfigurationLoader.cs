@@ -241,11 +241,12 @@ namespace OpenSim.Framework
             for (int i = 0 ; i < sources.Count ; i++)
             {
                 //Read all .example files first, then read all the normal ones
-                if (File.Exists(sources[i] + ".example") &&
-                    ReadConfig (sources[i] + ".example", i))
+
+                if (File.Exists (sources[i]) &&
+                    ReadConfig (sources[i], i))
                     iniFileExists = true;
-                if (File.Exists(sources[i]) &&
-                    ReadConfig(sources[i], i))
+                else if (File.Exists(sources[i] + ".example") &&
+                    ReadConfig (sources[i] + ".example", i))
                     iniFileExists = true;
                 AddIncludes (sources, basePath, ref i, ref triedPaths);
             }
