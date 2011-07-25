@@ -337,7 +337,7 @@ namespace OpenSim.Services.LLLoginService
             IPEndPoint endPoint = destination.ExternalEndPoint;
             endPoint = Util.ResolveAddressForClient (endPoint, circuitData.ClientIPEndPoint);//We can use this with certainty, we logged them in!
             SimAddress = endPoint.Address.ToString();
-            SimPort = (uint)endPoint.Port;
+            SimPort = (uint)circuitData.RegionUDPPort;
             RegionX = (uint)destination.RegionLocX;
             RegionY = (uint)destination.RegionLocY;
             RegionSizeX = destination.RegionSizeX;

@@ -104,6 +104,8 @@ namespace Aurora.Modules.RegionLoader
             this.button2 = new System.Windows.Forms.Button ();
             this.button1 = new System.Windows.Forms.Button ();
             this.groupBox2 = new System.Windows.Forms.GroupBox ();
+            this.label16 = new System.Windows.Forms.Label ();
+            this.RegionSelections = new System.Windows.Forms.ComboBox ();
             this.label15 = new System.Windows.Forms.Label ();
             this.RegionSelectionsPicture = new System.Windows.Forms.PictureBox ();
             this.tabControl1 = new System.Windows.Forms.TabControl ();
@@ -171,8 +173,6 @@ namespace Aurora.Modules.RegionLoader
             this.textBox11 = new System.Windows.Forms.TextBox ();
             this.label30 = new System.Windows.Forms.Label ();
             this.tabPage2 = new System.Windows.Forms.TabPage ();
-            this.RegionSelections = new System.Windows.Forms.ComboBox ();
-            this.label16 = new System.Windows.Forms.Label ();
             this.groupBox1.SuspendLayout ();
             this.groupBox2.SuspendLayout ();
             ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).BeginInit ();
@@ -249,9 +249,9 @@ namespace Aurora.Modules.RegionLoader
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point (6, 94);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size (63, 13);
+            this.label4.Size = new System.Drawing.Size (68, 13);
             this.label4.TabIndex = 9;
-            this.label4.Text = "Region Port";
+            this.label4.Text = "Region Ports";
             // 
             // Port
             // 
@@ -678,6 +678,24 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox2.TabIndex = 28;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Region Settings";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point (6, 61);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size (130, 13);
+            this.label16.TabIndex = 3;
+            this.label16.Text = "Default Region Selections";
+            // 
+            // RegionSelections
+            // 
+            this.RegionSelections.FormattingEnabled = true;
+            this.RegionSelections.Location = new System.Drawing.Point (138, 58);
+            this.RegionSelections.Name = "RegionSelections";
+            this.RegionSelections.Size = new System.Drawing.Size (121, 21);
+            this.RegionSelections.TabIndex = 2;
+            this.RegionSelections.SelectedIndexChanged += new System.EventHandler (this.RegionSelections_SelectedIndexChanged);
             // 
             // label15
             // 
@@ -1305,9 +1323,9 @@ namespace Aurora.Modules.RegionLoader
             this.label27.AutoSize = true;
             this.label27.Location = new System.Drawing.Point (6, 94);
             this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size (63, 13);
+            this.label27.Size = new System.Drawing.Size (68, 13);
             this.label27.TabIndex = 9;
-            this.label27.Text = "Region Port";
+            this.label27.Text = "Region Ports";
             // 
             // textBox8
             // 
@@ -1388,24 +1406,6 @@ namespace Aurora.Modules.RegionLoader
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // RegionSelections
-            // 
-            this.RegionSelections.FormattingEnabled = true;
-            this.RegionSelections.Location = new System.Drawing.Point (138, 58);
-            this.RegionSelections.Name = "RegionSelections";
-            this.RegionSelections.Size = new System.Drawing.Size (121, 21);
-            this.RegionSelections.TabIndex = 2;
-            this.RegionSelections.SelectedIndexChanged += new System.EventHandler (this.RegionSelections_SelectedIndexChanged);
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point (6, 61);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size (130, 13);
-            this.label16.TabIndex = 3;
-            this.label16.Text = "Default Region Selections";
             // 
             // RegionManager
             // 

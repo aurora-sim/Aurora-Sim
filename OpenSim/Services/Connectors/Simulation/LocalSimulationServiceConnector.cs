@@ -122,8 +122,9 @@ namespace OpenSim.Services.Connectors.Simulation
          * Agent-related communications
          */
 
-        public bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
+        public bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out int requestedUDPPort, out string reason)
         {
+            requestedUDPPort = destination.ExternalEndPoint.Port;
             if (destination == null)
             {
                 reason = "Given destination was null";
@@ -140,7 +141,7 @@ namespace OpenSim.Services.Connectors.Simulation
                         UpdateAgent(destination, data);
                     IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                     if (transferModule != null)
-                        return transferModule.NewUserConnection (s, aCircuit, teleportFlags, out reason);
+                        return transferModule.NewUserConnection (s, aCircuit, teleportFlags, out requestedUDPPort, out reason);
                 }
             }
 

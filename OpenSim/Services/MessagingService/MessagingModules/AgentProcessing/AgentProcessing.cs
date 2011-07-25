@@ -481,8 +481,10 @@ namespace OpenSim.Services.MessagingService
                 circuitData.firstname = clientCaps.AccountInfo.FirstName;
                 circuitData.lastname = clientCaps.AccountInfo.LastName;
 
+                int requestedPort = 0;
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
-                        TeleportFlags, agentData, out reason);
+                        TeleportFlags, agentData, out requestedPort, out reason);
+                circuitData.RegionUDPPort = requestedPort;//Fix the port
                 if (regionAccepted)
                 {
                     string otherRegionsCapsURL;
@@ -511,7 +513,7 @@ namespace OpenSim.Services.MessagingService
 
                     EQService.EnableSimulator(neighbor.RegionHandle,
                         Util.ResolveAddressForClient(neighbor.ExternalEndPoint.Address, clientCaps.ClientEndPoint).GetAddressBytes(),
-                        neighbor.ExternalEndPoint.Port, AgentID,
+                        requestedPort, AgentID,
                         neighbor.RegionSizeX, neighbor.RegionSizeY, requestingRegion);
 
                     // EnableSimulator makes the client send a UseCircuitCode message to the destination, 
@@ -520,7 +522,7 @@ namespace OpenSim.Services.MessagingService
                     Thread.Sleep(300);
                     EQService.EstablishAgentCommunication(AgentID, neighbor.RegionHandle,
                         Util.ResolveAddressForClient (neighbor.ExternalEndPoint.Address, clientCaps.ClientEndPoint).GetAddressBytes (),
-                        neighbor.ExternalEndPoint.Port, otherRegionsCapsURL, neighbor.RegionSizeX,
+                        requestedPort, otherRegionsCapsURL, neighbor.RegionSizeX,
                         neighbor.RegionSizeY,
                         requestingRegion);
 
@@ -604,10 +606,17 @@ namespace OpenSim.Services.MessagingService
 
                     IRegionClientCapsService otherRegion = clientCaps.GetCapsService(destination.RegionHandle);
 
-                    EQService.TeleportFinishEvent (destination.RegionHandle, destination.Access, Util.ResolveAddressForClient (destination.ExternalEndPoint, clientCaps.ClientEndPoint), otherRegion.CapsUrl,
-                                               4, AgentID, TeleportFlags,
-                                               destination.RegionSizeX, destination.RegionSizeY,
-                                               requestingRegion);
+                    if (circuit.RegionUDPPort == 0)
+                        circuit.RegionUDPPort = destination.ExternalEndPoint.Port;
+                    else
+                        destination.ExternalEndPoint.Port = circuit.RegionUDPPort;//Fix the port with the one the region said to use
+
+                    EQService.TeleportFinishEvent (destination.RegionHandle, destination.Access,
+                        Util.ResolveAddressForClient (destination.ExternalEndPoint, clientCaps.ClientEndPoint),
+                        otherRegion.CapsUrl,
+                        4, AgentID, TeleportFlags,
+                        destination.RegionSizeX, destination.RegionSizeY,
+                        requestingRegion);
 
                     // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
                     // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
@@ -1039,8 +1048,11 @@ namespace OpenSim.Services.MessagingService
                 if (commsService != null)
                     commsService.GetUrlsForUser (region, aCircuit.AgentID);//Make sure that we make userURLs if we need to
 
+                int requestedUDPPort = 0;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
-                success = SimulationService.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out reason);
+                success = SimulationService.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out requestedUDPPort, out reason);
+                aCircuit.RegionUDPPort = requestedUDPPort;
+
                 if (!success) // If it failed, do not set up any CapsService for the client
                 {
                     if (reason != "")

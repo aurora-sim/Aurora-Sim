@@ -138,11 +138,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene">The region to update the agent</param>
         /// <param name="agent">The agent information</param>
         /// <param name="teleportFlags">The flags on the agent's teleport</param>
+        /// <param name="UDPPort">The port to tell the client to connect to</param>
         /// <param name="reason">The reason the agent cannot enter the region</param>
         /// <returns>
         /// True if the user can enter, false if not
         /// </returns>
-        bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out string reason);
+        bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort, out string reason);
 
         /// <summary>
         /// New data has come in about one of our child agents, update them with the new information

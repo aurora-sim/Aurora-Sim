@@ -124,9 +124,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public Socket Server { get { return null; } }
 
-        public void Initialise (IPAddress _listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, AgentCircuitManager circuitManager)
+        public void Initialise (int port, IConfigSource configSource, AgentCircuitManager circuitManager)
         {
-            base.Initialise (_listenIP, (int)port);
+            base.Initialise (IPAddress.Any, port);
             #region Environment.TickCount Measurement
 
             // Measure the resolution of Environment.TickCount
@@ -230,6 +230,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             incomingPacketMonitor.Stop();
             outgoingPacketMonitor.Stop();
             base.Stop();
+        }
+
+        public IClientNetworkServer Copy ()
+        {
+            return new LLUDPServer();
         }
 
         public void AddScene(IScene scene)

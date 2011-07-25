@@ -71,12 +71,13 @@ namespace OpenSim.Services.Connectors.Simulation
             return "/agent/";
         }
 
-        public virtual bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out string reason)
+        public virtual bool CreateAgent (GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out int requestedUDPPort, out string reason)
         {
             reason = String.Empty;
             // Try local first
-            if (m_localBackend.CreateAgent(destination, ref aCircuit, teleportFlags, data, out reason))
+            if (m_localBackend.CreateAgent(destination, ref aCircuit, teleportFlags, data, out requestedUDPPort, out reason))
                 return true;
+            requestedUDPPort = destination.ExternalEndPoint.Port;//Just make sure..
 
             reason = String.Empty;
 
@@ -112,6 +113,8 @@ namespace OpenSim.Services.Connectors.Simulation
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
                         if (responseMap.ContainsKey ("Reason"))
                             reason = responseMap["Reason"].AsString ();
+                        if (responseMap.ContainsKey ("requestedUDPPort"))
+                            requestedUDPPort = responseMap["requestedUDPPort"];
                         return results["success"].AsBoolean ();
                     }
                     catch

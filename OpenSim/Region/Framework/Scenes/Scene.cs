@@ -68,7 +68,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         protected RegionInfo m_regInfo;
-        protected IClientNetworkServer m_clientServer;
+        protected List<IClientNetworkServer> m_clientServers;
 
         protected ThreadMonitor monitor = new ThreadMonitor();
             
@@ -293,13 +293,16 @@ namespace OpenSim.Region.Framework.Scenes
             m_regInfo = regionInfo;
         }
 
-        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer)
+        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers)
         {
             Initialize (regionInfo);
 
             //Set up the clientServer
-            m_clientServer = clientServer;
-            clientServer.AddScene (this);
+            m_clientServers = clientServers;
+            foreach (IClientNetworkServer clientServer in clientServers)
+            {
+                clientServer.AddScene (this);
+            }
 
             m_sceneManager = RequestModuleInterface<SceneManager> ();
             m_simDataStore = m_sceneManager.GetNewSimulationDataStore ();
@@ -404,7 +407,10 @@ namespace OpenSim.Region.Framework.Scenes
             shuttingdown = true;
 
             m_sceneGraph.Close ();
-            m_clientServer.Stop ();
+            foreach (IClientNetworkServer clientServer in m_clientServers)
+            {
+                clientServer.Stop ();
+            }
         }
 
         #endregion
@@ -419,7 +425,10 @@ namespace OpenSim.Region.Framework.Scenes
             if (!ShouldRunHeartbeat) //Allow for the heartbeat to not be used
                 return;
 
-            m_clientServer.Start ();
+            foreach (IClientNetworkServer clientServer in m_clientServers)
+            {
+                clientServer.Start ();
+            }
 
             //Give it the heartbeat delegate with an infinite timeout
             monitor.StartTrackingThread(0, Update);

@@ -79,7 +79,7 @@ namespace OpenSim.Framework
         #region Initialize/Close
 
         void Initialize (RegionInfo regionInfo);
-        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
+        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
         void StartHeartbeat ();
         void FinishedStartup (string p, List<string> list);
         bool ShouldRunHeartbeat { get; set; }

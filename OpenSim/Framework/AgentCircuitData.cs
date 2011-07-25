@@ -133,6 +133,11 @@ namespace OpenSim.Framework
         /// </summary>
         public IPEndPoint ClientIPEndPoint;
 
+        /// <summary>
+        /// IntenalUseOnly - Kept by the server to tell the rest of the server what port to call the region on
+        /// </summary>
+        public int RegionUDPPort;
+
         public AgentCircuitData()
         {
         }

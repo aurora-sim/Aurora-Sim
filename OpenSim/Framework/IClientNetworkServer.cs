@@ -34,13 +34,10 @@ namespace OpenSim.Framework
 {
     public interface IClientNetworkServer
     {
-        void Initialise(
-            IPAddress _listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource, 
-            AgentCircuitManager authenticateClass);
-
-        void Stop();
-        void AddScene(IScene x);
-
-        void Start();
+        void Initialise (int port, IConfigSource configSource, AgentCircuitManager authenticateClass);
+        void AddScene (IScene x);
+        void Start ();
+        void Stop ();
+        IClientNetworkServer Copy ();
     }
 }

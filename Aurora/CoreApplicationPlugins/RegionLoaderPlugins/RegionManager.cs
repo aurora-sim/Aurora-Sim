@@ -120,8 +120,17 @@ namespace Aurora.Modules.RegionLoader
             region.RegionLocY = int.Parse(LocY.Text) * Constants.RegionSize;
             
             IPAddress address = IPAddress.Parse("0.0.0.0");
-            int port = Convert.ToInt32(Port.Text);
-            region.InternalEndPoint = new IPEndPoint(address, port);
+            string[] ports = Port.Text.Split (',');
+            
+            foreach (string port in ports)
+            {
+                string tPort = port.Trim ();
+                int iPort = 0;
+                if (int.TryParse (tPort, out iPort))
+                    region.UDPPorts.Add (iPort);
+            }
+            region.InternalEndPoint = new IPEndPoint (address, region.UDPPorts[0]);
+            region.HttpPort = (uint)region.InternalEndPoint.Port;
 
             string externalName = ExternalIP.Text;
             if (externalName == "DEFAULT")
@@ -203,7 +212,7 @@ namespace Aurora.Modules.RegionLoader
                 textBox9.Text = "DEFAULT";
             else
                 textBox9.Text = region.ExternalHostName;
-            textBox7.Text = region.HttpPort.ToString ();
+            textBox7.Text = string.Join (", ", region.UDPPorts.ConvertAll<string> (delegate (int i) { return i.ToString (); }).ToArray ());
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString ();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString ();
             textBox1.Text = region.RegionName;
@@ -284,10 +293,19 @@ namespace Aurora.Modules.RegionLoader
             region.RegionLocX = int.Parse(textBox3.Text) * Constants.RegionSize;
             region.RegionLocY = int.Parse(textBox5.Text) * Constants.RegionSize;
 
-            IPAddress address = IPAddress.Parse("0.0.0.0");
-            int port = Convert.ToInt32(textBox7.Text);
-            region.InternalEndPoint = new IPEndPoint(address, port);
-            region.HttpPort = (uint)port;
+            IPAddress address = IPAddress.Parse ("0.0.0.0");
+            string[] ports = textBox7.Text.Split (',');
+
+            region.UDPPorts.Clear ();
+            foreach (string port in ports)
+            {
+                string tPort = port.Trim ();
+                int iPort = 0;
+                if (int.TryParse (tPort, out iPort))
+                    region.UDPPorts.Add (iPort);
+            }
+            region.InternalEndPoint = new IPEndPoint (address, region.UDPPorts[0]);
+            region.HttpPort = (uint)region.InternalEndPoint.Port;
 
             string externalName = textBox9.Text;
             if (externalName == "DEFAULT")
@@ -375,7 +393,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void RegionPort_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("This is the port that your region will run on.");
+            MessageBox.Show("This are the ports that your region will run on. Put a comma between multiple ports to have more than one.");
         }
 
         private void ExternalIPHelp_Click(object sender, EventArgs e)

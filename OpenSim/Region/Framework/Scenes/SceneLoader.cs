@@ -68,24 +68,21 @@ namespace OpenSim.Region.Framework.Scenes
         protected Scene SetupScene (RegionInfo regionInfo, IConfigSource configSource)
         {
             AgentCircuitManager circuitManager = new AgentCircuitManager ();
-            IPAddress listenIP = regionInfo.InternalEndPoint.Address;
-            if (!IPAddress.TryParse (regionInfo.InternalEndPoint.Address.ToString (), out listenIP))
-                listenIP = IPAddress.Parse ("0.0.0.0");
-
-            uint port = (uint)regionInfo.InternalEndPoint.Port;
-
-            string ClientstackDll = m_configSource.Configs["Startup"].GetString ("ClientStackPlugin", "OpenSim.Region.ClientStack.LindenUDP.dll");
-
-            IClientNetworkServer clientServer = AuroraModuleLoader.LoadPlugin<IClientNetworkServer> (Util.BasePathCombine (ClientstackDll));
-            clientServer.Initialise (
-                    listenIP, ref port, 0, regionInfo.m_allow_alternate_ports,
-                    m_configSource, circuitManager);
-
-            regionInfo.InternalEndPoint.Port = (int)port;
+            List<IClientNetworkServer> clientServers = AuroraModuleLoader.PickupModules<IClientNetworkServer> ();
+            List<IClientNetworkServer> allClientServers = new List<IClientNetworkServer> ();
+            foreach (IClientNetworkServer clientServer in clientServers)
+            {
+                foreach (int port in regionInfo.UDPPorts)
+                {
+                    IClientNetworkServer copy = clientServer.Copy ();
+                    copy.Initialise (port, m_configSource, circuitManager);
+                    allClientServers.Add (copy);
+                }
+            }
 
             Scene scene = new Scene ();
             scene.AddModuleInterfaces (m_openSimBase.ApplicationRegistry.GetInterfaces ());
-            scene.Initialize (regionInfo, circuitManager, clientServer);
+            scene.Initialize (regionInfo, circuitManager, allClientServers);
 
             return scene;
         }
