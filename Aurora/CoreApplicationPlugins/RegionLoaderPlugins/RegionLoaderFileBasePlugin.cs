@@ -299,7 +299,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port for region " + name, "9000"));
                 config.Set("InternalPort", port);
             }
-
+            region.UDPPorts.Add (port);
             region.InternalEndPoint = new IPEndPoint(address, port);
 
             if (config.Contains("AllowAlternatePorts"))

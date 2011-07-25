@@ -175,6 +175,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if ((alreadyExists = conn.GetRegionInfo (info.RegionID)) == null)
                     {
                         changed = true;
+                        if (!info.UDPPorts.Contains (info.InternalEndPoint.Port))
+                            info.UDPPorts.Add (info.InternalEndPoint.Port);
                         info.Disabled = false;
                         conn.UpdateRegionInfo (info);
                     }
@@ -188,6 +190,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         alreadyExists.RegionSizeY = info.RegionSizeY;
                         alreadyExists.ExternalHostName = info.ExternalHostName;
                         alreadyExists.Disabled = false;
+                        if (!alreadyExists.UDPPorts.Contains (info.InternalEndPoint.Port))
+                            alreadyExists.UDPPorts.Add (info.InternalEndPoint.Port);
                         conn.UpdateRegionInfo (alreadyExists);
                     }
                 }
