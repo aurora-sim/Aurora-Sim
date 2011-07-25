@@ -931,7 +931,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         continue;
                     if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID)//Send full updates for those in the sim
                     {
-                        if (avatar.CurrentParcel.LandData.Private || oldParcel.LandData.Private)//Either one, we gotta send an update
+                        if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))//Either one, we gotta send an update
                         {
                             sp.SceneViewer.RemoveAvatarFromView (avatar);
                             avatar.SceneViewer.RemoveAvatarFromView (sp);

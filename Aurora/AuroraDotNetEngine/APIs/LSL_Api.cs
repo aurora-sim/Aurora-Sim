@@ -11738,7 +11738,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
             int refcount = 0;
+            List<ContactResult> newResults = new List<ContactResult> ();
             foreach (ContactResult result in results)
+            {
+                bool found = false;
+                foreach (ContactResult r in newResults)
+                {
+                    if (r.ConsumerID == result.ConsumerID)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    newResults.Add (result);
+            }
+            foreach (ContactResult result in newResults)
             {
                 if ((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND &&
                     result.ConsumerID == 0)
