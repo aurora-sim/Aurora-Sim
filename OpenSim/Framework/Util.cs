@@ -1862,7 +1862,7 @@ namespace OpenSim.Framework
 
         public static System.Net.IPAddress ResolveAddressForClient (System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
         {
-            if (iPAddress == clientIP.Address)
+            if (iPAddress.Equals(clientIP.Address))
                 return System.Net.IPAddress.Loopback;//Loopback around! They are on the same connection
             return iPAddress;
         }
