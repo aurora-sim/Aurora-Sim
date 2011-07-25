@@ -180,8 +180,9 @@ namespace OpenSim.Region.Framework.Scenes
                 return; // if 2 far ignore
             }
             //Is this really necessary? -7/21
-            //if (!lastPresencesDInView.ContainsKey (presence.UUID))
-            //    return;//Only send updates if they are in view
+            //Very much so... the client cannot get a terse update before a full update -7/25
+            if (!lastPresencesDInView.ContainsKey (presence.UUID))
+                return;//Only send updates if they are in view
 
             QueuePresenceForUpdateInternal (presence, flags);
         }
