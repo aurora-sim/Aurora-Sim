@@ -1086,7 +1086,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             InventoryItemBase assetRequestItem = new InventoryItemBase (itemID, agentID);
             assetRequestItem = invService.GetItem (assetRequestItem);
 
-            if (assetRequestItem.CreatorData != null && assetRequestItem.CreatorData != string.Empty)
+            if (assetRequestItem != null &&
+                assetRequestItem.CreatorData != null && 
+                assetRequestItem.CreatorData != string.Empty)
             {
                 IUserManagement userManagement = m_scene.RequestModuleInterface<IUserManagement> ();
                 if (userManagement != null)
