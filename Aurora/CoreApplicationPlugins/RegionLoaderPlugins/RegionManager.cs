@@ -595,7 +595,17 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 loadAppenedFileName = simData.GetString ("ApendedLoadFileName", loadAppenedFileName);
                 newFilePath = simData.GetString ("LoadBackupDirectory", newFilePath);
             }
-            string newFileName = Path.Combine(newFilePath, name + loadAppenedFileName + ".abackup");
+            string newFileName = Path.Combine (newFilePath, name + loadAppenedFileName + ".abackup");
+            if (!File.Exists (name))
+                return; //None selected
+            if (File.Exists (newFileName))
+            {
+                DialogResult s = Utilities.InputBox ("Delete file?", "The file " + name + " already exists, delete?");
+                if (s == System.Windows.Forms.DialogResult.OK)
+                    File.Delete (name);
+                else
+                    return;//None selected
+            }
             File.Copy (name, newFileName);
         }
 
