@@ -870,8 +870,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         AssetType.Object, remoteClient.AgentId);
                     asset.Description = grp.RootChild.Description;
                     asset.Data = Utils.StringToBytes(sceneObjectXml);
-                    asset.FillHash();
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
 
                     if (item.Folder == UUID.Zero)
                     {

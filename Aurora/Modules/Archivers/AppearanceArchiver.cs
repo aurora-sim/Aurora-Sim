@@ -383,7 +383,7 @@ namespace Aurora.Modules
                 if (asset == null) //Don't overwrite
                 {
                     asset = LoadAssetBase(assetMap);
-                    AssetService.Store(asset);
+                    asset.ID = AssetService.Store(asset);
                 }
             }
         }

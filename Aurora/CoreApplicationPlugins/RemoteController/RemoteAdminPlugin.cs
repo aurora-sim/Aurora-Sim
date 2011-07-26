@@ -1869,9 +1869,7 @@ namespace OpenSim.CoreApplicationPlugins
                                               };
 
                         asset.FillHash();
-
-
-                        assetService.Store(asset);
+                        asset.ID = assetService.Store(asset);
                     }
 
                     avatars = doc.GetElementsByTagName("Avatar");

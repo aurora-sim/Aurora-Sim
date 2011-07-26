@@ -1297,7 +1297,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         return;
 
                     paintAsset.Data = defaultTexture.Data;//Eventually we need to replace this with an interpolation of the existing textures!
-                    m_scene.AssetService.Store(paintAsset);
+                    paintAsset.ID = m_scene.AssetService.Store(paintAsset);
                 }
             }
             args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);

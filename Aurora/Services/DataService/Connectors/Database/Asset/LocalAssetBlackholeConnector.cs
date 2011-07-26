@@ -151,47 +151,48 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             AssetBase asset = null;
             try
             {
+                // get the asset
                 dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
                                     "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, owner_id, host_uri");
                 asset = LoadAssetFromDR(dr);
+
+                if ((asset == null) && (needsConversion))
+                {
+                    // check to see if it needs converted
+                    asset = Convert2BH(uuid);
+                    if (asset != null)
+                    {
+                        if (metaOnly) asset.Data = new byte[] { };
+                        asset.MetaOnly = metaOnly;
+                    }
+                }
+
                 if (asset == null)
                 {
+                    // check the old table
                     databaseTable = "auroraassets_old";
                     dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
                                     "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, owner_id, host_uri");
                     asset = LoadAssetFromDR(dr);
-                    if (asset != null) StoreAsset(asset);
+                    if (asset != null) asset.ID = Store(asset);
                 }
-                if (asset == null)
+
+
+                if ((asset == null) && (displayMessages))
                 {
-                    if (needsConversion)
-                    {
-                        asset = Convert2BH(uuid);
-                        if (asset == null)
-                        {
-                            if (displayMessages)
-                                m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " +
-                                       uuid);
-                        }
-                        else
-                        {
-                            if (metaOnly) asset.Data = new byte[] { };
-                            asset.MetaOnly = metaOnly;
-                        }
-                    }
-                    else
-                    {
-                        if (displayMessages)
-                            m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
-                    }
+                    // oh well.. we tried
+                    m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
                 }
-                else if (!metaOnly)
+                if (asset == null) return null;
+
+                if (!metaOnly)
                 {
+                    // load all the data
                     asset.Data = LoadFile(asset.HashCode);
-                    asset.MetaOnly = false;
                 }
-                else asset.MetaOnly = true;
-                m_Gd.Update(databaseTable, new object[] { Util.ToUnixTime(DateTime.UtcNow) }, new[] { "access_time" }, new[] { "id" }, new object[] { uuid });
+                asset.MetaOnly = metaOnly;
+                // save down last time updated
+                m_Gd.Update(databaseTable, new object[] { Util.ToUnixTime(DateTime.UtcNow) }, new[] { "access_time" }, new[] { "id" }, new object[] { asset.ID });
             }
             catch (Exception e)
             {
@@ -249,6 +250,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region Store Asset
 
+        public UUID Store(AssetBase asset)
+        {
+            bool successful;
+            asset = StoreAsset(asset, out successful);
+            return asset.ID;
+        }
+
         /// <summary>
         /// Stores the Asset in the database
         /// </summary>
@@ -256,20 +264,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         /// <returns></returns>
         public bool StoreAsset(AssetBase asset)
         {
+            bool successful;
+            StoreAsset(asset, out successful);
+            return successful;
+        }
+
+        private AssetBase StoreAsset(AssetBase asset, out bool successful)
+        {
             ResetTimer(60000);
             try
             {
-                // Ensure some data is correct
-                string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
-                if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
-                if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
-
-
-
-                // Get the new hashcode if this is not MataOnly Data
-                if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
-                    asset.HashCode = WriteFile(asset.ID, asset.Data);
-
                 if (asset.ParentID == UUID.Zero)
                 {
                     // most likely this has never been saved before or is some new asset
@@ -284,8 +288,21 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         asset.ParentID = asset.ID;
                     }
                     else
-                        asset.ParentID = UUID.Parse(check1[0]);
+                    {
+                        successful = true;
+                        AssetBase abtemp = GetAsset(UUID.Parse(check1[0]));
+                        if (abtemp != null) return abtemp;
+                    }
                 }
+
+                // Ensure some data is correct
+                string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
+                if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
+                if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
+
+                // Get the new hashcode if this is not MataOnly Data
+                if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
+                    asset.HashCode = WriteFile(asset.ID, asset.Data);
 
                 if ((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode))
                 {
@@ -321,16 +338,19 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         0)
                     {
                         m_Log.Error("[AssetDataPlugin] Asset did not saver propery: " + asset.ID);
-                        return false;
+                        successful = false;
+                        return asset;
                     }
                 }
-                return true;
+                successful = true;
+                return asset;
             }
             catch (Exception e)
             {
                 m_Log.Error("[AssetDataPlugin]: StoreAsset(" + asset.ID + ")", e);
             }
-            return false;
+            successful = false;
+            return asset;
         }
 
         public void UpdateContent(UUID id, byte[] assetdata)
@@ -681,6 +701,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             "'", "auroraassets_temp", "id");
                         if ((check1 != null) && (check1.Count == 0))
                         {
+                            asset.ParentID = asset.ID;
                             m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
                                         new object[] { asset.ID, asset.HashCode, asset.CreatorID });
                         }
@@ -693,7 +714,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 new[] { "assetID" }, new object[] { asset.ID });
                         }
                         else asset.ParentID = asset.ID;
-
 
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;

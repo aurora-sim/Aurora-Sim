@@ -584,8 +584,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType)assetType,
                                                     remoteClient.AgentId) {Data = data, Description = description};
-                    asset.FillHash();
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
 
                     CreateNewInventoryItem(
                         remoteClient, remoteClient.AgentId.ToString(), "", folderID, name, 0, callbackID, asset, invType,
@@ -1210,8 +1209,7 @@ namespace OpenSim.Region.Framework.Scenes
                                           Description = itemBase.Description,
                                           Data = Encoding.ASCII.GetBytes(DefaultLSLScript)
                                       };
-                asset.FillHash();
-                m_scene.AssetService.Store(asset);
+                asset.ID = m_scene.AssetService.Store(asset);
 
                 TaskInventoryItem taskItem = new TaskInventoryItem();
 
@@ -2277,7 +2275,7 @@ namespace OpenSim.Region.Framework.Scenes
                     remoteClient.AgentId);
                 asset.Description = item.Description;
                 asset.Data = data;
-                m_scene.AssetService.Store(asset);
+                asset.ID = m_scene.AssetService.Store(asset);
 
                 // Update item with new asset
                 item.AssetID = asset.ID;

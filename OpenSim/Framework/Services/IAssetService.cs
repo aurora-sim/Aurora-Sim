@@ -132,6 +132,7 @@ namespace OpenSim.Services.Interfaces
     {
         AssetBase GetAsset(UUID uuid);
         AssetBase GetMeta(UUID uuid);
+        UUID Store(AssetBase asset);
         bool StoreAsset(AssetBase asset);
         void UpdateContent(UUID id, byte[] asset);
         bool ExistsAsset(UUID uuid);

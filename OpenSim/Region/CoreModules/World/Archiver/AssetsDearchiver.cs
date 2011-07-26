@@ -160,7 +160,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 AssetBase asset = new AssetBase(filename, metadata.Name, (AssetType) metadata.AssetType, UUID.Zero)
                                       {Description = metadata.Description, Data = data, MetaOnly = false};
-                m_cache.Store(asset);
+                asset.ID = m_cache.Store(asset);
             }
             else
             {

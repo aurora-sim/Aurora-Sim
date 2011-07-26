@@ -58,7 +58,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                                       Flags = (temporary) ? AssetFlags.Temperary : 0
                                   };
             asset.FillHash();
-            m_scene.AssetService.Store(asset);
+            asset.ID = m_scene.AssetService.Store(asset);
 
             return asset.ID;
         }

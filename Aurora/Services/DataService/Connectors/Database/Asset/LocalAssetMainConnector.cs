@@ -117,6 +117,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return null;
         }
 
+        public UUID Store(AssetBase asset)
+        {
+            StoreAsset(asset);
+            return asset.ID;
+        }
+
         public bool StoreAsset(AssetBase asset)
         {
             try

@@ -150,7 +150,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
             else if (m_storeLocal)
             {
-                m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+                m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
             }
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
@@ -218,7 +218,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         private void DoCreateItem(uint callbackID, IClientAPI remoteClient)
         {
-            m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+            m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)

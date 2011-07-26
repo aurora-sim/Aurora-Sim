@@ -136,7 +136,7 @@ namespace Aurora.Modules.World.WorldShader
                                 texture = Shade (texture, shader, percent, greyScale);
                                 a.Data = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage (texture, false);
                                 texture.Dispose ();
-                                MainConsole.Instance.ConsoleScene.AssetService.Store (a);
+                                a.ID = MainConsole.Instance.ConsoleScene.AssetService.Store (a);
                                 child.Shape.Textures = SetTexture (child.Shape, a.ID, t);
                                 m_previouslyConverted.Add (t, a.ID);
                                 m_revertConverted.Add (a.ID, t);

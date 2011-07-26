@@ -343,7 +343,7 @@ namespace OpenSim.Services.AssetService
             }
 
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
-            m_Database.StoreAsset(asset);
+            asset.ID = m_Database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null && asset != null)
             {

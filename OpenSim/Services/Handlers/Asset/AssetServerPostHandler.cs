@@ -81,6 +81,7 @@ namespace OpenSim.Services
             }
 
             UUID id = m_AssetService.Store(asset);
+            asset.ID = id;
 
             xs = new XmlSerializer(typeof(string));
             return WebUtils.SerializeResult(xs, id.ToString());

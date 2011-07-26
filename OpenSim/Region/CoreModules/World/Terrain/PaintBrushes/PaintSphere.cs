@@ -129,7 +129,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             paintAsset.Flags = AssetFlags.Deletable;
             map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture = UUID.Random();
             paintAsset.ID = map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
-            map.Scene.AssetService.Store(paintAsset);
+            paintAsset.ID = map.Scene.AssetService.Store(paintAsset);
             map.Scene.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
             locked = false;
         }

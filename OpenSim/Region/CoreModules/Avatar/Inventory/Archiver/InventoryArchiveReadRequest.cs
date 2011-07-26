@@ -524,7 +524,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 AssetBase asset = new AssetBase(UUID.Parse(uuid), "RandomName", (AssetType) assetType, UUID.Zero)
                                       {Data = data, Flags = AssetFlags.Normal};
-                m_registry.RequestModuleInterface<IAssetService>().Store(asset);
+                asset.ID = m_registry.RequestModuleInterface<IAssetService>().Store(asset);
                 return true;
             }
             else

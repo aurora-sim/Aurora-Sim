@@ -169,8 +169,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     AssetBase asset =
                     CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
+                    asset.ID = m_scene.AssetService.Store(asset);
                     item.AssetID = asset.ID;
-                    m_scene.AssetService.Store(asset);
 
                     m_scene.InventoryService.UpdateItem(item);
 
@@ -185,8 +185,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     AssetBase asset =
                         CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
+                        asset.ID = m_scene.AssetService.Store(asset);
                         item.AssetID = asset.ID;
-                        m_scene.AssetService.Store(asset);
 
                     m_scene.InventoryService.UpdateItem(item);
 
@@ -466,7 +466,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 (sbyte)AssetType.Object,
                 Utils.StringToBytes(AssetXML),
                 objectGroups[0].OwnerID.ToString());
-            m_scene.AssetService.Store(asset);
+            asset.ID = m_scene.AssetService.Store(asset);
             assetID = asset.ID;
             item.AssetID = assetID;
             if (DeRezAction.SaveToExistingUserInventoryItem != action)

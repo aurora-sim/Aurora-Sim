@@ -960,15 +960,13 @@ namespace Aurora.Modules
             if (terraindata != null)
             {
                 Terrainasset.Data = terraindata;
-                Terrainasset.FillHash();
-                m_scene.AssetService.Store (Terrainasset);
+                Terrainasset.ID = m_scene.AssetService.Store(Terrainasset);
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
-                Mapasset.FillHash();
-                m_scene.AssetService.Store (Mapasset);
+                Mapasset.ID = m_scene.AssetService.Store(Mapasset);
             }
 
             //Update the grid map

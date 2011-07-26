@@ -552,7 +552,7 @@ namespace OpenSim.Services.CapsService
                 {
                     AssetBase textureAsset = new AssetBase (UUID.Random (), assetName, AssetType.Texture, m_service.AgentID);
                     textureAsset.Data = texture_list[i].AsBinary ();
-                    m_assetService.Store (textureAsset);
+                    textureAsset.ID = m_assetService.Store(textureAsset);
                     textures.Add(textureAsset.ID);
                 }
                 for (int i = 0; i < mesh_list.Count; i++)
@@ -599,7 +599,7 @@ namespace OpenSim.Services.CapsService
 
                     AssetBase meshAsset = new AssetBase (UUID.Random (), assetName, AssetType.Mesh, m_service.AgentID);
                     meshAsset.Data = mesh_list[i].AsBinary ();
-                    m_assetService.Store (meshAsset);
+                    meshAsset.ID = m_assetService.Store(meshAsset);
                     
                     pbs.SculptEntry = true;
                     pbs.SculptTexture = meshAsset.ID;
@@ -683,7 +683,7 @@ namespace OpenSim.Services.CapsService
                 }
             }
             AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
-            m_assetService.Store(asset);
+            asset.ID = m_assetService.Store(asset);
 
             InventoryItemBase item = new InventoryItemBase();
             item.Owner = m_service.AgentID;

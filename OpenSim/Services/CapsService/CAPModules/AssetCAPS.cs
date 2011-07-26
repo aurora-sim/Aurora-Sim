@@ -82,20 +82,20 @@ namespace OpenSim.Services.CapsService
         public const string DefaultFormat = "x-j2c";
         // TODO: Change this to a config option
         protected string REDIRECT_URL = null;
-        
+
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
-            
-            service.AddStreamHandler("GetTexture", 
+
+            service.AddStreamHandler("GetTexture",
                 new StreamHandler("GET", service.CreateCAPS("GetTexture", ""),
                                                         ProcessGetTexture));
-            service.AddStreamHandler ("UploadBakedTexture",
-                new RestStreamHandler ("POST", service.CreateCAPS ("UploadBakedTexture", m_uploadBakedTexturePath),
+            service.AddStreamHandler("UploadBakedTexture",
+                new RestStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
                                                         UploadBakedTexture));
-            service.AddStreamHandler ("GetMesh",
-                new RestHTTPHandler("GET", service.CreateCAPS ("GetMesh", ""),
+            service.AddStreamHandler("GetMesh",
+                new RestHTTPHandler("GET", service.CreateCAPS("GetMesh", ""),
                                                        delegate(Hashtable m_dhttpMethod)
                                                        {
                                                            return ProcessGetMesh(m_dhttpMethod);
@@ -108,9 +108,9 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
-            m_service.RemoveStreamHandler ("GetTexture", "GET");
-            m_service.RemoveStreamHandler ("UploadBakedTexture", "POST");
-            m_service.RemoveStreamHandler ("GetMesh", "GET");
+            m_service.RemoveStreamHandler("GetTexture", "GET");
+            m_service.RemoveStreamHandler("UploadBakedTexture", "POST");
+            m_service.RemoveStreamHandler("GetMesh", "GET");
         }
 
         #region Get Texture
@@ -158,7 +158,7 @@ namespace OpenSim.Services.CapsService
             }
 
             httpResponse.Send();
-            httpRequest.InputStream.Close ();
+            httpRequest.InputStream.Close();
             httpRequest = null;
             return null;
         }
@@ -235,8 +235,7 @@ namespace OpenSim.Services.CapsService
                                 return false; // !!! Caller try another codec, please!
 
                             newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temperary;
-                            newTexture.FillHash();
-                            m_assetService.Store(newTexture);
+                            newTexture.ID = m_assetService.Store(newTexture);
                             WriteTextureData(httpRequest, httpResponse, newTexture, format);
                             newTexture = null;
                             return true;
@@ -266,9 +265,9 @@ namespace OpenSim.Services.CapsService
 
         private void WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
         {
-            m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler ("AssetRequested", new object[3] { this.m_service.Registry, texture, m_service.AgentID });
+            m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("AssetRequested", new object[3] { this.m_service.Registry, texture, m_service.AgentID });
 
-            string range = request.Headers.GetOne ("Range");
+            string range = request.Headers.GetOne("Range");
             //m_log.DebugFormat("[GETTEXTURE]: Range {0}", range);
             if (!String.IsNullOrEmpty(range)) // JP2's only
             {
@@ -453,7 +452,7 @@ namespace OpenSim.Services.CapsService
             return null;
         }
 
-        public delegate void UploadedBakedTexture(UUID assetID, byte[] data);
+        public delegate void UploadedBakedTexture(UUID assetID, byte[] data, out UUID newAssetID);
         public class BakedTextureUploader
         {
             public event UploadedBakedTexture OnUpLoad;
@@ -481,6 +480,14 @@ namespace OpenSim.Services.CapsService
             /// <returns></returns>
             public string uploaderCaps(byte[] data, string path, string param)
             {
+                handlerUpLoad = OnUpLoad;
+                if (handlerUpLoad != null)
+                {
+                    UUID newNewAssetID;
+                    handlerUpLoad(newAssetID, data, out newNewAssetID);
+                    newAssetID = newNewAssetID;
+                }
+
                 string res = String.Empty;
                 OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
@@ -489,17 +496,11 @@ namespace OpenSim.Services.CapsService
                 res = OSDParser.SerializeLLSDXmlString(map);
                 clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
-                handlerUpLoad = OnUpLoad;
-                if (handlerUpLoad != null)
-                {
-                    handlerUpLoad(newAssetID, data);
-                }
-
                 return res;
             }
         }
 
-        public void BakedTextureUploaded(UUID assetID, byte[] data)
+        public void BakedTextureUploaded(UUID assetID, byte[] data, out UUID newAssetID)
         {
             m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset;
@@ -507,13 +508,14 @@ namespace OpenSim.Services.CapsService
             asset.Data = data;
             asset.Flags = AssetFlags.Deletable | AssetFlags.Temperary;
 
-            m_assetService.Store(asset);
+            newAssetID = m_assetService.Store(asset);
+            asset.ID = newAssetID;
         }
 
-        public Hashtable ProcessGetMesh (Hashtable request)
+        public Hashtable ProcessGetMesh(Hashtable request)
         {
 
-            Hashtable responsedata = new Hashtable ();
+            Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 400; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
@@ -521,12 +523,12 @@ namespace OpenSim.Services.CapsService
 
             string meshStr = string.Empty;
 
-            if (request.ContainsKey ("mesh_id"))
-                meshStr = request["mesh_id"].ToString ();
+            if (request.ContainsKey("mesh_id"))
+                meshStr = request["mesh_id"].ToString();
 
 
             UUID meshID = UUID.Zero;
-            if (!String.IsNullOrEmpty (meshStr) && UUID.TryParse (meshStr, out meshID))
+            if (!String.IsNullOrEmpty(meshStr) && UUID.TryParse(meshStr, out meshID))
             {
                 if (m_assetService == null)
                 {
@@ -539,12 +541,12 @@ namespace OpenSim.Services.CapsService
 
                 AssetBase mesh;
                 // Only try to fetch locally cached textures. Misses are redirected
-                mesh = m_assetService.GetCached (meshID.ToString ());
+                mesh = m_assetService.GetCached(meshID.ToString());
                 if (mesh != null)
                 {
                     if (mesh.Type == (SByte)AssetType.Mesh)
                     {
-                        responsedata["str_response_string"] = Convert.ToBase64String (mesh.Data);
+                        responsedata["str_response_string"] = Convert.ToBase64String(mesh.Data);
                         responsedata["content_type"] = "application/vnd.ll.mesh";
                         responsedata["int_response_code"] = 200;
                     }
@@ -560,12 +562,12 @@ namespace OpenSim.Services.CapsService
                 }
                 else
                 {
-                    mesh = m_assetService.Get (meshID.ToString ());
+                    mesh = m_assetService.Get(meshID.ToString());
                     if (mesh != null)
                     {
                         if (mesh.Type == (SByte)AssetType.Mesh)
                         {
-                            responsedata["str_response_string"] = Convert.ToBase64String (mesh.Data);
+                            responsedata["str_response_string"] = Convert.ToBase64String(mesh.Data);
                             responsedata["content_type"] = "application/vnd.ll.mesh";
                             responsedata["int_response_code"] = 200;
                         }

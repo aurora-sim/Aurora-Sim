@@ -346,7 +346,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                         if ((Disp & DISP_TEMP) != 0) asset.Flags |= AssetFlags.Temperary;
                         else asset.Flags = asset.Flags & ~AssetFlags.Temperary;
                     }
-                    scene.AssetService.Store(asset);
+                    asset.ID = scene.AssetService.Store(asset);
                 }
                 else
                 {
@@ -357,8 +357,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     asset.Data = assetData;
                     asset.Description = String.Format("URL image : {0}", Url);
                     if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temperary;
-                    asset.FillHash();
-                    scene.AssetService.Store(asset);
+                    asset.ID = scene.AssetService.Store(asset);
                 }
 
                 IJ2KDecoder cacheLayerDecode = scene.RequestModuleInterface<IJ2KDecoder>();

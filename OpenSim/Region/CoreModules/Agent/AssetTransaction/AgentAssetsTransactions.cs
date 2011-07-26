@@ -185,7 +185,8 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                         networkMonitor.AddPendingUploads(-1);
                     }
 
-                    Manager.MyScene.AssetService.Store(asset);
+                    asset.ID = Manager.MyScene.AssetService.Store(asset);
+                    item.AssetID = asset.ID;
 
                     if (part.Inventory.UpdateInventoryItem(item))
                     {
@@ -226,7 +227,8 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                     asset.Type = (sbyte)item.AssetType;
                     item.AssetID = asset.ID;
 
-                    Manager.MyScene.AssetService.Store(asset);
+                    asset.ID = Manager.MyScene.AssetService.Store(asset);
+                    item.AssetID = asset.ID;
                 }
 
                 IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();

@@ -480,7 +480,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         AssetsToAdd.Add(asset);
                 }
                 else
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
 
                 /**
                  * Create layers on decode for image assets.  This is likely to significantly increase the time to load archives so
@@ -512,7 +512,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 foreach (AssetBase asset in AssetsToAdd)
                 {
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
                 }
             }
             AssetsToAdd.Clear();

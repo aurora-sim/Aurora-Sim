@@ -494,7 +494,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 Name = String.Empty,
                                 TypeAsset = AssetType.Simstate // Make something up to get around OpenSim's myopic treatment of assets
                             };
-                            m_scene.AssetService.Store (metadata);
+                            metadata.ID = m_scene.AssetService.Store(metadata);
                         }
                         textureAsset = null;
                     }

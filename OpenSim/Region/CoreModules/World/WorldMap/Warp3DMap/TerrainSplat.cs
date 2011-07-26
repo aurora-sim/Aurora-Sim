@@ -162,7 +162,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                                     TypeString = "image/png"
                                 };
                                 newAsset.FillHash();
-                                assetService.Store (newAsset);
+                                newAsset.ID = assetService.Store(newAsset);
                             }
                         }
                     }

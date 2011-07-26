@@ -695,7 +695,8 @@ textures 1
                             AssetBase asset = new AssetBase(m_underPantsUUID, "Default Underpants", AssetType.Clothing,
                                                             UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderPants)};
                             asset.FillHash();
-                            m_scene.AssetService.Store (asset);
+                            asset.ID = m_scene.AssetService.Store(asset);
+                            m_underPantsUUID = asset.ID;
                         }
                         item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underPantsUUID;
@@ -723,7 +724,8 @@ textures 1
                             AssetBase asset = new AssetBase(m_underShirtUUID, "Default Undershirt", AssetType.Clothing,
                                                             UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderShirt)};
                             asset.FillHash();
-                            m_scene.AssetService.Store (asset);
+                            asset.ID = m_scene.AssetService.Store(asset);
+                            m_underShirtUUID = asset.ID;
                         }
                         item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underShirtUUID;

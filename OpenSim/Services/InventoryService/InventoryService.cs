@@ -327,7 +327,7 @@ namespace OpenSim.Services.InventoryService
                 if (asset != null)
                 {
                     asset.ID = UUID.Random();
-                    m_AssetService.Store(asset);
+                    asset.ID = m_AssetService.Store(asset);
                     defaultShape.AssetID = asset.ID;
                     defaultShape.Folder = bodypartFolder.ID;
                     defaultShape.CreatorId = UUID.Zero.ToString();
@@ -346,7 +346,7 @@ namespace OpenSim.Services.InventoryService
                 if (asset != null)
                 {
                     asset.ID = UUID.Random();
-                    m_AssetService.Store(asset);
+                    asset.ID = m_AssetService.Store(asset);
                     defaultSkin.AssetID = asset.ID;
                     defaultSkin.Folder = bodypartFolder.ID;
                     defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
@@ -370,7 +370,7 @@ namespace OpenSim.Services.InventoryService
                 if (asset != null)
                 {
                     asset.ID = UUID.Random();
-                    m_AssetService.Store(asset);
+                    asset.ID = m_AssetService.Store(asset);
                     defaultHair.AssetID = asset.ID;
                     defaultHair.Folder = bodypartFolder.ID;
                     defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
@@ -394,7 +394,7 @@ namespace OpenSim.Services.InventoryService
                 if (asset != null)
                 {
                     asset.ID = UUID.Random();
-                    m_AssetService.Store(asset);
+                    asset.ID = m_AssetService.Store(asset);
                     defaultEyes.AssetID = asset.ID;
                     defaultEyes.Folder = bodypartFolder.ID;
                     defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
@@ -418,7 +418,7 @@ namespace OpenSim.Services.InventoryService
                 if (asset != null)
                 {
                     asset.ID = UUID.Random();
-                    m_AssetService.Store(asset);
+                    asset.ID = m_AssetService.Store(asset);
                     defaultShirt.AssetID = asset.ID;
                     defaultShirt.Folder = clothingFolder.ID;
                     defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
@@ -442,7 +442,7 @@ namespace OpenSim.Services.InventoryService
                 if (asset != null)
                 {
                     asset.ID = UUID.Random();
-                    m_AssetService.Store(asset);
+                    asset.ID = m_AssetService.Store(asset);
                     defaultPants.AssetID = asset.ID;
                     defaultPants.Folder = clothingFolder.ID;
                     defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();

@@ -246,8 +246,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
                     AssetBase asset = new AssetBase(UUID.Random(), part.Name,
                                                     AssetType.Object, group.OwnerID)
                                           {Description = part.Description, Data = Utils.StringToBytes(sceneObjectXml)};
-                    asset.FillHash();
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
 
                 InventoryItemBase item = new InventoryItemBase();
                 item.CreatorId = part.CreatorID.ToString();

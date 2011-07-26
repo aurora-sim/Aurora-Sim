@@ -1508,6 +1508,7 @@ namespace AvatarArchives
                     asset = LoadAssetBase(assetMap);
                     UUID oldassetID = asset.ID;
                     UUID newAssetID = AssetService.Store(asset);
+                    asset.ID = newAssetID;
                     //Fix the IDs
                     AvatarWearable[] wearables = new AvatarWearable[appearance.Wearables.Length];
                     appearance.Wearables.CopyTo(wearables, 0);

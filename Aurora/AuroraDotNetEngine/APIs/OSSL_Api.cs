@@ -1659,7 +1659,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             asset.Data = Util.UTF8.GetBytes(notecardData);
             asset.FillHash();
-            World.AssetService.Store(asset);
+            asset.ID = World.AssetService.Store(asset);
 
             // Create Task Entry
             TaskInventoryItem taskItem = new TaskInventoryItem();
