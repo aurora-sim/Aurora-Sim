@@ -54,6 +54,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return m_enabled; }
         }
 
+        public bool Default
+        {
+            get { return m_default; }
+        }
+
         public void Initialise(IConfigSource configSource, ISimulationBase openSim)
         {
             m_configSource = configSource;
@@ -241,7 +246,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         public bool FailedToStartRegions(string reason)
         {
             //Open the region manager for them
-            MessageBox.Show("Startup failed, regions did not validate!", reason);
+            MessageBox.Show(reason, "Startup failed, regions did not validate!");
             StartRegionManagerThread();
             return true;
         }

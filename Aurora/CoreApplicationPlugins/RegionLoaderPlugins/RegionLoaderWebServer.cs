@@ -53,6 +53,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return m_enabled; }
         }
 
+        public bool Default
+        {
+            get { return false; }
+        }
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IConfigSource m_configSource;

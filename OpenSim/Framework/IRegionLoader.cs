@@ -46,6 +46,11 @@ namespace OpenSim.Framework
         bool Enabled { get; }
 
         /// <summary>
+        /// This determines whether this plugin will be used for dealing with creating regions and other things
+        /// </summary>
+        bool Default { get; }
+
+        /// <summary>
         /// Starts up the module and loads configs
         /// </summary>
         /// <param name="configSource"></param>

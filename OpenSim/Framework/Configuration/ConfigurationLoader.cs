@@ -190,34 +190,34 @@ namespace OpenSim.Framework
 
                 string secondaryIniFileName = startupConfig.GetString ("secondaryIniFileName", "");
 
-                if(mainIniFileName == "")
+                if (mainIniFileName != "")
                 {
-                }
-                else if (IsUri (mainIniFileName))
-                {
-                    if (!sources.Contains (mainIniFileName))
-                        sources.Add (mainIniFileName);
-                }
-                else
-                {
-                    string mainIniFilePath = Path.Combine (mainIniDirectory, mainIniFileName);
-                    if (!sources.Contains (mainIniFilePath))
-                        sources.Add (mainIniFilePath);
+                    if (IsUri (mainIniFileName))
+                    {
+                        if (!sources.Contains (mainIniFileName))
+                            sources.Add (mainIniFileName);
+                    }
+                    else
+                    {
+                        string mainIniFilePath = Path.Combine (mainIniDirectory, mainIniFileName);
+                        if (!sources.Contains (mainIniFilePath))
+                            sources.Add (mainIniFilePath);
+                    }
                 }
 
-                if (secondaryIniFileName == "")
+                if (secondaryIniFileName != "")
                 {
-                }
-                else if (IsUri (secondaryIniFileName))
-                {
-                    if (!sources.Contains (secondaryIniFileName))
-                        sources.Add (secondaryIniFileName);
-                }
-                else
-                {
-                    string secondaryIniFilePath = Path.Combine (mainIniDirectory, secondaryIniFileName);
-                    if (!sources.Contains (secondaryIniFilePath))
-                        sources.Add (secondaryIniFilePath);
+                    if (IsUri (secondaryIniFileName))
+                    {
+                        if (!sources.Contains (secondaryIniFileName))
+                            sources.Add (secondaryIniFileName);
+                    }
+                    else
+                    {
+                        string secondaryIniFilePath = Path.Combine (mainIniDirectory, secondaryIniFileName);
+                        if (!sources.Contains (secondaryIniFilePath))
+                            sources.Add (secondaryIniFilePath);
+                    }
                 }
             }
 
