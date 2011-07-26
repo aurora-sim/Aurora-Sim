@@ -207,7 +207,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             {
                 doc.LoadXml (xmlData);
                 SceneObjectGroup grp = InternalFromXml2Format (doc, scene);
-                doc = null;
                 xmlData = null;
                 return grp;
             }
