@@ -162,7 +162,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 //Load the file loader and set it up and make sure that we pull any regions from it
                 RegionLoaderFileSystem system = new RegionLoaderFileSystem();
                 system.Initialise(m_configSource, m_openSim);
-                RegionInfo[] regionsToConvert = system.LoadRegions();
+                RegionInfo[] regionsToConvert = system.InternalLoadRegions(true);
                 if (regionsToConvert == null)
                     return;
 
