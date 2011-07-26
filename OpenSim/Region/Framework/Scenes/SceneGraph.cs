@@ -2219,7 +2219,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
             //This clears the xml file, which will need rebuilt now that we have changed the UUIDs
             entity.HasGroupChanged = true;
-            entity.ClearXMLRepresentation();
             foreach (ISceneChildEntity child in children)
             {
                 if(!child.IsRoot)

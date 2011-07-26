@@ -207,7 +207,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             {
                 doc.LoadXml (xmlData);
                 SceneObjectGroup grp = InternalFromXml2Format (doc, scene);
-                grp.XMLRepresentation = Encoding.UTF8.GetBytes(doc.OuterXml);
+                doc = null;
+                xmlData = null;
                 return grp;
             }
             catch (Exception e)
@@ -222,7 +223,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
         }
 
-        public static SceneObjectGroup FromXml2Format(MemoryStream ms, IScene scene)
+        public static SceneObjectGroup FromXml2Format(ref MemoryStream ms, IScene scene)
         {
             //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
@@ -234,7 +235,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.Load(ms);
 
                 grp = InternalFromXml2Format (doc, scene);
-                grp.XMLRepresentation = ms.ToArray();
                 return grp;
             }
             catch (Exception e)
@@ -244,7 +244,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             finally
             {
-                doc.RemoveAll ();
                 doc = null;
             }
         }
@@ -283,6 +282,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     sr.Close();
                 }
                 parts = null;
+                doc = null;
                 return sceneObject;
             }
             catch (Exception e)

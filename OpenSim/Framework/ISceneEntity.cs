@@ -382,8 +382,6 @@ namespace OpenSim.Framework
         /// </summary>
         void BackupPreparation();
 
-        void ClearXMLRepresentation ();
-
         void RemoveScriptInstances (bool p);
     }
 

@@ -510,7 +510,8 @@ namespace Amib.Threading
                         workerThread = new Thread(ProcessQueuedItems);
 
                     // Configure the new thread and start it
-                    workerThread.Name = "STP " + Name + " Thread #" + _threadCounter;
+                    //workerThread.Name = "STP " + Name + " Thread #" + _threadCounter;
+                    workerThread.Name = "STP " + Name + " Thread";
                     workerThread.IsBackground = true;
                     workerThread.Priority = _stpStartInfo.ThreadPriority;
                     workerThread.Start();
