@@ -177,6 +177,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         changed = true;
                         if (!info.UDPPorts.Contains (info.InternalEndPoint.Port))
                             info.UDPPorts.Add (info.InternalEndPoint.Port);
+                        info.HttpPort = (uint)info.InternalEndPoint.Port;
                         info.Disabled = false;
                         conn.UpdateRegionInfo (info);
                     }

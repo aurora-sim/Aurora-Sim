@@ -1912,9 +1912,11 @@ namespace OpenSim.Region.Framework.Scenes
                 Velocity = Vector3.Zero;
 
                 Animator.TrySetMovementAnimation(sitAnimation);
-                IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (appearance != null)
-                    appearance.SendAvatarDataToAllAgents (false);
+                //Force send a full update
+                foreach (IScenePresence sp in m_scene.GetScenePresences ())
+                {
+                    sp.ControllingClient.SendAvatarDataImmediate (this);
+                }
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
                 // [Update] We do now.
