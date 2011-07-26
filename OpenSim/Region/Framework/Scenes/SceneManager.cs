@@ -686,7 +686,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void KickUserCommand(string[] cmdparams)
         {
             string alert = null;
-            IList agents = CurrentOrFirstScene.GetScenePresences ();
+            IList agents = new List<IScenePresence>(CurrentOrFirstScene.GetScenePresences ());
 
             if (cmdparams.Length < 4)
             {

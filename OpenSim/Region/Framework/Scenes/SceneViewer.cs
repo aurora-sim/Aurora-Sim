@@ -204,6 +204,7 @@ namespace OpenSim.Region.Framework.Scenes
             else//Only send one full update please!
                 return;
 
+            SendFullUpdateForPresence (presence);
             AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
         }
 
