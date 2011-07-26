@@ -488,6 +488,7 @@ namespace OpenSim.Region.Framework.Scenes
             scene.RegionInfo.RegionSettings.TerrainTexture2 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_2;
             scene.RegionInfo.RegionSettings.TerrainTexture3 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_3;
             scene.RegionInfo.RegionSettings.TerrainTexture4 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_4;
+            scene.RegionInfo.RegionSettings.Save ();
             m_log.Warn ("Region " + scene.RegionInfo.RegionName + " was reset");
         }
 
