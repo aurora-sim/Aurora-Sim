@@ -245,9 +245,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public bool FailedToStartRegions(string reason)
         {
-            //Open the region manager for them
-            MessageBox.Show(reason, "Startup failed, regions did not validate!");
-            StartRegionManagerThread();
+            try
+            {
+                //Open the region manager for them
+                MessageBox.Show (reason, "Startup failed, regions did not validate!");
+                StartRegionManagerThread ();
+            }
+            catch
+            {
+                MainConsole.Instance.Output(string.Format("Startup failed, regions did not validate - {0}!", reason));
+            }
             return true;
         }
 
