@@ -516,7 +516,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             Util.FireAndForget (delegate (object o)
             {
                 m_sceneManager.StartNewRegion (region);
-                SetOnlineStatus ();
+                if (CurrentRegionID == region.RegionID)
+                    SetOnlineStatus ();
             });
         }
 
@@ -528,7 +529,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             {
                 m_sceneManager.TryGetScene (CurrentRegionID, out scene);
                 m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
-                SetOfflineStatus ();
+                if(CurrentRegionID == scene.RegionInfo.RegionID)
+                    SetOfflineStatus ();
             });
         }
 
