@@ -232,7 +232,7 @@ namespace Aurora.BotManager
         public void Close(bool forceKill)
         {
             // Pull Client out of Region
-            m_log.Info("[RexBot]: Removing bot " + Name);
+            m_scenePresence = null;
 
             OnBotLogout();
 
@@ -311,6 +311,9 @@ namespace Aurora.BotManager
             if (fly)
                 m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
             OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            m_scenePresence.CollisionPlane = Vector4.UnitW;
+            if(m_scenePresence.PhysicsActor != null)
+                m_scenePresence.PhysicsActor.ForceSetVelocity (Vector3.Zero);
         }
 
         private void RotateTo(Vector3 destination)
@@ -549,7 +552,10 @@ namespace Aurora.BotManager
                 else if (state == TravelMode.Walk)
                     WalkTo (pos);
                 else if (state == TravelMode.Teleport)
+                {
                     m_scenePresence.Teleport (pos);
+                    m_nodeGraph.CurrentPos++;
+                }
             }
             else
                 StopMoving (lastFlying, true);
@@ -1231,15 +1237,20 @@ namespace Aurora.BotManager
         void EventManager_OnClientMovement ()
         {
             if (FollowSP != null)
-                m_significantAvatarPositions.Add(FollowSP.AbsolutePosition);
+                lock(m_significantAvatarPositions)
+                    m_significantAvatarPositions.Add(FollowSP.AbsolutePosition);
         }
 
         private void ClearOutInSignificantPositions (bool checkPositions)
         {
             int closestPosition = 0;
             double closestDistance = 0;
-            Vector3[] sigPos = new Vector3[m_significantAvatarPositions.Count];
-            m_significantAvatarPositions.CopyTo (sigPos);
+            Vector3[] sigPos;
+            lock (m_significantAvatarPositions)
+            {
+                sigPos = new Vector3[m_significantAvatarPositions.Count];
+                m_significantAvatarPositions.CopyTo (sigPos);
+            }
 
             for (int i = 0; i < sigPos.Length; i++)
             {
@@ -1352,8 +1363,15 @@ namespace Aurora.BotManager
                 EventManager.UnregisterEventHandler ("Update", DistanceFollowUpdate);
         }
 
+        private class FollowingEventHolder
+        {
+            public UUID BotID;
+            public UUID AvID;
+            public FollowingEvent Event;
+        }
         public object DistanceFollowUpdate (string funct, object param)
         {
+            List<FollowingEventHolder> events = new List<FollowingEventHolder> ();
             foreach (KeyValuePair<UUID, float> kvp in m_followDistance)
             {
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
@@ -1361,10 +1379,19 @@ namespace Aurora.BotManager
                 {
                     if (Util.DistanceLessThan (sp.AbsolutePosition, m_scenePresence.AbsolutePosition, kvp.Value))
                     {
-                        m_followDistanceEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
-                        RemoveDistanceEvent (sp.UUID);
+                        FollowingEventHolder h = new FollowingEventHolder ()
+                        {
+                            Event = m_followDistanceEvents[kvp.Key],
+                            AvID = kvp.Key,
+                            BotID = m_scenePresence.UUID
+                        };
+                        events.Add(h);
                     }
                 }
+            }
+            foreach (FollowingEventHolder h in events)
+            {
+                h.Event (h.AvID, h.BotID);
             }
             return null;
         }
@@ -1391,6 +1418,7 @@ namespace Aurora.BotManager
 
         public object LineOfSightUpdate (string funct, object param)
         {
+            List<FollowingEventHolder> events = new List<FollowingEventHolder> ();
             foreach (KeyValuePair<UUID, float> kvp in m_LineOfSight)
             {
                 IScenePresence sp = m_scene.GetScenePresence (kvp.Key);
@@ -1400,10 +1428,19 @@ namespace Aurora.BotManager
                     if (entities.Count == 0)
                         if (m_scenePresence.AbsolutePosition.ApproxEquals (sp.AbsolutePosition, m_LineOfSight[kvp.Key]))
                         {
-                            m_LineOfSightEvents[kvp.Key] (kvp.Key, m_scenePresence.UUID);
-                            RemoveLineOfSightEvent (sp.UUID);
+                            FollowingEventHolder h = new FollowingEventHolder ()
+                            {
+                                Event = m_LineOfSightEvents[kvp.Key],
+                                AvID = kvp.Key,
+                                BotID = m_scenePresence.UUID
+                            };
+                            events.Add (h);
                         }
                 }
+            }
+            foreach (FollowingEventHolder h in events)
+            {
+                h.Event (h.AvID, h.BotID);
             }
             return null;
         }

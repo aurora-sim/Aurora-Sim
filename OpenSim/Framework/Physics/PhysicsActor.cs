@@ -35,10 +35,12 @@ namespace OpenSim.Framework
     {
         public Vector3 Position;
         public Vector3 SurfaceNormal;
+        public ActorTypes Type;
         public float PenetrationDepth;
 
-        public ContactPoint(Vector3 position, Vector3 surfaceNormal, float penetrationDepth)
+        public ContactPoint(Vector3 position, Vector3 surfaceNormal, float penetrationDepth, ActorTypes type)
         {
+            Type = type;
             Position = position;
             SurfaceNormal = surfaceNormal;
             PenetrationDepth = penetrationDepth;
@@ -49,26 +51,16 @@ namespace OpenSim.Framework
     {
         // Raising the event on the object, so don't need to provide location..  further up the tree knows that info.
 
-        public int m_colliderType;
-        public int m_GenericStartEnd;
         public Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
 
-        public CollisionEventUpdate(uint localID, int colliderType, Dictionary<uint, ContactPoint> objCollisionList)
+        public CollisionEventUpdate(Dictionary<uint, ContactPoint> objCollisionList)
         {
-            m_colliderType = colliderType;
             m_objCollisionList = objCollisionList;
         }
 
         public CollisionEventUpdate()
         {
-            m_colliderType = (int) ActorTypes.Unknown;
             m_objCollisionList = new Dictionary<uint, ContactPoint>();
-        }
-
-        public int collidertype
-        {
-            get { return m_colliderType; }
-            set { m_colliderType = value; }
         }
 
         public void addCollider(uint localID, ContactPoint contact)
@@ -88,7 +80,6 @@ namespace OpenSim.Framework
         /// </summary>
         public void Clear ()
         {
-            m_colliderType = (int)ActorTypes.Unknown;
             m_objCollisionList.Clear ();
         }
     }

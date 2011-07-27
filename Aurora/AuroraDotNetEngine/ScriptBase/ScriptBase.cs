@@ -600,8 +600,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
         }
 
+        private Type m_typeCache = null;//This shouldn't normally be used
         public virtual IEnumerator FireEvent (string evName, object[] parameters)
         {
+            if(m_typeCache == null)
+                m_typeCache = GetType ();
+            MethodInfo ev = m_typeCache.GetMethod (evName);
+            if(ev != null)
+                ev.Invoke (this, parameters);
+
             yield break;
         }
     }

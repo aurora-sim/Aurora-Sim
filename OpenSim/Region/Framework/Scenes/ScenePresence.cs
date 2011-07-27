@@ -2637,7 +2637,8 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (Single.IsNaN(lowest.Position.Z) || contact.Position.Z != 0 && contact.Position.Z < lowest.Position.Z)
                                 {
-                                    lowest = contact;
+                                    if (contact.Type != ActorTypes.Agent)
+                                        lowest = contact;
                                 }
                             }
 
@@ -2646,10 +2647,13 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 Vector4 newPlane = new Vector4(-lowest.SurfaceNormal, -Vector3.Dot(lowest.Position, lowest.SurfaceNormal));
                                 //if (lowest.SurfaceNormal != Vector3.Zero)//Generates a 0,0,0,0, which is bad for the client
-                                if (CollisionPlane != newPlane)
+                                if (!CollisionPlane.ApproxEquals (newPlane, 0.5f))
                                 {
-                                    CollisionPlane = newPlane;
-                                    SendTerseUpdateToAllClients ();
+                                    if (PhysicsActor != null && PhysicsActor.IsColliding && PhysicsActor.Velocity != Vector3.Zero)
+                                    {
+                                        CollisionPlane = newPlane;
+                                        SendTerseUpdateToAllClients ();
+                                    }
                                 }
                             }
                         }

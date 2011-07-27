@@ -909,9 +909,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_iscolliding = true;
                     flying = false; // ground the avatar
                     ContactPoint point = new ContactPoint ();
-                    point.PenetrationDepth = vel.Z;
+                    point.Type = ActorTypes.Ground;
+                    point.PenetrationDepth = -Math.Abs(vel.Z);
                     point.Position = Position;
-                    point.SurfaceNormal = Vector3.Zero;
+                    point.SurfaceNormal = new Vector3 (0, 0, -1f);
 
                     //0 is the ground localID
                     AddCollisionEvent (0, point);
