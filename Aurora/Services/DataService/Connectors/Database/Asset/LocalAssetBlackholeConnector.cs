@@ -291,7 +291,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     {
                         successful = true;
                         AssetBase abtemp = GetAsset(UUID.Parse(check1[0]));
+                        // not going to save it... 
+                        // use existing asset instead
                         if (abtemp != null) return abtemp;
+
+                        // that asset returned nothing.. so.. 
+                        // do some checks on it later
+                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "PARENTCHECK", check1[0] + "|" + asset.ID });
+                        asset.ParentID = asset.ID;
                     }
                 }
 
@@ -780,6 +787,38 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             if (File.Exists(GetFileName(task_value, false)))
                                 File.Delete(GetFileName(task_value, false));
                             if (File.Exists(GetFileName(task_value, true))) File.Delete(GetFileName(task_value, true));
+                        }
+                    }
+                    else if (task_type == "PARENTCHECK")
+                    {
+                        UUID uuid1 = UUID.Parse(task_value.Split('|')[0]);
+                        UUID uuid2 = UUID.Parse(task_value.Split('|')[1]);
+
+                        // double check this asset does not exist 
+                        AssetBase abtemp = GetAsset(uuid1);
+                        AssetBase actemp = GetAsset(uuid2);
+                        if ((abtemp == null) && (actemp != null))
+                        {
+                            m_Gd.Delete("auroraassets_temp", new string[] { "id" }, new object[] { uuid1 });
+                            m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
+                                   new object[] { actemp.ID, actemp.HashCode, actemp.CreatorID });
+                            // I admit this might be a bit over kill.. 
+                            m_Gd.Update("auroraassets_a", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_b", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_c", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_d", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_e", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_f", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_0", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_1", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_2", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_3", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_4", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_5", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_6", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_7", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_8", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_9", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
                         }
                     }
 
