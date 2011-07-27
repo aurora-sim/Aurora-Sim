@@ -230,7 +230,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 foreach (KeyValuePair<string, IScriptApi> functionName in m_compiler.ScriptEngine.GetAllFunctionNamesAPIs ())
                 {
-                    compileScript = compileScript.Replace (functionName.Key, "((" + functionName.Value.InterfaceName + ")m_apis[\"" + functionName.Value.Name + "\"])." + functionName);
+                    compileScript = compileScript.Replace (functionName.Key, "((" + functionName.Value.InterfaceName + ")m_apis[\"" + functionName.Value.Name + "\"])." + functionName.Key);
                 }
             }
 
