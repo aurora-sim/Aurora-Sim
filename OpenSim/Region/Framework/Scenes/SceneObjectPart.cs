@@ -3041,6 +3041,7 @@ namespace OpenSim.Region.Framework.Scenes
             List<uint> thisHitColliders = new List<uint>();
             List<uint> endedColliders = new List<uint>();
             List<uint> startedColliders = new List<uint>();
+            ContactPoint startedCollider = new ContactPoint();
 
             // calculate things that started colliding this time
             // and build up list of colliders this time
@@ -3049,6 +3050,7 @@ namespace OpenSim.Region.Framework.Scenes
                 thisHitColliders.Add(localID);
                 if (!m_lastColliders.Contains(localID))
                 {
+                    startedCollider = collissionswith[localID];
                     startedColliders.Add(localID);
                 }
                 //m_log.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
@@ -3089,19 +3091,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else if (startedColliders.Count > 0)
             {
-                switch (a.collidertype)
+                switch (startedCollider.Type)
                 {
-                    case (int)ActorTypes.Agent:
+                    case ActorTypes.Agent:
                         break; // Agents will play the sound so we don't
 
-                    case (int)ActorTypes.Ground:
+                    case ActorTypes.Ground:
                         if (collissionswith[startedColliders[0]].PenetrationDepth < 0.17)
                             SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
                         else
                             SendSound(Sounds.OBJECT_COLLISION.ToString(), 1, true, 0, 0, false, false);
                         break; //Always play the click or thump sound when hitting ground
 
-                    case (int)ActorTypes.Prim:
+                    case ActorTypes.Prim:
                         if (m_material == OpenMetaverse.Material.Flesh)
                             SendSound(SoundFleshCollision.ToString(), 1, true, 0, 0, false, false);
                         else if (m_material == OpenMetaverse.Material.Glass)

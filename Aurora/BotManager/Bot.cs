@@ -311,6 +311,9 @@ namespace Aurora.BotManager
             if (fly)
                 m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
             OnBotAgentUpdate (m_movementFlag, m_bodyDirection);
+            m_scenePresence.CollisionPlane = Vector4.UnitW;
+            if(m_scenePresence.PhysicsActor != null)
+                m_scenePresence.PhysicsActor.ForceSetVelocity (Vector3.Zero);
         }
 
         private void RotateTo(Vector3 destination)
@@ -549,7 +552,10 @@ namespace Aurora.BotManager
                 else if (state == TravelMode.Walk)
                     WalkTo (pos);
                 else if (state == TravelMode.Teleport)
+                {
                     m_scenePresence.Teleport (pos);
+                    m_nodeGraph.CurrentPos++;
+                }
             }
             else
                 StopMoving (lastFlying, true);

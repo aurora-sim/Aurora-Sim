@@ -709,6 +709,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     maxDepthContact.Position.X = curContact.pos.X;
                     maxDepthContact.Position.Y = curContact.pos.Y;
                     maxDepthContact.Position.Z = curContact.pos.Z;
+                    maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
                     maxDepthContact.SurfaceNormal.X = curContact.normal.X;
                     maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
                     maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
@@ -2184,10 +2185,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
-                        int tlimit = 5000;
+                        int tlimit = 50000;
                         AODEchangeitem item;
+                        bool continueProcessing = false;
                         while (GetNextChange(out item))
                         {
+                            continueProcessing = true;
                             if (item.prim != null)
                             {
                                 try
@@ -2198,7 +2201,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 catch { };
                             }
                             if (tlimit-- <= 0)
+                            {
+                                continueProcessing = false;
                                 break;
+                            }
                         }
 
                         if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
@@ -2215,7 +2221,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         int PhysicsMoveTime = Util.EnvironmentTickCount();
 
-                        if (!DisableCollisions)
+                        if (!continueProcessing && !DisableCollisions)
                         {
                             // Move characters
                             lock (_characters)
@@ -2274,12 +2280,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
-                        collision_optimized(timeElapsed);
+                        if(!continueProcessing)
+                            collision_optimized(timeElapsed);
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
 
                         int SendCollisionsTime = Util.EnvironmentTickCount();
-                        if (!DisableCollisions)
+                        if (!continueProcessing && !DisableCollisions)
                         {
                             lock (_collisionEventListLock)
                             {
