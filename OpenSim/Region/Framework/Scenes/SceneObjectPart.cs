@@ -5384,12 +5384,12 @@ namespace OpenSim.Region.Framework.Scenes
                 // Defensive programming calls for a check here.
                 // Better would be throwing an exception that could be catched by a unit test as the internal 
                 // logic should make sure, this Physactor is always here.
+
+                //FALSE, you can go from a phantom prim > VD -7/26
                 if (PhysActor != null)
-                {
                     PhysActor.VolumeDetect = true;
-                    AddFlag(PrimFlags.Phantom); // We set this flag also if VD is active
-                    VolumeDetectActive = true;
-                }
+                AddFlag (PrimFlags.Phantom); // We set this flag also if VD is active
+                VolumeDetectActive = true;
             }
             else
             {
