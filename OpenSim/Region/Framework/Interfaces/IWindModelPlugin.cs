@@ -51,7 +51,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Provides access to the wind configuration, if any.
         /// </summary>
-        void WindConfig(Scene scene, IConfig windConfig);
+        void WindConfig (IScene scene, IConfig windConfig);
 
         /// <summary>
         /// Update wind.

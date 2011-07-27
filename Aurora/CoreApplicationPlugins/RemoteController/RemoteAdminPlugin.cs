@@ -223,7 +223,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 UUID regionID = new UUID((string)requestData["regionID"]);
 
-                Scene rebootedScene;
+                IScene rebootedScene;
 
                 responseData["success"] = false;
                 responseData["accepted"] = true;
@@ -282,7 +282,7 @@ namespace OpenSim.CoreApplicationPlugins
                 response.Value = responseData;
 
                 manager.ForEachScene(
-                    delegate(Scene scene)
+                    delegate(IScene scene)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
                             if (dialogModule != null)
@@ -334,7 +334,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                 responseData["accepted"] = true;
 
-                Scene region = null;
+                IScene region = null;
 
                 if (!manager.TryGetScene(regionID, out region))
                     throw new Exception("1: unable to get a scene with that name");
@@ -411,7 +411,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
 
                 manager.ForEachScene(
-                    delegate(Scene scene)
+                    delegate(IScene scene)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
                             if (dialogModule != null)
@@ -548,7 +548,7 @@ namespace OpenSim.CoreApplicationPlugins
                         throw new Exception(String.Format("cannot instantiate new region, server capacity {0} already reached; delete regions first",
                                                           m_regionLimit));
                     // extract or generate region ID now
-                    Scene scene = null;
+                    IScene scene = null;
                     UUID regionID = UUID.Zero;
                     if (requestData.ContainsKey("region_id") &&
                         !String.IsNullOrEmpty((string)requestData["region_id"]))
@@ -592,14 +592,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     region.InternalEndPoint.Port = Convert.ToInt32(requestData["listen_port"]);
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
-                    if (manager.TryGetScene(region.InternalEndPoint, out scene))
-                        throw new Exception(
-                            String.Format(
-                                "region internal IP {0} and port {1} already in use by region {2}",
-                                region.InternalEndPoint.Address,
-                                region.InternalEndPoint.Port,
-                                scene.ToString()));
-
+                    
                     region.ExternalHostName = (string)requestData["external_address"];
 
                     // default place for region configuration files is in the
@@ -671,7 +664,7 @@ namespace OpenSim.CoreApplicationPlugins
                             string ownerFirst = (string)requestData["estate_owner_first"];
                             string ownerLast = (string)requestData["estate_owner_last"];
 
-                            Scene currentOrFirst = manager.CurrentOrFirstScene;
+                            IScene currentOrFirst = manager.CurrentOrFirstScene;
                             IUserAccountService accountService = currentOrFirst.UserAccountService;
                             UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
                                                                                ownerFirst, ownerLast);
@@ -693,8 +686,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     // Create the region and perform any initial initialization
 
-                    IScene newScene;
-                    manager.CreateRegion(region, out newScene);
+                    IScene newScene = manager.StartNewRegion(region);
 
                     // If an access specification was provided, use it.
                     // Otherwise accept the default.
@@ -781,7 +773,7 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
                     CheckStringParameters(request, new string[] {"password", "region_name"});
 
-                    Scene scene = null;
+                    IScene scene = null;
                     string regionName = (string) requestData["region_name"];
                     if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
@@ -842,7 +834,7 @@ namespace OpenSim.CoreApplicationPlugins
             m_log.Info("[RADMIN]: CloseRegion: new request");
             XmlRpcResponse response = new XmlRpcResponse();
             Hashtable responseData = new Hashtable();
-            Scene scene = null;
+            IScene scene = null;
 
             lock (m_requestLock)
             {
@@ -859,7 +851,7 @@ namespace OpenSim.CoreApplicationPlugins
                         if (!manager.TryGetScene(regionID, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionID));
 
-                        manager.CloseRegion(scene);
+                        manager.CloseRegion (scene, ShutdownType.Immediate, 0);
 
                         responseData["success"] = true;
                         responseData["region_id"] = regionID;
@@ -875,7 +867,7 @@ namespace OpenSim.CoreApplicationPlugins
                         if (!manager.TryGetScene(regionName, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                        manager.CloseRegion(scene);
+                        manager.CloseRegion (scene, ShutdownType.Immediate, 0);
 
                         responseData["success"] = true;
                         responseData["region_name"] = regionName;
@@ -946,7 +938,7 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
                     CheckStringParameters(request, new string[] {"password", "region_name"});
 
-                    Scene scene = null;
+                    IScene scene = null;
                     string regionName = (string) requestData["region_name"];
                     if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
@@ -1079,7 +1071,7 @@ namespace OpenSim.CoreApplicationPlugins
                     if (requestData.Contains("user_email"))
                         email = (string)requestData["user_email"];
 
-                    Scene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
 
                     UserAccount account = CreateUser(scopeID, firstName, lastName, password, email);
@@ -1326,7 +1318,7 @@ namespace OpenSim.CoreApplicationPlugins
             //        if (requestData.ContainsKey("about_virtual_world"))
             //            aboutAvatar = (string)requestData["about_virtual_world"];
 
-                    Scene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
                     UserAccount account = scene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
 
@@ -1459,7 +1451,7 @@ namespace OpenSim.CoreApplicationPlugins
                 return;
             }
 
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
             UUID scopeID = scene.RegionInfo.ScopeID;
             UserAccount modelProfile = scene.UserAccountService.GetUserAccount(scopeID, modelSpecifiers[0], modelSpecifiers[1]);
 
@@ -1488,7 +1480,7 @@ namespace OpenSim.CoreApplicationPlugins
         private void EstablishAppearance(UUID destination, UUID source)
         {
             m_log.DebugFormat("[RADMIN] Initializing inventory for {0} from {1}", destination, source);
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
 
             // If the model has no associated appearance we're done.
             AvatarAppearance avatarAppearance = scene.AvatarService.GetAppearance(source);
@@ -1843,7 +1835,7 @@ namespace OpenSim.CoreApplicationPlugins
                     bool include = false;
                     bool select  = false;
 
-                    Scene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     IInventoryService inventoryService = scene.InventoryService;
                     IAssetService assetService = scene.AssetService;
 
@@ -2193,7 +2185,7 @@ namespace OpenSim.CoreApplicationPlugins
                         (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     string filename = (string) requestData["filename"];
-                    Scene scene = null;
+                    IScene scene = null;
                     if (requestData.Contains("region_uuid"))
                     {
                         UUID region_uuid = (UUID) (string) requestData["region_uuid"];
@@ -2293,7 +2285,7 @@ namespace OpenSim.CoreApplicationPlugins
                     (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 string filename = (string) requestData["filename"];
-                Scene scene = null;
+                IScene scene = null;
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
@@ -2405,14 +2397,17 @@ namespace OpenSim.CoreApplicationPlugins
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    IScene scene;
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2497,23 +2492,27 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
                     (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
-                if (requestData.Contains("region_uuid"))
+                IScene scene;
+                if (requestData.Contains ("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = manager.CurrentScene;
+                scene = manager.CurrentOrFirstScene;
                 scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
                 scene.RegionInfo.EstateSettings.Save();
             }
@@ -2556,14 +2555,17 @@ namespace OpenSim.CoreApplicationPlugins
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    IScene scene;
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2575,7 +2577,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
                     IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
-                    Scene scene = manager.CurrentScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2642,14 +2644,17 @@ namespace OpenSim.CoreApplicationPlugins
                 if (requestData.Contains("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    IScene scene;
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2662,7 +2667,7 @@ namespace OpenSim.CoreApplicationPlugins
                     UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
                     IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
                     //UserProfileCacheService ups = m_application.CommunicationsManager.UserProfileCacheService;
-                    Scene scene = manager.CurrentScene;
+                    IScene scene = manager.CurrentOrFirstScene;
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2725,23 +2730,26 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
                     (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
-                if (requestData.Contains("region_uuid"))
+                IScene scene;
+                if (requestData.Contains ("region_uuid"))
                 {
                     UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (!manager.TrySetCurrentScene(region_uuid))
+                    if (manager.TryGetScene (region_uuid, out scene))
+                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
                     string region_name = (string) requestData["region_name"];
-                    if (!manager.TrySetCurrentScene(region_name))
+                    if (!manager.ChangeConsoleRegion (region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     m_log.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                Scene scene = manager.CurrentScene;
+                scene = manager.CurrentOrFirstScene;
                 UUID[] accessControlList = scene.RegionInfo.EstateSettings.EstateAccess;
                 Hashtable users = new Hashtable();
 
@@ -2850,7 +2858,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <param name="email"></param>
         private UserAccount CreateUser(UUID scopeID, string firstName, string lastName, string password, string email)
         {
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
             IUserAccountService userAccountService = scene.UserAccountService;
             IGridService gridService = scene.GridService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
@@ -2921,7 +2929,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <param name="password"></param>
         private bool ChangeUserPassword(string firstName, string lastName, string password)
         {
-            Scene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.CurrentOrFirstScene;
             IUserAccountService userAccountService = scene.UserAccountService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
 

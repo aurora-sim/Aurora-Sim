@@ -62,7 +62,7 @@ namespace Aurora.Modules
         //private static readonly UUID STOP_UUID = UUID.Random();
 
         //private IConfig m_config;
-        protected Scene m_scene;
+        protected IScene m_scene;
         private byte[] myMapImageJPEG;
         protected bool m_Enabled = false;
         private IConfigSource m_config;
@@ -102,7 +102,7 @@ namespace Aurora.Modules
             }
 		}
 
-		public virtual void AddRegion (Scene scene)
+        public virtual void AddRegion (IScene scene)
 		{
             if (!m_Enabled)
                 return;
@@ -138,7 +138,7 @@ namespace Aurora.Modules
             }
 		}
 
-		public virtual void RemoveRegion (Scene scene)
+        public virtual void RemoveRegion (IScene scene)
 		{
 			if (!m_Enabled)
 				return;
@@ -166,7 +166,7 @@ namespace Aurora.Modules
             }
 		}
 
-		public virtual void RegionLoaded (Scene scene)
+        public virtual void RegionLoaded (IScene scene)
 		{
             if (!m_Enabled)
                 return;
@@ -891,11 +891,23 @@ namespace Aurora.Modules
 
             //m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
 
-            UUID lastMapRegionUUID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
-            m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random();
+            //Delete the old assets and make sure the UUIDs exist
+            bool changed = false;
+            if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)
+            {
+                m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random ();
+                changed = true;
+            }
+            else
+                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainImageID);
 
-            UUID lastTerrainRegionUUID = m_scene.RegionInfo.RegionSettings.TerrainMapImageID;
-            m_scene.RegionInfo.RegionSettings.TerrainMapImageID = UUID.Random();
+            if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
+            {
+                m_scene.RegionInfo.RegionSettings.TerrainMapImageID = UUID.Random ();
+                changed = true;
+            }
+            else
+                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainMapImageID);
 
             AssetBase Mapasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainImageID,
@@ -913,16 +925,17 @@ namespace Aurora.Modules
             Terrainasset.Description = m_scene.RegionInfo.RegionName;
             Terrainasset.Flags = AssetFlags.Deletable;
 
-            m_scene.RegionInfo.RegionSettings.Save();
+            if(changed)
+                m_scene.RegionInfo.RegionSettings.Save();
 
             if (!m_asyncMapTileCreation)
             {
-                CreateMapTileAsync(Mapasset, Terrainasset, lastMapRegionUUID, lastTerrainRegionUUID);
+                CreateMapTileAsync(Mapasset, Terrainasset);
             }
             else
             {
                 CreateMapTile d = CreateMapTileAsync;
-                d.BeginInvoke(Mapasset, Terrainasset, lastMapRegionUUID, lastTerrainRegionUUID, CreateMapTileAsyncCompleted, d);
+                d.BeginInvoke(Mapasset, Terrainasset, CreateMapTileAsyncCompleted, d);
             }
             Mapasset = null;
             Terrainasset = null;
@@ -936,13 +949,13 @@ namespace Aurora.Modules
             icon.EndInvoke(iar);
         }
 
-        public delegate void CreateMapTile(AssetBase Mapasset, AssetBase Terrainasset, UUID lastMapRegionUUID, UUID lastTerrainRegionUUID);
+        public delegate void CreateMapTile(AssetBase Mapasset, AssetBase Terrainasset);
 
         #endregion
 
         #region Generate map tile
 
-        public void CreateMapTileAsync(AssetBase Mapasset, AssetBase Terrainasset, UUID lastMapRegionUUID, UUID lastTerrainRegionUUID)
+        public void CreateMapTileAsync(AssetBase Mapasset, AssetBase Terrainasset)
         {
             IMapImageGenerator terrain = m_scene.RequestModuleInterface<IMapImageGenerator>();
 
@@ -950,10 +963,10 @@ namespace Aurora.Modules
                 return;
 
             //Delete the old assets
-            if(lastMapRegionUUID != UUID.Zero)
-                m_scene.AssetService.Delete(lastMapRegionUUID);
-            if (lastTerrainRegionUUID != UUID.Zero)
-                m_scene.AssetService.Delete(lastTerrainRegionUUID);
+            if (Terrainasset.ID != UUID.Zero)
+                m_scene.AssetService.Delete(Terrainasset.ID);
+            if (Mapasset.ID != UUID.Zero)
+                m_scene.AssetService.Delete(Mapasset.ID);
 
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);

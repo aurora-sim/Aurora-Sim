@@ -44,11 +44,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        Scene m_scene = null; // only need one for communication with GridService
-        List<Scene> m_scenes = new List<Scene>();
-        bool Enabled = true;
+        private IScene m_scene = null; // only need one for communication with GridService
+        private List<IScene> m_scenes = new List<IScene> ();
+        private bool Enabled = true;
         
         #region IRegionModule Members
+
         public void Initialise(IConfigSource source)
         {
             if (source.Configs["MapModule"] != null)
@@ -66,31 +67,28 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!Enabled)
                 return;
 
             if (m_scene == null)
-            {
                 m_scene = scene;
-            }
 
             m_scenes.Add(scene);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scenes.Remove(scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface

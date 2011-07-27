@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
@@ -162,6 +163,11 @@ namespace OpenSim.Services.Interfaces
         /// The ID of the agent we are serving
         /// </summary>
         UUID AgentID { get; }
+
+        /// <summary>
+        /// The Clients ExternalIP 
+        /// </summary>
+        IPEndPoint ClientEndPoint { get; }
 
         /// <summary>
         /// Whether the user is currently teleporting/crossings

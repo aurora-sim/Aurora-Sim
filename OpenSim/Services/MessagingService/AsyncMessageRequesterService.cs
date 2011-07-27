@@ -66,11 +66,11 @@ namespace OpenSim.Services.MessagingService
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             IConfig handlerConfig = scene.Config.Configs["Handlers"];
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
@@ -88,8 +88,9 @@ namespace OpenSim.Services.MessagingService
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
+            m_scenes.Remove (scene);
         }
 
         public void Close()
@@ -112,7 +113,7 @@ namespace OpenSim.Services.MessagingService
 
         void requestAsyncMessages(object sender, ElapsedEventArgs e)
         {
-            if (m_locked)
+            if (m_locked || m_scenes.Count == 0)
                 return;
             m_locked = true;
             OSDMap message = CreateWebRequest();

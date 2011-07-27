@@ -68,24 +68,42 @@ namespace OpenSim.Framework
         EntityManager Entities { get; }
         EventManager EventManager { get; }
         ScenePermissions Permissions { get; }
-        PhysicsScene PhysicsScene { get; }
+        PhysicsScene PhysicsScene { get; set; }
         ISceneGraph SceneGraph { get; }
         AgentCircuitManager AuthenticateHandler { get; }
-        IConfigSource Config { get; }
+        IConfigSource Config { get; set; }
+        ISimulationDataStore SimulationDataService { get; }
 
         #endregion
 
         #region Initialize/Close
 
         void Initialize (RegionInfo regionInfo);
-        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer);
+        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
         void StartHeartbeat ();
+        void FinishedStartup (string p, List<string> list);
+        bool ShouldRunHeartbeat { get; set; }
         void Close ();
+
+        #endregion
+
+        #region Physics methods
+
+        /// <summary>
+        /// Reload the last saved physics state to the Physics Scene
+        /// </summary>
+        void StartPhysicsScene ();
+
+        /// <summary>
+        /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
+        /// </summary>
+        void StopPhysicsScene ();
 
         #endregion
 
         #region Client Methods
 
+        ClientManager ClientManager { get; }
         void AddNewClient (IClientAPI client);
         IScenePresence GetScenePresence (UUID uUID);
         List<IScenePresence> GetScenePresences ();
@@ -101,6 +119,7 @@ namespace OpenSim.Framework
 
         void ForEachClient (Action<IClientAPI> action);
         void ForEachScenePresence (Action<IScenePresence> action);
+        void ForEachSceneEntity (Action<ISceneEntity> action);
 
         #endregion
 
@@ -108,6 +127,7 @@ namespace OpenSim.Framework
 
         ISceneChildEntity GetSceneObjectPart (uint localID);
         ISceneChildEntity GetSceneObjectPart (UUID objectID);
+        ISceneEntity GetGroupByPrim (uint objectLocalID);
         bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
 
         #endregion
@@ -119,7 +139,8 @@ namespace OpenSim.Framework
 
         bool ShuttingDown { get; }
         object SyncRoot { get; }
-        float TimeDilation { get; }
+        float TimeDilation { get; set; }
+        uint Frame { get; }
 
         #endregion
 

@@ -46,6 +46,11 @@ namespace OpenSim.Framework
         bool Enabled { get; }
 
         /// <summary>
+        /// This determines whether this plugin will be used for dealing with creating regions and other things
+        /// </summary>
+        bool Default { get; }
+
+        /// <summary>
         /// Starts up the module and loads configs
         /// </summary>
         /// <param name="configSource"></param>
@@ -76,5 +81,21 @@ namespace OpenSim.Framework
         /// </summary>
         /// <returns></returns>
         bool FailedToStartRegions(string reason);
+    }
+
+    public interface ISceneLoader
+    {
+        /// <summary>
+        /// Returns the plugin name
+        /// </summary>
+        /// <returns></returns>
+        string Name { get; }
+
+        /// <summary>
+        /// Create a basic IScene reference with the given RegionInfo
+        /// </summary>
+        /// <param name="regionInfo"></param>
+        /// <returns></returns>
+        IScene CreateScene (RegionInfo regionInfo);
     }
 }

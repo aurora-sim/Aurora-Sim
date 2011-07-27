@@ -36,13 +36,14 @@ using System.Windows.Forms;
 using Aurora.Framework;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace Aurora.Modules
 {
     public partial class PhysicsProfilerForm : Form
     {
         private Timer m_updateStats = new Timer();
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene>();
         private UUID SceneSelected = UUID.Zero;
         private int MaxVal = 200;
         private bool m_useInstantUpdating = false;
@@ -50,7 +51,7 @@ namespace Aurora.Modules
         private object m_statsLock = new object ();
         private PhysicsMonitor m_monitor;
 
-        public PhysicsProfilerForm(PhysicsMonitor monitor, List<Scene> scenes)
+        public PhysicsProfilerForm(PhysicsMonitor monitor, List<IScene> scenes)
         {
             m_monitor = monitor;
             m_scenes = scenes;
@@ -59,8 +60,8 @@ namespace Aurora.Modules
         }
 
         private void PhysicsProfilerForm_Load(object sender, EventArgs e)
-        {
-            foreach (Scene scene in m_scenes)
+        {            
+            foreach (IScene scene in m_scenes)
             {
                 RegionNameSelector.Items.Add(scene.RegionInfo.RegionName);
             }
@@ -89,7 +90,7 @@ namespace Aurora.Modules
 
         private void RegionNameSelector_SelectedIndexChanged(object sender, EventArgs e)
         {
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 if (scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString())
                 {

@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected bool m_Enabled = false;
-        protected List<Scene> m_scenes = new List<Scene> ();
+        protected List<IScene> m_scenes = new List<IScene> ();
         private Dictionary<IScene, Dictionary<UUID, AgentData>> m_incomingChildAgentData = new Dictionary<IScene, Dictionary<UUID, AgentData>> ();
         
         #endregion
@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -123,7 +123,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         {
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -135,7 +135,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 
@@ -303,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    AgentCircuitData oldCircuit = ((Scene)sp.Scene).AuthenticateHandler.AgentCircuitsByUUID[sp.UUID];
+                    AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.AgentCircuitsByUUID[sp.UUID];
                     agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
                     agentCircuit.firstname = oldCircuit.firstname;
                     agentCircuit.lastname = oldCircuit.lastname;
@@ -352,14 +352,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             KillEntity(sp.Scene, sp);
 
             //Make it a child agent for now... the grid will kill us later if we need to close
-            sp.MakeChildAgent();
+            sp.MakeChildAgent(finalDestination);
         }
 
         protected void KillEntity (IScene scene, IEntity entity)
         {
             scene.ForEachClient(delegate(IClientAPI client)
             {
-                client.SendKillObject (scene.RegionInfo.RegionHandle, new IEntity[] { entity });
+                if(client.AgentId != entity.UUID)
+                    client.SendKillObject (scene.RegionInfo.RegionHandle, new IEntity[] { entity });
             });
         }
 
@@ -429,8 +430,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public void RequestTeleportLocation(IClientAPI remoteClient, ulong regionHandle, Vector3 position,
                                             Vector3 lookAt, uint teleportFlags)
         {
-            Scene scene = (Scene)remoteClient.Scene;
-            IScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence sp = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
                 Teleport(sp, regionHandle, position, lookAt, teleportFlags);
@@ -448,8 +448,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         public void RequestTeleportLocation(IClientAPI remoteClient, GridRegion reg, Vector3 position,
                                             Vector3 lookAt, uint teleportFlags)
         {
-            Scene scene = (Scene)remoteClient.Scene;
-            IScenePresence sp = scene.GetScenePresence(remoteClient.AgentId);
+            IScenePresence sp = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
             if (sp != null)
             {
                 Teleport(sp, reg, position, lookAt, teleportFlags);
@@ -512,7 +511,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     Vector3 position = Vector3.Zero, lookAt = Vector3.Zero;
                     if (uas != null)
-                        regionInfo = uas.GetHomeRegion (((Scene)client.Scene).AuthenticateHandler.AgentCircuitsByUUID[client.AgentId], out position, out lookAt);
+                        regionInfo = uas.GetHomeRegion (client.Scene.AuthenticateHandler.AgentCircuitsByUUID[client.AgentId], out position, out lookAt);
                     if (regionInfo == null)
                     {
                         //can't find the Home region: Tell viewer and abort
@@ -655,7 +654,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         }
                     }
                     //We're killing the animator and the physics actor, so we don't need to worry about agent.PhysicsActor.IsPhysical
-                    agent.MakeChildAgent();
+                    agent.MakeChildAgent(crossingRegion);
 
                     //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
                     // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
@@ -866,7 +865,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns></returns>
         public virtual bool IncomingCreateObject(UUID regionID, ISceneObject sog)
         {
-            Scene scene = GetScene(regionID);
+            IScene scene = GetScene(regionID);
             if (scene == null)
                 return false;
             
@@ -918,7 +917,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="sceneObject"></param>
         /// <returns>True if the SceneObjectGroup was added, False if it was not</returns>
-        public bool AddSceneObject(Scene scene, SceneObjectGroup sceneObject)
+        public bool AddSceneObject(IScene scene, SceneObjectGroup sceneObject)
         {
             // If the user is banned, we won't let any of their objects
             // enter. Period.
@@ -975,9 +974,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// </summary>
         /// <param name="RegionID"></param>
         /// <returns></returns>
-        public Scene GetScene(UUID RegionID)
+        public IScene GetScene(UUID RegionID)
         {
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 if (scene.RegionInfo.RegionID == RegionID)
                     return scene;
@@ -1002,9 +1001,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// or other applications where a full grid/Hypergrid presence may not be required.</param>
         /// <returns>True if the region accepts this agent.  False if it does not.  False will 
         /// also return a reason.</returns>
-        public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out string reason)
+        public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort, out string reason)
         {
             reason = String.Empty;
+            UDPPort = GetUDPPort (scene);
 
             // Don't disable this log message - it's too helpful
             m_log.TraceFormat (
@@ -1060,6 +1060,29 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             responseMap["Success"] = true;
             reason = OSDParser.SerializeJsonString (responseMap);
             return true;
+        }
+
+        private Dictionary<IScene, int> m_lastUsedPort = new Dictionary<IScene, int> ();
+        /// <summary>
+        /// This method provides ports for the region to accept requests from clients on as given by the region info
+        ///   and goes through them one by one
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        private int GetUDPPort (IScene scene)
+        {
+            if (scene.RegionInfo.UDPPorts.Count == 0)
+                return scene.RegionInfo.InternalEndPoint.Port;
+            lock (m_lastUsedPort)
+            {
+                if (!m_lastUsedPort.ContainsKey (scene))
+                    m_lastUsedPort.Add (scene, 0);
+                int port = scene.RegionInfo.UDPPorts[m_lastUsedPort[scene]];
+                m_lastUsedPort[scene]++;
+                if (m_lastUsedPort[scene] == scene.RegionInfo.UDPPorts.Count)
+                    m_lastUsedPort[scene] = 0;
+                return port;
+            }
         }
 
         /// <summary>

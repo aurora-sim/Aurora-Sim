@@ -53,7 +53,7 @@ namespace Aurora.Modules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public string OurGetPassword = "";
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
         private IConfigSource m_config;
 
         public void Initialise(IConfigSource source)
@@ -65,17 +65,17 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scenes.Add(scene);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scenes.Remove(scene);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             //Set up the incoming handler
             MainServer.Instance.AddStreamHandler(new CRBSIncoming(this));
@@ -187,7 +187,7 @@ namespace Aurora.Modules
                     foreach (object banUUID in valuevalue.Values)
                     {
                         UUID BanID = (UUID)banUUID;
-                        foreach (Scene scene in m_scenes)
+                        foreach (IScene scene in m_scenes)
                         {
                             bool found = false;
                             foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
@@ -210,7 +210,7 @@ namespace Aurora.Modules
                 }
             }
             //Update all the databases
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 scene.RegionInfo.EstateSettings.Save();
             }
@@ -220,7 +220,7 @@ namespace Aurora.Modules
         {
             Dictionary<string, object> Bans = new Dictionary<string, object>();
             int i = 0;
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
                 {

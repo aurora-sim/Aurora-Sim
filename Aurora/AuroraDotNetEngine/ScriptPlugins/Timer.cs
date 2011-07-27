@@ -36,6 +36,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -48,7 +49,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_ScriptEngine = engine;
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
         }
 

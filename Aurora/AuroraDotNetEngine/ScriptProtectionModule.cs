@@ -288,7 +288,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         return true;
                 }
                 else if ((m_userSet == UserSet.Administrators &&
-                    host.ParentEntity.Scene.Permissions.IsAdministrator (host.OwnerID)))
+                    host.ParentEntity.Scene.Permissions.IsGod (host.OwnerID)))
                 {
                     m_allowedUsers.Add (host.OwnerID);//We don't need to lock as it blocks up above,
                     //and we don't need to Contains() either as we already let all users in above

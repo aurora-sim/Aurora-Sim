@@ -34,7 +34,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private int MonitorOtherFrameTime = 0;
 
-        public OtherFrameMonitor(Scene scene)
+        public OtherFrameMonitor(IScene scene)
         {
         }
 

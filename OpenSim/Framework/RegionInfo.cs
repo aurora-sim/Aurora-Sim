@@ -44,6 +44,7 @@ namespace OpenSim.Framework
         Medium = 2,
         Normal = 3
     }
+
     public class RegionInfo
     {
         public string RegionFile = String.Empty;
@@ -118,6 +119,13 @@ namespace OpenSim.Framework
         {
             get { return m_allowScriptCrossing; }
             set { m_allowScriptCrossing = value; }
+        }
+
+        private List<int> m_UDPPorts = new List<int> ();
+        public List<int> UDPPorts
+        {
+            get { return m_UDPPorts; }
+            set { m_UDPPorts = value; }
         }
 
         private bool m_trustBinariesFromForeignSims = false;
@@ -346,6 +354,8 @@ namespace OpenSim.Framework
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
             args["region_size_y"] = OSD.FromInteger(RegionSizeY);
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
+            OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(delegate(int a) { return a;}));
+            args["UDPPorts"] = ports;
             if (secure)
             {
                 args["disabled"] = OSD.FromBoolean(Disabled);
@@ -438,6 +448,14 @@ namespace OpenSim.Framework
                 RegionSettings = new RegionSettings();
                 RegionSettings.FromOSD((OSDMap)args["RegionSettings"]);
             }
+            if (args.ContainsKey ("UDPPorts"))
+            {
+                OSDArray ports = (OSDArray)args["UDPPorts"];
+                foreach (OSD p in ports)
+                    m_UDPPorts.Add (p.AsInteger ());
+            }
+            if (!m_UDPPorts.Contains (InternalEndPoint.Port))
+                m_UDPPorts.Add (InternalEndPoint.Port);
         }
     }
 }

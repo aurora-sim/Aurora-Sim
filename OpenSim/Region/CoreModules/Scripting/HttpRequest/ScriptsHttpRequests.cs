@@ -97,7 +97,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         private Dictionary<UUID, List<HttpRequestClass>> m_pendingRequests;
         // <reqID, itemID>
         private Dictionary<UUID, UUID> m_reqID2itemID = new Dictionary<UUID, UUID>();
-        private Scene m_scene;
+        private IScene m_scene;
         private IScriptModule m_scriptModule;
         public class HTTPMax
         {
@@ -310,7 +310,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             m_pendingRequests = new Dictionary<UUID, List<HttpRequestClass>>();
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -318,12 +318,12 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

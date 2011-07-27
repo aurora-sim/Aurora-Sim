@@ -153,7 +153,7 @@ namespace OpenSim.Framework
         void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int p, int p_2);
         void CopyTo (AgentData agent);
         void MakeRootAgent(Vector3 pos, bool isFlying);
-        void MakeChildAgent ();
+        void MakeChildAgent (GridRegion destindation);
         void Close ();
 
 
@@ -382,7 +382,7 @@ namespace OpenSim.Framework
         /// </summary>
         void BackupPreparation();
 
-        void ClearXMLRepresentation ();
+        void RemoveScriptInstances (bool p);
     }
 
     public interface IEntity
@@ -617,7 +617,7 @@ namespace OpenSim.Framework
 
         void SetReturnAtEdge (bool p);
 
-        void SetBlockGrab (bool p);
+        void SetBlockGrab (bool block, bool wholeObject);
 
         void SetVehicleFloatParam (int param, float p);
 
@@ -652,7 +652,7 @@ namespace OpenSim.Framework
         List<UUID> SitTargetAvatar { get; }
         Dictionary<int, string> CollisionFilter { get; }
 
-        bool GetBlockGrab ();
+        bool GetBlockGrab (bool wholeObjectBlock);
 
         bool RemFlag (PrimFlags primFlags);
 
@@ -780,6 +780,8 @@ namespace OpenSim.Framework
         }
 
         void GenerateRotationalVelocityFromOmega ();
+
+        void ClearUpdateSchedule ();
     }
 
     public interface ISceneGraph
@@ -1002,7 +1004,10 @@ namespace OpenSim.Framework
         }
 
         public abstract Vector3 Acceleration { get; }
-        public abstract void AddAngularForce(Vector3 force, bool pushforce);
+        public abstract void AddAngularForce (Vector3 force, bool pushforce);
+        public virtual void ClearVelocity ()
+        {
+        }
     }
 
     public abstract class PhysicsActor
@@ -1109,6 +1114,14 @@ namespace OpenSim.Framework
 
         public abstract void SendCollisions ();
         public abstract void AddCollisionEvent (uint localID, ContactPoint contact);
+
+        public virtual void ForceSetVelocity (Vector3 velocity)
+        {
+        }
+
+        public virtual void ForceSetPosition (Vector3 position)
+        {
+        }
     }
 
     public enum ScriptControlled : uint
@@ -1209,7 +1222,7 @@ namespace OpenSim.Framework
         public delegate void LandObjectRemoved (UUID RegionID, UUID globalID);
         public event LandObjectRemoved OnLandObjectRemoved;
 
-        public delegate void AvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID);
+        public delegate void AvatarEnteringNewParcel (IScenePresence avatar, ILandObject oldParcel);
         public event AvatarEnteringNewParcel OnAvatarEnteringNewParcel;
 
         public delegate void SignificantClientMovement (IScenePresence sp);
@@ -1264,7 +1277,7 @@ namespace OpenSim.Framework
         public event ScriptColliding OnScriptLandColliding;
         public event ScriptColliding OnScriptLandColliderEnd;
 
-        public delegate void OnMakeChildAgentDelegate (IScenePresence presence);
+        public delegate void OnMakeChildAgentDelegate (IScenePresence presence, GridRegion destination);
         public event OnMakeChildAgentDelegate OnMakeChildAgent;
 
         public delegate void OnMakeRootAgentDelegate (IScenePresence presence);
@@ -1948,7 +1961,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerAvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID)
+        public void TriggerAvatarEnteringNewParcel (IScenePresence avatar, ILandObject oldParcel)
         {
             AvatarEnteringNewParcel handlerAvatarEnteringNewParcel = OnAvatarEnteringNewParcel;
             if (handlerAvatarEnteringNewParcel != null)
@@ -1957,7 +1970,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (avatar, localLandID, regionID);
+                        d (avatar, oldParcel);
                     }
                     catch (Exception e)
                     {
@@ -2032,7 +2045,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerOnMakeChildAgent (IScenePresence presence)
+        public void TriggerOnMakeChildAgent (IScenePresence presence, GridRegion destination)
         {
             OnMakeChildAgentDelegate handlerMakeChildAgent = OnMakeChildAgent;
             if (handlerMakeChildAgent != null)
@@ -2041,7 +2054,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (presence);
+                        d (presence, destination);
                     }
                     catch (Exception e)
                     {

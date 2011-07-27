@@ -121,34 +121,6 @@ namespace OpenSim.CoreApplicationPlugins
 
 #endregion
 
-#region IPlugin implementation
-
-        // We don't do that here
-        //
-        public void Initialise ()
-        {
-            throw new System.NotImplementedException();
-        }
-
-#endregion
-
-#region IDisposable implementation
-
-        // Cleanup
-        //
-        public void Dispose ()
-        {
-            // We expect that all regions have been removed already
-            while (m_sharedInstances.Count > 0)
-            {
-                m_sharedInstances[0].Close();
-                m_sharedInstances.RemoveAt(0);
-            }
-        }
-
-#endregion
-
-
         public string Name
         {
             get
@@ -164,7 +136,7 @@ namespace OpenSim.CoreApplicationPlugins
         // load. This means that here we deal with replaceable interfaces,
         // nonshared modules, etc.
         //
-        public void AddRegionToModules (Scene scene)
+        public void AddRegionToModules (IScene scene)
         {
             Dictionary<Type, ISharedRegionModule> deferredSharedModules =
                     new Dictionary<Type, ISharedRegionModule>();
@@ -353,16 +325,16 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        protected Dictionary<Scene, Dictionary<string, IRegionModuleBase>> RegionModules = new Dictionary<Scene, Dictionary<string, IRegionModuleBase>>();
+        protected Dictionary<IScene, Dictionary<string, IRegionModuleBase>> RegionModules = new Dictionary<IScene, Dictionary<string, IRegionModuleBase>>();
 
-        private void AddRegionModule(Scene scene, string p, IRegionModuleBase module)
+        private void AddRegionModule(IScene scene, string p, IRegionModuleBase module)
         {
             if (!RegionModules.ContainsKey(scene))
                 RegionModules.Add(scene, new Dictionary<string, IRegionModuleBase>());
             RegionModules[scene][p] = module;
         }
 
-        public void RemoveRegionFromModules (Scene scene)
+        public void RemoveRegionFromModules (IScene scene)
         {
             foreach (IRegionModuleBase module in RegionModules[scene].Values)
             {

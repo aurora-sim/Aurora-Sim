@@ -36,6 +36,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using log4net;
 using System.Reflection;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 {
@@ -44,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_name = "LoadImageURL";
-        private Scene m_scene;
+        private IScene m_scene;
         private IDynamicTextureManager m_textureManager;
 
         private string m_proxyurl = "";
@@ -105,7 +106,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_scene == null)
             {
@@ -113,12 +114,12 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)

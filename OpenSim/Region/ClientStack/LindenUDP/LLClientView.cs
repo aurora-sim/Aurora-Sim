@@ -354,7 +354,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         protected Dictionary<PacketType, PacketProcessor> m_packetHandlers = new Dictionary<PacketType, PacketProcessor>();
         protected Dictionary<string, GenericMessage> m_genericPacketHandlers = new Dictionary<string, GenericMessage>(); //PauPaw:Local Generic Message handlers
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected LLImageManager m_imageManager;
         protected string m_firstName;
         protected string m_lastName;
@@ -430,7 +430,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         /// Constructor
         /// </summary>
-        public LLClientView(EndPoint remoteEP, Scene scene, LLUDPServer udpServer, LLUDPClient udpClient, AgentCircuitData sessionInfo,
+        public LLClientView(EndPoint remoteEP, IScene scene, LLUDPServer udpServer, LLUDPClient udpClient, AgentCircuitData sessionInfo,
             UUID agentId, UUID sessionId, uint circuitCode)
         {
             InitDefaultAnimations();
@@ -524,6 +524,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Flush all of the packets out of the UDP server for this client
             if (m_udpServer != null)
                 m_udpServer.Flush(m_udpClient);
+
+            m_udpServer.RemoveClient (this);
 
             // Disable UDP handling for this client
             m_udpClient.Shutdown();
@@ -4654,7 +4656,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IScenePresence presence = (IScenePresence)entity;
 
                 attachPoint = 0;
-                if (presence.PhysicsActor != null && presence.PhysicsActor.Flying && !presence.PhysicsActor.IsColliding)
+                if (presence.PhysicsActor != null  && !presence.PhysicsActor.IsColliding)
                     presence.CollisionPlane = Vector4.UnitW;//We have to do this, otherwise the last ground one will be what we have, and it can cause the client to think that it shouldn't fly down, which will cause the agent to fall instead
                 collisionPlane = presence.CollisionPlane;
                 position = presence.OffsetPosition;
@@ -7854,7 +7856,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 //                    "[CLIENT]: Got request for asset {0} from item {1} in prim {2} by {3}",
 //                    requestID, itemID, taskID, Name);
 
-                if (!(((Scene)m_scene).Permissions.BypassPermissions()))
+                if (!m_scene.Permissions.BypassPermissions())
                 {
                     if (taskID != UUID.Zero) // Prim
                     {
@@ -7879,17 +7881,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         if (tii.Type == (int)AssetType.LSLText)
                         {
-                            if (!((Scene)m_scene).Permissions.CanEditScript(itemID, taskID, AgentId))
+                            if (!m_scene.Permissions.CanEditScript(itemID, taskID, AgentId))
                                 return true;
                         }
                         else if (tii.Type == (int)AssetType.Notecard)
                         {
-                            if (!((Scene)m_scene).Permissions.CanEditNotecard(itemID, taskID, AgentId))
+                            if (!m_scene.Permissions.CanEditNotecard(itemID, taskID, AgentId))
                                 return true;
                         }
                         else
                         {
-                            if (!((Scene)m_scene).Permissions.CanEditObjectInventory(part.UUID, AgentId))
+                            if (!m_scene.Permissions.CanEditObjectInventory(part.UUID, AgentId))
                             {
                                 m_log.Warn("[LLClientView]: Permissions check for CanEditObjectInventory fell through to standard code!");
                                 
@@ -7944,7 +7946,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         {
                             if (!invAccess.GetAgentInventoryItem(this, itemID, requestID))
                                 return false;
-
                         }
                         else
                             return false;
@@ -9370,13 +9371,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             switch (Utils.BytesToString(messagePacket.MethodData.Method))
             {
                 case "getinfo":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         OnDetailedEstateDataRequest(this, messagePacket.MethodData.Invoice);
                     }
                     return true;
                 case "setregioninfo":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         OnSetEstateFlagsRequest(this, convertParamStringToBool(messagePacket.ParamList[0].Parameter), convertParamStringToBool(messagePacket.ParamList[1].Parameter),
                                                 convertParamStringToBool(messagePacket.ParamList[2].Parameter), convertParamStringToBool(messagePacket.ParamList[3].Parameter),
@@ -9402,7 +9403,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //                                }
                 //                                break;
                 case "texturedetail":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
                         {
@@ -9420,7 +9421,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     return true;
                 case "textureheights":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
                         {
@@ -9438,13 +9439,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "texturecommit":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         OnCommitEstateTerrainTextureRequest(this);
                     }
                     return true;
                 case "setregionterrain":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         if (messagePacket.ParamList.Length != 9)
                         {
@@ -9482,7 +9483,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                     return true;
                 case "restart":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         // There's only 1 block in the estateResetSim..   and that's the number of seconds till restart.
                         foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
@@ -9496,7 +9497,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "estatechangecovenantid":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
                         {
@@ -9506,7 +9507,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "estateaccessdelta": // Estate access delta manages the banlist and allow list too.
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         int estateAccessType = Convert.ToInt16(Utils.BytesToString(messagePacket.ParamList[1].Parameter));
                         OnUpdateEstateAccessDeltaRequest(this, messagePacket.MethodData.Invoice, estateAccessType, new UUID(Utils.BytesToString(messagePacket.ParamList[2].Parameter)));
@@ -9514,7 +9515,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "simulatormessage":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID SenderID = new UUID(Utils.BytesToString(messagePacket.ParamList[2].Parameter));
@@ -9525,7 +9526,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "instantmessage":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID invoice = messagePacket.MethodData.Invoice; UUID sessionID = messagePacket.AgentData.SessionID;
                         string Message = "";
@@ -9547,7 +9548,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "setregiondebug":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID SenderID = messagePacket.AgentData.AgentID;
@@ -9559,7 +9560,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "teleporthomeuser":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID SenderID = messagePacket.AgentData.AgentID;
@@ -9571,7 +9572,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "teleporthomeallusers":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID SenderID = messagePacket.AgentData.AgentID;
@@ -9579,7 +9580,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "colliders":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         handlerLandStatRequest = OnLandStatRequest;
                         if (handlerLandStatRequest != null)
@@ -9589,7 +9590,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "scripts":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         handlerLandStatRequest = OnLandStatRequest;
                         if (handlerLandStatRequest != null)
@@ -9599,7 +9600,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 case "terrain":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         if (messagePacket.ParamList.Length > 0)
                         {
@@ -9633,15 +9634,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                     }
                                 }
                             }
-
                         }
-
-
                     }
                     return true;
 
                 case "estatechangeinfo":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID SenderID = messagePacket.AgentData.AgentID;
@@ -9657,7 +9655,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
 
                 case "refreshmapvisibility":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         IWorldMapModule mapModule;
                         mapModule = Scene.RequestModuleInterface<IWorldMapModule>();
@@ -9666,23 +9664,23 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     return true;
 
                 case "kickestate":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         UUID Prey;
 
                         UUID.TryParse(Utils.BytesToString(messagePacket.ParamList[0].Parameter), out Prey);
                         IClientAPI client;
-                        m_scene.TryGetClient(Prey, out client);
+                        m_scene.ClientManager.TryGetValue(Prey, out client);
                         if (client == null)
                             return true;
                         client.Kick("The Aurora Manager has kicked you");
                         IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule> ();
                         if (transferModule != null)
-                            transferModule.IncomingCloseAgent (((Scene)Scene), Prey);
+                            transferModule.IncomingCloseAgent (Scene, Prey);
                     }
                     return true;
                 case "telehub":
-                    if (((Scene)m_scene).Permissions.CanIssueEstateCommand(AgentId, false))
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
                         List<string> Parameters = new List<string>();
                         foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
@@ -11861,7 +11859,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             MultipleObjectUpdatePacket multipleupdate = (MultipleObjectUpdatePacket)packet;
             if (multipleupdate.AgentData.SessionID != SessionId) return false;
             // m_log.Debug("new multi update packet " + multipleupdate.ToString());
-            Scene tScene = (Scene)m_scene;
+            IScene tScene = m_scene;
 
             for (int i = 0; i < multipleupdate.ObjectData.Length; i++)
             {
@@ -12426,6 +12424,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             req.RequestAssetID = requestID;
             req.TransferRequestID = transferRequest.TransferInfo.TransferID;
 
+            
             if (asset == null)
             {
                 SendFailedAsset(req, TransferPacketStatus.AssetUnknownSource);

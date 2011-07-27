@@ -54,6 +54,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return m_enabled; }
         }
 
+        public bool Default
+        {
+            get { return m_default; }
+        }
+
         public void Initialise(IConfigSource configSource, ISimulationBase openSim)
         {
             m_configSource = configSource;
@@ -103,8 +108,18 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (infos.Length == 0 && m_default)
             {
                 //Load up the GUI to make a new region
-                RegionManager manager = new RegionManager(true, false, m_openSim);
-                System.Windows.Forms.Application.Run(manager);
+                try
+                {
+                    RegionManager manager = new RegionManager (true, false, m_openSim);
+                    System.Windows.Forms.Application.Run (manager);
+                }
+                catch
+                {
+                    //Probably no winforms
+                    RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
+                    system.Initialise (m_configSource, m_openSim);
+                    system.AddRegion (new string[0]);
+                }
                 return LoadRegions();
             }
             else if (infos.Length == 0)
@@ -120,13 +135,24 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {
-            RegionManager manager = new RegionManager(false, true, m_openSim);
-            System.Windows.Forms.Application.Run(manager);
+            try
+            {
+                RegionManager manager = new RegionManager (false, true, m_openSim);
+                System.Windows.Forms.Application.Run (manager);
+            }
+            catch
+            {
+                //Probably no winforms
+                RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
+                system.Initialise (m_configSource, m_openSim);
+                system.AddRegion (new string[0]);
+            }
         }
 
         protected void OpenRegionManager(string[] cmdparams)
         {
-            StartRegionManagerThread ();
+            Thread t = new Thread (StartRegionManagerThread);
+            t.Start ();
         }
 
         protected void StartRegionManagerThread()
@@ -142,15 +168,39 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 //Load the file loader and set it up and make sure that we pull any regions from it
                 RegionLoaderFileSystem system = new RegionLoaderFileSystem();
                 system.Initialise(m_configSource, m_openSim);
-                RegionInfo[] regionsToConvert = system.LoadRegions();
+                RegionInfo[] regionsToConvert = system.InternalLoadRegions(true);
                 if (regionsToConvert == null)
                     return;
 
+                bool changed = false;
                 //Now load all the regions into the database
                 IRegionInfoConnector conn = DataManager.RequestPlugin<IRegionInfoConnector>();
                 foreach (RegionInfo info in regionsToConvert)
                 {
-                    conn.UpdateRegionInfo(info);
+                    RegionInfo alreadyExists;
+                    if ((alreadyExists = conn.GetRegionInfo (info.RegionID)) == null)
+                    {
+                        changed = true;
+                        if (!info.UDPPorts.Contains (info.InternalEndPoint.Port))
+                            info.UDPPorts.Add (info.InternalEndPoint.Port);
+                        info.HttpPort = (uint)info.InternalEndPoint.Port;
+                        info.Disabled = false;
+                        conn.UpdateRegionInfo (info);
+                    }
+                    else
+                    {
+                        //Update some atributes...
+                        alreadyExists.RegionName = info.RegionName;
+                        alreadyExists.RegionLocX = info.RegionLocX;
+                        alreadyExists.RegionLocY = info.RegionLocY;
+                        alreadyExists.RegionSizeX = info.RegionSizeX;
+                        alreadyExists.RegionSizeY = info.RegionSizeY;
+                        alreadyExists.ExternalHostName = info.ExternalHostName;
+                        alreadyExists.Disabled = false;
+                        if (!alreadyExists.UDPPorts.Contains (info.InternalEndPoint.Port))
+                            alreadyExists.UDPPorts.Add (info.InternalEndPoint.Port);
+                        conn.UpdateRegionInfo (alreadyExists);
+                    }
                 }
 
                 //Make sure all the regions got saved
@@ -160,10 +210,23 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if (conn.GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
-                //Something went really wrong here... so lets not destroy anything
-                if (foundAll && regionsToConvert.Length != 0)
+                //We found some new ones, they are all loaded
+                if (foundAll && regionsToConvert.Length != 0 && changed)
                 {
-                    MessageBox.Show("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                    try
+                    {
+                        MessageBox.Show ("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                        MessageBox.Show ("To change your region settings, type 'open region manager' on the console, and a GUI will pop up for you to use.");
+                        DialogResult t = Utilities.InputBox ("Remove .ini files", "Do you want to remove your old .ini files?");
+                        if (t == DialogResult.OK)
+                            system.DeleteAllRegionFiles ();
+                    }
+                    catch
+                    {
+                        //For people who only have consoles, no winforms
+                        MainConsole.Instance.Output ("All region .ini and .xml files have been successfully converted to the new region loader style.");
+                        MainConsole.Instance.Output ("To change your region settings, well, you don't have Mono-Winforms installed. Get that, stick with just modifying the .ini files, or get something to modify the region database that isn't a GUI.");
+                    }
                 }
             }
             catch
@@ -182,9 +245,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public bool FailedToStartRegions(string reason)
         {
-            //Open the region manager for them
-            MessageBox.Show("Startup failed, regions did not validate!", reason);
-            StartRegionManagerThread();
+            try
+            {
+                //Open the region manager for them
+                MessageBox.Show (reason, "Startup failed, regions did not validate!");
+                StartRegionManagerThread ();
+            }
+            catch
+            {
+                MainConsole.Instance.Output(string.Format("Startup failed, regions did not validate - {0}!", reason));
+            }
             return true;
         }
 

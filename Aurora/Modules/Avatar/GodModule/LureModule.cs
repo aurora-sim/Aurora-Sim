@@ -48,7 +48,7 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
 
 		private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
@@ -69,33 +69,31 @@ namespace Aurora.Modules
             }
 		}
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
 
-            if(!m_scenes.Contains(scene))
-                m_scenes.Add(scene);
+            m_scenes.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
 
-            if (m_scenes.Contains(scene))
-                m_scenes.Remove(scene);
+            m_scenes.Remove(scene);
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -154,9 +152,9 @@ namespace Aurora.Modules
 
 			GridInstantMessage m;
 
-            if (m_allowGodTeleports && client.Scene.Permissions.IsAdministrator (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
+            if (m_allowGodTeleports && client.Scene.Permissions.IsGod (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
 			{
-                if (client.Scene.Permissions.IsAdministrator (targetid)) //if they are an admin
+                if (client.Scene.Permissions.IsGod (targetid)) //if they are an admin
 				{
                     //Gods do not tp other gods
                     m = new GridInstantMessage (client.Scene, client.AgentId,

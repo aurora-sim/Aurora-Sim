@@ -103,10 +103,10 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
         protected void LoadLibraries(string iarFileName)
         {
             RegionInfo regInfo = new RegionInfo();
-            Scene m_MockScene = null;
+            IScene m_MockScene = null;
             //Make the scene for the IAR loader
-            if (m_registry is Scene)
-                m_MockScene = (Scene)m_registry;
+            if (m_registry is IScene)
+                m_MockScene = (IScene)m_registry;
             else
             {
                 m_MockScene = new Scene();
@@ -178,7 +178,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             }
         }
 
-        private void TraverseFolders(UUID ID, Scene m_MockScene)
+        private void TraverseFolders(UUID ID, IScene m_MockScene)
         {
             List<InventoryFolderBase> folders = m_MockScene.InventoryService.GetFolderFolders(m_service.LibraryOwner, ID);
             foreach (InventoryFolderBase folder in folders)

@@ -84,12 +84,12 @@ namespace Aurora.Modules
             set { m_maxChatDistance = value; }
         }
 
-        public List<Scene> Scenes
+        public List<IScene> Scenes
         {
             get { return m_scenes; }
         }
 
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
 
         private IMuteListConnector MuteListConnector;
         internal IConfig m_config;
@@ -152,27 +152,25 @@ namespace Aurora.Modules
             }
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
-            if (!m_enabled) return;
+            if (!m_enabled)
+                return;
 
-            if (!m_scenes.Contains(scene))
-            {
-                m_scenes.Add(scene);
-                scene.EventManager.OnNewClient += OnNewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnRegisterCaps += RegisterCaps;
-                scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
+            m_scenes.Add (scene);
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnRegisterCaps += RegisterCaps;
+            scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
 
-                scene.RegisterModuleInterface<IMuteListModule>(this);
-                scene.RegisterModuleInterface<IChatModule>(this);
-                FindChatPlugins();
-            }
+            scene.RegisterModuleInterface<IMuteListModule> (this);
+            scene.RegisterModuleInterface<IChatModule> (this);
+            FindChatPlugins ();
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
             if (!m_enabled) return;
 
@@ -194,21 +192,19 @@ namespace Aurora.Modules
             }
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
-            if (!m_enabled) return;
+            if (!m_enabled)
+                return;
 
-            if (m_scenes.Contains(scene))
-            {
-                scene.EventManager.OnNewClient -= OnNewClient;
-                scene.EventManager.OnClosingClient -= OnClosingClient;
-                scene.EventManager.OnRegisterCaps -= RegisterCaps;
-                scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
+            scene.EventManager.OnNewClient -= OnNewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnRegisterCaps -= RegisterCaps;
+            scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
 
-                m_scenes.Remove(scene);
-                scene.UnregisterModuleInterface<IMuteListModule>(this);
-                scene.UnregisterModuleInterface<IChatModule>(this);
-            }
+            m_scenes.Remove (scene);
+            scene.UnregisterModuleInterface<IMuteListModule> (this);
+            scene.UnregisterModuleInterface<IChatModule> (this);
         }
 
         public virtual void Close()
@@ -410,18 +406,12 @@ namespace Aurora.Modules
 
             if (c.Channel == DEBUG_CHANNEL) c.Type = ChatTypeEnum.DebugChannel;
 
+            IScenePresence avatar = (scene != null && c.Sender != null) ? scene.GetScenePresence (c.Sender.AgentId) : null;
             switch (sourceType)
             {
                 case ChatSourceType.Agent:
                     if (scene != null)
                     {
-                        if (!(scene is Scene))
-                        {
-                            m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                                             scene.RegionInfo.RegionName, c.Sender.AgentId);
-                            return;
-                        }
-                        IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
                         if (avatar != null && message == "")
                         {
                             fromPos = avatar.AbsolutePosition;
@@ -450,7 +440,7 @@ namespace Aurora.Modules
 
             // m_log.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
-            foreach (Scene s in m_scenes)
+            foreach (IScene s in m_scenes)
             {
                 List<IScenePresence> ScenePresences = s.GetScenePresences ();
                 foreach (IScenePresence presence in ScenePresences)
@@ -474,6 +464,10 @@ namespace Aurora.Modules
                         {
                             continue;
                         }
+                        if (sourceType == ChatSourceType.Agent &&
+                            (avatar.CurrentParcelUUID != presence.CurrentParcelUUID &&
+                            (avatar.CurrentParcel.LandData.Private || presence.CurrentParcel.LandData.Private)))
+                            continue; //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
                         TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType, c.Range);
                     }
                 }
@@ -510,7 +504,7 @@ namespace Aurora.Modules
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
-                IScenePresence avatar = (c.Scene as Scene).GetScenePresence (c.Sender.AgentId);
+                IScenePresence avatar = c.Scene.GetScenePresence (c.Sender.AgentId);
                 fromID = c.Sender.AgentId;
                 fromName = avatar.Name;
                 sourceType = ChatSourceType.Agent;
@@ -518,7 +512,7 @@ namespace Aurora.Modules
 
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
-            ((Scene)c.Scene).ForEachScenePresence(
+            c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)
                 {
                     // ignore chat from child agents
@@ -930,9 +924,9 @@ namespace Aurora.Modules
             }
         }
 
-        private Scene findScene(UUID agentID)
+        private IScene findScene(UUID agentID)
         {
-            foreach (Scene scene in m_scenes)
+            foreach (IScene scene in m_scenes)
             {
                 IScenePresence SP = scene.GetScenePresence (agentID);
                 if (SP != null && !SP.IsChildAgent)
@@ -948,7 +942,7 @@ namespace Aurora.Modules
         /// <returns></returns>
         public IScenePresence findScenePresence (UUID avID)
         {
-            foreach (Scene s in m_scenes)
+            foreach (IScene s in m_scenes)
             {
                 IScenePresence SP = s.GetScenePresence (avID);
                 if (SP != null)

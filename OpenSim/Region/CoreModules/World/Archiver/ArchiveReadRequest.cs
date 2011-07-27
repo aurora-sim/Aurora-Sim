@@ -56,7 +56,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
         protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
 
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected Stream m_loadStream;
         protected string m_errorMessage;
         protected HashSet<AssetBase> AssetsToAdd = new HashSet<AssetBase>();
@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         private bool m_flipX = false;
         private bool m_flipY = false;
 
-        public ArchiveReadRequest(Scene scene, string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY)
+        public ArchiveReadRequest (IScene scene, string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY)
         {
             m_offsetX = offsetX;
             m_offsetY = offsetY;
@@ -112,7 +112,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_skipAssets = skipAssets;
         }
 
-        public ArchiveReadRequest(Scene scene, Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
+        public ArchiveReadRequest (IScene scene, Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
         {
             m_offsetX = offsetX;
             m_offsetY = offsetY;
@@ -249,9 +249,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                     {
                                         kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                     }
-                                    if (!ResolveUserUuid(kvp.Value.CreatorID))
+                                    if (kvp.Value.CreatorData == null || kvp.Value.CreatorData == string.Empty)
                                     {
-                                        kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                        if (!ResolveUserUuid (kvp.Value.CreatorID))
+                                            kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                     }
                                     if (UserManager != null)
                                         UserManager.AddUser (kvp.Value.CreatorID, kvp.Value.CreatorData);
@@ -429,6 +430,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 }
                 else
                 {
+                    IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement> ();
+                    if (uf != null)
+                        if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
+                        {
+                            m_validUserUuids.Add (uuid, true);
+                            return true;
+                        }
                     m_validUserUuids.Add(uuid, false);
                     return false;
                 }

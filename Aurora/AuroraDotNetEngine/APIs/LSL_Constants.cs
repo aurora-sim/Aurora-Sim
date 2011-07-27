@@ -53,6 +53,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger STATUS_DIE_AT_EDGE = 128;
         public static readonly LSLInteger STATUS_RETURN_AT_EDGE = 256;
         public static readonly LSLInteger STATUS_CAST_SHADOWS = 512;
+        public static readonly LSLInteger STATUS_BLOCK_GRAB_OBJECT = 1024;
 
         public static readonly LSLInteger AGENT = 1;
         public static readonly LSLInteger AGENT_BY_LEGACY_NAME = 1;

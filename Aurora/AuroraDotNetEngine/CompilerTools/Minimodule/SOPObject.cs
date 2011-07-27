@@ -48,7 +48,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         private readonly ISecurityCredential m_security;
 
         [Obsolete("Replace with 'credential' constructor [security]")]
-        public SOPObject(Scene rootScene, uint localID)
+        public SOPObject(IScene rootScene, uint localID)
         {
             m_rootScene = rootScene;
             m_localID = localID;

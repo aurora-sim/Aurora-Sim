@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         public bool m_enabled = true;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected List<Scene> m_Scenes = new List<Scene>();
+        protected List<IScene> m_Scenes = new List<IScene> ();
 
         protected Dictionary<UUID, UserFriendData> m_Friends =
                 new Dictionary<UUID, UserFriendData>();
@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -184,11 +184,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             return null;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -320,7 +320,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         /// </summary>
         public IClientAPI LocateClientObject(UUID agentID)
         {
-            Scene scene = GetClientScene(agentID);
+            IScene scene = GetClientScene(agentID);
             if (scene != null)
             {
                 IScenePresence presence = scene.GetScenePresence (agentID);
@@ -334,11 +334,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         /// <summary>
         /// Find the scene for an agent
         /// </summary>
-        public Scene GetClientScene(UUID agentId)
+        public IScene GetClientScene(UUID agentId)
         {
             lock (m_Scenes)
             {
-                foreach (Scene scene in m_Scenes)
+                foreach (IScene scene in m_Scenes)
                 {
                     IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null && !presence.IsChildAgent)
@@ -438,8 +438,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             ICallingCardModule ccmodule = client.Scene.RequestModuleInterface<ICallingCardModule>();
             if (ccmodule != null)
             {
-                UserAccount account = ((Scene)client.Scene).UserAccountService.GetUserAccount(UUID.Zero, friendID);
-                UUID folderID = ((Scene)client.Scene).InventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CallingCard).ID;
+                UserAccount account = client.Scene.UserAccountService.GetUserAccount(UUID.Zero, friendID);
+                UUID folderID = client.Scene.InventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CallingCard).ID;
                 if(account != null)
                     ccmodule.CreateCallingCard(client, friendID, folderID, account.Name);
             }
@@ -571,8 +571,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 ICallingCardModule ccmodule = friendClient.Scene.RequestModuleInterface<ICallingCardModule>();
                 if (ccmodule != null)
                 {
-                    UserAccount account = ((Scene)friendClient.Scene).UserAccountService.GetUserAccount(UUID.Zero, userID);
-                    UUID folderID = ((Scene)friendClient.Scene).InventoryService.GetFolderForType(friendID, InventoryType.Unknown, AssetType.CallingCard).ID;
+                    UserAccount account = friendClient.Scene.UserAccountService.GetUserAccount(UUID.Zero, userID);
+                    UUID folderID = friendClient.Scene.InventoryService.GetFolderForType(friendID, InventoryType.Unknown, AssetType.CallingCard).ID;
                     ccmodule.CreateCallingCard(friendClient, userID, folderID, account.Name);
                 }
                 // we're done

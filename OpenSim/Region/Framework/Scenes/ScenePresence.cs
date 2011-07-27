@@ -728,7 +728,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sendCourseLocationsMethod = SendCoarseLocationsDefault;
         }
 
-        public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
+        public ScenePresence(IClientAPI client, IScene world, RegionInfo reginfo)
             : this()
         {
             m_controllingClient = client;
@@ -854,6 +854,10 @@ namespace OpenSim.Region.Framework.Scenes
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
                 Name, m_scene.RegionInfo.RegionName);
 
+            // On the next prim update, all objects will be sent
+            //
+            m_sceneViewer.Reset ();
+
             AddToPhysicalScene(isFlying, false);
             //m_physicsActor.Position += m_savedVelocity * 0.25f;
             m_physicsActor.Velocity = m_savedVelocity * 0.25f;
@@ -869,10 +873,6 @@ namespace OpenSim.Region.Framework.Scenes
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
             // elsewhere anyway
             // Animator.SendAnimPack();
-
-            // On the next prim update, all objects will be sent
-            //
-            m_sceneViewer.Reset();
 
             IsChildAgent = false;
 
@@ -906,7 +906,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// It doesn't get called for a teleport.  Reason being, an agent that
         /// teleports out may not end up anywhere near this region
         /// </summary>
-        public void MakeChildAgent()
+        public void MakeChildAgent(GridRegion destindation)
         {
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
@@ -921,12 +921,13 @@ namespace OpenSim.Region.Framework.Scenes
                  Name, UUID, m_scene.RegionInfo.RegionName);
 
             IsChildAgent = true;
-            RemoveFromPhysicalScene();
+            RemoveFromPhysicalScene ();
+            m_sceneViewer.Reset ();
 
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
                 attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
-            m_scene.EventManager.TriggerOnMakeChildAgent(this);
+            m_scene.EventManager.TriggerOnMakeChildAgent(this, destindation);
 
             Reset();
         }
@@ -1053,7 +1054,7 @@ namespace OpenSim.Region.Framework.Scenes
             string reason;
             Vector3 pos;
             //Get a good position and make sure that we exist in the grid
-            AgentCircuitData agent = ((Scene)m_scene).AuthenticateHandler.GetAgentCircuitData (UUID);
+            AgentCircuitData agent = m_scene.AuthenticateHandler.GetAgentCircuitData (UUID);
 
             if (!Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
             {
@@ -1911,9 +1912,11 @@ namespace OpenSim.Region.Framework.Scenes
                 Velocity = Vector3.Zero;
 
                 Animator.TrySetMovementAnimation(sitAnimation);
-                IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (appearance != null)
-                    appearance.SendAvatarDataToAllAgents (false);
+                //Force send a full update
+                foreach (IScenePresence sp in m_scene.GetScenePresences ())
+                {
+                    sp.ControllingClient.SendAvatarDataImmediate (this);
+                }
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
                 // [Update] We do now.
@@ -2444,7 +2447,7 @@ namespace OpenSim.Region.Framework.Scenes
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
                 if(cAgent.IsCrossing)
-                    ((Scene)m_scene).AuthenticateHandler.GetAgentCircuitData (UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
+                    m_scene.AuthenticateHandler.GetAgentCircuitData (UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (appearance != null)
                 {

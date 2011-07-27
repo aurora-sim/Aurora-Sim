@@ -60,12 +60,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public List<Scene> Worlds
+        public List<IScene> Worlds
         {
             get { return m_Scenes; }
         }
 
-        private List<Scene> m_Scenes = new List<Scene>();
+        private List<IScene> m_Scenes = new List<IScene> ();
 
         // Handles and queues incoming events from OpenSim
         public EventManager EventManager;
@@ -241,12 +241,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
-
-        	m_Scenes.Add(scene);
 
             //Register the console commands
             if (FirstStartup)
@@ -279,10 +277,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             scene.StackModuleInterface<IScriptModule> (this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_enabled)
                 return;
+
+            m_Scenes.Add (scene);
 
             //Must come AFTER the script plugins setup! Otherwise you'll get weird errors from the plugins
             if (MaintenanceThread == null)
@@ -324,7 +324,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             UpdateLeasesTimer.Start();
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -405,7 +405,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (File.Exists(Dir))
             {
                 string defaultScript = File.ReadAllText(Dir);
-                foreach (Scene scene in m_Scenes)
+                foreach (IScene scene in m_Scenes)
                 {
                     ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
@@ -1240,7 +1240,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Starts all non shared script plugins
         /// </summary>
         /// <param name="scene"></param>
-        private void AddRegionToScriptModules(Scene scene)
+        private void AddRegionToScriptModules (IScene scene)
         {
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
@@ -1331,7 +1331,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public ISceneChildEntity findPrim (UUID objectID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (objectID);
                 if (part != null)
@@ -1342,7 +1342,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public ISceneChildEntity findPrim(uint localID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)
@@ -1351,9 +1351,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return null;
         }
 
-        public Scene findPrimsScene(uint localID)
+        public IScene findPrimsScene(uint localID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 ISceneChildEntity part = s.GetSceneObjectPart (localID);
                 if (part != null)

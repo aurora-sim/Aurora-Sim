@@ -45,7 +45,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<Scene> m_sceneList = new List<Scene>();
+        private List<IScene> m_sceneList = new List<IScene> ();
 
         private IMessageTransferModule m_msgTransferModule = null;
 
@@ -85,15 +85,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_groupMessagingEnabled)
                 return;
             
             scene.RegisterModuleInterface<IGroupsMessagingModule>(this);
         }
-        
-        public void RegionLoaded(Scene scene)
+
+        public void RegionLoaded (IScene scene)
         {
             if (!m_groupMessagingEnabled)
                 return;
@@ -129,7 +129,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             scene.EventManager.OnClientLogin += OnClientLogin;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_groupMessagingEnabled)
                 return;
@@ -150,7 +150,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             if (m_debugEnabled) m_log.Debug("[GROUPS-MESSAGING]: Shutting down GroupsMessagingModule module.");
 
-            foreach (Scene scene in m_sceneList)
+            foreach (IScene scene in m_sceneList)
             {
                 scene.EventManager.OnNewClient -= OnNewClient;
                 scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
@@ -520,7 +520,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             IClientAPI child = null;
 
             // Try root avatar first
-            foreach (Scene scene in m_sceneList)
+            foreach (IScene scene in m_sceneList)
             {
                 IScenePresence user;
                 if (scene.TryGetScenePresence (agentID, out user))

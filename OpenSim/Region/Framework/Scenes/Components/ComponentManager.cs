@@ -70,7 +70,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_hasStarted)
             {
@@ -184,7 +184,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent (com);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             //Commented out until we can verify that objects arn't requiring this as backup does need this,
             //   but shouldn't backup come before this?
@@ -196,7 +196,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             }*/
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 

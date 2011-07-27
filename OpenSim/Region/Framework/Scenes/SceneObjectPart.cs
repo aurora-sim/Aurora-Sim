@@ -124,11 +124,24 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                return GetComponentState("BlockGrab").AsBoolean();
+                return GetComponentState ("BlockGrab").AsBoolean ();
             }
             set
             {
-                SetComponentState("BlockGrab", value);
+                SetComponentState ("BlockGrab", value);
+            }
+        }
+
+        [XmlIgnore]
+        public bool BlockGrabObject
+        {
+            get
+            {
+                return GetComponentState ("BlockGrabObject").AsBoolean ();
+            }
+            set
+            {
+                SetComponentState ("BlockGrabObject", value);
             }
         }
 
@@ -2809,24 +2822,30 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentGroup.RootPart.RETURN_AT_EDGE = p;
         }
 
-        public bool GetBlockGrab()
+        public bool GetBlockGrab(bool wholeObjectBlock)
         {
             if (m_parentGroup == null)
                 return false;
             if (m_parentGroup.IsDeleted)
                 return false;
 
-            return m_parentGroup.RootPart.BlockGrab;
+            if (wholeObjectBlock)
+                return m_parentGroup.RootPart.BlockGrabObject;
+            else
+                return m_parentGroup.RootPart.BlockGrab;
         }
 
-        public void SetBlockGrab(bool p)
+        public void SetBlockGrab (bool block, bool wholeObjectBlock)
         {
             if (m_parentGroup == null)
                 return;
             if (m_parentGroup.IsDeleted)
                 return;
 
-            m_parentGroup.RootPart.BlockGrab = p;
+            if (wholeObjectBlock)
+                m_parentGroup.RootPart.BlockGrabObject = block;
+            else
+                m_parentGroup.RootPart.BlockGrab = block;
         }
 
         public void SetStatusSandbox(bool p)

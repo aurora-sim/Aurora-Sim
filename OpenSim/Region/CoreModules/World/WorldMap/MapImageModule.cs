@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Scene m_scene;
+        private IScene m_scene;
         private IConfigSource m_config;
         private IMapTileTerrainRenderer terrainRenderer;
         
@@ -195,7 +195,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_config = source;
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -207,14 +207,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
-
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
@@ -237,7 +235,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #endregion
 
-        private Bitmap DrawObjectVolume(Scene whichScene, Bitmap mapbmp)
+        private Bitmap DrawObjectVolume (IScene whichScene, Bitmap mapbmp)
         {
             ITerrainChannel heightmap = whichScene.RequestModuleInterface<ITerrainChannel>();
             //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");

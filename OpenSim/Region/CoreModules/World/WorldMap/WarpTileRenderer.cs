@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
 
         private IRendering m_primMesher;
-        private Scene m_scene;
+        private IScene m_scene;
         private IConfigSource m_config;
         private static readonly UUID TEXTURE_METADATA_MAGIC = new UUID ("802dc0e0-f080-4931-8b57-d1be8611c4f3");
         private static readonly Color4 WATER_COLOR = new Color4 (29, 72, 96, 216);
@@ -63,7 +63,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private bool m_useAntiAliasing = true; // TODO: Make this a config option
         private bool m_texturePrims = false;
 
-        public void Initialise (Scene scene, Nini.Config.IConfigSource config)
+        public void Initialise (IScene scene, Nini.Config.IConfigSource config)
         {
             m_scene = scene;
             m_config = config;

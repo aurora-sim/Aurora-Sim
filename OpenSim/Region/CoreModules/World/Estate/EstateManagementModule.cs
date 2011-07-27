@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private delegate void LookupUUIDS(List<UUID> uuidLst);
 
-        private Scene m_scene;
+        private IScene m_scene;
 
         private EstateTerrainXferHandler TerrainUploader;
 
@@ -215,7 +215,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             TriggerEstateSunUpdate();
 
             IClientAPI remoteClient;
-            m_scene.TryGetClient(agentID, out remoteClient);
+            m_scene.ClientManager.TryGetValue(agentID, out remoteClient);
 
             sendDetailedEstateData(remoteClient, invoice);
 
@@ -643,7 +643,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                 //Close them in the sim
                                 IEntityTransferModule transferModule = SP.Scene.RequestModuleInterface<IEntityTransferModule> ();
                                 if (transferModule != null)
-                                    transferModule.IncomingCloseAgent ((Scene)SP.Scene, SP.UUID);
+                                    transferModule.IncomingCloseAgent (SP.Scene, SP.UUID);
                             }
                         }
                     }
@@ -1472,7 +1472,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
 
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IEstateModule>(this);
@@ -1501,7 +1501,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.UnregisterModuleInterface<IEstateModule>(this);
             m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
@@ -1510,7 +1510,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             // Sets up the sun module based no the saved Estate and Region Settings
             // DO NOT REMOVE or the sun will stop working

@@ -42,7 +42,7 @@ namespace OpenSim.Region.CoreModules
         private uint m_frame = 0;
         private int m_frameUpdateRate = 1000;
         private Random m_rndnums = new Random(Environment.TickCount);
-        private Scene m_scene = null;
+        private IScene m_scene = null;
         private bool m_ready = false;
         private bool m_enabled = false;
         private float m_cloudDensity = 1.0F;
@@ -60,7 +60,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_enabled)
             {
@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (m_enabled)
             {
@@ -87,7 +87,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

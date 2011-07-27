@@ -62,7 +62,7 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_DefaultLSLScript = value; }
         }
 
-        protected Scene m_scene;
+        protected IScene m_scene;
 
         #endregion
 
@@ -72,7 +72,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -83,11 +83,11 @@ namespace OpenSim.Region.Framework.Scenes
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.UnregisterModuleInterface<ILLClientInventory>(this);
 
@@ -1799,7 +1799,7 @@ namespace OpenSim.Region.Framework.Scenes
                 IDs.Add(grp.LocalId);
             }
             IClientAPI client;
-            m_scene.TryGetClient(AgentId, out client);
+            m_scene.ClientManager.TryGetValue(AgentId, out client);
             //Its ok if the client is null, its taken care of
             DeRezObjects(client, IDs, returnobjects[0].RootChild.GroupID, DeRezAction.Return, UUID.Zero);
             return true;
@@ -2116,9 +2116,9 @@ namespace OpenSim.Region.Framework.Scenes
             private UUID inventoryItemID;
             private IHttpServer httpListener;
             private UUID agentID;
-            private Scene m_scene;
+            private IScene m_scene;
 
-            public ItemUpdater(UUID AgentID, Scene scene, UUID inventoryItem, string path, IHttpServer httpServer)
+            public ItemUpdater (UUID AgentID, IScene scene, UUID inventoryItem, string path, IHttpServer httpServer)
             {
                 inventoryItemID = inventoryItem;
                 uploaderPath = path;
@@ -2139,7 +2139,7 @@ namespace OpenSim.Region.Framework.Scenes
                 UUID inv = inventoryItemID;
                 IClientAPI client = null;
                 string res = "";
-                if (m_scene.TryGetClient(agentID, out client))
+                if (m_scene.ClientManager.TryGetValue(agentID, out client))
                 {
                     IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
                     if (invAccess != null)
@@ -2163,10 +2163,10 @@ namespace OpenSim.Region.Framework.Scenes
             private UUID primID;
             private bool isScriptRunning;
             private IHttpServer httpListener;
-            private Scene m_scene;
+            private IScene m_scene;
             private UUID AgentID;
 
-            public TaskInventoryScriptUpdater(Scene scene, UUID inventoryItemID, UUID primID, int isScriptRunning,
+            public TaskInventoryScriptUpdater(IScene scene, UUID inventoryItemID, UUID primID, int isScriptRunning,
                                               string path, IHttpServer httpServer, UUID agentID)
             {
 
@@ -2199,7 +2199,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     string res = String.Empty;
                     IClientAPI client;
-                    m_scene.TryGetClient(AgentID, out client);
+                    m_scene.ClientManager.TryGetValue(AgentID, out client);
                     ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data);
 
                     OSDMap map = new OSDMap();

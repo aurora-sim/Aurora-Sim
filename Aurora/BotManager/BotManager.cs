@@ -52,17 +52,17 @@ namespace Aurora.BotManager
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.RegisterModuleInterface<IBotManager> (this);
             scene.RegisterModuleInterface<BotManager> (this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
@@ -114,16 +114,15 @@ namespace Aurora.BotManager
         /// <param name="LastName"></param>
         /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar (string FirstName, string LastName, IScene s, UUID cloneAppearanceFrom, UUID creatorID, Vector3 startPos)
+        public UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID, Vector3 startPos)
         {
-            Scene scene = (Scene)s;
             AgentCircuitData m_aCircuitData = new AgentCircuitData ();
             m_aCircuitData.child = false;
 
             //Add the circuit data so they can login
             m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next();
 
-            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom, s);//Sets up appearance
+            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom, scene);//Sets up appearance
             if (m_aCircuitData.Appearance == null)
             {
                 m_aCircuitData.Appearance = new AvatarAppearance ();

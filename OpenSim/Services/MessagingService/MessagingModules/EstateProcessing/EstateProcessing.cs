@@ -127,7 +127,7 @@ namespace OpenSim.Services.MessagingService
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
                 if (manager != null)
                 {
-                    Scene s = null;
+                    IScene s = null;
                     if (manager.TryGetScene(regionID, out s))
                     {
                         if (s.RegionInfo.EstateSettings.EstateID == estateID)

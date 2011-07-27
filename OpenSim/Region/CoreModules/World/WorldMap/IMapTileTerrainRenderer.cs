@@ -27,13 +27,13 @@
 
 using System.Drawing;
 using Nini.Config;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     public interface IMapTileTerrainRenderer
     {
-        void Initialise(Scene scene, IConfigSource config);
+        void Initialise (IScene scene, IConfigSource config);
         Bitmap TerrainToBitmap(Bitmap mapbmp);
     }
 }

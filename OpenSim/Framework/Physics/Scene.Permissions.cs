@@ -661,6 +661,12 @@ namespace OpenSim.Framework
         #endregion
 
         #region CAN BE GODLIKE
+
+        /// <summary>
+        /// Checks whether the user is in god mode
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public bool IsGod(UUID user)
         {
             IsGodHandler handler = OnIsGod;
@@ -676,6 +682,11 @@ namespace OpenSim.Framework
             return true;
         }
 
+        /// <summary>
+        /// Checks whether the user can be in god mode
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public bool IsAdministrator(UUID user)
         {
             IsAdministratorHandler handler = OnIsAdministrator;

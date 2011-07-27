@@ -38,7 +38,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public int AgentFrameTime { get { return agentTime; } }
         public int AgentUpdates { get { return agentUpdates; } }
 
-        public AgentUpdateMonitor(Scene scene)
+        public AgentUpdateMonitor(IScene scene)
         {
         }
 

@@ -488,7 +488,8 @@ namespace OpenSim.Framework
                         }
                         else
                         {
-                            cmdline.Remove (cp - 1, 1);
+                            if(cmdline.Length >= cp)
+                                cmdline.Remove (cp - 1, 1);
                             cp--;
                         }
 

@@ -3,6 +3,8 @@
 ;;   or make a new file like this one under a different name (ending with the .ini file extention)
 ;; * The section name is the region name
 ;; *
+;; * Please Note that using region.ini files is depricated, and the region database loader is highly recommended
+;; *
 [Default Region]
 ;; *
 ;; * You MUST change this RegionUUID! It will NOT be done for you!
@@ -49,4 +51,4 @@ ExternalHostName = "SYSTEMIP"
 ;; Medium - Loads terrain and parcels during startup
 ;; Both of the above methods do not run the heartbeat (but do runs scripts!)
 ;; Normal - A normal region
-StartupType = Normal
+;StartupType = Normal

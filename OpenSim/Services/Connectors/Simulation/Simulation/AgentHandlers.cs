@@ -204,10 +204,12 @@ namespace OpenSim.Services
             OSDMap resp = new OSDMap(3);
             string reason = String.Empty;
 
+            int requestedUDPPort = 0;
             // This is the meaning of POST agent
-            bool result = CreateAgent(destination, ref aCircuit, teleportFlags, agent, out reason);
+            bool result = CreateAgent (destination, ref aCircuit, teleportFlags, agent, out requestedUDPPort, out reason);
 
             resp["reason"] = reason;
+            resp["requestedUDPPort"] = requestedUDPPort;
             resp["success"] = OSD.FromBoolean(result);
             // Let's also send out the IP address of the caller back to the caller (HG 1.5)
             resp["your_ip"] = OSD.FromString(GetCallerIP(request));
@@ -236,9 +238,9 @@ namespace OpenSim.Services
         }
 
         // subclasses can override this
-        protected virtual bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out string reason)
+        protected virtual bool CreateAgent (GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out int requestedUDPPort, out string reason)
         {
-            return m_SimulationService.CreateAgent(destination, ref aCircuit, teleportFlags, agent, out reason);
+            return m_SimulationService.CreateAgent(destination, ref aCircuit, teleportFlags, agent, out requestedUDPPort, out reason);
         }
 
         protected void DoAgentPut(Hashtable request, Hashtable responsedata)

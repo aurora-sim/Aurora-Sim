@@ -47,7 +47,7 @@ namespace Aurora.Modules
         protected bool m_Enabled = true;
         private Dictionary<UUID, Dictionary<uint, uint>> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
         private string m_filePath = "ObjectCache/";
-        private Scene m_scene;
+        private IScene m_scene;
 
         #endregion
 
@@ -75,7 +75,7 @@ namespace Aurora.Modules
         {
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -85,7 +85,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -95,7 +95,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 

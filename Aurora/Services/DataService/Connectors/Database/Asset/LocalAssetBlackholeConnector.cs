@@ -364,8 +364,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             ResetTimer(60000);
             string newHash = WriteFile(id, assetdata);
-            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0],
-                                                    "hash_code");
+            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0],"hash_code");
             if (hashCodeCheck.Count >= 1)
             {
                 if (hashCodeCheck[0] != newHash)
@@ -374,6 +373,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 new object[] { UUID.Random(), "HASHCHECK", hashCodeCheck[0] });
                     m_Gd.Update("auroraassets_" + id.ToString().ToCharArray()[0], new object[] { newHash },
                         new[] { "hash_code" }, new[] { "id" }, new object[] { id });
+
                 }
             }
         }

@@ -45,7 +45,7 @@ namespace Aurora.BotManager
         /// Loop through the current positions over and over
         /// </summary>
         public bool FollowIndefinitely = false;
-        private int CurrentPos = 0;
+        public int CurrentPos = 0;
 
         public NodeGraph ()
         {

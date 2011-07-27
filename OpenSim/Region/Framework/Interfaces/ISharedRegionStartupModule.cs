@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene"></param>
         /// <param name="source"></param>
         /// <param name="openSimBase"></param>
-        void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+        void Initialise (IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
         /// PostInitialise the module
@@ -53,7 +53,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene"></param>
         /// <param name="source"></param>
         /// <param name="openSimBase"></param>
-        void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+        void PostInitialise (IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
         /// Do the functions of the module and set up any necessary functions
@@ -61,7 +61,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene"></param>
         /// <param name="source"></param>
         /// <param name="openSimBase"></param>
-        void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+        void FinishStartup (IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
         /// Do the functions of the module and set up any necessary functions
@@ -69,7 +69,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene"></param>
         /// <param name="source"></param>
         /// <param name="openSimBase"></param>
-        void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase);
+        void PostFinishStartup (IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
         /// Close the module and remove all references to it
@@ -77,7 +77,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="scene"></param>
         /// <param name="m_config"></param>
         /// <param name="m_OpenSimBase"></param>
-        void Close(Scene scene);
+        void Close (IScene scene);
 
         /// <summary>
         /// Fired once when the entire instance is fully started up

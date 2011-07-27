@@ -232,7 +232,7 @@ namespace Aurora.Services.DataService
             return array;
         }
 
-        public virtual byte[] FetchInventoryReply (OSDArray fetchRequest, UUID AgentID)
+        public virtual byte[] FetchInventoryReply (OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
             contents.WriteStartMap("llsd"); //Start llsd
@@ -282,7 +282,7 @@ namespace Aurora.Services.DataService
                             contents["group_id"] = UUID.Parse (retVal["groupID"].ToString ());
                             contents["is_owner_group"] = int.Parse (retVal["groupOwned"].ToString ()) == 1;
                             contents["group_mask"] = uint.Parse (retVal["inventoryGroupPermissions"].ToString ());
-                            contents["owner_id"] = UUID.Parse (retVal["avatarID"].ToString ());
+                            contents["owner_id"] = forceOwnerID == UUID.Zero ?  UUID.Parse (retVal["avatarID"].ToString ()) : forceOwnerID;
                             contents["last_owner_id"] = UUID.Parse (retVal["avatarID"].ToString ());
                             contents["next_owner_mask"] = uint.Parse (retVal["inventoryNextPermissions"].ToString ());
                             contents["owner_mask"] = uint.Parse (retVal["inventoryCurrentPermissions"].ToString ());
@@ -321,7 +321,8 @@ namespace Aurora.Services.DataService
                             UUID inventoryID = UUID.Parse (retVal["inventoryID"].ToString ());
                             contents["item_id"] = inventoryID;
                             contents["parent_id"] = UUID.Parse (retVal["parentFolderID"].ToString ());
-                            contents["agent_id"] = UUID.Parse (retVal["avatarID"].ToString ());
+                            UUID avatarID = forceOwnerID == UUID.Zero ? UUID.Parse (retVal["avatarID"].ToString ()) : forceOwnerID;
+                            contents["agent_id"] = avatarID;
 
                             AssetType assetType = (AssetType)int.Parse (retVal["assetType"].ToString ());
                             if(assetType == AssetType.Link)

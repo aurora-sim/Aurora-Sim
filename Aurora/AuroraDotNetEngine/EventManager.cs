@@ -64,8 +64,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private ScriptEngine m_scriptEngine;
 
-        private List<Scene> m_Scenes = new List<Scene>();
-
         private Dictionary<uint, Dictionary<UUID, DetectParams>> CoalescedTouchEvents = new Dictionary<uint, Dictionary<UUID, DetectParams>>();
 
         public EventManager(ScriptEngine _ScriptEngine)
@@ -73,12 +71,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_scriptEngine = _ScriptEngine;
         }
 
-        public void HookUpRegionEvents(Scene Scene)
+        public void HookUpRegionEvents (IScene Scene)
         {
             //m_log.Info("[" + myScriptEngine.ScriptEngineName +
             //           "]: Hooking up to server events");
-
-            m_Scenes.Add(Scene);
 
             Scene.EventManager.OnObjectGrab +=
                     touch_start;
@@ -159,7 +155,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             bool ret = true;
 
-            foreach (Scene scene in m_Scenes)
+            foreach (IScene scene in m_scriptEngine.Worlds)
             {
                 if (scene.RegionInfo.RegionHandle == regionHandle)
                 {

@@ -35,6 +35,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -48,7 +49,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             m_ScriptEngine = engine;
         }
 
-        public void AddRegion (Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_modules.Add(scene.RequestModuleInterface<IHttpRequestModule> ());
         }

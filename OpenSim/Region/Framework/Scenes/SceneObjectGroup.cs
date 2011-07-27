@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -194,8 +193,6 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 if (m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
                                 {
-                                    if (XMLRepresentation != null)
-                                        XMLRepresentation = null; //Reset this
                                     backup.AddPrimBackupTaint (this);
                                 }
                             }
@@ -2223,7 +2220,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_rootPart.PhysActor.IsPhysical)
                     {
-                        if (!m_rootPart.BlockGrab)
+                        if (!m_rootPart.BlockGrab && !m_rootPart.BlockGrabObject)
                         {
                             Vector3 grabforce = pos - AbsolutePosition;
                             grabforce = grabforce * m_rootPart.PhysActor.Mass;
@@ -3409,22 +3406,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ISceneObject
 
-        public byte[] XMLRepresentation = null;
         public virtual string ToXml2 ()
         {
             return SceneObjectSerializer.ToXml2Format(this);
         }
 
-        public virtual void ClearXMLRepresentation ()
-        {
-            XMLRepresentation = null;
-        }
-
         public virtual byte[] ToBinaryXml2 ()
         {
-            if (XMLRepresentation == null)
-                XMLRepresentation = SceneObjectSerializer.ToBinaryXml2Format (this);
-            return XMLRepresentation;
+            return SceneObjectSerializer.ToBinaryXml2Format (this);
         }
 
         public virtual string ExtraToXmlString()

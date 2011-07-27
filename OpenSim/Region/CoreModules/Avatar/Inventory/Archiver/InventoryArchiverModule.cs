@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// <value>
         /// All scenes that this module knows about
         /// </value>
-        private Dictionary<UUID, Scene> m_scenes = new Dictionary<UUID, Scene>();
+        private Dictionary<UUID, IScene> m_scenes = new Dictionary<UUID, IScene>();
         private IRegistryCore m_registry;
         
         /// <summary>

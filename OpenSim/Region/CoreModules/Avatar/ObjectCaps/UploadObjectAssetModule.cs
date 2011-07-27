@@ -51,7 +51,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private Scene m_scene;
+        private IScene m_scene;
 
         #region IRegionModuleBase Members
 
@@ -66,20 +66,19 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         }
 
-        public void AddRegion(Scene pScene)
+        public void AddRegion (IScene pScene)
         {
             m_scene = pScene;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
             m_scene = null;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
-
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 

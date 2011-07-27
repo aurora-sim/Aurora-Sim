@@ -71,7 +71,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
@@ -79,11 +79,11 @@ namespace Aurora.Modules
             scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.EventManager.OnNewClient -= EventManager_OnNewClient;
             scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
@@ -172,7 +172,7 @@ namespace Aurora.Modules
         /// <param name="remoteClient"></param>
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
-            Scene scene = ((Scene)remoteClient.Scene);
+            IScene scene = remoteClient.Scene;
             List<ISceneChildEntity> EntitiesToUpdate = new List<ISceneChildEntity>();
             SceneObjectPart prim = null;
             foreach (uint primLocalID in primLocalIDs)
@@ -214,7 +214,9 @@ namespace Aurora.Modules
                 }
             }
             IScenePresence SP;
-            scene.TryGetScenePresence(remoteClient.AgentId, out SP);
+            scene.TryGetScenePresence (remoteClient.AgentId, out SP);
+            if (SP == null)
+                return;
             if (EntitiesToUpdate.Count != 0)
             {
                 SP.SceneViewer.QueuePartsForPropertiesUpdate (EntitiesToUpdate.ToArray ());
@@ -338,12 +340,13 @@ namespace Aurora.Modules
 
             public void Close()
             {
-                m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_SelectedUUID = null;
                 m_IsSelecting = false;
                 m_module = null;
                 m_EffectColor = null;
                 SendEffectPackets = 0;
+                if(m_presence != null)
+                    m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_presence = null;
             }
 

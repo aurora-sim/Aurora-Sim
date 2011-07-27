@@ -197,7 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void aaSetConeOfSilence(LSL_Float radius)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASetConeOfSilence", m_host, "AA");
-            if(World.Permissions.IsAdministrator(m_host.OwnerID))
+            if (World.Permissions.IsGod (m_host.OwnerID))
                 m_host.SetConeOfSilence(radius.value);
         }
 
@@ -389,7 +389,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsAdministrator(AgentID))
+                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsGod(AgentID))
                     {
                         //If they have combat permission on, do it whether the threat level is enabled or not
                         SP.AllowMovement = false;
@@ -412,7 +412,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.TryGetScenePresence(AgentID, out SP))
                 {
                     ICombatModule module = World.RequestModuleInterface<ICombatModule>();
-                    if (module.CheckCombatPermission(AgentID) || World.Permissions.IsAdministrator(AgentID))
+                    if (module.CheckCombatPermission (AgentID) || World.Permissions.IsGod (AgentID))
                     {
                         //If they have combat permission on, do it whether the threat level is enabled or not
                         SP.AllowMovement = true;
@@ -680,6 +680,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce ();
                 m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint (true, new Vector3 ((float)pos.x, (float)pos.y, (float)pos.z),
                     (float)xForce, (float)yForce, (float)zForce, 0, (float)radius.value, ident.value);
+            }
+            else if (name == ScriptBaseClass.START_TIME_REVERSAL_SAVING)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StartSavingPhysicsTimeReversalStates ();
+            }
+            else if (name == ScriptBaseClass.STOP_TIME_REVERSAL_SAVING)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StopSavingPhysicsTimeReversalStates ();
+            }
+            else if (name == ScriptBaseClass.START_TIME_REVERSAL)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StartPhysicsTimeReversal ();
+            }
+            else if (name == ScriptBaseClass.STOP_TIME_REVERSAL)
+            {
+                IPhysicsStateModule physicsState = World.RequestModuleInterface<IPhysicsStateModule> ();
+                if (physicsState != null)
+                    physicsState.StopPhysicsTimeReversal ();
             }
         }
 

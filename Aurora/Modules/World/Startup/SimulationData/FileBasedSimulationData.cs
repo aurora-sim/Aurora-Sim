@@ -238,6 +238,182 @@ namespace Aurora.Modules.FileBasedSimulationData
                 m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString());
             }
 
+            m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
+            string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
+            if (File.Exists (fileName))
+            {
+                //Do new style saving here!
+                GZipStream m_saveStream = new GZipStream (new FileStream (fileName + ".tmp", FileMode.Create), CompressionMode.Compress);
+                TarArchiveWriter writer = new TarArchiveWriter (m_saveStream);
+                GZipStream m_loadStream = new GZipStream (new FileStream (fileName, FileMode.Open), CompressionMode.Decompress);
+                TarArchiveReader reader = new TarArchiveReader (m_loadStream);
+
+                writer.WriteDir ("parcels");
+
+                IParcelManagementModule module = m_scene.RequestModuleInterface<IParcelManagementModule> ();
+                if (module != null)
+                {
+                    List<ILandObject> landObject = module.AllParcels ();
+                    foreach (ILandObject parcel in landObject)
+                    {
+                        OSDMap parcelMap = parcel.LandData.ToOSD ();
+                        writer.WriteFile ("parcels/" + parcel.LandData.GlobalID.ToString (), OSDParser.SerializeLLSDBinary (parcelMap));
+                        parcelMap = null;
+                    }
+                }
+
+                writer.WriteDir ("newstyleterrain");
+                writer.WriteDir ("newstylerevertterrain");
+
+                writer.WriteDir ("newstylewater");
+                writer.WriteDir ("newstylerevertwater");
+
+                ITerrainModule tModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                if (tModule != null)
+                {
+                    try
+                    {
+                        byte[] sdata = WriteTerrainToStream (tModule.TerrainMap);
+                        writer.WriteFile ("newstyleterrain/" + m_scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                        sdata = null;
+
+                        sdata = WriteTerrainToStream (tModule.TerrainRevertMap);
+                        writer.WriteFile ("newstylerevertterrain/" + m_scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                        sdata = null;
+
+                        if (tModule.TerrainWaterMap != null)
+                        {
+                            sdata = WriteTerrainToStream (tModule.TerrainWaterMap);
+                            writer.WriteFile ("newstylewater/" + m_scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                            sdata = null;
+
+                            sdata = WriteTerrainToStream (tModule.TerrainWaterRevertMap);
+                            writer.WriteFile ("newstylerevertwater/" + m_scene.RegionInfo.RegionID.ToString () + ".terrain", sdata);
+                            sdata = null;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                    }
+                }
+               
+                ISceneEntity[] saveentities = m_scene.Entities.GetEntities ();
+                List<UUID> entitiesToSave = new List<UUID>();
+                try
+                {
+                    foreach (ISceneEntity entity in saveentities)
+                    {
+                        if (entity.IsAttachment || ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                         || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
+                            continue;
+                        if (entity.HasGroupChanged)
+                        {
+                            entity.HasGroupChanged = false;
+                            //Write all entities
+                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
+                            writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
+                            xml = null;
+                        }
+                        else
+                            entitiesToSave.Add(entity.UUID);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                }
+
+
+                byte[] data;
+                string filePath;
+                TarArchiveReader.TarEntryType entryType;
+                //Load the archive data that we need
+                try
+                {
+                    while ((data = reader.ReadEntry (out filePath, out entryType)) != null)
+                    {
+                        if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
+                            continue;
+                        if (filePath.StartsWith ("entities/"))
+                        {
+                            UUID entityID = UUID.Parse (filePath.Remove (0, 9));
+                            if (entitiesToSave.Contains (entityID))
+                            {
+                                writer.WriteFile (filePath, data);
+                                entitiesToSave.Remove (entityID);
+                            }
+                        }
+                        data = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                }
+
+                if (entitiesToSave.Count > 0)
+                {
+                    m_log.Fatal (entitiesToSave.Count + " PRIMS WERE NOT GOING TO BE SAVED! FORCE SAVING NOW! ");
+                    foreach (ISceneEntity entity in saveentities)
+                    {
+                        if (entitiesToSave.Contains(entity.UUID))
+                        {
+                            if (entity.IsAttachment || ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                             || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
+                                continue;
+                            //Write all entities
+                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
+                            writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
+                            xml = null;
+                        }
+                    }
+                }
+
+                writer.Close ();
+                m_loadStream.Close ();
+                m_saveStream.Close ();
+                GC.Collect ();
+                
+                if (m_keepOldSave && !m_oldSaveHasBeenSaved)
+                {
+                    //Havn't moved it yet, so make sure the directory exists, then move it
+                    m_oldSaveHasBeenSaved = true;
+                    if (!Directory.Exists (m_oldSaveDirectory))
+                        Directory.CreateDirectory (m_oldSaveDirectory);
+                    File.Move (fileName, m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime () + m_saveAppenedFileName + ".abackup");
+                }
+                else //Just remove the file
+                    File.Delete (fileName);
+            }
+            else
+            {
+                //Add the .temp since we might need to make a backup and so that if something goes wrong, we don't corrupt the main backup
+                GZipStream m_saveStream = new GZipStream (new FileStream (fileName + ".tmp", FileMode.Create), CompressionMode.Compress);
+                TarArchiveWriter writer = new TarArchiveWriter (m_saveStream);
+                IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver> ();
+
+                //Turn off prompting so that we don't ask the user questions every time we need to save the backup
+                archiver.AllowPrompting = false;
+                archiver.SaveRegionBackup (writer, m_scene);
+                archiver.AllowPrompting = true;
+
+                //If we got this far, we assume that everything went well, so now we move the stuff around
+                if (File.Exists (fileName))
+                {
+                    //If keepOldSave is enabled, the user wants us to move the first backup that we originally loaded from into the oldSaveDirectory
+                    if (m_keepOldSave && !m_oldSaveHasBeenSaved)
+                    {
+                        //Havn't moved it yet, so make sure the directory exists, then move it
+                        m_oldSaveHasBeenSaved = true;
+                        if (!Directory.Exists (m_oldSaveDirectory))
+                            Directory.CreateDirectory (m_oldSaveDirectory);
+                        File.Move (fileName, m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime () + m_saveAppenedFileName + ".abackup");
+                    }
+                    else //Just remove the file
+                        File.Delete (fileName);
+                }
+            }
             ISceneEntity[] entities = m_scene.Entities.GetEntities ();
             try
             {
@@ -247,40 +423,21 @@ namespace Aurora.Modules.FileBasedSimulationData
                         entity.HasGroupChanged = false;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString());
-            }
-
-            m_log.Info ("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
-            string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
-            //Add the .temp since we might need to make a backup and so that if something goes wrong, we don't corrupt the main backup
-            GZipStream m_saveStream = new GZipStream (new FileStream (fileName + ".tmp", FileMode.Create), CompressionMode.Compress);
-            TarArchiveWriter writer = new TarArchiveWriter (m_saveStream);
-            IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver> ();
-            
-            //Turn off prompting so that we don't ask the user questions every time we need to save the backup
-            archiver.AllowPrompting = false;
-            archiver.SaveRegionBackup (writer, m_scene);
-            archiver.AllowPrompting = true;
-
-            //If we got this far, we assume that everything went well, so now we move the stuff around
-            if(File.Exists(fileName))
-            {
-                //If keepOldSave is enabled, the user wants us to move the first backup that we originally loaded from into the oldSaveDirectory
-                if (m_keepOldSave && !m_oldSaveHasBeenSaved)
-                {
-                    //Havn't moved it yet, so make sure the directory exists, then move it
-                    m_oldSaveHasBeenSaved = true;
-                    if (!Directory.Exists (m_oldSaveDirectory))
-                        Directory.CreateDirectory (m_oldSaveDirectory);
-                    File.Move (fileName, m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
-                }
-                else //Just remove the file
-                    File.Delete (fileName);
+                m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
             }
             //Now make it the full file again
             File.Move (fileName + ".tmp", fileName);
+            m_log.Info ("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
+        }
+
+        private byte[] WriteTerrainToStream (ITerrainChannel tModule)
+        {
+            int tMapSize = tModule.Height * tModule.Height;
+            byte[] sdata = new byte[tMapSize * 2];
+            System.Buffer.BlockCopy (tModule.GetSerialised (tModule.Scene), 0, sdata, 0, sdata.Length);
+            return sdata;
         }
 
         protected virtual string SerializeDateTime ()
@@ -347,7 +504,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
-                    SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format (ms, scene);
+                    SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format (ref ms, scene);
                     ms.Close ();
                     ms = null;
                     data = null;
@@ -360,6 +517,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     }
                     m_groups.Add (sceneObject);
                 }
+                data = null;
             }
             m_loadStream.Close ();
             m_loadStream = null;

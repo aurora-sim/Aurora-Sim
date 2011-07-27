@@ -44,11 +44,6 @@ namespace OpenSim.Framework
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// A source of Configuration data
-        /// </summary>
-        protected IConfigSource m_config;
-
-        /// <summary>
         /// Should we save all merging of the .ini files to the filesystem?
         /// </summary>
         protected bool inidbg = false;
@@ -195,38 +190,39 @@ namespace OpenSim.Framework
 
                 string secondaryIniFileName = startupConfig.GetString ("secondaryIniFileName", "");
 
-                if(mainIniFileName == "")
+                if (mainIniFileName != "")
                 {
-                }
-                else if (IsUri (mainIniFileName))
-                {
-                    if (!sources.Contains (mainIniFileName))
-                        sources.Add (mainIniFileName);
-                }
-                else
-                {
-                    string mainIniFilePath = Path.Combine (mainIniDirectory, mainIniFileName);
-                    if (!sources.Contains (mainIniFilePath))
-                        sources.Add (mainIniFilePath);
+                    if (IsUri (mainIniFileName))
+                    {
+                        if (!sources.Contains (mainIniFileName))
+                            sources.Add (mainIniFileName);
+                    }
+                    else
+                    {
+                        string mainIniFilePath = Path.Combine (mainIniDirectory, mainIniFileName);
+                        if (!sources.Contains (mainIniFilePath))
+                            sources.Add (mainIniFilePath);
+                    }
                 }
 
-                if (secondaryIniFileName == "")
+                if (secondaryIniFileName != "")
                 {
-                }
-                else if (IsUri (secondaryIniFileName))
-                {
-                    if (!sources.Contains (secondaryIniFileName))
-                        sources.Add (secondaryIniFileName);
-                }
-                else
-                {
-                    string secondaryIniFilePath = Path.Combine (mainIniDirectory, secondaryIniFileName);
-                    if (!sources.Contains (secondaryIniFilePath))
-                        sources.Add (secondaryIniFilePath);
+                    if (IsUri (secondaryIniFileName))
+                    {
+                        if (!sources.Contains (secondaryIniFileName))
+                            sources.Add (secondaryIniFileName);
+                    }
+                    else
+                    {
+                        string secondaryIniFilePath = Path.Combine (mainIniDirectory, secondaryIniFileName);
+                        if (!sources.Contains (secondaryIniFilePath))
+                            sources.Add (secondaryIniFilePath);
+                    }
                 }
             }
 
-            m_config = new IniConfigSource();
+            IConfigSource m_config = new IniConfigSource ();
+            IConfigSource m_fakeconfig = new IniConfigSource ();
             
             m_log.Info("[Config]: Reading configuration settings");
 
@@ -240,9 +236,26 @@ namespace OpenSim.Framework
             List<string> triedPaths = new List<string> ();
             for (int i = 0 ; i < sources.Count ; i++)
             {
-                if (ReadConfig(sources[i], i))
+                //Read all .example files first, then read all the normal ones
+
+                if (File.Exists (sources[i]) &&
+                    ReadConfig (sources[i], i, m_fakeconfig))
                     iniFileExists = true;
-                AddIncludes (sources, basePath, ref i, ref triedPaths);
+                else if (File.Exists(sources[i] + ".example") &&
+                    ReadConfig (sources[i] + ".example", i, m_fakeconfig))
+                    iniFileExists = true;
+                AddIncludes (sources, basePath, ref i, ref triedPaths, m_fakeconfig);
+            }
+
+            //
+            for (int i = 0 ; i < sources.Count ; i++)
+            {
+                //Read all .example files first, then read all the normal ones
+
+                if (File.Exists (sources[i]))
+                    ReadConfig (sources[i], i, m_config);
+                else if (File.Exists (sources[i] + ".example"))
+                    ReadConfig (sources[i] + ".example", i, m_config);
             }
 
             FixDefines (ref m_config);
@@ -287,12 +300,12 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="sources">List of URL strings or filename strings</param>
         /// <param name="cntr">Where should we start inserting sources into the list?</param>
-        private void AddIncludes (List<string> sources, string basePath, ref int cntr, ref List<string> triedPaths)
+        private void AddIncludes (List<string> sources, string basePath, ref int cntr, ref List<string> triedPaths, IConfigSource configSource)
         {
             int cn = cntr;
             //Where should we insert the sources into the list?
             //loop over config sources
-            foreach (IConfig config in m_config.Configs)
+            foreach (IConfig config in configSource.Configs)
             {
                 // Look for Include-* in the key name
                 string[] keys = config.GetKeys();
@@ -303,19 +316,19 @@ namespace OpenSim.Framework
                         if(!m_defines.ContainsKey(k.Remove (0, 7)))
                             m_defines.Add (k.Remove (0, 7), config.GetString (k));
                     }
-                    else if (k.StartsWith("Include-"))
+                    else if (k.StartsWith ("Include-"))
                     {
                         // read the config file to be included.
-                        string file = config.GetString(k);
+                        string file = config.GetString (k);
                         if (triedPaths.Contains (file))
                             continue;
                         triedPaths.Add (file);
-                        if (IsUri(file))
+                        if (IsUri (file))
                         {
-                            if (!sources.Contains(file))
+                            if (!sources.Contains (file))
                             {
                                 cn++;
-                                sources.Insert(cn, file);
+                                sources.Insert (cn, file);
                             }
                         }
                         else
@@ -323,22 +336,62 @@ namespace OpenSim.Framework
                             // Resolve relative paths with wildcards
                             string chunkWithoutWildcards = file;
                             string chunkWithWildcards = string.Empty;
-                            int wildcardIndex = file.IndexOfAny(new char[] { '*', '?' });
+                            int wildcardIndex = file.IndexOfAny (new char[] { '*', '?' });
                             if (wildcardIndex != -1)
                             {
-                                chunkWithoutWildcards = file.Substring(0, wildcardIndex);
-                                chunkWithWildcards = file.Substring(wildcardIndex);
+                                chunkWithoutWildcards = file.Substring (0, wildcardIndex);
+                                chunkWithWildcards = file.Substring (wildcardIndex);
                             }
                             string path = Path.Combine (basePath, chunkWithoutWildcards + chunkWithWildcards);
                             string[] paths = new string[1] { path };
-                            if(path.Contains("*"))
+                            if (path.Contains ("*"))
                                 paths = Util.GetSubFiles (path);
                             foreach (string p in paths)
                             {
-                                if (!sources.Contains(p))
+                                if (!sources.Contains (p))
                                 {
                                     cn++;
-                                    sources.Insert(cn, p);
+                                    sources.Insert (cn, p);
+                                }
+                            }
+                        }
+                    }
+                    else if (k.StartsWith ("RemoveInclude-"))
+                    {
+                        // read the config file to be included.
+                        string file = config.GetString (k);
+                        if (triedPaths.Contains (file))
+                            continue;
+                        triedPaths.Add (file);
+                        if (IsUri (file))
+                        {
+                            if (!sources.Contains (file))
+                            {
+                                cn--;
+                                sources.Remove (file);
+                            }
+                        }
+                        else
+                        {
+                            // Resolve relative paths with wildcards
+                            string chunkWithoutWildcards = file;
+                            string chunkWithWildcards = string.Empty;
+                            int wildcardIndex = file.IndexOfAny (new char[] { '*', '?' });
+                            if (wildcardIndex != -1)
+                            {
+                                chunkWithoutWildcards = file.Substring (0, wildcardIndex);
+                                chunkWithWildcards = file.Substring (wildcardIndex);
+                            }
+                            string path = Path.Combine (basePath, chunkWithoutWildcards + chunkWithWildcards);
+                            string[] paths = new string[1] { path };
+                            if (path.Contains ("*"))
+                                paths = Util.GetSubFiles (path);
+                            foreach (string p in paths)
+                            {
+                                if (!sources.Contains (p))
+                                {
+                                    cn--;
+                                    sources.Remove (p);
                                 }
                             }
                         }
@@ -364,7 +417,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="iniPath">Full path to the ini</param>
         /// <returns></returns>
-        private bool ReadConfig(string iniPath, int i)
+        private bool ReadConfig(string iniPath, int i, IConfigSource source)
         {
             bool success = false;
 
@@ -373,10 +426,10 @@ namespace OpenSim.Framework
                 if(showIniLoading)
                     m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath));
 
-                m_config.Merge(new IniConfigSource(iniPath, Nini.Ini.IniFileType.AuroraStyle));
+                source.Merge (new IniConfigSource (iniPath, Nini.Ini.IniFileType.AuroraStyle));
                 if (inidbg)
                 {
-                    WriteConfigFile(i, m_config);
+                    WriteConfigFile (i, source);
                 }
                 success = true;
             }
@@ -390,7 +443,7 @@ namespace OpenSim.Framework
                 {
                     XmlReader r = XmlReader.Create(iniPath);
                     XmlConfigSource cs = new XmlConfigSource(r);
-                    m_config.Merge(cs);
+                    source.Merge (cs);
 
                     success = true;
                 }

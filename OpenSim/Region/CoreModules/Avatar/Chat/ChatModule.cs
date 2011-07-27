@@ -48,13 +48,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         private int m_saydistance = 30;
         private int m_shoutdistance = 100;
         private int m_whisperdistance = 10;
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene> ();
 
         internal object m_syncy = new object();
 
         internal IConfig m_config;
 
         #region ISharedRegionModule Members
+
         public virtual void Initialise(IConfigSource config)
         {
             m_config = config.Configs["Chat"];
@@ -78,44 +79,38 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             m_shoutdistance = config.Configs["Chat"].GetInt("shout_distance", m_shoutdistance);
         }
 
-        public virtual void AddRegion(Scene scene)
+        public virtual void AddRegion (IScene scene)
         {
             if (!m_enabled) return;
 
             lock (m_syncy)
             {
-                if (!m_scenes.Contains(scene))
-                {
-                    m_scenes.Add(scene);
-                    scene.EventManager.OnNewClient += OnNewClient;
-                    scene.EventManager.OnClosingClient += OnClosingClient;
-                    scene.EventManager.OnChatFromWorld += OnChatFromWorld;
-                    scene.EventManager.OnChatBroadcast += OnChatBroadcast;
-                }
+                m_scenes.Add (scene);
+                scene.EventManager.OnNewClient += OnNewClient;
+                scene.EventManager.OnClosingClient += OnClosingClient;
+                scene.EventManager.OnChatFromWorld += OnChatFromWorld;
+                scene.EventManager.OnChatBroadcast += OnChatBroadcast;
             }
 
             //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
-        public virtual void RegionLoaded(Scene scene)
+        public virtual void RegionLoaded (IScene scene)
         {
         }
 
-        public virtual void RemoveRegion(Scene scene)
+        public virtual void RemoveRegion (IScene scene)
         {
             if (!m_enabled) return;
 
             lock (m_syncy)
             {
-                if (m_scenes.Contains(scene))
-                {
-                    scene.EventManager.OnNewClient -= OnNewClient;
-                    scene.EventManager.OnClosingClient -= OnClosingClient;
-                    scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
-                    scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
-                    m_scenes.Remove(scene);
-                }
+                scene.EventManager.OnNewClient -= OnNewClient;
+                scene.EventManager.OnClosingClient -= OnClosingClient;
+                scene.EventManager.OnChatFromWorld -= OnChatFromWorld;
+                scene.EventManager.OnChatBroadcast -= OnChatBroadcast;
+                m_scenes.Remove (scene);
             }
         }
         
@@ -153,8 +148,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
         {
             IScenePresence avatar;
-            Scene scene = (Scene)c.Scene;
-            if ((avatar = scene.GetScenePresence(c.Sender.AgentId)) != null)
+            if ((avatar = c.Scene.GetScenePresence (c.Sender.AgentId)) != null)
                 c.Position = avatar.AbsolutePosition;
 
             return c;
@@ -165,8 +159,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             c = FixPositionOfChatMessage(c);
 
             // redistribute to interested subscribers
-            Scene scene = (Scene)c.Scene;
-            scene.EventManager.TriggerOnChatFromClient(sender, c);
+            c.Scene.EventManager.TriggerOnChatFromClient (sender, c);
 
             // early return if not on public or debug channel
             if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
@@ -204,13 +197,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             switch (sourceType) 
             {
             case ChatSourceType.Agent:
-                if (!(scene is Scene))
-                {
-                    m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                                     scene.RegionInfo.RegionName, c.Sender.AgentId);
-                    return;
-                }
-                IScenePresence avatar = (scene as Scene).GetScenePresence (c.Sender.AgentId);
+                IScenePresence avatar = scene.GetScenePresence (c.Sender.AgentId);
                 fromPos = avatar.AbsolutePosition;
                 fromName = avatar.Name;
                 fromID = c.Sender.AgentId;
@@ -228,7 +215,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             // m_log.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
-            foreach (Scene s in m_scenes)
+            foreach (IScene s in m_scenes)
             {
                 s.ForEachScenePresence(
                     delegate(IScenePresence presence)
@@ -263,7 +250,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
-                IScenePresence avatar = (c.Scene as Scene).GetScenePresence (c.Sender.AgentId);
+                IScenePresence avatar = c.Scene.GetScenePresence (c.Sender.AgentId);
                 fromID = c.Sender.AgentId;
                 fromName = avatar.Name;
                 sourceType = ChatSourceType.Agent;
@@ -275,7 +262,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
-            ((Scene)c.Scene).ForEachScenePresence(
+            c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)
                 {
                     // ignore chat from child agents

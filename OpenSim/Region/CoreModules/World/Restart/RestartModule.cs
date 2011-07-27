@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.World.Region
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected Timer m_CountdownTimer = null;
         protected DateTime m_RestartBegin;
         protected List<int> m_Alerts;
@@ -58,7 +58,7 @@ namespace OpenSim.Region.CoreModules.World.Region
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             scene.RegisterModuleInterface<IRestartModule>(this);
@@ -75,12 +75,12 @@ namespace OpenSim.Region.CoreModules.World.Region
             }
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_DialogModule = m_scene.RequestModuleInterface<IDialogModule>();
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
@@ -233,9 +233,6 @@ namespace OpenSim.Region.CoreModules.World.Region
 
         private void HandleRegionRestart(string[] args)
         {
-            if (!(MainConsole.Instance.ConsoleScene is Scene))
-                return;
-
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
 
@@ -297,11 +294,8 @@ namespace OpenSim.Region.CoreModules.World.Region
                     return;
                 }
             }
-            m_log.Error("[Scene]: Closing...");
-            m_scene.SceneManager.CloseRegion(m_scene);
-
             m_log.Error("[Scene]: Restaring Now");
-            m_scene.SceneManager.HandleRestart(m_scene);
+            m_scene.RequestModuleInterface<SceneManager>().RestartRegion (m_scene);
         }
     }
 }

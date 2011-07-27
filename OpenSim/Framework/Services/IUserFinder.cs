@@ -18,6 +18,7 @@ namespace OpenSim.Services.Interfaces
 
     public interface IUserManagement
     {
+        bool GetUserExists (UUID userID);
         string GetUserName (UUID uuid);
         string GetUserHomeURL (UUID uuid);
         string GetUserUUI (UUID uuid);

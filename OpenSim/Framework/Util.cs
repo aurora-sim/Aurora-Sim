@@ -1886,5 +1886,28 @@ namespace OpenSim.Framework
         {
             l.ExitWriteLock ();
         }
+
+        private static bool useLocalhostLoopback = false;
+        public static System.Net.IPAddress ResolveAddressForClient (System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
+        {
+            if (iPAddress.Equals (clientIP.Address))
+            {
+                if (useLocalhostLoopback)
+                    return IPAddress.Loopback;
+                string hostName = System.Net.Dns.GetHostName ();
+#pragma warning disable 618
+                IPHostEntry ipEntry = System.Net.Dns.GetHostByName (hostName);
+#pragma warning restore 618
+                IPAddress[] addr = ipEntry.AddressList;
+                return addr[0];//Loopback around! They are on the same connection
+            }
+            return iPAddress;
+        }
+
+        public static System.Net.IPEndPoint ResolveAddressForClient (System.Net.IPEndPoint iPAddress, System.Net.IPEndPoint clientIP)
+        {
+            iPAddress.Address = ResolveAddressForClient (iPAddress.Address, clientIP);
+            return iPAddress;
+        }
     }
 }

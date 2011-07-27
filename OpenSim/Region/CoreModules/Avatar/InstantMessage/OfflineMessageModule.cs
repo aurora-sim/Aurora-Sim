@@ -44,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool enabled = true;
-        private List<Scene> m_SceneList = new List<Scene>();
+        private List<IScene> m_SceneList = new List<IScene> ();
         private string m_RestURL = String.Empty;
         private bool m_ForwardOfflineGroupMessages = true;
 
@@ -74,21 +74,19 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_ForwardOfflineGroupMessages = cnf.GetBoolean("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!enabled)
                 return;
 
             lock (m_SceneList)
-            {
-                m_SceneList.Add(scene);
+                m_SceneList.Add (scene);
 
-                scene.EventManager.OnNewClient += OnNewClient;
-                scene.EventManager.OnClosingClient += OnClosingClient;
-            }
+            scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!enabled)
                 return;
@@ -106,15 +104,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 scene.RequestModuleInterface<IMessageTransferModule>().OnUndeliveredMessage += UndeliveredMessage;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!enabled)
                 return;
 
             lock (m_SceneList)
-            {
                 m_SceneList.Remove(scene);
-            }
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -142,9 +138,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
         }
 
-        private Scene FindScene(UUID agentID)
+        private IScene FindScene(UUID agentID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
@@ -155,7 +151,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         private IClientAPI FindClient(UUID agentID)
         {
-            foreach (Scene s in m_SceneList)
+            foreach (IScene s in m_SceneList)
             {
                 IScenePresence presence = s.GetScenePresence (agentID);
                 if (presence != null && !presence.IsChildAgent)
@@ -193,7 +189,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     // Needed for proper state management for stored group
                     // invitations
                     //
-                    Scene s = FindScene(client.AgentId);
+                    IScene s = FindScene(client.AgentId);
                     if (s != null)
                         s.EventManager.TriggerIncomingInstantMessage(im);
                 }

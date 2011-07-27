@@ -60,16 +60,16 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
         }
 
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             scene.RegisterModuleInterface<IRegionSerialiserModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             scene.UnregisterModuleInterface<IRegionSerialiserModule>(this);
         }
@@ -89,28 +89,22 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
 
         public void LoadPrimsFromXml2(IScene scene, string fileName)
         {
-            if (scene is Scene)
-                SceneXmlLoader.LoadPrimsFromXml2((Scene)scene, new XmlTextReader(fileName), true);
+            SceneXmlLoader.LoadPrimsFromXml2(scene, new XmlTextReader(fileName), true);
         }
 
         public void SavePrimsToXml2(IScene scene, string fileName)
         {
-            if (scene is Scene)
-                SceneXmlLoader.SavePrimsToXml2((Scene)scene, fileName);
+            SceneXmlLoader.SavePrimsToXml2(scene, fileName);
         }
 
         public ISceneObject DeserializeGroupFromXml2 (string xmlString, IScene scene)
         {
-            if (scene is Scene)
-                return SceneXmlLoader.DeserializeGroupFromXml2 (xmlString, (Scene)scene);
-            return null;
+            return SceneXmlLoader.DeserializeGroupFromXml2 (xmlString, scene);
         }
 
         public ISceneObject DeserializeGroupFromXml2 (byte[] xml, IScene scene)
         {
-            if (scene is Scene)
-                return SceneXmlLoader.DeserializeGroupFromXml2 (xml, (Scene)scene);
-            return null;
+            return SceneXmlLoader.DeserializeGroupFromXml2 (xml, scene);
         }
 
         public string SerializeGroupToXml2(ISceneEntity grp)

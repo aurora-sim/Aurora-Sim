@@ -51,6 +51,12 @@ namespace OpenSim.Framework
         void QueuePresenceForFullUpdate (IScenePresence presence);
 
         /// <summary>
+        /// Send the full presence update immediately
+        /// </summary>
+        /// <param name="pres"></param>
+        void SendPresenceFullUpdate (IScenePresence presence);
+
+        /// <summary>
         /// Send a presence terse update to all clients
         /// </summary>
         /// <param name="presence"></param>
@@ -110,6 +116,12 @@ namespace OpenSim.Framework
         /// Closes the SceneViewer
         /// </summary>
         void Close ();
+
+        /// <summary>
+        /// Removes an avatar from the 'in-view' list
+        /// </summary>
+        /// <param name="sp"></param>
+        void RemoveAvatarFromView (IScenePresence sp);
     }
 
     public class AnimationGroup

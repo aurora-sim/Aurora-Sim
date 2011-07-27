@@ -50,7 +50,7 @@ namespace Aurora.Modules
         private float BaseRateFramesPerSecond = 45;
         // When BaseRate / current FPS is less than this percent, begin shutting down services
         protected float PercentToBeginShutDownOfServices = 50;
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected bool m_Enabled = false;
         protected float TimeAfterToReenablePhysics = 20;
         protected float TimeAfterToReenableScripts;
@@ -91,7 +91,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
         }
 
@@ -109,14 +109,14 @@ namespace Aurora.Modules
             get { return null; }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
             TimerToCheckHeartbeat.Stop();
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_Enabled)
                 return;

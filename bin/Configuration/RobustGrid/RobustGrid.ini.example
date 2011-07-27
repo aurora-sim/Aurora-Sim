@@ -34,6 +34,7 @@
     ParcelConnector = LocalConnector
     WebStatsDataConnector = LocalConnector
     GroupsConnector = LocalConnector
+	InventoryConnector = RobustConnector
 
 [NeighbourServices]
     ;; This controls the threat level of the neighbors you allow in

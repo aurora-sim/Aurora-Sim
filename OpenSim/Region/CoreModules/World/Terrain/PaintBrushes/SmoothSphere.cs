@@ -37,7 +37,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scenes)
+        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scenes)
         {
             int n = (int)(BrushSize + 0.5f);
             if (BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     int y = zy + dy;
                     if (x >= 0 && y >= 0 && x < map.Width && y < map.Height)
                     {
-                        if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                        if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                             continue;
 
                         float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);

@@ -57,7 +57,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         protected ITerrainModule m_terrainModule;
         protected IRegionSerialiserModule m_serialiser;
         protected List<SceneObjectGroup> m_sceneObjects;
-        protected Scene m_scene;
+        protected IScene m_scene;
         protected TarArchiveWriter m_archiveWriter;
         protected Guid m_requestId;
 
@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
              List<SceneObjectGroup> sceneObjects,
              ITerrainModule terrainModule,
              IRegionSerialiserModule serialiser,
-             Scene scene,
+             IScene scene,
              TarArchiveWriter archiveWriter,
              Guid requestId)
         {

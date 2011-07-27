@@ -28,11 +28,11 @@ namespace Aurora.Modules.World.Assets
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded(IScene scene)
         {
             if (MainConsole.Instance != null && !initialized)
             {
@@ -42,7 +42,7 @@ namespace Aurora.Modules.World.Assets
             initialized = true;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 

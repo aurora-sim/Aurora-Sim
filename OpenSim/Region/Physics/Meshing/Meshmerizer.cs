@@ -641,11 +641,6 @@ namespace OpenSim.Region.Physics.Meshing
             return mesh;
         }
 
-        public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod)
-        {
-            return CreateMesh(primName, primShape, size, lod, false);
-        }
-
         public void FinishedMeshing ()
         {
             foreach (Mesh mesh in m_uniqueMeshes.Values)

@@ -79,6 +79,7 @@ namespace Aurora.Modules.RegionLoader
             this.label12 = new System.Windows.Forms.Label ();
             this.label14 = new System.Windows.Forms.Label ();
             this.groupBox1 = new System.Windows.Forms.GroupBox ();
+            this.CStartupType = new System.Windows.Forms.ListBox ();
             this.button18 = new System.Windows.Forms.Button ();
             this.label37 = new System.Windows.Forms.Label ();
             this.CStartNum = new System.Windows.Forms.TextBox ();
@@ -103,16 +104,19 @@ namespace Aurora.Modules.RegionLoader
             this.button2 = new System.Windows.Forms.Button ();
             this.button1 = new System.Windows.Forms.Button ();
             this.groupBox2 = new System.Windows.Forms.GroupBox ();
-            this.radioButton2 = new System.Windows.Forms.RadioButton ();
-            this.label17 = new System.Windows.Forms.Label ();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox ();
-            this.radioButton1 = new System.Windows.Forms.RadioButton ();
             this.label16 = new System.Windows.Forms.Label ();
+            this.RegionSelections = new System.Windows.Forms.ComboBox ();
             this.label15 = new System.Windows.Forms.Label ();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox ();
+            this.RegionSelectionsPicture = new System.Windows.Forms.PictureBox ();
             this.tabControl1 = new System.Windows.Forms.TabControl ();
             this.tabPage1 = new System.Windows.Forms.TabPage ();
-            this.button13 = new System.Windows.Forms.Button ();
+            this.groupBox5 = new System.Windows.Forms.GroupBox ();
+            this.resetRegion = new System.Windows.Forms.Button ();
+            this.deleteRegion = new System.Windows.Forms.Button ();
+            this.putOnline = new System.Windows.Forms.Button ();
+            this.takeOffline = new System.Windows.Forms.Button ();
+            this.RegionStatus = new System.Windows.Forms.TextBox ();
+            this.label38 = new System.Windows.Forms.Label ();
             this.groupBox4 = new System.Windows.Forms.GroupBox ();
             this.ExportFileName = new System.Windows.Forms.TextBox ();
             this.label6 = new System.Windows.Forms.Label ();
@@ -169,13 +173,12 @@ namespace Aurora.Modules.RegionLoader
             this.textBox11 = new System.Windows.Forms.TextBox ();
             this.label30 = new System.Windows.Forms.Label ();
             this.tabPage2 = new System.Windows.Forms.TabPage ();
-            this.CStartupType = new System.Windows.Forms.ListBox ();
             this.groupBox1.SuspendLayout ();
             this.groupBox2.SuspendLayout ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit ();
+            ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).BeginInit ();
             this.tabControl1.SuspendLayout ();
             this.tabPage1.SuspendLayout ();
+            this.groupBox5.SuspendLayout ();
             this.groupBox4.SuspendLayout ();
             this.groupBox3.SuspendLayout ();
             this.tabPage2.SuspendLayout ();
@@ -246,9 +249,9 @@ namespace Aurora.Modules.RegionLoader
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point (6, 94);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size (63, 13);
+            this.label4.Size = new System.Drawing.Size (68, 13);
             this.label4.TabIndex = 9;
-            this.label4.Text = "Region Port";
+            this.label4.Text = "Region Ports";
             // 
             // Port
             // 
@@ -432,6 +435,18 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Region Info";
+            // 
+            // CStartupType
+            // 
+            this.CStartupType.FormattingEnabled = true;
+            this.CStartupType.Items.AddRange (new object[] {
+            "Normal",
+            "Medium",
+            "Soft"});
+            this.CStartupType.Location = new System.Drawing.Point (247, 373);
+            this.CStartupType.Name = "CStartupType";
+            this.CStartupType.Size = new System.Drawing.Size (100, 30);
+            this.CStartupType.TabIndex = 63;
             // 
             // button18
             // 
@@ -653,13 +668,10 @@ namespace Aurora.Modules.RegionLoader
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add (this.radioButton2);
-            this.groupBox2.Controls.Add (this.label17);
-            this.groupBox2.Controls.Add (this.pictureBox2);
-            this.groupBox2.Controls.Add (this.radioButton1);
             this.groupBox2.Controls.Add (this.label16);
+            this.groupBox2.Controls.Add (this.RegionSelections);
             this.groupBox2.Controls.Add (this.label15);
-            this.groupBox2.Controls.Add (this.pictureBox1);
+            this.groupBox2.Controls.Add (this.RegionSelectionsPicture);
             this.groupBox2.Location = new System.Drawing.Point (377, 8);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size (265, 284);
@@ -667,53 +679,23 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Region Settings";
             // 
-            // radioButton2
-            // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point (128, 132);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size (68, 17);
-            this.radioButton2.TabIndex = 6;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "Default 2";
-            this.radioButton2.UseVisualStyleBackColor = true;
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point (134, 65);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size (79, 13);
-            this.label17.TabIndex = 5;
-            this.label17.Text = "Coming Soon...";
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Location = new System.Drawing.Point (122, 45);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size (110, 81);
-            this.pictureBox2.TabIndex = 4;
-            this.pictureBox2.TabStop = false;
-            // 
-            // radioButton1
-            // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Location = new System.Drawing.Point (12, 132);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size (59, 17);
-            this.radioButton1.TabIndex = 3;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "Default";
-            this.radioButton1.UseVisualStyleBackColor = true;
-            // 
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point (18, 65);
+            this.label16.Location = new System.Drawing.Point (6, 61);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size (79, 13);
-            this.label16.TabIndex = 2;
-            this.label16.Text = "Coming Soon...";
+            this.label16.Size = new System.Drawing.Size (130, 13);
+            this.label16.TabIndex = 3;
+            this.label16.Text = "Default Region Selections";
+            // 
+            // RegionSelections
+            // 
+            this.RegionSelections.FormattingEnabled = true;
+            this.RegionSelections.Location = new System.Drawing.Point (138, 58);
+            this.RegionSelections.Name = "RegionSelections";
+            this.RegionSelections.Size = new System.Drawing.Size (121, 21);
+            this.RegionSelections.TabIndex = 2;
+            this.RegionSelections.SelectedIndexChanged += new System.EventHandler (this.RegionSelections_SelectedIndexChanged);
             // 
             // label15
             // 
@@ -724,13 +706,13 @@ namespace Aurora.Modules.RegionLoader
             this.label15.TabIndex = 1;
             this.label15.Text = "Default Region Look";
             // 
-            // pictureBox1
+            // RegionSelectionsPicture
             // 
-            this.pictureBox1.Location = new System.Drawing.Point (6, 45);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size (110, 81);
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
+            this.RegionSelectionsPicture.Location = new System.Drawing.Point (6, 88);
+            this.RegionSelectionsPicture.Name = "RegionSelectionsPicture";
+            this.RegionSelectionsPicture.Size = new System.Drawing.Size (253, 190);
+            this.RegionSelectionsPicture.TabIndex = 0;
+            this.RegionSelectionsPicture.TabStop = false;
             // 
             // tabControl1
             // 
@@ -744,7 +726,7 @@ namespace Aurora.Modules.RegionLoader
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add (this.button13);
+            this.tabPage1.Controls.Add (this.groupBox5);
             this.tabPage1.Controls.Add (this.groupBox4);
             this.tabPage1.Controls.Add (this.RegionListBox);
             this.tabPage1.Controls.Add (this.SearchForRegionByName);
@@ -759,15 +741,83 @@ namespace Aurora.Modules.RegionLoader
             this.tabPage1.Text = "Edit existing region";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // button13
+            // groupBox5
             // 
-            this.button13.Location = new System.Drawing.Point (570, 272);
-            this.button13.Name = "button13";
-            this.button13.Size = new System.Drawing.Size (75, 23);
-            this.button13.TabIndex = 36;
-            this.button13.Text = "Delete";
-            this.button13.UseVisualStyleBackColor = true;
-            this.button13.Click += new System.EventHandler (this.button13_Click);
+            this.groupBox5.Controls.Add (this.resetRegion);
+            this.groupBox5.Controls.Add (this.deleteRegion);
+            this.groupBox5.Controls.Add (this.putOnline);
+            this.groupBox5.Controls.Add (this.takeOffline);
+            this.groupBox5.Controls.Add (this.RegionStatus);
+            this.groupBox5.Controls.Add (this.label38);
+            this.groupBox5.Location = new System.Drawing.Point (434, 301);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size (211, 115);
+            this.groupBox5.TabIndex = 37;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Region Controller";
+            // 
+            // resetRegion
+            // 
+            this.resetRegion.Enabled = false;
+            this.resetRegion.Location = new System.Drawing.Point (9, 81);
+            this.resetRegion.Name = "resetRegion";
+            this.resetRegion.Size = new System.Drawing.Size (89, 23);
+            this.resetRegion.TabIndex = 4;
+            this.resetRegion.Text = "Reset Region";
+            this.resetRegion.UseVisualStyleBackColor = true;
+            this.resetRegion.Click += new System.EventHandler (this.resetRegion_Click);
+            // 
+            // deleteRegion
+            // 
+            this.deleteRegion.Enabled = false;
+            this.deleteRegion.Location = new System.Drawing.Point (116, 81);
+            this.deleteRegion.Name = "deleteRegion";
+            this.deleteRegion.Size = new System.Drawing.Size (89, 23);
+            this.deleteRegion.TabIndex = 36;
+            this.deleteRegion.Text = "Delete Region";
+            this.deleteRegion.UseVisualStyleBackColor = true;
+            this.deleteRegion.Click += new System.EventHandler (this.deleteregion_Click);
+            // 
+            // putOnline
+            // 
+            this.putOnline.Enabled = false;
+            this.putOnline.Location = new System.Drawing.Point (9, 52);
+            this.putOnline.Name = "putOnline";
+            this.putOnline.Size = new System.Drawing.Size (75, 23);
+            this.putOnline.TabIndex = 3;
+            this.putOnline.Text = "Put Online";
+            this.putOnline.UseVisualStyleBackColor = true;
+            this.putOnline.Click += new System.EventHandler (this.putOnline_Click);
+            // 
+            // takeOffline
+            // 
+            this.takeOffline.Enabled = false;
+            this.takeOffline.Location = new System.Drawing.Point (130, 52);
+            this.takeOffline.Name = "takeOffline";
+            this.takeOffline.Size = new System.Drawing.Size (75, 23);
+            this.takeOffline.TabIndex = 2;
+            this.takeOffline.Text = "Take Offline";
+            this.takeOffline.UseVisualStyleBackColor = true;
+            this.takeOffline.Click += new System.EventHandler (this.takeOffline_Click);
+            // 
+            // RegionStatus
+            // 
+            this.RegionStatus.Location = new System.Drawing.Point (130, 23);
+            this.RegionStatus.Name = "RegionStatus";
+            this.RegionStatus.ReadOnly = true;
+            this.RegionStatus.Size = new System.Drawing.Size (75, 20);
+            this.RegionStatus.TabIndex = 1;
+            this.RegionStatus.Text = "Unknown";
+            this.RegionStatus.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label38
+            // 
+            this.label38.AutoSize = true;
+            this.label38.Location = new System.Drawing.Point (27, 26);
+            this.label38.Name = "label38";
+            this.label38.Size = new System.Drawing.Size (37, 13);
+            this.label38.TabIndex = 0;
+            this.label38.Text = "Status";
             // 
             // groupBox4
             // 
@@ -1273,9 +1323,9 @@ namespace Aurora.Modules.RegionLoader
             this.label27.AutoSize = true;
             this.label27.Location = new System.Drawing.Point (6, 94);
             this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size (63, 13);
+            this.label27.Size = new System.Drawing.Size (68, 13);
             this.label27.TabIndex = 9;
-            this.label27.Text = "Region Port";
+            this.label27.Text = "Region Ports";
             // 
             // textBox8
             // 
@@ -1357,18 +1407,6 @@ namespace Aurora.Modules.RegionLoader
             this.tabPage2.Text = "Create new region";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // CStartupType
-            // 
-            this.CStartupType.FormattingEnabled = true;
-            this.CStartupType.Items.AddRange (new object[] {
-            "Normal",
-            "Medium",
-            "Soft"});
-            this.CStartupType.Location = new System.Drawing.Point (247, 373);
-            this.CStartupType.Name = "CStartupType";
-            this.CStartupType.Size = new System.Drawing.Size (100, 30);
-            this.CStartupType.TabIndex = 63;
-            // 
             // RegionManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF (6F, 13F);
@@ -1383,11 +1421,12 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox1.PerformLayout ();
             this.groupBox2.ResumeLayout (false);
             this.groupBox2.PerformLayout ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit ();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit ();
+            ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).EndInit ();
             this.tabControl1.ResumeLayout (false);
             this.tabPage1.ResumeLayout (false);
             this.tabPage1.PerformLayout ();
+            this.groupBox5.ResumeLayout (false);
+            this.groupBox5.PerformLayout ();
             this.groupBox4.ResumeLayout (false);
             this.groupBox4.PerformLayout ();
             this.groupBox3.ResumeLayout (false);
@@ -1425,13 +1464,8 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.RadioButton radioButton2;
-        private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.PictureBox pictureBox2;
-        private System.Windows.Forms.RadioButton radioButton1;
-        private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.PictureBox RegionSelectionsPicture;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage1;
@@ -1493,7 +1527,7 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Button button12;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TextBox StartupNumberBox;
-        private System.Windows.Forms.Button button13;
+        private System.Windows.Forms.Button deleteRegion;
         private System.Windows.Forms.Button RSizeYHelp;
         private System.Windows.Forms.TextBox RegionSizeY;
         private System.Windows.Forms.Label label32;
@@ -1515,5 +1549,13 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.Label label37;
         private System.Windows.Forms.ListBox startupType;
         private System.Windows.Forms.ListBox CStartupType;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.TextBox RegionStatus;
+        private System.Windows.Forms.Label label38;
+        private System.Windows.Forms.Button putOnline;
+        private System.Windows.Forms.Button takeOffline;
+        private System.Windows.Forms.Button resetRegion;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.ComboBox RegionSelections;
     }
 }

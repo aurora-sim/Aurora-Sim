@@ -67,7 +67,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_manager = module.Worlds[0].RequestModuleInterface<IComponentManager> ();
         }
 
-        public void AddScene (Scene scene)
+        public void AddScene (IScene scene)
         {
             scene.AuroraEventManager.RegisterEventHandler("DeleteToInventory", AuroraEventManager_OnGenericEvent);
         }

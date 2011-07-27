@@ -46,7 +46,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected Scene m_scene = null;
+        protected IScene m_scene = null;
         protected bool m_allowMultipleAttachments = true;
         protected int m_maxNumberOfAttachments = 38;
 
@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IAttachmentsModule>(this);
@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             m_scene.EventManager.OnMakeChildAgent += MakeChildAgent;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.UnregisterModuleInterface<IAttachmentsModule>(this);
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
@@ -86,7 +86,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             m_scene.EventManager.OnMakeChildAgent -= MakeChildAgent;
         }
 
-        public void RegionLoaded(Scene scene) 
+        public void RegionLoaded (IScene scene) 
         {
             AvatarFactory = scene.RequestModuleInterface<IAvatarFactory>();
         }
@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             Util.FireAndForget(delegate(object o) { RezAttachments(presence); });
         }
 
-        protected void MakeChildAgent (IScenePresence presence)
+        protected void MakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
             DetachAndSaveAllAttachments (presence.ControllingClient);

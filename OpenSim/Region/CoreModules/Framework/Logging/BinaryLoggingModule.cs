@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected bool m_collectStats;
-        protected Scene m_scene = null;
+        protected IScene m_scene = null;
         
         public string Name { get { return "Binary Statistics Logging Module"; } }
         public Type ReplaceableInterface { get { return null; } }
@@ -82,17 +82,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 // if it doesn't work, we don't collect anything
             }
         }
-        
-        public void AddRegion(Scene scene)
+
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
         }
-        
-        public void RemoveRegion(Scene scene) 
+
+        public void RemoveRegion (IScene scene) 
         {
         }
-        
-        public void RegionLoaded(Scene scene) 
+
+        public void RegionLoaded (IScene scene) 
         {
             if (m_collectStats)
             {

@@ -53,7 +53,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal EntityManager Entities = new EntityManager();
 
         protected RegionInfo m_regInfo;
-        protected Scene m_parentScene;
+        protected IScene m_parentScene;
         protected bool EnableFakeRaycasting = false;
         protected string m_DefaultObjectName = "Primitive";
 
@@ -84,7 +84,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructor and close
 
-        protected internal SceneGraph(Scene parent, RegionInfo regInfo)
+        protected internal SceneGraph(IScene parent, RegionInfo regInfo)
         {
             Random random = new Random();
             m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue / 2)) + (uint)(uint.MaxValue / 4);
@@ -504,14 +504,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// Performs action on all scene object groups.
         /// </summary>
         /// <param name="action"></param>
-        protected internal void ForEachSOG(Action<SceneObjectGroup> action)
+        protected internal void ForEachSceneEntity(Action<ISceneEntity> action)
         {
             ISceneEntity[] objlist = Entities.GetEntities ();
             foreach (ISceneEntity obj in objlist)
             {
                 try
                 {
-                    action(obj as SceneObjectGroup);
+                    action(obj);
                 }
                 catch (Exception e)
                 {
@@ -654,7 +654,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;
-                if (obj.RootPart.BlockGrab)
+                if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
                     return;
                 // Currently only grab/touch for the single prim
                 // the client handles rez correctly
@@ -699,7 +699,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part = childPrim as SceneObjectPart;
                 SceneObjectGroup obj = part.ParentGroup;
-                if (obj.RootPart.BlockGrab)
+                if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
                     return;
 
                 // If the touched prim handles touches, deliver it
@@ -2219,7 +2219,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
             //This clears the xml file, which will need rebuilt now that we have changed the UUIDs
             entity.HasGroupChanged = true;
-            entity.ClearXMLRepresentation();
             foreach (ISceneChildEntity child in children)
             {
                 if(!child.IsRoot)

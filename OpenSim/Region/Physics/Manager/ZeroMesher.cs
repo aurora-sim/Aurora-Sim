@@ -45,10 +45,6 @@ namespace OpenSim.Region.Physics.Manager
 {
     public class ZeroMesherPlugin : IMeshingPlugin
     {
-        public ZeroMesherPlugin()
-        {
-        }
-
         public string GetName()
         {
             return "ZeroMesher";
@@ -62,11 +58,6 @@ namespace OpenSim.Region.Physics.Manager
 
     public class ZeroMesher : IMesher
     {
-        public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod)
-        {
-            return CreateMesh(primName, primShape, size, lod, false);
-        }
-
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical)
         {
             // Remove the reference to the encoded JPEG2000 data so it can be GCed

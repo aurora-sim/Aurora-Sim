@@ -161,45 +161,57 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptChangeIsRunning = true;
 
             object oitems;
-            if (LUQueue.GetNext(out oitems))
+            bool broken = false;
+            for (int i = 0; i < 5; i++)
             {
-                LUStruct[] items = oitems as LUStruct[];
-                List<LUStruct> NeedsFired = new List<LUStruct>();
-                foreach (LUStruct item in items)
+                if (LUQueue.GetNext (out oitems))
                 {
-                    if (item.Action == LUType.Unload)
+                    LUStruct[] items = oitems as LUStruct[];
+                    List<LUStruct> NeedsFired = new List<LUStruct> ();
+                    foreach (LUStruct item in items)
                     {
-                        //Close
-                        item.ID.CloseAndDispose(true);
-                    }
-                    else if (item.Action == LUType.Load)
-                    {
-                        try
+                        if (item.Action == LUType.Unload)
                         {
-                            //Start
-                            if(item.ID.Start(false))
-                                NeedsFired.Add(item);
+                            //Close
+                            item.ID.CloseAndDispose (true);
                         }
-                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                    }
-                    else if (item.Action == LUType.Reupload)
-                    {
-                        try
+                        else if (item.Action == LUType.Load)
                         {
-                            //Start, but don't add to the queue's again
-                            if(item.ID.Start(true))
-                                NeedsFired.Add(item);
+                            try
+                            {
+                                //Start
+                                if (item.ID.Start (false))
+                                    NeedsFired.Add (item);
+                            }
+                            catch (Exception ex) { m_log.Error ("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
                         }
-                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                        else if (item.Action == LUType.Reupload)
+                        {
+                            try
+                            {
+                                //Start, but don't add to the queue's again
+                                if (item.ID.Start (true))
+                                    NeedsFired.Add (item);
+                            }
+                            catch (Exception ex) { m_log.Error ("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                        }
+                    }
+                    foreach (LUStruct item in NeedsFired)
+                    {
+                        //Fire the events afterward so that they all start at the same time
+                        item.ID.FireEvents ();
                     }
                 }
-                foreach (LUStruct item in NeedsFired)
+                else
                 {
-                    //Fire the events afterward so that they all start at the same time
-                    item.ID.FireEvents();
+                    //None left, stop looping
+                    broken = true;
+                    break;
                 }
-                scriptChangeThreadpool.QueueEvent (ScriptChangeQueue, 2); //Requeue us
-                Thread.Sleep(5);
+            }
+            if (!broken)
+            {
+                scriptChangeThreadpool.QueueEvent (ScriptChangeQueue, 2); //Requeue us, still more to do
                 return;
             }
 
@@ -209,7 +221,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (LUQueue.Count() == 0)
                 {
                     FiredStartupEvent = true;
-                    foreach (OpenSim.Region.Framework.Scenes.Scene scene in m_ScriptEngine.Worlds)
+                    foreach (IScene scene in m_ScriptEngine.Worlds)
                     {
                         scene.EventManager.TriggerEmptyScriptCompileQueue(m_ScriptEngine.ScriptFailCount,
                                                                         m_ScriptEngine.ScriptErrorMessages);
@@ -224,10 +236,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                foreach (Scene scene in m_ScriptEngine.Worlds)
+                foreach (IScene scene in m_ScriptEngine.Worlds)
                 {
                     ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                    if(scriptMonitor != null)
+                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
             }
         }
@@ -262,10 +275,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                foreach (Scene scene in m_ScriptEngine.Worlds)
+                foreach (IScene scene in m_ScriptEngine.Worlds)
                 {
                     ITimeMonitor scriptMonitor = (ITimeMonitor)module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
-                    scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                    if(scriptMonitor != null)
+                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
             }
 

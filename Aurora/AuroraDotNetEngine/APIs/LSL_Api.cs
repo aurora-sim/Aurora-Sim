@@ -1453,9 +1453,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if ((status & ScriptBaseClass.STATUS_BLOCK_GRAB) == ScriptBaseClass.STATUS_BLOCK_GRAB)
             {
                 if (value != 0)
-                    m_host.SetBlockGrab(true);
+                    m_host.SetBlockGrab (true, false);
                 else
-                    m_host.SetBlockGrab(false);
+                    m_host.SetBlockGrab (false, false);
+            }
+
+            if ((status & ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT) == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
+            {
+                if (value != 0)
+                    m_host.SetBlockGrab (true, true);
+                else
+                    m_host.SetBlockGrab (false, true);
             }
 
             if ((status & ScriptBaseClass.STATUS_DIE_AT_EDGE) == ScriptBaseClass.STATUS_DIE_AT_EDGE)
@@ -1496,86 +1504,88 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (status == ScriptBaseClass.STATUS_PHYSICS)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics)
-                {
-                    return 1;
-                }
-                return 0;
+                    return new LSL_Integer (1);
+                return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_PHANTOM)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) == (uint)PrimFlags.Phantom)
-                {
-                    return 1;
-                }
-                return 0;
+                    return new LSL_Integer (1);
+                return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_CAST_SHADOWS)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.CastShadows) == (uint)PrimFlags.CastShadows)
-                {
-                    return 1;
-                }
-                return 0;
+                    return new LSL_Integer (1);
+                return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB)
             {
-                if (m_host.GetBlockGrab())
-                    return 1;
+                if (m_host.GetBlockGrab (false))
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
+            }
+
+            else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
+            {
+                if (m_host.GetBlockGrab (true))
+                    return new LSL_Integer (1);
+                else
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_DIE_AT_EDGE)
             {
                 if (m_host.GetDieAtEdge())
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_RETURN_AT_EDGE)
             {
                 if (m_host.GetReturnAtEdge())
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_ROTATE_X)
             {
                 if (m_host.GetAxisRotation(2) == 2)
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_ROTATE_Y)
             {
                 if (m_host.GetAxisRotation(4) == 4)
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_ROTATE_Z)
             {
                 if (m_host.GetAxisRotation(8) == 8)
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
 
             else if (status == ScriptBaseClass.STATUS_SANDBOX)
             {
                 if (m_host.GetStatusSandbox())
-                    return 1;
+                    return new LSL_Integer (1);
                 else
-                    return 0;
+                    return new LSL_Integer (0);
             }
-            return 0;
+            return new LSL_Integer (0);
         }
 
         public void llSetScale(LSL_Vector scale)
@@ -4760,7 +4770,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (inv.Value.Type == type || type == -1)
                     {
-                        count = count + 1;
+                        count++;
                     }
                 }
             }
@@ -4786,9 +4796,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             if (keys.Count == 0)
-            {
                 return String.Empty;
-            }
+
             keys.Sort();
             if (keys.Count > number)
             {
@@ -5299,7 +5308,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (m_host.OwnerID == targetID) //People can push themselves
                         pushAllowed = true;
                     else
-                        pushAllowed = m_host.ParentEntity.Scene.Permissions.IsAdministrator (m_host.OwnerID);
+                        pushAllowed = m_host.ParentEntity.Scene.Permissions.IsGod (m_host.OwnerID);
                 }
                 else
                 {
@@ -11698,7 +11707,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             for (float i = 0; i <= distance; i += 0.1f)
             {
                 posToCheck = startvector  + (dir * (i / (float)distance));
-                if (checkTerrain && channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)] < posToCheck.Z)
+                float groundHeight = channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)];
+                if (checkTerrain && groundHeight > posToCheck.Z)
                 {
                     ContactResult result = new ContactResult();
                     result.ConsumerID = 0;
@@ -11729,7 +11739,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
             int refcount = 0;
+            List<ContactResult> newResults = new List<ContactResult> ();
             foreach (ContactResult result in results)
+            {
+                bool found = false;
+                foreach (ContactResult r in newResults)
+                {
+                    if (r.ConsumerID == result.ConsumerID)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    newResults.Add (result);
+            }
+            castRaySort (startvector, ref newResults);
+            foreach (ContactResult result in newResults)
             {
                 if ((rejectTypes & ScriptBaseClass.RC_REJECT_LAND) == ScriptBaseClass.RC_REJECT_LAND &&
                     result.ConsumerID == 0)
@@ -11745,7 +11771,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         list.Add(0);
                     list.Add(result.Pos);
                     if ((dataFlags & ScriptBaseClass.RC_GET_NORMAL) == ScriptBaseClass.RC_GET_NORMAL)
-                        list.Add(result.Normal);
+                        list.Add (result.Normal);
+                    refcount++;
                     continue; //Can't find it, so add UUID.Zero
                 }
 
@@ -11782,6 +11809,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             list.Add (refcount); //The status code, either the # of contacts, RCERR_SIM_PERF_LOW, or RCERR_CAST_TIME_EXCEEDED
 
             return list;
+        }
+
+        private void castRaySort (Vector3 pos, ref List<ContactResult> list)
+        {
+            list.Sort (delegate (ContactResult a, ContactResult b)
+            {
+                return Vector3.DistanceSquared (a.Pos, pos).CompareTo (Vector3.DistanceSquared (b.Pos, pos));
+            });
         }
 
         public LSL_Key llGetNumberOfNotecardLines(string name)

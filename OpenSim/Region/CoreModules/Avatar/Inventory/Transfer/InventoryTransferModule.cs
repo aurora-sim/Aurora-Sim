@@ -44,7 +44,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        private List<Scene> m_Scenelist = new List<Scene>();
+        private List<IScene> m_Scenelist = new List<IScene> ();
 
         private IMessageTransferModule m_TransferModule = null;
         private bool m_Enabled = true;
@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -82,7 +82,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (m_TransferModule == null)
             {
@@ -101,13 +101,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
+            m_Scenelist.Remove (scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnClientClosed -= ClientLoggedOut;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
-            m_Scenelist.Remove(scene);
         }
 
         public void PostInitialise()
@@ -141,11 +141,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             client.OnInstantMessage -= OnInstantMessage;
         }
 
-        private Scene FindClientScene(UUID agentId)
+        private IScene FindClientScene(UUID agentId)
         {
             lock (m_Scenelist)
             {
-                foreach (Scene scene in m_Scenelist)
+                foreach (IScene scene in m_Scenelist)
                 {
                     IScenePresence presence = scene.GetScenePresence (agentId);
                     if (presence != null)
@@ -159,7 +159,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
         {
             //m_log.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
             
-            Scene scene = FindClientScene(client.AgentId);
+            IScene scene = FindClientScene(client.AgentId);
 
             if (scene == null) // Something seriously wrong here.
                 return;
@@ -358,7 +358,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
         {
             // Check if this is ours to handle
             //
-            Scene scene = FindClientScene(msg.toAgentID);
+            IScene scene = FindClientScene(msg.toAgentID);
 
             if (scene == null)
                 return;

@@ -192,7 +192,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
                 if (manager != null && manager.Scenes.Count > 0)
                 {
-                    foreach (Scene scene in manager.Scenes)
+                    foreach (IScene scene in manager.Scenes)
                     {
                         IScenePresence sp = null;
                         if (scene.TryGetScenePresence(UUID.Parse(user), out sp))

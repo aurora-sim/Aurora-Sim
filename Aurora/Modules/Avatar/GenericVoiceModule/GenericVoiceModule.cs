@@ -68,7 +68,7 @@ namespace Aurora.Modules
             configToSend = m_config.GetString("ModuleToSend", configToSend);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_enabled)
             {
@@ -80,13 +80,13 @@ namespace Aurora.Modules
         }
 
         // Called to indicate that all loadable modules have now been added
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             // Do nothing.
         }
 
         // Called to indicate that the region is going away.
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
@@ -126,7 +126,7 @@ namespace Aurora.Modules
         // Note that OnRegisterCaps is called here via a closure
         // delegate containing the scene of the respective region (see
         // Initialise()).
-        public OSDMap OnRegisterCaps(Scene scene, UUID agentID, IHttpServer caps)
+        public OSDMap OnRegisterCaps (IScene scene, UUID agentID, IHttpServer caps)
         {
             OSDMap retVal = new OSDMap();
             retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
@@ -150,7 +150,7 @@ namespace Aurora.Modules
         }
 
         /// Callback for a client request for Voice Account Details.
-        public string ProvisionVoiceAccountRequest(Scene scene, string request, string path, string param,
+        public string ProvisionVoiceAccountRequest (IScene scene, string request, string path, string param,
                                                    UUID agentID)
         {
             try
@@ -170,7 +170,7 @@ namespace Aurora.Modules
         }
 
         /// Callback for a client request for ParcelVoiceInfo
-        public string ParcelVoiceInfoRequest(Scene scene, string request, string path, string param,
+        public string ParcelVoiceInfoRequest (IScene scene, string request, string path, string param,
                                              UUID agentID)
         {
             OSDMap response = new OSDMap();

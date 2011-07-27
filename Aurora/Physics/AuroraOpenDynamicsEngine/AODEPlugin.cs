@@ -53,13 +53,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     {
         //private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private CollisionLocker ode;
         private AuroraODEPhysicsScene _mScene;
         private static bool m_initialized = false;
 
         public AuroraODEPlugin()
         {
-            ode = new CollisionLocker();
         }
 
         public bool Init()
@@ -79,7 +77,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_initialized = true;
                 }
                 
-                _mScene = new AuroraODEPhysicsScene(ode, sceneIdentifier);
+                _mScene = new AuroraODEPhysicsScene(sceneIdentifier);
             }
             return _mScene;
         }

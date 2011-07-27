@@ -44,7 +44,7 @@ namespace Aurora.Modules
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        protected List<Scene> m_scenes = new List<Scene>();
+        protected List<IScene> m_scenes = new List<IScene> ();
         protected bool m_Enabled = true;
         protected Dictionary<UUID, UUID> m_pendingCallingcardRequests = new Dictionary<UUID, UUID>();
 
@@ -59,31 +59,29 @@ namespace Aurora.Modules
                 m_Enabled = ccmModuleConfig.GetBoolean("Enabled", true);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
 
-            if (!m_scenes.Contains(scene))
-                m_scenes.Add(scene);
+            m_scenes.Add(scene);
 
             scene.RegisterModuleInterface<ICallingCardModule>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_Enabled)
                 return;
 
-            if (m_scenes.Contains(scene))
-                m_scenes.Remove(scene);
+            m_scenes.Remove(scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
 
             scene.UnregisterModuleInterface<ICallingCardModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -267,7 +265,7 @@ namespace Aurora.Modules
         /// <returns></returns>
         public IClientAPI LocateClientObject(UUID agentID)
         {
-            Scene scene = GetClientScene(agentID);
+            IScene scene = GetClientScene(agentID);
             if (scene == null)
                 return null;
 
@@ -283,18 +281,15 @@ namespace Aurora.Modules
         /// </summary>
         /// <param name="agentId"></param>
         /// <returns></returns>
-        private Scene GetClientScene(UUID agentId)
+        private IScene GetClientScene(UUID agentId)
         {
-            lock (m_scenes)
+            foreach (IScene scene in m_scenes)
             {
-                foreach (Scene scene in m_scenes)
+                IScenePresence presence = scene.GetScenePresence (agentId);
+                if (presence != null)
                 {
-                    IScenePresence presence = scene.GetScenePresence (agentId);
-                    if (presence != null)
-                    {
-                        if (!presence.IsChildAgent)
-                            return scene;
-                    }
+                    if (!presence.IsChildAgent)
+                        return scene;
                 }
             }
             return null;

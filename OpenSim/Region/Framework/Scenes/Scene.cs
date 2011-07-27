@@ -62,8 +62,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected readonly ClientManager m_clientManager = new ClientManager();
 
+        public ClientManager ClientManager
+        {
+            get { return m_clientManager; }
+        }
+
         protected RegionInfo m_regInfo;
-        protected IClientNetworkServer m_clientServer;
+        protected List<IClientNetworkServer> m_clientServers;
 
         protected ThreadMonitor monitor = new ThreadMonitor();
             
@@ -130,7 +135,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         private volatile bool shuttingdown = false;
 
-        public bool ShouldRunHeartbeat = true;
+        private bool m_ShouldRunHeartbeat = true;
+        public bool ShouldRunHeartbeat
+        {
+            get { return m_ShouldRunHeartbeat; }
+            set { m_ShouldRunHeartbeat = value; }
+        }
 
         #endregion
 
@@ -283,16 +293,19 @@ namespace OpenSim.Region.Framework.Scenes
             m_regInfo = regionInfo;
         }
 
-        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, IClientNetworkServer clientServer)
+        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers)
         {
             Initialize (regionInfo);
 
             //Set up the clientServer
-            m_clientServer = clientServer;
-            clientServer.AddScene (this);
+            m_clientServers = clientServers;
+            foreach (IClientNetworkServer clientServer in clientServers)
+            {
+                clientServer.AddScene (this);
+            }
 
             m_sceneManager = RequestModuleInterface<SceneManager> ();
-            m_simDataStore = m_sceneManager.GetSimulationDataStore ();
+            m_simDataStore = m_sceneManager.GetNewSimulationDataStore ();
 
             m_config = m_sceneManager.ConfigSource;
             m_authenticateHandler = authen;
@@ -372,15 +385,18 @@ namespace OpenSim.Region.Framework.Scenes
                     avatar.ControllingClient.Kick("The simulator is going down.");
             });
 
+            //Let things process and get sent for a bit
+            Thread.Sleep (1000);
+
             IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule> ();
             if (transferModule != null)
             {
-                foreach (IScenePresence avatar in GetScenePresences ())
+                foreach (IScenePresence avatar in new List<IScenePresence>(GetScenePresences ()))
                 {
                     transferModule.IncomingCloseAgent (this, avatar.UUID);
                 }
             }
-            ShouldRunHeartbeat = false; //Stop the heartbeat
+            m_ShouldRunHeartbeat = false; //Stop the heartbeat
             //Now close the tracker
             monitor.Stop();
 
@@ -390,7 +406,11 @@ namespace OpenSim.Region.Framework.Scenes
             // Stop updating the scene objects and agents.
             shuttingdown = true;
 
-            m_sceneGraph.Close();
+            m_sceneGraph.Close ();
+            foreach (IClientNetworkServer clientServer in m_clientServers)
+            {
+                clientServer.Stop ();
+            }
         }
 
         #endregion
@@ -405,7 +425,10 @@ namespace OpenSim.Region.Framework.Scenes
             if (!ShouldRunHeartbeat) //Allow for the heartbeat to not be used
                 return;
 
-            m_clientServer.Start ();
+            foreach (IClientNetworkServer clientServer in m_clientServers)
+            {
+                clientServer.Start ();
+            }
 
             //Give it the heartbeat delegate with an infinite timeout
             monitor.StartTrackingThread(0, Update);
@@ -418,6 +441,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Scene Heartbeat Methods
 
+        private bool m_lastPhysicsChange = false;
         private bool Update()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
@@ -496,7 +520,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                             if (monitor != null)
                                 monitor.AddPhysicsStats (RegionInfo.RegionID, PhysicsScene);
+                            if (m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
+                                StartPhysicsScene ();
                         }
+                        else if (m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
+                            StopPhysicsScene ();
+                        m_lastPhysicsChange = RegionInfo.RegionSettings.DisablePhysics;
                     }
 
                     //Now fix the sim stats
@@ -525,6 +554,40 @@ namespace OpenSim.Region.Framework.Scenes
                 sleepFrameMonitor.AddTime(maintc);
 
                 totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
+            }
+        }
+
+        /// <summary>
+        /// Reload the last saved physics state to the Physics Scene
+        /// </summary>
+        public void StartPhysicsScene ()
+        {
+            //Save how all the prims are moving so that we can resume it when we turn it back on
+            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
+            if (physicsState != null)
+                physicsState.ResetToLastSavedState ();
+        }
+
+        /// <summary>
+        /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
+        /// </summary>
+        public void StopPhysicsScene ()
+        {
+            //Save how all the prims are moving so that we can resume it when we turn it back on
+            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
+            if (physicsState != null)
+                physicsState.SavePhysicsState ();
+
+            //Then clear all the velocity and stuff on objects
+            foreach (PhysicsObject o in this.PhysicsScene.ActiveObjects)
+            {
+                o.ClearVelocity ();
+                o.RequestPhysicsterseUpdate ();
+            }
+            foreach (IScenePresence sp in this.GetScenePresences ())
+            {
+                sp.PhysicsActor.ForceSetVelocity (Vector3.Zero);
+                sp.SendTerseUpdateToAllClients ();
             }
         }
 
@@ -624,9 +687,12 @@ namespace OpenSim.Region.Framework.Scenes
             ForEachClient (
                 delegate (IClientAPI client)
                 {
-                    //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                    try { client.SendKillObject (presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
-                    catch (NullReferenceException) { }
+                    if (client.AgentId != presence.UUID)
+                    {
+                        //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
+                        try { client.SendKillObject (presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
+                        catch (NullReferenceException) { }
+                    }
                 });
 
             // Remove the avatar from the scene
@@ -759,9 +825,9 @@ namespace OpenSim.Region.Framework.Scenes
             return m_clientManager.TryGetValue(remoteEndPoint, out client);
         }
 
-        public void ForEachSOG(Action<SceneObjectGroup> action)
+        public void ForEachSceneEntity (Action<ISceneEntity> action)
         {
-            m_sceneGraph.ForEachSOG(action);
+            m_sceneGraph.ForEachSceneEntity (action);
         }
 
         #endregion

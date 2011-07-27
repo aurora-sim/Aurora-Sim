@@ -46,7 +46,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
             {
                 for (int y = (int)south; y < (int)north; y++)
                 {
-                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                    if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
                     
                     float average = 0;
@@ -59,7 +59,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                         for (l = 0 - area; l < area; l += step)
                         {
                             avgsteps++;
-                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, new System.Collections.Generic.List<Scene>());
+                            average += TerrainUtil.GetBilinearInterpolate (x + n, y + l, map, new System.Collections.Generic.List<IScene> ());
                         }
                     }
 

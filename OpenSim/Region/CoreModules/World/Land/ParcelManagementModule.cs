@@ -86,13 +86,14 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private static readonly string remoteParcelRequestPath = "0009/";
 
-        private Scene m_scene;
+        private IScene m_scene;
 
         /// <value>
         /// Local land ids at specified region co-ordinates (region size / 4)
         /// </value>
         private int[,] m_landIDList;
         private bool UseDwell = true;
+        private bool m_usePrivateParcelAsBan = true;
         private List<UUID> m_hasSentParcelOverLay = new List<UUID>();
 
         /// <value>
@@ -305,10 +306,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryOnUpdate = config.GetBoolean("UpdateOnUpdate", m_UpdateDirectoryOnUpdate);
                 m_minutesBeforeTimer = config.GetInt("MinutesBeforeTimerUpdate", m_minutesBeforeTimer);
                 UseDwell = config.GetBoolean("AllowDwell", true);
+                m_usePrivateParcelAsBan = config.GetBoolean ("UsePrivateParcelAsBan", m_usePrivateParcelAsBan);
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -341,11 +343,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             m_scene.RegisterModuleInterface<IParcelManagementModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             List<ILandObject> parcels = AllParcels ();
             foreach (ILandObject land in parcels)
@@ -915,46 +917,57 @@ namespace OpenSim.Region.CoreModules.World.Land
                     "You are not allowed on this parcel because the land owner has restricted access.");
         }
 
-        public void EventManagerOnAvatarEnteringNewParcel (IScenePresence avatar, int localLandID, UUID regionID)
+        public void EventManagerOnAvatarEnteringNewParcel (IScenePresence avatar, ILandObject oldParcel)
         {
-            if (m_scene.RegionInfo.RegionID == regionID)
+            if (avatar.CurrentParcel != null)
             {
-                if (avatar.CurrentParcel != null)
-                {
-                    //Tell the clint about it
-                    avatar.CurrentParcel.SendLandUpdateToClient (avatar.ControllingClient);
+                //Tell the clint about it
+                avatar.CurrentParcel.SendLandUpdateToClient (avatar.ControllingClient);
 
-                    if (avatar.CurrentParcel.LandData.Private)
+                //Gotta kill all avatars outside the parcel
+                foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences ())
+                {
+                    if (sp.UUID == avatar.UUID)
+                        continue;
+                    if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID)//Send full updates for those in the sim
                     {
-                        //Gotta kill all avatars outside the parcel
-                        foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences ())
+                        if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))//Either one, we gotta send an update
                         {
-                            if (sp.UUID == avatar.UUID)
-                                continue;
-                            if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID)//Send full updates for those in the sim
-                                sp.SceneViewer.QueuePresenceForFullUpdate (avatar);
-                            else//Kill those outside the parcel
-                                sp.ControllingClient.SendKillObject (sp.Scene.RegionInfo.RegionHandle, 
-                                    new IEntity[1] { avatar });
+                            sp.SceneViewer.RemoveAvatarFromView (avatar);
+                            avatar.SceneViewer.RemoveAvatarFromView (sp);
+                            sp.SceneViewer.QueuePresenceForFullUpdate (avatar);
+                            avatar.SceneViewer.QueuePresenceForFullUpdate (sp);
                         }
                     }
-                    
-                    if (UseDwell)
-                        avatar.CurrentParcel.LandData.Dwell += 1;
-                    if (avatar.AbsolutePosition.Z < ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT)
+                    else//Kill those outside the parcel
                     {
-                        if (avatar.CurrentParcel.IsBannedFromLand (avatar.UUID))
+                        if (sp.CurrentParcel.LandData.Private || avatar.CurrentParcel.LandData.Private)
                         {
-                            SendYouAreBannedNotice(avatar);
-                            Vector3 pos = GetNearestAllowedPosition(avatar);
-                            avatar.Teleport(pos);
+                            sp.ControllingClient.SendKillObject (sp.Scene.RegionInfo.RegionHandle,
+                                new IEntity[1] { avatar });
+                            avatar.ControllingClient.SendKillObject (sp.Scene.RegionInfo.RegionHandle,
+                                new IEntity[1] { sp });
+                            sp.SceneViewer.RemoveAvatarFromView (avatar);
+                            avatar.SceneViewer.RemoveAvatarFromView (sp);
                         }
-                        else if (avatar.CurrentParcel.IsRestrictedFromLand (avatar.UUID))
-                        {
-                            SendYouAreRestrictedNotice(avatar);
-                            Vector3 pos = GetNearestAllowedPosition(avatar);
-                            avatar.Teleport(pos);
-                        }
+                    }
+                }
+
+                if (UseDwell)
+                    avatar.CurrentParcel.LandData.Dwell += 1;
+                if (avatar.AbsolutePosition.Z < ParcelManagementModule.BAN_LINE_SAFETY_HEIGHT)
+                {
+                    if (avatar.CurrentParcel.IsBannedFromLand (avatar.UUID))
+                    {
+                        SendYouAreBannedNotice (avatar);
+                        Vector3 pos = GetNearestAllowedPosition (avatar);
+                        avatar.Teleport (pos);
+                    }
+                    else if (avatar.CurrentParcel.IsRestrictedFromLand (avatar.UUID))
+                    {
+                        SendYouAreRestrictedNotice (avatar);
+                        Vector3 pos = GetNearestAllowedPosition (avatar);
+                        avatar.Teleport (pos);
                     }
                 }
             }
@@ -1026,10 +1039,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (!avatar.IsChildAgent)
                     {
+                        ILandObject oldParcel = avatar.CurrentParcel;
                         avatar.CurrentParcelUUID = over.LandData.GlobalID;
                         avatar.CurrentParcel = over;
-                        m_scene.EventManager.TriggerAvatarEnteringNewParcel (avatar, over.LandData.LocalID,
-                                                                            m_scene.RegionInfo.RegionID);
+                        m_scene.EventManager.TriggerAvatarEnteringNewParcel (avatar, oldParcel);
                     }
                 }
             }
@@ -1323,7 +1336,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             //If we are still here, then they are subdividing within one piece of land
             //Check owner
             IClientAPI client;
-            m_scene.TryGetClient(attempting_user_id, out client);
+            m_scene.ClientManager.TryGetValue(attempting_user_id, out client);
 
             if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, startLandObject) ||
                 (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
@@ -1382,7 +1395,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private void join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
         {
             IClientAPI client;
-            m_scene.TryGetClient(attempting_user_id, out client);
+            m_scene.ClientManager.TryGetValue(attempting_user_id, out client);
             if (client == null)
                 return;
             end_x -= 4;
@@ -1891,7 +1904,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private string ProcessParcelMediaURLFilterList(string request, string path, string param, UUID agentID)
         {
             IClientAPI client;
-            if (!m_scene.TryGetClient(agentID, out client))
+            if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
                 m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());
@@ -1911,7 +1924,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID)
         {
             IClientAPI client;
-            if (!m_scene.TryGetClient(agentID, out client))
+            if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
                 m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());

@@ -58,9 +58,8 @@ namespace Aurora.DataManager.Migration
                 if (m.MigrationName == null)
                     continue;
                 if (m.MigrationName == migratorName)
-                {
                     migrators.Add((Migrator)m);
-                }
+
             }
         }
 
@@ -150,17 +149,17 @@ namespace Aurora.DataManager.Migration
                     executed = true;
                 }
 
-                if (validateTables)
+                //lets first validate where we think we are
+                bool validated = currentMigrator == null ? false : currentMigrator.Validate (genericData);
+
+                if (!validated && validateTables && currentMigrator != null)
                 {
-                    //lets first validate where we think we are
-                    bool validated = currentMigrator.Validate(genericData);
+                    //Try rerunning the migrator and then the validation
+                    //prepare restore point if something goes wrong
+                    m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, retrying...", currentMigrator.MigrationName, currentMigrator.Version));
 
-                    if (!validated)
+                    if (currentMigrator == null)
                     {
-                        //Try rerunning the migrator and then the validation
-                        //prepare restore point if something goes wrong
-                        m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, retrying...", currentMigrator.MigrationName, currentMigrator.Version));
-
                         currentMigrator.Migrate (genericData);
                         validated = currentMigrator.Validate (genericData);
                         if (!validated)
@@ -176,6 +175,9 @@ namespace Aurora.DataManager.Migration
                         }
                     }
                 }
+                //else
+                //    m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, continueing...", currentMigrator.MigrationName, currentMigrator.Version));
+
 
                 bool restoreTaken = false;
                 //Loop through versions from start to end, migrating then validating
@@ -184,7 +186,7 @@ namespace Aurora.DataManager.Migration
                 //only restore if we are going to do something
                 if (executingMigrator != null)
                 {
-                    if (validateTables)
+                    if (validateTables && currentMigrator != null)
                     {
                         //prepare restore point if something goes wrong
                         restorePoint = currentMigrator.PrepareRestorePoint(genericData);
@@ -204,22 +206,17 @@ namespace Aurora.DataManager.Migration
                         throw new MigrationOperationException (string.Format ("Migrating to version {0} failed, {1}.", currentMigrator.Version, ex.ToString()));
                     }
                     executed = true;
-                    if (validateTables)
-                    {
-                        bool validated = executingMigrator.Validate(genericData);
+                    validated = executingMigrator.Validate(genericData);
 
-                        //if it doesn't validate, rollback
-                        if (!validated)
-                        {
-                            RollBackOperation();
-                            throw new MigrationOperationException(string.Format("Migrating to version {0} did not validate. Restoring to restore point.", currentMigrator.Version));
-                        }
+                    //if it doesn't validate, rollback
+                    if (!validated && validateTables)
+                    {
+                        RollBackOperation();
+                        throw new MigrationOperationException(string.Format("Migrating to version {0} did not validate. Restoring to restore point.", currentMigrator.Version));
                     }
 
                     if( executingMigrator.Version == operationDescription.EndVersion )
-                    {
                         break;
-                    }
 
                     executingMigrator = GetMigratorAfterVersion(executingMigrator.Version);
                 }
@@ -248,10 +245,12 @@ namespace Aurora.DataManager.Migration
         private Migrator GetMigratorByVersion(Version version)
         {
             if (version == null)
-            {
                 return null;
+            try
+            {
+                return (from m in migrators where m.Version == version select m).First ();
             }
-            return (from m in migrators where m.Version == version select m).First();
+            catch { return null; }
         }
     }
 }

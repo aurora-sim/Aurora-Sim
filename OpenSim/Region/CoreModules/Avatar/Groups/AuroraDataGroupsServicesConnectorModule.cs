@@ -114,7 +114,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             m_log.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Closing {0}", this.Name);
         }
 
-        public void AddRegion(OpenSim.Region.Framework.Scenes.Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (m_connectorEnabled)
             {
@@ -126,7 +126,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public void RemoveRegion(OpenSim.Region.Framework.Scenes.Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (scene.RequestModuleInterface<IGroupsServicesConnector>() == this)
             {
@@ -134,7 +134,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public void RegionLoaded(OpenSim.Region.Framework.Scenes.Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (GroupsConnector == null)

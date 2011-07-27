@@ -45,5 +45,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLString GRAVITY_FORCE_Z = "gravity_force_z";
         public static readonly LSLString ADD_GRAVITY_POINT = "add_gravity_point";
         public static readonly LSLString ADD_GRAVITY_FORCE = "add_gravity_force";
+
+        public static readonly LSLString START_TIME_REVERSAL_SAVING = "start_time_reversal_saving";
+        public static readonly LSLString STOP_TIME_REVERSAL_SAVING = "stop_time_reversal_saving";
+        public static readonly LSLString START_TIME_REVERSAL = "start_time_reversal";
+        public static readonly LSLString STOP_TIME_REVERSAL = "stop_time_reversal";
     }
 }

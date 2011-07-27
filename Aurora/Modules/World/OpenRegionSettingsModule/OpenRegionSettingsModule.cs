@@ -596,7 +596,7 @@ namespace Aurora.Modules
         #region Declares
 
         private IConfigSource m_source;
-        private Scene m_scene;
+        private IScene m_scene;
         private OpenRegionSettings m_settings = null;
 
         //Generic KVP's to send
@@ -615,7 +615,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             scene.EventManager.OnMakeRootAgent += OnNewClient;
@@ -632,11 +632,11 @@ namespace Aurora.Modules
             ReadConfig(scene);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             IChatModule chatmodule = scene.RequestModuleInterface<IChatModule>();
             if (chatmodule != null)
@@ -697,7 +697,7 @@ namespace Aurora.Modules
             if (SP == null)
                 return responsedata; //They don't exist
 
-            if (!((Scene)SP.Scene).Permissions.CanIssueEstateCommand(SP.UUID, false))
+            if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
                 return responsedata; // No permissions
 
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
@@ -741,7 +741,7 @@ namespace Aurora.Modules
 
         #region Setup
 
-        private void ReadConfig(Scene scene)
+        private void ReadConfig(IScene scene)
         {
             //Set up the instance first
             IConfig instanceSettings = m_source.Configs["InstanceSettings"];

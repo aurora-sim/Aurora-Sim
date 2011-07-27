@@ -58,7 +58,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Add the given region to the plugin that it will be serving
         /// </summary>
         /// <param name="scene"></param>
-        void AddRegion (Scene scene);
+        void AddRegion (IScene scene);
 
         /// <summary>
         /// Check the module and all scripts that it may be being used by

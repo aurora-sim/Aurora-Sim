@@ -274,6 +274,8 @@ namespace OpenSim.Services.MessagingService
             return null;
         }
 
+        #region Logout Agent
+
         public virtual void LogoutAgent (IRegionClientCapsService regionCaps)
         {
             //Close all neighbor agents as well, the root is closing itself, so don't call them
@@ -309,12 +311,23 @@ namespace OpenSim.Services.MessagingService
             IRegionCapsService fullregionCaps = m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(requestingRegion);
             if (fullregionCaps != null)
             {
+                IEventQueueService eqs = m_registry.RequestModuleInterface<IEventQueueService>();
+                if (eqs != null)
+                {
+                    foreach (IRegionClientCapsService regionClientCaps in fullregionCaps.GetClients ())
+                    {
+                        //We can send this here, because we ONLY send this when the region is going down for a loong time
+                        eqs.DisableSimulator (regionClientCaps.AgentID, regionClientCaps.RegionHandle);
+                    }
+                }
                 //Now kill the region in the caps Service, DO THIS FIRST, otherwise you get an infinite loop later in the IClientCapsService when it tries to remove itself from the IRegionCapsService
                 m_registry.RequestModuleInterface<ICapsService>().RemoveCapsForRegion(requestingRegion);
                 //Close all regions and remove them from the region
                 fullregionCaps.Close();
             }
         }
+
+        #endregion
 
         #region EnableChildAgents
 
@@ -388,6 +401,10 @@ namespace OpenSim.Services.MessagingService
             return informed;
         }
 
+        #endregion
+
+        #region Inform Client Of Neighbor
+
         /// <summary>
         /// Async component for informing client of which neighbors exist
         /// </summary>
@@ -427,7 +444,7 @@ namespace OpenSim.Services.MessagingService
             {
                 ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
                 IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
-
+                
                 IRegionClientCapsService oldRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
 
                 //If its disabled, it should be removed, so kill it!
@@ -464,8 +481,10 @@ namespace OpenSim.Services.MessagingService
                 circuitData.firstname = clientCaps.AccountInfo.FirstName;
                 circuitData.lastname = clientCaps.AccountInfo.LastName;
 
+                int requestedPort = 0;
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
-                        TeleportFlags, agentData, out reason);
+                        TeleportFlags, agentData, out requestedPort, out reason);
+                circuitData.RegionUDPPort = requestedPort;//Fix the port
                 if (regionAccepted)
                 {
                     string otherRegionsCapsURL;
@@ -493,8 +512,8 @@ namespace OpenSim.Services.MessagingService
                     IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
 
                     EQService.EnableSimulator(neighbor.RegionHandle,
-                        neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                        neighbor.ExternalEndPoint.Port, AgentID,
+                        Util.ResolveAddressForClient(neighbor.ExternalEndPoint.Address, clientCaps.ClientEndPoint).GetAddressBytes(),
+                        requestedPort, AgentID,
                         neighbor.RegionSizeX, neighbor.RegionSizeY, requestingRegion);
 
                     // EnableSimulator makes the client send a UseCircuitCode message to the destination, 
@@ -502,8 +521,8 @@ namespace OpenSim.Services.MessagingService
                     // So let's wait
                     Thread.Sleep(300);
                     EQService.EstablishAgentCommunication(AgentID, neighbor.RegionHandle,
-                        neighbor.ExternalEndPoint.Address.GetAddressBytes(),
-                        neighbor.ExternalEndPoint.Port, otherRegionsCapsURL, neighbor.RegionSizeX,
+                        Util.ResolveAddressForClient (neighbor.ExternalEndPoint.Address, clientCaps.ClientEndPoint).GetAddressBytes (),
+                        requestedPort, otherRegionsCapsURL, neighbor.RegionSizeX,
                         neighbor.RegionSizeY,
                         requestingRegion);
 
@@ -539,6 +558,7 @@ namespace OpenSim.Services.MessagingService
             if (regionCaps == null || !regionCaps.RootAgent)
             {
                 reason = "";
+                ResetFromTransit (AgentID);
                 return false;
             }
 
@@ -586,10 +606,17 @@ namespace OpenSim.Services.MessagingService
 
                     IRegionClientCapsService otherRegion = clientCaps.GetCapsService(destination.RegionHandle);
 
-                    EQService.TeleportFinishEvent(destination.RegionHandle, destination.Access, destination.ExternalEndPoint, otherRegion.CapsUrl,
-                                               4, AgentID, TeleportFlags,
-                                               destination.RegionSizeX, destination.RegionSizeY,
-                                               requestingRegion);
+                    if (circuit.RegionUDPPort == 0)
+                        circuit.RegionUDPPort = destination.ExternalEndPoint.Port;
+                    else
+                        destination.ExternalEndPoint.Port = circuit.RegionUDPPort;//Fix the port with the one the region said to use
+
+                    EQService.TeleportFinishEvent (destination.RegionHandle, destination.Access,
+                        Util.ResolveAddressForClient (destination.ExternalEndPoint, clientCaps.ClientEndPoint),
+                        otherRegion.CapsUrl,
+                        4, AgentID, TeleportFlags,
+                        destination.RegionSizeX, destination.RegionSizeY,
+                        requestingRegion);
 
                     // TeleportFinish makes the client send CompleteMovementIntoRegion (at the destination), which
                     // trigers a whole shebang of things there, including MakeRoot. So let's wait for confirmation
@@ -632,7 +659,8 @@ namespace OpenSim.Services.MessagingService
                         regionCaps.RootAgent = false;
 
                         // Next, let's close the child agent connections that are too far away.
-                        if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
+                        //if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
+                        //Why? OpenSim regions need closed too, even if the protocol is kinda stupid
                             CloseNeighborAgents (regionCaps.Region, destination, AgentID);
                         reason = "";
                     }
@@ -897,7 +925,7 @@ namespace OpenSim.Services.MessagingService
 
                             IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionHandle);
                             //Tell the client about the transfer
-                            EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, crossingRegion.ExternalEndPoint, otherRegion.CapsUrl,
+                            EQService.CrossRegion (crossingRegion.RegionHandle, pos, velocity, Util.ResolveAddressForClient (crossingRegion.ExternalEndPoint, clientCaps.ClientEndPoint), otherRegion.CapsUrl,
                                                AgentID, circuit.SessionID,
                                                crossingRegion.RegionSizeX, crossingRegion.RegionSizeY,
                                                requestingRegion);
@@ -1016,12 +1044,16 @@ namespace OpenSim.Services.MessagingService
                     regionClientCaps = capsService.GetClientCapsService (aCircuit.AgentID).GetCapsService (region.RegionHandle);
                 }
 
+
                 ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService> ();
                 if (commsService != null)
                     commsService.GetUrlsForUser (region, aCircuit.AgentID);//Make sure that we make userURLs if we need to
 
+                int requestedUDPPort = 0;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
-                success = SimulationService.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out reason);
+                success = SimulationService.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out requestedUDPPort, out reason);
+                aCircuit.RegionUDPPort = requestedUDPPort;
+
                 if (!success) // If it failed, do not set up any CapsService for the client
                 {
                     if (reason != "")

@@ -70,7 +70,7 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileFrontend = null;
         private IFriendsModule m_friendsModule;
-        private List<Scene> m_Scenes = new List<Scene>();
+        private List<IScene> m_Scenes = new List<IScene> ();
         private bool m_ProfileEnabled = true;
 
         #endregion
@@ -91,7 +91,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_ProfileEnabled)
                 return;
@@ -99,23 +99,22 @@ namespace Aurora.Modules
             if (ProfileFrontend == null)
                 return;
 
-            if (!m_Scenes.Contains(scene))
-                m_Scenes.Add(scene);
+            m_Scenes.Add(scene);
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_ProfileEnabled)
                 return;
-            if (m_Scenes.Contains(scene))
-                m_Scenes.Remove(scene);
+            
+            m_Scenes.Remove(scene);
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             m_friendsModule = scene.RequestModuleInterface<IFriendsModule>();
         }
@@ -630,9 +629,9 @@ namespace Aurora.Modules
 
         #region Helpers
 
-        private Scene GetRegionUserIsIn(UUID uUID)
+        private IScene GetRegionUserIsIn(UUID uUID)
         {
-            foreach (Scene scene in m_Scenes)
+            foreach (IScene scene in m_Scenes)
             {
                 if (scene.GetScenePresence(uUID) != null)
                     return scene;
@@ -647,7 +646,7 @@ namespace Aurora.Modules
             if (m_friendsModule.GetFriendPerms(requested, friend) == -1) //They aren't a friend
             {
                 IScenePresence SP = findScenePresence(friend);
-                if (SP != null && SP.Scene.Permissions.IsAdministrator(friend)) //Check is admin
+                if (SP != null && SP.Scene.Permissions.IsGod (friend)) //Check is admin
                     return true;
 
                 return false;
@@ -657,7 +656,7 @@ namespace Aurora.Modules
 
         public IScenePresence findScenePresence(UUID avID)
         {
-            foreach (Scene s in m_Scenes)
+            foreach (IScene s in m_Scenes)
             {
                 IScenePresence SP = s.GetScenePresence(avID);
                 if (SP != null)

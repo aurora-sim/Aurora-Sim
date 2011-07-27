@@ -55,7 +55,7 @@ namespace Aurora.Modules
         #region Declares
         private IConfigSource m_config;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<Scene> m_scenes = new List<Scene>();
+        private List<IScene> m_scenes = new List<IScene>();
         private Dictionary<string, string> genericInfo = new Dictionary<string, string>();
         private Timer m_timer;
         private Dictionary<UUID, List<GridRegion>> m_knownNeighbors = new Dictionary<UUID, List<GridRegion>> ();
@@ -64,7 +64,7 @@ namespace Aurora.Modules
 
         #region ISharedRegionStartupModule Members
 
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_scenes.Add(scene);
             //Register the interface
@@ -139,8 +139,8 @@ namespace Aurora.Modules
             ISyncMessagePosterService syncMessagePoster = m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
             if (syncMessagePoster != null)
             {
-                List<Scene> FailedScenes = new List<Scene> ();
-                foreach (Scene scene in m_scenes)
+                List<IScene> FailedScenes = new List<IScene> ();
+                foreach (IScene scene in m_scenes)
                 {
                     OSDMap map = new OSDMap();
                     map["Method"] = "RegisterHandlers";
@@ -173,15 +173,15 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             scene.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += RegisterRegionWithGridModule_OnMessageReceived;
         }
@@ -190,10 +190,11 @@ namespace Aurora.Modules
         {
         }
 
-        public void Close(Scene scene)
+        public void Close(IScene scene)
         {
             //Deregister the interface
-            scene.UnregisterModuleInterface<IGridRegisterModule>(this);
+            scene.UnregisterModuleInterface<IGridRegisterModule> (this);
+            m_scenes.Remove (scene);
 
             m_log.InfoFormat("[RegisterRegionWithGrid]: Deregistering region {0} from the grid...", scene.RegionInfo.RegionName);
 
@@ -271,7 +272,7 @@ namespace Aurora.Modules
             {
                 if (returnResponseFirstTime)
                 {
-                    m_log.Error ("[RegisterRegionWithGrid]: Registration of region with grid failed - " + error);
+                    m_log.Error ("[RegisterRegionWithGrid]: Registration of region with grid failed again - " + error);
                     return false;
                 }
 

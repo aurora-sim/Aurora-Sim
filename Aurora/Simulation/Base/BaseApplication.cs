@@ -232,6 +232,14 @@ namespace Aurora.Simulation.Base
                     UnhandledException (false, ex);
                     //Just clean it out as good as we can
                     simBase.Shutdown(false);
+                    IRegionLoader[] regionLoaders = simBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader> ();
+                    foreach (IRegionLoader loader in regionLoaders)
+                    {
+                        if (loader.Default)
+                        {
+                            loader.FailedToStartRegions (ex.Message);
+                        }
+                    }
                 }
                 //Then let it restart if it needs by sending it back up to 'while (AutoRestart || Running)' above
                 return;

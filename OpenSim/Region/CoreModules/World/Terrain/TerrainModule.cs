@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         #endregion
 
-        private static List<Scene> m_scenes = new List<Scene>();
+        private static List<IScene> m_scenes = new List<IScene> ();
         private static List<TerrainModule> m_terrainModules = new List<TerrainModule>();
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private ITerrainChannel m_waterChannel;
         private ITerrainChannel m_revert;
         private ITerrainChannel m_waterRevert;
-        private Scene m_scene;
+        private IScene m_scene;
         private long m_queueNextSave = 0;
         private int m_savetime = 2; // seconds to wait before saving terrain
         private Timer m_queueTimer = new Timer(); 
@@ -139,7 +139,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             bool firstScene = m_scenes.Count == 0;
             m_scene = scene;
@@ -175,12 +175,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             m_queueTimer.Elapsed += TerrainUpdateTimer; 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
+            m_scenes.Remove (scene);
             lock (m_scene)
             {
                 // remove the event-handlers
@@ -1222,7 +1223,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
                 return;
-            if (((Scene)client.Scene).RegionInfo.RegionID != m_scene.RegionInfo.RegionID)
+            if (client.Scene.RegionInfo.RegionID != m_scene.RegionInfo.RegionID)
                 return;
             string parameter1 = Parameters[0];
             if (Method == "terrain")

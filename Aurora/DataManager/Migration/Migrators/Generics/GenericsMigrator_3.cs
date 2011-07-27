@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,47 +27,46 @@
 
 using System;
 using System.Collections.Generic;
+using C5;
+using Aurora.Framework;
 
-namespace OpenSim.Region.Physics.Manager
+namespace Aurora.DataManager.Migration.Migrators
 {
-    public class CollisionLocker
+    public class GenericsMigrator_3 : Migrator
     {
-        private List<IntPtr> worldlock = new List<IntPtr>();
-
-        public CollisionLocker()
+        public GenericsMigrator_3()
         {
+            Version = new Version(0, 0, 3);
+            MigrationName = "Generics";
 
+            schema = new List<Rec<string, ColumnDefinition[]>>();
+
+            AddSchema("generics", ColDefs(
+                ColDef ("OwnerID", ColumnTypes.String128, true),
+                ColDef ("Type", ColumnTypes.String128, true),
+                ColDef ("Key", ColumnTypes.String128, true),
+                ColDef ("Value", ColumnTypes.LongText)
+                ));
         }
 
-        public void dlock(IntPtr world)
+        protected override void DoCreateDefaults(IDataConnector genericData)
         {
-            lock (worldlock)
-            {
-                worldlock.Add(world);
-            }
-
+            EnsureAllTablesInSchemaExist(genericData);
         }
 
-        public void dunlock(IntPtr world)
+        protected override bool DoValidate(IDataConnector genericData)
         {
-            lock (worldlock)
-            {
-                worldlock.Remove(world);
-            }
+            return TestThatAllTablesValidate(genericData);
         }
 
-        public bool lockquery()
+        protected override void DoMigrate(IDataConnector genericData)
         {
-            return (worldlock.Count > 0);
+            DoCreateDefaults(genericData);
         }
 
-        public void drelease(IntPtr world)
+        protected override void DoPrepareRestorePoint(IDataConnector genericData)
         {
-            lock (worldlock)
-            {
-                if (worldlock.Contains(world))
-                    worldlock.Remove(world);
-            }
+            CopyAllTablesToTempVersions(genericData);
         }
     }
 }

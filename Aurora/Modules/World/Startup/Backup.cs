@@ -58,7 +58,7 @@ namespace Aurora.Modules
                 = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected SceneManager m_manager;
-        protected Dictionary<Scene, InternalSceneBackup> m_backup = new Dictionary<Scene, InternalSceneBackup>();
+        protected Dictionary<IScene, InternalSceneBackup> m_backup = new Dictionary<IScene, InternalSceneBackup>();
         // the minimum time that must elapse before a changed object will be considered for persisted
         public static long m_dontPersistBefore = 60;
         // the maximum time that must elapse before a changed object will be considered for persisted
@@ -68,7 +68,7 @@ namespace Aurora.Modules
 
         #region ISharedRegionStartupModule Members
 
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             if (MainConsole.Instance != null && m_backup.Count == 0)//Only add them once
             {
@@ -90,15 +90,15 @@ namespace Aurora.Modules
             }
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             m_manager = scene.RequestModuleInterface<SceneManager>();
             m_backup[scene].FinishStartup();
@@ -109,7 +109,7 @@ namespace Aurora.Modules
             EnableBackup (null);
         }
 
-        public void Close(Scene scene)
+        public void Close(IScene scene)
         {
         }
 
@@ -123,7 +123,7 @@ namespace Aurora.Modules
         /// <param name="cmdparams">Additional arguments passed to the command</param>
         public void RunCommand (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            m_manager.ForEachCurrentScene (delegate (IScene scene)
             {
                 scene.AuroraEventManager.FireGenericEventHandler ("Backup", null);
             });
@@ -131,7 +131,7 @@ namespace Aurora.Modules
 
         public void DisableBackup (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            m_manager.ForEachCurrentScene (delegate (IScene scene)
             {
                 scene.SimulationDataService.SaveBackups = false;
             });
@@ -140,7 +140,7 @@ namespace Aurora.Modules
 
         public void EnableBackup (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (Scene scene)
+            m_manager.ForEachCurrentScene (delegate (IScene scene)
             {
                 scene.SimulationDataService.SaveBackups = true;
             });
@@ -158,7 +158,7 @@ namespace Aurora.Modules
 
             protected static readonly ILog m_log
                 = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-            protected Scene m_scene;
+            protected IScene m_scene;
             protected bool m_LoadingPrims = false;
             protected bool m_haveLoadedPrims = false;
             protected bool m_haveLoadedParcels = false;
@@ -167,7 +167,7 @@ namespace Aurora.Modules
 
             #region Constructor
 
-            public InternalSceneBackup (Scene scene)
+            public InternalSceneBackup (IScene scene)
             {
                 m_scene = scene;
                 m_scene.StackModuleInterface<IAuroraBackupModule> (this);
@@ -202,7 +202,7 @@ namespace Aurora.Modules
                 string mode = cmd[2];
                 string o = cmd[3];
 
-                List<SceneObjectGroup> deletes = new List<SceneObjectGroup> ();
+                List<ISceneEntity> deletes = new List<ISceneEntity> ();
 
                 UUID match;
 
@@ -211,7 +211,7 @@ namespace Aurora.Modules
                     case "owner":
                         if (!UUID.TryParse (o, out match))
                             return;
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
                                     if (g.OwnerID == match && !g.IsAttachment)
                                         deletes.Add (g);
@@ -220,31 +220,31 @@ namespace Aurora.Modules
                     case "creator":
                         if (!UUID.TryParse (o, out match))
                             return;
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
-                                    if (g.RootPart.CreatorID == match && !g.IsAttachment)
+                                    if (g.RootChild.CreatorID == match && !g.IsAttachment)
                                         deletes.Add (g);
                                 });
                         break;
                     case "uuid":
                         if (!UUID.TryParse (o, out match))
                             return;
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
                                     if (g.UUID == match && !g.IsAttachment)
                                         deletes.Add (g);
                                 });
                         break;
                     case "name":
-                        m_scene.ForEachSOG (delegate (SceneObjectGroup g)
+                        m_scene.ForEachSceneEntity (delegate (ISceneEntity g)
                                 {
-                                    if (g.RootPart.Name == o && !g.IsAttachment)
+                                    if (g.RootChild.Name == o && !g.IsAttachment)
                                         deletes.Add (g);
                                 });
                         break;
                 }
 
-                foreach (SceneObjectGroup g in deletes)
+                foreach (ISceneEntity g in deletes)
                     DeleteSceneObject (g, true, true);
             }
 
@@ -475,7 +475,7 @@ namespace Aurora.Modules
             /// <param name="group">Object Id</param>
             /// <param name="DeleteScripts">Remove the scripts from the ScriptEngine as well</param>
             /// <param name="removeFromDatabase">Remove from the database?</param>
-            protected bool DeleteSceneObject(SceneObjectGroup group, bool DeleteScripts, bool removeFromDatabase)
+            protected bool DeleteSceneObject(ISceneEntity group, bool DeleteScripts, bool removeFromDatabase)
             {
                 //m_log.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
 
@@ -502,7 +502,7 @@ namespace Aurora.Modules
                     group.RemoveScriptInstances(true);
                 }
 
-                foreach (SceneObjectPart part in group.ChildrenList)
+                foreach (ISceneChildEntity part in group.ChildrenEntities())
                 {
                     if (part.PhysActor != null)
                     {
@@ -519,8 +519,8 @@ namespace Aurora.Modules
                     // We need to keep track of this state in case this group is still queued for backup.
                     group.IsDeleted = true;
                     //Clear the update schedule HERE so that IsDeleted will not have to fire as well
-                    
-                    foreach (SceneObjectPart part in group.ChildrenList)
+
+                    foreach (ISceneChildEntity part in group.ChildrenEntities ())
                     {
                         //Make sure it isn't going to be updated again
                         part.ClearUpdateSchedule ();
@@ -839,7 +839,10 @@ namespace Aurora.Modules
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
-                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ms, (Scene)scene);
+                    SceneObjectGroup sceneObject = OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromXml2Format (ref ms, scene);
+                    ms.Close ();
+                    ms = null;
+                    data = null;
                     foreach (SceneObjectPart part in sceneObject.ChildrenList)
                     {
                         if (!ResolveUserUuid (part.CreatorID))

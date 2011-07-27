@@ -53,12 +53,12 @@ namespace OpenSim.Region.CoreModules
         private string LastEstateChoise = "no";
         private string LastEstateOwner = "Test User";
 
-        public void Initialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             scene.StackModuleInterface<IAuroraBackupModule>(this);
         }
 
-        private EstateSettings CreateEstateInfo(Scene scene)
+        private EstateSettings CreateEstateInfo(IScene scene)
         {
             EstateSettings ES = new EstateSettings();
             while (true)
@@ -213,11 +213,11 @@ namespace OpenSim.Region.CoreModules
             return ES;
         }
 
-        public void PostInitialise(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
-        public void FinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             if (scene.RegionInfo.EstateSettings != null)
                 return;
@@ -264,7 +264,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void PostFinishStartup(Scene scene, IConfigSource source, ISimulationBase openSimBase)
+        public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
         }
 
@@ -275,7 +275,7 @@ namespace OpenSim.Region.CoreModules
                     "change info about the estate for the given region", ChangeEstate); 
         }
 
-        public void Close(Scene scene)
+        public void Close(IScene scene)
         {
         }
 
@@ -289,7 +289,7 @@ namespace OpenSim.Region.CoreModules
                     m_log.Warn("Select a region before using this command.");
                     return;
                 }
-                Scene scene = (Scene)MainConsole.Instance.ConsoleScene;
+                IScene scene = MainConsole.Instance.ConsoleScene;
                 string removeFromEstate = MainConsole.Instance.CmdPrompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
                 if (removeFromEstate == "yes")
                 {

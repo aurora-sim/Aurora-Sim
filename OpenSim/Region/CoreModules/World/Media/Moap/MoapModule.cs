@@ -63,7 +63,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
         /// <summary>
         /// The scene to which this module is attached
         /// </summary>
-        protected Scene m_scene;
+        protected IScene m_scene;
         
         /// <summary>
         /// Track the ObjectMedia capabilities given to users keyed by path
@@ -95,7 +95,7 @@ namespace OpenSim.Region.CoreModules.Media.Moap
 //                m_log.Debug("[MOAP]: Initialised module.")l
         }
 
-        public void AddRegion(Scene scene) 
+        public void AddRegion (IScene scene) 
         { 
             if (!m_isEnabled)
                 return;
@@ -104,9 +104,9 @@ namespace OpenSim.Region.CoreModules.Media.Moap
             m_scene.RegisterModuleInterface<IMoapModule>(this);
         }
 
-        public void RemoveRegion(Scene scene) {}
+        public void RemoveRegion (IScene scene) { }
 
-        public void RegionLoaded(Scene scene) 
+        public void RegionLoaded (IScene scene) 
         {
             if (!m_isEnabled)
                 return;

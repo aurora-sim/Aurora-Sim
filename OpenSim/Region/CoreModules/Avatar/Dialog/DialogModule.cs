@@ -42,8 +42,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
     public class DialogModule : INonSharedRegionModule, IDialogModule
     { 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected Scene m_scene;
+
+        protected IScene m_scene;
         protected bool m_enabled = true;
         
         public void Initialise(IConfigSource source)
@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             }
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -84,12 +84,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             }
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }

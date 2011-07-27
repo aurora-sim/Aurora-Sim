@@ -690,11 +690,11 @@ namespace Flotsam.RegionModules.AssetCache
             {
                 UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
-                foreach (Scene s in manager.Scenes)
+                foreach (IScene s in manager.Scenes)
                 {
                     StampRegionStatusFile(s.RegionInfo.RegionID);
 
-                    s.ForEachSOG(delegate(SceneObjectGroup e)
+                    s.ForEachSceneEntity (delegate (ISceneEntity e)
                     {
                         gatherer.GatherAssetUuids(e, assets, s);
                     }

@@ -56,7 +56,7 @@ namespace Aurora.Modules
 
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IProfileConnector ProfileFrontend = null;
-        private List<Scene> m_Scenes = new List<Scene>();
+        private List<IScene> m_Scenes = new List<IScene> ();
         private bool m_SearchEnabled = false;
         private IGroupsModule GroupsModule = null;
         private IDirectoryServiceConnector directoryService = null;
@@ -73,29 +73,27 @@ namespace Aurora.Modules
                     m_SearchEnabled = true;
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_SearchEnabled)
                 return;
 
-            if (!m_Scenes.Contains(scene))
-                m_Scenes.Add(scene);
+            m_Scenes.Add(scene);
             scene.EventManager.OnNewClient += NewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             if (!m_SearchEnabled)
                 return;
 
-            if (m_Scenes.Contains(scene))
-                m_Scenes.Remove(scene);
+            m_Scenes.Remove(scene);
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
             if (!m_SearchEnabled)
                 return;
@@ -443,7 +441,7 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
-                    foreach (Scene scene in m_Scenes)
+                    foreach (IScene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
@@ -498,7 +496,7 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
-                    foreach (Scene scene in m_Scenes)
+                    foreach (IScene scene in m_Scenes)
                     {
                         if (scene.RegionInfo.RegionID == landdata.RegionID)
                         {
@@ -679,7 +677,7 @@ namespace Aurora.Modules
 
         public void ProcessAvatarPickerRequest(IClientAPI client, UUID avatarID, UUID RequestID, string query)
         {
-            Scene scene = (Scene)client.Scene;
+            IScene scene = client.Scene;
             List<UserAccount> accounts = scene.UserAccountService.GetUserAccounts(scene.RegionInfo.ScopeID, query);
 
             if (accounts == null)

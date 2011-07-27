@@ -151,7 +151,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<Scene> scene)
+        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -162,7 +162,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 int y;
                 for (y = 0; y < map.Height; y++)
                 {
-                    if (!((Scene)map.Scene).Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
+                    if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
 
                     float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength);

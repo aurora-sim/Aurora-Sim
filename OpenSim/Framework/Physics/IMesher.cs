@@ -34,14 +34,9 @@ namespace OpenSim.Framework
 {
     public interface IMesher
     {
-        IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod);
         IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
         void RemoveMesh(ulong key);
         void FinishedMeshing ();
-    }
-
-    public interface IVertex
-    {
     }
 
     public interface IMesh

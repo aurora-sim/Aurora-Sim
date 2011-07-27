@@ -45,7 +45,7 @@ namespace OpenSim.Services.RobustCompat
     {
         #region Declares
 
-        private Scene m_scene;
+        private IScene m_scene;
         private bool m_enabled = false;
 
         #endregion
@@ -57,18 +57,26 @@ namespace OpenSim.Services.RobustCompat
             m_enabled = source.Configs["Handlers"].GetBoolean("RobustCompatibility", m_enabled);
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if (!m_enabled)
                 return;
             m_scene = scene;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
+            scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
             scene.AuroraEventManager.RegisterEventHandler ("NewUserConnection", OnGenericEvent);
             scene.AuroraEventManager.RegisterEventHandler ("UserStatusChange", OnGenericEvent);
 
             scene.AuroraEventManager.RegisterEventHandler ("DetachingAllAttachments", DetachingAllAttachments);
             scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
+        }
+
+        void EventManager_OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        {
+            //IAgentProcessing agentProcessing = presence.Scene.RequestModuleInterface<IAgentProcessing> ();
+            //if(agentProcessing != null)
+            //    if(agentProcessing.is
         }
 
         private Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]> ();
@@ -144,6 +152,10 @@ namespace OpenSim.Services.RobustCompat
                         regionCaps.Close();
                         clientCaps.RemoveCAPS(m_scene.RegionInfo.RegionHandle);
                     }
+                    if (client.IsLoggingOut)
+                    {
+                        clientCaps.Close ();
+                    }
                 }
             }
 
@@ -206,11 +218,11 @@ namespace OpenSim.Services.RobustCompat
             return null;
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 

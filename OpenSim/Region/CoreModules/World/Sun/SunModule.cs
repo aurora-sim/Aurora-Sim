@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules
         private uint   m_frame          = 0;
 
         // Cached Scene reference
-        private Scene  m_scene          = null;
+        private IScene m_scene = null;
 
         // Calculated Once in the lifetime of a region
         private long  TicksToEpoch;              // Elapsed time for 1/1/1970
@@ -285,7 +285,7 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             // This one enables the ability to type just "sun" without any parameters
@@ -408,12 +408,12 @@ namespace OpenSim.Region.CoreModules
             scene.RegisterModuleInterface<ISunModule>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
 
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
@@ -500,7 +500,7 @@ namespace OpenSim.Region.CoreModules
         /// <param name="avatar"></param>
         /// <param name="localLandID"></param>
         /// <param name="regionID"></param>
-        private void AvatarEnteringParcel (IScenePresence avatar, int localLandID, UUID regionID)
+        private void AvatarEnteringParcel (IScenePresence avatar, ILandObject oldParcel)
         {
             SunToClient(avatar.ControllingClient);
         }

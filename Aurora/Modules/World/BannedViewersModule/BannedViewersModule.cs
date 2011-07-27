@@ -90,17 +90,17 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             if(m_enabled)
                 scene.RegisterModuleInterface<IBanViewersModule>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
         }
 
@@ -141,7 +141,7 @@ namespace Aurora.Modules
                                 client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
                                 IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
                                 if (transferModule != null)
-                                    transferModule.IncomingCloseAgent (((Scene)client.Scene), client.AgentId);
+                                    transferModule.IncomingCloseAgent (client.Scene, client.AgentId);
                                 break;
                             }
                             break;

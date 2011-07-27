@@ -118,9 +118,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public uint m_localID;
 
-        //public GCHandle gc;
-        private CollisionLocker ode;
-
         private Vector3 m_force;
         private Vector3 m_pushForce;
         private Vector3 m_forceacc;
@@ -196,11 +193,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         internal int m_material = (int)Material.Wood;
 
-        public AuroraODEPrim (ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical, CollisionLocker dode)
+        public AuroraODEPrim (ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical)
         {
             m_vehicle = new AuroraODEDynamics ();
             //gc = GCHandle.Alloc(prim_geom, GCHandleType.Pinned);
-            ode = dode;
 
             PID_D = parent_scene.bodyPIDD;
             PID_G = parent_scene.bodyPIDG;
@@ -305,6 +301,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_isSelected)
                     disableBodySoft ();
             }
+        }
+
+        public override void ClearVelocity ()
+        {
+            _velocity = Vector3.Zero;
+            _acceleration = Vector3.Zero;
+            m_rotationalVelocity = Vector3.Zero;
+            m_lastorientation = Orientation;
+            m_lastposition = Position;
+            m_lastVelocity = _velocity;
+            d.BodySetLinearVel (Body, 0, 0, 0);
+        }
+
+        public override void ForceSetVelocity (Vector3 velocity)
+        {
+            _velocity = velocity;
+            m_lastVelocity = velocity;
+            d.BodySetLinearVel (Body, velocity.X, velocity.Y, velocity.Z);
         }
 
         public void SetGeom (IntPtr geom)
@@ -1309,7 +1323,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     catch (AccessViolationException)
                     {
                         m_log.Warn ("[PHYSICS]: Unable to create physics proxy for object");
-                        ode.dunlock (_parent_scene.world);
                         return;
                     }
                 }
@@ -1324,7 +1337,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     catch (AccessViolationException)
                     {
                         m_log.Warn ("[PHYSICS]: Unable to create physics proxy for object");
-                        ode.dunlock (_parent_scene.world);
                         return;
                     }
                 }

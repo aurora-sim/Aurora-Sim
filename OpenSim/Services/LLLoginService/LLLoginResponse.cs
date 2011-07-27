@@ -247,7 +247,7 @@ namespace OpenSim.Services.LLLoginService
             FillOutHomeData(pinfo, home);
             LookAt = String.Format("[r{0},r{1},r{2}]", lookAt.X, lookAt.Y, lookAt.Z);
 
-            FillOutRegionData(destination);
+            FillOutRegionData (aCircuit, destination);
             login = "true";
             ErrorMessage = "";
             ErrorReason = LoginResponseEnum.OK;
@@ -332,11 +332,12 @@ namespace OpenSim.Services.LLLoginService
 
         }
 
-        private void FillOutRegionData(GridRegion destination)
+        private void FillOutRegionData(AgentCircuitData circuitData, GridRegion destination)
         {
             IPEndPoint endPoint = destination.ExternalEndPoint;
+            endPoint = Util.ResolveAddressForClient (endPoint, circuitData.ClientIPEndPoint);//We can use this with certainty, we logged them in!
             SimAddress = endPoint.Address.ToString();
-            SimPort = (uint)endPoint.Port;
+            SimPort = (uint)circuitData.RegionUDPPort;
             RegionX = (uint)destination.RegionLocX;
             RegionY = (uint)destination.RegionLocY;
             RegionSizeX = destination.RegionSizeX;

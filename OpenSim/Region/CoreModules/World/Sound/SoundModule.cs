@@ -38,14 +38,14 @@ namespace OpenSim.Region.CoreModules.World.Sound
     public class SoundModule : INonSharedRegionModule, ISoundModule
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected Scene m_scene;
+
+        protected IScene m_scene;
         
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
 
@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
             m_scene.RegisterModuleInterface<ISoundModule>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -63,7 +63,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
             m_scene.UnregisterModuleInterface<ISoundModule>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }
@@ -153,6 +153,11 @@ namespace OpenSim.Region.CoreModules.World.Sound
                 //Check to see if the person is local and the av is in the same parcel
                 if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
                     return;
+
+                if ((sp.CurrentParcelUUID != ILO.LandData.GlobalID &&
+                    (sp.CurrentParcel.LandData.Private || ILO.LandData.Private)))
+                    return; //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
+                        
 
                 // Scale by distance
                 if (radius == 0)

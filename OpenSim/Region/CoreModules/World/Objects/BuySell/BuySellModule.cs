@@ -43,30 +43,30 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
     public class BuySellModule : IBuySellModule, INonSharedRegionModule
     {
 //        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected Scene m_scene = null;
+
+        protected IScene m_scene = null;
         protected IDialogModule m_dialogModule;
         
         public string Name { get { return "Object BuySell Module"; } }
         public Type ReplaceableInterface { get { return null; } }
 
         public void Initialise(IConfigSource source) {}
-        
-        public void AddRegion(Scene scene)
+
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IBuySellModule>(this);
             m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
         }
-        
-        public void RemoveRegion(Scene scene) 
+
+        public void RemoveRegion (IScene scene) 
         {
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
             m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
         }
-        
-        public void RegionLoaded(Scene scene) 
+
+        public void RegionLoaded (IScene scene) 
         {
             m_dialogModule = scene.RequestModuleInterface<IDialogModule>();
         }
@@ -133,7 +133,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
             // didn't check the client sent data against the object do any.   Since the base modules are the 
             // 'crowning glory' examples of good practice..
 
-            ISceneChildEntity part = ((Scene)remoteClient.Scene).GetSceneObjectPart (localID);
+            ISceneChildEntity part = remoteClient.Scene.GetSceneObjectPart (localID);
             if (part == null)
             {
                 remoteClient.SendAgentAlertMessage("Unable to buy now. The object was not found.", false);

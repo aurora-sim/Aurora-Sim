@@ -39,7 +39,7 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
 {
     public class XferModule : INonSharedRegionModule, IXfer
     {
-        private Scene m_scene;
+        private IScene m_scene;
         private Dictionary<string, FileData> NewFiles = new Dictionary<string, FileData>();
         private Dictionary<ulong, XferDownLoad> Transfers = new Dictionary<ulong, XferDownLoad>();
 
@@ -66,7 +66,7 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
             
         }
 
-        public void AddRegion(Scene scene)
+        public void AddRegion (IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
@@ -75,7 +75,7 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
             m_scene.RegisterModuleInterface<IXfer>(this);
         }
 
-        public void RemoveRegion(Scene scene)
+        public void RemoveRegion (IScene scene)
         {
             m_scene.EventManager.OnNewClient -= NewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
             m_scene.UnregisterModuleInterface<IXfer>(this);
         }
 
-        public void RegionLoaded(Scene scene)
+        public void RegionLoaded (IScene scene)
         {
 
         }
