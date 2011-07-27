@@ -127,7 +127,7 @@ namespace Aurora.Framework
                 List<OnGenericEventHandler> events;
                 if (m_events.TryGetValue (FunctionName, out events))
                 {
-                    foreach (OnGenericEventHandler handler in events)
+                    foreach (OnGenericEventHandler handler in new List<OnGenericEventHandler>(events))
                     {
                         object param = handler (FunctionName, Param);
                         if (param != null)
