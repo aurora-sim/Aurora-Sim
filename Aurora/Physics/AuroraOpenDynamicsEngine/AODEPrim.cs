@@ -439,7 +439,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         quat.X = prm._orientation.X;
                         quat.Y = prm._orientation.Y;
                         quat.Z = prm._orientation.Z;
-                        d.RfromQ (out mat, ref quat);
+                        /*d.RfromQ (out mat, ref quat);
                         d.MassRotate (ref tmpdmass, ref mat);
 
                         Vector3 ppos = prm._position;
@@ -453,7 +453,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             ppos.Y,
                             ppos.Z);
 
-                        d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia
+                        d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia*/
+
+                        d.RfromQ (out mat, ref quat);
+                        d.MassRotate (ref tmpdmass, ref mat);
+                        d.MassTranslate (ref tmpdmass, Position.X - prm.Position.X, Position.Y - prm.Position.Y, Position.Z - prm.Position.Z);
+                        d.MassAdd (ref objdmass, ref tmpdmass);
 
                         // fix prim colision cats
                         if (prm.prim_geom == IntPtr.Zero)
@@ -927,19 +932,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.MassSetBoxTotal (out primdMass, primMass, s.X, s.Y, s.Z);
 
-            IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
+            /*IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
             IntCMOffset.Y = (IntAABB.MaxY + IntAABB.MinY) * 0.5f;
             IntCMOffset.Z = (IntAABB.MaxZ + IntAABB.MinZ) * 0.5f;
 
             d.MassTranslate (ref primdMass,
                                 IntCMOffset.X,
                                 IntCMOffset.Y,
-                                IntCMOffset.Z);
+                                IntCMOffset.Z);*/
         }
 
         #endregion
-
-
 
         private static Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr> ();
 
@@ -1574,7 +1577,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastposition = _position;
                         _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
                         d.Quaternion ori;
-                        foreach (AuroraODEPrim child in childrenPrim)
+                        /*foreach (AuroraODEPrim child in childrenPrim)
                         {
                             pos = d.GeomGetPosition (child.prim_geom);
                             child.m_lastposition = child._position;
@@ -1584,7 +1587,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             child._orientation.Y = ori.Y;
                             child._orientation.Z = ori.Z;
                             child._orientation.W = ori.W;
-                        }
+                        }*/
                         _zeroFlag = false;
 
                         _acceleration = ((_velocity - m_lastVelocity) / timestep);
@@ -1993,7 +1996,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         cpos.Z < -100 ||
                         cpos.Z > 100000)
                     {
-
                         if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
                         {
                             _position.X = (float)lpos.X;
@@ -2009,16 +2011,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            m_disabled = true;
-                            m_frozen = true;
+                            if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                            {
+                                m_disabled = true;
+                                m_frozen = true;
 
-                            Vector3 l_position;
-                            l_position.X = (float)lpos.X;
-                            l_position.Y = (float)lpos.Y;
-                            l_position.Z = (float)lpos.Z;
+                                Vector3 l_position;
+                                l_position.X = (float)lpos.X;
+                                l_position.Y = (float)lpos.Y;
+                                l_position.Z = (float)lpos.Z;
 
-                            base.RaiseOutOfBounds (l_position);
-                            return;
+                                base.RaiseOutOfBounds (l_position);
+                                return;
+                            }
+                            else
+                            {
+                                Vector3 newPos = Position;
+                                newPos.X = Util.Clip (Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);
+                                newPos.Y = Util.Clip (Position.Y, 0.75f, _parent_scene.Region.RegionSizeY - 0.75f);
+                                Position = newPos;
+                                d.BodySetPosition (Body, newPos.X, newPos.Y, newPos.Z);
+                            }
                         }
                     }
 
