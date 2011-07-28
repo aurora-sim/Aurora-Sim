@@ -1796,8 +1796,8 @@ namespace OpenSim.Region.Framework.Scenes
                 cameraAtOffset = part.CameraAtOffset;
                 cameraEyeOffset = part.CameraEyeOffset;
                 forceMouselook = part.ForceMouselook;
-
-                ControllingClient.SendSitResponse(targetID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
+                
+                ControllingClient.SendSitResponse(part.UUID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
                 // This calls HandleAgentSit twice, once from here, and the client calls
                 // HandleAgentSit itself after it gets to the location
                 // It doesn't get to the location until we've moved them there though
