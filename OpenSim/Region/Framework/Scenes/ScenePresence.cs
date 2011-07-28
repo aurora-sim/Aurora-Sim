@@ -890,7 +890,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (appearance != null)
             {
                 //Send updates to everyone about us
-                appearance.SendAvatarDataToAllAgents (true);
+                foreach (IScenePresence sp in m_scene.GetScenePresences ())
+                {
+                    if(sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene))
+                        sp.ControllingClient.SendAvatarDataImmediate (this);
+                }
                 agent.Appearance = appearance.Appearance;
             }
 
@@ -1594,9 +1598,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentPosition = Vector3.Zero;
 
                 m_parentID = UUID.Zero;
-                IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (appearance != null)
-                    appearance.SendAvatarDataToAllAgents (false);
+                //Force send a full update
+                foreach (IScenePresence sp in m_scene.GetScenePresences ())
+                {
+                    if (sp.SceneViewer.Culler.ShowEntityToClient (sp, this, Scene))
+                        sp.ControllingClient.SendAvatarDataImmediate (this);
+                }
                 m_requestedSitTargetUUID = UUID.Zero;
                 m_sitting = false;
             }
@@ -1676,9 +1683,12 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
-            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
-            if (appearance != null)
-                appearance.SendAvatarDataToAllAgents (false);
+            //Force send a full update
+            foreach (IScenePresence sp in m_scene.GetScenePresences ())
+            {
+                if (sp.SceneViewer.Culler.ShowEntityToClient (sp, this, Scene))
+                    sp.ControllingClient.SendAvatarDataImmediate (this);
+            }
             Animator.TrySetMovementAnimation(m_nextSitAnimation);
         }
 
@@ -1915,7 +1925,8 @@ namespace OpenSim.Region.Framework.Scenes
                 //Force send a full update
                 foreach (IScenePresence sp in m_scene.GetScenePresences ())
                 {
-                    sp.ControllingClient.SendAvatarDataImmediate (this);
+                    if (sp.SceneViewer.Culler.ShowEntityToClient (sp, this, Scene))
+                        sp.ControllingClient.SendAvatarDataImmediate (this);
                 }
                 // This may seem stupid, but Our Full updates don't send avatar rotation :P
                 // So we're also sending a terse update (which has avatar rotation)
