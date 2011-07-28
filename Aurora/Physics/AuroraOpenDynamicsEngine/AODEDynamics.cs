@@ -573,10 +573,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             grav.Z = _pParentScene.gravityz * Mass * (float)parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel (Body);
-            if(m_lastLinearVelocityVector.Z == 0 && m_verticalAttractionTimescale == 0)
+            if (m_lastLinearVelocityVector.Z == 0 && Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON)
                 m_dir.Z = vel_now.Z;        // Preserve the accumulated falling velocity
-            else if(Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON)
-                m_dir.Z += vel_now.Z;
+            //else if(Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON)
+            //    m_dir.Z += vel_now.Z;
 
             d.Vector3 pos = d.BodyGetPosition (Body);
             //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
@@ -646,6 +646,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if ((pos.Z - m_VhoverTargetHeight) > .2 || (pos.Z - m_VhoverTargetHeight) < -.2)
                     {
+                        float h = m_VhoverTargetHeight;
+                        float groundHeight = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y);
+                        if (groundHeight >= m_VhoverTargetHeight)
+                            h = groundHeight;
+
                         d.BodySetPosition (Body, pos.X, pos.Y, m_VhoverTargetHeight);
                     }
                 }
@@ -682,6 +687,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (Zchange > -0.1f)
                 {
+                    if (Zchange > 0.5f)
+                        Zchange = 0.5f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
                     grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
