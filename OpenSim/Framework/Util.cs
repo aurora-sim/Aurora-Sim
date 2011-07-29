@@ -1867,6 +1867,8 @@ namespace OpenSim.Framework
             {
                 if (useLocalhostLoopback)
                     return IPAddress.Loopback;
+                if (iPAddress == IPAddress.Loopback)
+                    return iPAddress;//Don't send something else if it is already on loopback
                 string hostName = System.Net.Dns.GetHostName ();
 #pragma warning disable 618
                 IPHostEntry ipEntry = System.Net.Dns.GetHostByName (hostName);

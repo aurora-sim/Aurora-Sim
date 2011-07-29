@@ -751,6 +751,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
             }
         }
+
+        private int m_lastForceApplied = 0;
       
         /// <summary>
         /// Called from Simulate
@@ -1053,9 +1055,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region Gravity
 
                 if (!flying)
-                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 1.0f, ref gravForce);
+                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 0.75f, ref gravForce);
                 else
-                    _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
+                    _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.65f, ref gravForce);//Allow point gravity and repulsors affect us a bit
 
                 vec += gravForce;
                 if (notMoving)
@@ -1204,9 +1206,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.BodyEnable (Body);
 
                     if (vec == Vector3.Zero) //if we arn't moving, STOP
-                        d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                    {
+                        m_lastForceApplied = 0;
+                        d.BodySetLinearVel (Body, vec.X, vec.Y, vec.Z);
+                    }
                     else
+                    {
+                        if(m_lastForceApplied < 100)
+                            vec *= m_lastForceApplied + 50 / 100;
                         doForce (vec);
+                        m_lastForceApplied++;
+                    }
                      
                     if (!_zeroFlag && (!flying || m_iscolliding))
                         AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);

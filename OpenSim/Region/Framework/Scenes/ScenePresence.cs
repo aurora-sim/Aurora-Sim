@@ -1118,13 +1118,19 @@ namespace OpenSim.Region.Framework.Scenes
             // This is irritating.  Really.
             if (!AbsolutePosition.IsFinite())
             {
+                m_pos = new Vector3 (m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2,
+                    128);
+                PhysicsActor.ForceSetPosition (m_pos);
+                PhysicsActor.ForceSetVelocity (Vector3.Zero);
                 RemoveFromPhysicalScene();
                 m_log.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error #9999902");
 
-                m_pos = new Vector3(m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2,
-                    128);
                 //Make them fly so that they don't just fall
                 AddToPhysicalScene(true, false);
+                Velocity = Vector3.Zero;
+                PhysicsActor.ForceSetPosition (m_pos);
+                PhysicsActor.ForceSetVelocity (Vector3.Zero);
+                return;
             }
 
             #endregion Sanity Checking

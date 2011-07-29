@@ -879,6 +879,18 @@ namespace OpenSim.Services.LLLoginService
                 else
                 {
                     position = pinfo.CurrentPosition;
+                    if (position.X < 0)
+                        position.X = 0;
+                    if (position.Y < 0)
+                        position.Y = 0;
+                    if (position.Z < 0)
+                        position.Z = 0;
+                    if (position.X > region.RegionSizeX)
+                        position.X = region.RegionSizeX;
+                    if (position.Y > region.RegionSizeY)
+                        position.Y = region.RegionSizeY;
+
+
                     lookAt = pinfo.CurrentLookAt;
                 }
 

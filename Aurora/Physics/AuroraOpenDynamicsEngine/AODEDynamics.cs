@@ -890,10 +890,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (m_bankingEfficiency < 0)
                         effSquared *= -1;//Keep the negative!
 
-                    banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
-                    m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                    if (Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix)
+                    if (Math.Abs (m_lastAngularVelocity.Z) > m_bankingMix)
                     {
+                        banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
+                        m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
                         Vector3 bankingRot = new Vector3 (m_lastAngularVelocity.Z * (effSquared * 10 * (m_bankingMix * (-1))), 0, 0);
                         bankingRot *= rotq;
                         banking += bankingRot;
