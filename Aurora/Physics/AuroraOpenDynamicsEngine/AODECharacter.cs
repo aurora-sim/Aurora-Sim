@@ -48,6 +48,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // private d.Matrix3 m_StandUpRotation;
         private Vector3 _velocity;
         private Vector3 m_lastVelocity;
+        private Vector3 m_lastAngVelocity;
         private Vector3 _target_velocity;
 //        private Quaternion _orientation;
 //        private Quaternion _lastorientation;
@@ -1309,13 +1310,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 vec = d.BodyGetLinearVel(Body);
             }
-            catch (NullReferenceException)
+            catch(NullReferenceException)
             {
                 vec.X = _velocity.X;
                 vec.Y = _velocity.Y;
                 vec.Z = _velocity.Z;
             }
 
+            d.Vector3 rvec;
+            try
+            {
+                rvec = d.BodyGetAngularVel(Body);
+            }
+            catch(NullReferenceException)
+            {
+                rvec.X = m_rotationalVelocity.X;
+                rvec.Y = m_rotationalVelocity.Y;
+                rvec.Z = m_rotationalVelocity.Z;
+            }
+
+            m_rotationalVelocity.X = rvec.X;
+            m_rotationalVelocity.Y = rvec.Y;
+            m_rotationalVelocity.Z = rvec.Z;
 
             // vec is a ptr into internal ode data better not mess with it
 
@@ -1350,7 +1366,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 1f;
+            const float VELOCITY_TOLERANCE = 0.125f;
+            const float ANG_VELOCITY_TOLERANCE = 0.05f;
             //const float POSITION_TOLERANCE = 0.25f;
             bool needSendUpdate = false;
 
@@ -1358,13 +1375,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
             // but simulator does not process rotation changes
             float length = (Velocity - m_lastVelocity).LengthSquared();
+            float anglength = (m_rotationalVelocity  - m_lastAngVelocity).LengthSquared();
             if (//!VelIsZero &&
                 //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                 (
                 //(Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
                 //(Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
                 //(Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE)// ||
-                (length > VELOCITY_TOLERANCE)// ||
+                (length > VELOCITY_TOLERANCE) ||
+                (anglength > ANG_VELOCITY_TOLERANCE)// ||
                 //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
@@ -1378,6 +1397,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_lastPosition = _position;
                 //                        m_lastRotationalVelocity = RotationalVelocity;
                 m_lastVelocity = Velocity;
+                m_lastAngVelocity = RotationalVelocity;
                 //                            _lastorientation = Orientation;
                 //                        base.RequestPhysicsterseUpdate();
                 //                        base.TriggerSignificantMovement();
