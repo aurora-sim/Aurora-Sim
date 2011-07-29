@@ -434,6 +434,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // There's a problem with Vector3.Zero! Don't Use it Here!
                 //if (_zeroFlag)
                 //    return Vector3.Zero;
+                //And definitely don't set this, otherwise, we never stop sending updates!
                 //m_lastUpdateSent = false;
                 return _velocity;
             }
@@ -984,29 +985,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
+                /*Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 &&*/ (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
-                m_isJumping = false;
-                //  keep track of where we stopped.  No more slippin' & slidin'
-                if (!_zeroFlag)
+                if(Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
                 {
-                    _zeroFlag = true;
-                    _wasZeroFlagFlying = flying;
-                    _zeroPosition = tempPos;
-                }
+                    m_isJumping = false;
+                    //  keep track of where we stopped.  No more slippin' & slidin'
+                    if(!_zeroFlag)
+                    {
+                        _zeroFlag = true;
+                        _wasZeroFlagFlying = flying;
+                        _zeroPosition = tempPos;
+                    }
 
-                if (m_pidControllerActive)
+                    if(m_pidControllerActive)
+                    {
+                        // We only want to deactivate the PID Controller if we think we want to have our surrogate
+                        // react to the physics scene by moving it's position.
+                        // Avatar to Avatar collisions
+                        // Prim to avatar collisions
+                        // if target vel is zero why was it here ?
+                        vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
+                        vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
+                        if(notMoving)
+                            vec.Z = 0;
+                    }
+                }
+                else
                 {
-                    // We only want to deactivate the PID Controller if we think we want to have our surrogate
-                    // react to the physics scene by moving it's position.
-                    // Avatar to Avatar collisions
-                    // Prim to avatar collisions
-                    // if target vel is zero why was it here ?
-                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
-                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
-                    if (notMoving)
-                        vec.Z = 0;
+                    vec.X = vel.X * -1 * PID_P;
+                    vec.Y = vel.Y * -1 * PID_P;
                 }
             }
             else
@@ -1205,7 +1214,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!d.BodyIsEnabled (Body))
                         d.BodyEnable (Body);
 
-                    if (vec == Vector3.Zero) //if we arn't moving, STOP
+                    if(vec == Vector3.Zero) //if we arn't moving, STOP
                     {
                         m_lastForceApplied = 0;
                         d.BodySetLinearVel (Body, vec.X, vec.Y, vec.Z);
@@ -1341,28 +1350,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 0.1f;
-            const float POSITION_TOLERANCE = 0.25f;
+            const float VELOCITY_TOLERANCE = 1f;
+            //const float POSITION_TOLERANCE = 0.25f;
             bool needSendUpdate = false;
 
             //Check to see whether we need to trigger the significant movement method in the presence
             // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
             // but simulator does not process rotation changes
+            float length = (Velocity - m_lastVelocity).LengthSquared();
             if (//!VelIsZero &&
                 //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                 (
-                (Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
-                (Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
-                (Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE) ||
-                (Math.Abs(_position.X - m_lastPosition.X) > POSITION_TOLERANCE) ||
-                (Math.Abs(_position.Y - m_lastPosition.Y) > POSITION_TOLERANCE) ||
-                (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE)// ||
+                //(Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
+                //(Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
+                //(Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE)// ||
+                (length > VELOCITY_TOLERANCE)// ||
                 //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
                 ))
             {
+                //m_log.Warn("Vel change - " + length + ", " + d.BodyIsEnabled(Body));
                 // Update the "last" values
                 needSendUpdate = true;
                 m_ZeroUpdateSent = 10;
