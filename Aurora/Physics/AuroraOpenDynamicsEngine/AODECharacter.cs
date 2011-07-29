@@ -966,24 +966,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             Vector3 gravForce = new Vector3 ();
 
-            #region Gravity
-
-            /*if (!flying)
-                _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref gravForce);
-            else
-                _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
-
-            Vector3 gravCopy = gravForce;
-            gravCopy.Normalize ();
-            Quaternion rotDiff = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravCopy);
-            if (rotDiff != Quaternion.Identity)
-            {
-                rotDiff.Normalize ();
-            }
-            //_target_velocity *= rotDiff;*/
-
-            #endregion
-
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
                 /*Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 &&*/ (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
@@ -1115,7 +1097,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            if (flying)
+            if(realFlying)
             {
                 #region Auto Fly Height
 
