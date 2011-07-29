@@ -89,6 +89,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Selected,
             disabled,
             buildingrepresentation,
+            blockphysicalreconstruction,
 
             Null             //keep this last used do dim the methods array. does nothing but pulsing the prim
         }
