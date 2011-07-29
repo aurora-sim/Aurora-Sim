@@ -112,6 +112,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents ("BlockGrab", false);
             RegisterComponent(com);
+            com = new DefaultComponents ("BlockGrabObject", false);
+            RegisterComponent(com);
             com = new DefaultComponents("StatusSandbox", false);
             RegisterComponent(com);
             com = new DefaultComponents("StatusSandboxPos", Vector3.Zero);
