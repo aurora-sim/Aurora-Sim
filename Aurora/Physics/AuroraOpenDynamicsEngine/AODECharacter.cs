@@ -1212,8 +1212,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     else
                     {
-                        if(m_lastForceApplied < 100)
-                            vec *= m_lastForceApplied + 50 / 100;
+                        if(m_lastForceApplied < 5)
+                            vec *= m_lastForceApplied / 5;
                         doForce (vec);
                         m_lastForceApplied++;
                     }
