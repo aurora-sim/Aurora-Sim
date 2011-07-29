@@ -539,7 +539,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            if (m_inUse || ((ScenePresence)m_presence).IsInTransit)
+            if (m_inUse || m_presence.IsInTransit)
                 return;
 
             m_inUse = true;
