@@ -971,7 +971,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 /*Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 &&*/ (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
-                if(Math.Abs(vel.X) < 0.05 && Math.Abs(vel.Y) < 0.05 && Math.Abs(vel.Z) < 0.05)
+                if(Math.Abs(vel.X) < 0.15 && Math.Abs(vel.Y) < 0.15 && Math.Abs(vel.Z) < 0.15)
                 {
                     m_isJumping = false;
                     //  keep track of where we stopped.  No more slippin' & slidin'

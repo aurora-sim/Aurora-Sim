@@ -185,6 +185,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AddChange (changes.buildingrepresentation, null);
             }
         }
+
+        internal bool m_blockPhysicalReconstruction = false;
+        public override bool BlockPhysicalReconstruction
+        {
+            get { return m_blockPhysicalReconstruction; }
+            set
+            {
+                if(value)
+                    m_blockPhysicalReconstruction = value;
+                else
+                    AddChange(changes.blockphysicalreconstruction, null);
+            }
+        }
         private CollisionEventUpdate CollisionEventsThisFrame;
 
         public volatile bool childPrim;
@@ -373,7 +386,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void MakeBody ()
+        public override void MakeBody()
         {
             //            d.Vector3 dvtmp;
             //            d.Vector3 dbtmp;
@@ -932,14 +945,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.MassSetBoxTotal (out primdMass, primMass, s.X, s.Y, s.Z);
 
-            /*IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
+            IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
             IntCMOffset.Y = (IntAABB.MaxY + IntAABB.MinY) * 0.5f;
             IntCMOffset.Z = (IntAABB.MaxZ + IntAABB.MinZ) * 0.5f;
 
             d.MassTranslate (ref primdMass,
                                 IntCMOffset.X,
                                 IntCMOffset.Y,
-                                IntCMOffset.Z);*/
+                                IntCMOffset.Z);
         }
 
         #endregion
@@ -1087,8 +1100,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     prim.DestroyBody (); // don't loose bodies around
                     prim.Body = IntPtr.Zero;
                 }
-                if (m_isphysical)
-                    MakeBody (); // full nasty reconstruction
+                if(m_isphysical)
+                {
+                    if(!BlockPhysicalReconstruction)
+                        MakeBody(); // full nasty reconstruction
+                }
             }
         }
 
@@ -3263,6 +3279,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 case changes.buildingrepresentation:
                     m_buildingRepresentation = false;
+                    break;
+                case changes.blockphysicalreconstruction:
+                    m_blockPhysicalReconstruction = false;
                     break;
 
                 case changes.Null:
