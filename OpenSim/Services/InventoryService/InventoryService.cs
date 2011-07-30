@@ -326,9 +326,9 @@ namespace OpenSim.Services.InventoryService
                 AssetBase asset = m_AssetService.Get(AvatarWearable.DEFAULT_BODY_ASSET.ToString());
                 if (asset != null)
                 {
-                    asset.FullID = UUID.Random();
-                    m_AssetService.Store(asset);
-                    defaultShape.AssetID = asset.FullID;
+                    asset.ID = UUID.Random();
+                    asset.ID = m_AssetService.Store(asset);
+                    defaultShape.AssetID = asset.ID;
                     defaultShape.Folder = bodypartFolder.ID;
                     defaultShape.CreatorId = UUID.Zero.ToString();
                     AddItem(defaultShape);
@@ -345,9 +345,9 @@ namespace OpenSim.Services.InventoryService
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SKIN_ASSET.ToString());
                 if (asset != null)
                 {
-                    asset.FullID = UUID.Random();
-                    m_AssetService.Store(asset);
-                    defaultSkin.AssetID = asset.FullID;
+                    asset.ID = UUID.Random();
+                    asset.ID = m_AssetService.Store(asset);
+                    defaultSkin.AssetID = asset.ID;
                     defaultSkin.Folder = bodypartFolder.ID;
                     defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultSkin.Owner = principalID;
@@ -369,9 +369,9 @@ namespace OpenSim.Services.InventoryService
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_HAIR_ASSET.ToString());
                 if (asset != null)
                 {
-                    asset.FullID = UUID.Random();
-                    m_AssetService.Store(asset);
-                    defaultHair.AssetID = asset.FullID;
+                    asset.ID = UUID.Random();
+                    asset.ID = m_AssetService.Store(asset);
+                    defaultHair.AssetID = asset.ID;
                     defaultHair.Folder = bodypartFolder.ID;
                     defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultHair.Owner = principalID;
@@ -393,9 +393,9 @@ namespace OpenSim.Services.InventoryService
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_EYES_ASSET.ToString());
                 if (asset != null)
                 {
-                    asset.FullID = UUID.Random();
-                    m_AssetService.Store(asset);
-                    defaultEyes.AssetID = asset.FullID;
+                    asset.ID = UUID.Random();
+                    asset.ID = m_AssetService.Store(asset);
+                    defaultEyes.AssetID = asset.ID;
                     defaultEyes.Folder = bodypartFolder.ID;
                     defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultEyes.Owner = principalID;
@@ -417,9 +417,9 @@ namespace OpenSim.Services.InventoryService
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SHIRT_ASSET.ToString());
                 if (asset != null)
                 {
-                    asset.FullID = UUID.Random();
-                    m_AssetService.Store(asset);
-                    defaultShirt.AssetID = asset.FullID;
+                    asset.ID = UUID.Random();
+                    asset.ID = m_AssetService.Store(asset);
+                    defaultShirt.AssetID = asset.ID;
                     defaultShirt.Folder = clothingFolder.ID;
                     defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultShirt.Owner = principalID;
@@ -441,9 +441,9 @@ namespace OpenSim.Services.InventoryService
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_PANTS_ASSET.ToString());
                 if (asset != null)
                 {
-                    asset.FullID = UUID.Random();
-                    m_AssetService.Store(asset);
-                    defaultPants.AssetID = asset.FullID;
+                    asset.ID = UUID.Random();
+                    asset.ID = m_AssetService.Store(asset);
+                    defaultPants.AssetID = asset.ID;
                     defaultPants.Folder = clothingFolder.ID;
                     defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultPants.Owner = principalID;

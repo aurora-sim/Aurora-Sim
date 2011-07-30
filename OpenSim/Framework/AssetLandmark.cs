@@ -39,7 +39,7 @@ namespace OpenSim.Framework
         public int Version;
 
         public AssetLandmark(AssetBase a)
-            : base(a.FullID, a.Name, a.Type, a.Metadata.CreatorID)
+            : base(a.ID, a.Name, a.TypeAsset, a.CreatorID)
         {
             Data = a.Data;
             Description = a.Description;

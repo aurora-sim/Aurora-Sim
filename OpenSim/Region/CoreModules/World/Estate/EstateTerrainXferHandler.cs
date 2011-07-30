@@ -52,11 +52,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         public EstateTerrainXferHandler(IClientAPI pRemoteClient, string pClientFilename)
         {
-            m_asset = new AssetBase(UUID.Zero, pClientFilename, type, pRemoteClient.AgentId.ToString());
-            m_asset.Data = new byte[0];
-            m_asset.Description = "empty";
-            m_asset.Local = true;
-            m_asset.Temporary = true;
+            m_asset = new AssetBase(UUID.Zero, pClientFilename, (AssetType) type, pRemoteClient.AgentId)
+                          {Data = new byte[0], Description = "empty", Flags = AssetFlags.Temperary | AssetFlags.Local};
         }
 
         public ulong XferID
@@ -67,7 +64,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
         public void RequestStartXfer(IClientAPI pRemoteClient)
         {
             mXferID = Util.GetNextXferID();
-            pRemoteClient.SendXferRequest(mXferID, m_asset.Type, m_asset.FullID, 0, Utils.StringToBytes(m_asset.Name));
+            pRemoteClient.SendXferRequest(mXferID, short.Parse(m_asset.Type.ToString()), m_asset.ID, 0, Utils.StringToBytes(m_asset.Name));
         }
 
         /// <summary>

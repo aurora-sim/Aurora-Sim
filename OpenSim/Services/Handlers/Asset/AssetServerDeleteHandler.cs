@@ -26,6 +26,7 @@
  */
 
 using Nini.Config;
+using OpenMetaverse;
 using log4net;
 using System;
 using System.Reflection;
@@ -74,7 +75,7 @@ namespace OpenSim.Services
                     return new byte[0];
             if (p.Length > 0 && m_allowDelete)
             {
-                result = m_AssetService.Delete(p[0]);
+                result = m_AssetService.Delete(UUID.Parse(p[0]));
             }
 
             XmlSerializer xs = new XmlSerializer(typeof(bool));

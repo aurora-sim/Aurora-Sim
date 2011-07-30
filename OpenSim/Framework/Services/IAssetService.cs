@@ -26,7 +26,8 @@
  */
 
 using System;
-using System.Collections.Generic;
+using Aurora.Framework;
+using OpenMetaverse;
 using OpenSim.Framework;
 
 namespace OpenSim.Services.Interfaces
@@ -57,11 +58,11 @@ namespace OpenSim.Services.Interfaces
         AssetBase Get(string id);
 
         /// <summary>
-        /// Get an asset's metadata
+        /// Get an asset synchronously.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        AssetMetadata GetMetadata(string id);
+        AssetBase GetMetadata(string id);
 
         /// <summary>
         /// Get whether an asset with the given ID exists
@@ -100,7 +101,7 @@ namespace OpenSim.Services.Interfaces
         /// Returns a random ID if none is passed into it
         /// <param name="asset"></param>
         /// <returns></returns>
-        string Store(AssetBase asset);
+        UUID Store(AssetBase asset);
 
         /// <summary>
         /// Update an asset's content
@@ -109,14 +110,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="id"> </param>
         /// <param name="data"></param>
         /// <returns></returns>
-        bool UpdateContent(string id, byte[] data);
+        bool UpdateContent(UUID id, byte[] data);
 
         /// <summary>
         /// Delete an asset
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        bool Delete(string id);
+        bool Delete(UUID id);
 
         /// <summary>
         /// Get the local service (if applicable)
@@ -127,13 +128,15 @@ namespace OpenSim.Services.Interfaces
         }
     }
 
-    public interface IAssetDataPlugin
+    public interface IAssetDataPlugin : IAuroraDataPlugin
     {
-        AssetBase GetAsset (string uuid);
-        void StoreAsset (AssetBase asset);
-        bool ExistsAsset (string uuid);
-        List<AssetMetadata> FetchAssetMetadataSet (int start, int count);
-        void Initialise (string connect);
-        bool Delete (string id);
+        AssetBase GetAsset(UUID uuid);
+        AssetBase GetMeta(UUID uuid);
+        UUID Store(AssetBase asset);
+        bool StoreAsset(AssetBase asset);
+        void UpdateContent(UUID id, byte[] asset);
+        bool ExistsAsset(UUID uuid);
+        void Initialise(string connect);
+        bool Delete(UUID id);
     }
 }

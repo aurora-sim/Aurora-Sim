@@ -477,8 +477,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     m_log.WarnFormat("[ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
 
                 //m_log.DebugFormat("[ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
-                AssetBase asset = new AssetBase(new UUID(uuid), String.Empty, assetType, UUID.Zero.ToString());
-                asset.Data = data;
+                AssetBase asset = new AssetBase(UUID.Parse(uuid), String.Empty, (AssetType) assetType, UUID.Zero)
+                                      {Data = data};
 
                 // We're relying on the asset service to do the sensible thing and not store the asset if it already
                 // exists.
@@ -488,7 +488,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         AssetsToAdd.Add(asset);
                 }
                 else
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
 
                 /**
                  * Create layers on decode for image assets.  This is likely to significantly increase the time to load archives so
@@ -520,7 +520,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 foreach (AssetBase asset in AssetsToAdd)
                 {
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
                 }
             }
             AssetsToAdd.Clear();

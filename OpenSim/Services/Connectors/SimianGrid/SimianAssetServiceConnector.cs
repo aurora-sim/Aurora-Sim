@@ -144,7 +144,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public AssetMetadata GetMetadata(string id)
+        public AssetBase GetMetadata(string id)
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
@@ -152,14 +152,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 throw new InvalidOperationException();
             }
 
-            AssetMetadata metadata = null;
+            AssetBase metadata = null;
 
             // Cache fetch
             if (m_cache != null)
             {
                 AssetBase asset = m_cache.Get(id);
                 if (asset != null)
-                    return asset.Metadata;
+                    return asset;
             }
 
             Uri url;
@@ -178,13 +178,13 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     using (Stream responseStream = response.GetResponseStream())
                     {
                         // Create the metadata object
-                        metadata = new AssetMetadata();
-                        metadata.ContentType = response.ContentType;
-                        metadata.ID = id;
+                        metadata = new AssetBase();
+                        metadata.TypeString = response.ContentType;
+                        metadata.ID = UUID.Parse(id);
 
                         UUID uuid;
                         if (UUID.TryParse(id, out uuid))
-                            metadata.FullID = uuid;
+                            metadata.ID = uuid;
 
                         string lastModifiedStr = response.Headers.Get("Last-Modified");
                         if (!String.IsNullOrEmpty(lastModifiedStr))
@@ -257,7 +257,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// Returns a random ID if none is passed into it
         /// <param name="asset"></param>
         /// <returns></returns>
-        public string Store(AssetBase asset)
+        public UUID Store(AssetBase asset)
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
@@ -269,11 +269,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
             string errorMessage = null;
 
             // AssetID handling
-            if (String.IsNullOrEmpty(asset.ID) || asset.ID == ZeroID)
-            {
-                asset.FullID = UUID.Random();
-                asset.ID = asset.FullID.ToString();
-            }
+            if (asset.ID == UUID.Zero)
+                asset.ID = UUID.Random();
 
             // Cache handling
             if (m_cache != null)
@@ -283,13 +280,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             // Local asset handling
-            if (asset.Local)
+            if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
             {
                 if (!storedInCache)
                 {
-                    m_log.Error("Cannot store local " + asset.Metadata.ContentType + " asset without an asset cache");
-                    asset.ID = null;
-                    asset.FullID = UUID.Zero;
+                    m_log.Error("Cannot store local " + asset.TypeString + " asset without an asset cache");
+                    asset.ID = UUID.Zero;
                 }
 
                 return asset.ID;
@@ -308,17 +304,17 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             // Make sure ContentType is set
-            if (String.IsNullOrEmpty(asset.Metadata.ContentType))
-                asset.Metadata.ContentType = SLUtil.SLAssetTypeToContentType(asset.Type);
+            if (String.IsNullOrEmpty(asset.TypeString))
+                asset.TypeString = SLUtil.SLAssetTypeToContentType(asset.Type);
 
             // Build the remote storage request
             List<MultipartForm.Element> postParameters = new List<MultipartForm.Element>()
             {
-                new MultipartForm.Parameter("AssetID", asset.FullID.ToString()),
-                new MultipartForm.Parameter("CreatorID", asset.Metadata.CreatorID),
-                new MultipartForm.Parameter("Temporary", asset.Temporary ? "1" : "0"),
+                new MultipartForm.Parameter("AssetID", asset.ID.ToString()),
+                new MultipartForm.Parameter("CreatorID", asset.CreatorID.ToString()),
+                new MultipartForm.Parameter("Temporary", ((asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary) ? "1" : "0"),
                 new MultipartForm.Parameter("Public", isPublic ? "1" : "0"),
-                new MultipartForm.File("Asset", asset.Name, asset.Metadata.ContentType, asset.Data)
+                new MultipartForm.File("Asset", asset.Name, asset.TypeString, asset.Data)
             };
 
             // Make the remote storage request
@@ -363,8 +359,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             m_log.WarnFormat("[SIMIAN ASSET CONNECTOR]: Failed to store asset \"{0}\" ({1}, {2}): {3}",
-                asset.Name, asset.ID, asset.Metadata.ContentType, errorMessage);
-            return null;
+                asset.Name, asset.ID, asset.TypeString, errorMessage);
+            return UUID.Zero;
         }
 
         /// <summary>
@@ -374,9 +370,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// <param name="id"> </param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public bool UpdateContent(string id, byte[] data)
+        public bool UpdateContent(UUID id, byte[] data)
         {
-            AssetBase asset = Get(id);
+            AssetBase asset = Get(id.ToString());
 
             if (asset == null)
             {
@@ -386,8 +382,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             asset.Data = data;
 
-            string result = Store(asset);
-            return !String.IsNullOrEmpty(result);
+            UUID result = Store(asset);
+            return result != UUID.Zero;
         }
 
         /// <summary>
@@ -395,7 +391,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public bool Delete(string id)
+        public bool Delete(UUID id)
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
@@ -407,7 +403,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             string url = m_serverUrl + id;
 
             if (m_cache != null)
-                m_cache.Expire(id);
+                m_cache.Expire(id.ToString());
 
             try
             {
@@ -451,14 +447,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 {
                     using (Stream responseStream = response.GetResponseStream())
                     {
-                        string creatorID = response.Headers.GetOne("X-Asset-Creator-Id") ?? String.Empty;
+                        string creatorID = response.Headers.GetOne("X-Asset-Creator-Id") ?? string.Empty;
 
                         // Create the asset object
-                        asset = new AssetBase(id, String.Empty, SLUtil.ContentTypeToSLAssetType(response.ContentType), creatorID);
-
-                        UUID assetID;
-                        if (UUID.TryParse(id, out assetID))
-                            asset.FullID = assetID;
+                        asset = new AssetBase(id, String.Empty, (AssetType)SLUtil.ContentTypeToSLAssetType(response.ContentType), UUID.Parse(creatorID));
 
                         // Grab the asset data from the response stream
                         using (MemoryStream stream = new MemoryStream())
@@ -470,7 +462,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 }
 
                 // Cache store
-                if (m_cache != null && asset != null)
+                if (m_cache != null)
                     m_cache.Cache(asset);
 
                 return asset;

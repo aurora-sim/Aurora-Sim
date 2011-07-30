@@ -481,7 +481,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     if (textureAsset != null)
                     {
                         int width, height;
-                        color = GetAverageColor (textureAsset.FullID, textureAsset.Data, m_scene, out width, out height);
+                        color = GetAverageColor (textureAsset.ID, textureAsset.Data, m_scene, out width, out height);
                         if (!(color.R == 0.5f && color.G == 0.5f && color.B == 0.5f && color.A == 1.0f))//If we failed, don't save it
                         {
                             OSDMap data = new OSDMap { { "X-JPEG2000-RGBA", OSD.FromColor4 (color) } };
@@ -489,15 +489,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             {
                                 Data = System.Text.Encoding.UTF8.GetBytes (OSDParser.SerializeJsonString (data)),
                                 Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString (),
-                                Flags = AssetFlags.Collectable,
-                                FullID = metadataID,
-                                ID = metadataID.ToString (),
-                                Local = true,
-                                Temporary = true,
+                                Flags = AssetFlags.Collectable | AssetFlags.Temperary | AssetFlags.Local,
+                                ID = metadataID,
                                 Name = String.Empty,
-                                Type = (sbyte)AssetType.Simstate // Make something up to get around OpenSim's myopic treatment of assets
+                                TypeAsset = AssetType.Simstate // Make something up to get around OpenSim's myopic treatment of assets
                             };
-                            m_scene.AssetService.Store (metadata);
+                            metadata.ID = m_scene.AssetService.Store(metadata);
                         }
                         textureAsset = null;
                     }

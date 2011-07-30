@@ -381,7 +381,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             UUID assetID = UUID.Zero;
             if (asset != null)
-                assetID = asset.FullID;
+                assetID = asset.ID;
             else if ((InventoryAccessModule != null) && (sender != InventoryAccessModule))
             {
                 // Unfortunately we need this here, there's no other way.

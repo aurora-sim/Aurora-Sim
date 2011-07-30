@@ -692,9 +692,11 @@ textures 1
                         if (m_underPantsUUID == UUID.Zero)
                         {
                             m_underPantsUUID = UUID.Random ();
-                            AssetBase asset = new AssetBase (m_underPantsUUID.ToString (), "Default Underpants", (sbyte)AssetType.Clothing, UUID.Zero.ToString ());
-                            asset.Data = Utils.StringToBytes (m_defaultUnderPants);
-                            m_scene.AssetService.Store (asset);
+                            AssetBase asset = new AssetBase(m_underPantsUUID, "Default Underpants", AssetType.Clothing,
+                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderPants)};
+                            asset.FillHash();
+                            asset.ID = m_scene.AssetService.Store(asset);
+                            m_underPantsUUID = asset.ID;
                         }
                         item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underPantsUUID;
@@ -719,9 +721,11 @@ textures 1
                         if (m_underShirtUUID == UUID.Zero)
                         {
                             m_underShirtUUID = UUID.Random ();
-                            AssetBase asset = new AssetBase (m_underShirtUUID.ToString (), "Default Undershirt", (sbyte)AssetType.Clothing, UUID.Zero.ToString ());
-                            asset.Data = Utils.StringToBytes (m_defaultUnderShirt);
-                            m_scene.AssetService.Store (asset);
+                            AssetBase asset = new AssetBase(m_underShirtUUID, "Default Undershirt", AssetType.Clothing,
+                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderShirt)};
+                            asset.FillHash();
+                            asset.ID = m_scene.AssetService.Store(asset);
+                            m_underShirtUUID = asset.ID;
                         }
                         item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underShirtUUID;

@@ -38,7 +38,7 @@ using Aurora.Simulation.Base;
 using OpenSim.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCAssetConnector : IAssetService, IService
     {
@@ -59,7 +59,7 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
@@ -76,7 +76,7 @@ namespace Aurora.Modules
             m_localService.Configure(config, registry);
             m_remoteService = new AssetServicesConnector();
             m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IAssetService> (this);
+            registry.RegisterModuleInterface<IAssetService>(this);
             m_registry = registry;
         }
 
@@ -104,9 +104,9 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public AssetMetadata GetMetadata(string id)
+        public AssetBase GetMetadata(string id)
         {
-            AssetMetadata asset = m_localService.GetMetadata(id);
+            AssetBase asset = m_localService.GetMetadata(id);
             if (asset == null)
                 asset = m_remoteService.GetMetadata(id);
             return asset;
@@ -144,14 +144,14 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public string Store(AssetBase asset)
+        public UUID Store(AssetBase asset)
         {
-            string retVal = m_localService.Store(asset);
+            UUID retVal = m_localService.Store(asset);
             //m_remoteService.Store(asset);
             return retVal;
         }
 
-        public bool UpdateContent(string id, byte[] data)
+        public bool UpdateContent(UUID id, byte[] data)
         {
             bool asset = m_localService.UpdateContent(id, data);
             if (!asset)
@@ -159,7 +159,7 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public bool Delete(string id)
+        public bool Delete(UUID id)
         {
             bool asset = m_localService.Delete(id);
             if (!asset)

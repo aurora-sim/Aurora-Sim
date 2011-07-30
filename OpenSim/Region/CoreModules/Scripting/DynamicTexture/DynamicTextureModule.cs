@@ -336,29 +336,35 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     asset = scene.AssetService.Get(LastAssetID.ToString());
                     asset.Description = String.Format("URL image : {0}", Url);
                     asset.Data = assetData;
-                    asset.Local = false;
-                    asset.Temporary = ((Disp & DISP_TEMP) != 0);
-                    scene.AssetService.Store(asset);
+                    if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
+                    {
+                        asset.Flags = asset.Flags & ~AssetFlags.Local;
+                    }
+                    if (((asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary) != ((Disp & DISP_TEMP) != 0))
+                    {
+                        if ((Disp & DISP_TEMP) != 0) asset.Flags |= AssetFlags.Temperary;
+                        else asset.Flags = asset.Flags & ~AssetFlags.Temperary;
+                    }
+                    asset.ID = scene.AssetService.Store(asset);
                 }
                 else
                 {
 
                     // Create a new asset for user
-                    asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000), (sbyte)AssetType.Texture,
-                        scene.RegionInfo.RegionID.ToString());
+                    asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000), AssetType.Texture,
+                        scene.RegionInfo.RegionID);
                     asset.Data = assetData;
                     asset.Description = String.Format("URL image : {0}", Url);
-                    asset.Local = false;
-                    asset.Temporary = ((Disp & DISP_TEMP) != 0);
-                    scene.AssetService.Store(asset);
+                    if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temperary;
+                    asset.ID = scene.AssetService.Store(asset);
                 }
 
                 IJ2KDecoder cacheLayerDecode = scene.RequestModuleInterface<IJ2KDecoder>();
                 if (cacheLayerDecode != null)
                 {
-                    cacheLayerDecode.Decode(asset.FullID, asset.Data);
+                    cacheLayerDecode.Decode(asset.ID, asset.Data);
                     cacheLayerDecode = null;
-                    LastAssetID = asset.FullID;
+                    LastAssetID = asset.ID;
                 }
 
                 UUID oldID = UUID.Zero;
@@ -373,19 +379,19 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     
                     if (Face == ALL_SIDES)
                     {
-                        tmptex.DefaultTexture.TextureID = asset.FullID;
+                        tmptex.DefaultTexture.TextureID = asset.ID;
                     }
                     else
                     {
                         try
                         {
                             Primitive.TextureEntryFace texface = tmptex.CreateFace((uint)Face);
-                            texface.TextureID = asset.FullID;
+                            texface.TextureID = asset.ID;
                             tmptex.FaceTextures[Face] = texface;
                         }
                         catch (Exception)
                         {
-                            tmptex.DefaultTexture.TextureID = asset.FullID;
+                            tmptex.DefaultTexture.TextureID = asset.ID;
                         }
                     }
 
@@ -401,9 +407,9 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     if (oldAsset == null) oldAsset = scene.AssetService.Get(oldID.ToString());
                     if (oldAsset != null)
                     {
-                        if (oldAsset.Temporary == true)
+                        if ((oldAsset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary)
                         {
-                            scene.AssetService.Delete(oldID.ToString());
+                            scene.AssetService.Delete(oldID);
                         }
                     }
                 }

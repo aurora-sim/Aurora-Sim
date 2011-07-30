@@ -899,7 +899,7 @@ namespace Aurora.Modules
                 changed = true;
             }
             else
-                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString ());
+                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainImageID);
 
             if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
             {
@@ -907,24 +907,22 @@ namespace Aurora.Modules
                 changed = true;
             }
             else
-                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainMapImageID.ToString ());
+                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainMapImageID);
 
             AssetBase Mapasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainImageID,
                 "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                (sbyte)AssetType.Simstate,
-                m_scene.RegionInfo.RegionID.ToString());
+                AssetType.Simstate,
+                m_scene.RegionInfo.RegionID);
             Mapasset.Description = m_scene.RegionInfo.RegionName;
-            Mapasset.Temporary = false;
             Mapasset.Flags = AssetFlags.Deletable;
 
             AssetBase Terrainasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID,
                 "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                (sbyte)AssetType.Simstate,
-                m_scene.RegionInfo.RegionID.ToString());
+                AssetType.Simstate,
+                m_scene.RegionInfo.RegionID);
             Terrainasset.Description = m_scene.RegionInfo.RegionName;
-            Terrainasset.Temporary = false;
             Terrainasset.Flags = AssetFlags.Deletable;
 
             if(changed)
@@ -964,18 +962,24 @@ namespace Aurora.Modules
             if (terrain == null)
                 return;
 
+            //Delete the old assets
+            if (Terrainasset.ID != UUID.Zero)
+                m_scene.AssetService.Delete(Terrainasset.ID);
+            if (Mapasset.ID != UUID.Zero)
+                m_scene.AssetService.Delete(Mapasset.ID);
+
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);
             if (terraindata != null)
             {
                 Terrainasset.Data = terraindata;
-                m_scene.AssetService.Store (Terrainasset);
+                Terrainasset.ID = m_scene.AssetService.Store(Terrainasset);
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
-                m_scene.AssetService.Store (Mapasset);
+                Mapasset.ID = m_scene.AssetService.Store(Mapasset);
             }
 
             //Update the grid map

@@ -132,14 +132,14 @@ namespace Aurora.Modules.World.WorldShader
                                 Bitmap texture = (Bitmap)j2kDecoder.DecodeToImage (a.Data);
                                 if (texture == null)
                                     continue;
-                                a.FullID = UUID.Random ();
+                                a.ID = UUID.Random ();
                                 texture = Shade (texture, shader, percent, greyScale);
                                 a.Data = OpenMetaverse.Imaging.OpenJPEG.EncodeFromImage (texture, false);
                                 texture.Dispose ();
-                                MainConsole.Instance.ConsoleScene.AssetService.Store (a);
-                                child.Shape.Textures = SetTexture (child.Shape, a.FullID, t);
-                                m_previouslyConverted.Add (t, a.FullID);
-                                m_revertConverted.Add (a.FullID, t);
+                                a.ID = MainConsole.Instance.ConsoleScene.AssetService.Store (a);
+                                child.Shape.Textures = SetTexture (child.Shape, a.ID, t);
+                                m_previouslyConverted.Add (t, a.ID);
+                                m_revertConverted.Add (a.ID, t);
                             }
                         }
                     }

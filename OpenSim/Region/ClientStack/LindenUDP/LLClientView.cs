@@ -2602,7 +2602,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (req.AssetInf.Data == null)
             {
                 m_log.ErrorFormat("[LLClientView]: Cannot send asset {0} ({1}), asset data is null",
-                    req.AssetInf.ID, req.AssetInf.Metadata.ContentType);
+                    req.AssetInf.ID, req.AssetInf.TypeString);
                 return;
             }
             

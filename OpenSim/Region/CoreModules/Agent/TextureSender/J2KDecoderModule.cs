@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>Temporarily holds deserialized layer data information in memory</summary>
-        private readonly ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]> m_decodedCache = new ExpiringCache<UUID,OpenJPEG.J2KLayerInfo[]>();
+        private readonly ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]> m_decodedCache = new ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]>();
         /// <summary>List of client methods to notify of results of decode</summary>
         private readonly Dictionary<UUID, List<DecodedCallback>> m_notifyList = new Dictionary<UUID, List<DecodedCallback>>();
         /// <summary>Cache that will store decoded JPEG2000 layer boundary data</summary>
@@ -176,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         {
             return DoJ2KDecode(assetID, j2kData, m_useCSJ2K);
         }
-        
+
         private bool DoJ2KDecode(UUID assetID, byte[] j2kData, bool m_useCSJ2K)
         {
             //int DecodeTime = 0;
@@ -262,7 +262,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                     SaveFileCacheForAsset(assetID, layers);
                 }
             }
-            
+
             // Notify Interested Parties
             lock (m_notifyList)
             {
@@ -282,12 +282,12 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         public Image DecodeToImage(byte[] j2kData)
         {
             if (m_useCSJ2K)
-                return CSJ2K.J2kImage.FromBytes (j2kData);
+                return CSJ2K.J2kImage.FromBytes(j2kData);
             else
             {
                 ManagedImage mimage;
                 Image image;
-                if (OpenJPEG.DecodeToImage (j2kData, out mimage, out image))
+                if (OpenJPEG.DecodeToImage(j2kData, out mimage, out image))
                 {
                     mimage = null;
                     return image;
@@ -324,16 +324,15 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
         private void SaveFileCacheForAsset(UUID AssetId, OpenJPEG.J2KLayerInfo[] Layers)
         {
-            if(m_useCache)
+            if (m_useCache)
                 m_decodedCache.AddOrUpdate(AssetId, Layers, TimeSpan.FromMinutes(10));
 
             if (m_cache != null)
             {
                 string assetID = "j2kCache_" + AssetId.ToString();
 
-                AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, (sbyte)AssetType.Notecard, m_scene.RegionInfo.RegionID.ToString());
-                layerDecodeAsset.Local = true;
-                layerDecodeAsset.Temporary = true;
+                AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, AssetType.Notecard,
+                                                           m_scene.RegionInfo.RegionID) { Flags = AssetFlags.Local | AssetFlags.Temperary };
 
                 #region Serialize Layer Data
 

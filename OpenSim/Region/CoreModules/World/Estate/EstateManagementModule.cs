@@ -1289,7 +1289,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
                 if (paintAsset == null)
                 {
-                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID, (sbyte)AssetType.Texture, UUID.Zero.ToString());
+                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID, AssetType.Texture, UUID.Zero);
                     paintAsset.Flags = AssetFlags.Deletable;
                     AssetBase defaultTexture = m_scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
                     if (defaultTexture == null)
@@ -1297,7 +1297,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         return;
 
                     paintAsset.Data = defaultTexture.Data;//Eventually we need to replace this with an interpolation of the existing textures!
-                    m_scene.AssetService.Store(paintAsset);
+                    paintAsset.ID = m_scene.AssetService.Store(paintAsset);
                 }
             }
             args.RegionType = Utils.StringToBytes(m_scene.RegionInfo.RegionType);

@@ -169,8 +169,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     AssetBase asset =
                     CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                    item.AssetID = asset.FullID;
-                    m_scene.AssetService.Store(asset);
+                    asset.ID = m_scene.AssetService.Store(asset);
+                    item.AssetID = asset.ID;
 
                     m_scene.InventoryService.UpdateItem(item);
 
@@ -185,14 +185,14 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     AssetBase asset =
                         CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                        item.AssetID = asset.FullID;
-                        m_scene.AssetService.Store(asset);
+                        asset.ID = m_scene.AssetService.Store(asset);
+                        item.AssetID = asset.ID;
 
                     m_scene.InventoryService.UpdateItem(item);
 
                     if (ScriptEngine != null)
                     {
-                        string Errors = ScriptEngine.TestCompileScript(asset.FullID, itemID);
+                        string Errors = ScriptEngine.TestCompileScript(asset.ID, itemID);
                         if (Errors != "")
                             return FailedCompileScriptCAPSUpdate(item.AssetID, itemID, Errors);
                     }
@@ -466,8 +466,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 (sbyte)AssetType.Object,
                 Utils.StringToBytes(AssetXML),
                 objectGroups[0].OwnerID.ToString());
-            m_scene.AssetService.Store(asset);
-            assetID = asset.FullID;
+            asset.ID = m_scene.AssetService.Store(asset);
+            assetID = asset.ID;
             item.AssetID = assetID;
             if (DeRezAction.SaveToExistingUserInventoryItem != action)
             {
@@ -1073,9 +1073,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <returns></returns>
         private AssetBase CreateAsset(string name, string description, sbyte assetType, byte[] data, string creatorID)
         {
-            AssetBase asset = new AssetBase(UUID.Random(), name, assetType, creatorID);
-            asset.Description = description;
-            asset.Data = (data == null) ? new byte[1] : data;
+            AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType) assetType, UUID.Parse(creatorID))
+                                  {Description = description, Data = data ?? new byte[1]};
 
             return asset;
         }

@@ -73,7 +73,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             AssetBase paintAsset = map.Scene.AssetService.Get(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
             if (paintAsset == null)
             {
-                paintAsset = new AssetBase(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + map.Scene.RegionInfo.RegionID, (sbyte)AssetType.Texture, UUID.Zero.ToString());
+                paintAsset = new AssetBase(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + map.Scene.RegionInfo.RegionID, AssetType.Texture, UUID.Zero);
                 paintAsset.Flags = AssetFlags.Deletable;
                 AssetBase defaultTexture = map.Scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
                 if (defaultTexture == null)
@@ -128,8 +128,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             paintAsset.Data = OpenJPEG.EncodeFromImage(paintTexture.Bitmap(), false);
             paintAsset.Flags = AssetFlags.Deletable;
             map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture = UUID.Random();
-            paintAsset.ID = map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString();
-            map.Scene.AssetService.Store(paintAsset);
+            paintAsset.ID = map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture;
+            paintAsset.ID = map.Scene.AssetService.Store(paintAsset);
             map.Scene.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
             locked = false;
         }

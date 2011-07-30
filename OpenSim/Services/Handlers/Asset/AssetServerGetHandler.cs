@@ -50,8 +50,8 @@ namespace OpenSim.Services
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public AssetServerGetHandler (IAssetService service, string url, string SessionID, IRegistryCore registry) :
-                base("GET", url)
+        public AssetServerGetHandler(IAssetService service, string url, string SessionID, IRegistryCore registry) :
+            base("GET", url)
         {
             m_AssetService = service;
             m_SessionID = SessionID;
@@ -71,7 +71,7 @@ namespace OpenSim.Services
             IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
-                if (!urlModule.CheckThreatLevel (m_SessionID, "Asset_Get", ThreatLevel.Low))
+                if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Get", ThreatLevel.Low))
                     return new byte[0];
             if (p.Length > 1 && p[1] == "data")
             {
@@ -94,7 +94,7 @@ namespace OpenSim.Services
                 {
                     bool RetVal = m_AssetService.GetExists(p[0]);
                     XmlSerializer xs =
-                                   new XmlSerializer(typeof(AssetMetadata));
+                                   new XmlSerializer(typeof(AssetBase));
                     result = WebUtils.SerializeResult(xs, RetVal);
 
                     if (result == null)
@@ -109,7 +109,7 @@ namespace OpenSim.Services
                         httpResponse.ContentType = "application/octet-stream";
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     result = new byte[0];
                     m_log.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] + ", " + ex.ToString());
@@ -117,12 +117,12 @@ namespace OpenSim.Services
             }
             else if (p.Length > 1 && p[1] == "metadata")
             {
-                AssetMetadata metadata = m_AssetService.GetMetadata(p[0]);
+                AssetBase metadata = m_AssetService.GetMetadata(p[0]);
 
                 if (metadata != null)
                 {
                     XmlSerializer xs =
-                            new XmlSerializer(typeof(AssetMetadata));
+                            new XmlSerializer(typeof(AssetBase));
                     result = WebUtils.SerializeResult(xs, metadata);
 
                     httpResponse.StatusCode = (int)HttpStatusCode.OK;

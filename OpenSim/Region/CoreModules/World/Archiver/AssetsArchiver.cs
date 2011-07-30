@@ -127,9 +127,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             string extension = string.Empty;
 
-            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey(asset.Type))
+            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey((sbyte)asset.TypeAsset))
             {
-                extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[asset.Type];
+                extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[(sbyte)asset.TypeAsset];
             }
             else
             {
@@ -139,7 +139,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
 
             m_archiveWriter.WriteFile(
-                ArchiveConstants.ASSETS_PATH + asset.FullID.ToString() + extension,
+                ArchiveConstants.ASSETS_PATH + asset.ID.ToString() + extension,
                 asset.Data);
 
             m_assetsWritten++;

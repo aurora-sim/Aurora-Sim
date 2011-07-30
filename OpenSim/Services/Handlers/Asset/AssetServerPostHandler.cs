@@ -26,6 +26,7 @@
  */
 
 using Nini.Config;
+using OpenMetaverse;
 using log4net;
 using System;
 using System.Reflection;
@@ -61,8 +62,8 @@ namespace OpenSim.Services
         public override byte[] Handle(string path, Stream request,
                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
-            AssetBase asset = (AssetBase) xs.Deserialize(request);
+            XmlSerializer xs = new XmlSerializer(typeof(AssetBase));
+            AssetBase asset = (AssetBase)xs.Deserialize(request);
 
             IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService>();
@@ -73,16 +74,17 @@ namespace OpenSim.Services
             if (p.Length > 1)
             {
                 bool result =
-                        m_AssetService.UpdateContent(p[1], asset.Data);
+                        m_AssetService.UpdateContent(UUID.Parse(p[1]), asset.Data);
 
                 xs = new XmlSerializer(typeof(bool));
                 return WebUtils.SerializeResult(xs, result);
             }
 
-            string id = m_AssetService.Store(asset);
+            UUID id = m_AssetService.Store(asset);
+            asset.ID = id;
 
             xs = new XmlSerializer(typeof(string));
-            return WebUtils.SerializeResult(xs, id);
+            return WebUtils.SerializeResult(xs, id.ToString());
         }
     }
 }

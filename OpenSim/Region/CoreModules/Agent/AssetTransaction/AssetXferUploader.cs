@@ -112,11 +112,10 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         public bool Initialise(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data,
                                bool storeLocal, bool tempFile)
         {
-            m_asset = new AssetBase(assetID, "blank", type, remoteClient.AgentId.ToString());
-            m_asset.Data = data;
-            m_asset.Description = "empty";
-            m_asset.Local = storeLocal;
-            m_asset.Temporary = tempFile;
+            m_asset = new AssetBase(assetID, "blank", (AssetType) type, remoteClient.AgentId)
+                          {Data = data, Description = "empty"};
+            if (storeLocal) m_asset.Flags |= AssetFlags.Local;
+            if (tempFile) m_asset.Flags |= AssetFlags.Temperary;
 
             TransactionID = transaction;
             m_storeLocal = storeLocal;
@@ -137,12 +136,12 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         protected void RequestStartXfer(IClientAPI remoteClient)
         {
             XferID = Util.GetNextXferID();
-            remoteClient.SendXferRequest(XferID, m_asset.Type, m_asset.FullID, 0, new byte[0]);
+            remoteClient.SendXferRequest(XferID, short.Parse(m_asset.Type.ToString()), m_asset.ID, 0, new byte[0]);
         }
 
         protected void SendCompleteMessage(IClientAPI remoteClient)
         {
-            remoteClient.SendAssetUploadCompleteMessage(m_asset.Type, true, m_asset.FullID);
+            remoteClient.SendAssetUploadCompleteMessage((sbyte)m_asset.Type, true, m_asset.ID);
 
             m_finished = true;
             if (m_createItem)
@@ -151,7 +150,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
             else if (m_storeLocal)
             {
-                m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+                m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
             }
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
@@ -162,7 +161,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
 
             m_log.DebugFormat(
-                "[ASSET TRANSACTIONS]: Uploaded asset {0} for transaction {1}", m_asset.FullID, TransactionID);
+                "[ASSET TRANSACTIONS]: Uploaded asset {0} for transaction {1}", m_asset.ID, TransactionID);
 
             if (m_dumpAssetToFile)
             {
@@ -219,7 +218,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         private void DoCreateItem(uint callbackID, IClientAPI remoteClient)
         {
-            m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+            m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
@@ -232,7 +231,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             item.Owner = remoteClient.AgentId;
             item.CreatorId = remoteClient.AgentId.ToString();
             item.ID = UUID.Random();
-            item.AssetID = m_asset.FullID;
+            item.AssetID = m_asset.ID;
             item.Description = m_description;
             item.Name = m_name;
             item.AssetType = type;
