@@ -194,8 +194,14 @@ namespace OpenSim.Framework
             set
             {
                 myData = value;
-                MetaOnly = (myData.Length == 0);
-                if (!MetaOnly) FillHash();
+                if(myData != null)
+                {
+                    MetaOnly = (myData.Length == 0);
+                    if(!MetaOnly)
+                        FillHash();
+                }
+                else
+                    HashCode = "";
             }
         }
 
