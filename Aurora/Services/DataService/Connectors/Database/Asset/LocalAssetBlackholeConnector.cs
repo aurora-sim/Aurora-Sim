@@ -153,7 +153,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 // get the asset
                 dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
-                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, owner_id, host_uri");
+                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, host_uri");
                 asset = LoadAssetFromDR(dr);
 
                 if ((asset == null) && (needsConversion))
@@ -172,7 +172,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     // check the old table
                     databaseTable = "auroraassets_old";
                     dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
-                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, owner_id, host_uri");
+                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, host_uri");
                     asset = LoadAssetFromDR(dr);
                     if (asset != null) asset.ID = Store(asset);
                 }
@@ -225,7 +225,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             HashCode = dr["hash_code"].ToString(),
                             HostUri = dr["host_uri"].ToString(),
                             LastAccessed = DateTime.UtcNow,
-                            OwnerID = (dr["parent_id"].ToString() == "") ? UUID.Zero : UUID.Parse(dr["owner_id"].ToString()),
                             ParentID = (dr["parent_id"].ToString() == "") ? UUID.Parse(dr["id"].ToString()) : UUID.Parse(dr["parent_id"].ToString())
                         };
                     }
@@ -324,7 +323,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 {
                                     "id", "hash_code", "parent_id", "creator_id", "name", "description", "asset_type",
                                     "create_time", "access_time", "asset_flags",
-                                    "owner_id", "host_uri"
+                                    "host_uri"
                                 },
                             new object[]
                                 {
@@ -334,8 +333,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     (asset.CreatorID == UUID.Zero) ? "" : asset.CreatorID.ToString(), asset.Name,
                                     asset.Description, (int) asset.TypeAsset,
                                     Util.ToUnixTime(asset.CreationDate), Util.ToUnixTime(DateTime.UtcNow)
-                                    , (int) asset.Flags, (asset.OwnerID == UUID.Zero) ? "" : asset.OwnerID.ToString(),
-                                    asset.HostUri
+                                    , (int) asset.Flags, asset.HostUri
                                 });
 
                 // Double checked its saved. Just for debug
@@ -364,7 +362,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             ResetTimer(60000);
             string newHash = WriteFile(id, assetdata);
-            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0],"hash_code");
+            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0], "hash_code");
             if (hashCodeCheck.Count >= 1)
             {
                 if (hashCodeCheck[0] != newHash)
@@ -780,19 +778,24 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     //check if this hash file is still used anywhere
                     if (task_type == "HASHCHECK")
                     {
-                        int result = TaskGetHashCodeUseCount(task_value);
-                        if (result == 0)
+                        if (File.Exists(GetFileName(task_value, false)))
                         {
-                            m_Log.Info("[AssetDataPlugin] Deleteing old asset files");
-                            if (File.Exists(GetFileName(task_value, false)))
+                            int result = TaskGetHashCodeUseCount(task_value);
+                            if (result == 0)
+                            {
+                                m_Log.Info("[AssetDataPlugin] Deleteing old unused asset file");
                                 File.Delete(GetFileName(task_value, false));
-                            if (File.Exists(GetFileName(task_value, true))) File.Delete(GetFileName(task_value, true));
+                                if (File.Exists(GetFileName(task_value, true)))
+                                    File.Delete(GetFileName(task_value, true));
+                            }
                         }
                     }
-                    else if (task_type == "PARENTCHECK")
+                    else if ((task_type == "PARENTCHECK") && (task_value.Split('|').Count() > 1))
                     {
                         UUID uuid1 = UUID.Parse(task_value.Split('|')[0]);
-                        UUID uuid2 = UUID.Parse(task_value.Split('|')[1]);
+                        UUID uuid2;
+
+                        uuid2 = UUID.Parse(task_value.Split('|')[1]);
 
                         // double check this asset does not exist 
                         AssetBase abtemp = GetAsset(uuid1);
@@ -801,27 +804,42 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         {
                             m_Gd.Delete("auroraassets_temp", new string[] { "id" }, new object[] { uuid1 });
                             m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
-                                   new object[] { actemp.ID, actemp.HashCode, actemp.CreatorID });
+                                        new object[] { actemp.ID, actemp.HashCode, actemp.CreatorID });
                             // I admit this might be a bit over kill.. 
-                            m_Gd.Update("auroraassets_a", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_b", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_c", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_d", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_e", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_f", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_0", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_1", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_2", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_3", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_4", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_5", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_6", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_7", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_8", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_9", new object[] { uuid2 }, new[] { "parent_id" }, new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_a", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_b", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_c", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_d", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_e", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_f", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_0", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_1", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_2", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_3", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_4", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_5", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_6", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_7", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_8", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_9", new object[] { uuid2 }, new[] { "parent_id" },
+                                        new[] { "parent_id" }, new object[] { uuid1 });
                         }
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -848,14 +866,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         {
                             List<string> findOld = m_Gd.Query(" id = '" + ass + "'",
                                                               "auroraassets_" + ass.ToCharArray()[0],
-                                                              "id,hash_code,name,description,asset_type,create_time,access_time,asset_flags,creator_id,owner_id,host_uri,parent_id");
+                                                              "id,hash_code,name,description,asset_type,create_time,access_time,asset_flags,creator_id,host_uri,parent_id");
                             if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count == 0)
                                 m_Gd.Insert("auroraassets_old",
                                             new[]
                                                 {
                                                     "id", "hash_code", "name", "description", "asset_type",
                                                     "create_time",
-                                                    "access_time", "asset_flags", "creator_id", "owner_id", "host_uri",
+                                                    "access_time", "asset_flags", "creator_id", "host_uri",
                                                     "parent_id"
                                                 },
                                             new object[]

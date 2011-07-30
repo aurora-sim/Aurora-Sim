@@ -62,8 +62,8 @@ namespace OpenSim.Services
         public override byte[] Handle(string path, Stream request,
                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
-            AssetBase asset = (AssetBase) xs.Deserialize(request);
+            XmlSerializer xs = new XmlSerializer(typeof(AssetBase));
+            AssetBase asset = (AssetBase)xs.Deserialize(request);
 
             IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService>();

@@ -502,13 +502,13 @@ namespace OpenSim.Services.CapsService
 
         public void BakedTextureUploaded(UUID assetID, byte[] data, out UUID newAssetID)
         {
-            m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
+            //m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset;
             asset = new AssetBase(assetID, "Baked Texture", AssetType.Texture, m_service.AgentID);
             asset.Data = data;
             asset.Flags = AssetFlags.Deletable | AssetFlags.Temperary;
-
             newAssetID = m_assetService.Store(asset);
+            //m_log.InfoFormat("[AssetCAPS]: Baked texture new id {0}", assetID.ToString());
             asset.ID = newAssetID;
         }
 

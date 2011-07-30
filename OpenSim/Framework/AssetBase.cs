@@ -95,7 +95,6 @@ namespace OpenSim.Framework
             ID = UUID.Zero;
             TypeAsset = AssetType.Unknown;
             CreatorID = UUID.Zero;
-            OwnerID = UUID.Zero;
             Description = "";
             Name = "";
             HostUri = "";
@@ -240,7 +239,6 @@ namespace OpenSim.Framework
         public int Type { get { return (int)TypeAsset; } set { TypeAsset = (AssetType)value; } }
         public AssetFlags Flags { get; set; }
         public string DatabaseTable { get; set; }
-        public UUID OwnerID { get; set; }
         public string HostUri { get; set; }
         public DateTime LastAccessed { get; set; }
         public DateTime CreationDate { get; set; }
@@ -292,9 +290,10 @@ namespace OpenSim.Framework
                                       {"HostUri", OSD.FromString(HostUri)},
                                       {"LastAccessed", OSD.FromDate(LastAccessed)},
                                       {"Name", OSD.FromString(Name)},
+                                      {"ParentID", CreationDate},
                                       {"TypeAsset", OSD.FromInteger((int) TypeAsset)},
                                       {"Description", OSD.FromString(Description)},
-                                      {"OwnerID", OSD.FromUUID(OwnerID)},
+                                      {"DatabaseTable", OSD.FromString(DatabaseTable)}
                                   };
             return assetMap;
         }
@@ -321,9 +320,6 @@ namespace OpenSim.Framework
             if (assetMap.ContainsKey("CreatorID"))
                 CreatorID = assetMap["CreatorID"].AsUUID();
 
-            if (assetMap.ContainsKey("OwnerID"))
-                OwnerID = assetMap["OwnerID"].AsUUID();
-
             if (assetMap.ContainsKey("Data"))
                 Data = assetMap["Data"].AsBinary();
 
@@ -337,10 +333,16 @@ namespace OpenSim.Framework
                 Name = assetMap["Name"].AsString();
 
             if (assetMap.ContainsKey("TypeAsset"))
-                TypeAsset = (AssetType)assetMap["Type"].AsInteger();
+                TypeAsset = (AssetType)assetMap["TypeAsset"].AsInteger();
 
             if (assetMap.ContainsKey("Description"))
                 Description = assetMap["Description"].AsString();
+
+            if (assetMap.ContainsKey("ParentID"))
+                ParentID = assetMap["ParentID"].AsUUID();
+
+            if (assetMap.ContainsKey("DatabaseTable"))
+                DatabaseTable = assetMap["DatabaseTable"].AsString();
 
             return this;
         }
@@ -351,26 +353,7 @@ namespace OpenSim.Framework
         /// <returns>A compressed (gzip) string of the data needed for the database</returns>
         public string CompressedPack()
         {
-            OSDMap assetMap = new OSDMap();
-
-            assetMap["AssetFlags"] = (int)Flags;
-            assetMap["CreationDate"] = CreationDate;
-            assetMap["CreatorID"] = CreatorID;
-
-            //In the database table, don't save it
-            //assetMap["OwnerID"] = this.OwnerID;
-
-            //In the database table, don't save it
-            //assetMap["Data"] = this.Data;
-
-            assetMap["HostUri"] = HostUri;
-            assetMap["LastAccessed"] = LastAccessed;
-
-            //In the database table, don't save it
-            //assetMap["Name"] = this.Name;
-
-            //In the database table, don't save it
-            //assetMap["AssetType"] = (int)this.AssetType;
+            OSDMap assetMap = Pack();
 
             //Serialize it with json
             string jsonString = OSDParser.SerializeJsonString(assetMap);

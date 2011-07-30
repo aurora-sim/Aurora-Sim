@@ -49,11 +49,11 @@ namespace OpenSim.Services.Connectors
         protected IImprovedAssetCache m_Cache = null;
         private string m_serverURL = "";
 
-        public AssetServicesConnector ()
+        public AssetServicesConnector()
         {
         }
 
-        public AssetServicesConnector (string url)
+        public AssetServicesConnector(string url)
         {
             m_serverURL = url;
         }
@@ -79,7 +79,7 @@ namespace OpenSim.Services.Connectors
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id + "/exists";
@@ -96,9 +96,9 @@ namespace OpenSim.Services.Connectors
         public virtual AssetBase Get(string id)
         {
             AssetBase asset = null;
-            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("AssetServerURI");
+            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -137,14 +137,14 @@ namespace OpenSim.Services.Connectors
                 if (fullAsset != null)
                 {
                     // thinking I should not include the data since this use to request metadata
-                    fullAsset.Data = new byte[]{};
+                    fullAsset.Data = new byte[] { };
                     return fullAsset;
                 }
             }
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id + "/metadata";
@@ -169,7 +169,7 @@ namespace OpenSim.Services.Connectors
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 RestClient rc = new RestClient(m_ServerURI);
@@ -200,7 +200,7 @@ namespace OpenSim.Services.Connectors
         {
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -223,7 +223,7 @@ namespace OpenSim.Services.Connectors
                                 result = true;
                             });
 
-                    if(result)
+                    if (result)
                         return result;
                 }
                 else
@@ -249,7 +249,7 @@ namespace OpenSim.Services.Connectors
             UUID newID = UUID.Zero;
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/";
@@ -268,7 +268,7 @@ namespace OpenSim.Services.Connectors
                 {
                     // Placing this here, so that this work with old asset servers that don't send any reply back
                     // SynchronousRestObjectRequester returns somethins that is not an empty string
-                    asset.ID =  newID;
+                    asset.ID = newID;
 
                     if (m_Cache != null)
                         m_Cache.Cache(asset);
@@ -294,7 +294,7 @@ namespace OpenSim.Services.Connectors
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -315,7 +315,7 @@ namespace OpenSim.Services.Connectors
         {
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string> (new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -333,7 +333,7 @@ namespace OpenSim.Services.Connectors
         {
             if (args.Length != 4)
             {
-                m_log.Info ("Syntax: dump asset <id> <file>");
+                m_log.Info("Syntax: dump asset <id> <file>");
                 return;
             }
 
@@ -341,13 +341,13 @@ namespace OpenSim.Services.Connectors
 
             if (!UUID.TryParse(args[2], out assetID))
             {
-                m_log.Info ("Invalid asset ID");
+                m_log.Info("Invalid asset ID");
                 return;
             }
 
             if (m_Cache == null)
             {
-                m_log.Info ("Instance uses no cache");
+                m_log.Info("Instance uses no cache");
                 return;
             }
 
@@ -355,7 +355,7 @@ namespace OpenSim.Services.Connectors
 
             if (asset == null)
             {
-                m_log.Info ("Asset not found in cache");
+                m_log.Info("Asset not found in cache");
                 return;
             }
 
@@ -377,14 +377,14 @@ namespace OpenSim.Services.Connectors
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
-            registry.RegisterModuleInterface<IAssetServiceConnector> (this);
+            registry.RegisterModuleInterface<IAssetServiceConnector>(this);
 
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
             if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand ("dump asset",
+                MainConsole.Instance.Commands.AddCommand("dump asset",
                                           "dump asset <id> <file>",
                                           "dump one cached asset", HandleDumpAsset);
 
@@ -393,7 +393,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            SetCache (registry.RequestModuleInterface<IImprovedAssetCache> ());
+            SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
         }
 
         public void FinishedStartup()
