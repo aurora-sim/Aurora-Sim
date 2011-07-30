@@ -1005,15 +1005,35 @@ namespace OpenSim.Region.Framework.Scenes
             List<string> args = new List<string> (cmd);
             args.RemoveAt (0);
             string[] showParams = args.ToArray ();
-            
-            IList agents;
-            if (showParams.Length > 1 && showParams[1] == "full")
+
+            List<IScenePresence> agents = new List<IScenePresence>();
+            if(showParams.Length > 1 && showParams[1] == "full")
             {
-                agents = CurrentOrFirstScene.GetScenePresences ();
+                if(MainConsole.Instance.ConsoleScene == null)
+                {
+                    foreach(IScene scene in m_localScenes)
+                    {
+                        agents.AddRange(scene.GetScenePresences());
+                    }
+                }
+                else
+                    agents = CurrentOrFirstScene.GetScenePresences();
             }
             else
             {
-                agents = CurrentOrFirstScene.GetScenePresences ();
+                if(MainConsole.Instance.ConsoleScene == null)
+                {
+                    foreach(IScene scene in m_localScenes)
+                    {
+                        agents.AddRange(scene.GetScenePresences());
+                    }
+                }
+                else
+                    agents = CurrentOrFirstScene.GetScenePresences();
+                agents.RemoveAll(delegate(IScenePresence sp)
+                {
+                    return sp.IsChildAgent;
+                });
             }
 
             m_log.Info (String.Format ("\nAgents connected: {0}\n", agents.Count));
