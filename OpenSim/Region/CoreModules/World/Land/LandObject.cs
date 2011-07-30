@@ -240,8 +240,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                         else
                         {
                             remote_client.SendAlertMessage ("Permissions: You cannot set this parcel for sale");
-                            newData.Flags &= ~(uint)ParcelFlags.ForSale;
-                            newData.Flags &= ~(uint)ParcelFlags.ForSaleObjects;
+                            args.ParcelFlags &= ~(uint)ParcelFlags.ForSale;
+                            args.ParcelFlags &= ~(uint)ParcelFlags.ForSaleObjects;
+                            args.ParcelFlags &= ~(uint)ParcelFlags.SellParcelObjects;
                         }
                     }
 
@@ -342,6 +343,23 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice, int area)
         {
             LandData newData = LandData.Copy();
+            if((LandData.Flags & (uint)ParcelFlags.SellParcelObjects) == (uint)ParcelFlags.SellParcelObjects)
+            {
+                //Sell all objects on the parcel too
+                IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
+                IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
+                foreach(ISceneEntity obj in primCounts.Objects)
+                {
+                    if(obj.OwnerID == LandData.OwnerID)
+                    {
+                        //Fix the owner/last owner
+                        obj.SetOwnerId(avatarID);
+                        //Then update all clients around
+                        obj.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
+                    }
+                }
+            }
+
             newData.OwnerID = avatarID;
             newData.GroupID = groupID;
             newData.IsGroupOwned = groupOwned;
@@ -351,6 +369,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             newData.SalePrice = 0;
             newData.AuthBuyerID = UUID.Zero;
             newData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
+            this.LandData = newData;
             m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
 
             SendLandUpdateToAvatarsOverMe(true);
@@ -913,6 +932,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 resultLocalIDs.Add(obj.LocalId);
                             }
                             else if (request_type == (int)ObjectReturnType.List && returnIDs.Contains(obj.OwnerID))
+                            {
+                                resultLocalIDs.Add(obj.LocalId);
+                            }
+                            else if(request_type == (int)ObjectReturnType.Sell && obj.OwnerID == remote_client.AgentId)
                             {
                                 resultLocalIDs.Add(obj.LocalId);
                             }

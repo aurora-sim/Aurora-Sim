@@ -1340,9 +1340,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             IClientAPI client;
             m_scene.ClientManager.TryGetValue(attempting_user_id, out client);
 
-            if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, startLandObject) ||
-                (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
-                !m_scene.Permissions.IsGod(attempting_user_id)))
+            if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, startLandObject) &&
+                (!(m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
+                m_scene.Permissions.IsGod(attempting_user_id))))
             {
                 client.SendAlertMessage("Permissions: you cannot split this parcel.");
                 return;
