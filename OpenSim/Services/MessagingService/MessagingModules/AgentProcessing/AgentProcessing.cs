@@ -366,39 +366,37 @@ namespace OpenSim.Services.MessagingService
             return informed;
         }
 
-        public virtual bool EnableChildAgents (UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
+        public virtual void EnableChildAgents (UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit)
         {
-            int count = 0;
-            bool informed = true;
-            int x, y;
-            Util.UlongToInts (requestingRegion, out x, out y);
-            GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y);
-            if (ourRegion == null)
+            Util.FireAndForget(delegate(object o)
             {
-                m_log.Info ("[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
-                return false;
-            }
-            List<GridRegion> neighbors = GetNeighbors (ourRegion, DrawDistance);
-
-            foreach (GridRegion neighbor in neighbors)
-            {
-                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
-
-                if (neighbor.RegionHandle != requestingRegion)
+                int count = 0;
+                int x, y;
+                Util.UlongToInts(requestingRegion, out x, out y);
+                GridRegion ourRegion = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
+                if(ourRegion == null)
                 {
-                    string reason;
-                    AgentCircuitData regionCircuitData = circuit.Copy ();
-                    GridRegion nCopy = neighbor;
-                    regionCircuitData.child = true; //Fix child agent status
-                    regionCircuitData.reallyischild = true;
-                    bool useCallbacks = false;
-                    if (!InformClientOfNeighbor (AgentID, requestingRegion, regionCircuitData, ref nCopy,
-                        (uint)TeleportFlags.Default, null, out reason, out useCallbacks))
-                        informed = false;
+                    m_log.Info("[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
+                    return;
                 }
-                count++;
-            }
-            return informed;
+                List<GridRegion> neighbors = GetNeighbors(ourRegion, DrawDistance);
+
+                foreach(GridRegion neighbor in neighbors)
+                {
+                    if(neighbor.RegionHandle != requestingRegion)
+                    {
+                        string reason;
+                        AgentCircuitData regionCircuitData = circuit.Copy();
+                        GridRegion nCopy = neighbor;
+                        regionCircuitData.child = true; //Fix child agent status
+                        regionCircuitData.reallyischild = true;
+                        bool useCallbacks = false;
+                        InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData, ref nCopy,
+                            (uint)TeleportFlags.Default, null, out reason, out useCallbacks);
+                    }
+                    count++;
+                }
+            });
         }
 
         #endregion

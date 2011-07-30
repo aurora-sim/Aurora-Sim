@@ -194,7 +194,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected RegionInfo m_regionInfo;
         protected ulong crossingFromRegion;
 
-        private readonly Vector3[] Dir_Vectors = new Vector3[11];
+        private readonly Vector3[] Dir_Vectors = new Vector3[12];
 
         /// <summary>
         /// Position of agent's camera in world (region cordinates)
@@ -263,9 +263,10 @@ namespace OpenSim.Region.Framework.Scenes
             DIR_CONTROL_FLAG_DOWN = AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG,
             DIR_CONTROL_FLAG_FORWARD_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS,
             DIR_CONTROL_FLAG_BACKWARD_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_NEG,
-            DIR_CONTROL_FLAG_DOWN_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG,
             DIR_CONTROL_FLAG_LEFT_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS,
-            DIR_CONTROL_FLAG_RIGHT_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG
+            DIR_CONTROL_FLAG_RIGHT_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG,
+            DIR_CONTROL_FLAG_DOWN_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG,
+            DIR_CONTROL_FLAG_UP_NUDGE = AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_POS,
         }
         
         /// <summary>
@@ -794,16 +795,17 @@ namespace OpenSim.Region.Framework.Scenes
             Dir_Vectors[3] = -Vector3.UnitY; //RIGHT
             Dir_Vectors[4] = Vector3.UnitZ; //UP
             Dir_Vectors[5] = -Vector3.UnitZ; //DOWN
-            Dir_Vectors[8] = new Vector3(0f, 0f, -0.5f); //DOWN_Nudge
-            Dir_Vectors[6] = Vector3.UnitX*2; //FORWARD
-            Dir_Vectors[7] = -Vector3.UnitX; //BACK
-            Dir_Vectors[9] = new Vector3(0, 4, 0); //LEFT Nudge
-            Dir_Vectors[10] = new Vector3(0, -4, 0); //RIGHT Nudge
+            Dir_Vectors[6] = Vector3.UnitX*2; //FORWARD_NUDGE
+            Dir_Vectors[7] = -Vector3.UnitX; //BACK_NUDGE
+            Dir_Vectors[8] = new Vector3(0, 4, 0); //LEFT Nudge
+            Dir_Vectors[9] = new Vector3(0, -4, 0); //RIGHT Nudge
+            Dir_Vectors[10] = new Vector3(0f, 0f, -0.5f); //DOWN_Nudge
+            Dir_Vectors[11] = new Vector3(0f, 0f, 0.5f); //UP_Nudge
         }
 
         private Vector3[] GetWalkDirectionVectors()
         {
-            Vector3[] vector = new Vector3[11];
+            Vector3[] vector = new Vector3[12];
             vector[0] = new Vector3(m_CameraUpAxis.Z, 0f, -m_CameraAtAxis.Z); //FORWARD
             vector[1] = new Vector3(-m_CameraUpAxis.Z, 0f, m_CameraAtAxis.Z); //BACK
             vector[2] = Vector3.UnitY; //LEFT
@@ -813,8 +815,10 @@ namespace OpenSim.Region.Framework.Scenes
             vector[8] = new Vector3(-m_CameraAtAxis.Z, 0f, -m_CameraUpAxis.Z); //DOWN_Nudge
             vector[6] = (new Vector3(m_CameraUpAxis.Z, 0f, -m_CameraAtAxis.Z) * 2); //FORWARD Nudge
             vector[7] = new Vector3(-m_CameraUpAxis.Z, 0f, m_CameraAtAxis.Z); //BACK Nudge
-            vector[9] = new Vector3(0, 2, 0); //LEFT Nudge
-            vector[10] = new Vector3(0, -2, 0); //RIGHT Nudge
+            vector[8] = new Vector3(0, 2, 0); //LEFT Nudge
+            vector[9] = new Vector3(0, -2, 0); //RIGHT Nudge
+            vector[10] = new Vector3(m_CameraAtAxis.Z, 0f, m_CameraUpAxis.Z); //DOWN_Nudge
+            vector[11] = new Vector3(m_CameraAtAxis.Z, 0f, -m_CameraUpAxis.Z); //UP_Nudge
             return vector;
         }
 

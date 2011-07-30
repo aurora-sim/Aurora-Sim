@@ -22,6 +22,10 @@
     ;; ##
     ;; ## World Settings
     ;; ##
+	
+	;; This turns off crossings and allows you to move outside the region to any position (by flying)
+	;; This 'does' not allow you to cross into other regions!
+	InfiniteRegion = false
 
     ;; ##
     ;; ## Avatar Settings

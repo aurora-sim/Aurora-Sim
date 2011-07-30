@@ -851,7 +851,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Position.X > _parent_scene.Region.RegionSizeX - .25f ||
                 Position.Y > _parent_scene.Region.RegionSizeY - .25f)
             {
-                if (!CheckForRegionCrossing())
+                if (!_parent_scene.InfiniteRegion && !CheckForRegionCrossing())
                 {
                     Vector3 newPos = Position;
                     newPos.X = Util.Clip(Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);
@@ -882,45 +882,39 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Check for underground
 
             bool notMoving = false;
-            if (!(Position.X < 0.25f || Position.Y < 0.25f ||
-                Position.X > _parent_scene.Region.RegionSizeX - .25f ||
-                Position.Y > _parent_scene.Region.RegionSizeY - .25f))
-            {
-                float groundHeight = _parent_scene.GetTerrainHeightAtXY (
+            float groundHeight = _parent_scene.GetTerrainHeightAtXY (
                            tempPos.X + (tempPos.X == 0 ? tempPos.X : timeStep * 0.75f * vel.X),
                            tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
-
-                if ((tempPos.Z - AvatarHalfsize) < groundHeight)
+            if((tempPos.Z - AvatarHalfsize) < groundHeight)
+            {
+                if(_target_velocity == Vector3.Zero &&
+                    Math.Abs(vel.Z) < 0.1)
+                    notMoving = true;
+                if(!flying)
                 {
-                    if (_target_velocity == Vector3.Zero &&
-                        Math.Abs (vel.Z) < 0.1)
-                        notMoving = true;
-                    if (!flying)
-                    {
-                        //if (_target_velocity.Z < 0)
-                        _target_velocity.Z = 0;
-                        if (vel.Z < -10f)
-                            vel.Z = -10f;
-                        vec.Z = -vel.Z * PID_D * 1.5f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
-                    }
-                    else
-                    {
-                        vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
-                    }
+                    //if (_target_velocity.Z < 0)
+                    _target_velocity.Z = 0;
+                    if(vel.Z < -10f)
+                        vel.Z = -10f;
+                    vec.Z = -vel.Z * PID_D * 1.5f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
                 }
-                if (tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
+                else
                 {
-                    m_iscolliding = true;
-                    flying = false; // ground the avatar
-                    ContactPoint point = new ContactPoint ();
-                    point.Type = ActorTypes.Ground;
-                    point.PenetrationDepth = -Math.Abs(vel.Z);
-                    point.Position = Position;
-                    point.SurfaceNormal = new Vector3 (0, 0, -1f);
-
-                    //0 is the ground localID
-                    AddCollisionEvent (0, point);
+                    vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
                 }
+            }
+            if(tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
+            {
+                m_iscolliding = true;
+                flying = false; // ground the avatar
+                ContactPoint point = new ContactPoint();
+                point.Type = ActorTypes.Ground;
+                point.PenetrationDepth = -Math.Abs(vel.Z);
+                point.Position = Position;
+                point.SurfaceNormal = new Vector3(0, 0, -1f);
+
+                //0 is the ground localID
+                AddCollisionEvent(0, point);
             }
 
             #endregion
