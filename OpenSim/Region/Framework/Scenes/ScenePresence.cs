@@ -1286,13 +1286,13 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         bResetMoveToPosition = true;
                         DCFlagKeyPressed = true;
-                        agent_control_v3 += dirVectors[9];
+                        agent_control_v3 += dirVectors[8];
                     }
                     else if ((flags & AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG) == AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG)
                     {
                         bResetMoveToPosition = true;
                         DCFlagKeyPressed = true;
-                        agent_control_v3 += dirVectors[10];
+                        agent_control_v3 += dirVectors[9];
                     }
                     else
                     {

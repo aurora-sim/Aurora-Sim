@@ -465,6 +465,7 @@ namespace Aurora.Modules
                             continue;
                         }
                         if (sourceType == ChatSourceType.Agent &&
+                            avatar != null && avatar.CurrentParcel != null && 
                             (avatar.CurrentParcelUUID != presence.CurrentParcelUUID &&
                             (avatar.CurrentParcel.LandData.Private || presence.CurrentParcel.LandData.Private)))
                             continue; //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
