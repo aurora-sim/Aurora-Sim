@@ -60,6 +60,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTierLen = 1;
         private readonly System.Timers.Timer taskTimer = new System.Timers.Timer();
         private int NumberOfDaysForOldAssets = -30;
+        private string m_uuidColumnName = "id";
 
         // for debugging
         private const bool disableTimer = false;
@@ -93,6 +94,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             if (source.Configs["Handlers"].GetString("AssetHandler", "") != "AssetService")
                 return;
+
+            IDataConnector connector = (IDataConnector)m_Gd;
+                if(connector.Identifier == "SQLiteConnector")
+                    m_uuidColumnName = "uuid";
+
 
             m_CacheDirectory = source.Configs["BlackHole"].GetString("CacheDirector", m_CacheDirectory);
             m_CacheDirectoryBackup = source.Configs["BlackHole"].GetString("BackupCacheDirector", m_CacheDirectoryBackup);
@@ -634,7 +640,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private AssetBase Convert2BH(UUID uuid)
         {
-            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
+            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets", m_uuidColumnName + ", name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
             AssetBase asset = null;
             try
             {
