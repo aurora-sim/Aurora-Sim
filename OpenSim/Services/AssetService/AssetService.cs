@@ -57,7 +57,7 @@ namespace OpenSim.Services.AssetService
             get { return this; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
@@ -65,7 +65,7 @@ namespace OpenSim.Services.AssetService
             Configure(config, registry);
         }
 
-        public void Configure(IConfigSource config, IRegistryCore registry)
+        public virtual void Configure (IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
 
@@ -89,15 +89,15 @@ namespace OpenSim.Services.AssetService
             m_Log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup ()
         {
         }
 
-        public AssetBase Get(string id)
+        public virtual AssetBase Get (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
@@ -112,22 +112,7 @@ namespace OpenSim.Services.AssetService
             return asset;
         }
 
-        public AssetBase GetMetadata(string id)
-        {
-            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null)
-            {
-                AssetBase cachedAsset = cache.Get(id);
-                if (cachedAsset != null)
-                    return cachedAsset;
-            }
-            AssetBase asset = m_database.GetMeta(UUID.Parse(id));
-            if (cache != null && asset != null)
-                cache.Cache(asset);
-            return asset;
-        }
-
-        public AssetBase GetCached(string id)
+        public virtual AssetBase GetCached (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
@@ -135,7 +120,7 @@ namespace OpenSim.Services.AssetService
             return null;
         }
 
-        public byte[] GetData(string id)
+        public virtual byte[] GetData (string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
@@ -151,12 +136,12 @@ namespace OpenSim.Services.AssetService
             return new byte[] { };
         }
 
-        public bool GetExists(string id)
+        public virtual bool GetExists (string id)
         {
             return m_database.ExistsAsset(UUID.Parse(id));
         }
 
-        public bool Get(String id, Object sender, AssetRetrieved handler)
+        public virtual bool Get (String id, Object sender, AssetRetrieved handler)
         {
             //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
 
@@ -172,7 +157,7 @@ namespace OpenSim.Services.AssetService
             return true;
         }
 
-        public UUID Store(AssetBase asset)
+        public virtual UUID Store (AssetBase asset)
         {
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             asset.ID = m_database.Store(asset);
@@ -186,13 +171,13 @@ namespace OpenSim.Services.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        public bool UpdateContent(UUID id, byte[] data)
+        public virtual bool UpdateContent (UUID id, byte[] data)
         {
             m_database.UpdateContent(id, data);
             return true;
         }
 
-        public bool Delete(UUID id)
+        public virtual bool Delete (UUID id)
         {
             m_Log.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             AssetBase asset = m_database.GetAsset(id);

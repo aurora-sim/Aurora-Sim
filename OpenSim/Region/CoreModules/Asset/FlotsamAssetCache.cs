@@ -333,6 +333,8 @@ namespace Flotsam.RegionModules.AssetCache
 
                             asset = (AssetBase)bformatter.Deserialize(stream);
 
+                            if(asset.ID == UUID.Zero)//Bad request
+                                return null;
                             UpdateMemoryCache(id, asset);
 
                             m_DiskHits++;
@@ -859,14 +861,6 @@ namespace Flotsam.RegionModules.AssetCache
         #endregion
 
         #region IAssetService Members
-
-
-        public AssetBase GetMetadata(string id)
-        {
-            AssetBase asset = Get(id);
-            asset.Data = new byte[]{};
-            return asset;
-        }
 
         public byte[] GetData(string id)
         {

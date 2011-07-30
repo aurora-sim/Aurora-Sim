@@ -115,27 +115,6 @@ namespace OpenSim.Services
                     m_log.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] + ", " + ex.ToString());
                 }
             }
-            else if (p.Length > 1 && p[1] == "metadata")
-            {
-                AssetBase metadata = m_AssetService.GetMetadata(p[0]);
-
-                if (metadata != null)
-                {
-                    XmlSerializer xs =
-                            new XmlSerializer(typeof(AssetBase));
-                    result = WebUtils.SerializeResult(xs, metadata);
-
-                    httpResponse.StatusCode = (int)HttpStatusCode.OK;
-                    httpResponse.ContentType =
-                            SLUtil.SLAssetTypeToContentType(metadata.Type);
-                }
-                else
-                {
-                    httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
-                    httpResponse.ContentType = "text/plain";
-                    result = new byte[0];
-                }
-            }
             else
             {
                 AssetBase asset = m_AssetService.Get(p[0]);

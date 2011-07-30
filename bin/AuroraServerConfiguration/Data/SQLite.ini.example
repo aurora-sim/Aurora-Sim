@@ -14,7 +14,7 @@
 [IAvatarData]
     ConnectionString = "URI=file:avatars.db,version=3,UseUTF16Encoding=True"
 
-[AssetService]
+[IAssetDataPlugin]
     ConnectionString = "URI=file:Asset.db,version=3"
 
 [SimulationDataStore]

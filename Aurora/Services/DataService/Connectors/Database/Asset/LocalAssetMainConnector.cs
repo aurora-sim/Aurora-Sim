@@ -27,9 +27,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 return;
             m_Gd = genericData;
 
-            if (source.Configs["Handlers"].GetString("AssetHandler", "") != "AssetService")
-                return;
-
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 

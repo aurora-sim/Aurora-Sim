@@ -962,37 +962,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                /*Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 &&*/ (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
+                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
-                if(Math.Abs(vel.X) < 0.15 && Math.Abs(vel.Y) < 0.15 && Math.Abs(vel.Z) < 0.15)
+                m_isJumping = false;
+                //  keep track of where we stopped.  No more slippin' & slidin'
+                if(!_zeroFlag)
                 {
-                    m_isJumping = false;
-                    //  keep track of where we stopped.  No more slippin' & slidin'
-                    if(!_zeroFlag)
-                    {
-                        _zeroFlag = true;
-                        _wasZeroFlagFlying = flying;
-                        _zeroPosition = tempPos;
-                    }
-
-                    if(m_pidControllerActive)
-                    {
-                        // We only want to deactivate the PID Controller if we think we want to have our surrogate
-                        // react to the physics scene by moving it's position.
-                        // Avatar to Avatar collisions
-                        // Prim to avatar collisions
-                        // if target vel is zero why was it here ?
-                        vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
-                        vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
-                        if(notMoving)
-                            vec.Z = 0;
-                    }
+                    _zeroFlag = true;
+                    _wasZeroFlagFlying = flying;
+                    _zeroPosition = tempPos;
                 }
-                else
+
+                if(m_pidControllerActive)
                 {
-                    vec.X = vel.X * -1 * PID_P;
-                    vec.Y = vel.Y * -1 * PID_P;
+                    // We only want to deactivate the PID Controller if we think we want to have our surrogate
+                    // react to the physics scene by moving it's position.
+                    // Avatar to Avatar collisions
+                    // Prim to avatar collisions
+                    // if target vel is zero why was it here ?
+                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
+                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
+                    if(notMoving)
+                        vec.Z = 0;
                 }
             }
             else
@@ -1256,9 +1248,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <summary>
         /// Updates the reported position and velocity.  This essentially sends the data up to ScenePresence.
         /// </summary>
-        public void UpdatePositionAndVelocity(float timestep)
+        public void UpdatePositionAndVelocity (float timestep)
         {
-            if (!m_shouldBePhysical)
+            if(!m_shouldBePhysical)
                 return;
 
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
@@ -1267,7 +1259,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 vec = d.BodyGetPosition(Body);
             }
-            catch (NullReferenceException)
+            catch(NullReferenceException)
             {
                 bad = true;
                 _parent_scene.BadCharacter(this);
@@ -1317,49 +1309,47 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             bool VelIsZero = false;
             int vcntr = 0;
-            if (Math.Abs(_velocity.X) < 0.01)
+            if(Math.Abs(_velocity.X) < 0.01)
             {
                 vcntr++;
                 _velocity.X = 0;
             }
-            if (Math.Abs(_velocity.Y) < 0.01)
+            if(Math.Abs(_velocity.Y) < 0.01)
             {
                 vcntr++;
                 _velocity.Y = 0;
             }
-            if (Math.Abs(_velocity.Z) < 0.01)
+            if(Math.Abs(_velocity.Z) < 0.01)
             {
                 vcntr++;
                 _velocity.Z = 0;
             }
-            if (vcntr == 3)
+            if(vcntr == 3)
                 VelIsZero = true;
 
             // slow down updates
             m_UpdateTimecntr += timestep;
-            if (m_UpdateTimecntr < m_UpdateFPScntr)
+            if(m_UpdateTimecntr < m_UpdateFPScntr)
                 return;
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 0.125f;
-            const float ANG_VELOCITY_TOLERANCE = 0.05f;
-            //const float POSITION_TOLERANCE = 0.25f;
+            const float VELOCITY_TOLERANCE = 0.1f;
+            const float ANG_VELOCITY_TOLERANCE = 0;
+            const float POSITION_TOLERANCE = 0.25f;
             bool needSendUpdate = false;
 
             //Check to see whether we need to trigger the significant movement method in the presence
             // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
             // but simulator does not process rotation changes
             float length = (Velocity - m_lastVelocity).LengthSquared();
-            float anglength = (m_rotationalVelocity  - m_lastAngVelocity).LengthSquared();
-            if (//!VelIsZero &&
+            float anglength = (m_rotationalVelocity - m_lastAngVelocity).LengthSquared();
+            if(//!VelIsZero &&
                 //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                 (
-                //(Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
-                //(Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
-                //(Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE)// ||
                 (length > VELOCITY_TOLERANCE) ||
                 (anglength > ANG_VELOCITY_TOLERANCE)// ||
+                //true
                 //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
@@ -1378,16 +1368,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                        base.RequestPhysicsterseUpdate();
                 //                        base.TriggerSignificantMovement();
             }
-            else if (VelIsZero)
+            else if(VelIsZero)
             {
-                if (m_ZeroUpdateSent > 0)
+                if(m_ZeroUpdateSent > 0)
                 {
                     needSendUpdate = true;
                     m_ZeroUpdateSent--;
                 }
             }
 
-            if (needSendUpdate)
+            if(needSendUpdate)
             {
                 base.RequestPhysicsterseUpdate();
                 base.TriggerSignificantMovement();
@@ -1395,7 +1385,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //Tell any listeners about the new info
             // This is for animations
-            base.TriggerMovementUpdate ();
+            base.TriggerMovementUpdate();
         }
 
         #endregion

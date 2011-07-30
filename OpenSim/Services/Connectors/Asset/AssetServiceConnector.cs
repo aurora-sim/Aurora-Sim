@@ -128,35 +128,6 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
-        public virtual AssetBase GetMetadata(string id)
-        {
-            if (m_Cache != null)
-            {
-                AssetBase fullAsset = m_Cache.Get(id);
-
-                if (fullAsset != null)
-                {
-                    // thinking I should not include the data since this use to request metadata
-                    fullAsset.Data = new byte[] { };
-                    return fullAsset;
-                }
-            }
-
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
-            {
-                string uri = m_ServerURI + "/" + id + "/metadata";
-
-                AssetBase asset = SynchronousRestObjectRequester.
-                        MakeRequest<int, AssetBase>("GET", uri, 0);
-                if (asset != null)
-                    return asset;
-            }
-            return null;
-        }
-
         public virtual byte[] GetData(string id)
         {
             if (m_Cache != null)
@@ -286,7 +257,7 @@ namespace OpenSim.Services.Connectors
 
             if (asset == null)
             {
-                asset = GetMetadata(id.ToString());
+                asset = Get(id.ToString());
                 if (asset == null)
                     return false;
             }

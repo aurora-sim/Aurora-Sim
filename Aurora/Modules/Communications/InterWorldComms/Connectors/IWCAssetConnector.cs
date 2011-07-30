@@ -104,14 +104,6 @@ namespace Aurora.Modules
             return asset;
         }
 
-        public AssetBase GetMetadata(string id)
-        {
-            AssetBase asset = m_localService.GetMetadata(id);
-            if (asset == null)
-                asset = m_remoteService.GetMetadata(id);
-            return asset;
-        }
-
         public bool GetExists(string id)
         {
             bool exists = m_localService.GetExists(id);
