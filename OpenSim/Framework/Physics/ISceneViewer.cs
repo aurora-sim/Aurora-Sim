@@ -48,7 +48,7 @@ namespace OpenSim.Framework
         /// Sends all the information about the client to this avatar
         /// </summary>
         /// <param name="presence"></param>
-        void QueuePresenceForFullUpdate (IScenePresence presence);
+        void QueuePresenceForFullUpdate (IScenePresence presence, bool forced);
 
         /// <summary>
         /// Send the full presence update immediately

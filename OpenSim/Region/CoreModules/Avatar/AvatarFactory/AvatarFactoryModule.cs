@@ -1009,7 +1009,7 @@ textures 1
                 if (!sendAppearance)
                     avatar.SceneViewer.SendPresenceFullUpdate (m_sp);
                 else
-                    avatar.SceneViewer.QueuePresenceForFullUpdate (m_sp);
+                    avatar.SceneViewer.QueuePresenceForFullUpdate (m_sp, false);
             }
 
             /// <summary>

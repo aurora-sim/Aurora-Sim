@@ -929,14 +929,16 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (sp.UUID == avatar.UUID)
                         continue;
+                    if(sp.CurrentParcel == null)
+                        continue;
                     if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID)//Send full updates for those in the sim
                     {
                         if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))//Either one, we gotta send an update
                         {
                             sp.SceneViewer.RemoveAvatarFromView (avatar);
                             avatar.SceneViewer.RemoveAvatarFromView (sp);
-                            sp.SceneViewer.QueuePresenceForFullUpdate (avatar);
-                            avatar.SceneViewer.QueuePresenceForFullUpdate (sp);
+                            sp.SceneViewer.QueuePresenceForFullUpdate (avatar, true);
+                            avatar.SceneViewer.QueuePresenceForFullUpdate (sp, true);
                         }
                     }
                     else//Kill those outside the parcel

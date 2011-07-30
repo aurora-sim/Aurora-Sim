@@ -137,7 +137,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="DrawDistance"></param>
         /// <param name="circuit"></param>
         /// <returns></returns>
-        bool EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit);
+        void EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance, AgentCircuitData circuit);
 
         /// <summary>
         /// Teleport the given agent to another sim
