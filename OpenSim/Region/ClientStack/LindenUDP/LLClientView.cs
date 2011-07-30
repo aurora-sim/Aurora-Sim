@@ -4662,7 +4662,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 position = presence.OffsetPosition;
                 velocity = presence.Velocity;
                 acceleration = Vector3.Zero;
-                angularVelocity = Vector3.Zero;
+                if(presence.PhysicsActor != null)
+                    angularVelocity = presence.PhysicsActor.RotationalVelocity;
+                else
+                    angularVelocity = Vector3.Zero;
                 rotation = presence.Rotation;
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (sendTexture)

@@ -112,10 +112,26 @@ namespace OpenSim.Region.Framework.Scenes
             m_presence = presence;
             m_scene = presence.Scene;
             m_presence.OnSignificantClientMovement += SignificantClientMovement;
+            m_presence.Scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
+            m_scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
             m_presence.Scene.AuroraEventManager.RegisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
             m_presence.Scene.AuroraEventManager.RegisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
             m_prioritizer = new Prioritizer (presence.Scene);
             m_culler = new Culler (presence.Scene);
+        }
+
+        void EventManager_OnClosingClient (IClientAPI client)
+        {
+            if (lastPresencesDInView.ContainsKey (client.AgentId))
+            {
+                lastPresencesInView.Remove (lastPresencesDInView[client.AgentId]);
+                lastPresencesDInView.Remove (client.AgentId);
+            }
+        }
+
+        void EventManager_OnMakeChildAgent (IScenePresence presence, Services.Interfaces.GridRegion destination)
+        {
+            RemoveAvatarFromView (presence);
         }
 
         object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
@@ -867,6 +883,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Close ()
         {
+            if (m_presence == null)
+                return;
             m_SentInitialObjects = false;
             m_prioritizer = null;
             m_culler = null;
@@ -875,6 +893,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_objectUpdatesToSend.Clear ();
             m_presenceUpdatesToSend.Clear ();
             m_presence.OnSignificantClientMovement -= SignificantClientMovement;
+            m_presence.Scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
+            m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
             m_presence.Scene.AuroraEventManager.UnregisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
             m_presence.Scene.AuroraEventManager.UnregisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
             m_presence = null;

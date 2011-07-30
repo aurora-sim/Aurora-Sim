@@ -185,6 +185,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AddChange (changes.buildingrepresentation, null);
             }
         }
+
+        internal bool m_blockPhysicalReconstruction = false;
+        public override bool BlockPhysicalReconstruction
+        {
+            get { return m_blockPhysicalReconstruction; }
+            set
+            {
+                if(value)
+                    m_blockPhysicalReconstruction = value;
+                else
+                    AddChange(changes.blockphysicalreconstruction, null);
+            }
+        }
         private CollisionEventUpdate CollisionEventsThisFrame;
 
         public volatile bool childPrim;
@@ -373,7 +386,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void MakeBody ()
+        public override void MakeBody()
         {
             //            d.Vector3 dvtmp;
             //            d.Vector3 dbtmp;
@@ -439,7 +452,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         quat.X = prm._orientation.X;
                         quat.Y = prm._orientation.Y;
                         quat.Z = prm._orientation.Z;
-                        d.RfromQ (out mat, ref quat);
+                        /*d.RfromQ (out mat, ref quat);
                         d.MassRotate (ref tmpdmass, ref mat);
 
                         Vector3 ppos = prm._position;
@@ -453,7 +466,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             ppos.Y,
                             ppos.Z);
 
-                        d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia
+                        d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia*/
+
+                        d.RfromQ (out mat, ref quat);
+                        d.MassRotate (ref tmpdmass, ref mat);
+                        d.MassTranslate (ref tmpdmass, Position.X - prm.Position.X, Position.Y - prm.Position.Y, Position.Z - prm.Position.Z);
+                        d.MassAdd (ref objdmass, ref tmpdmass);
 
                         // fix prim colision cats
                         if (prm.prim_geom == IntPtr.Zero)
@@ -939,8 +957,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #endregion
 
-
-
         private static Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr> ();
 
         public void setMesh (AuroraODEPhysicsScene parent_scene, IMesh mesh)
@@ -1084,8 +1100,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     prim.DestroyBody (); // don't loose bodies around
                     prim.Body = IntPtr.Zero;
                 }
-                if (m_isphysical)
-                    MakeBody (); // full nasty reconstruction
+                if(m_isphysical)
+                {
+                    if(!BlockPhysicalReconstruction)
+                        MakeBody(); // full nasty reconstruction
+                }
             }
         }
 
@@ -1574,7 +1593,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastposition = _position;
                         _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
                         d.Quaternion ori;
-                        foreach (AuroraODEPrim child in childrenPrim)
+                        /*foreach (AuroraODEPrim child in childrenPrim)
                         {
                             pos = d.GeomGetPosition (child.prim_geom);
                             child.m_lastposition = child._position;
@@ -1584,7 +1603,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             child._orientation.Y = ori.Y;
                             child._orientation.Z = ori.Z;
                             child._orientation.W = ori.W;
-                        }
+                        }*/
                         _zeroFlag = false;
 
                         _acceleration = ((_velocity - m_lastVelocity) / timestep);
@@ -1993,7 +2012,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         cpos.Z < -100 ||
                         cpos.Z > 100000)
                     {
-
                         if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
                         {
                             _position.X = (float)lpos.X;
@@ -2009,16 +2027,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            m_disabled = true;
-                            m_frozen = true;
+                            if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                            {
+                                m_disabled = true;
+                                m_frozen = true;
 
-                            Vector3 l_position;
-                            l_position.X = (float)lpos.X;
-                            l_position.Y = (float)lpos.Y;
-                            l_position.Z = (float)lpos.Z;
+                                Vector3 l_position;
+                                l_position.X = (float)lpos.X;
+                                l_position.Y = (float)lpos.Y;
+                                l_position.Z = (float)lpos.Z;
 
-                            base.RaiseOutOfBounds (l_position);
-                            return;
+                                base.RaiseOutOfBounds (l_position);
+                                return;
+                            }
+                            else
+                            {
+                                Vector3 newPos = Position;
+                                newPos.X = Util.Clip (Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);
+                                newPos.Y = Util.Clip (Position.Y, 0.75f, _parent_scene.Region.RegionSizeY - 0.75f);
+                                Position = newPos;
+                                d.BodySetPosition (Body, newPos.X, newPos.Y, newPos.Z);
+                            }
                         }
                     }
 
@@ -3250,6 +3279,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 case changes.buildingrepresentation:
                     m_buildingRepresentation = false;
+                    break;
+                case changes.blockphysicalreconstruction:
+                    m_blockPhysicalReconstruction = false;
                     break;
 
                 case changes.Null:

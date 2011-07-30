@@ -48,6 +48,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // private d.Matrix3 m_StandUpRotation;
         private Vector3 _velocity;
         private Vector3 m_lastVelocity;
+        private Vector3 m_lastAngVelocity;
         private Vector3 _target_velocity;
 //        private Quaternion _orientation;
 //        private Quaternion _lastorientation;
@@ -434,6 +435,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // There's a problem with Vector3.Zero! Don't Use it Here!
                 //if (_zeroFlag)
                 //    return Vector3.Zero;
+                //And definitely don't set this, otherwise, we never stop sending updates!
                 //m_lastUpdateSent = false;
                 return _velocity;
             }
@@ -751,6 +753,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
             }
         }
+
+        private int m_lastForceApplied = 0;
       
         /// <summary>
         /// Called from Simulate
@@ -962,49 +966,39 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             Vector3 gravForce = new Vector3 ();
 
-            #region Gravity
-
-            /*if (!flying)
-                _parent_scene.CalculateGravity (m_mass, tempPos, true, 1, ref gravForce);
-            else
-                _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
-
-            Vector3 gravCopy = gravForce;
-            gravCopy.Normalize ();
-            Quaternion rotDiff = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravCopy);
-            if (rotDiff != Quaternion.Identity)
-            {
-                rotDiff.Normalize ();
-            }
-            //_target_velocity *= rotDiff;*/
-
-            #endregion
-
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
+                /*Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 &&*/ (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
-                m_isJumping = false;
-                //  keep track of where we stopped.  No more slippin' & slidin'
-                if (!_zeroFlag)
+                if(Math.Abs(vel.X) < 0.15 && Math.Abs(vel.Y) < 0.15 && Math.Abs(vel.Z) < 0.15)
                 {
-                    _zeroFlag = true;
-                    _wasZeroFlagFlying = flying;
-                    _zeroPosition = tempPos;
-                }
+                    m_isJumping = false;
+                    //  keep track of where we stopped.  No more slippin' & slidin'
+                    if(!_zeroFlag)
+                    {
+                        _zeroFlag = true;
+                        _wasZeroFlagFlying = flying;
+                        _zeroPosition = tempPos;
+                    }
 
-                if (m_pidControllerActive)
+                    if(m_pidControllerActive)
+                    {
+                        // We only want to deactivate the PID Controller if we think we want to have our surrogate
+                        // react to the physics scene by moving it's position.
+                        // Avatar to Avatar collisions
+                        // Prim to avatar collisions
+                        // if target vel is zero why was it here ?
+                        vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
+                        vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
+                        if(notMoving)
+                            vec.Z = 0;
+                    }
+                }
+                else
                 {
-                    // We only want to deactivate the PID Controller if we think we want to have our surrogate
-                    // react to the physics scene by moving it's position.
-                    // Avatar to Avatar collisions
-                    // Prim to avatar collisions
-                    // if target vel is zero why was it here ?
-                    vec.X = -vel.X * PID_D + (_zeroPosition.X - tempPos.X) * PID_P;
-                    vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
-                    if (notMoving)
-                        vec.Z = 0;
+                    vec.X = vel.X * -1 * PID_P;
+                    vec.Y = vel.Y * -1 * PID_P;
                 }
             }
             else
@@ -1053,9 +1047,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region Gravity
 
                 if (!flying)
-                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 1.0f, ref gravForce);
+                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 0.75f, ref gravForce);
                 else
-                    _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.75f, ref gravForce);//Allow point gravity and repulsors affect us a bit
+                    _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.65f, ref gravForce);//Allow point gravity and repulsors affect us a bit
 
                 vec += gravForce;
                 if (notMoving)
@@ -1103,7 +1097,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            if (flying)
+            if(realFlying)
             {
                 #region Auto Fly Height
 
@@ -1203,10 +1197,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!d.BodyIsEnabled (Body))
                         d.BodyEnable (Body);
 
-                    if (vec == Vector3.Zero) //if we arn't moving, STOP
-                        d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                    if(vec == Vector3.Zero) //if we arn't moving, STOP
+                    {
+                        m_lastForceApplied = 0;
+                        d.BodySetLinearVel (Body, vec.X, vec.Y, vec.Z);
+                    }
                     else
+                    {
+                        if(m_lastForceApplied < 5)
+                            vec *= m_lastForceApplied / 5;
                         doForce (vec);
+                        m_lastForceApplied++;
+                    }
                      
                     if (!_zeroFlag && (!flying || m_iscolliding))
                         AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
@@ -1290,13 +1292,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 vec = d.BodyGetLinearVel(Body);
             }
-            catch (NullReferenceException)
+            catch(NullReferenceException)
             {
                 vec.X = _velocity.X;
                 vec.Y = _velocity.Y;
                 vec.Z = _velocity.Z;
             }
 
+            d.Vector3 rvec;
+            try
+            {
+                rvec = d.BodyGetAngularVel(Body);
+            }
+            catch(NullReferenceException)
+            {
+                rvec.X = m_rotationalVelocity.X;
+                rvec.Y = m_rotationalVelocity.Y;
+                rvec.Z = m_rotationalVelocity.Z;
+            }
+
+            m_rotationalVelocity.X = rvec.X;
+            m_rotationalVelocity.Y = rvec.Y;
+            m_rotationalVelocity.Z = rvec.Z;
 
             // vec is a ptr into internal ode data better not mess with it
 
@@ -1331,34 +1348,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 0.1f;
-            const float POSITION_TOLERANCE = 0.25f;
+            const float VELOCITY_TOLERANCE = 0.125f;
+            const float ANG_VELOCITY_TOLERANCE = 0.05f;
+            //const float POSITION_TOLERANCE = 0.25f;
             bool needSendUpdate = false;
 
             //Check to see whether we need to trigger the significant movement method in the presence
             // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
             // but simulator does not process rotation changes
+            float length = (Velocity - m_lastVelocity).LengthSquared();
+            float anglength = (m_rotationalVelocity  - m_lastAngVelocity).LengthSquared();
             if (//!VelIsZero &&
                 //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                 (
-                (Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
-                (Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
-                (Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE) ||
-                (Math.Abs(_position.X - m_lastPosition.X) > POSITION_TOLERANCE) ||
-                (Math.Abs(_position.Y - m_lastPosition.Y) > POSITION_TOLERANCE) ||
-                (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE)// ||
+                //(Math.Abs(Velocity.X - m_lastVelocity.X) > VELOCITY_TOLERANCE) ||
+                //(Math.Abs(Velocity.Y - m_lastVelocity.Y) > VELOCITY_TOLERANCE) ||
+                //(Math.Abs(Velocity.Z - m_lastVelocity.Z) > VELOCITY_TOLERANCE)// ||
+                (length > VELOCITY_TOLERANCE) ||
+                (anglength > ANG_VELOCITY_TOLERANCE)// ||
                 //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Z - _orientation.Z) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
                 ))
             {
+                //m_log.Warn("Vel change - " + length + ", " + d.BodyIsEnabled(Body));
                 // Update the "last" values
                 needSendUpdate = true;
                 m_ZeroUpdateSent = 10;
                 m_lastPosition = _position;
                 //                        m_lastRotationalVelocity = RotationalVelocity;
                 m_lastVelocity = Velocity;
+                m_lastAngVelocity = RotationalVelocity;
                 //                            _lastorientation = Orientation;
                 //                        base.RequestPhysicsterseUpdate();
                 //                        base.TriggerSignificantMovement();

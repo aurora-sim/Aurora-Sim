@@ -996,6 +996,9 @@ namespace OpenSim.Framework
         public virtual void VehicleFlags(int param, bool remove) { }
         public virtual void SetCameraPos(Quaternion CameraRotation) { }
         public virtual bool BuildingRepresentation { get; set; }
+        public virtual bool BlockPhysicalReconstruction { get; set; }
+
+        public virtual void MakeBody () { }
 
         public virtual bool VolumeDetect
         {

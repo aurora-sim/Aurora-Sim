@@ -1514,9 +1514,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         m_cachedGroupTitles[presence.UUID] = Title;
                         if (!presence.IsChildAgent)
                         {
-                            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-                            if(appearance != null)
-                                appearance.SendAvatarDataToAllAgents (false);
+                            //Force send a full update
+                            foreach (IScenePresence sp in scene.GetScenePresences ())
+                            {
+                                if (sp.SceneViewer.Culler.ShowEntityToClient (sp, presence, scene))
+                                    sp.ControllingClient.SendAvatarDataImmediate (presence);
+                            }
                         }
                     }
                     return;
