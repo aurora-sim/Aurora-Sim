@@ -229,7 +229,7 @@ namespace OpenSim.Services.CapsService
                         }
                         else
                         {
-                            AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, (sbyte)AssetType.Texture, texture.CreatorID);
+                            AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, AssetType.Texture, texture.CreatorID);
                             newTexture.Data = ConvertTextureData(texture, format);
                             if (newTexture.Data.Length == 0)
                                 return false; // !!! Caller try another codec, please!
