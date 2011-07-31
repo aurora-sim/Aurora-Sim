@@ -103,9 +103,9 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                         AssetBase asset;
                         UUID cacheID = UUID.Combine (TERRAIN_CACHE_MAGIC, textureIDs[i]);
 
-                        // Try to fetch a cached copy of the decoded/resized version of this texture
+                        // The asset service does this check as well, so I don't think we need to do this.
                         asset = assetService.GetCached (cacheID.ToString ());
-                        if (asset != null)
+                        if ((asset != null) && (asset.Data != null) && (asset.Data.Length != 0))
                         {
                             try
                             {

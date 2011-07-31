@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Linq;
 using log4net;
 using System;
 using System.Collections.Generic;
@@ -96,28 +97,29 @@ namespace OpenSim.Services.Connectors
         public virtual AssetBase Get(string id)
         {
             AssetBase asset = null;
+
+            if (m_Cache != null)
+            {
+                asset = m_Cache.Get(id);
+                if ((asset != null) && ((asset.Data != null) && (asset.Data.Length != 0)))
+                    return asset;
+            }
+
             List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
-            {
-                string uri = m_ServerURI + "/" + id;
-
-                if (m_Cache != null)
-                    asset = m_Cache.Get(id);
-
-                if ((asset == null) || ((asset != null) && ((asset.Data == null) || (asset.Data.Length == 0))))
+            if (serverURIs != null)
+                foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
                 {
                     asset = SynchronousRestObjectRequester.
-                            MakeRequest<int, AssetBase>("GET", uri, 0);
+                        MakeRequest<int, AssetBase>("GET", uri, 0);
 
                     if (m_Cache != null && asset != null)
                         m_Cache.Cache(asset);
+                    if (asset != null)
+                        return asset;
                 }
-                if (asset != null)
-                    return asset;
-            }
-            return asset;
+            return null;
         }
 
         public virtual AssetBase GetCached(string id)
