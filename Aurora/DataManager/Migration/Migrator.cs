@@ -39,6 +39,7 @@ namespace Aurora.DataManager.Migration
     public class Migrator : IMigrator, IRestorePoint
     {
         public List<Rec<string, ColumnDefinition[]>> schema;
+        public Dictionary<string, string> renameColumns = new Dictionary<string, string>();
         private Dictionary<string, string> renameSchema = new Dictionary<string, string>();
 
         public Version Version { get; protected set; }
@@ -143,7 +144,7 @@ namespace Aurora.DataManager.Migration
             }
             foreach (var s in schema)
             {
-                genericData.EnsureTableExists(s.X1, s.X2);
+                genericData.EnsureTableExists(s.X1, s.X2, renameColumns);
             }
         }
 

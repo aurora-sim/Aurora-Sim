@@ -714,7 +714,7 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns)
+        public override void UpdateTable (string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns)
         {
             table = table.ToLower ();
             if (!TableExists (table))
@@ -826,6 +826,10 @@ namespace Aurora.DataManager.MySQL
                     return "DATE";
                 case ColumnTypes.DateTime:
                     return "DATETIME";
+                case ColumnTypes.TinyInt1:
+                    return "TINYINT(1)";
+                case ColumnTypes.TinyInt4:
+                    return "TINYINT(4)";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -1004,8 +1008,10 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.Integer11;
                 case "int(10)":
                     return ColumnTypes.Integer11;
+                case "tinyint(1)":
+                    return ColumnTypes.TinyInt1;
                 case "tinyint(4)":
-                    return ColumnTypes.Integer11;
+                    return ColumnTypes.TinyInt4;
             }
             if (tStr.StartsWith ("varchar"))
             {

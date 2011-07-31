@@ -709,7 +709,7 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns)
+        public override void UpdateTable (string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns)
         {
             if (TableExists(table))
             {
@@ -811,6 +811,10 @@ namespace Aurora.DataManager.MSSQL
                     return "MEDIUMTEXT";
                 case ColumnTypes.LongText:
                     return "LONGTEXT";
+                case ColumnTypes.TinyInt1:
+                    return "TINYINT(1)";
+                case ColumnTypes.TinyInt4:
+                    return "TINYINT(4)";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -944,6 +948,10 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.LongText;
                 case "image":
                     return ColumnTypes.Blob;
+                case "tinyint(1)":
+                    return ColumnTypes.TinyInt1;
+                case "tinyint(4)":
+                    return ColumnTypes.TinyInt4;
                 default:
                     throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }

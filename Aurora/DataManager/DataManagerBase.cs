@@ -65,7 +65,7 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
-        public abstract void UpdateTable(string table, ColumnDefinition[] columns);
+        public abstract void UpdateTable (string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns);
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract bool DirectReplace(string table, string[] keys, object[] values);
         public abstract IGenericData Copy();
@@ -137,7 +137,7 @@ namespace Aurora.DataManager
                 throw new MigrationOperationException("Cannot copy table to new name, source table does not match columnDefinitions: " + destinationTableName);
             }
 
-            EnsureTableExists(destinationTableName, columnDefinitions);
+            EnsureTableExists(destinationTableName, columnDefinitions, null);
             CopyAllDataBetweenMatchingTables(sourceTableName, destinationTableName, columnDefinitions);
         }
 
@@ -201,14 +201,14 @@ namespace Aurora.DataManager
             return true;
         }
 
-        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions)
+        public void EnsureTableExists (string tableName, ColumnDefinition[] columnDefinitions, Dictionary<string, string> renameColumns)
         {
             if (TableExists(tableName))
             {
                 if (!VerifyTableExists(tableName, columnDefinitions))
                 {
                     //throw new MigrationOperationException("Cannot create, table with same name and different columns already exists. This should be fixed in a migration: " + tableName);
-                    UpdateTable(tableName, columnDefinitions);
+                    UpdateTable(tableName, columnDefinitions, renameColumns);
                 }
                 return;
             }

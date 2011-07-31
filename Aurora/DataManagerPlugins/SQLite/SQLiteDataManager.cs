@@ -682,7 +682,7 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns)
         {
             if (!TableExists(table))
             {
@@ -696,7 +696,9 @@ namespace Aurora.DataManager.SQLite
             {
                 foreach (ColumnDefinition innercolumn in columns)
                 {
-                    if (innercolumn.Name == column.Name)
+                    if(innercolumn.Name.ToLower() == column.Name.ToLower() ||
+                        renameColumns.ContainsKey(column.Name) && 
+                        renameColumns[column.Name].ToLower() == innercolumn.Name.ToLower())
                     {
                         sameColumns.Add (column.Name, column);
                         break;
@@ -774,16 +776,25 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
 
             string InsertFromTempTableColumnDefinition = string.Empty;
+            string InsertIntoFromTempTableColumnDefinition = string.Empty;
 
             foreach (ColumnDefinition column in sameColumns.Values)
             {
-                if (InsertFromTempTableColumnDefinition != string.Empty)
+                if(InsertFromTempTableColumnDefinition != string.Empty)
                 {
                     InsertFromTempTableColumnDefinition += ", ";
                 }
+                if(InsertIntoFromTempTableColumnDefinition != string.Empty)
+                {
+                    InsertIntoFromTempTableColumnDefinition += ", ";
+                }
+                if(renameColumns.ContainsKey(column.Name))
+                    InsertIntoFromTempTableColumnDefinition += renameColumns[column.Name];
+                else
+                    InsertIntoFromTempTableColumnDefinition += column.Name;
                 InsertFromTempTableColumnDefinition += column.Name;
             }
-            query = "INSERT INTO " + table + " (" + InsertFromTempTableColumnDefinition + ") SELECT " + InsertFromTempTableColumnDefinition + " from " + table + "__temp;";
+            query = "INSERT INTO " + table + " (" + InsertIntoFromTempTableColumnDefinition + ") SELECT " + InsertFromTempTableColumnDefinition + " from " + table + "__temp;";
             cmd = new SqliteCommand();
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
@@ -856,7 +867,11 @@ namespace Aurora.DataManager.SQLite
                 case ColumnTypes.DateTime:
                     return "DATETIME";
                 case ColumnTypes.Unknown:
-                    return "unknown";
+                    return "";
+                case ColumnTypes.TinyInt1:
+                    return "TINYINT(1)";
+                case ColumnTypes.TinyInt4:
+                    return "TINYINT(4)";
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
@@ -939,9 +954,13 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.Blob;
                 case "float":
                     return ColumnTypes.Unknown;
+                case "tinyint(1)":
+                    return ColumnTypes.TinyInt1;
                 case "tinyint(4)":
-                    return ColumnTypes.Unknown;
+                    return ColumnTypes.TinyInt4;
                 case "int unsigned":
+                    return ColumnTypes.Unknown;
+                case "":
                     return ColumnTypes.Unknown;
                 default:
                     throw new Exception("You've discovered some type in SQLite that's not reconized by Aurora (" + typeString + "), please place the correct conversion in ConvertTypeToColumnType.");
