@@ -648,7 +648,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     while (dr.Read())
                     {
-                        asset = new AssetBase(dr["id"].ToString(), dr["name"].ToString(), (AssetType)int.Parse(dr["assetType"].ToString()), UUID.Parse(dr["CreatorID"].ToString()))
+                        asset = new AssetBase(dr[m_uuidColumnName].ToString(), dr["name"].ToString(), (AssetType)int.Parse(dr["assetType"].ToString()), UUID.Parse(dr["CreatorID"].ToString()))
                         {
                             CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
                             Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString()),
@@ -656,9 +656,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             Description = dr["description"].ToString(),
                             CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
                             LastAccessed = DateTime.Now,
-                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
+                            DatabaseTable = "auroraassets_" + dr[m_uuidColumnName].ToString().Substring(0, 1),
                             MetaOnly = false,
-                            ParentID = UUID.Parse(dr["id"].ToString())
+                            ParentID = UUID.Parse(dr[m_uuidColumnName].ToString())
                         };
 
                         // go through this asset and change all the guids to the parent IDs
