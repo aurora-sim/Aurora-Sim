@@ -214,7 +214,22 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             
             if (dr["local"].ToString().Equals("1") || dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                 asset.Flags |= AssetFlags.Local;
-            if (bool.Parse(dr["temporary"].ToString())) asset.Flags |= AssetFlags.Temperary;
+            string temp = dr["temporary"].ToString();
+            if(temp != "")
+            {
+                bool tempbool = false;
+                int tempint = 0;
+                if(bool.TryParse(temp, out tempbool))
+                {
+                    if(tempbool)
+                        asset.Flags |= AssetFlags.Temperary;
+                }
+                else if(int.TryParse(temp, out tempint))
+                {
+                    if(tempint == 1)
+                        asset.Flags |= AssetFlags.Temperary;
+                }
+            }
             return asset;
         }
 
