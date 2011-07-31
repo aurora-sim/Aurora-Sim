@@ -60,6 +60,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTierLen = 1;
         private readonly System.Timers.Timer taskTimer = new System.Timers.Timer();
         private int NumberOfDaysForOldAssets = -30;
+        private string m_uuidColumnName = "id";
 
         // for debugging
         private const bool disableTimer = false;
@@ -93,6 +94,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             if (source.Configs["Handlers"].GetString("AssetHandler", "") != "AssetService")
                 return;
+
+            IDataConnector connector = (IDataConnector)m_Gd;
+                if(connector.Identifier == "SQLiteConnector")
+                    m_uuidColumnName = "uuid";
+
 
             m_CacheDirectory = source.Configs["BlackHole"].GetString("CacheDirector", m_CacheDirectory);
             m_CacheDirectoryBackup = source.Configs["BlackHole"].GetString("BackupCacheDirector", m_CacheDirectoryBackup);
@@ -634,7 +640,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private AssetBase Convert2BH(UUID uuid)
         {
-            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
+            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets", m_uuidColumnName + ", name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
             AssetBase asset = null;
             try
             {
@@ -642,7 +648,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     while (dr.Read())
                     {
-                        asset = new AssetBase(dr["id"].ToString(), dr["name"].ToString(), (AssetType)int.Parse(dr["assetType"].ToString()), UUID.Parse(dr["CreatorID"].ToString()))
+                        asset = new AssetBase(dr[m_uuidColumnName].ToString(), dr["name"].ToString(), (AssetType)int.Parse(dr["assetType"].ToString()), UUID.Parse(dr["CreatorID"].ToString()))
                         {
                             CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
                             Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString()),
@@ -650,9 +656,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             Description = dr["description"].ToString(),
                             CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
                             LastAccessed = DateTime.Now,
-                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
+                            DatabaseTable = "auroraassets_" + dr[m_uuidColumnName].ToString().Substring(0, 1),
                             MetaOnly = false,
-                            ParentID = UUID.Parse(dr["id"].ToString())
+                            ParentID = UUID.Parse(dr[m_uuidColumnName].ToString())
                         };
 
                         // go through this asset and change all the guids to the parent IDs
