@@ -851,7 +851,7 @@ namespace Aurora.Modules
                 UUID AgentID = parameters["agent_id"].AsUUID();
                 OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
 
-                ChatSessionMember thismember = FindMember(sessionid, Agent);
+                ChatSessionMember thismember = FindMember(sessionid, AgentID);
                 if (muteInfoMap.ContainsKey("text"))
                     thismember.MuteText = muteInfoMap["text"].AsBoolean();
                 if (muteInfoMap.ContainsKey("voice"))
@@ -958,6 +958,8 @@ namespace Aurora.Modules
         {
             ChatSession session;
             ChatSessions.TryGetValue(sessionid, out session);
+            if(session == null)
+                return false;
             ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
             foreach (ChatSessionMember testmember in session.Members)
             {

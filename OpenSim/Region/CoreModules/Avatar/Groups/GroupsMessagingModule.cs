@@ -295,7 +295,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 ((msg.dialog == (byte)InstantMessageDialog.SessionSend)
                  || (msg.dialog == (byte)InstantMessageDialog.SessionAdd)
                  || (msg.dialog == (byte)InstantMessageDialog.SessionDrop)
-                 || (msg.dialog == 212)))
+                 || (msg.dialog == 212)
+                 || (msg.dialog == 213)))
             {
                 ProcessMessageFromGroupSession(msg);
             }
@@ -329,6 +330,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     DropMemberFromSession(GetActiveClient(AgentID), msg, false);
                     break;
 
+                case (byte)213://Special for muting/unmuting a user
+                    IClientAPI client = GetActiveClient(AgentID);
+                    IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
+                    ChatSessionMember thismember = m_groupData.FindMember(msg.imSessionID, AgentID);
+                    string[] brokenMessage = msg.message.Split(',');
+                    bool mutedText = false, mutedVoice = false;
+                    bool.TryParse(brokenMessage[0], out mutedText);
+                    bool.TryParse(brokenMessage[1], out mutedVoice);
+                    thismember.MuteText = mutedText;
+                    thismember.MuteVoice = mutedVoice;
+                    MuteUser(msg.imSessionID, eq, AgentID, thismember, false);
+                    break;
+
                 case (byte)InstantMessageDialog.SessionSend:
                     ChatSession session = m_groupData.GetSession(msg.imSessionID);
                     if(session != null)
@@ -336,13 +350,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         ChatSessionMember member = m_groupData.FindMember(msg.imSessionID, AgentID);
                         if(member.AvatarKey == AgentID && !member.MuteText)
                         {
-                            IClientAPI client = GetActiveClient(msg.toAgentID);
-                            if(client != null)
+                            IClientAPI msgclient = GetActiveClient(msg.toAgentID);
+                            if(msgclient != null)
                             {
                                 // Deliver locally, directly
                                 if(m_debugEnabled)
-                                    m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0} locally", client.Name);
-                                client.SendInstantMessage(msg);
+                                    m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0} locally", msgclient.Name);
+                                msgclient.SendInstantMessage(msg);
                             }
                         }
                     }
@@ -373,7 +387,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 if(session != null)
                 {
                     ChatSessionMember thismember = m_groupData.FindMember(sessionid, Agent);
+                    if(thismember == null)
+                        return "";//No user with that session
                     //Tell all the other members about the incoming member
+                    thismember.HasBeenAdded = true;
                     foreach(ChatSessionMember sessionMember in session.Members)
                     {
                         OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
@@ -385,10 +402,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         block.Transition = "ENTER";
                         if(Agent == sessionMember.AvatarKey)
                             Us.Add(block);
-                        else if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't want to be here.
+                        if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't want to be here.
                             NotUsAgents.Add(block);
                     }
-                    thismember.HasBeenAdded = true;
                     foreach(ChatSessionMember member in session.Members)
                     {
                         if(member.AvatarKey == thismember.AvatarKey)
@@ -410,40 +426,58 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             else if(method == "mute update")
             {
                 //Check if the user is a moderator
-                /*if(!CheckModeratorPermission(Agent, sessionid))
-                {
+                if(!GetIsModerator(Agent, sessionid))
                     return "";
-                }
 
                 OSDMap parameters = (OSDMap)rm["params"];
                 UUID AgentID = parameters["agent_id"].AsUUID();
                 OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
 
-                ChatSessionMember thismember = FindMember(sessionid, Agent);
+                ChatSessionMember thismember = m_groupData.FindMember(sessionid, AgentID);
                 if(muteInfoMap.ContainsKey("text"))
                     thismember.MuteText = muteInfoMap["text"].AsBoolean();
                 if(muteInfoMap.ContainsKey("voice"))
                     thismember.MuteVoice = muteInfoMap["voice"].AsBoolean();
+                MuteUser(sessionid, eq, AgentID, thismember, true);
 
-                OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
-                block.AgentID = thismember.AvatarKey;
-                block.CanVoiceChat = thismember.CanVoiceChat;
-                block.IsModerator = thismember.IsModerator;
-                block.MuteText = thismember.MuteText;
-                block.MuteVoice = thismember.MuteVoice;
-                block.Transition = "ENTER";
-
-                // Send an update to the affected user
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "", findScene(Agent).RegionInfo.RegionHandle);
-
-                return "Accepted";*/
-                return "";
+                return "Accepted";
             }
             else
             {
                 m_log.Warn("ChatSessionRequest : " + method);
                 return "";
             }
+        }
+
+        private void MuteUser (UUID sessionid, IEventQueueService eq, UUID AgentID, ChatSessionMember thismember, bool forward)
+        {
+            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+            block.AgentID = thismember.AvatarKey;
+            block.CanVoiceChat = thismember.CanVoiceChat;
+            block.IsModerator = thismember.IsModerator;
+            block.MuteText = thismember.MuteText;
+            block.MuteVoice = thismember.MuteVoice;
+            block.Transition = "ENTER";
+
+            // Send an update to the affected user
+            IClientAPI affectedUser = GetActiveClient(thismember.AvatarKey);
+            if(affectedUser != null)
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "", affectedUser.Scene.RegionInfo.RegionHandle);
+            else if(forward)
+                SendMutedUserIM(thismember, sessionid);
+        }
+
+        private void SendMutedUserIM (ChatSessionMember member, UUID GroupID)
+        {
+            GridInstantMessage img = new GridInstantMessage() 
+            {
+                toAgentID = member.AvatarKey,
+                fromGroup = true,
+                imSessionID = GroupID,
+                dialog = 213,//Special mute one
+                message = member.MuteText + "," + member.MuteVoice
+            };
+            m_msgTransferModule.SendInstantMessage(img);
         }
 
         #endregion
@@ -467,10 +501,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 UUID GroupID = im.imSessionID;
                 UUID AgentID = im.fromAgentID;
 
-                GroupRecord groupInfo = m_groupData.GetGroupRecord(UUID.Zero, GroupID, null);
+                GroupRecord groupInfo = m_groupData.GetGroupRecord(AgentID, GroupID, null);
     
                 if (groupInfo != null)
                 {
+                    if(!m_groupsModule.GroupPermissionCheck(AgentID, GroupID, GroupPowers.JoinChat))
+                        return;//They have to be able to join to create a group chat
                     //Create the session.
                     if(m_groupData.CreateSession(new ChatSession()
                     {
@@ -492,15 +528,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         foreach(GroupMembersData gmd in m_groupData.GetGroupMembers(AgentID, GroupID))
                         {
                             if(gmd.AgentID != AgentID)//Add everyone else too
-                                m_groupData.AddMemberToGroup(new ChatSessionMember()
+                            {
+                                if((gmd.AgentPowers & (ulong)GroupPowers.JoinChat) == (ulong)GroupPowers.JoinChat)//Only if they can join
                                 {
-                                    AvatarKey = gmd.AgentID,
-                                    CanVoiceChat = false,
-                                    IsModerator = GetIsModerator(gmd.AgentID, GroupID),
-                                    MuteText = false,
-                                    MuteVoice = false,
-                                    HasBeenAdded = false
-                                }, GroupID);
+                                    m_groupData.AddMemberToGroup(new ChatSessionMember()
+                                    {
+                                        AvatarKey = gmd.AgentID,
+                                        CanVoiceChat = false,
+                                        IsModerator = GetIsModerator(gmd.AgentID, GroupID),
+                                        MuteText = false,
+                                        MuteVoice = false,
+                                        HasBeenAdded = false
+                                    }, GroupID);
+                                }
+                            }
                         }
                         //Tell us that it was made successfully
                         ChatterBoxSessionStartReplyViaCaps(remoteClient, groupInfo.GroupName, GroupID);

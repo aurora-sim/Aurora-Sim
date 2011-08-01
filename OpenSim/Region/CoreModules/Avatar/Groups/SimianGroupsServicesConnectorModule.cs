@@ -1364,8 +1364,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
         }
 
-        public void CreateSession (ChatSession chatSession)
+        public bool CreateSession (ChatSession chatSession)
         {
+            return false;
         }
 
         public void AddMemberToGroup (OpenSim.Framework.ChatSessionMember chatSessionMember, UUID GroupID)
