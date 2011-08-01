@@ -485,6 +485,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 Queries.Add(agentID.ToString());
             }
 
+            if(Queries.Count == 0)
+                return;//All done
+
             //Ask for the user new style first
             string[] AgentLocations = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(im.fromAgentID.ToString(), Queries.ToArray());
             //If this is false, this doesn't exist on the presence server and we use the legacy way

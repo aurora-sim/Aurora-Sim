@@ -225,22 +225,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.fromAgentID = im.fromAgentID;
             msg.fromGroup = true;
 
-            SendInstantMessages(msg);
-
-            /*foreach (GroupMembersData member in m_groupData.GetGroupMembers(msg.fromAgentID, groupID))
-            {
-                if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, groupID))
-                {
-                    // Don't deliver messages to people who have dropped this session
-                    if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} has dropped session, not delivering to them", member.AgentID);
-                    continue;
-                }
-
-                msg.toAgentID = member.AgentID;
-
-                if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0}", member.AgentID);
-                m_msgTransferModule.SendInstantMessage(msg);
-            }*/
+            Util.FireAndForget(SendInstantMessages, msg);
         }
 
         private void SendInstantMessages(object message)
@@ -248,6 +233,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GridInstantMessage msg = message as GridInstantMessage;
             List<GroupMembersData> members = m_groupData.GetGroupMembers(msg.fromAgentID, msg.imSessionID);
             List<UUID> agentsToSendTo = new List<UUID>();
+            GroupRecord groupInfo = null;
             foreach (GroupMembersData member in members)
             {
                 UUID GroupID = msg.imSessionID;
@@ -267,7 +253,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     if(activeClient != null)
                     {
                         //Only send EQM messages if they are on this sim
-                        GroupRecord groupInfo = m_groupData.GetGroupRecord(UUID.Zero, GroupID, null);
+                        if(groupInfo == null)
+                            groupInfo = m_groupData.GetGroupRecord(UUID.Zero, GroupID, null);
                         if(groupInfo != null)
                         {
                             if(m_debugEnabled)
