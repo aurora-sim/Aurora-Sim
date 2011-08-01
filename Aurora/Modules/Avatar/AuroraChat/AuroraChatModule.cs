@@ -162,6 +162,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnRegisterCaps += RegisterCaps;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
+            scene.EventManager.OnChatSessionRequest += OnChatSessionRequest;
 
             scene.RegisterModuleInterface<IMuteListModule> (this);
             scene.RegisterModuleInterface<IChatModule> (this);
@@ -201,6 +202,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnRegisterCaps -= RegisterCaps;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
+            scene.EventManager.OnChatSessionRequest -= OnChatSessionRequest;
 
             m_scenes.Remove (scene);
             scene.UnregisterModuleInterface<IMuteListModule> (this);
@@ -760,6 +762,17 @@ namespace Aurora.Modules
         private Hashtable ProcessChatSessionRequest(Hashtable mDhttpMethod, UUID Agent)
         {
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = findScene(Agent).EventManager.TriggerChatSessionRequest(Agent, rm);
+            return responsedata;
+        }
+
+        private string OnChatSessionRequest(UUID Agent, OSDMap rm)
+        {
             string method = rm["method"].AsString();
 
             UUID sessionid = UUID.Parse(rm["session-id"].AsString());
@@ -815,13 +828,7 @@ namespace Aurora.Modules
                 cs.SessionName = SP.Name + " Conference";
                 cs.ModeratedVoice = true;
 
-                Hashtable responsedata = new Hashtable();
-                responsedata["int_response_code"] = 200; //501; //410; //404;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                OSDMap map = cs.Serialize();
-                responsedata["str_response_string"] = map.ToString();
-                return responsedata;
+                return cs.Serialize().ToString();
             }
             else if (method == "accept invitation")
             {
@@ -830,11 +837,11 @@ namespace Aurora.Modules
                 List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
 
                 ChatSession session = GetSession(sessionid);
-                if (session != null)
+                if(session != null)
                 {
                     ChatSessionMember thismember = FindMember(sessionid, Agent);
                     //Tell all the other members about the incoming member
-                    foreach (ChatSessionMember sessionMember in session.Members)
+                    foreach(ChatSessionMember sessionMember in session.Members)
                     {
                         OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
                         block.AgentID = sessionMember.AvatarKey;
@@ -842,19 +849,19 @@ namespace Aurora.Modules
                         block.IsModerator = sessionMember.IsModerator;
                         block.MuteText = sessionMember.MuteText;
                         block.MuteVoice = sessionMember.MuteVoice;
-                        block.Transition = "ENTER"; 
-                        if (sessionMember.AvatarKey == thismember.AvatarKey)
+                        block.Transition = "ENTER";
+                        if(sessionMember.AvatarKey == thismember.AvatarKey)
                             Us.Add(block);
                         else
                         {
-                            if (sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't watn to be here.
+                            if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't watn to be here.
                                 NotUsAgents.Add(block);
                         }
                     }
                     thismember.HasBeenAdded = true;
-                    foreach (ChatSessionMember member in session.Members)
+                    foreach(ChatSessionMember member in session.Members)
                     {
-                        if (member.AvatarKey == thismember.AvatarKey)
+                        if(member.AvatarKey == thismember.AvatarKey)
                         {
                             //Tell 'us' about all the other agents in the group
                             eq.ChatterBoxSessionAgentListUpdates(session.SessionID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER", findScene(Agent).RegionInfo.RegionHandle);
@@ -865,13 +872,10 @@ namespace Aurora.Modules
                             eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", findScene(Agent).RegionInfo.RegionHandle);
                         }
                     }
+                    return "Accepted";
                 }
-                Hashtable responsedata = new Hashtable();
-                responsedata["int_response_code"] = 200; //501; //410; //404;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                responsedata["str_response_string"] = "Accepted";
-                return responsedata;
+                else
+                    return ""; //not this type of session
             }
             else if (method == "mute update")
             {
@@ -879,11 +883,7 @@ namespace Aurora.Modules
                 Hashtable responsedata = new Hashtable();
                 if (!CheckModeratorPermission(Agent, sessionid))
                 {
-                    responsedata["int_response_code"] = 200; //501; //410; //404;
-                    responsedata["content_type"] = "text/plain";
-                    responsedata["keepalive"] = false;
-                    responsedata["str_response_string"] = "Accepted";
-                    return responsedata;
+                    return "";
                 }
 
                 OSDMap parameters = (OSDMap)rm["params"];
@@ -906,22 +906,13 @@ namespace Aurora.Modules
 
                 // Send an update to the affected user
                 eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "", findScene(Agent).RegionInfo.RegionHandle);
-                
-                responsedata["int_response_code"] = 200; //501; //410; //404;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                responsedata["str_response_string"] = "Accepted";
-                return responsedata;
+
+                return "Accepted";
             }
             else
             {
                 m_log.Warn("ChatSessionRequest : " + method);
-                Hashtable responsedata = new Hashtable();
-                responsedata["int_response_code"] = 200; //501; //410; //404;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                responsedata["str_response_string"] = "Accepted";
-                return responsedata;
+                return "";
             }
         }
 

@@ -89,7 +89,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (!m_groupMessagingEnabled)
                 return;
-            
+
             scene.RegisterModuleInterface<IGroupsMessagingModule>(this);
         }
 
@@ -127,6 +127,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnClientLogin += OnClientLogin;
+            scene.EventManager.OnChatSessionRequest += OnChatSessionRequest;
         }
 
         public void RemoveRegion (IScene scene)
@@ -141,6 +142,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             scene.EventManager.OnClosingClient -= OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
             scene.EventManager.OnClientLogin -= OnClientLogin;
+            scene.EventManager.OnChatSessionRequest -= OnChatSessionRequest;
         }
 
         public void Close()
@@ -439,6 +441,97 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 default:
                     m_log.WarnFormat("[GROUPS-MESSAGING]: I don't know how to proccess a {0} message.", ((InstantMessageDialog)msg.dialog).ToString());
                     break;
+            }
+        }
+
+        private string OnChatSessionRequest (UUID Agent, OSDMap rm)
+        {
+            string method = rm["method"].AsString();
+
+            UUID sessionid = UUID.Parse(rm["session-id"].AsString());
+
+            IClientAPI SP = GetActiveClient(Agent);
+            IEventQueueService eq = SP.Scene.RequestModuleInterface<IEventQueueService>();
+
+            if(method == "accept invitation")
+            {
+                //They would like added to the group conversation
+                List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+                List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+
+                if(m_groupData.AgentsInvitedToGroupChatSession(sessionid).Count > 0)
+                {
+                    //Tell all the other members about the incoming member
+                    foreach(UUID agentID in m_groupData.AgentsInvitedToGroupChatSession(sessionid))
+                    {
+                        OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                        block.AgentID = agentID;
+                        block.CanVoiceChat = false;
+                        block.IsModerator = false;
+                        block.MuteText = false;
+                        block.MuteVoice = false;
+                        block.Transition = "ENTER";
+                        if(Agent == agentID)
+                            Us.Add(block);
+                        else
+                        {
+                            NotUsAgents.Add(block);
+                        }
+                    }
+                    foreach(UUID agentID in m_groupData.AgentsInvitedToGroupChatSession(sessionid))
+                    {
+                        if(Agent == agentID)
+                        {
+                            //Tell 'us' about all the other agents in the group
+                            eq.ChatterBoxSessionAgentListUpdates(sessionid, NotUsAgents.ToArray(), agentID, "ENTER", SP.Scene.RegionInfo.RegionHandle);
+                        }
+                        else
+                        {
+                            //Tell 'other' agents about the new agent ('us')
+                            eq.ChatterBoxSessionAgentListUpdates(sessionid, Us.ToArray(), agentID, "ENTER", SP.Scene.RegionInfo.RegionHandle);
+                        }
+                    }
+                    return "Accepted";
+                }
+                else
+                    return ""; //not this type of session
+            }
+            else if(method == "mute update")
+            {
+                //Check if the user is a moderator
+                /*if(!CheckModeratorPermission(Agent, sessionid))
+                {
+                    return "";
+                }
+
+                OSDMap parameters = (OSDMap)rm["params"];
+                UUID AgentID = parameters["agent_id"].AsUUID();
+                OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
+
+                ChatSessionMember thismember = FindMember(sessionid, Agent);
+                if(muteInfoMap.ContainsKey("text"))
+                    thismember.MuteText = muteInfoMap["text"].AsBoolean();
+                if(muteInfoMap.ContainsKey("voice"))
+                    thismember.MuteVoice = muteInfoMap["voice"].AsBoolean();
+
+                OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                block.AgentID = thismember.AvatarKey;
+                block.CanVoiceChat = thismember.CanVoiceChat;
+                block.IsModerator = thismember.IsModerator;
+                block.MuteText = thismember.MuteText;
+                block.MuteVoice = thismember.MuteVoice;
+                block.Transition = "ENTER";
+
+                // Send an update to the affected user
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "", findScene(Agent).RegionInfo.RegionHandle);
+
+                return "Accepted";*/
+                return "";
+            }
+            else
+            {
+                m_log.Warn("ChatSessionRequest : " + method);
+                return "";
             }
         }
 

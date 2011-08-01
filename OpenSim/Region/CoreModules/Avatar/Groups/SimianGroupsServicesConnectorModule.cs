@@ -1087,6 +1087,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return SimianGetGenericEntry(agentID, "GroupSessionDropped", groupID.ToString(), out session);
         }
 
+        public List<UUID> AgentsInvitedToGroupChatSession (UUID groupID)
+        {
+            return new List<UUID>();
+        }
+
         #endregion
 
         private void EnsureRoleNotSelectedByMember(UUID groupID, UUID roleID, UUID userID)

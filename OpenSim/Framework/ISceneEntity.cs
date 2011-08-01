@@ -1456,6 +1456,9 @@ namespace OpenSim.Framework
         public delegate void IncomingInstantMessage (GridInstantMessage message);
         public event IncomingInstantMessage OnIncomingInstantMessage;
 
+        public delegate string ChatSessionRequest (UUID agentID, OSDMap request);
+        public event ChatSessionRequest OnChatSessionRequest;
+
         public event IncomingInstantMessage OnUnhandledInstantMessage;
 
         public delegate void ClientClosed (UUID clientID, IScene scene);
@@ -2202,6 +2205,30 @@ namespace OpenSim.Framework
                     }
                 }
             }
+        }
+
+        public string TriggerChatSessionRequest (UUID AgentID, OSDMap request)
+        {
+            ChatSessionRequest handlerChatSessionRequest = OnChatSessionRequest;
+            if(handlerChatSessionRequest != null)
+            {
+                foreach(ChatSessionRequest d in handlerChatSessionRequest.GetInvocationList())
+                {
+                    try
+                    {
+                        string resp = d(AgentID, request);
+                        if(resp != "")
+                            return resp;
+                    }
+                    catch(Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerIncomingInstantMessage failed - continuing.  {0} {1}",
+                            e.ToString(), e.StackTrace);
+                    }
+                }
+            }
+            return "";
         }
 
         public void TriggerIncomingInstantMessage (GridInstantMessage message)

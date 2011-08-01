@@ -251,7 +251,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool SendPacket(LLClientView client)
         {
-            if (client == null)
+            if(client == null || m_asset == null)
                 return false;
 
             bool complete = false;

@@ -794,6 +794,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 && m_groupsAgentsInvitedToChatSession[groupID].Contains(agentID);
         }
 
+        public List<UUID> AgentsInvitedToGroupChatSession (UUID groupID)
+        {
+            List<UUID> agents = new List<UUID>();
+            if(!m_groupsAgentsInvitedToChatSession.TryGetValue(groupID, out agents))
+                agents = new List<UUID>();
+            return agents;
+        }
+
         public bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID)
         {
             // If we're tracking drops for this group, 

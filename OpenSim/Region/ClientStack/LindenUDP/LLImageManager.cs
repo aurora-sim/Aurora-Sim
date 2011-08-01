@@ -284,7 +284,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         void RemoveImageFromQueue(J2KImage image)
         {
             lock (m_syncRoot)
-                try { m_priorityQueue.Delete(image.PriorityQueueHandle); }
+                try
+                { 
+                    if(image.PriorityQueueHandle != null)
+                        m_priorityQueue.Delete(image.PriorityQueueHandle);
+                }
                 catch (Exception) { }
             image.Dispose ();
         }
@@ -293,7 +297,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             lock (m_syncRoot)
             {
-                try { m_priorityQueue.Replace(image.PriorityQueueHandle, image); }
+                try 
+                {
+                    if(image.PriorityQueueHandle != null)
+                        m_priorityQueue.Replace(image.PriorityQueueHandle, image); 
+                }
                 catch (Exception)
                 {
                     image.PriorityQueueHandle = null;

@@ -74,7 +74,8 @@ namespace OpenSim.Framework
         bool hasAgentBeenInvitedToGroupChatSession(UUID agentID, UUID groupID);
         bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID);
         void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID);
-        void AgentInvitedToGroupChatSession(UUID agentID, UUID groupID);
+        void AgentInvitedToGroupChatSession (UUID agentID, UUID groupID);
+        List<UUID> AgentsInvitedToGroupChatSession (UUID groupID);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
     }
