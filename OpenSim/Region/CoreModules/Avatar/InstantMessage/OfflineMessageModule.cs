@@ -196,7 +196,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        private void UndeliveredMessage(GridInstantMessage im)
+        private void UndeliveredMessage(GridInstantMessage im, string reason)
         {
             if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))

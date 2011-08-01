@@ -32,7 +32,7 @@ using OpenMetaverse;
 namespace OpenSim.Region.Framework.Interfaces
 {
     public delegate void MessageResultNotification(bool success);
-    public delegate void UndeliveredMessage(GridInstantMessage im);
+    public delegate void UndeliveredMessage(GridInstantMessage im, string reason);
    
     public interface IMessageTransferModule
     {

@@ -164,7 +164,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             SendGridInstantMessageViaXMLRPC(im, result);
         }
 
-        private void HandleUndeliveredMessage(GridInstantMessage im, MessageResultNotification result)
+        private void HandleUndeliveredMessage(GridInstantMessage im, MessageResultNotification result, string reason)
         {
             UndeliveredMessage handlerUndeliveredMessage = OnUndeliveredMessage;
 
@@ -173,7 +173,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             //
             if (handlerUndeliveredMessage != null)
             {
-                handlerUndeliveredMessage(im);
+                handlerUndeliveredMessage(im, reason);
                 if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                     result(true);
                 else
@@ -497,7 +497,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     {
                         IMUsersCache.Remove(users[i]);
                         m_log.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] + ", user was not online");
-                        HandleUndeliveredMessage(im, m_result);
+                        HandleUndeliveredMessage(im, m_result, "User is not set as online by presence service.");
                         continue;
                     }
                     else
@@ -528,7 +528,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                                 //Remove them so we keep testing against the db
                                 IMUsersCache.Remove (kvp.Key);
                             }
-                            HandleUndeliveredMessage (im, m_result);
+                            HandleUndeliveredMessage (im, m_result, "Failed to send IM to destination.");
                         }
                     }
                     else
@@ -547,7 +547,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         //Remove them so we keep testing against the db
                         IMUsersCache.Remove(kvp.Key);
                     }
-                    HandleUndeliveredMessage(im, m_result);
+                    HandleUndeliveredMessage(im, m_result, "Agent Location was blank.");
                 }
             }
         }
@@ -624,7 +624,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         IMUsersCache.Remove(toAgentID);
                     }
                     m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
-                    HandleUndeliveredMessage(im, result);
+                    HandleUndeliveredMessage(im, result, "User is not set as online by presence service.");
                     return;
                 }
                 else //Found the agent, use this location
@@ -646,7 +646,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                             IMUsersCache.Remove (toAgentID);
                         }
                         m_log.Info ("[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
-                        HandleUndeliveredMessage (im, result);
+                        HandleUndeliveredMessage (im, result, "Failed to send IM to destination.");
                         return;
                     }
                 }
@@ -669,7 +669,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     IMUsersCache.Remove(toAgentID);
                 }
                 m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
-                HandleUndeliveredMessage(im, result);
+                HandleUndeliveredMessage(im, result, "Agent Location was blank.");
             }
         }
 

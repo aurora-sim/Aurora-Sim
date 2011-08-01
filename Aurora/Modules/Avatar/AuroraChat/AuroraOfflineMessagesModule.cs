@@ -202,7 +202,7 @@ namespace Aurora.Modules
             }
         }
 
-        private void UndeliveredMessage(GridInstantMessage im)
+        private void UndeliveredMessage(GridInstantMessage im, string reason)
         {
             if (!OfflineMessagesConnector.AddOfflineMessage (im))
             {
@@ -253,7 +253,7 @@ namespace Aurora.Modules
                             null, im.toAgentID,
                             "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
-                            "User is not logged in. Message saved.",
+                            "Message saved, reason: " + reason,
                             false, new Vector3()));
                 }
 
@@ -278,7 +278,7 @@ namespace Aurora.Modules
                             null, im.toAgentID,
                             "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
-                            "User is not able to be found. Message saved.",
+                            "Message saved, reason: " + reason,
                             false, new Vector3()));
                 }
 
