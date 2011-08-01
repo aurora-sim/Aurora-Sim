@@ -159,7 +159,7 @@ namespace Aurora.DataManager
                     //Check to see whether the two tables have the same type, but under different names
                     foreach (ColumnDefinition extractedDefinition in extractedColumns)
                     {
-                        if (extractedDefinition.Name == columnDefinition.Name)
+                        if(extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
                         {
                             thisDef = extractedDefinition;
                             break;
@@ -182,7 +182,7 @@ namespace Aurora.DataManager
                     //Check to see whether the two tables have the same type, but under different names
                     foreach (ColumnDefinition extractedDefinition in newColumns)
                     {
-                        if (extractedDefinition.Name == columnDefinition.Name)
+                        if(extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
                         {
                             thisDef = extractedDefinition;
                             break;
