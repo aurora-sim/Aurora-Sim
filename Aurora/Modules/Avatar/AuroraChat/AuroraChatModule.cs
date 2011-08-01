@@ -43,6 +43,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using ChatSessionMember = OpenSim.Framework.ChatSessionMember;
 
 namespace Aurora.Modules
 {
@@ -702,46 +703,6 @@ namespace Aurora.Modules
         private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
 
         /// <summary>
-        /// Internal class for chat sessions 
-        /// </summary>
-        public class ChatSession
-        {
-            public UUID SessionID;
-            public List<ChatSessionMember> Members;
-            public string Name;
-        }
-
-        //Pulled from OpenMetaverse
-        // Summary:
-        //     Struct representing a member of a group chat session and their settings
-        public class ChatSessionMember
-        {
-            // Summary:
-            //     The OpenMetaverse.UUID of the Avatar
-            public UUID AvatarKey;
-            //
-            // Summary:
-            //     True if user has voice chat enabled
-            public bool CanVoiceChat;
-            //
-            // Summary:
-            //     True of Avatar has moderator abilities
-            public bool IsModerator;
-            //
-            // Summary:
-            //     True if a moderator has muted this avatars chat
-            public bool MuteText;
-            //
-            // Summary:
-            //     True if a moderator has muted this avatars voice
-            public bool MuteVoice;
-            //
-            // Summary:
-            //     True if they have been requested to join the session
-            public bool HasBeenAdded;
-        }
-        
-        /// <summary>
         /// Set up the CAPS for friend conferencing
         /// </summary>
         /// <param name="agentID"></param>
@@ -854,7 +815,7 @@ namespace Aurora.Modules
                             Us.Add(block);
                         else
                         {
-                            if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't watn to be here.
+                            if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't want to be here.
                                 NotUsAgents.Add(block);
                         }
                     }
@@ -1022,7 +983,7 @@ namespace Aurora.Modules
             ChatSessionMember member = new ChatSessionMember() { AvatarKey = UUID.Zero };
             foreach (ChatSessionMember testmember in session.Members)
             {
-                if (member.AvatarKey == im.fromAgentID)
+                if(testmember.AvatarKey == im.fromAgentID)
                     member = testmember;
             }
 

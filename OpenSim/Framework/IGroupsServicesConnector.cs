@@ -78,6 +78,52 @@ namespace OpenSim.Framework
         List<UUID> AgentsInvitedToGroupChatSession (UUID groupID);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
+
+        void CreateSession (ChatSession chatSession);
+        void AddMemberToGroup (ChatSessionMember chatSessionMember, UUID GroupID);
+        ChatSession GetSession (UUID sessionid);
+        ChatSessionMember FindMember (UUID sessionid, UUID Agent);
+        void RemoveSession (UUID sessionid);
+    }
+    
+    /// <summary>
+    /// Internal class for chat sessions 
+    /// </summary>
+    public class ChatSession
+    {
+        public UUID SessionID;
+        public List<ChatSessionMember> Members;
+        public string Name;
+    }
+
+    //Pulled from OpenMetaverse
+    // Summary:
+    //     Struct representing a member of a group chat session and their settings
+    public class ChatSessionMember
+    {
+        // Summary:
+        //     The OpenMetaverse.UUID of the Avatar
+        public UUID AvatarKey;
+        //
+        // Summary:
+        //     True if user has voice chat enabled
+        public bool CanVoiceChat;
+        //
+        // Summary:
+        //     True of Avatar has moderator abilities
+        public bool IsModerator;
+        //
+        // Summary:
+        //     True if a moderator has muted this avatars chat
+        public bool MuteText;
+        //
+        // Summary:
+        //     True if a moderator has muted this avatars voice
+        public bool MuteVoice;
+        //
+        // Summary:
+        //     True if they have been requested to join the session
+        public bool HasBeenAdded;
     }
 
     public class GroupInviteInfo

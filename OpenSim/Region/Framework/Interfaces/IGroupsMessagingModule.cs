@@ -36,24 +36,6 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IGroupsMessagingModule
     {
         /// <summary>
-        /// Start a group chat session.
-        /// </summary>
-        /// You must call this before calling SendMessageToGroup().  If a chat session for this group is already taking
-        /// place then the agent will added to that session.
-        /// <param name="agentID">
-        /// A UUID that represents the agent being added.  If you are agentless (e.g. you are
-        /// a region module), then you can use any random ID.
-        /// </param>
-        /// <param name="groupID">
-        /// The ID for the group to join.  Currently, the session ID used is identical to the
-        /// group ID.
-        /// </param>
-        /// <returns>
-        /// True if the chat session was started successfully, false otherwise.
-        /// </returns>
-        bool StartGroupChatSession(UUID agentID, UUID groupID);
-        
-        /// <summary>
         /// Send a message to an entire group.
         /// </summary>
         /// <param name="im">

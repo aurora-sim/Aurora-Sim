@@ -42,6 +42,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using Aurora.DataManager;
+using ChatSessionMember = OpenSim.Framework.ChatSessionMember;
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
@@ -459,6 +460,93 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
             return GroupsConnector.GetGroupInvites(requestingAgentID);
+        }
+        
+        private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
+        /// <summary>
+        /// Add this member to the friend conference
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="SessionID"></param>
+        public void AddMemberToGroup(ChatSessionMember member, UUID SessionID)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(SessionID, out session);
+            session.Members.Add(member);
+        }
+
+        /// <summary>
+        /// Create a new friend conference session
+        /// </summary>
+        /// <param name="session"></param>
+        public void CreateSession(ChatSession session)
+        {
+            ChatSession oldSession = null;
+            if(ChatSessions.TryGetValue(session.SessionID, out oldSession))
+                if(oldSession.Members.Count == 0)
+                    RemoveSession(session.SessionID);
+                else
+                    return;//Already have one
+            ChatSessions.Add(session.SessionID, session);
+        }
+
+        public void RemoveSession (UUID sessionid)
+        {
+            ChatSessions.Remove(sessionid);
+        }
+
+        /// <summary>
+        /// Get a session by a user's sessionID
+        /// </summary>
+        /// <param name="SessionID"></param>
+        /// <returns></returns>
+        public ChatSession GetSession(UUID SessionID)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(SessionID, out session);
+            return session;
+        }
+
+        /// <summary>
+        /// Add the agent to the in-memory session lists and give them the default permissions
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="SessionID"></param>
+        private void AddDefaultPermsMemberToSession(UUID AgentID, UUID SessionID)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(SessionID, out session);
+            ChatSessionMember member = new ChatSessionMember()
+            {
+                AvatarKey = AgentID,
+                CanVoiceChat = true,
+                IsModerator = false,
+                MuteText = false,
+                MuteVoice = false,
+                HasBeenAdded = false
+            };
+            session.Members.Add(member);
+        }
+
+        /// <summary>
+        /// Find the member from X sessionID 
+        /// </summary>
+        /// <param name="sessionid"></param>
+        /// <param name="Agent"></param>
+        /// <returns></returns>
+        public ChatSessionMember FindMember (UUID sessionid, UUID Agent)
+        {
+            ChatSession session;
+            ChatSessions.TryGetValue(sessionid, out session);
+            if(session == null)
+                return null;
+            ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
+            foreach(ChatSessionMember testmember in session.Members)
+            {
+                if(testmember.AvatarKey == Agent)
+                    thismember = testmember;
+            }
+            return thismember;
         }
     }
 }

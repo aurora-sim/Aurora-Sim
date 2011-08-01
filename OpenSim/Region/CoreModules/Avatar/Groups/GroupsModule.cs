@@ -657,11 +657,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     }
                 }
             }
-            if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined))
+            else if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined))
             {
                 //GroupAttachmentCache.Remove(im.imSessionID);
             }
-            if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted))
+            else if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted) || (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
                 InventoryItemBase item = null;
@@ -673,8 +673,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     remoteClient.SendBulkUpdateInventory(item);
                 //GroupAttachmentCache.Remove(im.imSessionID);
             }
-            
-            if ((im.dialog == 210))
+            else if ((im.dialog == 210))
             {
                 // This is sent from the region that the ejectee was ejected from
                 // if it's being delivered here, then the ejectee is here
@@ -694,7 +693,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
 
             // Interop, received special 211 code for offline group notice
-            if ((im.dialog == 211))
+            else if ((im.dialog == 211))
             {
                 im.dialog = (byte)InstantMessageDialog.GroupNotice;
 

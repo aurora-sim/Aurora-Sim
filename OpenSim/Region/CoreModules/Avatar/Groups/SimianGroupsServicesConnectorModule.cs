@@ -1415,6 +1415,28 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
         {
         }
+
+        public void CreateSession (ChatSession chatSession)
+        {
+        }
+
+        public void AddMemberToGroup (OpenSim.Framework.ChatSessionMember chatSessionMember, UUID GroupID)
+        {
+        }
+
+        public ChatSession GetSession (UUID SessionID)
+        {
+            return null;
+        }
+
+        public OpenSim.Framework.ChatSessionMember FindMember (UUID sessionid, UUID Agent)
+        {
+            return null;
+        }
+
+        public void RemoveSession (UUID sessionid)
+        {
+        }
     }
 
 }
