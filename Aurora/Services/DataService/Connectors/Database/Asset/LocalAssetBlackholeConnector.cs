@@ -273,7 +273,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             ResetTimer(60000);
             try
             {
-                if (asset.ParentID == UUID.Zero)
+                // this was causing problems with convering the first asset which.. is a zero id.. 
+                if ((asset.ParentID == UUID.Zero) && (asset.ID != UUID.Zero))
                 {
                     // most likely this has never been saved before or is some new asset
                     // otherwise the parent id would hold a value and would have had this check done before
