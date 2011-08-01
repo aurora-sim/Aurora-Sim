@@ -314,6 +314,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 case (byte)InstantMessageDialog.SessionAdd:
                     ChatSession chatSession = m_groupData.GetSession(msg.imSessionID);
                     if(chatSession != null)
+                    {
                         chatSession.Members.Add(new ChatSessionMember()
                         {
                             AvatarKey = AgentID,
@@ -323,6 +324,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             MuteVoice = false,
                             MuteText = false
                         });
+                    }
                     break;
 
                 case (byte)InstantMessageDialog.SessionDrop:
@@ -508,6 +510,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     if(!m_groupsModule.GroupPermissionCheck(AgentID, GroupID, GroupPowers.JoinChat))
                         return;//They have to be able to join to create a group chat
                     //Create the session.
+                    IEventQueueService queue = remoteClient.Scene.RequestModuleInterface<IEventQueueService>();
                     if(m_groupData.CreateSession(new ChatSession()
                     {
                         Members = new List<ChatSessionMember>(),
@@ -548,6 +551,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     }
                     else
                     {
+                        ChatSession thisSession = m_groupData.GetSession(GroupID);
                         //A session already exists
                         //Add us
                         m_groupData.AddMemberToGroup(new ChatSessionMember()
@@ -562,18 +566,47 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                         //Tell us that we entered successfully
                         ChatterBoxSessionStartReplyViaCaps(remoteClient, groupInfo.GroupName, GroupID);
+                        List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> Us = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+                        List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock> NotUsAgents = new List<OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock>();
+
+                        foreach(ChatSessionMember sessionMember in thisSession.Members)
+                        {
+                            OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                            block.AgentID = sessionMember.AvatarKey;
+                            block.CanVoiceChat = sessionMember.CanVoiceChat;
+                            block.IsModerator = sessionMember.IsModerator;
+                            block.MuteText = sessionMember.MuteText;
+                            block.MuteVoice = sessionMember.MuteVoice;
+                            block.Transition = "ENTER";
+                            if(AgentID == sessionMember.AvatarKey)
+                                Us.Add(block);
+                            if(sessionMember.HasBeenAdded) // Don't add not joined yet agents. They don't want to be here.
+                                NotUsAgents.Add(block);
+                        }
+                        foreach(ChatSessionMember member in thisSession.Members)
+                        {
+                            if(member.AvatarKey == AgentID)
+                            {
+                                //Tell 'us' about all the other agents in the group
+                                queue.ChatterBoxSessionAgentListUpdates(GroupID, NotUsAgents.ToArray(), member.AvatarKey, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
+                            }
+                            else
+                            {
+                                //Tell 'other' agents about the new agent ('us')
+                                queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
+                            }
+                        }
                     }
 
                     //Tell us that we entered
-                    IEventQueueService queue = remoteClient.Scene.RequestModuleInterface<IEventQueueService>();
-                    OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
-                    block.AgentID = AgentID;
-                    block.CanVoiceChat = true;
-                    block.IsModerator = true;
-                    block.MuteText = false;
-                    block.MuteVoice = false;
-                    block.Transition = "ENTER";
-                    queue.ChatterBoxSessionAgentListUpdates(GroupID, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
+                    OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock ourblock = new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock();
+                    ourblock.AgentID = AgentID;
+                    ourblock.CanVoiceChat = true;
+                    ourblock.IsModerator = true;
+                    ourblock.MuteText = false;
+                    ourblock.MuteVoice = false;
+                    ourblock.Transition = "ENTER";
+                    queue.ChatterBoxSessionAgentListUpdates(GroupID, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { ourblock }, AgentID, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
                 }
             }
             // Send a message from locally connected client to a group

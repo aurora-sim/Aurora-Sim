@@ -403,7 +403,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             ChatSession session;
             ChatSessions.TryGetValue(SessionID, out session);
-            session.Members.Add(member);
+            ChatSessionMember oldMember = FindMember(SessionID, member.AvatarKey);
+            if(oldMember == null)
+                session.Members.Add(member);
+            else
+                oldMember.HasBeenAdded = true;//Reset this
         }
 
         /// <summary>
