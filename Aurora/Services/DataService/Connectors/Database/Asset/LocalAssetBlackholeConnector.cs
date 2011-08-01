@@ -99,6 +99,26 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             NumberOfDaysForOldAssets = source.Configs["BlackHole"].GetInt("AssetsAreOldAfterHowManyDays", 30) * -1;
             m_Enabled = true;
 
+            if (!Directory.Exists(m_CacheDirectoryBackup))
+                Directory.CreateDirectory(m_CacheDirectoryBackup);
+            if (!Directory.Exists(m_CacheDirectoryBackup))
+            {
+                m_Log.Error(
+                    "Check your Main.ini and ensure your backup directory is set! under [BlackHole] BackupCacheDirector");
+                m_Enabled = false;
+                return;
+            }
+
+            if (!Directory.Exists(m_CacheDirectory))
+                Directory.CreateDirectory(m_CacheDirectory);
+            if (!Directory.Exists(m_CacheDirectory))
+            {
+                m_Log.Error(
+                    "Check your Main.ini and ensure your cache directory is set! under [BlackHole] m_CacheDirectory");
+                m_Enabled = false;
+                return;
+            }
+
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
             genericData.ConnectToDatabase(defaultConnectionString, "BlackholeAsset", true);
@@ -273,7 +293,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             ResetTimer(60000);
             try
             {
-                if (asset.ParentID == UUID.Zero)
+                // this was causing problems with convering the first asset which.. is a zero id.. 
+                if ((asset.ParentID == UUID.Zero) && (asset.ID != UUID.Zero))
                 {
                     // most likely this has never been saved before or is some new asset
                     // otherwise the parent id would hold a value and would have had this check done before
