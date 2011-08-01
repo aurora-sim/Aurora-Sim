@@ -171,12 +171,14 @@ namespace Aurora.Modules.World.Auction
                     OpenMetaverse.Assets.AssetNotecard noteCardAsset = new OpenMetaverse.Assets.AssetNotecard(UUID.Zero, asset.Data);
                     noteCardAsset.Decode();
                     bool found = false;
+                    UUID lastOwnerID = UUID.Zero;
                     foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems)
                     {
                         if (notecardObjectItem.UUID == ItemID)
                         {
                             //Make sure that it exists
                             found = true;
+                            lastOwnerID = notecardObjectItem.OwnerID;
                             break;
                         }
                     }
@@ -185,11 +187,14 @@ namespace Aurora.Modules.World.Auction
                         InventoryItemBase item = null;
                         ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
-                            item = inventoryModule.GiveInventoryItem(agentID, agentID, ItemID, FolderID);
+                            item = inventoryModule.GiveInventoryItem(agentID, lastOwnerID, ItemID, FolderID);
 
                         IClientAPI client;
                         m_scene.ClientManager.TryGetValue(agentID, out client);
-                        client.SendBulkUpdateInventory(item);
+                        if(item != null)
+                            client.SendBulkUpdateInventory(item);
+                        else
+                            client.SendAlertMessage("Failed to retrieve item");
                     }
                 }
             }
