@@ -896,8 +896,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //Send updates to everyone about us
                 foreach (IScenePresence sp in m_scene.GetScenePresences ())
                 {
-                    if(sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene))
-                        sp.ControllingClient.SendAvatarDataImmediate (this);
+                    sp.SceneViewer.SendPresenceFullUpdate(this);
                 }
                 agent.Appearance = appearance.Appearance;
             }

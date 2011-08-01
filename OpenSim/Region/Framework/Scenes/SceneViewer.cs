@@ -199,7 +199,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Very much so... the client cannot get a terse update before a full update -7/25
             if (!lastPresencesDInView.ContainsKey (presence.UUID))
                 return;//Only send updates if they are in view
-
             QueuePresenceForUpdateInternal (presence, flags);
         }
 
@@ -491,6 +490,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
                 m_presence.ControllingClient.SendAvatarDataImmediate (presence);
+            if(!lastPresencesDInView.ContainsKey(presence.UUID))
+            {
+                lastPresencesInView.Add(presence);
+                lastPresencesDInView.Add(presence.UUID, presence);
+            }
         }
 
         protected void SendFullUpdateForPresence (IScenePresence presence)
