@@ -417,7 +417,21 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         else
                         {
                             //Tell 'other' agents about the new agent ('us')
-                            eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", SP.Scene.RegionInfo.RegionHandle);
+                            IClientAPI otherAgent = GetActiveClient(member.AvatarKey);
+                            if(otherAgent != null)//Local, so we can send it directly
+                                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", SP.Scene.RegionInfo.RegionHandle);
+                            else
+                            {
+                                IAsyncMessagePostService amps = m_sceneList[0].RequestModuleInterface<IAsyncMessagePostService>();
+                                if(amps != null)
+                                {
+                                    OSDMap message = new OSDMap();
+                                    message["Method"] = "GroupSessionAgentUpdate";
+                                    message["AgentID"] = thismember.AvatarKey;
+                                    message["Message"] = ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), "ENTER");
+                                    amps.Post(SP.Scene.RegionInfo.RegionHandle, message);
+                                }
+                            }
                         }
                     }
                     return "Accepted";
@@ -593,7 +607,21 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             else
                             {
                                 //Tell 'other' agents about the new agent ('us')
-                                queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
+                                IClientAPI otherAgent = GetActiveClient(member.AvatarKey);
+                                if(otherAgent != null)//Local, so we can send it directly
+                                    queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
+                                else
+                                {
+                                    IAsyncMessagePostService amps = m_sceneList[0].RequestModuleInterface<IAsyncMessagePostService>();
+                                    if(amps != null)
+                                    {
+                                        OSDMap message = new OSDMap();
+                                        message["Method"] = "GroupSessionAgentUpdate";
+                                        message["AgentID"] = AgentID;
+                                        message["Message"] = ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), "ENTER");
+                                        amps.Post(remoteClient.Scene.RegionInfo.RegionHandle, message);
+                                    }
+                                }
                             }
                         }
                     }
@@ -632,6 +660,39 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private bool GetIsModerator (UUID AgentID, UUID GroupID)
         {
             return m_groupsModule.GroupPermissionCheck(AgentID, GroupID, GroupPowers.ModerateChat);
+        }
+
+        private OSD ChatterBoxSessionAgentListUpdates (UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] agentUpdatesBlock, string Transition)
+        {
+            OSDMap body = new OSDMap();
+            OSDMap agentUpdates = new OSDMap();
+            OSDMap infoDetail = new OSDMap();
+            OSDMap mutes = new OSDMap();
+
+            foreach(OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block in agentUpdatesBlock)
+            {
+                infoDetail = new OSDMap();
+                mutes = new OSDMap();
+                mutes.Add("text", OSD.FromBoolean(block.MuteText));
+                mutes.Add("voice", OSD.FromBoolean(block.MuteVoice));
+                infoDetail.Add("can_voice_chat", OSD.FromBoolean(block.CanVoiceChat));
+                infoDetail.Add("is_moderator", OSD.FromBoolean(block.IsModerator));
+                infoDetail.Add("mutes", mutes);
+                OSDMap info = new OSDMap();
+                info.Add("info", infoDetail);
+                if(Transition != string.Empty)
+                    info.Add("transition", OSD.FromString(Transition));
+                agentUpdates.Add(block.AgentID.ToString(), info);
+            }
+            body.Add("agent_updates", agentUpdates);
+            body.Add("session_id", OSD.FromUUID(sessionID));
+            body.Add("updates", new OSD());
+
+            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap();
+            chatterBoxSessionAgentListUpdates.Add("message", OSD.FromString("ChatterBoxSessionAgentListUpdates"));
+            chatterBoxSessionAgentListUpdates.Add("body", body);
+
+            return chatterBoxSessionAgentListUpdates;
         }
 
         /// <summary>
