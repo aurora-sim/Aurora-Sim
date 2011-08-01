@@ -99,6 +99,26 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             NumberOfDaysForOldAssets = source.Configs["BlackHole"].GetInt("AssetsAreOldAfterHowManyDays", 30) * -1;
             m_Enabled = true;
 
+            if (!Directory.Exists(m_CacheDirectoryBackup))
+                Directory.CreateDirectory(m_CacheDirectoryBackup);
+            if (!Directory.Exists(m_CacheDirectoryBackup))
+            {
+                m_Log.Error(
+                    "Check your Main.ini and ensure your backup directory is set! under [BlackHole] BackupCacheDirector");
+                m_Enabled = false;
+                return;
+            }
+
+            if (!Directory.Exists(m_CacheDirectory))
+                Directory.CreateDirectory(m_CacheDirectory);
+            if (!Directory.Exists(m_CacheDirectory))
+            {
+                m_Log.Error(
+                    "Check your Main.ini and ensure your cache directory is set! under [BlackHole] m_CacheDirectory");
+                m_Enabled = false;
+                return;
+            }
+
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
             genericData.ConnectToDatabase(defaultConnectionString, "BlackholeAsset", true);
