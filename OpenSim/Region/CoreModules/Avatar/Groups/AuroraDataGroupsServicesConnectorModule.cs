@@ -426,9 +426,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             CreateGroupChatSessionTracking(groupID);
 
             // If nessesary, remove from dropped list
-            if (m_groupsAgentsDroppedFromChatSession[groupID].Contains(agentID))
+            if(m_groupsAgentsDroppedFromChatSession[groupID].Contains(agentID))
             {
                 m_groupsAgentsDroppedFromChatSession[groupID].Remove(agentID);
+            }
+            if(!m_groupsAgentsInvitedToChatSession[groupID].Contains(agentID))
+            {
+                m_groupsAgentsInvitedToChatSession[groupID].Add(agentID);
             }
         }
 

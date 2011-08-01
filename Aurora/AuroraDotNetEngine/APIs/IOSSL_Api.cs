@@ -53,8 +53,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osSetDynamicTextureDataBlendFace(string dynamicID, string contentType, string data, string extraParams,
                                             bool blend, int disp, int timer, int alpha, int face);
 
-        LSL_Float osTerrainGetHeight(int x, int y);
-        LSL_Integer osTerrainSetHeight(int x, int y, double val);
+        LSL_Float osGetTerrainHeight(int x, int y);
+        LSL_Integer osSetTerrainHeight(int x, int y, double val);
         void osTerrainFlush();
 
         int osRegionRestart(double seconds);

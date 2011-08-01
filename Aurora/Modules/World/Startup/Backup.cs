@@ -111,6 +111,7 @@ namespace Aurora.Modules
 
         public void Close(IScene scene)
         {
+            m_backup.Remove(scene);
         }
 
         #endregion

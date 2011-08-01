@@ -189,7 +189,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //
         // OpenSim functions
         //
-        public LSL_Integer osTerrainSetHeight(int x, int y, double val)
+        public LSL_Integer osSetTerrainHeight(int x, int y, double val)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTerrainSetHeight", m_host, "OSSL");
 
@@ -210,7 +210,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public LSL_Float osTerrainGetHeight(int x, int y)
+        public LSL_Float osGetTerrainHeight(int x, int y)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTerrainGetHeight", m_host, "OSSL");
 

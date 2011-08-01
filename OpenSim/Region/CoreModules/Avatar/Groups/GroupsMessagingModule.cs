@@ -225,7 +225,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.fromAgentID = im.fromAgentID;
             msg.fromGroup = true;
 
-            foreach (GroupMembersData member in m_groupData.GetGroupMembers(msg.fromAgentID, groupID))
+            SendInstantMessages(msg);
+
+            /*foreach (GroupMembersData member in m_groupData.GetGroupMembers(msg.fromAgentID, groupID))
             {
                 if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, groupID))
                 {
@@ -238,7 +240,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                 if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0}", member.AgentID);
                 m_msgTransferModule.SendInstantMessage(msg);
-            }
+            }*/
         }
 
         private void SendInstantMessages(object message)
@@ -248,33 +250,67 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             List<UUID> agentsToSendTo = new List<UUID>();
             foreach (GroupMembersData member in members)
             {
-                if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, msg.imSessionID))
+                UUID GroupID = msg.imSessionID;
+                if(m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, GroupID))
                 {
                     // Don't deliver messages to people who have dropped this session
                     if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} has dropped session, not delivering to them", member.AgentID);
                     continue;
+                }
+                if(!m_groupData.hasAgentBeenInvitedToGroupChatSession(member.AgentID, GroupID))
+                {
+                    // Agent not in session and hasn't dropped from session
+                    // Add them to the session for now, and Invite them
+                    m_groupData.AgentInvitedToGroupChatSession(member.AgentID, GroupID);
+
+                    IClientAPI activeClient = GetActiveClient(member.AgentID);
+                    if(activeClient != null)
+                    {
+                        //Only send EQM messages if they are on this sim
+                        GroupRecord groupInfo = m_groupData.GetGroupRecord(UUID.Zero, GroupID, null);
+                        if(groupInfo != null)
+                        {
+                            if(m_debugEnabled)
+                                m_log.DebugFormat("[GROUPS-MESSAGING]: Sending chatterbox invite instant message");
+
+                            // Force? open the group session dialog???
+                            // and simultanously deliver the message, so we don't need to do a seperate client.SendInstantMessage(msg);
+                            IEventQueueService eq = activeClient.Scene.RequestModuleInterface<IEventQueueService>();
+                            eq.ChatterboxInvitation(
+                                GroupID
+                                , groupInfo.GroupName
+                                , msg.fromAgentID
+                                , msg.message
+                                , member.AgentID
+                                , msg.fromAgentName
+                                , msg.dialog
+                                , msg.timestamp
+                                , msg.offline == 1
+                                , (int)msg.ParentEstateID
+                                , msg.Position
+                                , 1
+                                , msg.imSessionID
+                                , msg.fromGroup
+                                , OpenMetaverse.Utils.StringToBytes(groupInfo.GroupName)
+                                , activeClient.Scene.RegionInfo.RegionHandle
+                                );
+
+                            eq.ChatterBoxSessionAgentListUpdates(
+                                GroupID
+                                , msg.fromAgentID
+                                , member.AgentID
+                                , false //canVoiceChat
+                                , false //isModerator
+                                , false //text mute
+                                , activeClient.Scene.RegionInfo.RegionHandle
+                                );
+                            continue;
+                        }
+                    }
                 }
                 agentsToSendTo.Add(member.AgentID);
             }
             m_msgTransferModule.SendInstantMessages(msg, agentsToSendTo);
-            /*foreach (GroupMembersData member in m_groupData.GetGroupMembers(UUID.Parse(msg.fromAgentID.ToString()), UUID.Parse(msg.imSessionID.ToString())))
-            {
-                if (m_groupData.hasAgentDroppedGroupChatSession(member.AgentID, UUID.Parse(msg.imSessionID.ToString())))
-                {
-                    // Don't deliver messages to people who have dropped this session
-                    if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: {0} has dropped session, not delivering to them", member.AgentID);
-                    continue;
-                }
-
-                msg.toAgentID = member.AgentID.Guid;
-
-                m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0}", member.AgentID);
-                m_msgTransferModule.SendInstantMessage(msg, delegate(bool success)
-                {
-                    if (!success && m_removeOfflineAgentsFromGroupIMs)
-                        m_groupData.AgentDroppedFromGroupChatSession(member.AgentID, UUID.Parse(msg.imSessionID.ToString()));
-                });
-            }*/
         }
         
         #region SimGridEventHandlers

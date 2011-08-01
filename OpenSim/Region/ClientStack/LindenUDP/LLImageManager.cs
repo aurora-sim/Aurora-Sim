@@ -165,9 +165,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private J2KImage FindImage(TextureRequestArgs newRequest)
         {
+            if(newRequest == null)
+                return null;
+
             J2KImage imgrequest;
             lock (m_syncRoot)
-                m_priorityQueue.Find(delegate(J2KImage img) { return img.TextureID == newRequest.RequestedAssetID; }, out imgrequest);
+                m_priorityQueue.Find(delegate(J2KImage img)
+                {
+                    if(img == null)
+                        return false;
+                    return img.TextureID == newRequest.RequestedAssetID;
+                }, out imgrequest);
             return imgrequest;
         }
 
