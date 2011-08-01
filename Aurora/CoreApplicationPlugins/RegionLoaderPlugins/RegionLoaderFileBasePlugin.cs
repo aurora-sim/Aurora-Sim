@@ -401,11 +401,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {
-            if (cmd.Length < 2)
-            {
-                m_log.Info ("Usage: create region");
-                return;
-            }
             string fileName = MainConsole.Instance.CmdPrompt ("File Name", "Regions.ini");
             string regionName = MainConsole.Instance.CmdPrompt ("Region Name", "New Region");
 
