@@ -386,75 +386,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupsConnector.AddGroupProposal(agentID, info);
         }
 
-        public void ResetAgentGroupChatSessions(UUID agentID)
-        {
-            foreach (List<UUID> agentList in m_groupsAgentsDroppedFromChatSession.Values)
-            {
-                agentList.Remove(agentID);
-            }
-        }
-
-        public bool hasAgentBeenInvitedToGroupChatSession(UUID agentID, UUID groupID)
-        {
-            // If we're  tracking this group, and we can find them in the tracking, then they've been invited
-            return m_groupsAgentsInvitedToChatSession.ContainsKey(groupID)
-                && m_groupsAgentsInvitedToChatSession[groupID].Contains(agentID);
-        }
-
-        public List<UUID> AgentsInvitedToGroupChatSession (UUID groupID)
-        {
-            List<UUID> agents = new List<UUID>();
-            if(!m_groupsAgentsInvitedToChatSession.TryGetValue(groupID, out agents))
-                agents = new List<UUID>();
-            return agents;
-        }
-
-        public bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID)
-        {
-            // If we're tracking drops for this group, 
-            // and we find them, well... then they've dropped
-            return m_groupsAgentsDroppedFromChatSession.ContainsKey(groupID)
-                && m_groupsAgentsDroppedFromChatSession[groupID].Contains(agentID);
-        }
-
-        public void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID)
-        {
-            if (m_groupsAgentsDroppedFromChatSession.ContainsKey(groupID))
-            {
-                // If not in dropped list, add
-                if (!m_groupsAgentsDroppedFromChatSession[groupID].Contains(agentID))
-                {
-                    m_groupsAgentsDroppedFromChatSession[groupID].Add(agentID);
-                }
-            }
-        }
-
-        public void AgentInvitedToGroupChatSession(UUID agentID, UUID groupID)
-        {
-            // Add Session Status if it doesn't exist for this session
-            CreateGroupChatSessionTracking(groupID);
-
-            // If nessesary, remove from dropped list
-            if(m_groupsAgentsDroppedFromChatSession[groupID].Contains(agentID))
-            {
-                m_groupsAgentsDroppedFromChatSession[groupID].Remove(agentID);
-            }
-            if(!m_groupsAgentsInvitedToChatSession[groupID].Contains(agentID))
-            {
-                m_groupsAgentsInvitedToChatSession[groupID].Add(agentID);
-            }
-        }
-
-        private void CreateGroupChatSessionTracking(UUID groupID)
-        {
-            if (!m_groupsAgentsDroppedFromChatSession.ContainsKey(groupID))
-            {
-                m_groupsAgentsDroppedFromChatSession.Add(groupID, new List<UUID>());
-                m_groupsAgentsInvitedToChatSession.Add(groupID, new List<UUID>());
-            }
-
-        }
-
         #endregion
 
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
@@ -479,15 +410,27 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// Create a new friend conference session
         /// </summary>
         /// <param name="session"></param>
-        public void CreateSession(ChatSession session)
+        public bool CreateSession(ChatSession session)
         {
             ChatSession oldSession = null;
             if(ChatSessions.TryGetValue(session.SessionID, out oldSession))
-                if(oldSession.Members.Count == 0)
+                if(GetMemeberCount(session) == 0)
                     RemoveSession(session.SessionID);
                 else
-                    return;//Already have one
+                    return false;//Already have one
             ChatSessions.Add(session.SessionID, session);
+            return true;
+        }
+
+        private int GetMemeberCount (ChatSession session)
+        {
+            int count = 0;
+            foreach(ChatSessionMember member in session.Members)
+            {
+                if(member.HasBeenAdded)
+                    count++;
+            }
+            return count;
         }
 
         public void RemoveSession (UUID sessionid)

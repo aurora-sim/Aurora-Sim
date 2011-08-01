@@ -1042,58 +1042,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         }
         #endregion
 
-        #region GroupSessionTracking
-
-        public void ResetAgentGroupChatSessions(UUID agentID)
-        {
-            Dictionary<string, OSDMap> agentSessions;
-
-            if (SimianGetGenericEntries(agentID, "GroupSessionDropped", out agentSessions))
-            {
-                foreach (string GroupID in agentSessions.Keys)
-                {
-                    SimianRemoveGenericEntry(agentID, "GroupSessionDropped", GroupID);
-                }
-            }
-
-            if (SimianGetGenericEntries(agentID, "GroupSessionInvited", out agentSessions))
-            {
-                foreach (string GroupID in agentSessions.Keys)
-                {
-                    SimianRemoveGenericEntry(agentID, "GroupSessionInvited", GroupID);
-                }
-            }
-        }
-
-        public bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID)
-        {
-            OSDMap session;
-            return SimianGetGenericEntry(agentID, "GroupSessionDropped", groupID.ToString(), out session);
-        }
-
-        public void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID)
-        {
-            SimianAddGeneric(agentID, "GroupSessionDropped", groupID.ToString(), new OSDMap());
-        }
-
-        public void AgentInvitedToGroupChatSession(UUID agentID, UUID groupID)
-        {
-            SimianAddGeneric(agentID, "GroupSessionInvited", groupID.ToString(), new OSDMap());
-        }
-
-        public bool hasAgentBeenInvitedToGroupChatSession(UUID agentID, UUID groupID)
-        {
-            OSDMap session;
-            return SimianGetGenericEntry(agentID, "GroupSessionDropped", groupID.ToString(), out session);
-        }
-
-        public List<UUID> AgentsInvitedToGroupChatSession (UUID groupID)
-        {
-            return new List<UUID>();
-        }
-
-        #endregion
-
         private void EnsureRoleNotSelectedByMember(UUID groupID, UUID roleID, UUID userID)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);

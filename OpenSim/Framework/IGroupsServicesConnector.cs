@@ -70,16 +70,10 @@ namespace OpenSim.Framework
         GroupNoticeInfo GetGroupNotice(UUID RequestingAgentID, UUID noticeID);
         List<GroupNoticeData> GetGroupNotices(UUID RequestingAgentID, UUID GroupID);
 
-        void ResetAgentGroupChatSessions(UUID agentID);
-        bool hasAgentBeenInvitedToGroupChatSession(UUID agentID, UUID groupID);
-        bool hasAgentDroppedGroupChatSession(UUID agentID, UUID groupID);
-        void AgentDroppedFromGroupChatSession(UUID agentID, UUID groupID);
-        void AgentInvitedToGroupChatSession (UUID agentID, UUID groupID);
-        List<UUID> AgentsInvitedToGroupChatSession (UUID groupID);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
 
-        void CreateSession (ChatSession chatSession);
+        bool CreateSession (ChatSession chatSession);
         void AddMemberToGroup (ChatSessionMember chatSessionMember, UUID GroupID);
         ChatSession GetSession (UUID sessionid);
         ChatSessionMember FindMember (UUID sessionid, UUID Agent);
