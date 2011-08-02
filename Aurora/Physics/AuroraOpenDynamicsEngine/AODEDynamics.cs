@@ -646,9 +646,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
             }
-            if (pos.Z < _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y))
+            if (pos.Z < _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y) - 5)
             {
                 pos.Z = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y) + 2;
+                m_lastPositionVector = pos;//Make sure that we don't have an explosion the next frame with the posChange
                 d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
             }
 
