@@ -581,9 +581,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.Vector3 pos = d.BodyGetPosition (Body);
             //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
             Vector3 posChange = new Vector3 ();
-            posChange.X = pos.X - m_lastPositionVector.X;
-            posChange.Y = pos.Y - m_lastPositionVector.Y;
-            posChange.Z = pos.Z - m_lastPositionVector.Z;
+            if(!(m_lastPositionVector.X == 0 &&
+                m_lastPositionVector.Y == 0 &&
+                m_lastPositionVector.Z == 0))
+            {
+                ///Only do this if we have a last position
+                posChange.X = pos.X - m_lastPositionVector.X;
+                posChange.Y = pos.Y - m_lastPositionVector.Y;
+                posChange.Z = pos.Z - m_lastPositionVector.Z;
+            }
             double Zchange = Math.Abs (posChange.Z);
             if (m_BlockingEndPoint != Vector3.Zero)
             {
@@ -688,7 +694,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Zchange > -0.1f)
                 {
                     if (Zchange > 0.5f)
-                        Zchange = 0.5f;
+                        Zchange = 0.25f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
                     grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
@@ -746,11 +752,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Math.Abs (m_dir.Y) > 1000 ||
                 Math.Abs (m_dir.Z) > 1000)
             {
+                m_dir = Vector3.Zero;
+                /*
                 //This vehicle is f***ed
                 parent.RaiseOutOfBounds (parent.Position);
                 parent._zeroFlag = true;
                 parent.m_disabled = true;
-                parent.m_frozen = true;
+                parent.m_frozen = true;*/
                 return;
             }
 
@@ -764,7 +772,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // apply friction
             Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / pTimestep);
+            if(parent.IsColliding)
+            {
+                decayamount *= 1000;
+                float length = m_lastLinearVelocityVector.LengthSquared();
+                if(length < 1)
+                    decayamount *= 2 - length;
+            }
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
+            if(m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f))
+            {
+                m_lastLinearVelocityVector = Vector3.Zero;
+                //m_linearZeroFlag = true;
+            }
+            //else
+            //    m_linearZeroFlag = false;
         } // end MoveLinear()
 
         private void MoveAngular (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
@@ -849,8 +871,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //        m_lastVertAttractor = vertattr;
 
-            // Bank section tba
-            
             #region Deflection
 
             //Forward is the prefered direction, but if the reference frame has changed, we need to take this into account as well
@@ -882,23 +902,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // velocity may still be acheived.
 
                     Vector3 dir = Vector3.One * rotq;
-                    float mult = /*dir.X > 0 ?*/ -1f /*: 1*/;
-                    mult *= m_bankingMix;//Changes which way it banks in and out of turns
+                    float mult = m_bankingMix * -1;//Changes which way it banks in and out of turns
 
                     //Use the square of the efficiency, as it looks much more how SL banking works
                     float effSquared = (m_bankingEfficiency * m_bankingEfficiency);
                     if (m_bankingEfficiency < 0)
                         effSquared *= -1;//Keep the negative!
 
-                    if (Math.Abs (m_lastAngularVelocity.Z) > m_bankingMix)
+                    banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
+                    m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
+                    if(Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix)
                     {
-                        banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
-                        m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                        Vector3 bankingRot = new Vector3 (m_lastAngularVelocity.Z * (effSquared * 10 * (m_bankingMix * (-1))), 0, 0);
+                        Vector3 bankingRot = new Vector3(m_lastAngularVelocity.Z * (effSquared * 10 * mult), 0, 0);
                         bankingRot *= rotq;
-                        banking += bankingRot;
-                        //m_angularMotorDirection.Y = m_lastAngularVelocity.Z * (m_bankingEfficiency);
-                        //m_linearMotorDirectionLASTSET.Y = m_lastAngularVelocity.Z * (m_bankingEfficiency * 100);
+                        if(!parent.IsColliding)//If they are colliding, we probably shouldn't shove the prim around... probably
+                            banking += bankingRot;
                     }
                 }
             }
@@ -950,10 +968,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // apply friction
             Vector3 decayamount = Vector3.One / (m_angularFrictionTimescale / pTimestep);
+            if(parent.IsColliding)
+            {
+                decayamount *= 1000;
+                float length = m_lastAngularVelocity.LengthSquared();
+                if(length < 1)
+                    decayamount *= 2 - length;
+                if(decayamount.X > 1)
+                    decayamount.X = 1;
+                if(decayamount.Y > 1)
+                    decayamount.Y = 1;
+                if(decayamount.Z > 1)
+                    decayamount.Z = 1;
+            }
             m_lastAngularVelocity -= m_lastAngularVelocity * decayamount;
 
             // Apply to the body
             d.BodySetAngularVel (Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
+
+            if(m_lastAngularVelocity.ApproxEquals(Vector3.Zero, 0.1f))
+            {
+                m_lastAngularVelocity = Vector3.Zero;
+                //m_angularZeroFlag = true;
+            }
+            //else
+            //    m_angularZeroFlag = false;
         }
 
         private Vector3 ToEuler(Quaternion m_lastCameraRotation)

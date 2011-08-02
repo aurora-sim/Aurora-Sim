@@ -2248,7 +2248,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // Retrieve group
                 ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
-                if (null == part.ParentEntity)
+                if(null == part || null == part.ParentEntity)
                 {
                     m_log.ErrorFormat(
                         "[PRIM INVENTORY]: " +
