@@ -1198,6 +1198,8 @@ namespace OpenSim.Framework
 
         public virtual void delink() { }
 
+        public virtual bool LinkSetIsColliding { get; set; }
+
         public virtual void LockAngularMotion(Vector3 axis) { }
 
         public virtual PrimitiveBaseShape Shape { set { } }

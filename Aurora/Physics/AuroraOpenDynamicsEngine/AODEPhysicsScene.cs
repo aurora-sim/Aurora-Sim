@@ -1211,14 +1211,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             lock (_activeprimsLock)
             {
                 List<AuroraODEPrim> removeprims = null;
+                foreach(AuroraODEPrim chr in _activeprims)
+                {
+                    //Fix colliding atributes!
+                    chr.IsColliding = false;
+                    chr.LinkSetIsColliding = false;
+                }
                 foreach (AuroraODEPrim chr in _activeprims)
                 {
                     if (chr.Body != IntPtr.Zero && d.BodyIsEnabled(chr.Body) &&
                         (!chr.m_disabled) && (!chr.m_frozen) && !(chr._zeroFlag))
                     {
-                        //Fix colliding atributes!
-                        chr.IsColliding = false;
-
                         try
                         {
                             lock (chr)

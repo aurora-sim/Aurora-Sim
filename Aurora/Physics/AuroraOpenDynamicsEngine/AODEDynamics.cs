@@ -220,7 +220,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
                 case Vehicle.ANGULAR_MOTOR_DIRECTION:
                     m_angularMotorDirection = new Vector3(pValue, pValue, pValue);
-                    m_angularMotorApply = 10;
+                    m_angularMotorApply = 300;
                     break;
                 case Vehicle.LINEAR_FRICTION_TIMESCALE:
                     m_linearFrictionTimescale = new Vector3(pValue, pValue, pValue);
@@ -253,7 +253,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (m_angularMotorDirection.Y < -12.56f) m_angularMotorDirection.Y = -12.56f;
                     if (m_angularMotorDirection.Z > 12.56f) m_angularMotorDirection.Z = 12.56f;
                     if (m_angularMotorDirection.Z < -12.56f) m_angularMotorDirection.Z = -12.56f;
-                    m_angularMotorApply = 10;
+                    m_angularMotorApply = 300;
                     break;
                 case Vehicle.LINEAR_FRICTION_TIMESCALE:
                     m_linearFrictionTimescale = new Vector3(pValue.X, pValue.Y, pValue.Z);
@@ -806,7 +806,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // apply friction
             Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / pTimestep);
-            if(parent.IsColliding)
+            if(parent.LinkSetIsColliding)
             {
                 decayamount *= 1000;
                 float length = m_lastLinearVelocityVector.LengthSquared();
@@ -846,7 +846,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     Console.WriteLine (Vector3.One * camrot);
                 }
             }*/
-            if (m_angularMotorApply > 0)
+            if (m_angularMotorApply > 290)
             {
                 // ramp up to new value
                 //   current velocity  +=                         error                       /    (time to get there / step interval)
@@ -870,13 +870,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if(m_angularMotorVelocity.ApproxEquals(Vector3.Zero, 0.1f))
                     m_angularMotorVelocity = Vector3.Zero;
             } // end motor section
+            if(m_angularMotorApply > 0)
+                m_angularMotorApply--;
 
             // Vertical attractor section
             Vector3 vertattr = Vector3.Zero;
             Vector3 deflection = Vector3.Zero;
             Vector3 banking = Vector3.Zero;
 
-            if (m_verticalAttractionTimescale < 300)
+            if(m_verticalAttractionTimescale < 300 && (m_angularMotorVelocity != Vector3.Zero || m_angularMotorApply > 0))
             {
                 float VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
                 VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
@@ -930,7 +932,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_bankingEfficiency != 0)
             {
                 Vector3 angularMotorVelocity = new Vector3 ();
-                if (m_angularMotorApply > 0)
+                if (m_angularMotorApply > 10)
                 {
                     // ramp up to new value
                     //   current velocity  +=                         error                       /    (time to get there / step interval)
@@ -952,7 +954,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
                     m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                    if(!parent.IsColliding && Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix) //If they are colliding, we probably shouldn't shove the prim around... probably
+                    if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
                         Vector3 bankingRot = new Vector3(m_lastAngularVelocity.Z * (effSquared * 10 * mult), 0, 0);
                         bankingRot *= rotq;
@@ -1008,7 +1010,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // apply friction
             Vector3 decayamount = Vector3.One / (m_angularFrictionTimescale / pTimestep);
-            if(parent.IsColliding)
+            if(parent.LinkSetIsColliding)
             {
                 decayamount *= 100;
                 if(decayamount.X > 1)

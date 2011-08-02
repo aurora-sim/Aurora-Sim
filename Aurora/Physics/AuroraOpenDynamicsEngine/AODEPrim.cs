@@ -141,6 +141,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         internal List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim> ();
 
         private bool iscolliding;
+        private bool linksetIscolliding;
         private bool m_isphysical;
         private bool m_isSelected;
 
@@ -2565,7 +2566,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             set
             {
+                if(value && _parent != null)
+                    _parent.LinkSetIsColliding = value;
+                LinkSetIsColliding = value;
                 iscolliding = value;
+            }
+        }
+
+        public override bool LinkSetIsColliding
+        {
+            get
+            {
+                return linksetIscolliding;
+            }
+            set
+            {
+                linksetIscolliding = value;
             }
         }
 
