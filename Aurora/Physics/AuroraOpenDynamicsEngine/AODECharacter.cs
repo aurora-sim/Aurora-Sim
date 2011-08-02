@@ -574,7 +574,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetCategoryBits(Shell, (int)m_collisionCategories);
             d.GeomSetCollideBits(Shell, (int)m_collisionFlags);
 
-            d.MassSetCapsule(out ShellMass, 150f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
+            d.MassSetCapsule(out ShellMass, 30f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
 
             m_mass=ShellMass.mass;
 
@@ -938,8 +938,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //    vel.Z = -0.6f;
                 if (!m_iscolliding)//not Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
                 {
-                    _target_velocity.X += m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplier * 7;
-                    _target_velocity.Y += m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplier * 7;
+                    _target_velocity.X += m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplier * 5;
+                    _target_velocity.Y += m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplier * 5;
                 }
                 _target_velocity.Z += m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
                 
@@ -1103,7 +1103,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if ((tempPos.Z - CAPSULE_LENGTH) < target_altitude ||
                             (tempPos.Z - CAPSULE_LENGTH) < _parent_scene.GetTerrainHeightAtXY (tempPos.X + forwardVel.X, tempPos.Y + forwardVel.Y)
                             + MinimumGroundFlightOffset)
-                        vec.Z += (target_altitude - tempPos.Z) * PID_P * 0.5f;
+                        if(_target_velocity.Z < 0)
+                            vec.Z += (target_altitude - tempPos.Z) * PID_P * 0.5f;//Don't apply so much
+                        else
+                            vec.Z += (target_altitude - tempPos.Z) * PID_P * 1.05f;
                 }
                 else
                 {
