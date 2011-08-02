@@ -48,5 +48,11 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </param>
         /// <param name="groupID"></param>
         void SendMessageToGroup(GridInstantMessage im, UUID groupID);
+
+        /// <summary>
+        /// Ensures that a group chat is created and users are added to it
+        /// </summary>
+        /// <param name="groupID"></param>
+        void EnsureGroupChatIsStarted (UUID groupID);
     }
 }

@@ -107,6 +107,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 //m_log.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
 
                 m_connectorEnabled = true;
+                GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+                if(GroupsConnector == null)
+                {
+                    m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
+                    m_connectorEnabled = false;
+                }
             }
         }
 
@@ -137,12 +143,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void RegionLoaded (IScene scene)
         {
-            GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
-            if (GroupsConnector == null)
-            {
-                m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
-                m_connectorEnabled = false;
-            }
         }
 
         #endregion
@@ -251,16 +251,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName)
         {
-            Hashtable param = new Hashtable();
-            if (GroupID != UUID.Zero)
-            {
-                param["GroupID"] = GroupID.ToString();
-            }
-            if ((GroupName != null) && (GroupName != string.Empty))
-            {
-                param["Name"] = GroupName.ToString();
-            }
-
             return GroupsConnector.GetGroupRecord(requestingAgentID, GroupID, GroupName);
         }
 

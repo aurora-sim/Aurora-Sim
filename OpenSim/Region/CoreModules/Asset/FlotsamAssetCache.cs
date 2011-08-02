@@ -334,7 +334,10 @@ namespace Flotsam.RegionModules.AssetCache
                             asset = (AssetBase)bformatter.Deserialize(stream);
 
                             if(asset.ID == UUID.Zero)//Bad request
+                            {
+                                File.Delete(filename);
                                 return null;
+                            }
                             UpdateMemoryCache(id, asset);
 
                             m_DiskHits++;

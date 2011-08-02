@@ -217,6 +217,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             GridInstantMessage im = message as GridInstantMessage;
             ChatSession session = m_groupData.GetSession(im.imSessionID);
+            if(session == null)
+                return;
             List<UUID> agentsToSendTo = new List<UUID>();
             foreach(ChatSessionMember member in session.Members)
             {
@@ -494,6 +496,33 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 message = member.MuteText + "," + member.MuteVoice
             };
             m_msgTransferModule.SendInstantMessage(img);
+        }
+
+        public void EnsureGroupChatIsStarted (UUID groupID)
+        {
+            ChatSession session = m_groupData.GetSession(groupID);
+            if(session == null)
+            {
+                List<ChatSessionMember> members = new List<ChatSessionMember>();
+                GroupRecord record = m_groupData.GetGroupRecord(UUID.Zero, groupID, "");
+                UUID ownerID = record.FounderID;//Requires that the founder is still in the group
+                foreach(GroupMembersData gmd in m_groupData.GetGroupMembers(ownerID, groupID))
+                {
+                    if((gmd.AgentPowers & (ulong)GroupPowers.JoinChat) == (ulong)GroupPowers.JoinChat)//Only if they can join
+                    {
+                        members.Add(new OpenSim.Framework.ChatSessionMember()
+                        {
+                            AvatarKey = gmd.AgentID
+                        });
+                    }
+                }
+                m_groupData.CreateSession(new ChatSession()
+                {
+                    Members = members,
+                    Name = record.GroupName,
+                    SessionID = groupID
+                });
+            }
         }
 
         #endregion
