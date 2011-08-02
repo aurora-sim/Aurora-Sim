@@ -335,6 +335,8 @@ namespace Flotsam.RegionModules.AssetCache
 
                             if(asset.ID == UUID.Zero)//Bad request
                             {
+                                if(stream != null)
+                                    stream.Close();
                                 File.Delete(filename);
                                 return null;
                             }
