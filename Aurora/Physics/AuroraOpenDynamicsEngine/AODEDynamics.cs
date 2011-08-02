@@ -299,10 +299,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_flags |= param;
         }//end ProcessVehicleFlags
 
-        internal void ProcessTypeChange(Vehicle pType)
+        internal void ProcessTypeChange(AuroraODEPrim parent, Vehicle pType)
         {
             // Set Defaults For Type
             m_type = pType;
+            SetPhysicalParameters(parent, m_type);
             switch (pType)
             {
                 case Vehicle.TYPE_NONE:
@@ -469,13 +470,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_enabled = true;
             m_previousFriction = parent._parent_entity.Friction;
             m_previousRestitution = parent._parent_entity.Restitution;
-            parent._parent_entity.Friction = 0.2f; //This seems to happen in SL... and its needed for here
-            parent._parent_entity.Restitution = 0.1f;
             parent.ThrottleUpdates = false;
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
                 return;
             GetMass (pBody);
+        }
+
+        internal void SetPhysicalParameters (AuroraODEPrim parent, Vehicle type)
+        {
+            if(type == Vehicle.TYPE_CAR ||
+                type == Vehicle.TYPE_SLED)
+            {
+                parent._parent_entity.Friction = 0.2f; //This seems to happen in SL... and its needed for here
+                parent._parent_entity.Restitution = 0.1f;
+            }
+            else if(type == Vehicle.TYPE_BOAT ||
+                type == Vehicle.TYPE_BALLOON)
+            {
+                parent._parent_entity.Friction = 0.5f;//No driving boats!
+                parent._parent_entity.Restitution = 0.1f;
+            }
+            else if(type == Vehicle.TYPE_AIRPLANE)
+            {
+                parent._parent_entity.Friction = 0.4f;
+                parent._parent_entity.Restitution = 0.1f;
+            }
         }
 
         internal void Disable(AuroraODEPrim parent)
@@ -649,27 +669,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_VhoverTargetHeight = m_VhoverHeight;
                 }
 
+                float tempHoverHeight = m_VhoverTargetHeight;
                 if ((m_flags & VehicleFlag.HOVER_UP_ONLY) != 0)
                 {
                     // If body is aready heigher, use its height as target height
-                    if (pos.Z > m_VhoverTargetHeight)
-                        m_VhoverTargetHeight = pos.Z;
+                    if(pos.Z > tempHoverHeight)
+                        tempHoverHeight = pos.Z;
                 }
                 if ((m_flags & VehicleFlag.LOCK_HOVER_HEIGHT) != 0)
                 {
-                    if ((pos.Z - m_VhoverTargetHeight) > .2 || (pos.Z - m_VhoverTargetHeight) < -.2)
+                    if((pos.Z - tempHoverHeight) > .2 || (pos.Z - tempHoverHeight) < -.2)
                     {
-                        float h = m_VhoverTargetHeight;
+                        float h = tempHoverHeight;
                         float groundHeight = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y);
-                        if (groundHeight >= m_VhoverTargetHeight)
+                        if(groundHeight >= tempHoverHeight)
                             h = groundHeight;
 
-                        d.BodySetPosition (Body, pos.X, pos.Y, m_VhoverTargetHeight);
+                        d.BodySetPosition(Body, pos.X, pos.Y, tempHoverHeight);
                     }
                 }
                 else
                 {
-                    float herr0 = pos.Z - m_VhoverTargetHeight;
+                    float herr0 = pos.Z - tempHoverHeight;
                     // Replace Vertical speed with correction figure if significant
                     if (Math.Abs (herr0) > 0.01f)
                     {
@@ -701,7 +722,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Zchange > -0.1f)
                 {
                     if (Zchange > 0.5f)
-                        Zchange = 0.25f;
+                        Zchange = 0.5f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
                     grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
@@ -785,6 +806,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 float length = m_lastLinearVelocityVector.LengthSquared();
                 if(length < 1)
                     decayamount *= 2 - length;
+                if(decayamount.X > 1)
+                    decayamount.X = 1;
+                if(decayamount.Y > 1)
+                    decayamount.Y = 1;
+                if(decayamount.Z > 1)
+                    decayamount.Z = 1;
             }
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
             if(m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f))
