@@ -225,7 +225,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     messagePost.Post (regionClient.RegionHandle, BuildRequest ("KickUserMessage", message, regionClient.AgentID.ToString ()));
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
                     if (agentProcessor != null)
-                        agentProcessor.LogoutAgent (regionClient);
+                        agentProcessor.LogoutAgent (regionClient, true);
                     m_log.Info ("User Kicked sent.");
                     return;
                 }

@@ -83,6 +83,7 @@ namespace OpenSim.Services.LLLoginService
         protected IConfig m_LoginServerConfig;
         protected IConfigSource m_config;
         protected bool m_AllowAnonymousLogin = false;
+        protected bool m_AllowDuplicateLogin = false;
         protected bool m_UseTOS = false;
         protected string m_TOSLocation = "";
         protected string m_DefaultUserAvatarArchive = "DefaultAvatar.aa";
@@ -108,6 +109,7 @@ namespace OpenSim.Services.LLLoginService
             m_DefaultHomeRegion = m_LoginServerConfig.GetString("DefaultHomeRegion", "");
             m_DefaultUserAvatarArchive = m_LoginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
             m_AllowAnonymousLogin = m_LoginServerConfig.GetBoolean("AllowAnonymousLogin", false);
+            m_AllowDuplicateLogin = m_LoginServerConfig.GetBoolean("AllowDuplicateLogin", false);
             m_TOSLocation = m_LoginServerConfig.GetString("FileNameOfTOS", "");
             LLLoginResponseRegister.RegisterValue ("AllowFirstLife", m_LoginServerConfig.GetBoolean ("AllowFirstLifeInProfile", true) ? "Y" : "N");
             LLLoginResponseRegister.RegisterValue ("TutorialURL", m_LoginServerConfig.GetString ("TutorialURL", ""));
@@ -547,7 +549,7 @@ namespace OpenSim.Services.LLLoginService
                         {
                             IRegionClientCapsService rootRegionCaps = clientCaps.GetRootCapsService();
                             if (rootRegionCaps != null)
-                                agentProcessor.LogoutAgent(rootRegionCaps);
+                                agentProcessor.LogoutAgent(rootRegionCaps, m_AllowDuplicateLogin);
                         }
                     }
                     else

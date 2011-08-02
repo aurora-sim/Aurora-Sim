@@ -16,6 +16,8 @@
     FileNameOfTOS = ToS.txt
     ;; Allow users to login anonymously and have a new account created automatically? This will create a new account for any user logging in.
     AllowAnonymousLogin = false
+    ;; Allow users to login multiple times, but the previous agent will not be able to access his inventory or teleport again
+    AllowDuplicateLogin = false
     ;; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive (in the console) then put the name of it here.
     ;; To set this, create a user and set them up as you wish them to look.
     ;;  Then save an Avatar Archive into the database by the command in the console "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)"

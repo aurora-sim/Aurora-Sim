@@ -106,7 +106,7 @@ namespace OpenSim.Services.Interfaces
         /// Log out the current agent
         /// </summary>
         /// <param name="regionCaps"></param>
-        void LogoutAgent(IRegionClientCapsService regionCaps);
+        void LogoutAgent(IRegionClientCapsService regionCaps, bool kickRootAgent);
 
         /// <summary>
         /// Called by the login service, adds an agent to the region without firing any EQM messages

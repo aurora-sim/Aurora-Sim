@@ -177,7 +177,7 @@ namespace OpenSim.Services.MessagingService
                 {
                     if (regionCaps.RootAgent)
                     {
-                        LogoutAgent(regionCaps);
+                        LogoutAgent(regionCaps, true);
                     }
                 }
             }
@@ -276,7 +276,7 @@ namespace OpenSim.Services.MessagingService
 
         #region Logout Agent
 
-        public virtual void LogoutAgent (IRegionClientCapsService regionCaps)
+        public virtual void LogoutAgent (IRegionClientCapsService regionCaps, bool kickRootAgent)
         {
             //Close all neighbor agents as well, the root is closing itself, so don't call them
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
@@ -294,6 +294,8 @@ namespace OpenSim.Services.MessagingService
                     }
                 }
             }
+            if(kickRootAgent)//Kick the root agent then
+                SimulationService.CloseAgent(regionCaps.Region, regionCaps.AgentID);
             //Close all caps
             regionCaps.ClientCaps.Close();
 
@@ -1070,7 +1072,7 @@ namespace OpenSim.Services.MessagingService
                     //Delete the Caps!
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
                     if (agentProcessor != null && capsService != null)
-                        agentProcessor.LogoutAgent (regionClientCaps);
+                        agentProcessor.LogoutAgent (regionClientCaps, true);
                     else if (capsService != null)
                         capsService.RemoveCAPS (aCircuit.AgentID);
                     return success;
@@ -1089,7 +1091,7 @@ namespace OpenSim.Services.MessagingService
                         //Delete the Caps!
                         IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
                         if (agentProcessor != null && capsService != null)
-                            agentProcessor.LogoutAgent (regionClientCaps);
+                            agentProcessor.LogoutAgent (regionClientCaps, true);
                         else if (capsService != null)
                             capsService.RemoveCAPS (aCircuit.AgentID);
                         success = false;
