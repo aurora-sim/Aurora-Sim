@@ -303,7 +303,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             // Set Defaults For Type
             m_type = pType;
-            SetPhysicalParameters(parent, m_type);
             switch (pType)
             {
                 case Vehicle.TYPE_NONE:
@@ -470,6 +469,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_enabled = true;
             m_previousFriction = parent._parent_entity.Friction;
             m_previousRestitution = parent._parent_entity.Restitution;
+            SetPhysicalParameters(parent, m_type);
             parent.ThrottleUpdates = false;
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
@@ -483,7 +483,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 type == Vehicle.TYPE_SLED)
             {
                 parent._parent_entity.Friction = 0.2f; //This seems to happen in SL... and its needed for here
-                parent._parent_entity.Restitution = 0.1f;
+                parent._parent_entity.Restitution = 0.05f;
             }
             else if(type == Vehicle.TYPE_BOAT ||
                 type == Vehicle.TYPE_BALLOON)
@@ -646,11 +646,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
             }
-            if (pos.Z < _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y) - 5)
+            float terrainHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
+            if(pos.Z < terrainHeight - 5)
             {
                 pos.Z = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y) + 2;
                 m_lastPositionVector = pos;//Make sure that we don't have an explosion the next frame with the posChange
                 d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
+            }
+            else if(pos.Z < terrainHeight)
+            {
+                m_dir.Z += 1;
             }
 
             // Check if hovering
