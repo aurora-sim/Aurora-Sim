@@ -220,7 +220,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
                 case Vehicle.ANGULAR_MOTOR_DIRECTION:
                     m_angularMotorDirection = new Vector3(pValue, pValue, pValue);
-                    m_angularMotorApply = 300;
+                    m_angularMotorApply = 100;
                     break;
                 case Vehicle.LINEAR_FRICTION_TIMESCALE:
                     m_linearFrictionTimescale = new Vector3(pValue, pValue, pValue);
@@ -253,7 +253,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (m_angularMotorDirection.Y < -12.56f) m_angularMotorDirection.Y = -12.56f;
                     if (m_angularMotorDirection.Z > 12.56f) m_angularMotorDirection.Z = 12.56f;
                     if (m_angularMotorDirection.Z < -12.56f) m_angularMotorDirection.Z = -12.56f;
-                    m_angularMotorApply = 300;
+                    m_angularMotorApply = 100;
                     break;
                 case Vehicle.LINEAR_FRICTION_TIMESCALE:
                     m_linearFrictionTimescale = new Vector3(pValue.X, pValue.Y, pValue.Z);
@@ -846,7 +846,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     Console.WriteLine (Vector3.One * camrot);
                 }
             }*/
-            if (m_angularMotorApply > 290)
+            if (m_angularMotorApply > 90)
             {
                 // ramp up to new value
                 //   current velocity  +=                         error                       /    (time to get there / step interval)
@@ -932,7 +932,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_bankingEfficiency != 0)
             {
                 Vector3 angularMotorVelocity = new Vector3 ();
-                if (m_angularMotorApply > 10)
+                if (m_angularMotorApply > 90)
                 {
                     // ramp up to new value
                     //   current velocity  +=                         error                       /    (time to get there / step interval)
@@ -954,9 +954,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
                     m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                    if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix) //If they are colliding, we probably shouldn't shove the prim around... probably
+                    float mix = m_bankingMix * (m_angularMotorDirection.Z == 0 ? 1 : Math.Abs(m_angularMotorDirection.Z));
+                    if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > mix) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
+                        float angVelZ = m_lastAngularVelocity.Z;
+                        if(angVelZ > 1)
+                            angVelZ = 1;
+                        else if(angVelZ < -1)
+                            angVelZ = -1;
                         Vector3 bankingRot = new Vector3(m_lastAngularVelocity.Z * (effSquared * 10 * mult), 0, 0);
+                        if(bankingRot.X > 7)
+                            bankingRot.X = 7;
+                        if(bankingRot.X < -7)
+                            bankingRot.X = -7;
+                        MainConsole.Instance.Output(bankingRot.ToString());
                         bankingRot *= rotq;
                         banking += bankingRot;
                     }
