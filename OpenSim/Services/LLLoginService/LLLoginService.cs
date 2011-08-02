@@ -549,7 +549,7 @@ namespace OpenSim.Services.LLLoginService
                         {
                             IRegionClientCapsService rootRegionCaps = clientCaps.GetRootCapsService();
                             if (rootRegionCaps != null)
-                                agentProcessor.LogoutAgent(rootRegionCaps, m_AllowDuplicateLogin);
+                                agentProcessor.LogoutAgent(rootRegionCaps, !m_AllowDuplicateLogin);
                         }
                     }
                     else

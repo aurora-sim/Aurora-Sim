@@ -2309,12 +2309,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                             }
                         }
-                        m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
+                        if(!continueProcessing)
+                        {
+                            m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
 
-                        m_global_contactcount = 0;
-                        d.WorldQuickStep (world, ODE_STEPSIZE);
-                        d.JointGroupEmpty(contactgroup);
-                        //ode.dunlock(world);
+                            m_global_contactcount = 0;
+                            d.WorldQuickStep(world, ODE_STEPSIZE);
+                            d.JointGroupEmpty(contactgroup);
+                            //ode.dunlock(world);
+                        }
                     }
                     catch (Exception e)
                     {

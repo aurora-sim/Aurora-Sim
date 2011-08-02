@@ -177,7 +177,7 @@ namespace OpenSim.Services.MessagingService
                 {
                     if (regionCaps.RootAgent)
                     {
-                        LogoutAgent(regionCaps, true);
+                        LogoutAgent(regionCaps, false);//The root is killing itself
                     }
                 }
             }
