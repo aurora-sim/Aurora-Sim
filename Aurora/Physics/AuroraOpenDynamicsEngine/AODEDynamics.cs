@@ -67,7 +67,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         // private OdeScene m_parentScene = null;
         private IntPtr m_body = IntPtr.Zero;
-        private Material m_previousMaterial = Material.Wood;
+        private float m_previousFriction = 0.5f;
+        private float m_previousRestitution = 0.2f;
         //        private IntPtr m_jointGroup = IntPtr.Zero;
         //        private IntPtr m_aMotor = IntPtr.Zero;
 
@@ -96,6 +97,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private d.Vector3 m_lastPositionVector = new d.Vector3();
         //private bool m_LinearMotorSetLastFrame = false;
         private Vector3 m_linearMotorOffset = Vector3.Zero;
+        private bool m_linearZeroFlag = false;
+        private bool m_angularZeroFlag = false;
 
         //Angular properties
         private Vector3 m_angularMotorDirection = Vector3.Zero;         // angular velocity requested by LSL motor
@@ -464,8 +467,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_enabled)
                 return;
             m_enabled = true;
-            m_previousMaterial = (Material)parent.m_material;
-            parent.SetMaterial((int)Material.Glass, false); //This seems to happen in SL... and its needed for here
+            m_previousFriction = parent._parent_entity.Friction;
+            m_previousRestitution = parent._parent_entity.Restitution;
+            parent._parent_entity.Friction = 0.2f; //This seems to happen in SL... and its needed for here
+            parent._parent_entity.Restitution = 0.1f;
             parent.ThrottleUpdates = false;
             m_body = pBody;
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
@@ -479,7 +484,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             m_enabled = false;
 
-            parent.SetMaterial((int)m_previousMaterial, false); //Revert to the original
+            parent._parent_entity.Friction = m_previousFriction;//Revert to the original
+            parent._parent_entity.Restitution = m_previousRestitution;
 
             parent.ThrottleUpdates = true;
             //d.BodyDisable(Body);
@@ -518,7 +524,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             LimitRotation(pTimestep);
 
             // WE deal with updates
-            parent.RequestPhysicsterseUpdate();
+            if(!m_linearZeroFlag || !m_angularZeroFlag)
+                parent.RequestPhysicsterseUpdate();
         }   // end Step
 
         private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
@@ -783,10 +790,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if(m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f))
             {
                 m_lastLinearVelocityVector = Vector3.Zero;
-                //m_linearZeroFlag = true;
+                m_linearZeroFlag = true;
             }
-            //else
-            //    m_linearZeroFlag = false;
+            else
+                m_linearZeroFlag = false;
         } // end MoveLinear()
 
         private void MoveAngular (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
@@ -869,8 +876,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             } // else vertical attractor is off
 
-            //        m_lastVertAttractor = vertattr;
-
             #region Deflection
 
             //Forward is the prefered direction, but if the reference frame has changed, we need to take this into account as well
@@ -911,12 +916,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
                     m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                    if(Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix)
+                    if(!parent.IsColliding && Math.Abs(m_lastAngularVelocity.Z) > m_bankingMix) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
                         Vector3 bankingRot = new Vector3(m_lastAngularVelocity.Z * (effSquared * 10 * mult), 0, 0);
                         bankingRot *= rotq;
-                        if(!parent.IsColliding)//If they are colliding, we probably shouldn't shove the prim around... probably
-                            banking += bankingRot;
+                        banking += bankingRot;
                     }
                 }
             }
@@ -970,10 +974,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 decayamount = Vector3.One / (m_angularFrictionTimescale / pTimestep);
             if(parent.IsColliding)
             {
-                decayamount *= 1000;
-                float length = m_lastAngularVelocity.LengthSquared();
-                if(length < 1)
-                    decayamount *= 2 - length;
+                decayamount *= 100;
+                decayamount += new Vector3(0.1f, 0.1f, 0.25f);
                 if(decayamount.X > 1)
                     decayamount.X = 1;
                 if(decayamount.Y > 1)
@@ -989,10 +991,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if(m_lastAngularVelocity.ApproxEquals(Vector3.Zero, 0.1f))
             {
                 m_lastAngularVelocity = Vector3.Zero;
-                //m_angularZeroFlag = true;
+                m_angularZeroFlag = true;
             }
-            //else
-            //    m_angularZeroFlag = false;
+            else
+                m_angularZeroFlag = false;
         }
 
         private Vector3 ToEuler(Quaternion m_lastCameraRotation)
