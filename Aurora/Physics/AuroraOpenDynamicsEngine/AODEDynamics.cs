@@ -825,7 +825,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
             }
-            else
+            else if(m_angularMotorVelocity != Vector3.Zero)
             {
                 // no motor recently applied, keep the body velocity
                 /*        m_angularMotorVelocity.X = angularVelocity.X;
@@ -833,7 +833,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_angularMotorVelocity.Z = angularVelocity.Z; */
 
                 // and decay the velocity
-                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / (pTimestep * pTimestep));
+                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
+                if(m_angularMotorVelocity.ApproxEquals(Vector3.Zero, 0.1f))
+                    m_angularMotorVelocity = Vector3.Zero;
             } // end motor section
 
             // Vertical attractor section
@@ -975,7 +977,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if(parent.IsColliding)
             {
                 decayamount *= 100;
-                decayamount += new Vector3(0.1f, 0.1f, 0.25f);
                 if(decayamount.X > 1)
                     decayamount.X = 1;
                 if(decayamount.Y > 1)
