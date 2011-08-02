@@ -1566,6 +1566,7 @@ namespace Aurora.BotManager
         public event Action<IClientAPI> OnConnectionClosed;
 
         public event ImprovedInstantMessage OnInstantMessage;
+        public event PreSendImprovedInstantMessage OnPreSendInstantMessage;
         public event ChatMessage OnChatFromClient;
         public event RezObject OnRezObject;
         public event ModifyTerrain OnModifyTerrain;

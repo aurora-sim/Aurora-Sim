@@ -69,6 +69,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event Action<IClientAPI> OnConnectionClosed;
         public event ViewerEffectEventHandler OnViewerEffect;
         public event ImprovedInstantMessage OnInstantMessage;
+        public event PreSendImprovedInstantMessage OnPreSendInstantMessage;
         public event ChatMessage OnChatFromClient;
         public event RezObject OnRezObject;
         public event DeRezObject OnDeRezObject;
@@ -5934,10 +5935,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         msgpack.MessageBlock.Position,
                         msgpack.MessageBlock.BinaryBucket);
 
+                PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
+                if(handlerPreSendInstantMessage != null)
+                {
+                    foreach(PreSendImprovedInstantMessage d in handlerPreSendInstantMessage.GetInvocationList())
+                    {
+                        if(d(this, im))
+                            return true;//handled
+                    }
+                }
                 handlerInstantMessage(this, im);
             }
             return true;
-
         }
 
         private bool HandlerAcceptFriendship(IClientAPI sender, Packet Pack)
