@@ -721,8 +721,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (Zchange > -0.1f)
                 {
-                    if (Zchange > 0.5f)
-                        Zchange = 0.5f;
+                    if (Zchange > 0.25f)
+                        Zchange = 0.25f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
                     grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
@@ -873,6 +873,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_verticalAttractionTimescale < 300)
             {
                 float VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
+                VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
                 // get present body rotation
                 // make a vector pointing up
                 Vector3 verterr = Vector3.Zero;
