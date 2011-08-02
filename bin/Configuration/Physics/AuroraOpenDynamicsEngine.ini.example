@@ -33,7 +33,7 @@
 
     ;; The amount to decay the avatar's movement each step in the physics engine
     ;; Lower is faster
-    avDecayTime = 0.95
+    avDecayTime = 0.97
     ;; The velocity at which to stop the av from decaying and stop their movement (in m/s2)
     ;; Lower is slower
     avStopDecaying = 0.5
@@ -49,7 +49,7 @@
     UsePreJump = true
     
     ;; The time to wait before jumping (for prejump) in frames
-    PreJumpTime = 15
+    PreJumpTime = 5
     
     ;; The amount to multiply the jump by (can have a decimal point)
     PreJumpMultiplier = 3
@@ -124,10 +124,10 @@
 
     ;; World Step size. (warning these are dangerous.  Changing these will probably cause your scene to explode dramatically)
     ;; reference: fps = (0.09375/ODE_STEPSIZE) * 1000;
-    world_stepsize = 0.020
+    world_stepsize = 0.010
     ;; Smaller means less iterations through the simulation between frames
     ;; Default is 10
-    world_internal_steps_without_collisions = 10
+    world_internal_steps_without_collisions = 5
 
     ;; ##
     ;; ## Contact properties. (the stuff that happens when things come in contact with each other)
@@ -167,7 +167,7 @@
     av_capsule_radius = 0.37
 
     ;; When the avatar flies, it will be moved up by this amount off the ground (in meters)
-    minimum_ground_flight_offset = 4.0
+    minimum_ground_flight_offset = 6.0
 
     ;; ##
     ;; ## Object options
