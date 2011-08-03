@@ -166,7 +166,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private AssetBase GetAsset(UUID uuid, bool metaOnly, bool displayMessages)
         {
-            ResetTimer(60000);
+            ResetTimer(15000);
             string databaseTable = "auroraassets_" + uuid.ToString().Substring(0, 1);
             IDataReader dr = null;
             AssetBase asset = null;
@@ -291,7 +291,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private AssetBase StoreAsset(AssetBase asset, out bool successful)
         {
-            ResetTimer(60000);
+            ResetTimer(15000);
             try
             {
                 // this was causing problems with convering the first asset which.. is a zero id.. 
@@ -382,7 +382,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public void UpdateContent(UUID id, byte[] assetdata)
         {
-            ResetTimer(60000);
+            ResetTimer(15000);
             string newHash = WriteFile(id, assetdata);
             List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0], "hash_code");
             if (hashCodeCheck.Count >= 1)
@@ -408,7 +408,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         /// <returns></returns>
         public bool ExistsAsset(UUID uuid)
         {
-            ResetTimer(60000);
+            ResetTimer(15000);
             try
             {
                 bool result = m_Gd.Query("id", uuid, "auroraassets_" + uuid.ToString().Substring(0, 1), "id").Count > 0;
@@ -445,7 +445,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private bool Delete(UUID id, bool assignHashCodeCheckTask)
         {
-            ResetTimer(60000);
+            ResetTimer(15000);
             string tableName = "auroraassets_" + id.ToString().Substring(0, 1);
             try
             {
@@ -781,7 +781,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (needsConversion)
             {
                 StartMigration();
-                ResetTimer(100);
+                ResetTimer(1000);
                 return;
             }
 
@@ -916,7 +916,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     m_Log.Error("[AssetDataPlugin] Background task retiring asset", exx);
                 }
             }
-            ResetTimer(60000);
+            ResetTimer(15000);
         }
 
         private int TaskGetHashCodeUseCount(string hash_code)

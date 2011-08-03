@@ -50,15 +50,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public const GroupPowers m_DefaultEveryonePowers = GroupPowers.AllowSetHome | 
-            GroupPowers.Accountable | 
-            GroupPowers.JoinChat | 
-            GroupPowers.AllowVoiceChat | 
-            GroupPowers.ReceiveNotices | 
-            GroupPowers.StartProposal | 
+        public const GroupPowers m_DefaultEveryonePowers = GroupPowers.AllowSetHome |
+            GroupPowers.Accountable |
+            GroupPowers.JoinChat |
+            GroupPowers.AllowVoiceChat |
+            GroupPowers.ReceiveNotices |
+            GroupPowers.StartProposal |
             GroupPowers.VoteOnProposal;
 
         private bool m_connectorEnabled = false;
+        private bool m_notConnectedBecauseOfMissing = false;
 
         private IUserAccountService m_accountService = null;
 
@@ -108,10 +109,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                 m_connectorEnabled = true;
                 GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
-                if(GroupsConnector == null)
+                if (GroupsConnector == null)
                 {
                     m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
                     m_connectorEnabled = false;
+                    m_notConnectedBecauseOfMissing = true;
                 }
             }
         }
@@ -121,8 +123,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             m_log.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Closing {0}", this.Name);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
+
+            if ((!m_connectorEnabled) && (m_notConnectedBecauseOfMissing))
+            {
+                if (GroupsConnector == null)
+                    GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+                if ((!m_connectorEnabled) && (GroupsConnector != null))
+                    m_connectorEnabled = true;
+
+            }
             if (m_connectorEnabled)
             {
                 if (m_accountService == null)
@@ -133,7 +144,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (scene.RequestModuleInterface<IGroupsServicesConnector>() == this)
             {
@@ -141,7 +152,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -161,8 +172,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// <summary>
         /// Create a Group, including Everyone and Owners Role, place FounderID in both groups, select Owner as selected role, and newly created group as agent's active role.
         /// </summary>
-        public UUID CreateGroup(UUID requestingAgentID, string name, string charter, bool showInList, UUID insigniaID, 
-                                int membershipFee, bool openEnrollment, bool allowPublish, 
+        public UUID CreateGroup(UUID requestingAgentID, string name, string charter, bool showInList, UUID insigniaID,
+                                int membershipFee, bool openEnrollment, bool allowPublish,
                                 bool maturePublish, UUID founderID)
         {
             UUID GroupID = UUID.Random();
@@ -214,7 +225,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                     | GroupPowers.SetLandingPoint
                                     | GroupPowers.StartProposal
                                     | GroupPowers.VoteOnProposal;
-            
+
             GroupsConnector.CreateGroup(GroupID, name, charter, showInList,
                 insigniaID, 0, openEnrollment, allowPublish, maturePublish, founderID,
                 ((ulong)m_DefaultEveryonePowers), OwnerRoleID, ((ulong)OwnerPowers));
@@ -222,8 +233,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return GroupID;
         }
 
-        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, bool showInList, 
-                                UUID insigniaID, int membershipFee, bool openEnrollment, 
+        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, bool showInList,
+                                UUID insigniaID, int membershipFee, bool openEnrollment,
                                 bool allowPublish, bool maturePublish)
         {
             GroupsConnector.UpdateGroup(requestingAgentID, groupID, charter,
@@ -232,7 +243,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 maturePublish == true ? 1 : 0);
         }
 
-        public void AddGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description, 
+        public void AddGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description,
                                  string title, ulong powers)
         {
             GroupsConnector.AddRoleToGroup(requestingAgentID, groupID, roleID, name, description, title, powers);
@@ -243,7 +254,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupsConnector.RemoveRoleFromGroup(requestingAgentID, roleID, groupID);
         }
 
-        public void UpdateGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description, 
+        public void UpdateGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description,
                                     string title, ulong powers)
         {
             GroupsConnector.UpdateRole(requestingAgentID, groupID, roleID, name, description, title, powers);
@@ -382,7 +393,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             return GroupsConnector.GetGroupInvites(requestingAgentID);
         }
-        
+
         private Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         /// <summary>
         /// Add this member to the friend conference
@@ -394,7 +405,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             ChatSession session;
             ChatSessions.TryGetValue(SessionID, out session);
             ChatSessionMember oldMember = FindMember(SessionID, member.AvatarKey);
-            if(oldMember == null)
+            if (oldMember == null)
                 session.Members.Add(member);
             else
                 oldMember.HasBeenAdded = true;//Reset this
@@ -407,8 +418,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public bool CreateSession(ChatSession session)
         {
             ChatSession oldSession = null;
-            if(ChatSessions.TryGetValue(session.SessionID, out oldSession))
-                if(GetMemeberCount(session) == 0)
+            if (ChatSessions.TryGetValue(session.SessionID, out oldSession))
+                if (GetMemeberCount(session) == 0)
                     RemoveSession(session.SessionID);
                 else
                     return false;//Already have one
@@ -416,18 +427,18 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return true;
         }
 
-        private int GetMemeberCount (ChatSession session)
+        private int GetMemeberCount(ChatSession session)
         {
             int count = 0;
-            foreach(ChatSessionMember member in session.Members)
+            foreach (ChatSessionMember member in session.Members)
             {
-                if(member.HasBeenAdded)
+                if (member.HasBeenAdded)
                     count++;
             }
             return count;
         }
 
-        public void RemoveSession (UUID sessionid)
+        public void RemoveSession(UUID sessionid)
         {
             ChatSessions.Remove(sessionid);
         }
@@ -471,16 +482,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// <param name="sessionid"></param>
         /// <param name="Agent"></param>
         /// <returns></returns>
-        public ChatSessionMember FindMember (UUID sessionid, UUID Agent)
+        public ChatSessionMember FindMember(UUID sessionid, UUID Agent)
         {
             ChatSession session;
             ChatSessions.TryGetValue(sessionid, out session);
-            if(session == null)
+            if (session == null)
                 return null;
             ChatSessionMember thismember = new ChatSessionMember() { AvatarKey = UUID.Zero };
-            foreach(ChatSessionMember testmember in session.Members)
+            foreach (ChatSessionMember testmember in session.Members)
             {
-                if(testmember.AvatarKey == Agent)
+                if (testmember.AvatarKey == Agent)
                     thismember = testmember;
             }
             return thismember;
