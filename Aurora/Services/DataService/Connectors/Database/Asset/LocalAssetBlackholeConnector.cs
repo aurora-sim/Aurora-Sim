@@ -49,7 +49,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
     {
         #region Variables
 
-        private static SHA1Managed SHA1HashGenerator = new SHA256Managed();
+        private static SHA256Managed SHA256HashGenerator = new SHA256Managed();
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData m_Gd;
         private bool m_Enabled;
@@ -569,7 +569,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         return new byte[] { };
                 }
                 results = File.ReadAllBytes(filename);
-                if(hashCode != Convert.ToBase64String(SHA1HashGenerator.ComputeHash(results)) + results.Length)
+                if(hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
                 {
                     // just want to see if this ever happens.. 
                     m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash.");
@@ -719,7 +719,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         dr.Close();
                         dr = null;
 
-                        if(File.Exists(GetFileName(Convert.ToBase64String(SHA1HashGenerator.ComputeHash(asset.Data)) + asset.Data.Length, false)))
+                        if(File.Exists(GetFileName(Convert.ToBase64String(SHA256HashGenerator.ComputeHash(asset.Data)) + asset.Data.Length, false)))
                             convertCountDupe++;
 
                         // check to see if this asset should have a parent ID
