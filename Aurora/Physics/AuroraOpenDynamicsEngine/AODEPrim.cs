@@ -332,7 +332,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             _velocity = velocity;
             m_lastVelocity = velocity;
-            d.BodySetLinearVel (Body, velocity.X, velocity.Y, velocity.Z);
+            if(Body != IntPtr.Zero)
+                d.BodySetLinearVel(Body, velocity.X, velocity.Y, velocity.Z);
+        }
+
+        public void ForceSetRotVelocity (Vector3 velocity)
+        {
+            m_rotationalVelocity = velocity;
+            if(Body != IntPtr.Zero)
+                d.BodySetAngularVel(Body, velocity.X, velocity.Y, velocity.Z);
         }
 
         public void SetGeom (IntPtr geom)
@@ -381,9 +389,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_disabled = true;
                 m_vehicle.Disable (this);
                 if (IsPhysical && Body != IntPtr.Zero)
-                {
                     d.BodyDisable (Body);
-                }
             }
         }
 
@@ -2013,41 +2019,44 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         cpos.Z < -100 ||
                         cpos.Z > 100000)
                     {
-                        if (m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
+                        if(!_parent_scene.InfiniteRegion)
                         {
-                            _position.X = (float)lpos.X;
-                            _position.Y = (float)lpos.Y;
-                            _position.Z = (float)lpos.Z;
-                            m_crossingfailures++;
-
-                            m_lastposition = _position;
-                            m_lastorientation = _orientation;
-
-                            base.RequestPhysicsterseUpdate ();
-                            return;
-                        }
-                        else
-                        {
-                            if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                            if(m_crossingfailures < _parent_scene.geomCrossingFailuresBeforeOutofbounds)
                             {
-                                m_disabled = true;
-                                m_frozen = true;
+                                _position.X = (float)lpos.X;
+                                _position.Y = (float)lpos.Y;
+                                _position.Z = (float)lpos.Z;
+                                m_crossingfailures++;
 
-                                Vector3 l_position;
-                                l_position.X = (float)lpos.X;
-                                l_position.Y = (float)lpos.Y;
-                                l_position.Z = (float)lpos.Z;
+                                m_lastposition = _position;
+                                m_lastorientation = _orientation;
 
-                                base.RaiseOutOfBounds (l_position);
+                                base.RequestPhysicsterseUpdate();
                                 return;
                             }
                             else
                             {
-                                Vector3 newPos = Position;
-                                newPos.X = Util.Clip (Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);
-                                newPos.Y = Util.Clip (Position.Y, 0.75f, _parent_scene.Region.RegionSizeY - 0.75f);
-                                Position = newPos;
-                                d.BodySetPosition (Body, newPos.X, newPos.Y, newPos.Z);
+                                if(m_vehicle.Type == Vehicle.TYPE_NONE)
+                                {
+                                    m_disabled = true;
+                                    m_frozen = true;
+
+                                    Vector3 l_position;
+                                    l_position.X = (float)lpos.X;
+                                    l_position.Y = (float)lpos.Y;
+                                    l_position.Z = (float)lpos.Z;
+
+                                    base.RaiseOutOfBounds(l_position);
+                                    return;
+                                }
+                                else
+                                {
+                                    Vector3 newPos = Position;
+                                    newPos.X = Util.Clip(Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);
+                                    newPos.Y = Util.Clip(Position.Y, 0.75f, _parent_scene.Region.RegionSizeY - 0.75f);
+                                    Position = newPos;
+                                    d.BodySetPosition(Body, newPos.X, newPos.Y, newPos.Z);
+                                }
                             }
                         }
                     }

@@ -1396,6 +1396,7 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 OffsetPosition
         {
             get { return m_offsetPosition; }
+            set { m_offsetPosition = value; }
         }
 
         public Vector3 RelativePosition

@@ -2330,17 +2330,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetLocalPos()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            return GetLocalPos(m_host);
+        }
+
+        private LSL_Vector GetLocalPos (ISceneChildEntity entity)
+        {
             Vector3 tmp;
-            if (m_host.ParentID != 0)
+            if(entity.ParentID != 0)
             {
-                tmp = m_host.OffsetPosition;
+                tmp = entity.OffsetPosition;
                 return new LSL_Vector(tmp.X,
                                       tmp.Y,
                                       tmp.Z);
             }
             else
             {
-                tmp = m_host.AbsolutePosition;
+                tmp = entity.AbsolutePosition;
                 return new LSL_Vector(tmp.X,
                                       tmp.Y,
                                       tmp.Z);
@@ -2584,6 +2589,40 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             Vector3 tmp = m_host.IsAttachment ? m_host.ParentEntity.Scene.GetScenePresence(m_host.AttachedAvatar).Velocity : m_host.Velocity;
             return new LSL_Vector(tmp.X, tmp.Y, tmp.Z);
+        }
+
+        public void llSetVelocity (LSL_Vector force, LSL_Integer local)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            Vector3 velocity = new Vector3((float)force.x, (float)force.y, (float)force.z);
+            if(local == 1)
+            {
+                Quaternion grot = m_host.GetWorldRotation();
+                Quaternion AXgrot = grot;
+                Vector3 AXimpulsei = velocity;
+                Vector3 newimpulse = AXimpulsei * AXgrot;
+                velocity = newimpulse;
+            }
+
+            if(m_host.ParentEntity.RootChild.PhysActor != null)
+                m_host.ParentEntity.RootChild.PhysActor.Velocity = velocity;
+        }
+
+        public void llSetRotationalVelocity (LSL_Vector force, LSL_Integer local)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            Vector3 rotvelocity = new Vector3((float)force.x, (float)force.y, (float)force.z);
+            if(local == 1)
+            {
+                Quaternion grot = m_host.GetWorldRotation();
+                Quaternion AXgrot = grot;
+                Vector3 AXimpulsei = rotvelocity;
+                Vector3 newimpulse = AXimpulsei * AXgrot;
+                rotvelocity = newimpulse;
+            }
+
+            if(m_host.ParentEntity.RootChild.PhysActor != null)
+                m_host.ParentEntity.RootChild.PhysActor.RotationalVelocity = rotvelocity;
         }
 
         public LSL_Vector llGetAccel()
@@ -6959,10 +6998,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return (int)m_host.ParentEntity.RootChild.AttachmentPoint;
         }
 
-        public LSL_Integer llGetFreeMemory()
+        public LSL_Integer llGetFreeMemory ()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+
+            // Make scripts designed for LSO happy
+            return 16384;
+        }
+
+        public LSL_Integer llSetMemoryLimit (LSL_Integer limit)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
             // Make scripts designed for LSO happy
             return 16384;
         }
@@ -7468,23 +7515,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void llSitTarget(LSL_Vector offset, LSL_Rotation rot)
+        public void llSitTarget (LSL_Vector offset, LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
+
             // LSL quaternions can normalize to 0, normal Quaternions can't.
-            if (rot.s == 0 && rot.x == 0 && rot.y == 0 && rot.z == 0)
+            if(rot.s == 0 && rot.x == 0 && rot.y == 0 && rot.z == 0)
                 rot.z = 1; // ZERO_ROTATION = 0,0,0,1
 
             m_host.SitTargetPosition = new Vector3((float)offset.x, (float)offset.y, (float)offset.z);
             m_host.SitTargetOrientation = Rot2Quaternion(rot);
         }
 
-        public LSL_String llAvatarOnSitTarget()
+        public void llLinkSitTarget (LSL_Integer link, LSL_Vector offset, LSL_Rotation rot)
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
-            
-            if (m_host.GetAvatarOnSitTarget().Count != 0)
+
+            // LSL quaternions can normalize to 0, normal Quaternions can't.
+            if(rot.s == 0 && rot.x == 0 && rot.y == 0 && rot.z == 0)
+                rot.z = 1; // ZERO_ROTATION = 0,0,0,1
+
+            List<ISceneChildEntity> entities = GetLinkParts(link);
+            if(entities.Count == 0)
+                return;
+
+            entities[0].SitTargetPosition = new Vector3((float)offset.x, (float)offset.y, (float)offset.z);
+            entities[0].SitTargetOrientation = Rot2Quaternion(rot);
+        }
+
+        public LSL_String llAvatarOnSitTarget ()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            if(m_host.ParentEntity.RootChild.GetAvatarOnSitTarget().Count != 0)
+                return m_host.ParentEntity.RootChild.GetAvatarOnSitTarget()[0].ToString();
+            else
+                return ScriptBaseClass.NULL_KEY;
+        }
+
+        public LSL_String llAvatarOnLinkSitTarget ()
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            if(m_host.GetAvatarOnSitTarget().Count != 0)
                 return m_host.GetAvatarOnSitTarget()[0].ToString();
             else
                 return ScriptBaseClass.NULL_KEY;
@@ -7526,6 +7599,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             
             m_host.SitName = text;
+        }
+
+        public void llSetLinkCamera (LSL_Integer link, LSL_Vector eye, LSL_Vector at)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            List<ISceneChildEntity> entities = GetLinkParts(link);
+            if(entities.Count > 0)
+            {
+                entities[0].CameraEyeOffset = new Vector3((float)eye.x, (float)eye.y, (float)eye.z);
+                entities[0].CameraAtOffset = new Vector3((float)at.x, (float)at.y, (float)at.z);
+            }
         }
 
         public void llSetCameraEyeOffset(LSL_Vector offset)
@@ -8186,18 +8271,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         SetRot((part as ISceneChildEntity), Rot2Quaternion(lr));
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_POSITION)
+                else if(code == (int)ScriptBaseClass.PRIM_POSITION)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return;
 
                     v = rules.GetVector3Item(idx++);
-                    if (part is ISceneChildEntity)
+                    if(part is ISceneChildEntity)
                         SetPos(part as ISceneChildEntity, v);
-                    else if (part is IScenePresence)
+                    else if(part is IScenePresence)
                     {
-                        (part as IScenePresence).OffsetPosition = new Vector3 ((float)v.x, (float)v.y, (float)v.z);
-                        (part as IScenePresence).SendTerseUpdateToAllClients ();
+                        (part as IScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
+                        (part as IScenePresence).SendTerseUpdateToAllClients();
+                    }
+                }
+                else if(code == (int)ScriptBaseClass.PRIM_POS_LOCAL)
+                {
+                    if(remain < 1)
+                        return;
+
+                    v = rules.GetVector3Item(idx++);
+                    if(part is ISceneChildEntity)
+                    {
+                        if(((ISceneChildEntity)part).ParentID != 0)
+                            ((ISceneChildEntity)part).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
+                        else
+                            part.AbsolutePosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
                     }
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_SIZE)
@@ -8292,10 +8391,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         twist = rules.GetVector3Item(idx++);
                         taper_b = rules.GetVector3Item(idx++);
                         topshear = rules.GetVector3Item(idx++);
-                        (part as SceneObjectPart).Shape.ProfileShape = ProfileShape.Circle;
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
+                        (part as ISceneChildEntity).Shape.ProfileShape = ProfileShape.Circle;
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Straight;
                         SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 0);
-
                     }
 
                     else if (code == (int)ScriptBaseClass.PRIM_TYPE_PRISM)
@@ -8591,7 +8689,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     (part as SceneObjectPart).SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
 
                 }
-
                 else if (code == (int)ScriptBaseClass.PRIM_OMEGA)
                 {
                     if (remain < 3)
@@ -8601,6 +8698,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     LSL_Float gain = rules.GetLSLFloatItem (idx++);
                     if (part is ISceneChildEntity)
                         llTargetOmega (direction, spinrate, gain);
+                }
+                else if(code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
+                {
+                    if (remain < 1)
+                        return;
+                    LSL_Integer nextLink = rules.GetLSLIntegerItem(idx++);
+                    List<IEntity> entities = GetLinkPartsAndEntities(nextLink);
+                    if(entities.Count > 0)
+                        part = entities[0];
                 }
             }
         }
@@ -8985,8 +9091,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                     res.Add(v);
                 }
-
-                else if (code == (int)ScriptBaseClass.PRIM_SIZE)
+                else if(code == (int)ScriptBaseClass.PRIM_POS_LOCAL)
+                {
+                    res.Add(GetLocalPos(part));
+                }
+                else if(code == (int)ScriptBaseClass.PRIM_SIZE)
                 {
                     Vector3 tmp = part.Scale;
                     res.Add(new LSL_Vector(tmp.X,
@@ -8994,12 +9103,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                   tmp.Z));
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_ROTATION)
+                else if(code == (int)ScriptBaseClass.PRIM_ROTATION)
                 {
                     res.Add(GetPartRot(part));
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_TYPE)
+                else if(code == (int)ScriptBaseClass.PRIM_TYPE)
                 {
                     // implementing box
                     PrimitiveBaseShape Shape = part.Shape;
@@ -9007,7 +9116,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     res.Add(new LSL_Integer(primType));
                     double topshearx = (double)(sbyte)Shape.PathShearX / 100.0; // Fix negative values for PathShearX
                     double topsheary = (double)(sbyte)Shape.PathShearY / 100.0; // and PathShearY.
-                    if (primType == ScriptBaseClass.PRIM_TYPE_BOX ||
+                    if(primType == ScriptBaseClass.PRIM_TYPE_BOX ||
                          ScriptBaseClass.PRIM_TYPE_CYLINDER ||
                          ScriptBaseClass.PRIM_TYPE_PRISM)
                     {
@@ -9019,7 +9128,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         res.Add(new LSL_Vector(topshearx, topsheary, 0));
                     }
 
-                    if (primType == ScriptBaseClass.PRIM_TYPE_SPHERE)
+                    if(primType == ScriptBaseClass.PRIM_TYPE_SPHERE)
                     {
                         res.Add(new LSL_Integer(Shape.ProfileCurve));
                         res.Add(new LSL_Vector(Shape.PathBegin / 50000.0, 1 - Shape.PathEnd / 50000.0, 0));
@@ -9028,12 +9137,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
                     }
 
-                    if (primType == ScriptBaseClass.PRIM_TYPE_SCULPT)
+                    if(primType == ScriptBaseClass.PRIM_TYPE_SCULPT)
                     {
                         res.Add(Shape.SculptTexture.ToString());
                         res.Add(new LSL_Integer(Shape.SculptType));
                     }
-                    if (primType == ScriptBaseClass.PRIM_TYPE_RING ||
+                    if(primType == ScriptBaseClass.PRIM_TYPE_RING ||
                      ScriptBaseClass.PRIM_TYPE_TUBE ||
                      ScriptBaseClass.PRIM_TYPE_TORUS)
                     {
@@ -9075,14 +9184,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_TEXTURE)
+                else if(code == (int)ScriptBaseClass.PRIM_TEXTURE)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return res;
 
-                    if (face == ScriptBaseClass.ALL_SIDES)
+                    if(face == ScriptBaseClass.ALL_SIDES)
                     {
-                        for (face = 0; face < GetNumberOfSides(part); face++)
+                        for(face = 0; face < GetNumberOfSides(part); face++)
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
 
@@ -9098,7 +9207,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     else
                     {
-                        if (face >= 0 && face < GetNumberOfSides(part))
+                        if(face >= 0 && face < GetNumberOfSides(part))
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
 
@@ -9114,16 +9223,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_COLOR)
+                else if(code == (int)ScriptBaseClass.PRIM_COLOR)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return res;
 
                     tex = part.Shape.Textures;
                     Color4 texcolor;
-                    if (face == ScriptBaseClass.ALL_SIDES)
+                    if(face == ScriptBaseClass.ALL_SIDES)
                     {
-                        for (face = 0; face < GetNumberOfSides(part); face++)
+                        for(face = 0; face < GetNumberOfSides(part); face++)
                         {
                             texcolor = tex.GetFace((uint)face).RGBA;
                             res.Add(new LSL_Vector(texcolor.R,
@@ -9142,16 +9251,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_BUMP_SHINY)
+                else if(code == (int)ScriptBaseClass.PRIM_BUMP_SHINY)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return res;
 
                     face = (int)rules.GetLSLIntegerItem(idx++);
 
-                    if (face == ScriptBaseClass.ALL_SIDES)
+                    if(face == ScriptBaseClass.ALL_SIDES)
                     {
-                        for (face = 0; face < GetNumberOfSides(part); face++)
+                        for(face = 0; face < GetNumberOfSides(part); face++)
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                             // Convert Shininess to PRIM_SHINY_*
@@ -9162,7 +9271,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     else
                     {
-                        if (face >= 0 && face < GetNumberOfSides(part))
+                        if(face >= 0 && face < GetNumberOfSides(part))
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                             // Convert Shininess to PRIM_SHINY_*
@@ -9173,16 +9282,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_FULLBRIGHT)
+                else if(code == (int)ScriptBaseClass.PRIM_FULLBRIGHT)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return res;
 
                     face = (int)rules.GetLSLIntegerItem(idx++);
                     tex = part.Shape.Textures;
-                    if (face == ScriptBaseClass.ALL_SIDES)
+                    if(face == ScriptBaseClass.ALL_SIDES)
                     {
-                        for (face = 0; face < GetNumberOfSides(part); face++)
+                        for(face = 0; face < GetNumberOfSides(part); face++)
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                             res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
@@ -9190,7 +9299,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     else
                     {
-                        if (face >= 0 && face < GetNumberOfSides(part))
+                        if(face >= 0 && face < GetNumberOfSides(part))
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                             res.Add(new LSL_Integer(texface.Fullbright ? 1 : 0));
@@ -9198,11 +9307,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_FLEXIBLE)
+                else if(code == (int)ScriptBaseClass.PRIM_FLEXIBLE)
                 {
                     PrimitiveBaseShape shape = part.Shape;
 
-                    if (shape.FlexiEntry)
+                    if(shape.FlexiEntry)
                         res.Add(new LSL_Integer(1));              // active
                     else
                         res.Add(new LSL_Integer(0));
@@ -9216,15 +9325,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                            shape.FlexiForceZ));
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_TEXGEN)
+                else if(code == (int)ScriptBaseClass.PRIM_TEXGEN)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return res;
 
                     face = (int)rules.GetLSLIntegerItem(idx++);
-                    if (face == ScriptBaseClass.ALL_SIDES)
+                    if(face == ScriptBaseClass.ALL_SIDES)
                     {
-                        for (face = 0; face < GetNumberOfSides(part); face++)
+                        for(face = 0; face < GetNumberOfSides(part); face++)
                         {
                             MappingType texgen = tex.GetFace((uint)face).TexMapType;
                             // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
@@ -9233,7 +9342,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     else
                     {
-                        if (face >= 0 && face < GetNumberOfSides(part))
+                        if(face >= 0 && face < GetNumberOfSides(part))
                         {
                             MappingType texgen = tex.GetFace((uint)face).TexMapType;
                             res.Add(new LSL_Integer((uint)texgen >> 1));
@@ -9241,11 +9350,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_POINT_LIGHT)
+                else if(code == (int)ScriptBaseClass.PRIM_POINT_LIGHT)
                 {
                     PrimitiveBaseShape shape = part.Shape;
 
-                    if (shape.LightEntry)
+                    if(shape.LightEntry)
                         res.Add(new LSL_Integer(1));              // active
                     else
                         res.Add(new LSL_Integer(0));
@@ -9257,15 +9366,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     res.Add(new LSL_Float(shape.LightFalloff));   // falloff
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_GLOW)
+                else if(code == (int)ScriptBaseClass.PRIM_GLOW)
                 {
-                    if (remain < 1)
+                    if(remain < 1)
                         return res;
 
                     face = (int)rules.GetLSLIntegerItem(idx++);
-                    if (face == ScriptBaseClass.ALL_SIDES)
+                    if(face == ScriptBaseClass.ALL_SIDES)
                     {
-                        for (face = 0; face < GetNumberOfSides(part); face++)
+                        for(face = 0; face < GetNumberOfSides(part); face++)
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                             res.Add(new LSL_Float(texface.Glow));
@@ -9273,7 +9382,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     else
                     {
-                        if (face >= 0 && face < GetNumberOfSides(part))
+                        if(face >= 0 && face < GetNumberOfSides(part))
                         {
                             Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                             res.Add(new LSL_Float(texface.Glow));
@@ -9281,7 +9390,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
 
-                else if (code == (int)ScriptBaseClass.PRIM_TEXT)
+                else if(code == (int)ScriptBaseClass.PRIM_TEXT)
                 {
                     Color4 textColor = part.GetTextColor();
                     res.Add(new LSL_String(part.Text));
@@ -9290,19 +9399,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                            textColor.B));
                     res.Add(new LSL_Float(textColor.A));
                 }
-                else if (code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
+                else if(code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
                 {
                     Quaternion rtmp = part.RotationOffset;
-                    res.Add (new LSL_Rotation (rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
+                    res.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                 }
-                else if (code == (int)ScriptBaseClass.PRIM_OMEGA)
+                else if(code == (int)ScriptBaseClass.PRIM_OMEGA)
                 {
                     Vector3 axis = part.OmegaAxis;
                     LSL_Float spinRate = part.OmegaSpinRate;
                     LSL_Float gain = part.OmegaGain;
-                    res.Add (axis);
-                    res.Add (spinRate);
-                    res.Add (gain);
+                    res.Add(axis);
+                    res.Add(spinRate);
+                    res.Add(gain);
+                }
+                else if(code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
+                {
+                    if(remain < 1)
+                        continue;
+                    LSL_Integer nextLink = rules.GetLSLIntegerItem(idx++);
+                    List<ISceneChildEntity> entities = GetLinkParts(nextLink);
+                    if(entities.Count > 0)
+                        part = entities[0];
                 }
             }
             return res;
@@ -10498,16 +10616,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
                 return new LSL_List();
             else
-                return GetPrimMediaParams(face, rules);
+                return GetPrimMediaParams(m_host, face, rules);
         }
 
-        private LSL_List GetPrimMediaParams(int face, LSL_List rules)
+        public LSL_List llGetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            List<ISceneChildEntity> entities = GetLinkParts(link);
+            if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
+                return new LSL_List();
+            else
+                return GetPrimMediaParams(entities[0], face, rules);
+        }
+
+        private LSL_List GetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
         {
             IMoapModule module = World.RequestModuleInterface<IMoapModule>();
             if (null == module)
                 throw new Exception("Media on a prim functions not available");
 
-            MediaEntry me = module.GetMediaEntry(m_host, face);
+            MediaEntry me = module.GetMediaEntry(obj, face);
 
             // As per http://wiki.secondlife.com/wiki/LlGetPrimMediaParams
             if (null == me)
@@ -10594,25 +10723,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return res;
         }
 
-        public LSL_Integer llClearPrimMedia(LSL_Integer face)
+        public LSL_Integer llClearPrimMedia (LSL_Integer face)
         {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
             ScriptSleep(1000);
 
+            ClearPrimMedia(m_host, face);
+
+            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+        }
+
+        public LSL_Integer llClearLinkMedia (LSL_Integer link, LSL_Integer face)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+            ScriptSleep(1000);
+
+            List<ISceneChildEntity> entities = GetLinkParts(link);
+            if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
+                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+
+            ClearPrimMedia(m_host, face);
+
+            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+        }
+
+        private void ClearPrimMedia (ISceneChildEntity entity, LSL_Integer face)
+        {
             // LSL Spec http://wiki.secondlife.com/wiki/LlClearPrimMedia says to fail silently if face is invalid
             // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
             // FIXME: Don't perform the media check directly
-            if (face < 0 || face > m_host.GetNumberOfSides() - 1)
-                {
-                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
-                }
+            if(face < 0 || face > entity.GetNumberOfSides() - 1)
+                return;
 
             IMoapModule module = World.RequestModuleInterface<IMoapModule>();
-            if (null == module)
+            if(null == module)
                 throw new Exception("Media on a prim functions not available");
 
-            module.ClearMediaEntry(m_host, face);
-
-            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+            module.ClearMediaEntry(entity, face);
         }
 
         public LSL_Integer llSetPrimMediaParams(LSL_Integer face, LSL_List rules)
@@ -10625,16 +10772,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
                 return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
             else
-                return (LSL_Integer)SetPrimMediaParams(face, rules);
+                return (LSL_Integer)SetPrimMediaParams(m_host, face, rules);
         }
 
-        public LSL_Integer SetPrimMediaParams(int face, LSL_List rules)
+        public LSL_Integer llSetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules)
+        {
+            ScriptSleep(1000);
+
+            // LSL Spec http://wiki.secondlife.com/wiki/LlSetPrimMediaParams says to fail silently if face is invalid
+            // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
+            // Don't perform the media check directly
+            List<ISceneChildEntity> entities = GetLinkParts(link);
+            if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
+                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+            return (LSL_Integer)SetPrimMediaParams(entities[0], face, rules);
+        }
+
+        public LSL_Integer SetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
         {
             IMoapModule module = World.RequestModuleInterface<IMoapModule>();
             if (null == module)
                 throw new Exception("Media on a prim functions not available");
 
-            MediaEntry me = module.GetMediaEntry(m_host, face);
+            MediaEntry me = module.GetMediaEntry(obj, face);
             if (null == me)
                 me = new MediaEntry();
 
@@ -10714,7 +10874,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
 
-            module.SetMediaEntry(m_host, face, me);
+            module.SetMediaEntry(obj, face, me);
 
             return ScriptBaseClass.LSL_STATUS_OK;
         }
@@ -11233,6 +11393,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return new LSL_String("");
         }
 
+        public void llSetContentType (LSL_Key id, LSL_Integer type)
+        {
+            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
+
+            string content_type = "text/plain";
+            if(type == ScriptBaseClass.CONTENT_TYPE_TEXT)
+                content_type = "text/plain";
+            else if(type == ScriptBaseClass.CONTENT_TYPE_HTML)
+                content_type = "text/html";
+
+            if(m_UrlModule != null)
+                m_UrlModule.SetContentType(new UUID(id), content_type);
+        }
 
         public void llHTTPResponse(LSL_Key id, int status, string body)
         {

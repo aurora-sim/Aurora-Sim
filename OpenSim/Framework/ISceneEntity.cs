@@ -724,7 +724,7 @@ namespace OpenSim.Framework
 
         void SetParent (ISceneEntity grp);
 
-        Vector3 OffsetPosition { get; }
+        Vector3 OffsetPosition { get; set; }
 
         Vector3 AttachedPos { get; set; }
 

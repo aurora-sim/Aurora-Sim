@@ -57,6 +57,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
         public string body;
         public int responseCode;
         public string responseBody;
+        public string contentType;
         //public ManualResetEvent ev;
         public bool requestDone;
         public int startTime;
@@ -192,6 +193,15 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
                 RemoveUrl(data);
                 m_UrlMap.Remove(url);
+            }
+        }
+
+        public void SetContentType (UUID request, string content_type)
+        {
+            if(m_RequestMap.ContainsKey(request))
+            {
+                UrlData urlData = m_RequestMap[request];
+                urlData.requests[request].contentType = content_type;
             }
         }
         
@@ -373,7 +383,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             //put response
             response["int_response_code"] = requestData.responseCode;
             response["str_response_string"] = requestData.responseBody;
-            response["content_type"] = "text/plain";
+            response["content_type"] = requestData.contentType;
             response["keepalive"] = false;
             response["reusecontext"] = false;
             

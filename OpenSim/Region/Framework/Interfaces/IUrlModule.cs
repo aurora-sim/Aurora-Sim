@@ -37,6 +37,7 @@ namespace OpenSim.Region.Framework.Interfaces
         UUID RequestURL (IScriptModule engine, ISceneChildEntity host, UUID itemID);
         UUID RequestSecureURL (IScriptModule engine, ISceneChildEntity host, UUID itemID);
         void ReleaseURL(string url);
+        void SetContentType (UUID request, string content_type);
         void HttpResponse(UUID request, int status, string body);
         string GetHttpHeader(UUID request, string header);
         int GetFreeUrls();

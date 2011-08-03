@@ -309,6 +309,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger HTTP_BODY_MAXLENGTH = 2;
         public static readonly LSLInteger HTTP_VERIFY_CERT = 3;
 
+        public static readonly LSLInteger CONTENT_TYPE_TEXT = 0;
+        public static readonly LSLInteger CONTENT_TYPE_HTML = 1;
+
         public static readonly LSLInteger PRIM_MATERIAL = 2;
         public static readonly LSLInteger PRIM_PHYSICS = 3;
         public static readonly LSLInteger PRIM_TEMP_ON_REZ = 4;
@@ -331,6 +334,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PRIM_DESC = 28;
         public static readonly LSLInteger PRIM_ROT_LOCAL = 29;
         public static readonly LSLInteger PRIM_OMEGA = 32;
+        public static readonly LSLInteger PRIM_LINK_TARGET = 40;//UNKNOWN #
+        public static readonly LSLInteger PRIM_POS_LOCAL = 41;//UNKNOWN #
         public static readonly LSLInteger PRIM_TEXGEN_DEFAULT = 0;
         public static readonly LSLInteger PRIM_TEXGEN_PLANAR = 1;
 
