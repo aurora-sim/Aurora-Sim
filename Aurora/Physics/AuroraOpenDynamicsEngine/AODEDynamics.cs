@@ -94,7 +94,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_linearMotorDecayTimescale = 0;
         private float m_linearMotorTimescale = 0;
         private Vector3 m_lastLinearVelocityVector = Vector3.Zero;
-        private d.Vector3 m_lastPositionVector = new d.Vector3();
+        private Vector3 m_lastPositionVector = Vector3.Zero;
         //private bool m_LinearMotorSetLastFrame = false;
         private Vector3 m_linearMotorOffset = Vector3.Zero;
         private bool m_linearZeroFlag = false;
@@ -556,7 +556,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyEnable (Body);
 
                 // add drive to body
-                Vector3 addAmount = m_linearMotorDirection / ((m_linearMotorTimescale) / pTimestep);
+                Vector3 addAmount = m_linearMotorDirection / ((m_linearMotorTimescale) * (pTimestep));
                 m_lastLinearVelocityVector += (addAmount);  // lastLinearVelocityVector is the current body velocity vector?
 
                 // This will work temporarily, but we really need to compare speed on an axis
@@ -600,12 +600,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             grav.Z = _pParentScene.gravityz * Mass * (float)parent.ParentEntity.GravityMultiplier * (1f - m_VehicleBuoyancy);
             // Preserve the current Z velocity
             d.Vector3 vel_now = d.BodyGetLinearVel (Body);
-            if (m_lastLinearVelocityVector.Z == 0 && Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON)
+            if (m_lastLinearVelocityVector.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
                 m_dir.Z = vel_now.Z;        // Preserve the accumulated falling velocity
             //else if(Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON)
             //    m_dir.Z += vel_now.Z;
 
-            d.Vector3 pos = d.BodyGetPosition (Body);
+            Vector3 pos = parent.Position;
             //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
             Vector3 posChange = new Vector3 ();
             if(!(m_lastPositionVector.X == 0 &&
@@ -698,10 +698,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     float herr0 = pos.Z - tempHoverHeight;
                     // Replace Vertical speed with correction figure if significant
-                    if (Math.Abs (herr0) > 0.01f)
+                    if (herr0 > 0.01f)
                     {
                         m_dir.Z = -((herr0 * pTimestep * 50.0f) / m_VhoverTimescale);
                         //KF: m_VhoverEfficiency is not yet implemented
+                    }
+                    else if(herr0 < -0.01f)
+                    {
+                        m_dir.Z = -((herr0 * pTimestep * 50f) / m_VhoverTimescale);
                     }
                     else
                     {
@@ -725,7 +729,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
             {
-                if (Zchange > -0.1f)
+                if (Zchange > -0.1f && Zchange != 0)
                 {
                     if (Zchange > 0.25f)
                         Zchange = 0.25f;
@@ -779,7 +783,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-            m_lastPositionVector = d.BodyGetPosition (Body);
+            m_lastPositionVector = parent.Position;
             #region limitations
 
             if (Math.Abs (m_dir.X) > 1000 ||
@@ -798,6 +802,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            if(m_dir.ApproxEquals(Vector3.Zero, 0.001f))
+                m_dir = Vector3.Zero;
+            
             // Apply velocity
             d.BodySetLinearVel (Body, m_dir.X, m_dir.Y, m_dir.Z);
             // apply gravity force
@@ -854,7 +861,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * 46f));
                 m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
                 m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
-
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
             }
@@ -963,10 +969,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else if(angVelZ < -1)
                             angVelZ = -1;
                         Vector3 bankingRot = new Vector3(m_lastAngularVelocity.Z * (effSquared * 10 * mult), 0, 0);
-                        if(bankingRot.X > 7)
-                            bankingRot.X = 7;
-                        if(bankingRot.X < -7)
-                            bankingRot.X = -7;
+                        if(bankingRot.X > 4)
+                            bankingRot.X = 4;
+                        if(bankingRot.X < -4)
+                            bankingRot.X = -4;
                         MainConsole.Instance.Output(bankingRot.ToString());
                         bankingRot *= rotq;
                         banking += bankingRot;
