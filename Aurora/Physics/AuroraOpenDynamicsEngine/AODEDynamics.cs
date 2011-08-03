@@ -503,7 +503,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         internal void Disable(AuroraODEPrim parent)
         {
-            if (!m_enabled)
+            if (!m_enabled || m_type == Vehicle.TYPE_NONE)
                 return;
             m_enabled = false;
 
@@ -511,7 +511,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             parent._parent_entity.Restitution = m_previousRestitution;
 
             parent.ThrottleUpdates = true;
-            //d.BodyDisable(Body);
+            parent.ForceSetVelocity(Vector3.Zero);
+            parent.ForceSetRotVelocity(Vector3.Zero);
+            m_body = IntPtr.Zero;
             m_linearMotorDirection = Vector3.Zero;
             m_linearMotorDirectionLASTSET = Vector3.Zero;
             m_angularMotorDirection = Vector3.Zero;
@@ -559,7 +561,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyEnable (Body);
 
                 // add drive to body
-                Vector3 addAmount = m_linearMotorDirection / ((m_linearMotorTimescale) * (pTimestep));
+                Vector3 addAmount = m_linearMotorDirection / ((m_linearMotorTimescale) * (pTimestep * 3));
                 m_lastLinearVelocityVector += (addAmount);  // lastLinearVelocityVector is the current body velocity vector?
 
                 // This will work temporarily, but we really need to compare speed on an axis
@@ -574,9 +576,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // decay applied velocity
                 Vector3 decayfraction = ((Vector3.One / (m_linearMotorDecayTimescale / (pTimestep))));
                 decayfraction.Z = ((1 / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
-                //Console.WriteLine("decay: " + decayfraction);
+                decayfraction += addAmount * 5;
+                if(decayfraction.X > 1)
+                    decayfraction.X = 0.95f;
+                if(decayfraction.Y > 1)
+                    decayfraction.Y = 0.95f;
+                if(decayfraction.Z > 1)
+                    decayfraction.Z = 0.95f;
                 Vector3 decayAmt = (m_linearMotorDirection * decayfraction);
+                Console.WriteLine("decay: " + decayfraction);
+                bool xisPos = decayAmt.X > 0;
+                bool yisPos = decayAmt.Y > 0;
+                bool zisPos = decayAmt.Z > 0;
                 m_linearMotorDirection -= decayAmt;
+                if(m_linearMotorDirection.X > 0 != xisPos)
+                    m_linearMotorDirection.X = 0;
+                if(m_linearMotorDirection.Y > 0 != yisPos)
+                    m_linearMotorDirection.Y = 0;
+                if(m_linearMotorDirection.Z > 0 != zisPos)
+                    m_linearMotorDirection.Z = 0;
                 //Console.WriteLine("actual: " + m_linearMotorDirection);
             }
             else
@@ -861,7 +879,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // ramp up to new value
                 //   current velocity  +=                         error                       /    (time to get there / step interval)
                 //                               requested speed            -  last motor speed
-                m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * 46f));
+                m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * 16f));
                 m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
                 m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
@@ -875,7 +893,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_angularMotorVelocity.Z = angularVelocity.Z; */
 
                 // and decay the velocity
-                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
+                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / (pTimestep * 3));
                 if(m_angularMotorVelocity.ApproxEquals(Vector3.Zero, 0.1f))
                     m_angularMotorVelocity = Vector3.Zero;
             } // end motor section
@@ -889,8 +907,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if(m_verticalAttractionTimescale < 300 && (m_angularMotorVelocity != Vector3.Zero || m_angularMotorApply > 0))
             {
-                float VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
-                VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
+                float VAservo = 0;
+                if(Type == Vehicle.TYPE_BOAT)
+                {
+                    VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
+                    VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
+                }
+                else
+                {
+                    VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
+                    VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
+                }
                 // get present body rotation
                 // make a vector pointing up
                 Vector3 verterr = Vector3.Zero;
@@ -900,7 +927,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // verterr.X and .Y are the World error ammounts. They are 0 when there is no error (Vehicle Body is 'vertical'), and .Z will be 1.
                 // As the body leans to its side |.X| will increase to 1 and .Z fall to 0. As body inverts |.X| will fall and .Z will go
                 // negative. Similar for tilt and |.Y|. .X and .Y must be modulated to prevent a stable inverted body.
-                if (verterr.Z < 0.0f)
+                if(verterr.Z < 0.0f)
                 {
                     verterr.X = 2.0f - verterr.X;
                     verterr.Y = 2.0f - verterr.Y;
@@ -920,7 +947,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 float bounce = 1.0f - (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
                 vertattr.X += bounce * angularVelocity.X;
                 vertattr.Y += bounce * angularVelocity.Y;
-
             } // else vertical attractor is off
 
             #region Deflection
@@ -941,7 +967,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_bankingEfficiency != 0)
             {
                 Vector3 angularMotorVelocity = new Vector3 ();
-                if (m_angularMotorApply > 90)
+                if (m_angularMotorApply > 95)
                 {
                     // ramp up to new value
                     //   current velocity  +=                         error                       /    (time to get there / step interval)
@@ -963,7 +989,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
                     m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                    float mix = m_bankingMix * (m_angularMotorDirection.Z == 0 ? 1 : Math.Abs(m_angularMotorDirection.Z));
+                    float mix = Math.Abs(m_bankingMix);
                     if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > mix) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
                         float angVelZ = m_lastAngularVelocity.Z;
@@ -971,12 +997,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             angVelZ = 1;
                         else if(angVelZ < -1)
                             angVelZ = -1;
-                        Vector3 bankingRot = new Vector3(m_lastAngularVelocity.Z * (effSquared * 10 * mult), 0, 0);
-                        if(bankingRot.X > 4)
-                            bankingRot.X = 4;
-                        if(bankingRot.X < -4)
-                            bankingRot.X = -4;
-                        MainConsole.Instance.Output(bankingRot.ToString());
+                        Vector3 bankingRot = new Vector3(angVelZ * (effSquared * 10 * mult), 0, 0);
+                        if(bankingRot.X > 3)
+                            bankingRot.X = 3;
+                        if(bankingRot.X < -3)
+                            bankingRot.X = -3;
                         bankingRot *= rotq;
                         banking += bankingRot;
                     }
@@ -994,9 +1019,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodyEnable (Body);
             }
             else
-            {
                 m_lastAngularVelocity = Vector3.Zero; // Reduce small value to zero.
-            }
 
             #region Linear Motor Offset
 
@@ -1043,7 +1066,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastAngularVelocity -= m_lastAngularVelocity * decayamount;
 
             // Apply to the body
-            d.BodySetAngularVel (Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
 
             if(m_lastAngularVelocity.ApproxEquals(Vector3.Zero, 0.1f))
             {
@@ -1051,7 +1073,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_angularZeroFlag = true;
             }
             else
+            {
+                d.BodySetAngularVel(Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
                 m_angularZeroFlag = false;
+            }
         }
 
         private Vector3 ToEuler(Quaternion m_lastCameraRotation)
