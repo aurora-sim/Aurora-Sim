@@ -1868,8 +1868,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 //                retstr += GenerateLine("if (CheckSlice()) yield return null;");
             m_braceCount++;
 
-            foreach (SYMBOL kid in cs.kids)
-                retstr += GenerateNode(kid);
+            foreach(SYMBOL kid in cs.kids)
+                if(kid is Statement && kid.kids.Top is BinaryExpression && ((BinaryExpression)kid.kids.Top).ExpressionSymbol == "==")
+                    continue;
+                else
+                    retstr += GenerateNode(kid);
 
             // closing brace
             m_braceCount--;
@@ -1951,19 +1954,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     foreach (SYMBOL kid in s.kids)
                     {
                         //                        if (kid is Assignment && m_SLCompatabilityMode)
-                        if (kid is Assignment)
+                        if(kid is Assignment)
                         {
                             Assignment a = kid as Assignment;
                             List<string> identifiers = new List<string>();
                             checkForMultipleAssignments(identifiers, a);
                             retstr += GenerateNode((SYMBOL)a.kids.Pop());
                             retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
-                            foreach (SYMBOL akid in a.kids)
+                            foreach(SYMBOL akid in a.kids)
                             {
-                                if (akid is BinaryExpression)
+                                if(akid is BinaryExpression)
                                 {
                                     BinaryExpression be = akid as BinaryExpression;
-                                    if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
+                                    if(be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
                                     {
                                         // special case handling for logical and/or, see Mantis 3174
                                         retstr += "((bool)(";
@@ -1971,7 +1974,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                         retstr += "))";
                                         retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
                                         retstr += "((bool)(";
-                                        foreach (SYMBOL bkid in be.kids)
+                                        foreach(SYMBOL bkid in be.kids)
                                             retstr += GenerateNode(bkid);
                                         retstr += "))";
                                     }
@@ -1979,7 +1982,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     {
                                         retstr += GenerateNode((SYMBOL)be.kids.Pop());
                                         retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
-                                        foreach (SYMBOL kidb in be.kids)
+                                        foreach(SYMBOL kidb in be.kids)
                                         {
                                             //                                            if (kidb is FunctionCallExpression)
                                             {
@@ -1996,22 +1999,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         }
                         else
                         {
-                        if (kid is FunctionCallExpression)
+                            if(kid is FunctionCallExpression)
                             {
-                            foreach (SYMBOL akid in kid.kids)
+                                foreach(SYMBOL akid in kid.kids)
                                 {
-                                if (akid is FunctionCall)
-                                    retstr += GenerateFunctionCall(akid as FunctionCall, false);
-                                else
-                                    retstr += GenerateNode(akid);
+                                    if(akid is FunctionCall)
+                                        retstr += GenerateFunctionCall(akid as FunctionCall, false);
+                                    else
+                                        retstr += GenerateNode(akid);
                                 }
                             }
-                        else
+                            else
                             {
-                            // this kids will not need to dump in current string position
-                            // so save what we have in dump and let kids have their own then take it again
-                                retstr += DumpFunc (marc) + GenerateNode (kid);
-                            marc = FuncCallsMarc();
+                                // this kids will not need to dump in current string position
+                                // so save what we have in dump and let kids have their own then take it again
+                                retstr += DumpFunc(marc) + GenerateNode(kid);
+                                marc = FuncCallsMarc();
                             }
                         }
                     }
