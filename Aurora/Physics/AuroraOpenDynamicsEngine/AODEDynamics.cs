@@ -103,6 +103,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         //Angular properties
         private Vector3 m_angularMotorDirection = Vector3.Zero;         // angular velocity requested by LSL motor
         private int m_angularMotorApply = 0;                            // application frame counter
+        private int m_linearMotorApply = 0;
         private Vector3 m_angularMotorVelocity = Vector3.Zero;          // current angular motor velocity
         private float m_angularMotorTimescale = 0;                      // motor angular velocity ramp up rate
         private float m_angularMotorDecayTimescale = 0;                 // motor angular velocity decay rate
@@ -228,6 +229,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 case Vehicle.LINEAR_MOTOR_DIRECTION:
                     m_linearMotorDirection = new Vector3(pValue, pValue, pValue);
                     m_linearMotorDirectionLASTSET = new Vector3(pValue, pValue, pValue);
+                    m_linearMotorApply = 100;
                     break;
                 case Vehicle.LINEAR_MOTOR_OFFSET:
                     m_linearMotorOffset = new Vector3(pValue, pValue, pValue);
@@ -259,8 +261,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_linearFrictionTimescale = new Vector3(pValue.X, pValue.Y, pValue.Z);
                     break;
                 case Vehicle.LINEAR_MOTOR_DIRECTION:
-                    m_linearMotorDirection = new Vector3(pValue.X, pValue.Y, pValue.Z);
-                    m_linearMotorDirectionLASTSET = new Vector3(pValue.X, pValue.Y, pValue.Z);
+                    if(pValue.X == 0 && pValue.Y == 0 && pValue.Z == 0)
+                        m_linearMotorDirection /= 2;
+                    else
+                        m_linearMotorDirection = new Vector3(pValue.X, pValue.Y, pValue.Z);
+                    m_linearMotorDirectionLASTSET = m_linearMotorDirection;
+                    m_linearMotorApply = 100;
                     break;
                 case Vehicle.LINEAR_MOTOR_OFFSET:
                     m_linearMotorOffset = new Vector3(pValue.X, pValue.Y, pValue.Z);
@@ -555,13 +561,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
-            if (!m_linearMotorDirection.ApproxEquals (Vector3.Zero, 0.01f))  // requested m_linearMotorDirection is significant
+            Vector3 motorDirection = m_linearMotorDirection;
+            if(!motorDirection.ApproxEquals(Vector3.Zero, 0.01f) || m_linearMotorApply > 90)  // requested m_linearMotorDirection is significant
             {
                 if (!d.BodyIsEnabled (Body))
                     d.BodyEnable (Body);
 
                 // add drive to body
-                Vector3 addAmount = m_linearMotorDirection / ((m_linearMotorTimescale) * (pTimestep * 3));
+                Vector3 addAmount = motorDirection / m_linearMotorTimescale;
+                addAmount *= pTimestep;
+
                 m_lastLinearVelocityVector += (addAmount);  // lastLinearVelocityVector is the current body velocity vector?
 
                 // This will work temporarily, but we really need to compare speed on an axis
@@ -573,35 +582,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Math.Abs (m_lastLinearVelocityVector.Z) > Math.Abs (m_linearMotorDirectionLASTSET.Z))
                     m_lastLinearVelocityVector.Z = m_linearMotorDirectionLASTSET.Z;
 
-                // decay applied velocity
-                Vector3 decayfraction = ((Vector3.One / (m_linearMotorDecayTimescale / (pTimestep))));
-                decayfraction.Z = ((1 / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
-                decayfraction += addAmount * 5;
-                if(decayfraction.X > 1)
-                    decayfraction.X = 0.95f;
-                if(decayfraction.Y > 1)
-                    decayfraction.Y = 0.95f;
-                if(decayfraction.Z > 1)
-                    decayfraction.Z = 0.95f;
-                Vector3 decayAmt = (m_linearMotorDirection * decayfraction);
-                Console.WriteLine("decay: " + decayfraction);
-                bool xisPos = decayAmt.X > 0;
-                bool yisPos = decayAmt.Y > 0;
-                bool zisPos = decayAmt.Z > 0;
-                m_linearMotorDirection -= decayAmt;
-                if(m_linearMotorDirection.X > 0 != xisPos)
-                    m_linearMotorDirection.X = 0;
-                if(m_linearMotorDirection.Y > 0 != yisPos)
-                    m_linearMotorDirection.Y = 0;
-                if(m_linearMotorDirection.Z > 0 != zisPos)
-                    m_linearMotorDirection.Z = 0;
-                //Console.WriteLine("actual: " + m_linearMotorDirection);
+                if(addAmount != Vector3.Zero)
+                {
+                    // decay applied velocity
+                    Vector3 decayfraction = Vector3.One;
+                    if(m_linearMotorDecayTimescale <= 1)
+                        decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale * m_linearMotorDecayTimescale) / (pTimestep))));
+                    else
+                        decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale) / (pTimestep))));
+                    decayfraction.Z = ((1 / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
+                    Vector3 decayAmt = (motorDirection * decayfraction);
+                    //Console.WriteLine("decay: " + decayfraction);
+                    motorDirection -= decayAmt;
+                    m_linearMotorDirection -= decayAmt;
+                }
+                m_linearMotorApply--;
             }
             else
             {        // requested is not significant
                 // if what remains of applied is small, zero it.
                 if (m_lastLinearVelocityVector.ApproxEquals (Vector3.Zero, 0.01f))
                     m_lastLinearVelocityVector = Vector3.Zero;
+                if(m_linearMotorApply > 0)
+                    m_linearMotorApply--;
             }
 
             // convert requested object velocity to world-referenced vector
@@ -775,7 +778,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     for (int i = 0; i < m_forcelist.Count; i++)
                     {
-                        TaintedForce = TaintedForce + (m_forcelist[i] * 100);
+                        TaintedForce = TaintedForce + (m_forcelist[i]);
                     }
                 }
                 catch (IndexOutOfRangeException)
@@ -825,6 +828,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if(m_dir.ApproxEquals(Vector3.Zero, 0.001f))
                 m_dir = Vector3.Zero;
+            m_dir += TaintedForce;
             
             // Apply velocity
             d.BodySetLinearVel (Body, m_dir.X, m_dir.Y, m_dir.Z);
@@ -854,7 +858,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_linearZeroFlag = true;
             }
             else
+            {
                 m_linearZeroFlag = false;
+            }
         } // end MoveLinear()
 
         private void MoveAngular (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
@@ -884,6 +890,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
+                m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
             }
             else if(m_angularMotorVelocity != Vector3.Zero)
             {
@@ -915,7 +922,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
+                    if(parent.LinkSetIsColliding)
+                        VAservo = 0.05f / (m_verticalAttractionTimescale * pTimestep);
+                    else
+                        VAservo = 0.2f / (m_verticalAttractionTimescale * pTimestep);
                     VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
                 }
                 // get present body rotation

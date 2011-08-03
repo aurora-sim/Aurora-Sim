@@ -3171,8 +3171,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             object[] args = (object[])arg;
             Vector3 force = (Vector3)args[0];
-            if ((bool)args[1])
-                m_pushForce = force * 100;
+            if((bool)args[1])
+            {
+                if(IsPhysical && m_vehicle.Type != Vehicle.TYPE_NONE)
+                    m_vehicle.ProcessForceTaint(force);
+                else
+                    m_pushForce = force * 100;
+            }
             else
                 m_force = force;
         }
