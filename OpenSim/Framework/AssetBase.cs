@@ -53,6 +53,7 @@ namespace OpenSim.Framework
     [Serializable]
     public class AssetBase : IDisposable
     {
+        private static SHA1Managed SHA1HashGenerator = new SHA1Managed();
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private byte[] myData = new byte[] { };
         private string myHashCode = "";
@@ -257,7 +258,7 @@ namespace OpenSim.Framework
         // because we need to know if it changed.
         public string FillHash()
         {
-            HashCode = Convert.ToBase64String(new SHA256Managed().ComputeHash(myData)) + myData.Length;
+            HashCode = Convert.ToBase64String(SHA1HashGenerator.ComputeHash(myData)) + myData.Length;
             return HashCode;
         }
 

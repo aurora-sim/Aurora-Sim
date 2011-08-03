@@ -49,6 +49,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
     {
         #region Variables
 
+        private static SHA1Managed SHA1HashGenerator = new SHA256Managed();
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData m_Gd;
         private bool m_Enabled;
@@ -558,21 +559,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private Byte[] LoadFile(string hashCode, bool waserror)
         {
-            Stream stream = null;
-            BinaryFormatter bformatter = new BinaryFormatter();
             byte[] results = new byte[] { };
             string filename = GetFileName(hashCode, false);
             try
             {
                 if (!File.Exists(filename))
                 {
-                    RestoreBackup(hashCode);
-                    if (!File.Exists(filename))
+                    if(!RestoreBackup(hashCode))
                         return new byte[] { };
                 }
-                stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                results = (Byte[])bformatter.Deserialize(stream);
-                if (hashCode != Convert.ToBase64String(new SHA256Managed().ComputeHash(results)) + results.Length)
+                results = File.ReadAllBytes(filename);
+                if(hashCode != Convert.ToBase64String(SHA1HashGenerator.ComputeHash(results)) + results.Length)
                 {
                     // just want to see if this ever happens.. 
                     m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash.");
@@ -581,22 +578,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch
             {
-                if (stream != null) stream.Close();
-                stream = null;
                 if (!waserror)
                 {
-                    RestoreBackup(hashCode);
-                    return LoadFile(hashCode, true);
+                    if(RestoreBackup(hashCode))
+                        return LoadFile(hashCode, true);
                 }
                 return null;
             }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
         }
 
-        private void RestoreBackup(string hashCode)
+        private bool RestoreBackup(string hashCode)
         {
             string backupfile = GetFileName(hashCode, true);
             string file = GetFileName(hashCode, false);
@@ -605,7 +596,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 File.Move(file, file + ".corrupt");
                 Util.UnCompress7ZipFile(backupfile + ".7z", Path.GetDirectoryName(file));
                 m_Log.Info("[AssetDataPlugin]: Restored backup asset file " + file);
+                return true;
             }
+            return false;
         }
 
         private string GetFileName(string id, bool backup)
@@ -681,6 +674,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         {
                             const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
                             string stringData = Utils.BytesToString(asset.Data);
+                            bool changed = false;
                             MatchCollection mc = Regex.Matches(stringData, sPattern);
                             if (mc.Count >= 1)
                             {
@@ -697,9 +691,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                             {
                                                 stringData = stringData.Replace(match.Value,
                                                                                 mightBeAsset.ParentID.ToString());
-                                                asset.Data = Utils.StringToBytes(stringData);
-                                                // so it doesn't try to find the old file
-                                                asset.LastHashCode = asset.HashCode;
+                                                changed = true;
                                             }
                                         }
                                     }
@@ -709,6 +701,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     }
                                 }
                             }
+                            if(changed)
+                            {
+                                asset.Data = Utils.StringToBytes(stringData);
+                                // so it doesn't try to find the old file
+                                asset.LastHashCode = asset.HashCode;
+                            }
                         }
 
 
@@ -716,9 +714,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         // set the flags
                         if (dr["local"].ToString().Equals("1") || dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                             asset.Flags |= AssetFlags.Local;
-                        if (bool.Parse(dr["temporary"].ToString())) asset.Flags |= AssetFlags.Temperary;
+                        if(bool.Parse(dr["temporary"].ToString()))
+                            asset.Flags |= AssetFlags.Temperary;
+                        dr.Close();
+                        dr = null;
 
-                        if (File.Exists(GetFileName(Convert.ToBase64String(new SHA256Managed().ComputeHash(asset.Data)) + asset.Data.Length, false)))
+                        if(File.Exists(GetFileName(Convert.ToBase64String(SHA1HashGenerator.ComputeHash(asset.Data)) + asset.Data.Length, false)))
                             convertCountDupe++;
 
                         // check to see if this asset should have a parent ID
@@ -739,13 +740,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             m_Gd.Update("inventoryitems", new object[] { asset.ParentID }, new[] { "assetID" },
                                 new[] { "assetID" }, new object[] { asset.ID });
                         }
-                        else asset.ParentID = asset.ID;
+                        else 
+                            asset.ParentID = asset.ID;
 
                         if (StoreAsset(asset)) m_Gd.Delete("assets", "id = '" + asset.ID + "'");
                         convertCount++;
                     }
-                    dr.Close();
-                    dr = null;
                 }
             }
             catch (Exception e)
