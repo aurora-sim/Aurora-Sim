@@ -467,6 +467,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_enabled)
                 return;
             m_enabled = true;
+            m_lastLinearVelocityVector = parent.Velocity;
+            m_lastPositionVector = parent.Position;
+            m_lastAngularVelocity = parent.RotationalVelocity;
             m_previousFriction = parent._parent_entity.Friction;
             m_previousRestitution = parent._parent_entity.Restitution;
             SetPhysicalParameters(parent, m_type);
@@ -649,7 +652,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float terrainHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
             if(pos.Z < terrainHeight - 5)
             {
-                pos.Z = _pParentScene.GetTerrainHeightAtXY (pos.X, pos.Y) + 2;
+                pos.Z = terrainHeight + 2;
                 m_lastPositionVector = pos;//Make sure that we don't have an explosion the next frame with the posChange
                 d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
             }
@@ -735,7 +738,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         Zchange = 0.25f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                    grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
+                    //grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
                 }
             }
 

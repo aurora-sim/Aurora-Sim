@@ -1590,7 +1590,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.Vector3 vel = d.BodyGetLinearVel (Body);
                         m_lastVelocity = _velocity;
                         _velocity = new Vector3 ((float)vel.X, (float)vel.Y, (float)vel.Z);
-                        d.Vector3 pos = d.GeomGetPosition (prim_geom);
+                        d.Vector3 pos = d.BodyGetPosition(Body);
                         m_lastposition = _position;
                         _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
                         d.Quaternion ori;
