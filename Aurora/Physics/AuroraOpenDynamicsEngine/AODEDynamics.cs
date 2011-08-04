@@ -95,6 +95,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_linearMotorTimescale = 0;
         private Vector3 m_lastLinearVelocityVector = Vector3.Zero;
         private Vector3 m_lastPositionVector = Vector3.Zero;
+        private Vector3 m_lastposChange = Vector3.Zero;
         //private bool m_LinearMotorSetLastFrame = false;
         private Vector3 m_linearMotorOffset = Vector3.Zero;
         private bool m_linearZeroFlag = false;
@@ -557,10 +558,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             SendUpdate(parent);
         }   // end Step
 
+        private int m_lastAppliedDownForce = 0;
         private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
             Vector3 motorDirection = m_linearMotorDirection;
-            if(!motorDirection.ApproxEquals(Vector3.Zero, 0.01f) || m_linearMotorApply > 90)  // requested m_linearMotorDirection is significant
+            if(!motorDirection.ApproxEquals(Vector3.Zero, 0.01f) || m_linearMotorApply > 99)  // requested m_linearMotorDirection is significant
             {
                 if (!d.BodyIsEnabled (Body))
                     d.BodyEnable (Body);
@@ -589,6 +591,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     else
                         decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale) / (pTimestep))));
                     decayfraction.Z = ((1 / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
+                    if(decayfraction.X > 0.9f)
+                        decayfraction.X = 0.9f;
+                    if(decayfraction.Y > 0.9f)
+                        decayfraction.Y = 0.9f;
+                    if(decayfraction.Z > 0.9f)
+                        decayfraction.Z = 0.9f;
                     Vector3 decayAmt = (motorDirection * decayfraction);
                     //Console.WriteLine("decay: " + decayfraction);
                     motorDirection -= decayAmt;
@@ -629,42 +637,42 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             Vector3 pos = parent.Position;
             //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
-            Vector3 posChange = new Vector3 ();
+            m_lastposChange = new Vector3 ();
             if(!(m_lastPositionVector.X == 0 &&
                 m_lastPositionVector.Y == 0 &&
                 m_lastPositionVector.Z == 0))
             {
                 ///Only do this if we have a last position
-                posChange.X = pos.X - m_lastPositionVector.X;
-                posChange.Y = pos.Y - m_lastPositionVector.Y;
-                posChange.Z = pos.Z - m_lastPositionVector.Z;
+                m_lastposChange.X = pos.X - m_lastPositionVector.X;
+                m_lastposChange.Y = pos.Y - m_lastPositionVector.Y;
+                m_lastposChange.Z = pos.Z - m_lastPositionVector.Z;
             }
-            double Zchange = Math.Abs (posChange.Z);
+            double Zchange = Math.Abs(m_lastposChange.Z);
             if (m_BlockingEndPoint != Vector3.Zero)
             {
                 if (pos.X >= (m_BlockingEndPoint.X - (float)1))
                 {
-                    pos.X -= posChange.X + 1;
+                    pos.X -= m_lastposChange.X + 1;
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.Y >= (m_BlockingEndPoint.Y - (float)1))
                 {
-                    pos.Y -= posChange.Y + 1;
+                    pos.Y -= m_lastposChange.Y + 1;
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.Z >= (m_BlockingEndPoint.Z - (float)1))
                 {
-                    pos.Z -= posChange.Z + 1;
+                    pos.Z -= m_lastposChange.Z + 1;
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.X <= 0)
                 {
-                    pos.X += posChange.X + 1;
+                    pos.X += m_lastposChange.X + 1;
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
                 if (pos.Y <= 0)
                 {
-                    pos.Y += posChange.Y + 1;
+                    pos.Y += m_lastposChange.Y + 1;
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
             }
@@ -910,7 +918,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 deflection = Vector3.Zero;
             Vector3 banking = Vector3.Zero;
 
-            if(m_verticalAttractionTimescale < 300 && (m_angularMotorVelocity != Vector3.Zero || m_angularMotorApply > 90))
+            if(m_verticalAttractionTimescale < 300 && (m_lastAngularVelocity != Vector3.Zero || m_angularMotorApply > 90))
             {
                 float VAservo = 0;
                 if(Type == Vehicle.TYPE_BOAT)
@@ -1018,8 +1026,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            Vector3 downForce = Vector3.Zero;
+
+            double Zchange = m_lastposChange.Z;
+            if((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
+            {
+                if(Zchange < -0.1f/* && m_lastAppliedDownForce <= 0*/)
+                {
+                    if(Zchange < -0.035f)
+                        Zchange = -0.035f;
+                    //Requires idea of 'up', so use reference frame to rotate it
+                    //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
+                    downForce = (new Vector3(0, ((float)Math.Abs(Zchange) * (pTimestep * _pParentScene.PID_P / 2)), 0));
+                    downForce *= rotq;
+                    m_lastAppliedDownForce = 2;//Only apply every 10 frames
+                }
+                /*else
+                    m_lastAppliedDownForce--;*/
+            }
+
             // Sum velocities
-            m_lastAngularVelocity = m_angularMotorVelocity + vertattr + deflection + banking;
+            m_lastAngularVelocity = m_angularMotorVelocity + vertattr + deflection + banking + downForce;
 
             if (!m_lastAngularVelocity.ApproxEquals (Vector3.Zero, 0.01f))
             {
@@ -1084,6 +1111,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if(m_lastAngularVelocity.ApproxEquals(Vector3.Zero, 0.1f))
             {
                 m_lastAngularVelocity = Vector3.Zero;
+                d.BodySetAngularVel(Body, 0, 0, 0);
                 m_angularZeroFlag = true;
             }
             else
