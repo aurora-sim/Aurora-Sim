@@ -42,6 +42,10 @@
     Module = ObjectCacheModule
 
 [ClientStack.LindenUDP]
+    ;; Allow UDP packets to be used for inventory
+	;; Really should be false... but some viewers don't allow for CAPS only
+	AllowUDPInventory = true
+	
     ;; Set this to true to process incoming packets asyncronously. This can speed up the queue, but can also cause deadlocks, so watch out.
     ;; Default is true
     async_packet_handling = true
@@ -115,8 +119,8 @@
     ;TextureSendLimit = 20
 
     ;; Time before the client is disconnected because of inactivity (in seconds)
-    ;; Default is 60
-    ClientTimeOut = 60;
+    ;; Default is 120
+    ClientTimeOut = 120
 
     ;; Quash and remove any light properties from attachments not on the
     ;; hands. This allows flashlights and lanterns to function, but kills

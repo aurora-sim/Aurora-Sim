@@ -61,6 +61,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </value>
         protected int m_debugPacketLevel = 0;
 
+        private bool m_allowUDPInv = false;
+
         #region Events
 
         public event BinaryGenericMessage OnBinaryGenericMessage;
@@ -437,6 +439,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             InitDefaultAnimations();
 
             m_scene = scene;
+
+            IConfig advancedConfig = m_scene.Config.Configs["ClientStack.LindenUDP"];
+            if(advancedConfig != null)
+                m_allowUDPInv = advancedConfig.GetBoolean("AllowUDPInventory", m_allowUDPInv);
 
             //m_killRecord = new HashSet<uint>();
 //            m_attachmentsSent = new HashSet<uint>();
@@ -5311,8 +5317,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.MoveInventoryFolder, HandleMoveInventoryFolder);
             AddLocalPacketHandler(PacketType.CreateInventoryItem, HandleCreateInventoryItem);
             AddLocalPacketHandler(PacketType.LinkInventoryItem, HandleLinkInventoryItem);
-            //AddLocalPacketHandler(PacketType.FetchInventory, HandleFetchInventory);
-            //AddLocalPacketHandler(PacketType.FetchInventoryDescendents, HandleFetchInventoryDescendents);
+            if(m_allowUDPInv)
+            {
+                AddLocalPacketHandler(PacketType.FetchInventory, HandleFetchInventory);
+                AddLocalPacketHandler(PacketType.FetchInventoryDescendents, HandleFetchInventoryDescendents);
+            }
             AddLocalPacketHandler(PacketType.PurgeInventoryDescendents, HandlePurgeInventoryDescendents);
             AddLocalPacketHandler(PacketType.UpdateInventoryItem, HandleUpdateInventoryItem);
             AddLocalPacketHandler(PacketType.CopyInventoryItem, HandleCopyInventoryItem);
