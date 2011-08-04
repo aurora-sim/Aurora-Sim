@@ -338,6 +338,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     IClientAPI client = GetActiveClient(AgentID);
                     IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
                     ChatSessionMember thismember = m_groupData.FindMember(msg.imSessionID, AgentID);
+                    if(thismember == null)
+                        return;
                     string[] brokenMessage = msg.message.Split(',');
                     bool mutedText = false, mutedVoice = false;
                     bool.TryParse(brokenMessage[0], out mutedText);
@@ -424,14 +426,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                 eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", otherAgent.Scene.RegionInfo.RegionHandle);
                             else
                             {
-                                IAsyncMessagePostService amps = m_sceneList[0].RequestModuleInterface<IAsyncMessagePostService>();
+                                ISyncMessagePosterService amps = m_sceneList[0].RequestModuleInterface<ISyncMessagePosterService>();
                                 if(amps != null)
                                 {
                                     OSDMap message = new OSDMap();
                                     message["Method"] = "GroupSessionAgentUpdate";
                                     message["AgentID"] = thismember.AvatarKey;
                                     message["Message"] = ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), "ENTER");
-                                    amps.Post(SP.Scene.RegionInfo.RegionHandle, message);
+                                    amps.Post(message, SP.Scene.RegionInfo.RegionHandle);
                                 }
                             }
                         }
@@ -641,14 +643,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                     queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey, "ENTER", otherAgent.Scene.RegionInfo.RegionHandle);
                                 else
                                 {
-                                    IAsyncMessagePostService amps = m_sceneList[0].RequestModuleInterface<IAsyncMessagePostService>();
+                                    ISyncMessagePosterService amps = m_sceneList[0].RequestModuleInterface<ISyncMessagePosterService>();
                                     if(amps != null)
                                     {
                                         OSDMap message = new OSDMap();
                                         message["Method"] = "GroupSessionAgentUpdate";
                                         message["AgentID"] = AgentID;
                                         message["Message"] = ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), "ENTER");
-                                        amps.Post(remoteClient.Scene.RegionInfo.RegionHandle, message);
+                                        amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
                                     }
                                 }
                             }
