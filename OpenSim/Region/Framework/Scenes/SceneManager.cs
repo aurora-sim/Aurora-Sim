@@ -1194,7 +1194,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         IBackupModule backup = sc.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
-                            backup.DeleteSceneObjects (new ISceneEntity[1] { grp }, true);
+                            backup.DeleteSceneObjects (new ISceneEntity[1] { grp }, true, true);
                     }
                     catch (Exception e)
                     {

@@ -690,7 +690,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             IBackupModule backup = QIS.ID.Part.ParentEntity.Scene.RequestModuleInterface<IBackupModule> ();
                             if (backup != null)
                                 backup.DeleteSceneObjects(
-                                    new ISceneEntity[1] { QIS.ID.Part.ParentEntity }, true);
+                                    new ISceneEntity[1] { QIS.ID.Part.ParentEntity }, true, true);
                         }
                     }
                     else if (ex.Message.Contains("ScriptDeleteException"))

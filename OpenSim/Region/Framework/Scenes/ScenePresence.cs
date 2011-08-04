@@ -1504,7 +1504,7 @@ namespace OpenSim.Region.Framework.Scenes
             remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
-                backup.DeleteSceneObjects(new SceneObjectGroup[1] { proxyObjectGroup }, true);
+                backup.DeleteSceneObjects(new SceneObjectGroup[1] { proxyObjectGroup }, true, true);
             //            }
             //            else
             //            {

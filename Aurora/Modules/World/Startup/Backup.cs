@@ -383,7 +383,7 @@ namespace Aurora.Modules
                         }
                     }
                     //Delete all the groups now
-                    DeleteSceneObjects(groups.ToArray(), true);
+                    DeleteSceneObjects(groups.ToArray(), true, true);
 
                     //Now remove the entire region at once
                     m_scene.SimulationDataService.RemoveRegion(m_scene.RegionInfo.RegionID);
@@ -435,7 +435,7 @@ namespace Aurora.Modules
             /// <param name="groups"></param>
             /// <param name="DeleteScripts"></param>
             /// <returns></returns>
-            public bool DeleteSceneObjects (ISceneEntity[] groups, bool DeleteScripts)
+            public bool DeleteSceneObjects (ISceneEntity[] groups, bool DeleteScripts, bool sendKillPackets)
             {
                 List<SceneObjectPart> parts = new List<SceneObjectPart>();
                 foreach (ISceneEntity grp in groups)
@@ -448,10 +448,14 @@ namespace Aurora.Modules
                     parts.AddRange(group.ChildrenList);
                     DeleteSceneObject(group, true, true);
                 }
-                m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
+                if(sendKillPackets)
                 {
-                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, parts.ToArray());
-                });
+                    m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
+                                                     {
+                                                         avatar.ControllingClient.SendKillObject(
+                                                             m_scene.RegionInfo.RegionHandle, parts.ToArray());
+                                                     });
+                }
 
                 return true;
             }

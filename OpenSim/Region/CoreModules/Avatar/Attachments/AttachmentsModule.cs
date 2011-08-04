@@ -375,7 +375,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //And from storage as well
                     IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule> ();
                     if (backup != null)
-                        backup.DeleteSceneObjects (new ISceneEntity[1]{grp}, false);
+                        backup.DeleteSceneObjects (new ISceneEntity[1]{grp}, false, true);
                 }
             }
         }
@@ -510,6 +510,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         /// <summary>
         /// Make sure that all attachments are ready to be transfered to a new region
         /// Note: this will remove broken attachments
+        /// Note: this does NOT send kill packets to the viewer, the caller will need to do that on their own
         /// </summary>
         /// <param name="avatarID">The avatar who's attachments will be checked</param>
         public void ValidateAttachments(UUID avatarID)
@@ -537,7 +538,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         DetachSingleAttachmentGroupToInventoryInternal (attachments[i].RootChild.FromUserInventoryItemID, presence.ControllingClient, false, attachments[i]);
                     }
                 }
-                backupModule.DeleteSceneObjects (attachments, true);
+                backupModule.DeleteSceneObjects (attachments, true, false);
             }
         }
 
@@ -785,7 +786,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             //And from storage as well so that they don't end up at 0,0,0
             IBackupModule backup = remoteClient.Scene.RequestModuleInterface<IBackupModule>();
             if(backup != null)
-                backup.DeleteSceneObjects(attachments, false);
+                backup.DeleteSceneObjects(attachments, false, true);
         }
 
         private void DetachSingleAttachmentGroupToInventoryInternal (UUID itemID, IClientAPI remoteClient, bool fireEvent, ISceneEntity group)

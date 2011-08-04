@@ -720,7 +720,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
-                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true);
+                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, true, true);
                 }
                 catch (Exception)
                 {
@@ -799,7 +799,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         }
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
-                            return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false);
+                            return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, true);
                     }
                     catch (Exception e)
                     {
@@ -942,7 +942,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
-                        backup.DeleteSceneObjects(new SceneObjectGroup[1] { sceneObject }, true);
+                        backup.DeleteSceneObjects(new SceneObjectGroup[1] { sceneObject }, true, true);
 
                     return false;
                 }

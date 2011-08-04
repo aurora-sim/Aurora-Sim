@@ -101,9 +101,11 @@ namespace OpenSim.Region.Framework.Interfaces
         void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args);
 
         /// <summary>
-        /// Validate the current avatar's attachments and prep them for leaving the region
+        /// Make sure that all attachments are ready to be transfered to a new region
+        /// Note: this will remove broken attachments
+        /// Note: this does NOT send kill packets to the viewer, the caller will need to do that on their own
         /// </summary>
-        /// <param name="uUID"></param>
+        /// <param name="avatarID">The avatar who's attachments will be checked</param>
         void ValidateAttachments(UUID uUID);
 
         /// <summary>

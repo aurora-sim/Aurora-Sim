@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules
                     {
                         IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
-                            backup.DeleteSceneObjects(x.objectGroups.ToArray(), true);
+                            backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
                     }
                     m_log.DebugFormat(
                         "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
