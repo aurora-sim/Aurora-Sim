@@ -405,7 +405,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             ChatSession session;
             ChatSessions.TryGetValue(SessionID, out session);
             ChatSessionMember oldMember = FindMember(SessionID, member.AvatarKey);
-            if (oldMember == null)
+            if ((oldMember == null) || (oldMember.AvatarKey == UUID.Zero))
                 session.Members.Add(member);
             else
                 oldMember.HasBeenAdded = true;//Reset this
