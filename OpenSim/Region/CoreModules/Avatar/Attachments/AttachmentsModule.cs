@@ -322,6 +322,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //NOTE: we MUST do this manually, otherwise it will never be added!
                     //We also have to reset the IDs!
                     //Note: root first, as we have to set the parentID right!
+                    SendKillEntity(objatt.RootChild);
                     m_scene.SceneGraph.PrepPrimForAdditionToScene(objatt);
                     m_scene.Entities.Add(objatt);
 
@@ -780,11 +781,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             foreach (ISceneEntity group in attachments)
             {
                 DetachSingleAttachmentGroupToInventoryInternal (group.RootChild.FromUserInventoryItemID, remoteClient, false, group);
-                //And from storage as well so that they don't end up at 0,0,0
-                IBackupModule backup = remoteClient.Scene.RequestModuleInterface<IBackupModule> ();
-                if (backup != null)
-                    backup.DeleteSceneObjects (new ISceneEntity[1] { group }, false);
             }
+            //And from storage as well so that they don't end up at 0,0,0
+            IBackupModule backup = remoteClient.Scene.RequestModuleInterface<IBackupModule>();
+            if(backup != null)
+                backup.DeleteSceneObjects(attachments, false);
         }
 
         private void DetachSingleAttachmentGroupToInventoryInternal (UUID itemID, IClientAPI remoteClient, bool fireEvent, ISceneEntity group)

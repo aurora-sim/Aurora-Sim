@@ -364,11 +364,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             });
         }
 
-        protected void KillEntities (IScene scene, IEntity[] grp)
+        protected void KillEntities (IScenePresence sp, IEntity[] grp)
         {
-            scene.ForEachClient(delegate(IClientAPI client)
+            sp.Scene.ForEachClient(delegate(IClientAPI client)
             {
-                client.SendKillObject(scene.RegionInfo.RegionHandle, grp);
+                if(sp.UUID != client.AgentId)//Don't send kill requests to us, it'll just look jerky
+                    client.SendKillObject(sp.Scene.RegionInfo.RegionHandle, grp);
             });
         }
 
@@ -684,7 +685,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 foreach (ISceneEntity grp in attachments)
                 {
                     //Kill in all clients as it will be readded in the other region
-                    KillEntities(agent.Scene, grp.ChildrenEntities().ToArray());
+                    KillEntities(agent, grp.ChildrenEntities().ToArray());
                     //Now remove it from the Scene so that it will not come back
                     agent.Scene.SceneGraph.DeleteEntity(grp);
                 }

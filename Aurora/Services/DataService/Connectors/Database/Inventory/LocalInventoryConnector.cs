@@ -633,7 +633,6 @@ namespace Aurora.Services.DataService
                 writer = null;
                 sw = null;
                 array = null;
-                MainConsole.Instance.Output(Utils.BytesToString(newarr));
                 return newarr;
             }
 
