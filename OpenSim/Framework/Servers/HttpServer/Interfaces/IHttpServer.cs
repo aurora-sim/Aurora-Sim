@@ -39,7 +39,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         string SSLCommonName { get; }
 
         uint Port { get; }
-        string HostName { get; }
+        string HostName { get; set;  }
         bool UseSSL { get; }
         
         /// <summary>

@@ -105,6 +105,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         public string HostName
         {
             get { return m_hostName; }
+            set { m_hostName = value; }
         }
 
         public BaseHttpServer(uint port)
