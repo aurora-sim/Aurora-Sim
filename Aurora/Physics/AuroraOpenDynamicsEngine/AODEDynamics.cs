@@ -551,6 +551,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (frcount > 100)
                 frcount = 0;
 
+            pTimestep *= 2;
             MoveLinear (pTimestep, pParentScene, parent);
             MoveAngular (pTimestep, pParentScene, parent);
             LimitRotation(pTimestep);
@@ -562,8 +563,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
             Vector3 motorDirection = m_linearMotorDirection;
-            if(!motorDirection.ApproxEquals(Vector3.Zero, 0.01f) || m_linearMotorApply > 99)  // requested m_linearMotorDirection is significant
+            if(!motorDirection.ApproxEquals(Vector3.Zero, 0.01f) || m_linearMotorApply > 90)  // requested m_linearMotorDirection is significant
             {
+                if(m_linearMotorApply <= 80)
+                    if(m_linearMotorTimescale > 1)
+                        m_linearMotorDirection /= m_linearMotorTimescale;
+                    else
+                        m_linearMotorDirection *= m_linearMotorTimescale;
                 if (!d.BodyIsEnabled (Body))
                     d.BodyEnable (Body);
 
@@ -754,22 +760,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_dir.Y = 0;
             if ((m_flags & (VehicleFlag.NO_Z)) != 0)
                 m_dir.Z = 0;
-
-            #region Limit Motor Up
-
-            if ((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
-            {
-                if (Zchange > -0.1f && Zchange != 0)
-                {
-                    if (Zchange > 0.25f)
-                        Zchange = 0.25f;
-                    //Requires idea of 'up', so use reference frame to rotate it
-                    //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                    //grav += (new Vector3 (0, 0, ((float)Math.Abs (Zchange) * (pTimestep * -_pParentScene.PID_D * _pParentScene.PID_D))));
-                }
-            }
-
-            #endregion
 
             #region Deal with tainted forces
 
@@ -1026,6 +1016,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            #region Downward Force
+
             Vector3 downForce = Vector3.Zero;
 
             double Zchange = m_lastposChange.Z;
@@ -1033,17 +1025,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if(Zchange < -0.1f/* && m_lastAppliedDownForce <= 0*/)
                 {
-                    if(Zchange < -0.035f)
-                        Zchange = -0.035f;
+                    if(Zchange < -0.3f)
+                        Zchange = -0.3f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                    downForce = (new Vector3(0, ((float)Math.Abs(Zchange) * (pTimestep * _pParentScene.PID_P / 2)), 0));
+                    downForce = (new Vector3(0, ((float)Math.Abs(Zchange) * (pTimestep * _pParentScene.PID_P / 4)), 0));
                     downForce *= rotq;
                     m_lastAppliedDownForce = 2;//Only apply every 10 frames
                 }
                 /*else
                     m_lastAppliedDownForce--;*/
             }
+
+            #endregion
 
             // Sum velocities
             m_lastAngularVelocity = m_angularMotorVelocity + vertattr + deflection + banking + downForce;
