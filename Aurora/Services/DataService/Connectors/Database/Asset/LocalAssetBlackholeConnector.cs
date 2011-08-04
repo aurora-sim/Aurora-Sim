@@ -561,16 +561,19 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private Byte[] LoadFile(string hashCode, bool waserror)
         {
+            Stream stream = null;
+            BinaryFormatter bformatter = new BinaryFormatter();
             byte[] results = new byte[] { };
             string filename = GetFileName(hashCode, false);
             try
             {
-                if (!File.Exists(filename))
+                if(!File.Exists(filename))
                 {
                     if(!RestoreBackup(hashCode))
                         return new byte[] { };
                 }
-                results = File.ReadAllBytes(filename);
+                stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+                results = (Byte[])bformatter.Deserialize(stream);
                 if(hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
                 {
                     // just want to see if this ever happens.. 
@@ -580,12 +583,18 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch
             {
-                if (!waserror)
+                if(!waserror)
                 {
                     if(RestoreBackup(hashCode))
                         return LoadFile(hashCode, true);
                 }
                 return null;
+            }
+            finally
+            {
+                if(stream != null)
+                    stream.Close();
+                stream = null;
             }
         }
 
@@ -631,11 +640,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (!sw.IsRunning) sw.Start();
             displayCount++;
             List<string> toConvert = m_Gd.Query(" 1 = 1 LIMIT 5 ", "assets", "id");
-            if (toConvert.Count >= 1)
+            if(toConvert.Count >= 1)
             {
-                foreach (string assetkey in toConvert)
+                foreach(string assetkey in toConvert)
                     Convert2BH(UUID.Parse(assetkey));
             }
+            else
+                needsConversion = false;//ALL DONE!
             if (displayCount == 100)
             {
                 sw.Stop();
