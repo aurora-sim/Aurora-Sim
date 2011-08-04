@@ -554,9 +554,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             MoveAngular (pTimestep, pParentScene, parent);
             LimitRotation(pTimestep);
 
-            // WE deal with updates
-            if(!m_linearZeroFlag || !m_angularZeroFlag)
-                parent.RequestPhysicsterseUpdate();
+            SendUpdate(parent);
         }   // end Step
 
         private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
@@ -912,7 +910,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 deflection = Vector3.Zero;
             Vector3 banking = Vector3.Zero;
 
-            if(m_verticalAttractionTimescale < 300 && (m_angularMotorVelocity != Vector3.Zero || m_angularMotorApply > 0))
+            if(m_verticalAttractionTimescale < 300 && (m_angularMotorVelocity != Vector3.Zero || m_angularMotorApply > 90))
             {
                 float VAservo = 0;
                 if(Type == Vehicle.TYPE_BOAT)
@@ -1089,6 +1087,35 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        private Vector3 m_lastVelocity = Vector3.Zero;
+        private Vector3 m_lastAngVelocity = Vector3.Zero;
+        private int m_sentZeroFlag = 0;
+
+        private void SendUpdate (AuroraODEPrim parent)
+        {
+            // WE deal with updates
+            if(m_linearZeroFlag && m_angularZeroFlag)
+            {
+                if(m_sentZeroFlag > 0)
+                {
+                    m_sentZeroFlag--;
+                    parent.RequestPhysicsterseUpdate();
+                }
+            }
+            else
+            {
+                if(!m_lastVelocity.ApproxEquals(parent.Velocity, 0.1f) ||
+                    !m_lastAngVelocity.ApproxEquals(parent.RotationalVelocity, 0.1f))
+                {
+                    m_lastVelocity = parent.Velocity;
+                    m_lastAngVelocity = parent.RotationalVelocity;
+                    m_sentZeroFlag = 5;
+                }
+                else
+                {
+                }
+            }
+        }
         private Vector3 ToEuler(Quaternion m_lastCameraRotation)
         {
             Quaternion t = new Quaternion(m_lastCameraRotation.X * m_lastCameraRotation.X, m_lastCameraRotation.Y * m_lastCameraRotation.Y, m_lastCameraRotation.Z * m_lastCameraRotation.Z, m_lastCameraRotation.W * m_lastCameraRotation.W);
