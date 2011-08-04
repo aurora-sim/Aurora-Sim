@@ -90,3 +90,4 @@
 	CacheDirector = "C:\aurora\admin\BHAssets\"
 	BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
 	AssetsAreOldAfterHowManyDays = 30
+	PointInventoryToParentAssets = true
