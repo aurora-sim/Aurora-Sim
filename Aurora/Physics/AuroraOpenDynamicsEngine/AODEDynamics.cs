@@ -1047,7 +1047,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // The torque created is the linear velocity crossed with the offset
 
                 //Note: we use the motor, otherwise you will just spin around and we divide by 10 since otherwise we go crazy
-                Vector3 torqueFromOffset = (m_linearMotorDirectionLASTSET % m_linearMotorOffset) / 10;
+                Vector3 torqueFromOffset = (m_linearMotorDirectionLASTSET / m_linearMotorOffset);
+                if(float.IsNaN(torqueFromOffset.X))
+                    torqueFromOffset.X = 0;
+                if(float.IsNaN(torqueFromOffset.Y))
+                    torqueFromOffset.Y = 0;
+                if(float.IsNaN(torqueFromOffset.Z))
+                    torqueFromOffset.Z = 0;
                 d.BodyAddTorque (Body, torqueFromOffset.X, torqueFromOffset.Y, torqueFromOffset.Z);
             }
 

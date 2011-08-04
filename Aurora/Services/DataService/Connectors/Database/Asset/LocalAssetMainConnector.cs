@@ -44,13 +44,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             IDataReader dr = null;
             try
             {
-                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, data");
-                if (dr == null)
+                dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, data");
+                /*if (dr == null)
                 {
                     m_Log.Warn("[LocalAssetMainConnector] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
                     return null;
-                }
-                while (dr.Read())
+                }*/
+                while(dr != null && dr.Read())
                 {
                     return LoadAssetFromDataRead(dr);
                 }
@@ -188,11 +188,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             AssetBase asset = new AssetBase(dr["id"].ToString())
             {
                 Name = dr["name"].ToString(),
-                TypeAsset = (AssetType)int.Parse(dr["assetType"].ToString()),
-                CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
-                Description = dr["description"].ToString(),
-                Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString())
+                Description = dr["description"].ToString()
             };
+            string Flags = dr["asset_flags"].ToString();
+            if(Flags != "")
+                asset.Flags = (AssetFlags)int.Parse(Flags);
+            string type = dr["assetType"].ToString();
+            asset.TypeAsset = (AssetType)int.Parse(type);
+            UUID creator;
+            if(UUID.TryParse(dr["CreatorID"].ToString(), out creator))
+                asset.CreatorID = creator;
             try
             {
                 if ((dr["data"] != null) && (dr["data"].ToString() != ""))
