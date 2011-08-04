@@ -448,7 +448,6 @@ namespace Aurora.Services.DataService
             public LLSDSerializationDictionary()
             {
                 writer = new XmlTextWriter(sw, Encoding.UTF8);
-                writer.Formatting = Formatting.None;
                 writer.WriteStartElement(String.Empty, "llsd", String.Empty);
             }
 
@@ -629,9 +628,13 @@ namespace Aurora.Services.DataService
                 writer.Close ();
 
                 byte[] array = sw.ToArray ();
+                byte[] newarr = new byte[array.Length - 3];
+                Array.Copy(array, 3, newarr, 0, newarr.Length);
                 writer = null;
                 sw = null;
-                return array;
+                array = null;
+                MainConsole.Instance.Output(Utils.BytesToString(newarr));
+                return newarr;
             }
 
             private string AsString(DateTime value)
