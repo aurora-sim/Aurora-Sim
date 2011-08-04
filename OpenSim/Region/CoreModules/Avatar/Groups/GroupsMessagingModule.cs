@@ -199,11 +199,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.imSessionID = groupID;
             msg.fromAgentName = im.fromAgentName;
             msg.message = im.message;
-            msg.dialog = im.dialog;
-            msg.offline = im.offline;
-            msg.ParentEstateID = im.ParentEstateID;
-            msg.Position = im.Position;
-            msg.RegionID = im.RegionID;
+            msg.dialog = (byte)InstantMessageDialog.SessionSend;
+            msg.offline = 0;
+            msg.ParentEstateID = 0;
+            msg.Position = Vector3.Zero;
+            msg.RegionID = UUID.Zero;
             msg.binaryBucket = im.binaryBucket;
             msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
 
