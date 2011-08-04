@@ -308,7 +308,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS-MESSAGING]: Session message from {0} going to agent {1}", msg.fromAgentName, msg.toAgentID);
 
-            UUID AgentID = msg.fromAgentID;
+            UUID AgentID = msg.toAgentID;
             UUID GroupID = msg.imSessionID;
 
             switch (msg.dialog)
@@ -421,7 +421,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             //Tell 'other' agents about the new agent ('us')
                             IClientAPI otherAgent = GetActiveClient(member.AvatarKey);
                             if(otherAgent != null)//Local, so we can send it directly
-                                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", SP.Scene.RegionInfo.RegionHandle);
+                                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, Us.ToArray(), member.AvatarKey, "ENTER", otherAgent.Scene.RegionInfo.RegionHandle);
                             else
                             {
                                 IAsyncMessagePostService amps = m_sceneList[0].RequestModuleInterface<IAsyncMessagePostService>();
@@ -480,7 +480,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // Send an update to the affected user
             IClientAPI affectedUser = GetActiveClient(thismember.AvatarKey);
             if(affectedUser != null)
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "", affectedUser.Scene.RegionInfo.RegionHandle);
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] { block }, AgentID, "ENTER", affectedUser.Scene.RegionInfo.RegionHandle);
             else if(forward)
                 SendMutedUserIM(thismember, sessionid);
         }
@@ -638,7 +638,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                 //Tell 'other' agents about the new agent ('us')
                                 IClientAPI otherAgent = GetActiveClient(member.AvatarKey);
                                 if(otherAgent != null)//Local, so we can send it directly
-                                    queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey, "ENTER", remoteClient.Scene.RegionInfo.RegionHandle);
+                                    queue.ChatterBoxSessionAgentListUpdates(GroupID, Us.ToArray(), member.AvatarKey, "ENTER", otherAgent.Scene.RegionInfo.RegionHandle);
                                 else
                                 {
                                     IAsyncMessagePostService amps = m_sceneList[0].RequestModuleInterface<IAsyncMessagePostService>();
