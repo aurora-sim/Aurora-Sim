@@ -745,25 +745,39 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 List<string> check1 = m_Gd.Query(
                                     "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
                                     "'", "auroraassets_temp", "id");
+                                bool update = false;
+                                bool insert = false;
                                 if((check1 != null) && (check1.Count == 0))
                                 {
                                     asset.ParentID = asset.ID;
-                                    m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
-                                                new object[] { asset.ID, asset.HashCode, asset.CreatorID });
+                                    insert = true;
                                 }
                                 else if((check1 != null) && (check1[0] != asset.ID.ToString()))
                                 {
                                     convertCountParentFix++;
                                     asset.ParentID = new UUID(check1[0]);
 
-                                    m_Gd.Update("inventoryitems", new object[] { asset.ParentID }, new[] { "assetID" },
-                                        new[] { "assetID" }, new object[] { asset.ID });
+                                    update = true;
                                 }
                                 else
                                     asset.ParentID = asset.ID;
 
                                 if(StoreAsset(asset))
                                     m_Gd.Delete("assets", "id = '" + asset.ID + "'");
+
+                                try
+                                {
+                                    if(insert)
+                                        m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
+                                                    new object[] { asset.ID, asset.HashCode, asset.CreatorID });
+                                    else if(update)
+                                        m_Gd.Update("inventoryitems", new object[] { asset.ParentID }, new[] { "assetID" },
+                                            new[] { "assetID" }, new object[] { asset.ID });
+                                }
+                                catch(Exception e)
+                                {
+                                    m_Log.Error("[LocalAssetBlackholeManualMigration] Error on update/insert", e);
+                                }
                                 convertCount++;
                                 m_convertingAssets.Remove(uuid);
                             });
