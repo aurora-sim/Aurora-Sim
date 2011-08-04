@@ -1250,7 +1250,56 @@
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="Ode.NET" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="Tests" pattern="Tests"/>
+        </Match>
+      </Files>
+    </Project>
+  <Project frameworkVersion="v3_0" name="Aurora.Physics.AuroraPhysX" path="Aurora/Physics/AuroraPhysX" type="Library">
+      <Configuration name="Debug" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x86">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Debug" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="AnyCPU">
+        <Options>
+          <OutputPath>../../../bin/Physics/</OutputPath>
+        </Options>
+      </Configuration>
 
+      <ReferencePath>../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+
+      <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Region.Physics.Manager"/>
+      
+      <Reference name="log4net" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="Ode.NET" path="../../../bin/"/>
+      <Reference name="StillDesign.PhysX.Net" path="./"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Files>
         <Match pattern="*.cs" recurse="true">
           <Exclude name="Tests" pattern="Tests"/>
