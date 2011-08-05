@@ -628,12 +628,12 @@ namespace Aurora.Services.DataService
                 writer.Close ();
 
                 byte[] array = sw.ToArray ();
-                byte[] newarr = new byte[array.Length - 3];
+                /*byte[] newarr = new byte[array.Length - 3];
                 Array.Copy(array, 3, newarr, 0, newarr.Length);
                 writer = null;
                 sw = null;
-                array = null;
-                return newarr;
+                array = null;*/
+                return array;
             }
 
             private string AsString(DateTime value)
@@ -737,8 +737,8 @@ namespace Aurora.Services.DataService
 
         public virtual void IncrementFolder (UUID folderID)
         {
-            GD.Update (m_foldersrealm, new object[1] { folderID.ToString() }, new string[1] { "folderID" },
-                new string[1] { "version" }, new object[1] { "version + 1" });
+            GD.Update(m_foldersrealm, new object[1] { "version + 1" }, new string[1] { "version" },
+                new string[1] { "folderID" }, new object[1] { folderID.ToString() });
         }
 
         public virtual void IncrementFolderByItem (UUID itemID)
