@@ -595,6 +595,12 @@ More configuration options and info can be found in the Configuration/Data/FileB
 
         public virtual List<ISceneEntity> LoadObjects (IScene scene)
         {
+            if(!m_loaded)
+            {
+                m_loaded = true;
+                ReadConfig(scene, scene.Config.Configs["FileBasedSimulationData"]);
+                ReadBackup(scene);
+            }
             return m_groups;
         }
 
@@ -670,6 +676,12 @@ More configuration options and info can be found in the Configuration/Data/FileB
 
         public virtual short[] LoadWater (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY)
         {
+            if(!m_loaded)
+            {
+                m_loaded = true;
+                ReadConfig(scene, scene.Config.Configs["FileBasedSimulationData"]);
+                ReadBackup(scene);
+            }
             ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule> ();
             if (RevertMap)
             {
@@ -719,6 +731,12 @@ More configuration options and info can be found in the Configuration/Data/FileB
         /// <returns></returns>
         public virtual List<LandData> LoadLandObjects (UUID regionUUID)
         {
+            if(!m_loaded)
+            {
+                m_loaded = true;
+                ReadConfig(m_scene, m_scene.Config.Configs["FileBasedSimulationData"]);
+                ReadBackup(m_scene);
+            }
             return m_parcels;
         }
     }

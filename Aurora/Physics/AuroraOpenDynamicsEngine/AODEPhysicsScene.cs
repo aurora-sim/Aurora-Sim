@@ -1363,6 +1363,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float GetTerrainHeightAtXY (float x, float y)
         {
             // warning this code assumes terrain grid as 1m size
+            if(TerrainHeightFieldHeights == null)
+                return 0;
 
             if (x < 0)
                 x = 0;

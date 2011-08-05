@@ -790,7 +790,7 @@ namespace Aurora.Modules
             if (ES.EstateOwner == agent.AgentID ||
                 new List<UUID>(ES.EstateManagers).Contains(agent.AgentID) ||
                 new List<UUID>(ES.EstateAccess).Contains(agent.AgentID) ||
-                (Sp != null && new List<UUID>(ES.EstateGroups).Contains(Sp.ControllingClient.ActiveGroupId)))
+                CheckEstateGroups(ES, agent))
             {
                 reason = "";
                 return true;
@@ -856,6 +856,22 @@ namespace Aurora.Modules
 
             reason = "";
             return true;
+        }
+
+        private bool CheckEstateGroups (EstateSettings ES, AgentCircuitData agent)
+        {
+            IGroupsModule gm = m_scenes.Count == 0 ? null : m_scenes[0].RequestModuleInterface<IGroupsModule>();
+            if(gm != null && ES.EstateGroups.Length > 0)
+            {
+                List<UUID> esGroups = new List<UUID>(ES.EstateGroups);
+                GroupMembershipData[] gmds = gm.GetMembershipData(agent.AgentID);
+                foreach(GroupMembershipData gmd in gmds)
+                {
+                    if(esGroups.Contains(gmd.GroupID))
+                        return true;
+                }
+            }
+            return false;
         }
 
         private bool FindUnBannedParcel(Vector3 Position, IScenePresence Sp, UUID AgentID, out ILandObject ILO, out Vector3 newPosition, out string reason)
