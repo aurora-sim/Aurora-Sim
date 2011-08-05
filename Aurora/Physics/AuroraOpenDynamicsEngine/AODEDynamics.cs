@@ -521,6 +521,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             parent.ThrottleUpdates = true;
             parent.ForceSetVelocity(Vector3.Zero);
             parent.ForceSetRotVelocity(Vector3.Zero);
+            parent.ForceSetPosition(parent.Position);
             m_body = IntPtr.Zero;
             m_linearMotorDirection = Vector3.Zero;
             m_linearMotorDirectionLASTSET = Vector3.Zero;

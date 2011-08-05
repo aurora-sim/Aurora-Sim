@@ -1596,6 +1596,8 @@ namespace OpenSim.Region.Framework.Scenes
                     MovePos *= Rotation;
                     m_parentPosition += MovePos;
                     ControllingClient.SendClearFollowCamProperties(part.ParentUUID);
+                    if(part.PhysActor != null)
+                        part.PhysActor.Selected = false;
                 }
 
                 if (m_physicsActor == null)
