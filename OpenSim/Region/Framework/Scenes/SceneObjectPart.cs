@@ -2779,7 +2779,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (asset != null)
                 this.Shape.SculptData = asset.Data;//Set the asset data
-            if ((bool)sender)//Update physics
+            if((bool)sender && this.PhysActor != null)//Update physics
             {
                 //Get physics to update in a hackish way
                 PrimitiveBaseShape shape = Shape.Copy();

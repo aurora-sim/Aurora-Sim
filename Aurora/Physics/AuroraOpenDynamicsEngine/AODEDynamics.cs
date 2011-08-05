@@ -304,7 +304,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_flags &= ~param;
             }
             else
-                m_flags |= param;
+                if(pParam == -1)
+                    m_flags = (VehicleFlag)0;
+                else
+                    m_flags |= param;
         }//end ProcessVehicleFlags
 
         internal void ProcessTypeChange(AuroraODEPrim parent, Vehicle pType)
@@ -1020,10 +1023,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > mix) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
                         float angVelZ = m_lastAngularVelocity.Z;
-                        if(angVelZ > mix)
-                            angVelZ = mix;
-                        else if(angVelZ < -mix)
-                            angVelZ = -mix;
+                        float mmix = Math.Abs(mix);
+                        if(angVelZ > mmix)
+                            angVelZ = mmix;
+                        else if(angVelZ < -mmix)
+                            angVelZ = -mmix;
                         Vector3 bankingRot = new Vector3(angVelZ * (effSquared * 10 * mult), 0, 0);
                         if(bankingRot.X > 3)
                             bankingRot.X = 3;
@@ -1145,6 +1149,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if(m_sentZeroFlag > 0)
                 {
+                    parent.ForceSetVelocity(Vector3.Zero);
+                    parent.ForceSetRotVelocity(Vector3.Zero);
                     m_sentZeroFlag--;
                     parent.RequestPhysicsterseUpdate();
                 }
