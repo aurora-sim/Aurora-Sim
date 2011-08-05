@@ -137,6 +137,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_verticalAttractionEfficiency = 1.0f;        // damped
         private float m_verticalAttractionTimescale = 500f;         // Timescale > 300  means no vert attractor.
         public float Mass;
+        private int m_lastAppliedDownForce = 0;
         private bool m_enabled = false;
 
         internal void ProcessFloatVehicleParam(Vehicle pParam, float pValue)
@@ -551,7 +552,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (frcount > 100)
                 frcount = 0;
 
-            pTimestep *= 2;
             MoveLinear (pTimestep, pParentScene, parent);
             MoveAngular (pTimestep, pParentScene, parent);
             LimitRotation(pTimestep);
@@ -559,7 +559,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             SendUpdate(parent);
         }   // end Step
 
-        private int m_lastAppliedDownForce = 0;
         private void MoveLinear (float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
             Vector3 motorDirection = m_linearMotorDirection;
@@ -576,7 +575,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // add drive to body
                 Vector3 addAmount = motorDirection / m_linearMotorTimescale;
                 addAmount *= pTimestep;
-
                 m_lastLinearVelocityVector += (addAmount);  // lastLinearVelocityVector is the current body velocity vector?
 
                 // This will work temporarily, but we really need to compare speed on an axis
@@ -588,7 +586,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (Math.Abs (m_lastLinearVelocityVector.Z) > Math.Abs (m_linearMotorDirectionLASTSET.Z))
                     m_lastLinearVelocityVector.Z = m_linearMotorDirectionLASTSET.Z;
 
-                if(addAmount != Vector3.Zero)
+                if(!addAmount.ApproxEquals(Vector3.Zero, 0.1f))
                 {
                     // decay applied velocity
                     Vector3 decayfraction = Vector3.One;
@@ -610,14 +608,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 m_linearMotorApply--;
             }
-            else
-            {        // requested is not significant
-                // if what remains of applied is small, zero it.
-                if (m_lastLinearVelocityVector.ApproxEquals (Vector3.Zero, 0.01f))
-                    m_lastLinearVelocityVector = Vector3.Zero;
-                if(m_linearMotorApply > 0)
-                    m_linearMotorApply--;
-            }
+            else if(m_linearMotorApply > 0)
+                m_linearMotorApply--;
 
             // convert requested object velocity to world-referenced vector
             m_dir = m_lastLinearVelocityVector;
@@ -643,7 +635,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             Vector3 pos = parent.Position;
             //            Vector3 accel = new Vector3(-(m_dir.X - m_lastLinearVelocityVector.X / 0.1f), -(m_dir.Y - m_lastLinearVelocityVector.Y / 0.1f), m_dir.Z - m_lastLinearVelocityVector.Z / 0.1f);
-            m_lastposChange = new Vector3 ();
             if(!(m_lastPositionVector.X == 0 &&
                 m_lastPositionVector.Y == 0 &&
                 m_lastPositionVector.Z == 0))
@@ -653,6 +644,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_lastposChange.Y = pos.Y - m_lastPositionVector.Y;
                 m_lastposChange.Z = pos.Z - m_lastPositionVector.Z;
             }
+
+            #region Blocking Change
+
             double Zchange = Math.Abs(m_lastposChange.Z);
             if (m_BlockingEndPoint != Vector3.Zero)
             {
@@ -682,6 +676,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodySetPosition (Body, pos.X, pos.Y, pos.Z);
                 }
             }
+
+            #endregion
+
+            #region Terrain checks
+
             float terrainHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
             if(pos.Z < terrainHeight - 5)
             {
@@ -693,6 +692,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 m_dir.Z += 1;
             }
+
+            #endregion
+
+            #region Hover
 
             // Check if hovering
             if ((m_flags & (VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY | VehicleFlag.HOVER_GLOBAL_HEIGHT)) != 0)
@@ -754,12 +757,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                pTimestep  is time since last frame,in secs
             }
 
+            #endregion
+
+            #region No X,Y,Z
+
             if ((m_flags & (VehicleFlag.NO_X)) != 0)
                 m_dir.X = 0;
             if ((m_flags & (VehicleFlag.NO_Y)) != 0)
                 m_dir.Y = 0;
             if ((m_flags & (VehicleFlag.NO_Z)) != 0)
                 m_dir.Z = 0;
+
+            #endregion
 
             #region Deal with tainted forces
 
@@ -803,7 +812,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
-            m_lastPositionVector = parent.Position;
             #region limitations
 
             if (Math.Abs (m_dir.X) > 1000 ||
@@ -825,7 +833,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if(m_dir.ApproxEquals(Vector3.Zero, 0.001f))
                 m_dir = Vector3.Zero;
             m_dir += TaintedForce;
-            
+
+            m_lastPositionVector = parent.Position;
             // Apply velocity
             d.BodySetLinearVel (Body, m_dir.X, m_dir.Y, m_dir.Z);
             // apply gravity force
@@ -848,7 +857,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     decayamount.Z = 1;
             }
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
-            if(m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f))
+            if(m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.001f))
             {
                 m_lastLinearVelocityVector = Vector3.Zero;
                 m_linearZeroFlag = true;
@@ -978,10 +987,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // ramp up to new value
                     //   current velocity  +=                         error                       /    (time to get there / step interval)
                     //                               requested speed            -  last motor speed
-                    angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / pTimestep);
-                    angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / pTimestep);
-                    angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / pTimestep);
-
+                    angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / pTimestep * pTimestep * 16f);
+                    angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / pTimestep * pTimestep * 4f);
+                    angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / pTimestep * pTimestep * 4f);
+                    
 
                     // velocity may still be acheived.
 
@@ -999,15 +1008,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > mix) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
                         float angVelZ = m_lastAngularVelocity.Z;
-                        if(angVelZ > 1)
-                            angVelZ = 1;
-                        else if(angVelZ < -1)
-                            angVelZ = -1;
+                        if(angVelZ > mix)
+                            angVelZ = mix;
+                        else if(angVelZ < -mix)
+                            angVelZ = -mix;
                         Vector3 bankingRot = new Vector3(angVelZ * (effSquared * 10 * mult), 0, 0);
                         if(bankingRot.X > 3)
                             bankingRot.X = 3;
-                        if(bankingRot.X < -3)
-                            bankingRot.X = -3;
                         bankingRot *= rotq;
                         banking += bankingRot;
                     }
