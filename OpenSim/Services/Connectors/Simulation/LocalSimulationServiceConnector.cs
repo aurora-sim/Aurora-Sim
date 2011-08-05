@@ -165,10 +165,10 @@ namespace OpenSim.Services.Connectors.Simulation
             {
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                 if(transferModule != null)
-                    if(retVal)
-                        transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
-                    else
-                        retVal = transferModule.IncomingChildAgentDataUpdate (s, cAgentData);
+                {
+                    if(destination.RegionID == s.RegionInfo.RegionID)
+                        retVal = transferModule.IncomingChildAgentDataUpdate(s, cAgentData);
+                }
             }
 
             //            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);

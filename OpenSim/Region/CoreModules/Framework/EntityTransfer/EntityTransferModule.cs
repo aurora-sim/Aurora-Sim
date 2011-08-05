@@ -1141,6 +1141,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if (!m_incomingChildAgentData.ContainsKey (scene))
                         m_incomingChildAgentData.Add (scene, new Dictionary<UUID, AgentData> ());
                     m_incomingChildAgentData[scene][cAgentData.AgentID] = cAgentData;
+                    return false;//The agent doesn't exist
                 }
             return true;
         }
