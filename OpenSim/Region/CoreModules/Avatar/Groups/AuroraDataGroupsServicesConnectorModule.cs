@@ -62,14 +62,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private bool m_notConnectedBecauseOfMissing = false;
 
         private IUserAccountService m_accountService = null;
-
-        // Used to track which agents are have dropped from a group chat session
-        // Should be reset per agent, on logon
-        // TODO: move this to Flotsam XmlRpc Service
-        // SessionID, List<AgentID>
-        private Dictionary<UUID, List<UUID>> m_groupsAgentsDroppedFromChatSession = new Dictionary<UUID, List<UUID>>();
-        private Dictionary<UUID, List<UUID>> m_groupsAgentsInvitedToChatSession = new Dictionary<UUID, List<UUID>>();
-
         private IGroupsServiceConnector GroupsConnector;
 
         #region IRegionModuleBase Members

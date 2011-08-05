@@ -304,13 +304,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     byte[] data = datas[i];
                     SendPacketData(udpClient, data, packet, category, resendMethod, finishedMethod);
+                    data = null;
                 }
+                datas = null;
             }
             else
             {
                 byte[] data = packet.ToBytes();
                 SendPacketData(udpClient, data, packet, category, resendMethod, finishedMethod);
+                data = null;
             }
+            packet = null;
         }
 
         public void SendPacketData(LLUDPClient udpClient, byte[] data, Packet packet, ThrottleOutPacketType category, UnackedPacketMethod resendMethod, UnackedPacketMethod finishedMethod)
@@ -550,9 +554,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // Add this packet to the list of ACK responses we are waiting on from the server
                     udpClient.NeedAcks.Add(outgoingPacket);
                     Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
-                    if (outgoingPacket.UnackedMethod != null)
-                        {
-                        }
                 }
             }
 
@@ -571,8 +572,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Keep track of when this packet was sent out (right now)
             outgoingPacket.TickCount = Environment.TickCount & Int32.MaxValue;
 
+            buffer = null;
             if(outgoingPacket.FinishedMethod != null)
                 outgoingPacket.FinishedMethod(outgoingPacket);
+            if(!isResend && !isReliable && outgoingPacket.Category != ThrottleOutPacketType.Resend)
+            {
+                outgoingPacket.Buffer = null;
+                outgoingPacket.FinishedMethod = null;
+                outgoingPacket.Packet = null;
+                outgoingPacket = null;
+            }
         }
 
         protected override void PacketReceived(UDPPacketBuffer buffer)

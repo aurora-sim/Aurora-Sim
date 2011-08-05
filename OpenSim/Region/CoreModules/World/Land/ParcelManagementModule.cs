@@ -1574,11 +1574,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 remote_client.SendLandParcelOverlay(byteArray, sequenceID);
                                 byteArrayCount = 0;
                                 sequenceID++;
-                                byteArray = new byte[LAND_BLOCKS_PER_PACKET];
                             }
                         }
                     }
                 }
+                byteArray = null;
             }
             );
         }

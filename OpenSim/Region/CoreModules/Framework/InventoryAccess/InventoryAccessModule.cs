@@ -519,6 +519,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         // and apply next owner perms on rez
                         item.CurrentPermissions |= 16; // Slam!
 
+                        item.SalePrice = group.RootChild.SalePrice;
+                        item.SaleType = group.RootChild.ObjectSaleType;
                     }
                 }
                 else
@@ -531,6 +533,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         item.EveryOnePermissions = group.RootPart.EveryoneMask;
                         item.GroupPermissions = group.RootPart.GroupMask;
 
+                        item.SalePrice = group.RootChild.SalePrice;
+                        item.SaleType = group.RootChild.ObjectSaleType;
+
                         item.CurrentPermissions &=
                                 ((uint)PermissionMask.Copy |
                                  (uint)PermissionMask.Transfer |
@@ -541,7 +546,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                 }
 
-                // TODO: add the new fields (Flags, Sale info, etc)
                 if(objectGroups.Count != 1)
                     item.Flags |= (uint)OpenMetaverse.InventoryItemFlags.ObjectHasMultipleItems;
                 item.CreationDate = Util.UnixTimeSinceEpoch();

@@ -693,7 +693,6 @@ namespace Aurora.Modules
             agentData.AgentID = avatarID;
             agentData.QueryID = RequestID;
             replyPacket.AgentData = agentData;
-            //byte[] bytes = new byte[AvatarResponses.Count*32];
 
             int i = 0;
             foreach (UserAccount item in accounts)

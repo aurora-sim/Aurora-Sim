@@ -140,7 +140,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// </summary>
     public sealed class LLUDPClient
     {
-        // TODO: Make this a config setting
         /// <summary>Percentage of the task throttle category that is allocated to avatar and prim
         /// state updates</summary>
         const float STATE_TASK_PERCENTAGE = 0.3f;
@@ -492,15 +491,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // this queue
                 if (m_outbox.Dequeue (out packet))
                 {
+                    m_log.Format(new log4net.Core.Level(0, "All"), this.AgentID + " - " + packet.Packet.Type, null);
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
                     if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens (packet.Buffer.DataLength))
                     {
                         packetSent = true;
                         //Send the packet
+                        PacketsCounts[(int)packet.Category] += packet.Packet.Length;
                         m_udpServer.SendPacketFinal (packet);
                         this.PacketsSent++;
-                        PacketsCounts[(int)packet.Category] += packet.Packet.Length;
                     }
                     else if (packetsSkipped < MAX_PACKET_SKIP_RATE)
                     {

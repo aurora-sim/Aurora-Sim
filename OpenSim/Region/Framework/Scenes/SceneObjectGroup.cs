@@ -3503,7 +3503,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (RootPart.CollisionSprite != UUID.Zero && RootPart.CollisionSoundVolume > 0.0f) // The collision volume isn't a mistake, its an SL feature/bug
             {
                 // TODO: make a sprite!
-
             }
 
             if ((RootPart.ScriptEvents & scriptEvents.collision_start) != 0)

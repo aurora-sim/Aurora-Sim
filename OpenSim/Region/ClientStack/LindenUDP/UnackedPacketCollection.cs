@@ -205,6 +205,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             if (rtt > 0)
                                 ackedPacket.Client.UpdateRoundTrip(rtt);
                         }
+                        ackedPacket.Buffer = null;
+                        ackedPacket = null;
                     }
                 }
             }

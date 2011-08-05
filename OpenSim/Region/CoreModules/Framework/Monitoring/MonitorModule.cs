@@ -590,7 +590,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[33].StatID = (uint)Stats.SimSleepTime;
                     sb[33].StatValue = (float)(sleepFrameMonitor.GetValue() / realsimfps);
 
-                    //Info about this stat: http://blogs.secondlife.com/message/66098
                     sb[34].StatID = (uint)Stats.IOPumpTime;
                     sb[34].StatValue = 0;//TODO: implement this
 
