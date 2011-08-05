@@ -350,6 +350,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     break;
 
                 case (byte)InstantMessageDialog.SessionSend:
+                    EnsureGroupChatIsStarted(msg.imSessionID);//Make sure one exists
                     ChatSession session = m_groupData.GetSession(msg.imSessionID);
                     if(session != null)
                     {
@@ -359,6 +360,25 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             IClientAPI msgclient = GetActiveClient(msg.toAgentID);
                             if(msgclient != null)
                             {
+                                if(!member.HasBeenAdded)
+                                    msgclient.Scene.RequestModuleInterface<IEventQueueService>().ChatterboxInvitation(
+                                        session.SessionID
+                                        , session.Name
+                                        , msg.fromAgentID
+                                        , msg.message
+                                        , member.AvatarKey
+                                        , msg.fromAgentName
+                                        , msg.dialog
+                                        , msg.timestamp
+                                        , msg.offline == 1
+                                        , (int)msg.ParentEstateID
+                                        , msg.Position
+                                        , 1
+                                        , msg.imSessionID
+                                        , true
+                                        , OpenMetaverse.Utils.StringToBytes(session.Name)
+                                        , msgclient.Scene.RegionInfo.RegionHandle
+                                        );
                                 // Deliver locally, directly
                                 if(m_debugEnabled)
                                     m_log.DebugFormat("[GROUPS-MESSAGING]: Delivering to {0} locally", msgclient.Name);
