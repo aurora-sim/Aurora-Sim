@@ -568,7 +568,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if(m_linearMotorTimescale > 1)
                         m_linearMotorDirection /= m_linearMotorTimescale;
                     else
+                    {
                         m_linearMotorDirection *= m_linearMotorTimescale;
+                        motorDirection *= m_linearMotorTimescale;
+                    }
                 if (!d.BodyIsEnabled (Body))
                     d.BodyEnable (Body);
 
@@ -613,7 +616,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     decayAmt = (m_linearMotorDirection * decayfraction);
                     m_linearMotorDirection -= decayAmt;
                 }
-                m_linearMotorApply--;
+                if(m_linearMotorApply > 0)
+                    m_linearMotorApply--;
             }
             else if(m_linearMotorApply > 0)
                 m_linearMotorApply--;
