@@ -351,7 +351,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     else
                     {
                         float Z = m_SP.Velocity.Length () / 20;
-                        if (coldata[localid].PenetrationDepth >= 0.05f && Math.Abs (m_SP.Velocity.X) < 1 && Math.Abs (m_SP.Velocity.Y) < 1)
+                        if (coldata[localid].PenetrationDepth >= 0.05f && m_SP.Velocity.Z < -5 && !m_SP.PhysicsActor.Flying)
                         {
                             Z = Math.Min (Z, 1.5f);
                             float damage = Math.Min (coldata[localid].PenetrationDepth, 15f);
