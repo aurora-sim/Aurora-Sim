@@ -273,7 +273,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool Flying
         {
-            get { return flying; }
+            get { return realFlying; }
             set 
             {
                 realFlying = value;
@@ -909,7 +909,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 flying = false; // ground the avatar
                 ContactPoint point = new ContactPoint();
                 point.Type = ActorTypes.Ground;
-                point.PenetrationDepth = -Math.Abs(vel.Z);
+                point.PenetrationDepth = Math.Abs(vel.Z);
                 point.Position = Position;
                 point.SurfaceNormal = new Vector3(0, 0, -1f);
 

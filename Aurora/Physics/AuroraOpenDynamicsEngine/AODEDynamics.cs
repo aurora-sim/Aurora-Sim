@@ -137,7 +137,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_verticalAttractionEfficiency = 1.0f;        // damped
         private float m_verticalAttractionTimescale = 500f;         // Timescale > 300  means no vert attractor.
         public float Mass;
-        private int m_lastAppliedDownForce = 0;
         private bool m_enabled = false;
 
         internal void ProcessFloatVehicleParam(Vehicle pParam, float pValue)
@@ -1046,7 +1045,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             double Zchange = m_lastposChange.Z;
             if((m_flags & (VehicleFlag.LIMIT_MOTOR_UP)) != 0) //if it isn't going up, don't apply the limiting force
             {
-                if(Zchange < -0.1f/* && m_lastAppliedDownForce <= 0*/)
+                if(Zchange < -0.1f)
                 {
                     if(Zchange < -0.3f)
                         Zchange = -0.3f;
@@ -1054,10 +1053,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
                     downForce = (new Vector3(0, ((float)Math.Abs(Zchange) * (pTimestep * _pParentScene.PID_P / 4)), 0));
                     downForce *= rotq;
-                    m_lastAppliedDownForce = 2;//Only apply every 10 frames
                 }
-                /*else
-                    m_lastAppliedDownForce--;*/
             }
 
             #endregion
