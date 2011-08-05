@@ -737,7 +737,7 @@ namespace Aurora.Services.DataService
 
         public virtual void IncrementFolder (UUID folderID)
         {
-            GD.Update(m_foldersrealm, new object[1] { "version + 1" }, new string[1] { "version" },
+            GD.DirectUpdate(m_foldersrealm, new object[1] { "version + 1" }, new string[1] { "version" },
                 new string[1] { "folderID" }, new object[1] { folderID.ToString() });
         }
 

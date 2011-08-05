@@ -456,6 +456,37 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
+        public override bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        {
+            string query = String.Format("update {0} set ", table);
+            int i = 0;
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            foreach(object value in setValues)
+            {
+                string valueSTR = value.ToString();
+                query += string.Format("{0} = {1},", setRows[i], valueSTR);
+                i++;
+            }
+            i = 0;
+            query = query.Remove(query.Length - 1);
+            query += " where ";
+            foreach(object value in keyValues)
+            {
+                query += String.Format("{0}  = '{1}' and ", keyRows[i], value);
+                i++;
+            }
+            query = query.Remove(query.Length - 5);
+            try
+            {
+                ExecuteNonQuery(query, parameters);
+            }
+            catch(MySqlException e)
+            {
+                m_log.Error("[MySQLDataLoader] Update(" + query + "), " + e.ToString());
+            }
+            return true;
+        }
+
         public override bool Insert(string table, object[] values)
         {
             string query = String.Format("insert into {0} values (", table);

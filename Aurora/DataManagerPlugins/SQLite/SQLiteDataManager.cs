@@ -588,6 +588,11 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        public override bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        {
+            return Update(table, setValues, setRows, keyRows, keyValues);
+        }
+
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             var cmd = new SqliteCommand();

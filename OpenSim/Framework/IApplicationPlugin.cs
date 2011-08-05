@@ -83,8 +83,13 @@ namespace Aurora.Framework
         /// <summary>
         /// update 'table' set 'setRow' = 'setValue' WHERE 'keyRow' = 'keyValue'
         /// </summary>
-        bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-        
+        bool Update (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+
+        /// <summary>
+        /// update 'table' set 'setRow' = setValue WHERE 'keyRow' = 'keyValue'
+        /// </summary>
+        bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+
         /// <summary>
         /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         /// </summary>

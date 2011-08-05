@@ -61,8 +61,9 @@ namespace Aurora.DataManager
         public abstract bool Delete(string table, string whereclause);
         public abstract bool DeleteByTime(string table, string key);
         public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
-        public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-        public abstract void CloseDatabase();
+        public abstract bool Update (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        public abstract bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        public abstract void CloseDatabase ();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns);
         public abstract void UpdateTable (string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns);

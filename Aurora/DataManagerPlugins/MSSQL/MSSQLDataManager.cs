@@ -394,6 +394,11 @@ namespace Aurora.DataManager.MSSQL
             dic[key].Add (value);
         }
 
+        public override bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        {
+            return Update(table, setValues, setRows, keyRows, keyValues);
+        }
+
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             SqlConnection dbcon = GetLockedConnection();
