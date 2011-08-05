@@ -987,7 +987,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Action<IClientAPI> clientPacketHandler = ClientOutgoingPacketHandler;
 
             try
-                {
+            {
                 m_packetSent = false;
 
                 #region Update Timers
@@ -998,7 +998,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 // Update elapsed time
                 int thisTick = Environment.TickCount & Int32.MaxValue;
-                if (m_tickLastOutgoingPacketHandler > thisTick)
+                if(m_tickLastOutgoingPacketHandler > thisTick)
                     m_elapsedMSOutgoingPacketHandler += ((Int32.MaxValue - m_tickLastOutgoingPacketHandler) + thisTick);
                 else
                     m_elapsedMSOutgoingPacketHandler += (thisTick - m_tickLastOutgoingPacketHandler);
@@ -1006,43 +1006,43 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_tickLastOutgoingPacketHandler = thisTick;
 
                 // Check for pending outgoing resends every 100ms
-                if (m_elapsedMSOutgoingPacketHandler >= 100)
-                    {
+                if(m_elapsedMSOutgoingPacketHandler >= 100)
+                {
                     m_resendUnacked = true;
                     m_elapsedMSOutgoingPacketHandler = 0;
                     m_elapsed100MSOutgoingPacketHandler += 1;
-                    }
+                }
 
                 // Check for pending outgoing ACKs every 500ms
-                if (m_elapsed100MSOutgoingPacketHandler >= 5)
-                    {
+                if(m_elapsed100MSOutgoingPacketHandler >= 5)
+                {
                     m_sendAcks = true;
                     m_elapsed100MSOutgoingPacketHandler = 0;
                     m_elapsed500MSOutgoingPacketHandler += 1;
-                    }
+                }
 
                 // Send pings to clients every 5000ms
-                if (m_elapsed500MSOutgoingPacketHandler >= 10)
-                    {
+                if(m_elapsed500MSOutgoingPacketHandler >= 10)
+                {
                     m_sendPing = true;
                     m_elapsed500MSOutgoingPacketHandler = 0;
-                    }
+                }
 
                 #endregion Update Timers
 
                 // Handle outgoing packets, resends, acknowledgements, and pings for each
                 // client. m_packetSent will be set to true if a packet is sent
-                ForEachInternalClient (clientPacketHandler);
+                ForEachInternalClient(clientPacketHandler);
 
                 // If nothing was sent, sleep for the minimum amount of time before a
                 // token bucket could get more tokens
-                if (!m_packetSent)
+                if(!m_packetSent)
                     Thread.Sleep((int)TickCountResolution);
-                }
-            catch (Exception ex)
-                {
+            }
+            catch(Exception ex)
+            {
                 m_log.Error("[LLUDPSERVER]: OutgoingPacketHandler loop threw an exception: " + ex.Message, ex);
-                }
+            }
             return true;
         }
 

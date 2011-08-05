@@ -676,7 +676,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             presence.ControllingClient.Close (forceClose);
             foreach(IClientNetworkServer cns in m_clientServers)
-                cns.RemoveAgent(presence.ControllingClient);
+                cns.RemoveClient(presence.ControllingClient);
 
             if (presence.ParentID != UUID.Zero)
                 presence.StandUp ();
