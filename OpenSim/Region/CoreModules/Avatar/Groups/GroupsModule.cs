@@ -689,6 +689,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     UUID groupID = im.imSessionID;
                     ejectee.SendAgentDropGroup(groupID);
+                    if(ejectee.ActiveGroupId == groupID)
+                        GroupTitleUpdate(ejectee, UUID.Zero, UUID.Zero);
                 }
             }
 
@@ -1009,6 +1011,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
+            m_cachedGroupTitles.Remove(remoteClient.AgentId);
             m_groupData.SetAgentActiveGroupRole(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID, titleRoleID);
 
             // TODO: Not sure what all is needed here, but if the active group role change is for the group
@@ -1237,6 +1240,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             remoteClient.SendLeaveGroupReply(groupID, true);
 
             remoteClient.SendAgentDropGroup(groupID);
+
+            if(remoteClient.ActiveGroupId == groupID)
+                GroupTitleUpdate(remoteClient, UUID.Zero, UUID.Zero);
 
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 

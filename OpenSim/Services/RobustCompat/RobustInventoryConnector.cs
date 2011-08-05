@@ -185,6 +185,7 @@ namespace Aurora.Addon.Hypergrid
                     {
                         try
                         {
+                            //Slow, and doesn't help, plus they get called by the using statement 
                             //if (retVal != null)
                             //{
                             //    retVal.Close ();
