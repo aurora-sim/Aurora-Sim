@@ -588,12 +588,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //This is a huge problem with the Bwind script, it 'must' be disabled
                 // This will work temporarily, but we really need to compare speed on an axis
                 // KF: Limit body velocity to applied velocity?
-                if (Math.Abs (m_lastLinearVelocityVector.X) > Math.Abs (m_linearMotorDirectionLASTSET.X))
+                /*if (Math.Abs (m_lastLinearVelocityVector.X) > Math.Abs (m_linearMotorDirectionLASTSET.X))
                     m_linearMotorDirection.X = m_linearMotorDirectionLASTSET.X;
                 if (Math.Abs (m_lastLinearVelocityVector.Y) > Math.Abs (m_linearMotorDirectionLASTSET.Y))
                     m_linearMotorDirection.Y = m_linearMotorDirectionLASTSET.Y;
                 if (Math.Abs (m_lastLinearVelocityVector.Z) > Math.Abs (m_linearMotorDirectionLASTSET.Z))
-                    m_linearMotorDirection.Z = m_linearMotorDirectionLASTSET.Z;
+                    m_linearMotorDirection.Z = m_linearMotorDirectionLASTSET.Z;*/
 
                 if(!addAmount.ApproxEquals(Vector3.Zero, 0.01f))
                 {
@@ -603,7 +603,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale * m_linearMotorDecayTimescale) / (pTimestep))));
                     else
                         decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale) / (pTimestep))));
-                    decayfraction.Z = ((1 / (m_linearMotorDecayTimescale / (pTimestep * pTimestep))));
                     if(decayfraction.X > 0.9f)
                         decayfraction.X = 0.9f;
                     if(decayfraction.Y > 0.9f)
@@ -853,10 +852,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
             // apply friction
-            Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / pTimestep);
+            Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / (pTimestep * 5));
             if(parent.LinkSetIsColliding)
             {
-                decayamount *= 1000;
+                decayamount *= 250;
                 float length = m_lastLinearVelocityVector.LengthSquared();
                 if(length < 1)
                     decayamount *= 2 - length;
