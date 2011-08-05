@@ -1694,6 +1694,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentPosition = part.AbsolutePosition;
             m_parentID = m_requestedSitTargetUUID;
 
+            part.SetAvatarOnSitTarget(this.UUID);
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
@@ -2529,6 +2530,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 sceneObject.ResumeScripts();
                             }
                             ISceneChildEntity part = m_scene.GetSceneObjectPart(sceneObject.UUID);
+                            part.PhysActor.ForceSetVelocity(cAgent.Velocity);
+                            part.PhysActor.Velocity = (cAgent.Velocity);
                             sceneObject.AbsolutePosition = cAgent.Position;
                             cAgent.SittingObjects.m_objectID = sceneObject.UUID;
                             m_objectToSitOn = cAgent.SittingObjects;

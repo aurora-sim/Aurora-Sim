@@ -555,6 +555,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void control (ISceneChildEntity part, UUID itemID, UUID agentID, uint held, uint change)
         {
+            if(part == null)
+                return;
             ScriptData ID = ScriptEngine.ScriptProtection.GetScript(part.UUID, itemID);
 
             if (ID == null)

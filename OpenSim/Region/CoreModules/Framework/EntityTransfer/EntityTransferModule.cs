@@ -782,6 +782,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         foreach(UUID avID in grp.SitTargetAvatar)
                         {
                             IScenePresence SP = grp.Scene.GetScenePresence(avID);
+                            SP.Velocity = grp.RootChild.PhysActor.Velocity;
                             CrossAgentToNewRegionAsync(SP, attemptedPos, destination, false, true);
                         }
                     }
