@@ -39,5 +39,6 @@ namespace OpenSim.Framework
         void Start ();
         void Stop ();
         IClientNetworkServer Copy ();
+        void RemoveAgent (IClientAPI iClientAPI);
     }
 }

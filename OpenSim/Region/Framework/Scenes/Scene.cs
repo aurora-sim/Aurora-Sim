@@ -675,10 +675,11 @@ namespace OpenSim.Region.Framework.Scenes
         public bool RemoveAgent (IScenePresence presence, bool forceClose)
         {
             presence.ControllingClient.Close (forceClose);
+            foreach(IClientNetworkServer cns in m_clientServers)
+                cns.RemoveAgent(presence.ControllingClient);
+
             if (presence.ParentID != UUID.Zero)
-            {
                 presence.StandUp ();
-            }
 
             EventManager.TriggerClientClosed (presence.UUID, this);
             EventManager.TriggerOnClosingClient (presence.ControllingClient);

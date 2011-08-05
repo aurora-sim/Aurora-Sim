@@ -437,9 +437,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 ILoginMonitor monitor = (ILoginMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
                 if (monitor != null)
-                {
                     monitor.AddAbnormalClientThreadTermination();
-                }
+
                 RemoveClient(udpClient);
                 return;
             }

@@ -529,10 +529,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 OnConnectionClosed(this);
 
             // Flush all of the packets out of the UDP server for this client
-            if (m_udpServer != null)
+            if(m_udpServer != null)
+            {
                 m_udpServer.Flush(m_udpClient);
-
-            m_udpServer.RemoveClient (this);
+                m_udpServer.RemoveClient(this);
+            }
 
             // Disable UDP handling for this client
             m_udpClient.Shutdown();
