@@ -217,7 +217,7 @@ namespace OpenSim.Services.CapsService
                     UserAccount account = m_userService.GetUserAccount (UUID.Zero, UUID.Parse (id));
                     if (account != null)
                     {
-                        IUserProfileInfo info = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (UUID.Parse (id));
+                        IUserProfileInfo info = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
                         if (info != null)
                             PackUserInfo (info, account, ref agents);
                         else
@@ -225,7 +225,18 @@ namespace OpenSim.Services.CapsService
                     }
                 }
             }
-            //TODO: usernames
+            else if(username != null)
+            {
+                UserAccount account = m_userService.GetUserAccount(UUID.Zero, username.Replace('.',' '));
+                if(account != null)
+                {
+                    IUserProfileInfo info = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                    if(info != null)
+                        PackUserInfo(info, account, ref agents);
+                    else
+                        bad_usernames.Add(username);
+                }
+            }
 
             map["agents"] = agents;
             map["bad_ids"] = bad_ids;
