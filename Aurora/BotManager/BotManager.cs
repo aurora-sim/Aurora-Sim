@@ -157,7 +157,7 @@ namespace Aurora.BotManager
             scene.AddNewClient (m_character);
             IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
             m_character.Initialize (SP);
-            SP.MakeRootAgent (m_character.StartPos, false);
+            SP.MakeRootAgent (m_character.StartPos, false, true);
             //Move them
             SP.Teleport (startPos);
 

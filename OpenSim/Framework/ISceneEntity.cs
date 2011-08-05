@@ -255,7 +255,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="pos"></param>
         /// <param name="isFlying"></param>
-        void MakeRootAgent(Vector3 pos, bool isFlying);
+        void MakeRootAgent (Vector3 pos, bool isFlying, bool makePhysicalActor);
 
         /// <summary>
         /// Turns the agent into a child agent

@@ -836,7 +836,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This is called when an agent teleports into a region, or if an
         /// agent crosses into this region from a neighbor over the border
         /// </summary>
-        public void MakeRootAgent(Vector3 pos, bool isFlying)
+        public void MakeRootAgent(Vector3 pos, bool isFlying, bool makePhysicalActor)
         {
             AbsolutePosition = pos;
 
@@ -862,16 +862,20 @@ namespace OpenSim.Region.Framework.Scenes
             //
             m_sceneViewer.Reset ();
 
-            AddToPhysicalScene(isFlying, false);
-            //m_physicsActor.Position += m_savedVelocity * 0.25f;
-            m_physicsActor.Velocity = m_savedVelocity * 0.25f;
-            m_savedVelocity = Vector3.Zero;
-            SuccessfulTransit ();
+            if(makePhysicalActor)
+            {
+                AddToPhysicalScene(isFlying, false);
+                //m_physicsActor.Position += m_savedVelocity * 0.25f;
+                m_physicsActor.Velocity = m_savedVelocity * 0.25f;
 
-            if (m_forceFly)
-                m_physicsActor.Flying = true;
-            else if (m_flyDisabled)
-                m_physicsActor.Flying = false;
+                if(m_forceFly)
+                    m_physicsActor.Flying = true;
+                else if(m_flyDisabled)
+                    m_physicsActor.Flying = false;
+            }
+
+            m_savedVelocity = Vector3.Zero;
+            SuccessfulTransit();
 
             // Don't send an animation pack here, since on a region crossing this will sometimes cause a flying 
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
@@ -893,10 +897,13 @@ namespace OpenSim.Region.Framework.Scenes
             IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
             if (appearance != null)
             {
-                //Send updates to everyone about us
-                foreach (IScenePresence sp in m_scene.GetScenePresences ())
+                if(makePhysicalActor)//Someone else will deal with this
                 {
-                    sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
+                    //Send updates to everyone about us
+                    foreach(IScenePresence sp in m_scene.GetScenePresences())
+                    {
+                        sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
+                    }
                 }
                 agent.Appearance = appearance.Appearance;
             }
@@ -1071,7 +1078,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-            MakeRootAgent(pos, m_flying);
+            MakeRootAgent(pos, m_flying, m_objectToSitOn == null);
 
             if(m_objectToSitOn != null)
             {
@@ -1698,11 +1705,10 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
-            //Force send a full update
-            foreach (IScenePresence sp in m_scene.GetScenePresences ())
+            //Send updates to everyone about us
+            foreach(IScenePresence sp in m_scene.GetScenePresences())
             {
-                if (sp.SceneViewer.Culler.ShowEntityToClient (sp, this, Scene))
-                    sp.ControllingClient.SendAvatarDataImmediate (this);
+                sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
             }
             Animator.TrySetMovementAnimation(m_nextSitAnimation);
         }
@@ -2521,7 +2527,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if(sceneObject != null)
                         {
                             //We were sitting on something when we crossed
-                            if(Scene.SceneGraph.AddPrimToScene(sceneObject))
+                            if(Scene.SceneGraph.RestorePrimToScene(sceneObject))
                             {
                                 if(sceneObject.RootChild.IsSelected)
                                     sceneObject.RootChild.CreateSelected = true;

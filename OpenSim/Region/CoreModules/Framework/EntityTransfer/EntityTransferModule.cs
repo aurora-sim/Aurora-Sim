@@ -791,7 +791,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
                     IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                     if(backup != null)
-                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, true);
+                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, false);
                     return true;//They do all the work adding the prim in the other region
                 }
 
