@@ -572,21 +572,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!d.BodyIsEnabled (Body))
                     d.BodyEnable (Body);
 
+                //Interpolate between the current and last
+                float diff = 100 - m_linearMotorApply;
+                if(m_linearMotorApply >= 90)
+                    motorDirection = (m_linearMotorDirection * (diff / 10f)) + (m_linearMotorDirectionLASTSET * (1 - (diff / 10f)));
+
                 // add drive to body
                 Vector3 addAmount = motorDirection / m_linearMotorTimescale;
                 addAmount *= pTimestep;
                 m_lastLinearVelocityVector += (addAmount);  // lastLinearVelocityVector is the current body velocity vector?
 
+                //This is a huge problem with the Bwind script, it 'must' be disabled
                 // This will work temporarily, but we really need to compare speed on an axis
                 // KF: Limit body velocity to applied velocity?
                 if (Math.Abs (m_lastLinearVelocityVector.X) > Math.Abs (m_linearMotorDirectionLASTSET.X))
-                    m_lastLinearVelocityVector.X = m_linearMotorDirectionLASTSET.X;
+                    m_linearMotorDirection.X = m_linearMotorDirectionLASTSET.X;
                 if (Math.Abs (m_lastLinearVelocityVector.Y) > Math.Abs (m_linearMotorDirectionLASTSET.Y))
-                    m_lastLinearVelocityVector.Y = m_linearMotorDirectionLASTSET.Y;
+                    m_linearMotorDirection.Y = m_linearMotorDirectionLASTSET.Y;
                 if (Math.Abs (m_lastLinearVelocityVector.Z) > Math.Abs (m_linearMotorDirectionLASTSET.Z))
-                    m_lastLinearVelocityVector.Z = m_linearMotorDirectionLASTSET.Z;
+                    m_linearMotorDirection.Z = m_linearMotorDirectionLASTSET.Z;
 
-                if(!addAmount.ApproxEquals(Vector3.Zero, 0.1f))
+                if(!addAmount.ApproxEquals(Vector3.Zero, 0.01f))
                 {
                     // decay applied velocity
                     Vector3 decayfraction = Vector3.One;
@@ -604,6 +610,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     Vector3 decayAmt = (motorDirection * decayfraction);
                     //Console.WriteLine("decay: " + decayfraction);
                     motorDirection -= decayAmt;
+                    decayAmt = (m_linearMotorDirection * decayfraction);
                     m_linearMotorDirection -= decayAmt;
                 }
                 m_linearMotorApply--;
@@ -857,7 +864,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     decayamount.Z = 1;
             }
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
-            if(m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.001f))
+            if(m_linearMotorApply < 0 ? m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f) :
+                m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.001f))
             {
                 m_lastLinearVelocityVector = Vector3.Zero;
                 m_linearZeroFlag = true;
