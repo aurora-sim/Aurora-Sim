@@ -44,6 +44,7 @@ namespace OpenSim.Framework
         private bool packetPoolEnabled = true;
         private bool dataBlockPoolEnabled = true;
 
+        private readonly object m_poolLock = new object();
         private readonly Dictionary<PacketType, Stack<Packet>> pool = new Dictionary<PacketType, Stack<Packet>>();
 
         private static Dictionary<Type, Stack<Object>> DataBlocks =
@@ -77,9 +78,9 @@ namespace OpenSim.Framework
             if (!packetPoolEnabled)
                 return Packet.BuildPacket(type);
 
-            lock (pool)
+            lock(m_poolLock)
             {
-                if (!pool.ContainsKey(type) || pool[type] == null || (pool[type]).Count == 0)
+                if (!pool.ContainsKey(type) || (pool[type]).Count == 0)
                 {
                     // Creating a new packet if we cannot reuse an old package
                     packet = Packet.BuildPacket(type);
@@ -160,8 +161,7 @@ namespace OpenSim.Framework
                     case PacketType.ObjectUpdate:
                         ObjectUpdatePacket oup = (ObjectUpdatePacket)packet;
 
-                        foreach (ObjectUpdatePacket.ObjectDataBlock oupod in
-                                oup.ObjectData)
+                        foreach (ObjectUpdatePacket.ObjectDataBlock oupod in oup.ObjectData)
                             ReturnDataBlock<ObjectUpdatePacket.ObjectDataBlock>(oupod);
                         oup.ObjectData = null;
                         break;
@@ -170,8 +170,7 @@ namespace OpenSim.Framework
                         ImprovedTerseObjectUpdatePacket itoup =
                                 (ImprovedTerseObjectUpdatePacket)packet;
 
-                        foreach (ImprovedTerseObjectUpdatePacket.ObjectDataBlock
-                                itoupod in itoup.ObjectData)
+                        foreach(ImprovedTerseObjectUpdatePacket.ObjectDataBlock itoupod in itoup.ObjectData)
                             ReturnDataBlock<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>(itoupod);
                         itoup.ObjectData = null;
                         break;
@@ -186,18 +185,18 @@ namespace OpenSim.Framework
                     case PacketType.PacketAck:
                     case PacketType.ObjectUpdate:
                     case PacketType.ImprovedTerseObjectUpdate:
-                        lock (pool)
+                    case PacketType.ObjectDelete:
+                    case PacketType.ObjectUpdateCompressed:
+                    case PacketType.LayerData:
+                        lock(m_poolLock)
                         {
                             PacketType type = packet.Type;
 
                             if (!pool.ContainsKey(type))
-                            {
                                 pool[type] = new Stack<Packet>();
-                            }
+
                             if ((pool[type]).Count < 50)
-                            {
                                 (pool[type]).Push(packet);
-                            }
                         }
                         break;
                     
@@ -234,6 +233,9 @@ namespace OpenSim.Framework
 
             lock (DataBlocks)
             {
+                if(!DataBlocks.ContainsKey(typeof(T)))
+                    DataBlocks[typeof(T)] = new Stack<Object>();
+
                 if (DataBlocks[typeof(T)].Count < 50)
                     DataBlocks[typeof(T)].Push(block);
             }
