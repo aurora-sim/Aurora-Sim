@@ -1072,6 +1072,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(pos, m_flying);
+
+            if(m_objectToSitOn != null)
+            {
+                SitOnObjectAfterCrossing(m_objectToSitOn);
+                m_objectToSitOn = null;
+            }
         }
 
         /// <summary>
@@ -1607,16 +1613,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                 m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f*m_sitAvatarHeight);
                 m_parentPosition = Vector3.Zero;
-
-                m_parentID = UUID.Zero;
-                //Force send a full update
-                foreach (IScenePresence sp in m_scene.GetScenePresences ())
-                {
-                    if (sp.SceneViewer.Culler.ShowEntityToClient (sp, this, Scene))
-                        sp.ControllingClient.SendAvatarDataImmediate (this);
-                }
-                m_requestedSitTargetUUID = UUID.Zero;
-                m_sitting = false;
+            }
+            m_parentID = UUID.Zero;
+            m_requestedSitTargetUUID = UUID.Zero;
+            m_sitting = false;
+            foreach(IScenePresence sp in m_scene.GetScenePresences())
+            {
+                if(sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene))
+                    sp.ControllingClient.SendAvatarDataImmediate(this);
             }
 
             Animator.TrySetMovementAnimation("STAND");
@@ -1666,27 +1670,26 @@ namespace OpenSim.Region.Framework.Scenes
             return targetPart;
         }
 
-        public void CrossSittingAgent(IClientAPI remoteClient, UUID targetID)
+        private SittingObjectData m_objectToSitOn = null;
+        public void SitOnObjectAfterCrossing (SittingObjectData sod)
         {
-            if (String.IsNullOrEmpty(m_nextSitAnimation))
-            {
-                m_nextSitAnimation = "SIT";
-            }
+            UUID targetID = sod.m_objectID;
 
             ISceneChildEntity part = FindNextAvailableSitTarget (targetID);
+            if(part == null)
+                return;
 
-            if (!String.IsNullOrEmpty(part.SitAnimation))
-            {
-                m_nextSitAnimation = part.SitAnimation;
-            }
+            if(String.IsNullOrEmpty(sod.m_animation))
+                m_nextSitAnimation = "SIT";
+
             m_requestedSitTargetUUID = targetID;
             m_sitting = true;
 
-            Vector3 sitTargetPos = part.SitTargetPosition;
-            Quaternion sitTargetOrient = part.SitTargetOrientation;
+            Vector3 sitTargetPos = sod.m_sitTargetPos;
+            Quaternion sitTargetOrient = sod.m_sitTargetRot;
 
             m_pos = new Vector3(sitTargetPos.X, sitTargetPos.Y, sitTargetPos.Z);
-            m_pos += SIT_TARGET_ADJUSTMENT;
+            //m_pos += SIT_TARGET_ADJUSTMENT;
             m_bodyRot = sitTargetOrient;
             m_parentPosition = part.AbsolutePosition;
             m_parentID = m_requestedSitTargetUUID;
@@ -2387,7 +2390,7 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.AgentID = UUID;
             cAgent.RegionID = Scene.RegionInfo.RegionID;
 
-            cAgent.Position = AbsolutePosition;
+            cAgent.Position = AbsolutePosition + OffsetPosition;
             cAgent.Velocity = Velocity;
             cAgent.Center = m_CameraCenter;
             // Don't copy the size; it is inferred from appearance parameters
@@ -2436,6 +2439,19 @@ namespace OpenSim.Region.Framework.Scenes
             IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
             if (m != null)
                 cAgent.Controllers = m.Serialize ();
+
+            cAgent.SittingObjects = new SittingObjectData();
+            if(Sitting)
+            {
+                ISceneChildEntity child = Scene.GetSceneObjectPart(SittingOnUUID);
+                if(child != null && child.ParentEntity != null)
+                {
+                    cAgent.SittingObjects.m_sittingObjectXML = ((ISceneObject)child.ParentEntity).ToXml2();
+                    cAgent.SittingObjects.m_sitTargetPos = this.OffsetPosition;//Get the difference
+                    cAgent.SittingObjects.m_sitTargetRot = m_bodyRot;
+                    cAgent.SittingObjects.m_animation = this.m_nextSitAnimation;
+                }
+            }
             
             // Animations
             if (Animator != null)
@@ -2490,6 +2506,34 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Animator.ResetAnimations();
                     Animator.Animations.FromArray(cAgent.Anims);
+                }
+                catch { }
+                try
+                {
+                    if(cAgent.SittingObjects != null && cAgent.SittingObjects.m_sittingObjectXML != "")
+                    {
+                        ISceneObject sceneObject = null;
+                        IRegionSerialiserModule mod = Scene.RequestModuleInterface<IRegionSerialiserModule>();
+                        if(mod != null)
+                            sceneObject = mod.DeserializeGroupFromXml2(cAgent.SittingObjects.m_sittingObjectXML, Scene);
+
+                        if(sceneObject != null)
+                        {
+                            //We were sitting on something when we crossed
+                            if(Scene.SceneGraph.AddPrimToScene(sceneObject))
+                            {
+                                if(sceneObject.RootChild.IsSelected)
+                                    sceneObject.RootChild.CreateSelected = true;
+                                sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+                                sceneObject.CreateScriptInstances(0, false, 1, UUID.Zero);
+                                sceneObject.ResumeScripts();
+                            }
+                            ISceneChildEntity part = m_scene.GetSceneObjectPart(sceneObject.UUID);
+                            sceneObject.AbsolutePosition = cAgent.Position;
+                            cAgent.SittingObjects.m_objectID = sceneObject.UUID;
+                            m_objectToSitOn = cAgent.SittingObjects;
+                        }
+                    }
                 }
                 catch { }
             }

@@ -122,45 +122,6 @@ namespace OpenSim.Framework
         }
     }
 
-    public class AgentGroupData
-    {
-        public UUID GroupID;
-        public ulong GroupPowers;
-        public bool AcceptNotices;
-
-        public AgentGroupData(UUID id, ulong powers, bool notices)
-        {
-            GroupID = id;
-            GroupPowers = powers;
-            AcceptNotices = notices;
-        }
-
-        public AgentGroupData(OSDMap args)
-        {
-            UnpackUpdateMessage(args);
-        }
-
-        public OSDMap PackUpdateMessage()
-        {
-            OSDMap groupdata = new OSDMap();
-            groupdata["group_id"] = OSD.FromUUID(GroupID);
-            groupdata["group_powers"] = OSD.FromString(GroupPowers.ToString());
-            groupdata["accept_notices"] = OSD.FromBoolean(AcceptNotices);
-
-            return groupdata;
-        }
-
-        public void UnpackUpdateMessage(OSDMap args)
-        {
-            if (args["group_id"] != null)
-                GroupID = args["group_id"].AsUUID();
-            if (args["group_powers"] != null)
-                UInt64.TryParse((string)args["group_powers"].AsString(), out GroupPowers);
-            if (args["accept_notices"] != null)
-                AcceptNotices = args["accept_notices"].AsBoolean();
-        }
-    }
-
     public class ControllerData
     {
         public UUID ItemID;
@@ -198,6 +159,56 @@ namespace OpenSim.Framework
                 IgnoreControls = (uint)args["ignore"].AsInteger();
             if (args["event"] != null)
                 EventControls = (uint)args["event"].AsInteger();
+        }
+    }
+
+    public class SittingObjectData
+    {
+        public string m_sittingObjectXML = "";
+        public Vector3 m_sitTargetPos = Vector3.Zero;
+        public Quaternion m_sitTargetRot = Quaternion.Identity;
+        public string m_animation = "";
+        public UUID m_objectID = UUID.Zero;
+
+        public SittingObjectData ()
+        {
+        }
+
+        public SittingObjectData (string sittingObjectXML, Vector3 sitTargetPos, Quaternion sitTargetRot, string animation)
+        {
+            m_sittingObjectXML = sittingObjectXML;
+            m_sitTargetPos = sitTargetPos;
+            m_sitTargetRot = sitTargetRot;
+            m_animation = animation;
+        }
+
+        public SittingObjectData (OSDMap args)
+        {
+            UnpackUpdateMessage(args);
+        }
+
+        public OSDMap PackUpdateMessage ()
+        {
+            OSDMap controldata = new OSDMap();
+            controldata["sittingObjectXML"] = m_sittingObjectXML;
+            controldata["sitTargetPos"] = m_sitTargetPos;
+            controldata["sitTargetRot"] = m_sitTargetRot;
+            controldata["animation"] = m_animation;
+
+            return controldata;
+        }
+
+
+        public void UnpackUpdateMessage (OSDMap args)
+        {
+            if(args["sittingObjectXML"] != null)
+                m_sittingObjectXML = args["sittingObjectXML"];
+            if(args["sitTargetPos"] != null)
+                m_sitTargetPos = args["sitTargetPos"];
+            if(args["sitTargetRot"] != null)
+                m_sitTargetRot = args["sitTargetRot"];
+            if(args["animation"] != null)
+                m_animation = args["animation"];
         }
     }
 
@@ -242,7 +253,6 @@ namespace OpenSim.Framework
         //Evil... only for OpenSim...
         public string CallbackURI;
 
-        public AgentGroupData[] Groups;
         public Animation[] Anims;
 
         public UUID GranterID;
@@ -251,18 +261,12 @@ namespace OpenSim.Framework
         // Appearance
         public AvatarAppearance Appearance;
 
-        // DEBUG ON
         private static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        // DEBUG OFF
 
-        /*
-                public byte[] AgentTextures;
-                public byte[] VisualParams;
-                public UUID[] Wearables;
-                public AvatarAttachment[] Attachments;
-        */
+        public SittingObjectData SittingObjects;
+
         // Scripted
         public ControllerData[] Controllers;
 
@@ -311,13 +315,7 @@ namespace OpenSim.Framework
             args["active_group_id"] = OSD.FromUUID(ActiveGroupID);
             args["IsCrossing"] = IsCrossing;
 
-            if ((Groups != null) && (Groups.Length > 0))
-            {
-                OSDArray groups = new OSDArray(Groups.Length);
-                foreach (AgentGroupData agd in Groups)
-                    groups.Add(agd.PackUpdateMessage());
-                args["groups"] = groups;
-            }
+            args["SittingObjects"] = SittingObjects.PackUpdateMessage();
 
             if ((Anims != null) && (Anims.Length > 0))
             {
@@ -450,20 +448,6 @@ namespace OpenSim.Framework
             if (args["IsCrossing"] != null)
                 IsCrossing = args["IsCrossing"].AsBoolean ();
 
-            if ((args["groups"] != null) && (args["groups"]).Type == OSDType.Array)
-            {
-                OSDArray groups = (OSDArray)(args["groups"]);
-                Groups = new AgentGroupData[groups.Count];
-                int i = 0;
-                foreach (OSD o in groups)
-                {
-                    if (o.Type == OSDType.Map)
-                    {
-                        Groups[i++] = new AgentGroupData((OSDMap)o);
-                    }
-                }
-            }
-
             if ((args["animations"] != null) && (args["animations"]).Type == OSDType.Array)
             {
                 OSDArray anims = (OSDArray)(args["animations"]);
@@ -506,15 +490,13 @@ namespace OpenSim.Framework
                     }
                 }
             }
+
+            if(args["SittingObjects"] != null)
+                SittingObjects = new SittingObjectData((OSDMap)args["SittingObjects"]);
         }
 
         public AgentData()
         {
-        }
-
-        public AgentData(Hashtable hash)
-        {
-            //UnpackUpdateMessage(hash);
         }
 
         public void Dump()

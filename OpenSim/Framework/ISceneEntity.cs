@@ -313,13 +313,6 @@ namespace OpenSim.Framework
         void FailedCrossingTransit (GridRegion failedCrossingRegion);
 
         /// <summary>
-        /// Attempt to cross an agent that is sitting on an avatar (EXPERIMENTAL)
-        /// </summary>
-        /// <param name="iClientAPI"></param>
-        /// <param name="uUID"></param>
-        void CrossSittingAgent (IClientAPI iClientAPI, OpenMetaverse.UUID uUID);
-
-        /// <summary>
         /// Adds a force in the given direction to the avatar
         /// </summary>
         /// <param name="force"></param>

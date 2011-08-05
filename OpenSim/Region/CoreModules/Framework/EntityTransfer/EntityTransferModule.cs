@@ -549,7 +549,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public virtual void Cross(IScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
-            agent.PhysicsActor.IsPhysical = false;
+            if(agent.PhysicsActor != null)
+                agent.PhysicsActor.IsPhysical = false;
             CrossAgentToNewRegionAsyncUtil (agent, isFlying, crossingRegion);
         }
 
@@ -558,7 +559,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             Vector3 newposition = new Vector3 (agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
             Util.FireAndForget (delegate (object o)
             {
-                CrossAgentToNewRegionAsync (agent, newposition, crossingRegion, isFlying);
+                CrossAgentToNewRegionAsync (agent, newposition, crossingRegion, isFlying, false);
             });
         }
 
@@ -567,7 +568,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
         /// </summary>
         protected IScenePresence CrossAgentToNewRegionAsync(IScenePresence agent, Vector3 pos,
-            GridRegion crossingRegion, bool isFlying)
+            GridRegion crossingRegion, bool isFlying, bool positionIsAlreadyFixed)
         {
             m_log.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name, crossingRegion.RegionName);
 
@@ -582,29 +583,32 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if (attModule != null)
                         attModule.ValidateAttachments(agent.UUID);
 
-                    int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
-                    int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
+                    if(!positionIsAlreadyFixed)
+                    {
+                        int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
+                        int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
 
-                    if (xOffset < 0)
-                        pos.X += m_scene.RegionInfo.RegionSizeX;
-                    else if (xOffset > 0)
-                        pos.X -= m_scene.RegionInfo.RegionSizeX;
+                        if(xOffset < 0)
+                            pos.X += m_scene.RegionInfo.RegionSizeX;
+                        else if(xOffset > 0)
+                            pos.X -= m_scene.RegionInfo.RegionSizeX;
 
-                    if (yOffset < 0)
-                        pos.Y += m_scene.RegionInfo.RegionSizeY;
-                    else if (yOffset > 0)
-                        pos.Y -= m_scene.RegionInfo.RegionSizeY;
+                        if(yOffset < 0)
+                            pos.Y += m_scene.RegionInfo.RegionSizeY;
+                        else if(yOffset > 0)
+                            pos.Y -= m_scene.RegionInfo.RegionSizeY;
 
-                    //Make sure that they are within bounds (velocity can push it out of bounds)
-                    if (pos.X < 0)
-                        pos.X = 1;
-                    if (pos.Y < 0)
-                        pos.Y = 1;
+                        //Make sure that they are within bounds (velocity can push it out of bounds)
+                        if(pos.X < 0)
+                            pos.X = 1;
+                        if(pos.Y < 0)
+                            pos.Y = 1;
 
-                    if (pos.X > crossingRegion.RegionSizeX)
-                        pos.X = crossingRegion.RegionSizeX - 1;
-                    if (pos.Y > crossingRegion.RegionSizeY)
-                        pos.Y = crossingRegion.RegionSizeY - 1;
+                        if(pos.X > crossingRegion.RegionSizeX)
+                            pos.X = crossingRegion.RegionSizeX - 1;
+                        if(pos.Y > crossingRegion.RegionSizeY)
+                            pos.Y = crossingRegion.RegionSizeY - 1;
+                    }
 
                     AgentData cAgent = new AgentData();
                     agent.CopyTo(cAgent);
@@ -771,16 +775,23 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             grp.RootPart.ClearUpdateScheduleOnce();
             if (destination != null)
             {
-                if (grp.SitTargetAvatar.Count != 0)
+                if(grp.SitTargetAvatar.Count != 0)
                 {
-                    lock (grp.SitTargetAvatar)
+                    lock(grp.SitTargetAvatar)
                     {
-                        foreach (UUID avID in grp.SitTargetAvatar)
+                        foreach(UUID avID in grp.SitTargetAvatar)
                         {
                             IScenePresence SP = grp.Scene.GetScenePresence(avID);
-                            CrossAgentToNewRegionAsync(SP, grp.AbsolutePosition, destination, false);
+                            CrossAgentToNewRegionAsync(SP, attemptedPos, destination, false, true);
                         }
                     }
+                    foreach(ISceneChildEntity part in grp.ChildrenEntities())
+                        part.SitTargetAvatar.Clear();
+
+                    IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
+                    if(backup != null)
+                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, true);
+                    return true;//They do all the work adding the prim in the other region
                 }
 
                 SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
@@ -890,23 +901,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, 1, UUID.Zero);
             newObject.RootPart.ParentGroup.ResumeScripts();
-
-            if (newObject.SitTargetAvatar.Count != 0)
-            {
-                lock (newObject.SitTargetAvatar)
-                {
-                    foreach (UUID avID in newObject.SitTargetAvatar)
-                    {
-                        IScenePresence SP = scene.GetScenePresence(avID);
-                        while (SP == null)
-                        {
-                            Thread.Sleep(20);
-                        }
-                        SP.AbsolutePosition = newObject.AbsolutePosition;
-                        SP.CrossSittingAgent(SP.ControllingClient, newObject.RootPart.UUID);
-                    }
-                }
-            }
 
             return true;
         }
