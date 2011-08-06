@@ -570,6 +570,37 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        #region Update region info
+
+        public void UpdateRegionInfo (RegionInfo region)
+        {
+            foreach(IScene scene in m_localScenes)
+            {
+                if(scene.RegionInfo.RegionID == region.RegionID)
+                {
+                     bool needsGridUpdate = scene.RegionInfo.RegionName != region.RegionName ||
+                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
+                         scene.RegionInfo.RegionLocY != region.RegionLocY ||
+                         scene.RegionInfo.RegionLocZ != region.RegionLocZ ||
+                         scene.RegionInfo.HttpPort != region.HttpPort ||
+                         scene.RegionInfo.ExternalHostName != region.ExternalHostName ||
+                         scene.RegionInfo.AccessLevel != region.AccessLevel ||
+                         scene.RegionInfo.RegionType != region.RegionType// ||
+                         //scene.RegionInfo.RegionSizeX != region.RegionSizeX //Don't allow for size updates on the fly, that needs a restart
+                         //scene.RegionInfo.RegionSizeY != region.RegionSizeY
+                         //scene.RegionInfo.RegionSizeZ != region.RegionSizeZ
+                         ;
+                    if(needsGridUpdate)
+                        scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
+                    scene.RegionInfo = region;
+                    //Tell clients about the changes
+                    scene.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                }
+            }
+        }
+
+        #endregion
+
         #region ISharedRegionStartupModule plugins
 
         protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule> ();

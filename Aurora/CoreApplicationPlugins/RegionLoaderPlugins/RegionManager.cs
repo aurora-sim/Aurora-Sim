@@ -344,6 +344,7 @@ namespace Aurora.Modules.RegionLoader
             }
 
             m_connector.UpdateRegionInfo(region);
+            m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>().UpdateRegionInfo(region);
             if (OnNewRegion != null)
                 OnNewRegion(region);
         }
