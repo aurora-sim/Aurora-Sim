@@ -870,7 +870,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     decayamount.Z = 1;
             }
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
-            if(m_linearMotorApply < 0 ? m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f) :
+            if(m_linearMotorApply <= 0 ? m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f) :
                 m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.001f))
             {
                 m_lastLinearVelocityVector = Vector3.Zero;

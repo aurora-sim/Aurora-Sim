@@ -3398,7 +3398,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             contact.surface.mu = 800;
             if(actorType == ActorTypes.Prim)
                 contact.surface.mu *= _parent_entity.Friction;
-            if (m_vehicle.Type != Vehicle.TYPE_NONE)
+            if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
                 contact.surface.mu *= 0.05f;
             contact.surface.mu2 = contact.surface.mu;
 

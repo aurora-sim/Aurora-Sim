@@ -404,10 +404,10 @@ namespace Aurora.Modules.FileBasedSimulationData
                     m_oldSaveHasBeenSaved = true;
                     if (!Directory.Exists (m_oldSaveDirectory))
                         Directory.CreateDirectory (m_oldSaveDirectory);
-                    File.Copy (fileName + ".tmp", m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime () + m_saveAppenedFileName + ".abackup");
+                    File.Copy(fileName + ".tmp", m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
                 }
-                else //Just remove the file
-                    File.Delete (fileName);
+                //Just remove the file
+                File.Delete (fileName);
             }
             else
             {
@@ -425,16 +425,16 @@ namespace Aurora.Modules.FileBasedSimulationData
                 if (File.Exists (fileName))
                 {
                     //If keepOldSave is enabled, the user wants us to move the first backup that we originally loaded from into the oldSaveDirectory
-                    if (m_keepOldSave && !m_oldSaveHasBeenSaved)
+                    if(m_keepOldSave && !m_oldSaveHasBeenSaved)
                     {
                         //Havn't moved it yet, so make sure the directory exists, then move it
                         m_oldSaveHasBeenSaved = true;
-                        if (!Directory.Exists (m_oldSaveDirectory))
-                            Directory.CreateDirectory (m_oldSaveDirectory);
-                        File.Move (fileName, m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime () + m_saveAppenedFileName + ".abackup");
+                        if(!Directory.Exists(m_oldSaveDirectory))
+                            Directory.CreateDirectory(m_oldSaveDirectory);
+                        File.Copy(fileName + ".tmp", m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
                     }
-                    else //Just remove the file
-                        File.Delete (fileName);
+                    //Just remove the file
+                    File.Delete(fileName);
                 }
             }
             ISceneEntity[] entities = m_scene.Entities.GetEntities ();
