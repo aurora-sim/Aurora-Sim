@@ -276,6 +276,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void ApplyPermissions (uint permissions)
+        {
+            foreach (SceneObjectPart part in m_partsList)
+            {
+                part.ApplyPermissions(permissions);
+            }
+        }
+
         public void ResumeScripts()
         {
             foreach (SceneObjectPart part in m_partsList)

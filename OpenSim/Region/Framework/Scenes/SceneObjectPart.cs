@@ -5608,13 +5608,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion Public Methods
 
-        public void ApplyNextOwnerPermissions()
+        public void ApplyNextOwnerPermissions ()
         {
             _baseMask &= _nextOwnerMask;
             _ownerMask &= _nextOwnerMask;
             _everyoneMask &= _nextOwnerMask;
 
             Inventory.ApplyNextOwnerPermissions();
+        }
+
+        public void ApplyPermissions (uint permissions)
+        {
+            _ownerMask = permissions;
         }
 
         private void UpdateLookAt()

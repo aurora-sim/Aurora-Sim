@@ -505,20 +505,29 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     m_log.WarnFormat("[INVENTORY ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
                 else if (assetType == AssetType.Object)
                 {
-                    if (m_creatorIdForAssetId.ContainsKey (UUID.Parse(uuid)))
+                    string xmlData = Utils.BytesToString(data);
+                    List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
+
+                    sceneObjects.Add(OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat(xmlData, m_registry));
+
+                    if(m_creatorIdForAssetId.ContainsKey(UUID.Parse(uuid)))
                     {
-                        string xmlData = Utils.BytesToString (data);
-                        List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup> ();
-
-                        sceneObjects.Add (OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.FromOriginalXmlFormat (xmlData, m_registry));
-
                         foreach (SceneObjectGroup sog in sceneObjects)
                             foreach (SceneObjectPart sop in sog.Parts)
                                 if (string.IsNullOrEmpty(sop.CreatorData))
                                     sop.CreatorID = m_creatorIdForAssetId[UUID.Parse (uuid)];
-
-                        data = Utils.StringToBytes (OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.ToOriginalXmlFormat (sceneObjects[0]));
                     }
+                    foreach(SceneObjectGroup sog in sceneObjects)
+                        foreach(SceneObjectPart sop in sog.Parts)
+                        {
+                            //Fix ownerIDs and perms
+                            sop.Inventory.ApplyGodPermissions((uint)PermissionMask.All);
+                            sog.ApplyPermissions((uint)PermissionMask.All);
+                            foreach(TaskInventoryItem item in sop.Inventory.GetInventoryItems())
+                                item.OwnerID = m_userInfo.PrincipalID;
+                            sop.OwnerID = m_userInfo.PrincipalID;
+                        }
+                    data = Utils.StringToBytes(OpenSim.Region.Framework.Scenes.Serialization.SceneObjectSerializer.ToOriginalXmlFormat(sceneObjects[0]));
                 }
                 //m_log.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
 
