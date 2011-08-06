@@ -282,12 +282,20 @@ namespace Aurora.Modules.RegionLoader
 
         private new void Update()
         {
-            RegionInfo region = m_connector.GetRegionInfo(textBox1.Text);
+            object item = RegionListBox.Items[RegionListBox.SelectedIndex];
+            if(item == null)
+            {
+                MessageBox.Show("Select a valid region from the list.");
+                return;
+            }
+            RegionInfo region = m_connector.GetRegionInfo(item.ToString());
             if (region == null)
             {
                 MessageBox.Show("You must enter a valid region name!");
                 return;
             }
+            string oldRegionName = region.RegionName;
+            bool listNeedsUpdated = oldRegionName != textBox1.Text;
             region.RegionName = textBox1.Text;
             region.RegionID = CurrentRegionID;
             region.RegionLocX = int.Parse(textBox3.Text) * Constants.RegionSize;
@@ -344,9 +352,12 @@ namespace Aurora.Modules.RegionLoader
             }
 
             m_connector.UpdateRegionInfo(region);
-            m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>().UpdateRegionInfo(region);
+            m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>().UpdateRegionInfo(oldRegionName, region);
             if (OnNewRegion != null)
                 OnNewRegion(region);
+            if(listNeedsUpdated)
+                RefreshCurrentRegions();
+            RegionListBox.SelectedItem = region.RegionName;
         }
 
         private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)

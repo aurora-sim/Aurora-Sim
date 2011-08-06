@@ -572,27 +572,41 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Update region info
 
-        public void UpdateRegionInfo (RegionInfo region)
+        public void UpdateRegionInfo (string oldRegionName, RegionInfo region)
         {
+            if(oldRegionName != region.RegionName)
+            {
+                //Move .abackup files if possible
+                m_simulationDataService.RenameBackupFiles(oldRegionName, region.RegionName, ConfigSource);
+            }
             foreach(IScene scene in m_localScenes)
             {
                 if(scene.RegionInfo.RegionID == region.RegionID)
                 {
-                     bool needsGridUpdate = scene.RegionInfo.RegionName != region.RegionName ||
-                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
-                         scene.RegionInfo.RegionLocY != region.RegionLocY ||
-                         scene.RegionInfo.RegionLocZ != region.RegionLocZ ||
-                         scene.RegionInfo.HttpPort != region.HttpPort ||
-                         scene.RegionInfo.ExternalHostName != region.ExternalHostName ||
-                         scene.RegionInfo.AccessLevel != region.AccessLevel ||
-                         scene.RegionInfo.RegionType != region.RegionType// ||
-                         //scene.RegionInfo.RegionSizeX != region.RegionSizeX //Don't allow for size updates on the fly, that needs a restart
-                         //scene.RegionInfo.RegionSizeY != region.RegionSizeY
-                         //scene.RegionInfo.RegionSizeZ != region.RegionSizeZ
-                         ;
-                    if(needsGridUpdate)
-                        scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
+                    bool needsGridUpdate = scene.RegionInfo.RegionName != region.RegionName ||
+                        scene.RegionInfo.RegionLocX != region.RegionLocX ||
+                        scene.RegionInfo.RegionLocY != region.RegionLocY ||
+                        scene.RegionInfo.RegionLocZ != region.RegionLocZ ||
+                        scene.RegionInfo.HttpPort != region.HttpPort ||
+                        scene.RegionInfo.ExternalHostName != region.ExternalHostName ||
+                        scene.RegionInfo.AccessLevel != region.AccessLevel ||
+                        scene.RegionInfo.RegionType != region.RegionType// ||
+                        //scene.RegionInfo.RegionSizeX != region.RegionSizeX //Don't allow for size updates on the fly, that needs a restart
+                        //scene.RegionInfo.RegionSizeY != region.RegionSizeY
+                        //scene.RegionInfo.RegionSizeZ != region.RegionSizeZ
+                        ;
+                    bool needsRegistration = scene.RegionInfo.RegionName != region.RegionName || 
+                        scene.RegionInfo.RegionLocX != region.RegionLocX ||
+                        scene.RegionInfo.RegionLocY != region.RegionLocY;
+
+                    region.RegionSettings = scene.RegionInfo.RegionSettings;
+                    region.EstateSettings = scene.RegionInfo.EstateSettings;
+                    region.GridSecureSessionID = scene.RegionInfo.GridSecureSessionID;
                     scene.RegionInfo = region;
+                    if(needsRegistration)
+                        scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(scene, false);
+                    else if(needsGridUpdate)
+                        scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
                     //Tell clients about the changes
                     scene.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
                 }

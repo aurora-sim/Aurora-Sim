@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
+using Nini.Config;
 
 namespace OpenSim.Framework
 {
@@ -98,6 +99,14 @@ namespace OpenSim.Framework
         /// Make a copy of the given data store
         /// </summary>
         ISimulationDataStore Copy ();
+
+        /// <summary>
+        /// Rename any backups that we might have to a new regionName
+        /// </summary>
+        /// <param name="oldRegionName"></param>
+        /// <param name="newRegionName"></param>
+        /// <param name="configSource"></param>
+        void RenameBackupFiles (string oldRegionName, string newRegionName, IConfigSource configSource);
     }
     
     /// <summary>
