@@ -139,7 +139,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public void RezAttachments (IScenePresence presence)
         {
             IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-            if (null == appearance.Appearance)
+            if(null == appearance || null == appearance.Appearance)
             {
                 m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
                 return;

@@ -750,10 +750,12 @@ namespace OpenSim.Services.MessagingService
         protected void ResetFromTransit(UUID AgentID)
         {
             IClientCapsService clientCaps = m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(AgentID);
-
-            clientCaps.InTeleport = false;
-            clientCaps.RequestToCancelTeleport = false;
-            clientCaps.CallbackHasCome = false;
+            if(clientCaps != null)
+            {
+                clientCaps.InTeleport = false;
+                clientCaps.RequestToCancelTeleport = false;
+                clientCaps.CallbackHasCome = false;
+            }
         }
 
         protected bool SetUserInTransit(UUID AgentID)

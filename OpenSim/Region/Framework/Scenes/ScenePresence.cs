@@ -1612,15 +1612,15 @@ namespace OpenSim.Region.Framework.Scenes
                     if(part.PhysActor != null)
                         part.PhysActor.Selected = false;
                 }
-
-                if (m_physicsActor == null)
-                {
+                if(m_physicsActor == null)
                     AddToPhysicalScene(false, false);
-                }
-
                 m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f*m_sitAvatarHeight);
                 m_parentPosition = Vector3.Zero;
             }
+
+            if(m_physicsActor == null)
+                AddToPhysicalScene(false, false);
+
             m_parentID = UUID.Zero;
             m_requestedSitTargetUUID = UUID.Zero;
             m_sitting = false;
@@ -1701,7 +1701,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentPosition = part.AbsolutePosition;
             m_parentID = m_requestedSitTargetUUID;
 
-            part.SetAvatarOnSitTarget(this.UUID);
+            part.SitTargetAvatar.Add(this.UUID);
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
@@ -2500,14 +2500,6 @@ namespace OpenSim.Region.Framework.Scenes
                     appearance.Appearance = new AvatarAppearance (cAgent.Appearance);
                 }
 
-                try
-                {
-                    IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule> ();
-                    if (m != null)
-                        if (cAgent.Controllers != null)
-                            m.Deserialize(cAgent.Controllers);
-                }
-                catch { }
                 // Animations
                 try
                 {
@@ -2534,13 +2526,38 @@ namespace OpenSim.Region.Framework.Scenes
                                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                                 sceneObject.CreateScriptInstances(0, false, 1, UUID.Zero);
                                 sceneObject.ResumeScripts();
+
+                                sceneObject.RootChild.PhysActor.ForceSetVelocity(cAgent.Velocity);
+                                sceneObject.RootChild.PhysActor.Velocity = (cAgent.Velocity);
+                                sceneObject.AbsolutePosition = cAgent.Position;
+                                this.Animator.TrySetMovementAnimation(cAgent.SittingObjects.m_animation);
+                                this.m_nextSitAnimation = cAgent.SittingObjects.m_animation;
+                                cAgent.SittingObjects.m_objectID = sceneObject.UUID;
+                                m_objectToSitOn = cAgent.SittingObjects;
+
+                                foreach(ISceneChildEntity child in sceneObject.ChildrenEntities())
+                                {
+                                    foreach(TaskInventoryItem taskInv in child.Inventory.GetInventoryItems())
+                                    {
+                                        foreach(ControllerData cd in cAgent.Controllers)
+                                        {
+                                            if(cd.ItemID == taskInv.ItemID || cd.ItemID == taskInv.OldItemID)
+                                            {
+                                                cd.ItemID = taskInv.ItemID;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                try
+                                {
+                                    IScriptControllerModule m = RequestModuleInterface<IScriptControllerModule>();
+                                    if(m != null)
+                                        if(cAgent.Controllers != null)
+                                            m.Deserialize(cAgent.Controllers);
+                                }
+                                catch { }
                             }
-                            ISceneChildEntity part = m_scene.GetSceneObjectPart(sceneObject.UUID);
-                            part.PhysActor.ForceSetVelocity(cAgent.Velocity);
-                            part.PhysActor.Velocity = (cAgent.Velocity);
-                            sceneObject.AbsolutePosition = cAgent.Position;
-                            cAgent.SittingObjects.m_objectID = sceneObject.UUID;
-                            m_objectToSitOn = cAgent.SittingObjects;
                         }
                     }
                 }

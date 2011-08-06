@@ -2032,6 +2032,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 m_lastorientation = _orientation;
 
                                 base.RequestPhysicsterseUpdate();
+                                m_crossingfailures = 0;
                                 return;
                             }
                             else
@@ -2047,6 +2048,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     l_position.Z = (float)lpos.Z;
 
                                     base.RaiseOutOfBounds(l_position);
+                                    m_crossingfailures = 0;
                                     return;
                                 }
                                 else
@@ -2056,6 +2058,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     newPos.Y = Util.Clip(Position.Y, 0.75f, _parent_scene.Region.RegionSizeY - 0.75f);
                                     Position = newPos;
                                     d.BodySetPosition(Body, newPos.X, newPos.Y, newPos.Z);
+                                    m_crossingfailures = 0;
                                 }
                             }
                         }

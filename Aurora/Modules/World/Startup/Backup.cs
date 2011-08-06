@@ -509,6 +509,9 @@ namespace Aurora.Modules
 
                 foreach (ISceneChildEntity part in group.ChildrenEntities())
                 {
+                    IScriptControllerModule m = m_scene.RequestModuleInterface<IScriptControllerModule>();
+                    if(m != null)
+                        m.RemoveAllScriptControllers(part);
                     if (part.PhysActor != null)
                     {
                         //Remove us from the physics sim

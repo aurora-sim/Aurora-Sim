@@ -110,10 +110,12 @@ namespace Aurora.Modules.Avatar.AvatarModules
             {
                 m_sp = sp;
                 m_sp.ControllingClient.OnForceReleaseControls += HandleForceReleaseControls;
+                m_sp.Scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
             }
 
             public void Close ()
             {
+                m_sp.Scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
                 m_sp.ControllingClient.OnForceReleaseControls -= HandleForceReleaseControls;
                 m_sp = null;
             }
@@ -127,6 +129,14 @@ namespace Aurora.Modules.Avatar.AvatarModules
                     scriptedcontrols.TryGetValue (itemID, out takecontrols);
                 }
                 return takecontrols;
+            }
+
+            void EventManager_OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+            {
+                lock(scriptedcontrols)
+                {
+                    scriptedcontrols.Clear();//Remove all controls when we leave the region
+                }
             }
 
             public void RegisterControlEventsToScript (int controls, int accept, int pass_on, ISceneChildEntity part, UUID Script_item_UUID)
@@ -374,7 +384,7 @@ namespace Aurora.Modules.Avatar.AvatarModules
 
                     foreach (ScriptControllers c in scriptedcontrols.Values)
                     {
-                        controls[i++] = new ControllerData (c.itemID, (uint)c.ignoreControls, (uint)c.eventControls);
+                        controls[i++] = new ControllerData(c.itemID, c.part.UUID, (uint)c.ignoreControls, (uint)c.eventControls);
                     }
                     return controls;
                 }
@@ -388,12 +398,13 @@ namespace Aurora.Modules.Avatar.AvatarModules
 
                     foreach (ControllerData c in controllerData)
                     {
-                        ScriptControllers sc = new ScriptControllers ();
+                        ScriptControllers sc = new ScriptControllers();
                         sc.itemID = c.ItemID;
+                        sc.part = m_sp.Scene.GetSceneObjectPart(c.ObjectID);
                         sc.ignoreControls = (ScriptControlled)c.IgnoreControls;
                         sc.eventControls = (ScriptControlled)c.EventControls;
-
-                        scriptedcontrols[sc.itemID] = sc;
+                        if(sc.part != null)
+                            scriptedcontrols[sc.itemID] = sc;
                     }
                 }
             }
