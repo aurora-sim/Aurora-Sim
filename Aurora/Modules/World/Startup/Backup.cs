@@ -549,6 +549,7 @@ namespace Aurora.Modules
             private List<UUID> m_missingAssets = new List<UUID>();
             private List<LandData> m_parcels = new List<LandData>();
             private bool m_merge = false;
+            private bool m_loadAssets = false;
 
             public bool IsArchiving
             {
@@ -709,7 +710,7 @@ namespace Aurora.Modules
             private void WriteAsset(string id, AssetBase asset, TarArchiveWriter writer)
             {
                 if (asset != null)
-                    writer.WriteFile ("assets/" + asset.ID, asset.Data);
+                    writer.WriteFile ("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.Pack()));
                 else
                     m_log.WarnFormat ("Could not find asset {0}", id);
             }
@@ -729,7 +730,8 @@ namespace Aurora.Modules
                 if (backup != null)
                 {
                     backup.LoadingPrims = true;
-                    m_merge = MainConsole.Instance.CmdPrompt("Should we merge prims together (keep the prims from the old region too)?", "false") == "true";
+                    m_loadAssets = MainConsole.Instance.CmdPrompt("Should any stored assets be loaded? (If you got this .abackup from another grid, choose yes", "no").ToLower() == "yes";
+                    m_merge = MainConsole.Instance.CmdPrompt("Should we merge prims together (keep the prims from the old region too)?", "no").ToLower() == "yes";
                     if (!m_merge)
                     {
                         DateTime before = DateTime.Now;
@@ -888,6 +890,17 @@ namespace Aurora.Modules
                         sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                         sceneObject.CreateScriptInstances (0, false, 0, UUID.Zero);
                         sceneObject.ResumeScripts ();
+                    }
+                }
+                else if(filePath.StartsWith("assets/"))
+                {
+                    if(m_loadAssets)
+                    {
+                        AssetBase asset = new AssetBase();
+                        asset.Unpack(OSDParser.DeserializeJson(UTF8Encoding.UTF8.GetString(data)));
+                        bool exists = m_scene.AssetService.Get(asset.IDString) != null;
+                        if(!exists && asset != null)
+                            m_scene.AssetService.Store(asset);
                     }
                 }
             }

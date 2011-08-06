@@ -145,7 +145,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             if (m_saveChanges && m_timeBetweenBackupSaves != 0)
             {
                 m_backupSaveTimer = new Timer (m_timeBetweenBackupSaves * 60 * 1000);
-                m_backupSaveTimer.Elapsed += m_saveTimer_Elapsed;
+                m_backupSaveTimer.Elapsed += m_backupSaveTimer_Elapsed;
                 m_backupSaveTimer.Start ();
             }
 
@@ -167,7 +167,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             {
                 m_saveTimer.Stop ();
                 m_requiresSave = false;
-                SaveBackup (m_saveDirectory + "/");
+                SaveBackup (m_saveDirectory + "/", false);
                 m_saveTimer.Start (); //Restart it as we just did a backup
             }
             return null;
@@ -183,7 +183,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             if (m_requiresSave)
             {
                 m_saveTimer.Stop ();
-                SaveBackup (m_saveDirectory + "/");
+                SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
                 m_requiresSave = false;
                 m_saveTimer.Start (); //Restart it as we just did a backup
             }
@@ -198,14 +198,14 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// <param name="e"></param>
         void m_backupSaveTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
-            SaveBackup (m_oldSaveDirectory + "/");
+            SaveBackup (m_oldSaveDirectory + "/", true);
         }
 
         /// <summary>
         /// Save a backup of the sim
         /// </summary>
         /// <param name="appendedFilePath">The file path where the backup will be saved</param>
-        protected virtual void SaveBackup (string appendedFilePath)
+        protected virtual void SaveBackup (string appendedFilePath, bool saveAssets)
         {
             if (!m_saveChanges || !m_saveBackups)
                 return;
@@ -297,8 +297,11 @@ namespace Aurora.Modules.FileBasedSimulationData
                         m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
                     }
                 }
-               
-                ISceneEntity[] saveentities = m_scene.Entities.GetEntities ();
+
+                IDictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
+                UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
+                
+                ISceneEntity[] saveentities = m_scene.Entities.GetEntities();
                 List<UUID> entitiesToSave = new List<UUID>();
                 try
                 {
@@ -317,6 +320,8 @@ namespace Aurora.Modules.FileBasedSimulationData
                         }
                         else
                             entitiesToSave.Add(entity.UUID);
+                        if(saveAssets)
+                            assetGatherer.GatherAssetUuids(entity, assets, m_scene);
                     }
                 }
                 catch (Exception ex)
@@ -370,6 +375,24 @@ namespace Aurora.Modules.FileBasedSimulationData
                     }
                 }
 
+                if(saveAssets)
+                {
+                    foreach(UUID assetID in new List<UUID>(assets.Keys))
+                    {
+                        try
+                        {
+                            AssetBase asset = m_scene.AssetService.GetCached(assetID.ToString());
+                            if(asset == null)
+                                asset = m_scene.AssetService.Get(assetID.ToString());
+                            WriteAsset(assetID.ToString(), asset, writer);
+                        }
+                        catch(Exception ex)
+                        {
+                            m_log.WarnFormat("[Backup]: Exception caught: {0}", ex.ToString());
+                        }
+                    }
+                }
+
                 writer.Close ();
                 m_loadStream.Close ();
                 m_saveStream.Close ();
@@ -381,7 +404,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     m_oldSaveHasBeenSaved = true;
                     if (!Directory.Exists (m_oldSaveDirectory))
                         Directory.CreateDirectory (m_oldSaveDirectory);
-                    File.Move (fileName, m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime () + m_saveAppenedFileName + ".abackup");
+                    File.Copy (fileName + ".tmp", m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime () + m_saveAppenedFileName + ".abackup");
                 }
                 else //Just remove the file
                     File.Delete (fileName);
@@ -430,6 +453,14 @@ namespace Aurora.Modules.FileBasedSimulationData
             //Now make it the full file again
             File.Move (fileName + ".tmp", fileName);
             m_log.Info ("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
+        }
+
+        private void WriteAsset (string id, AssetBase asset, TarArchiveWriter writer)
+        {
+            if(asset != null)
+                writer.WriteFile("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.Pack()));
+            else
+                m_log.WarnFormat("Could not find asset {0}", id);
         }
 
         private byte[] WriteTerrainToStream (ITerrainChannel tModule)
@@ -710,7 +741,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
         public virtual void Shutdown ()
         {
             //The sim is shutting down, we need to save one last backup
-            SaveBackup (m_saveDirectory + "/");
+            SaveBackup (m_saveDirectory + "/", false);
         }
 
         public virtual void Tainted ()

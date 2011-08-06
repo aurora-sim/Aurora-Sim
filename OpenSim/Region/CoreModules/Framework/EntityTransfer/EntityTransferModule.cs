@@ -777,22 +777,29 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 if(grp.SitTargetAvatar.Count != 0)
                 {
+                    bool success = false;
                     lock(grp.SitTargetAvatar)
                     {
                         foreach(UUID avID in grp.SitTargetAvatar)
                         {
                             IScenePresence SP = grp.Scene.GetScenePresence(avID);
                             SP.Velocity = grp.RootChild.PhysActor.Velocity;
-                            CrossAgentToNewRegionAsync(SP, attemptedPos, destination, false, true);
+                            SP = CrossAgentToNewRegionAsync(SP, attemptedPos, destination, false, true);
+                            success = SP.IsChildAgent;
                         }
                     }
-                    foreach(ISceneChildEntity part in grp.ChildrenEntities())
-                        part.SitTargetAvatar.Clear();
+                    if(success)
+                    {
+                        foreach(ISceneChildEntity part in grp.ChildrenEntities())
+                            part.SitTargetAvatar.Clear();
 
-                    IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
-                    if(backup != null)
-                        return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, false);
-                    return true;//They do all the work adding the prim in the other region
+                        IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
+                        if(backup != null)
+                            return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, false);
+                        return true;//They do all the work adding the prim in the other region
+                    }
+                    else
+                        return false;
                 }
 
                 SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
