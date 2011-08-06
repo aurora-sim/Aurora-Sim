@@ -360,7 +360,11 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 List<UUID> allSittingAvatars = new List<UUID> ();
-                List<SceneObjectPart> parts = new List<SceneObjectPart> (m_partsList);
+                List<SceneObjectPart> parts;
+                lock(m_partsList)
+                {
+                    parts = new List<SceneObjectPart>(m_partsList);
+                }
                 foreach (SceneObjectPart entity in parts)
                 {
                     allSittingAvatars.AddRange (entity.SitTargetAvatar);

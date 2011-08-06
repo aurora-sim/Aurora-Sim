@@ -1139,7 +1139,7 @@ namespace OpenSim.Region.Framework.Scenes
                 PhysicsActor.ForceSetPosition (m_pos);
                 PhysicsActor.ForceSetVelocity (Vector3.Zero);
                 RemoveFromPhysicalScene();
-                m_log.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error #9999902");
+                m_log.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position, the client may be messed up now.");
 
                 //Make them fly so that they don't just fall
                 AddToPhysicalScene(true, false);
