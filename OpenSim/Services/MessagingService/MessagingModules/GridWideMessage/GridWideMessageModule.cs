@@ -226,7 +226,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
                     if (agentProcessor != null)
                         agentProcessor.LogoutAgent (regionClient, true);
-                    m_log.Info ("User Kicked sent.");
+                    m_log.Info ("User will be kicked in less than 30 seconds.");
                     return;
                 }
             }
@@ -246,7 +246,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     //Send the message to the client
                     messagePost.Post (regionClient.RegionHandle, BuildRequest ("GridWideMessage", message, regionClient.AgentID.ToString ()));
-                    m_log.Info ("Message sent.");
+                    m_log.Info ("Message sent, will be delievered in the next 30 seconds to the user.");
                     return;
                 }
             }
@@ -267,11 +267,13 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 {
                     if (regionClient.RootAgent)
                     {
+                        m_log.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
                         //Send the message to the client
                         messagePost.Post (regionClient.RegionHandle, BuildRequest ("GridWideMessage", message, regionClient.AgentID.ToString ()));
                     }
                 }
             }
+            m_log.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 30 seconds.");
         }
     }
 }
