@@ -571,7 +571,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Keep track of when this packet was sent out (right now)
             outgoingPacket.TickCount = Environment.TickCount & Int32.MaxValue;
 
-            buffer = null;
             if(outgoingPacket.FinishedMethod != null)
                 outgoingPacket.FinishedMethod(outgoingPacket);
             if(!isResend && !isReliable && outgoingPacket.Category != ThrottleOutPacketType.Resend)
