@@ -336,6 +336,7 @@ namespace OpenSim.Services.Interfaces
             m_RegionSizeZ = ConvertFrom.RegionSizeZ;
             ScopeID = ConvertFrom.ScopeID;
             SessionID = ConvertFrom.GridSecureSessionID;
+            Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
         }
 
         #region Definition of equality
