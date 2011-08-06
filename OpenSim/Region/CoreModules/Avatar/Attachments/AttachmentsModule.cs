@@ -283,6 +283,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                     List<SceneObjectPart> partList = new List<SceneObjectPart>(objatt.ChildrenList);
 
+                    foreach(SceneObjectPart part in partList)
+                        part.AttachedAvatar = remoteClient.AgentId;
+
                     objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient);
                     if (objatt.RootPart.OwnerID != item.Owner)
                     {
