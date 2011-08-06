@@ -297,8 +297,8 @@ namespace Aurora.Modules
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName + " with the grid failed - The region location you specified is already in use. You must move your region.");
                     int X = 0, Y = 0;
-                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", "1000"), out X);
-                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", "1000"), out Y);
+                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location X", (scene.RegionInfo.RegionLocX / 256).ToString()), out X);
+                    int.TryParse(MainConsole.Instance.CmdPrompt("New Region Location Y", (scene.RegionInfo.RegionLocY / 256).ToString()), out Y);
 
                     scene.RegionInfo.RegionLocX = X * Constants.RegionSize;
                     scene.RegionInfo.RegionLocY = Y * Constants.RegionSize;

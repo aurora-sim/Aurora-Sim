@@ -258,6 +258,8 @@ namespace OpenSim.Region.CoreModules
             {
                 Velocity = (Velocity * Tilt) * (1.0f / Magnitude);
             }
+            m_scene.RegionInfo.RegionSettings.SunVector = Position;
+            m_scene.RegionInfo.RegionSettings.SunPosition = GetCurrentTimeAsLindenSunHour();
         }
 
         public float GetCurrentTimeAsLindenSunHour()
