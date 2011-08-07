@@ -355,21 +355,12 @@ namespace OpenSim.Region.Framework.Scenes
             return entities;
         }
 
+        private List<UUID> m_sitTargetAvatars = new List<UUID>();
         public List<UUID> SitTargetAvatar
         {
             get
             {
-                List<UUID> allSittingAvatars = new List<UUID> ();
-                List<SceneObjectPart> parts;
-                lock(m_partsList)
-                {
-                    parts = new List<SceneObjectPart>(m_partsList);
-                }
-                foreach (SceneObjectPart entity in parts)
-                {
-                    allSittingAvatars.AddRange (entity.SitTargetAvatar);
-                }
-                return allSittingAvatars;
+                return m_sitTargetAvatars;
             }
         }
 

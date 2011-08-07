@@ -1700,6 +1700,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentID = m_requestedSitTargetUUID;
 
             part.SitTargetAvatar.Add(this.UUID);
+            part.ParentEntity.SitTargetAvatar.Add(this.UUID);
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 

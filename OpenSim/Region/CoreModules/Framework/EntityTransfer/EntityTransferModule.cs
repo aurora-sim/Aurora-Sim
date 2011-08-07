@@ -800,6 +800,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         foreach(ISceneChildEntity part in grp.ChildrenEntities())
                             part.SitTargetAvatar.Clear();
+                        grp.SitTargetAvatar.Clear();
 
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if(backup != null)
@@ -821,9 +822,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     try
                     {
                         foreach (ISceneChildEntity part in grp.ChildrenEntities())
-                        {
                             part.SitTargetAvatar.Clear();
-                        }
+                        grp.SitTargetAvatar.Clear();
+
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
                             return backup.DeleteSceneObjects(new SceneObjectGroup[1] { grp }, false, true);

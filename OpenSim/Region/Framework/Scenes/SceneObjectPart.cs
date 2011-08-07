@@ -4162,8 +4162,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (SitTargetAvatar)
             {
-                if (!SitTargetAvatar.Contains (avatarID))
-                    SitTargetAvatar.Add (avatarID);
+                if(!SitTargetAvatar.Contains(avatarID))
+                {
+                    SitTargetAvatar.Add(avatarID);
+                    ParentEntity.SitTargetAvatar.Add(avatarID);
+                }
             }
             TriggerScriptChangedEvent (Changed.LINK);
         }
@@ -4172,8 +4175,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (SitTargetAvatar)
             {
-                if (SitTargetAvatar.Contains (avatarID))
-                    SitTargetAvatar.Remove (avatarID);
+                if(SitTargetAvatar.Contains(avatarID))
+                {
+                    SitTargetAvatar.Remove(avatarID);
+                    ParentEntity.SitTargetAvatar.Remove(avatarID);
+                }
             }
             TriggerScriptChangedEvent (Changed.LINK);
         }
