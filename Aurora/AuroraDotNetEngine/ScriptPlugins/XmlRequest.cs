@@ -53,13 +53,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public bool Check()
         {
-            bool didAnything = false;
+            bool needToContinue = false;
             foreach (IXMLRPC xmlrpc in m_modules)
             {
                 if (xmlrpc == null)
                     continue;
                 RPCRequestInfo rInfo = (RPCRequestInfo)xmlrpc.GetNextCompletedRequest ();
                 SendRemoteDataRequest srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
+
+                if(!needToContinue)
+                    needToContinue = xmlrpc.hasRequests();
 
                 if (rInfo == null && srdInfo == null)
                     continue;
@@ -111,9 +114,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                     srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
                 }
-                didAnything = true;
             }
-            return didAnything;
+            return needToContinue;
         }
 
         public string Name

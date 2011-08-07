@@ -321,12 +321,15 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         public bool hasRequests()
         {
-            lock (XMLRPCListLock)
+            lock(XMLRPCListLock)
             {
-                if (m_rpcPending != null)
-                    return (m_rpcPending.Count > 0);
-                else
-                    return false;
+                if(m_rpcPending != null)
+                    if(m_rpcPending.Count > 0)
+                        return true;
+                if(m_pendingSRDResponses != null)
+                    if(m_pendingSRDResponses.Count > 0)
+                        return true;
+                return false;
             }
         }
 

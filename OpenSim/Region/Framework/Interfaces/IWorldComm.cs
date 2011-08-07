@@ -89,6 +89,12 @@ namespace OpenSim.Region.Framework.Interfaces
         bool HasMessages();
 
         /// <summary>
+        /// Are there any listeners currently?
+        /// </summary>
+        /// <returns></returns>
+        bool HasListeners ();
+
+        /// <summary>
         /// Pop the first availlable listen event from the queue
         /// </summary>
         /// <returns>ListenerInfo with filter filled in</returns>

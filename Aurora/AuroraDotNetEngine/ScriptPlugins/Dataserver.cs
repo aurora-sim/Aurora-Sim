@@ -155,7 +155,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 {
                     DataserverRequests.Remove(re.handle);
                 }
-                return true;
+                return DataserverRequests.Count > 0;
             }
         }
 

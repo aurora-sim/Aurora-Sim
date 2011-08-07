@@ -185,7 +185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     }
                 }
             } // lock
-            return true;
+            return SenseRepeaters.Count > 0;
         }
 
         public void SenseOnce(UUID objectID, UUID m_itemID,

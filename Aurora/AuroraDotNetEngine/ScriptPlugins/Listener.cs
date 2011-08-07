@@ -59,9 +59,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public bool Check()
         {
-            bool didAnything = false;
+            bool needToContinue = false;
             foreach (IWorldComm comms in m_modules)
             {
+                if(!needToContinue)
+                    needToContinue = comms.HasListeners();
                 if (comms.HasMessages ())
                 {
                     while (comms.HasMessages ())
@@ -82,10 +84,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                     "listen", resobj,
                                     new DetectParams[0]), EventPriority.Suspended);
                     }
-                    didAnything = true;
                 }
             }
-            return didAnything;
+            return needToContinue;
         }
 
         public OSD GetSerializationData (UUID itemID, UUID primID)

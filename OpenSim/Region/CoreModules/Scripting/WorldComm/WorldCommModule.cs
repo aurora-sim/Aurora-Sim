@@ -400,6 +400,11 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             return m_pending.Count != 0;
         }
 
+        public bool HasListeners ()
+        {
+            return m_listenerManager.GetListenersCount() > 0;
+        }
+
         /// <summary>
         /// Pop the first availlable listen event from the queue
         /// </summary>
@@ -621,6 +626,11 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             }
 
             return -1;
+        }
+
+        public int GetListenersCount ()
+        {
+            return m_listeners.Count;
         }
 
         // Theres probably a more clever and efficient way to

@@ -135,7 +135,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     }
                 }
             }
-            return true;
+            return Timers.Count > 0;
         }
 
         public OSD GetSerializationData (UUID itemID, UUID primID)
