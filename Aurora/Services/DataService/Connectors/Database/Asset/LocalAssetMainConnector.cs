@@ -34,7 +34,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             genericData.ConnectToDatabase(defaultConnectionString, "Asset", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
             DataManager.DataManager.RegisterPlugin(Name, this);
-
         }
 
         #endregion

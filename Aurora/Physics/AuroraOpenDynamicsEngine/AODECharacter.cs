@@ -915,6 +915,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 //0 is the ground localID
                 AddCollisionEvent(0, point);
+
+                if(_target_velocity == Vector3.Zero && vec.X == 0 && vec.Y == 0)
+                {
+                    vec.X = vel.X * timeStep * -1 * PID_D;
+                    vec.Y = vel.Y * timeStep * -1 * PID_D;
+                    vec.Z += 100;
+                }
             }
 
             #endregion
