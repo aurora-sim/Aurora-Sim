@@ -83,11 +83,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             get { return "IAssetDataPlugin"; }
         }
 
-        public void Initialise(string connect)
-        {
-
-        }
-
         public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") != "LocalConnectorBlackHole")
@@ -135,6 +130,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             if (m_Enabled)
             {
+                m_Log.Error("[BlackholeAssets]: Blackhole assets enabled");
                 DataManager.DataManager.RegisterPlugin(Name, this);
                 needsConversion = (m_Gd.Query(" 1 = 1 LIMIT 1 ", "assets", "id").Count >= 1);
                 convertCount = 0;

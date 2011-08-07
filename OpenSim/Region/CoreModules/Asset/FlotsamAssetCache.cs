@@ -409,9 +409,8 @@ namespace Flotsam.RegionModules.AssetCache
             }
             IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.AssetMonitor);
             if (monitor != null)
-            {
                 monitor.AddAsset(asset);
-            }
+
             return asset;
         }
 

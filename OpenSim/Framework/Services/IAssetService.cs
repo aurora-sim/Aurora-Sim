@@ -129,7 +129,6 @@ namespace OpenSim.Services.Interfaces
         bool StoreAsset(AssetBase asset);
         void UpdateContent(UUID id, byte[] asset);
         bool ExistsAsset(UUID uuid);
-        void Initialise(string connect);
         bool Delete(UUID id);
     }
 }

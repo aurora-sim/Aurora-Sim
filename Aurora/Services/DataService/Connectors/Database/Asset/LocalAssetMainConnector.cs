@@ -178,11 +178,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return false;
         }
 
-        public void Initialise(string connect)
-        {
-
-        }
-
         public bool Delete(UUID id)
         {
             try
