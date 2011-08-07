@@ -256,6 +256,11 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             }
         }
 
+        public int GetRequestCount ()
+        {
+            return m_pendingRequests.Count;
+        }
+
         public IServiceRequest GetNextCompletedRequest()
         {
             if (m_pendingRequests.Count == 0)

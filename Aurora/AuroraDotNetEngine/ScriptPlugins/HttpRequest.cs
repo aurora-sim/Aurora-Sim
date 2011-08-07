@@ -56,13 +56,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public bool Check()
         {
-            bool didAnything = false;
+            bool needToContinue = false;
             foreach (IHttpRequestModule iHttpReq in m_modules)
             {
                 IServiceRequest httpInfo = null;
 
-                if (iHttpReq != null)
-                    httpInfo = iHttpReq.GetNextCompletedRequest ();
+                if(iHttpReq != null)
+                {
+                    httpInfo = iHttpReq.GetNextCompletedRequest();
+                    if(!needToContinue)
+                        needToContinue = iHttpReq.GetRequestCount() > 0;
+                }
 
                 if (httpInfo == null)
                     continue;
@@ -87,9 +91,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     m_ScriptEngine.AddToObjectQueue (info.PrimID, "http_response", new DetectParams[0], resobj);
                     httpInfo = iHttpReq.GetNextCompletedRequest ();
                 }
-                didAnything = true;
             }
-            return didAnything;
+            return needToContinue;
         }
 
         public string Name
