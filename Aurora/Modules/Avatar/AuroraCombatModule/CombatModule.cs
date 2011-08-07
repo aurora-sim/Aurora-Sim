@@ -415,7 +415,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
                     {
                         IEntityTransferModule transferModule = m_SP.Scene.RequestModuleInterface<IEntityTransferModule>();
                         if (transferModule != null)
-                            transferModule.TeleportHome(m_SP.UUID, m_SP.ControllingClient);
+                            if(!transferModule.TeleportHome(m_SP.UUID, m_SP.ControllingClient))
+                            {
+                                if(m_SP.PhysicsActor != null)
+                                    m_SP.PhysicsActor.Flying = true;
+                                m_SP.Teleport(new Vector3(m_SP.Scene.RegionInfo.RegionSizeX / 2,
+                                    m_SP.Scene.RegionInfo.RegionSizeY / 2, 128));
+                            }
                     }
                 }
 

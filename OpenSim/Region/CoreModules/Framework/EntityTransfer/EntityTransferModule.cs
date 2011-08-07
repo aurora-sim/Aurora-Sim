@@ -379,7 +379,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected virtual void OnNewClient(IClientAPI client)
         {
-            client.OnTeleportHomeRequest += TeleportHome;
+            client.OnTeleportHomeRequest += ClientTeleportHome;
             client.OnTeleportCancel += RequestTeleportCancel;
             client.OnTeleportLocationRequest += RequestTeleportLocation;
             client.OnTeleportLandmarkRequest += RequestTeleportLandmark;
@@ -387,7 +387,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         protected virtual void OnClosingClient(IClientAPI client)
         {
-            client.OnTeleportHomeRequest -= TeleportHome;
+            client.OnTeleportHomeRequest -= ClientTeleportHome;
             client.OnTeleportCancel -= RequestTeleportCancel;
             client.OnTeleportLocationRequest -= RequestTeleportLocation;
             client.OnTeleportLandmarkRequest -= RequestTeleportLandmark;
@@ -497,7 +497,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         #region Teleport Home
 
-        public virtual void TeleportHome(UUID id, IClientAPI client)
+        public void ClientTeleportHome (UUID id, IClientAPI client)
+        {
+            TeleportHome(id, client);
+        }
+
+        public virtual bool TeleportHome(UUID id, IClientAPI client)
         {
             //m_log.DebugFormat("[ENTITY TRANSFER MODULE]: Request to teleport {0} {1} home", client.FirstName, client.LastName);
 
@@ -517,7 +522,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         //can't find the Home region: Tell viewer and abort
                         client.SendTeleportFailed ("Your home region could not be found.");
-                        return;
+                        return false;
                     }
                 }
                 m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region is {0} {1} ({2}-{3})",
@@ -531,7 +536,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 //Default region time...
                 List<GridRegion> Regions = client.Scene.GridService.GetDefaultRegions(UUID.Zero);
-                if (Regions.Count != 0)
+                if(Regions.Count != 0)
                 {
                     m_log.DebugFormat("[ENTITY TRANSFER MODULE]: User's home region was not found, using {0} {1} ({2}-{3})",
                         Regions[0].RegionName, Regions[0].RegionID, Regions[0].RegionLocX / Constants.RegionSize, Regions[0].RegionLocY / Constants.RegionSize);
@@ -540,7 +545,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         client, Regions[0], new Vector3(128, 128, 25), new Vector3(128, 128, 128),
                         (uint)(TeleportFlags.SetLastToTarget | TeleportFlags.ViaHome));
                 }
+                else
+                    return false;
             }
+            return true;
         }
 
         #endregion

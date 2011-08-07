@@ -53,7 +53,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="id">The UUID of the client to teleport home</param>
         /// <param name="client">The client to teleport hom</param>
-        void TeleportHome(UUID id, IClientAPI client);
+        bool TeleportHome(UUID id, IClientAPI client);
 
         // <summary>
         /// Crosses the given agent to the given neighboring region.
