@@ -294,7 +294,7 @@ namespace OpenSim.Services.MessagingService
                     }
                 }
             }
-            if(kickRootAgent)//Kick the root agent then
+            if(kickRootAgent && regionCaps.Region != null)//Kick the root agent then
                 SimulationService.CloseAgent(regionCaps.Region, regionCaps.AgentID);
             //Close all caps
             regionCaps.ClientCaps.Close();

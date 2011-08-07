@@ -128,7 +128,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-            genericData.ConnectToDatabase(defaultConnectionString, "BlackholeAsset", true);
+            genericData.ConnectToDatabase(defaultConnectionString, "BlackholeAsset", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_InvalidChars.AddRange(Path.GetInvalidPathChars());
             m_InvalidChars.AddRange(Path.GetInvalidFileNameChars());
