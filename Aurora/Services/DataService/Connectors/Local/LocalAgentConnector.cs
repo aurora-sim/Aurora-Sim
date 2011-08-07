@@ -25,18 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using OpenMetaverse;
-using Aurora.DataManager;
 using Aurora.Framework;
 using log4net;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
@@ -82,7 +78,7 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { agentID, "AgentInfo" }, "userdata", "Value");
+                query = GD.Query(new[] { "ID", "`Key`" }, new object[] { agentID, "AgentInfo" }, "userdata", "Value");
             }
             catch
             {
@@ -93,6 +89,7 @@ namespace Aurora.Services.DataService
             OSDMap agentInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
 
             agent.FromOSD(agentInfo);
+            agent.PrincipalID = agentID;
 			return agent;
 		}
 
@@ -103,18 +100,15 @@ namespace Aurora.Services.DataService
         /// <param name="agent"></param>
         public void UpdateAgent(IAgentInfo agent)
 		{
-            List<object> SetValues = new List<object>();
-            List<string> SetRows = new List<string>();
-            SetRows.Add("Value");
-            SetValues.Add(OSDParser.SerializeLLSDXmlString(agent.ToOSD()));
+            List<object> SetValues = new List<object> {OSDParser.SerializeLLSDXmlString(agent.ToOSD())};
+            List<string> SetRows = new List<string> {"Value"};
+           
             
             
-            List<object> KeyValue = new List<object>();
-            List<string> KeyRow = new List<string>();
-            KeyRow.Add("ID");
-            KeyValue.Add(agent.PrincipalID);
-            KeyRow.Add("`Key`");
-            KeyValue.Add("AgentInfo");
+            List<object> KeyValue = new List<object> {agent.PrincipalID, "AgentInfo"};
+
+            List<string> KeyRow = new List<string> {"ID", "`Key`"};
+
             GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
 		}
 
@@ -125,11 +119,8 @@ namespace Aurora.Services.DataService
         /// <param name="agentID"></param>
         public void CreateNewAgent(UUID agentID)
 		{
-            List<object> values = new List<object>();
-            values.Add(agentID);
-            values.Add("AgentInfo");
-            IAgentInfo info = new IAgentInfo();
-            info.PrincipalID = agentID;
+            List<object> values = new List<object> {agentID, "AgentInfo"};
+            IAgentInfo info = new IAgentInfo {PrincipalID = agentID};
             values.Add(OSDParser.SerializeLLSDXmlString(info.ToOSD())); //Value which is a default Profile
             GD.Insert("userdata", values.ToArray());
 		}
@@ -140,6 +131,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name="Mac"></param>
         /// <param name="viewer"></param>
+        /// <param name="reason"></param>
         /// <returns></returns>
         public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
         {
