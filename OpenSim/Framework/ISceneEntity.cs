@@ -994,6 +994,8 @@ namespace OpenSim.Framework
         void GenerateRotationalVelocityFromOmega ();
 
         void ClearUpdateSchedule ();
+
+        void ScriptSetTemporaryStatus (bool tempOnRez);
     }
 
     public interface ISceneGraph

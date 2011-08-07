@@ -1669,7 +1669,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
         }
 
-        public void SetTexGen(SceneObjectPart part, int face,int style)
+        public void SetTexGen (ISceneChildEntity part, int face, int style)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             MappingType textype;
@@ -1699,7 +1699,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void SetGlow(SceneObjectPart part, int face, float glow)
+        public void SetGlow (ISceneChildEntity part, int face, float glow)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
             if (face >= 0 && face < GetNumberOfSides(part))
@@ -1724,7 +1724,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void SetShiny(SceneObjectPart part, int face, int shiny, Bumpiness bump)
+        public void SetShiny (ISceneChildEntity part, int face, int shiny, Bumpiness bump)
         {
 
             Shininess sval = new Shininess();
@@ -1774,7 +1774,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void SetFullBright(SceneObjectPart part, int face, bool bright)
+        public void SetFullBright (ISceneChildEntity part, int face, bool bright)
         {
              Primitive.TextureEntry tex = part.Shape.Textures;
              if (face >= 0 && face < GetNumberOfSides(part))
@@ -1896,7 +1896,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="wind"></param>
         /// <param name="tension"></param>
         /// <param name="Force"></param>
-        protected void SetFlexi(SceneObjectPart part, bool flexi, int softness, float gravity, float friction,
+        protected void SetFlexi (ISceneChildEntity part, bool flexi, int softness, float gravity, float friction,
             float wind, float tension, LSL_Vector Force)
         {
             if (part == null)
@@ -1926,7 +1926,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
 
-            part.ParentGroup.HasGroupChanged = true;
+            part.ParentEntity.HasGroupChanged = true;
             part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
@@ -1941,7 +1941,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="intensity"></param>
         /// <param name="radius"></param>
         /// <param name="falloff"></param>
-        protected void SetPointLight(SceneObjectPart part, bool light, LSL_Vector color, float intensity, float radius, float falloff)
+        protected void SetPointLight (ISceneChildEntity part, bool light, LSL_Vector color, float intensity, float radius, float falloff)
         {
             if (part == null)
                 return;
@@ -1980,7 +1980,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!same)
             {
-                part.ParentGroup.HasGroupChanged = true;
+                part.ParentEntity.HasGroupChanged = true;
                 part.ScheduleUpdate (PrimUpdateFlags.FindBest);
             }
         }
@@ -2793,7 +2793,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentEntity.LoopSoundMasterPrim == m_host)
                 {
-                    foreach (SceneObjectPart part in m_host.ParentEntity.LoopSoundSlavePrims)
+                    foreach(ISceneChildEntity part in m_host.ParentEntity.LoopSoundSlavePrims)
                     {
                         part.Sound = UUID.Zero;
                         part.SoundGain = 0;
@@ -3603,7 +3603,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                     }
 
-                    foreach (SceneObjectPart part in partList)
+                    foreach (ISceneChildEntity part in partList)
                     {
                         if (part.OwnerID != item.OwnerID)
                         {
@@ -4291,8 +4291,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
                     group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
-                    SceneObjectPart rootPart = null;
-                    rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
+                    ISceneChildEntity rootPart = null;
+                    rootPart = group.GetChildPart(group.UUID);
 
                     IScenePresence SP = World.GetScenePresence (m_host.OwnerID);
                     if (SP != null)
@@ -4305,7 +4305,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     // Fire on_rez
                     group.CreateScriptInstances(0, true, 0, UUID.Zero);
-                    rootPart.ParentGroup.ResumeScripts();
+                    rootPart.ParentEntity.ResumeScripts();
                 }
             }
         }
@@ -4661,9 +4661,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     ISceneChildEntity newRoot = parts[0];
                     parts.Remove(newRoot);
-                    foreach (SceneObjectPart part in parts)
+                    foreach(ISceneChildEntity part in parts)
                     {
-                        newRoot.ParentEntity.LinkToGroup (part.ParentGroup);
+                        newRoot.ParentEntity.LinkToGroup (part.ParentEntity);
                     }
                     newRoot.ParentEntity.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                 }
@@ -7864,7 +7864,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return Util.SHA1Hash(src).ToLower();
         }
 
-        protected ObjectShapePacket.ObjectDataBlock SetPrimitiveBlockShapeParams(SceneObjectPart part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist)
+        protected ObjectShapePacket.ObjectDataBlock SetPrimitiveBlockShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist)
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock = new ObjectShapePacket.ObjectDataBlock();
 
@@ -7940,7 +7940,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return shapeBlock;
         }
 
-        protected void SetPrimitiveShapeParams(SceneObjectPart part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector taper_b, LSL_Vector topshear, byte fudge)
+        protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector taper_b, LSL_Vector topshear, byte fudge)
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock;
 
@@ -7989,7 +7989,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             part.UpdateShape(shapeBlock);
         }
 
-        protected void SetPrimitiveShapeParams(SceneObjectPart part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector dimple, byte fudge)
+        protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector dimple, byte fudge)
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock;
 
@@ -8031,7 +8031,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             part.UpdateShape(shapeBlock);
         }
 
-        protected void SetPrimitiveShapeParams(SceneObjectPart part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector holesize, LSL_Vector topshear, LSL_Vector profilecut, LSL_Vector taper_a, float revolutions, float radiusoffset, float skew, byte fudge)
+        protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector holesize, LSL_Vector topshear, LSL_Vector profilecut, LSL_Vector taper_a, float revolutions, float radiusoffset, float skew, byte fudge)
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock;
 
@@ -8157,7 +8157,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             part.UpdateShape(shapeBlock);
         }
 
-        protected void SetPrimitiveShapeParams(SceneObjectPart part, string map, int type)
+        protected void SetPrimitiveShapeParams (ISceneChildEntity part, string map, int type)
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock = new ObjectShapePacket.ObjectDataBlock();
             UUID sculptId;
@@ -8248,8 +8248,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
 
                     string name = rules.Data[idx++].ToString();
-                    if (part is SceneObjectPart)
-                        (part as SceneObjectPart).Name = name;
+                    if(part is ISceneChildEntity)
+                        (part as ISceneChildEntity).Name = name;
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_DESC)
@@ -8258,8 +8258,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
 
                     string desc = rules.Data[idx++].ToString();
-                    if (part is SceneObjectPart)
-                        (part as SceneObjectPart).Description = desc;
+                    if(part is ISceneChildEntity)
+                        (part as ISceneChildEntity).Description = desc;
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_ROT_LOCAL)
@@ -8298,6 +8298,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else
                             part.AbsolutePosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
                     }
+                    else if(part is IScenePresence)
+                    {
+                        (part as IScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
+                        (part as IScenePresence).SendTerseUpdateToAllClients();
+                    }
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_SIZE)
                 {
@@ -8315,30 +8320,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (remain < 1)
                         return;
 
-                    if (part is SceneObjectPart) { }
-                    else return;
-
                     LSL_Rotation q = rules.GetQuaternionItem(idx++);
-                    // try to let this work as in SL...
-                    if ((part as ISceneChildEntity).ParentID == 0)
+                    if(part is ISceneChildEntity)
                     {
-                        // special case: If we are root, rotate complete SOG to new rotation
-                        SetRot(part as ISceneChildEntity, Rot2Quaternion(q));
-                    }
-                    else
-                    {
-                        // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                        SceneObjectGroup group = (part as SceneObjectPart).ParentGroup;
-                        if (group != null) // a bit paranoid, maybe
+                        // try to let this work as in SL...
+                        if((part as ISceneChildEntity).ParentID == 0)
                         {
-                            SceneObjectPart rootPart = group.RootPart;
-                            if (rootPart != null) // again, better safe than sorry
+                            // special case: If we are root, rotate complete SOG to new rotation
+                            SetRot(part as ISceneChildEntity, Rot2Quaternion(q));
+                        }
+                        else
+                        {
+                            // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
+                            ISceneEntity group = (part as ISceneChildEntity).ParentEntity;
+                            if(group != null) // a bit paranoid, maybe
                             {
-                                SetRot((part as ISceneChildEntity), rootPart.RotationOffset * Rot2Quaternion(q));
+                                ISceneChildEntity rootPart = group.RootChild;
+                                if(rootPart != null) // again, better safe than sorry
+                                {
+                                    SetRot((part as ISceneChildEntity), rootPart.RotationOffset * Rot2Quaternion(q));
+                                }
                             }
                         }
                     }
-
+                    else if(part is IScenePresence)
+                    {
+                        IScenePresence sp = (IScenePresence)part;
+                        sp.Rotation = Rot2Quaternion(q);
+                        sp.SendTerseUpdateToAllClients();
+                    }
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_TYPE)
@@ -8346,7 +8356,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (remain < 3)
                         return;
 
-                    if (part is SceneObjectPart) { }
+                    if(part is ISceneChildEntity) { }
                     else
                         return;
 
@@ -8375,8 +8385,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         taper_b = rules.GetVector3Item(idx++);
                         topshear = rules.GetVector3Item(idx++);
 
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 1);
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Straight;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, taper_b, topshear, 1);
 
                     }
 
@@ -8393,7 +8403,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         topshear = rules.GetVector3Item(idx++);
                         (part as ISceneChildEntity).Shape.ProfileShape = ProfileShape.Circle;
                         (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Straight;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 0);
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, taper_b, topshear, 0);
                     }
 
                     else if (code == (int)ScriptBaseClass.PRIM_TYPE_PRISM)
@@ -8407,8 +8417,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         twist = rules.GetVector3Item(idx++);
                         taper_b = rules.GetVector3Item(idx++);
                         topshear = rules.GetVector3Item(idx++);
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Straight;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, topshear, 3);
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Straight;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, taper_b, topshear, 3);
 
                     }
 
@@ -8422,8 +8432,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
                         taper_b = rules.GetVector3Item(idx++); // dimple
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, taper_b, 5);
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, taper_b, 5);
 
                     }
 
@@ -8443,8 +8453,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         revolutions = (float)rules.GetLSLFloatItem(idx++);
                         radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                         skew = (float)rules.GetLSLFloatItem(idx++);
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
                                                 revolutions, radiusoffset, skew, 0);
                     }
 
@@ -8464,8 +8474,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         revolutions = (float)rules.GetLSLFloatItem(idx++);
                         radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                         skew = (float)rules.GetLSLFloatItem(idx++);
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
                                                 revolutions, radiusoffset, skew, 1);
                     }
 
@@ -8485,8 +8495,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         revolutions = (float)rules.GetLSLFloatItem(idx++);
                         radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                         skew = (float)rules.GetLSLFloatItem(idx++);
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), face, v, hollow, twist, holesize, topshear, profilecut, taper_b,
                                                 revolutions, radiusoffset, skew, 3);
                     }
 
@@ -8497,8 +8507,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         string map = rules.Data[idx++].ToString();
                         face = (int)rules.GetLSLIntegerItem(idx++); // type
-                        (part as SceneObjectPart).Shape.PathCurve = (byte)Extrusion.Curve1;
-                        SetPrimitiveShapeParams((part as SceneObjectPart), map, face);
+                        (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Curve1;
+                        SetPrimitiveShapeParams((part as ISceneChildEntity), map, face);
                     }
                 }
 
@@ -8506,7 +8516,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 5)
                         return;
-                    if (part is SceneObjectPart) { }
+                    if(part is ISceneChildEntity) { }
                     else
                         return;
                     face = (int)rules.GetLSLIntegerItem(idx++);
@@ -8515,10 +8525,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     LSL_Vector offsets = rules.GetVector3Item(idx++);
                     double rotation = (double)rules.GetLSLFloatItem(idx++);
 
-                    SetTexture((part as SceneObjectPart), tex, face);
-                    ScaleTexture((part as SceneObjectPart), repeats.x, repeats.y, face);
-                    OffsetTexture((part as SceneObjectPart), offsets.x, offsets.y, face);
-                    RotateTexture((part as SceneObjectPart), rotation, face);
+                    SetTexture((part as ISceneChildEntity), tex, face);
+                    ScaleTexture((part as ISceneChildEntity), repeats.x, repeats.y, face);
+                    OffsetTexture((part as ISceneChildEntity), offsets.x, offsets.y, face);
+                    RotateTexture((part as ISceneChildEntity), rotation, face);
 
                 }
 
@@ -8526,15 +8536,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 3)
                         return;
-                    if (part is SceneObjectPart) { }
+                    if(part is ISceneChildEntity) { }
                     else
                         return;
                     face = (int)rules.GetLSLIntegerItem(idx++);
                     LSL_Vector color = rules.GetVector3Item(idx++);
                     double alpha = (double)rules.GetLSLFloatItem(idx++);
 
-                    (part as SceneObjectPart).SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
-                    SetAlpha((part as SceneObjectPart), alpha, face);
+                    (part as ISceneChildEntity).SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
+                    SetAlpha((part as ISceneChildEntity), alpha, face);
 
                 }
 
@@ -8542,7 +8552,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 7)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     bool flexi = rules.GetLSLIntegerItem(idx++);
                     int softness = rules.GetLSLIntegerItem(idx++);
@@ -8552,13 +8562,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     float tension = (float)rules.GetLSLFloatItem(idx++);
                     LSL_Vector force = rules.GetVector3Item(idx++);
 
-                    SetFlexi((part as SceneObjectPart), flexi, softness, gravity, friction, wind, tension, force);
+                    SetFlexi((part as ISceneChildEntity), flexi, softness, gravity, friction, wind, tension, force);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_POINT_LIGHT)
                 {
                     if (remain < 5)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     bool light = rules.GetLSLIntegerItem(idx++);
                     LSL_Vector lightcolor = rules.GetVector3Item(idx++);
@@ -8566,7 +8576,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     float radius = (float)rules.GetLSLFloatItem(idx++);
                     float falloff = (float)rules.GetLSLFloatItem(idx++);
 
-                    SetPointLight((part as SceneObjectPart), light, lightcolor, intensity, radius, falloff);
+                    SetPointLight((part as ISceneChildEntity), light, lightcolor, intensity, radius, falloff);
 
                 }
 
@@ -8574,55 +8584,55 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 2)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     face = rules.GetLSLIntegerItem(idx++);
                     float glow = (float)rules.GetLSLFloatItem(idx++);
 
-                    SetGlow((part as SceneObjectPart), face, glow);
+                    SetGlow((part as ISceneChildEntity), face, glow);
 
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_BUMP_SHINY)
                 {
                     if (remain < 3)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     face = (int)rules.GetLSLIntegerItem(idx++);
                     int shiny = (int)rules.GetLSLIntegerItem(idx++);
                     Bumpiness bump = (Bumpiness)Convert.ToByte((int)rules.GetLSLIntegerItem(idx++));
 
-                    SetShiny((part as SceneObjectPart), face, shiny, bump);
+                    SetShiny(part as ISceneChildEntity, face, shiny, bump);
 
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_FULLBRIGHT)
                 {
                     if (remain < 2)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     face = rules.GetLSLIntegerItem(idx++);
                     bool st = rules.GetLSLIntegerItem(idx++);
-                    SetFullBright((part as SceneObjectPart), face, st);
+                    SetFullBright(part as ISceneChildEntity, face, st);
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_MATERIAL)
                 {
                     if (remain < 1)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     int mat = rules.GetLSLIntegerItem(idx++);
                     if (mat < 0 || mat > 7)
                         return;
 
-                    (part as SceneObjectPart).Material = Convert.ToByte(mat);
+                    (part as ISceneChildEntity).Material = Convert.ToByte(mat);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_PHANTOM)
                 {
                     if (remain < 1)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     string ph = rules.Data[idx++].ToString();
                     bool phantom;
@@ -8632,7 +8642,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else
                         phantom = false;
 
-                    (part as SceneObjectPart).ScriptSetPhantomStatus(phantom);
+                    (part as ISceneChildEntity).ScriptSetPhantomStatus(phantom);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_PHYSICS)
                 {
@@ -8651,7 +8661,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (remain < 1)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     string temp = rules.Data[idx++].ToString();
                     bool tempOnRez;
@@ -8661,24 +8671,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else
                         tempOnRez = false;
 
-                    (part as SceneObjectPart).ScriptSetTemporaryStatus(tempOnRez);
+                    (part as ISceneChildEntity).ScriptSetTemporaryStatus(tempOnRez);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_TEXGEN)
                 {
                     if (remain < 2)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     //face,type
                     face = rules.GetLSLIntegerItem(idx++);
                     int style = rules.GetLSLIntegerItem(idx++);
-                    SetTexGen((part as SceneObjectPart), face, style);
+                    SetTexGen((part as ISceneChildEntity), face, style);
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_TEXT)
                 {
                     if (remain < 3)
                         return;
-                    if (!(part is SceneObjectPart))
+                    if(!(part is ISceneChildEntity))
                         return;
                     string primText = rules.GetLSLStringItem(idx++);
                     LSL_Vector primTextColor = rules.GetVector3Item(idx++);
@@ -8686,7 +8696,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     Vector3 av3 = new Vector3(Util.Clip((float)primTextColor.x, 0.0f, 1.0f),
                                   Util.Clip((float)primTextColor.y, 0.0f, 1.0f),
                                   Util.Clip((float)primTextColor.z, 0.0f, 1.0f));
-                    (part as SceneObjectPart).SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
+                    (part as ISceneChildEntity).SetText(primText, av3, Util.Clip((float)primTextAlpha, 0.0f, 1.0f));
 
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_OMEGA)
@@ -8971,7 +8981,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Vector3 MinPos = new Vector3(100000, 100000, 100000);
             Vector3 MaxPos = new Vector3(-100000, -100000, -100000);
-            foreach (SceneObjectPart child in m_host.ParentEntity.ChildrenEntities())
+            foreach(ISceneChildEntity child in m_host.ParentEntity.ChildrenEntities())
             {
                 Vector3 tmp = child.AbsolutePosition;
                 if (tmp.X < MinPos.X)
