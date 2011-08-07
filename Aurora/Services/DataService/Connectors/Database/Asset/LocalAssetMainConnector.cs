@@ -27,6 +27,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 return;
             m_Gd = genericData;
 
+            m_Log.Warn("Asset Database is using " + ((IDataConnector)genericData).Identifier);
+
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
