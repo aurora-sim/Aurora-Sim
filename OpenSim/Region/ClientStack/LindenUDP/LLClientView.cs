@@ -3632,14 +3632,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 IEntity entity = update.Entity;
                 PrimUpdateFlags updateFlags = update.Flags;
-                if (entity is SceneObjectPart)
+                if(entity is ISceneChildEntity)
                 {
-                    SceneObjectPart part = (SceneObjectPart)entity;
+                    ISceneChildEntity part = (ISceneChildEntity)entity;
 
-                    if (part.ParentGroup.IsAttachment && m_disableFacelights)
+                    if (part.ParentEntity.IsAttachment && m_disableFacelights)
                     {
-                        if (part.ParentGroup.RootPart.Shape.State != (byte)AttachmentPoint.LeftHand &&
-                            part.ParentGroup.RootPart.Shape.State != (byte)AttachmentPoint.RightHand)
+                        if(part.ParentEntity.RootChild.Shape.State != (byte)AttachmentPoint.LeftHand &&
+                            part.ParentEntity.RootChild.Shape.State != (byte)AttachmentPoint.RightHand)
                         {
                             part.Shape.LightEntry = false;
                         }

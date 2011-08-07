@@ -174,15 +174,15 @@ namespace Aurora.Modules
         {
             IScene scene = remoteClient.Scene;
             List<ISceneChildEntity> EntitiesToUpdate = new List<ISceneChildEntity>();
-            SceneObjectPart prim = null;
+            ISceneChildEntity prim = null;
             foreach (uint primLocalID in primLocalIDs)
             {
                 ISceneChildEntity entity = null;
                 if (scene.SceneGraph.TryGetPart(primLocalID, out entity))
                 {
-                    if (entity is SceneObjectPart)
+                    if(entity is ISceneChildEntity)
                     {
-                        prim = entity as SceneObjectPart;
+                        prim = entity as ISceneChildEntity;
                         // changed so that we send select to all the indicated prims
                         // also to root prim (done in prim.IsSelected)
                         // so "edit link parts" keep the object select and not moved by physics
@@ -327,7 +327,7 @@ namespace Aurora.Modules
             protected IScenePresence m_presence;
             protected SelectionModule m_module;
             protected bool m_IsSelecting = false;
-            protected SceneObjectPart m_SelectedUUID = null;
+            protected ISceneChildEntity m_SelectedUUID = null;
             protected byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
 
             public PerClientSelectionParticles (IScenePresence presence, SelectionModule mod)
@@ -350,7 +350,7 @@ namespace Aurora.Modules
                 m_presence = null;
             }
 
-            public SceneObjectPart SelectedUUID
+            public ISceneChildEntity SelectedUUID
             {
                 get { return m_SelectedUUID; }
                 set { m_SelectedUUID = value; }
@@ -388,7 +388,7 @@ namespace Aurora.Modules
                 if (!IsSelecting)
                     return;
 
-                SceneObjectPart SOP = m_SelectedUUID;
+                ISceneChildEntity SOP = m_SelectedUUID;
                 if (SOP == null) //This IS nesessary, this is how we can clear this out
                 {
                     IsSelecting = false;

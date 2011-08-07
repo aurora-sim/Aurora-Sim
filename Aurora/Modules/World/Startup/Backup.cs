@@ -407,12 +407,11 @@ namespace Aurora.Modules
                         ISceneEntity[] entities = m_scene.Entities.GetEntities();
                         foreach (ISceneEntity entity in entities)
                         {
-                            if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
+                            if (!entity.IsAttachment)
                             {
-                                List<SceneObjectPart> parts = new List<SceneObjectPart>();
-                                SceneObjectGroup grp = entity as SceneObjectGroup;
-                                parts.AddRange(grp.ChildrenList);
-                                DeleteSceneObject(grp, true, false); //Don't remove from the database
+                                List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
+                                parts.AddRange(entity.ChildrenEntities());
+                                DeleteSceneObject(entity, true, false); //Don't remove from the database
                                 m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
                                 {
                                     avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, parts.ToArray());
@@ -437,16 +436,15 @@ namespace Aurora.Modules
             /// <returns></returns>
             public bool DeleteSceneObjects (ISceneEntity[] groups, bool DeleteScripts, bool sendKillPackets)
             {
-                List<SceneObjectPart> parts = new List<SceneObjectPart>();
+                List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
                 foreach (ISceneEntity grp in groups)
                 {
-                    SceneObjectGroup group = grp as SceneObjectGroup;
                     if (grp == null)
                         continue;
                     //if (group.IsAttachment)
                     //    continue;
-                    parts.AddRange(group.ChildrenList);
-                    DeleteSceneObject(group, true, true);
+                    parts.AddRange(grp.ChildrenEntities());
+                    DeleteSceneObject(grp, true, true);
                 }
                 if(sendKillPackets)
                 {
@@ -853,7 +851,7 @@ namespace Aurora.Modules
                     ms.Close ();
                     ms = null;
                     data = null;
-                    foreach (SceneObjectPart part in sceneObject.ChildrenList)
+                    foreach(ISceneChildEntity part in sceneObject.ChildrenEntities())
                     {
                         if (!ResolveUserUuid (part.CreatorID))
                             part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;

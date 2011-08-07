@@ -3549,7 +3549,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return null;
                     }
 
-                    List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
+                    List<ISceneChildEntity> partList = group.ChildrenEntities();
                     // we set it's position in world.
                     // llRezObject sets the whole group at the position, while llRezAtRoot rezzes the group based on the root prim's position
                     // See: http://lslwiki.net/lslwiki/wakka.php?wakka=llRezAtRoot
@@ -3564,7 +3564,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // less root prim position
 
                         Vector3 offset = Vector3.Zero;
-                        foreach (SceneObjectPart child in partList)
+                        foreach(ISceneChildEntity child in partList)
                         {
                             offset += child.AbsolutePosition;
                         }
@@ -3575,8 +3575,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
 
                     World.SceneGraph.AddPrimToScene(group);
-                    
-                    SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart(group.UUID);
+
+                    ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
 
                     // Since renaming the item in the inventory does not affect the name stored
                     // in the serialization, transfer the correct name from the inventory to the
@@ -3593,7 +3593,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             if ((item.CurrentPermissions & 8) != 0)
                             {
-                                foreach (SceneObjectPart part in partList)
+                                foreach(ISceneChildEntity part in partList)
                                 {
                                     part.EveryoneMask = item.EveryonePermissions;
                                     part.NextOwnerMask = item.NextPermissions;
@@ -3643,7 +3643,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     group.ScheduleGroupUpdate(PrimUpdateFlags.FullUpdate);
 
-                    return rootPart.ParentGroup;
+                    return rootPart.ParentEntity;
                 }
             }
 

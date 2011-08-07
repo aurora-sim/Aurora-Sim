@@ -2015,7 +2015,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             InitLSL();
             LSL_List retVal = new LSL_List();
             //Assign requested part directly
-            SceneObjectPart part = m_host.ParentEntity.GetLinkNumPart(linknumber) as SceneObjectPart;
+            ISceneChildEntity part = m_host.ParentEntity.GetLinkNumPart(linknumber) as ISceneChildEntity;
 
             //Check to see if the requested part exists (NOT null) and if so, get it's rules
             if (part != null) retVal = ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);

@@ -785,7 +785,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             group.AbsolutePosition = pos;
             //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
-            SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart (group.UUID);
+            ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
             if (rootPart == null)
             {
                 m_log.Error ("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart.");
@@ -850,7 +850,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             // Fire on_rez
             group.CreateScriptInstances (0, true, 0, UUID.Zero);
-            rootPart.ParentGroup.ResumeScripts ();
+            rootPart.ParentEntity.ResumeScripts ();
 
             group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
             if (!m_scene.Permissions.BypassPermissions ())

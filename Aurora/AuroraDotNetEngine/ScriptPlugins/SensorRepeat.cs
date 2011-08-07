@@ -313,7 +313,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             Vector3 toRegionPos;
             double dis;
             int objtype;
-            SceneObjectPart part;
+            ISceneChildEntity part;
             float dx;
             float dy;
             float dz;
@@ -346,7 +346,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (ent.IsDeleted) // taken so long to do this it has gone from the scene
                     continue;
 
-                if (!(ent is SceneObjectGroup)) // dont bother if it is a pesky avatar
+                if (!(ent is ISceneEntity)) // dont bother if it is a pesky avatar
                     continue;
                 toRegionPos = ent.AbsolutePosition;
 
@@ -368,7 +368,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     // In Range and not the object containing the script, is it the right Type ?
                     objtype = 0;
 
-                    part = ((SceneObjectGroup)ent).RootPart;
+                    part = ((ISceneEntity)ent).RootChild;
                     if (part.AttachmentPoint != 0) // Attached so ignore
                         continue;
 
