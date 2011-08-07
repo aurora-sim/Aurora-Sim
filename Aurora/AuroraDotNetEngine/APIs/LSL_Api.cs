@@ -10112,9 +10112,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     case 5: // DATA_SIM_POS
                         if (info == null)
-                        {
                             break;
-                        }
+
                         reply = new LSL_Vector(
                             info.RegionLocX,
                             info.RegionLocY,
@@ -10136,9 +10135,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         break;
                     case 7: // DATA_SIM_RATING
                         if (info == null)
-                        {
                             break;
-                        }
+
                         uint access = Util.ConvertAccessLevelToMaturity(info.Access);
                         if (access == 0)
                             reply = "PG";
@@ -10150,19 +10148,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             reply = "UNKNOWN";
                         break;
                     case 128:
-                        ScriptProtection.CheckThreatLevel(ThreatLevel.High, "llRequestSimulatorData", m_host, "LSL");
-                        reply = "OpenSim";
+                        try
+                        {
+                            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "llRequestSimulatorData", m_host, "LSL");
+                            reply = "Aurora";
+                        }
+                        catch
+                        {
+                            reply = "";
+                        }
                         break;
                     default:
                         break;
                 }
-                UUID rq = UUID.Random();
+                if(reply != "")
+                {
+                    UUID rq = UUID.Random();
 
-                DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
+                    DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
 
-                tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, rq.ToString());
+                    tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, rq.ToString());
 
-                dataserverPlugin.AddReply(rq.ToString(), reply, 1000);
+                    dataserverPlugin.AddReply(rq.ToString(), reply, 1000);
+                }
             }
             catch (Exception)
             {

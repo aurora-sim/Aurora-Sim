@@ -315,18 +315,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             region.UDPPorts.Add (port);
             region.InternalEndPoint = new IPEndPoint(address, port);
 
-            if (config.Contains("AllowAlternatePorts"))
-            {
-                region.m_allow_alternate_ports = config.GetBoolean("AllowAlternatePorts", true);
-            }
-            else
-            {
-                NeedsUpdate = true;
-                region.m_allow_alternate_ports = Convert.ToBoolean(MainConsole.Instance.CmdPrompt("Allow alternate ports", "False"));
-
-                config.Set("AllowAlternatePorts", region.m_allow_alternate_ports.ToString());
-            }
-
             // External IP
             //
             string externalName;

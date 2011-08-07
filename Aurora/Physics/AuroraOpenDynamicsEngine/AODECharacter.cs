@@ -851,7 +851,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 Position.X > _parent_scene.Region.RegionSizeX - .25f ||
                 Position.Y > _parent_scene.Region.RegionSizeY - .25f)
             {
-                if (!_parent_scene.InfiniteRegion && !CheckForRegionCrossing())
+                if (!CheckForRegionCrossing())
                 {
                     Vector3 newPos = Position;
                     newPos.X = Util.Clip(Position.X, 0.75f, _parent_scene.Region.RegionSizeX - 0.75f);

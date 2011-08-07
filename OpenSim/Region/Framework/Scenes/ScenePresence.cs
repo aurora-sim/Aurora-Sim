@@ -191,7 +191,6 @@ namespace OpenSim.Region.Framework.Scenes
         // Default AV Height
         private float m_avHeight = 1.56f;
 
-        protected RegionInfo m_regionInfo;
         protected ulong crossingFromRegion;
 
         private readonly Vector3[] Dir_Vectors = new Vector3[12];
@@ -729,7 +728,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sendCourseLocationsMethod = SendCoarseLocationsDefault;
         }
 
-        public ScenePresence(IClientAPI client, IScene world, RegionInfo reginfo)
+        public ScenePresence(IClientAPI client, IScene world)
             : this()
         {
             m_controllingClient = client;
@@ -738,7 +737,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_name = m_controllingClient.Name;
             m_scene = world;
             m_uuid = client.AgentId;
-            m_regionInfo = reginfo;
             m_localId = m_scene.SceneGraph.AllocateLocalId();
 
             CreateSceneViewer();
@@ -852,7 +850,7 @@ namespace OpenSim.Region.Framework.Scenes
             IsChildAgent = false;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
-            m_controllingClient.MoveAgentIntoRegion (m_regionInfo, AbsolutePosition, look);
+            m_controllingClient.MoveAgentIntoRegion (Scene.RegionInfo, AbsolutePosition, look);
 
             m_log.DebugFormat(
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
@@ -2205,7 +2203,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Border Crossing Methods
 
-        private Dictionary<UUID, int> m_failedNeighborCrossing = new Dictionary<UUID, int> ();
+        private Dictionary<UUID, int> m_failedNeighborCrossing = new Dictionary<UUID, int>();
+        private List<GridRegion> m_regionsNearByForInfiniteRegionChecks = new List<GridRegion>();
 
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
@@ -2229,59 +2228,66 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!IsInTransit)
             {
-                if (pos2.X < 0f || pos2.Y < 0f ||
+                if(pos2.X < 0f || pos2.Y < 0f ||
                     pos2.X > Scene.RegionInfo.RegionSizeX || pos2.Y > Scene.RegionInfo.RegionSizeY)
                 {
-                    //If we are headed out of the region, make sure we have a region there
-                    IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule> ();
-                    if (neighborService != null)
+                    if(Scene.RegionInfo.InfiniteRegion)
                     {
-                        List<GridRegion> neighbors = neighborService.GetNeighbors(Scene);
-
-                        double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)pos2.X;
-                        double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)pos2.Y;
-
-                        GridRegion neighborRegion = null;
-
-                        foreach (GridRegion region in neighbors)
+                        return true;
+                    }
+                    else
+                    {
+                        //If we are headed out of the region, make sure we have a region there
+                        IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule>();
+                        if(neighborService != null)
                         {
-                            if (TargetX >= (double)region.RegionLocX
-                                && TargetY >= (double)region.RegionLocY
-                                && TargetX < (double)(region.RegionLocX + region.RegionSizeX)
-                                && TargetY < (double)(region.RegionLocY + region.RegionSizeY))
+                            List<GridRegion> neighbors = neighborService.GetNeighbors(Scene);
+
+                            double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)pos2.X;
+                            double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)pos2.Y;
+
+                            GridRegion neighborRegion = null;
+
+                            foreach(GridRegion region in neighbors)
                             {
-                                neighborRegion = region;
-                                break;
+                                if(TargetX >= (double)region.RegionLocX
+                                    && TargetY >= (double)region.RegionLocY
+                                    && TargetX < (double)(region.RegionLocX + region.RegionSizeX)
+                                    && TargetY < (double)(region.RegionLocY + region.RegionSizeY))
+                                {
+                                    neighborRegion = region;
+                                    break;
+                                }
                             }
-                        }
 
-                        if (neighborRegion != null)
-                        {
-                            if (m_failedNeighborCrossing.ContainsKey (neighborRegion.RegionID))
+                            if(neighborRegion != null)
                             {
-                                int diff = Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]);
-                                if (diff > 10 * 1000)
-                                    m_failedNeighborCrossing.Remove (neighborRegion.RegionID); //Only allow it to retry every 10 seconds
+                                if(m_failedNeighborCrossing.ContainsKey(neighborRegion.RegionID))
+                                {
+                                    int diff = Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]);
+                                    if(diff > 10 * 1000)
+                                        m_failedNeighborCrossing.Remove(neighborRegion.RegionID); //Only allow it to retry every 10 seconds
+                                    else
+                                        return false;
+                                }
+
+                                InTransit();
+                                bool isFlying = false;
+
+                                if(m_physicsActor != null)
+                                    isFlying = m_physicsActor.Flying;
+
+                                IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                                if(transferModule != null)
+                                    transferModule.Cross(this, isFlying, neighborRegion);
                                 else
-                                    return false;
+                                    m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+
+                                return true;
                             }
-                            
-                            InTransit();
-                            bool isFlying = false;
-
-                            if (m_physicsActor != null)
-                                isFlying = m_physicsActor.Flying;
-
-                            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
-                            if (transferModule != null)
-                                transferModule.Cross(this, isFlying, neighborRegion);
-                            else
-                                m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
-
-                            return true;
+                            //else
+                            //    m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
                         }
-                        //else
-                        //    m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
                     }
                 }
             }

@@ -208,7 +208,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private RegionInfo m_region;
         private IRegistryCore m_registry;
         private IWindModule m_windModule = null;
-        public bool InfiniteRegion = false;
 
         public RegionInfo Region
         {
@@ -429,7 +428,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     gravityVectorNormalized = gravityVector;
                     gravityVectorNormalized.Normalize ();
 
-                    InfiniteRegion = physicsconfig.GetBoolean("InfiniteRegion", InfiniteRegion);
                     m_avDecayTime = physicsconfig.GetFloat("avDecayTime", m_avDecayTime);
                     m_avStopDecaying = physicsconfig.GetFloat("avStopDecaying", m_avStopDecaying);
 

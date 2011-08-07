@@ -58,7 +58,6 @@ namespace OpenSim.Framework
         protected uint m_httpPort;
         protected string m_serverURI;
         protected string m_regionName = String.Empty;
-        public bool m_allow_alternate_ports;
         protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
         protected int m_regionLocX;
@@ -70,6 +69,7 @@ namespace OpenSim.Framework
         private UUID m_GridSecureSessionID = UUID.Zero;
         public int NumberStartup = 0;
         public StartupType Startup = StartupType.Normal;
+        public bool InfiniteRegion = false;
 
         /// <summary>
         /// The X length (in meters) that the region is
@@ -284,8 +284,6 @@ namespace OpenSim.Framework
             config.Set("InternalAddress", m_internalEndPoint.Address.ToString());
             config.Set("InternalPort", m_internalEndPoint.Port);
 
-            config.Set("AllowAlternatePorts", m_allow_alternate_ports.ToString());
-
             config.Set("ExternalHostName", m_externalHostName);
 
             if (m_objectCapacity != 0)
@@ -347,7 +345,6 @@ namespace OpenSim.Framework
             args["region_yloc"] = OSD.FromString(RegionLocY.ToString());
             args["internal_ep_address"] = OSD.FromString(InternalEndPoint.Address.ToString());
             args["internal_ep_port"] = OSD.FromString(InternalEndPoint.Port.ToString());
-            args["allow_alt_ports"] = OSD.FromBoolean(m_allow_alternate_ports);
             if (RegionType != String.Empty)
                 args["region_type"] = OSD.FromString(RegionType);
             args["password"] = OSD.FromUUID(Password);
@@ -407,8 +404,6 @@ namespace OpenSim.Framework
                 Int32.TryParse(args["internal_ep_port"].AsString(), out port);
             }
             InternalEndPoint = new IPEndPoint(ip_addr, port);
-            if (args.ContainsKey("allow_alt_ports"))
-                m_allow_alternate_ports = args["allow_alt_ports"].AsBoolean();
             if (args.ContainsKey("region_type"))
                 m_regionType = args["region_type"].AsString();
             if (args.ContainsKey("password"))
