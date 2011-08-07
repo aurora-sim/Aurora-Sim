@@ -999,7 +999,7 @@ namespace OpenSim.Framework
 
         void ScriptSetTemporaryStatus (bool tempOnRez);
 
-        int InventorySerial { get; set; }
+        uint InventorySerial { get; set; }
     }
 
     public interface ISceneGraph
