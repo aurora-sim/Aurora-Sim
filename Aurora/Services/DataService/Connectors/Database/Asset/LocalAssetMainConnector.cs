@@ -45,7 +45,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             IDataReader dr = null;
             try
             {
-                dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, data");
+                dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets", "id, name, description, assetType, local, temporary, asset_flags, creatorID, data");
                 /*if (dr == null)
                 {
                     m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
@@ -73,7 +73,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             IDataReader dr = null;
             try
             {
-                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID");
+                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, creatorID");
                 if (dr == null)
                 {
                     m_Log.Warn("[LocalAssetDatabase] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
@@ -126,14 +126,25 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             try
             {
-                if (asset.Name.Length > 64) asset.Name = asset.Name.Substring(0, 64);
-                if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
+                if(asset.Name.Length > 64)
+                    asset.Name = asset.Name.Substring(0, 64);
+                if(asset.Description.Length > 128)
+                    asset.Description = asset.Description.Substring(0, 128);
                 int now = (int)Utils.DateTimeToUnixTime(DateTime.UtcNow);
-                Delete(asset.ID);
-                m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "CreatorID", "data" },
-                    new object[] { asset.ID, asset.Name, asset.Description, (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                if(ExistsAsset(asset.ID))
+                {
+                    m_Log.Warn("[LocalAssetDatabase]: Asset already exists in the db - " + asset.ID);
+                    Delete(asset.ID);
+                    m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
+                        new object[] { asset.ID, asset.Name, asset.Description, (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                }
+                else
+                {
+                    m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
+                        new object[] { asset.ID, asset.Name, asset.Description, (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                }
             }
-            catch (Exception e)
+            catch(Exception e)
             {
                 m_Log.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
                     asset.ID, asset.Name, e.ToString());
@@ -198,7 +209,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             string type = dr["assetType"].ToString();
             asset.TypeAsset = (AssetType)int.Parse(type);
             UUID creator;
-            if(UUID.TryParse(dr["CreatorID"].ToString(), out creator))
+
+            if(UUID.TryParse(dr["creatorID"].ToString(), out creator))
                 asset.CreatorID = creator;
             try
             {

@@ -103,7 +103,7 @@ namespace OpenSim.Services.AssetService
             if (cache != null)
             {
                 AssetBase cachedAsset = cache.Get(id);
-                if (cachedAsset != null)
+                if (cachedAsset != null && cachedAsset.Data.Length != 0)
                     return cachedAsset;
             }
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
@@ -126,7 +126,7 @@ namespace OpenSim.Services.AssetService
             if (cache != null)
             {
                 AssetBase cachedAsset = cache.Get(id);
-                if (cachedAsset != null)
+                if(cachedAsset != null && cachedAsset.Data.Length != 0)
                     return cachedAsset.Data;
             }
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
@@ -147,7 +147,7 @@ namespace OpenSim.Services.AssetService
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null && asset != null)
+            if(cache != null && asset != null && asset.Data.Length != 0)
                 cache.Cache(asset);
 
             //m_log.DebugFormat("[AssetService]: Got asset {0}", asset);
@@ -162,7 +162,7 @@ namespace OpenSim.Services.AssetService
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null && asset != null)
+            if(cache != null && asset != null && asset.Data.Length != 0)
             {
                 cache.Expire(asset.ID.ToString());
                 cache.Cache(asset);
