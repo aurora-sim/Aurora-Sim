@@ -812,7 +812,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             taskTimer.Stop();
             taskTimer.Interval = howLong;
-            if (!disableTimer)
+            if ((m_Enabled) && (!disableTimer))
                 taskTimer.Start();
         }
 
