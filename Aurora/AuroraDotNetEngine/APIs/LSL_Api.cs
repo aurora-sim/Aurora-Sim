@@ -3465,17 +3465,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // need the magnitude later
                         float velmag = (float)Util.GetMagnitude(llvel);
 
-                        SceneObjectGroup new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
+                        ISceneEntity new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
 
                         // If either of these are null, then there was an unknown error.
                         if (new_group == null)
                             continue;
-                        if (new_group.RootPart == null)
+                        if (new_group.RootChild == null)
                             continue;
 
                         // objects rezzed with this method are die_at_edge by default.
                         if(SetDieAtEdge)
-                            new_group.RootPart.SetDieAtEdge(true);
+                            new_group.RootChild.SetDieAtEdge(true);
 
                         new_group.ResumeScripts();
 
@@ -3483,7 +3483,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         float groupmass = new_group.GetMass();
 
-                        if (new_group.RootPart.PhysActor != null && new_group.RootPart.PhysActor.IsPhysical && llvel != Vector3.Zero)
+                        if(new_group.RootChild.PhysActor != null && new_group.RootChild.PhysActor.IsPhysical && llvel != Vector3.Zero)
                         {
                             //Apply the velocity to the object
                             //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
@@ -3525,7 +3525,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="vel"></param>
         /// <param name="param"></param>
         /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful</returns>
-        public SceneObjectGroup RezObject(
+        public ISceneEntity RezObject(
             ISceneChildEntity sourcePart, TaskInventoryItem item,
             Vector3 pos, Quaternion rot, Vector3 vel, int param, UUID RezzedFrom, bool RezObjectAtRoot)
         {
@@ -4289,7 +4289,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // if attachment we set it's asset id so object updates can reflect that
                     // if not, we set it's position in world.
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
-                    group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
                     ISceneChildEntity rootPart = null;
                     rootPart = group.GetChildPart(group.UUID);
@@ -4299,13 +4298,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         group.SetGroup(m_host.GroupID, SP.ControllingClient);
 
                     if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
-                    {
                         group.ClearPartAttachmentData();
-                    }
 
                     // Fire on_rez
                     group.CreateScriptInstances(0, true, 0, UUID.Zero);
                     rootPart.ParentEntity.ResumeScripts();
+                    group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
@@ -8346,8 +8344,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else if(part is IScenePresence)
                     {
                         IScenePresence sp = (IScenePresence)part;
-                        sp.Rotation = Rot2Quaternion(q);
-                        sp.SendTerseUpdateToAllClients();
+                        ISceneChildEntity childObj = sp.Scene.GetSceneObjectPart(sp.SittingOnUUID);
+                        if(childObj != null)
+                        {
+                            sp.Rotation = childObj.ParentEntity.GroupRotation * Rot2Quaternion(q);
+                            sp.SendTerseUpdateToAllClients();
+                        }
                     }
                 }
 

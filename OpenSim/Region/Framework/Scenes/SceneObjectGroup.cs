@@ -3371,10 +3371,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             HasGroupChanged = true;
-
-            // Don't trigger the update here - otherwise some client issues occur when multiple updates are scheduled
-            // for the same object with very different properties.  The caller must schedule the update.
-            //ScheduleGroupForFullUpdate();
+            if(client != null)
+                GetProperties(client);
         }
 
         public void TriggerScriptChangedEvent(Changed val)

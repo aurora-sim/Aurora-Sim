@@ -1776,9 +1776,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             IScenePresence avatar;
             if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
-            {
                 destPart.GetProperties(avatar.ControllingClient);
-            }
         }
 
         /// <summary>
@@ -1904,9 +1902,7 @@ namespace OpenSim.Region.Framework.Scenes
             IScenePresence avatar;
 
             if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
-            {
                 destPart.GetProperties(avatar.ControllingClient);
-            }
         }
 
         /// <summary>

@@ -2941,8 +2941,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void GetProperties(IClientAPI client)
         {
-            if (ParentGroup != null && ParentGroup.Scene != null)
-                ParentGroup.Scene.GetScenePresence(client.AgentId).SceneViewer.QueuePartsForPropertiesUpdate(new ISceneChildEntity[1] { this });
+            IScenePresence sp;
+            if (ParentGroup != null && ParentGroup.Scene != null && (sp = ParentGroup.Scene.GetScenePresence(client.AgentId)) != null)
+                sp.SceneViewer.QueuePartsForPropertiesUpdate(new ISceneChildEntity[1] { this });
         }
 
         public UUID GetRootPartUUID()
@@ -4539,9 +4540,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetGroup(UUID groupID, IClientAPI client)
         {
             _groupID = groupID;
-            if (client != null)
-                GetProperties(client);
-            ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         /// <summary>

@@ -290,9 +290,9 @@ namespace OpenSim.Region.Framework.Scenes
                 IEntity entity;
                 if (TryGetEntity(LocalID, out entity))
                 {
-                    if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
-                        if (((SceneObjectGroup)entity).OwnerID == remoteClient.AgentId)
-                            ((SceneObjectGroup)entity).SetGroup(GroupID, remoteClient);
+                    if(m_parentScene.Permissions.CanEditObject(((ISceneEntity)entity).UUID, remoteClient.AgentId))
+                        if(((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
+                            ((ISceneEntity)entity).SetGroup(GroupID, remoteClient);
                 }
             }
         }

@@ -4187,9 +4187,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             List<ObjectPropertiesPacket.ObjectDataBlock> blocks = new List<ObjectPropertiesPacket.ObjectDataBlock>();
             foreach (IEntity entity in parts)
             {
-                if (!(entity is SceneObjectPart))
+                if (!(entity is ISceneChildEntity))
                     continue;
-                SceneObjectPart part = entity as SceneObjectPart;
+                ISceneChildEntity part = entity as ISceneChildEntity;
 
                 ObjectPropertiesPacket.ObjectDataBlock block =
                         new ObjectPropertiesPacket.ObjectDataBlock();
@@ -4210,21 +4210,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     block.OwnerID = UUID.Zero;
                 else
                     block.OwnerID = part.OwnerID;
-                block.TouchName = Util.StringToBytes256(part.ParentGroup.RootPart.TouchName);
+                block.TouchName = Util.StringToBytes256(part.ParentEntity.RootChild.TouchName);
                 block.TextureID = new byte[0];
-                block.SitName = Util.StringToBytes256(part.ParentGroup.RootPart.SitName);
+                block.SitName = Util.StringToBytes256(part.ParentEntity.RootChild.SitName);
                 block.Name = Util.StringToBytes256(part.Name);
                 block.Description = Util.StringToBytes256(part.Description);
-                block.OwnerMask = part.ParentGroup.RootPart.OwnerMask;
-                block.NextOwnerMask = part.ParentGroup.RootPart.NextOwnerMask;
-                block.GroupMask = part.ParentGroup.RootPart.GroupMask;
-                block.EveryoneMask = part.ParentGroup.RootPart.EveryoneMask;
-                block.BaseMask = part.ParentGroup.RootPart.BaseMask;
+                block.OwnerMask = part.ParentEntity.RootChild.OwnerMask;
+                block.NextOwnerMask = part.ParentEntity.RootChild.NextOwnerMask;
+                block.GroupMask = part.ParentEntity.RootChild.GroupMask;
+                block.EveryoneMask = part.ParentEntity.RootChild.EveryoneMask;
+                block.BaseMask = part.ParentEntity.RootChild.BaseMask;
                 //            proper.ObjectData[0].AggregatePerms = 53;
                 //            proper.ObjectData[0].AggregatePermTextures = 0;
                 //            proper.ObjectData[0].AggregatePermTexturesOwner = 0;
-                block.SaleType = part.ParentGroup.RootPart.ObjectSaleType;
-                block.SalePrice = part.ParentGroup.RootPart.SalePrice;
+                block.SaleType = part.ParentEntity.RootChild.ObjectSaleType;
+                block.SalePrice = part.ParentEntity.RootChild.SalePrice;
                 blocks.Add(block);
             }
             //Theres automatic splitting, just let it go on through

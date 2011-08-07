@@ -595,6 +595,8 @@ namespace OpenSim.Framework
         void BackupPreparation();
 
         void RemoveScriptInstances (bool p);
+
+        float GetMass ();
     }
 
     public interface IEntity
@@ -996,6 +998,8 @@ namespace OpenSim.Framework
         void ClearUpdateSchedule ();
 
         void ScriptSetTemporaryStatus (bool tempOnRez);
+
+        int InventorySerial { get; set; }
     }
 
     public interface ISceneGraph
