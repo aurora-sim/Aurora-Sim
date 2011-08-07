@@ -141,7 +141,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         protected void SendCompleteMessage(IClientAPI remoteClient)
         {
-            remoteClient.SendAssetUploadCompleteMessage((sbyte)m_asset.Type, true, m_asset.ID);
 
             m_finished = true;
             if (m_createItem)
@@ -152,6 +151,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             {
                 m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
             }
+            remoteClient.SendAssetUploadCompleteMessage((sbyte)m_asset.Type, true, m_asset.ID);
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)

@@ -731,7 +731,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
                 }
             }
-            if (group == null && (doc.FirstChild.OuterXml.StartsWith ("<groups>") ||
+            if(group == null && doc != null && (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
                 (doc.FirstChild.NextSibling != null &&
                 doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))))
             {
@@ -744,6 +744,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     remoteClient.SendAlertMessage ("Failed to find the item you requested.");
                     return null;
                 }
+            }
+            if(group == null)
+            {
+                remoteClient.SendAlertMessage("Failed to find the item you requested.");
+                return null;
             }
 
             string reason;
