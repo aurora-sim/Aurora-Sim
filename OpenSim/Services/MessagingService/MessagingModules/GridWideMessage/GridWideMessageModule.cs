@@ -174,11 +174,18 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
                 if (manager != null && manager.Scenes.Count > 0)
                 {
-                    IDialogModule dialogModule = manager.Scenes[0].RequestModuleInterface<IDialogModule>();
-                    if (dialogModule != null)
+                    foreach(IScene scene in manager.Scenes)
                     {
-                        //Send the message to the user now
-                        dialogModule.SendAlertToUser(UUID.Parse(user), value);
+                        IScenePresence sp = null;
+                        if(scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
+                        {
+                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
+                            if(dialogModule != null)
+                            {
+                                //Send the message to the user now
+                                dialogModule.SendAlertToUser(UUID.Parse(user), value);
+                            }
+                        }
                     }
                 }
             }
