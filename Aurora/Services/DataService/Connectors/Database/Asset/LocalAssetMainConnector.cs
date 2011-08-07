@@ -47,7 +47,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, data");
                 /*if (dr == null)
                 {
-                    m_Log.Warn("[LocalAssetMainConnector] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
+                    m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
                     return null;
                 }*/
                 while(dr != null && dr.Read())
@@ -57,11 +57,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[ASSETS DB]: MySql failure fetching asset " + uuid, e);
+                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e.ToString());
             }
             finally
             {
-                if (dr != null) dr.Close();
+                if (dr != null)
+                    dr.Close();
             }
             return null;
         }
@@ -74,7 +75,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID");
                 if (dr == null)
                 {
-                    m_Log.Warn("[LocalAssetMainConnector] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
+                    m_Log.Warn("[LocalAssetDatabase] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
                     return null;
                 }
                 while (dr.Read())
@@ -84,7 +85,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[ASSETS DB]: MySql failure fetching asset " + uuid, e);
+                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e.ToString());
             }
             finally
             {
@@ -101,11 +102,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
                 if (dr != null)
                     return (byte[])dr["data"];
-                m_Log.Warn("[LocalAssetMainConnector] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
+                m_Log.Warn("[LocalAssetDatabase] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
-                m_Log.Error("[ASSETS DB]: MySql failure fetching asset " + uuid, e);
+                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e.ToString());
             }
             finally
             {
@@ -133,8 +134,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.ErrorFormat("[ASSET DB]: MySQL failure creating asset {0} with name \"{1}\". Error: {2}",
-                    asset.ID, asset.Name, e.Message);
+                m_Log.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
+                    asset.ID, asset.Name, e.ToString());
             }
             return true;
         }
@@ -147,7 +148,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[ASSETS DB] UpdateContent(" + id + ") - Errored", e);
+                m_Log.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e.ToString());
             }
         }
 
@@ -160,7 +161,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             catch (Exception e)
             {
                 m_Log.ErrorFormat(
-                    "[ASSETS DB]: MySql failure fetching asset {0}" + Environment.NewLine + e, uuid);
+                    "[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e.ToString(), uuid);
             }
             return false;
         }
@@ -178,7 +179,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[ASSETS DB] Error while deleting asset", e);
+                m_Log.Error("[LocalAssetDatabase] Error while deleting asset " + e.ToString());
             }
             return true;
         }
@@ -200,9 +201,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 asset.CreatorID = creator;
             try
             {
-                if ((dr["data"] != null) && (dr["data"].ToString() != ""))
+                object d = dr["data"];
+                if ((d != null) && (d.ToString() != ""))
                 {
-                    asset.Data = (Byte[]) dr["data"];
+                    asset.Data = (Byte[]) d;
                     asset.MetaOnly = false;
                 }
                 else
@@ -211,10 +213,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     asset.Data = new byte[0];
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 asset.MetaOnly = true;
                 asset.Data = new byte[0];
+                m_Log.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex.ToString());
             }
             
             if (dr["local"].ToString().Equals("1") || dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))

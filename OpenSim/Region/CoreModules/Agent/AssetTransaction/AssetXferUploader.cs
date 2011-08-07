@@ -141,7 +141,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         protected void SendCompleteMessage(IClientAPI remoteClient)
         {
-
             m_finished = true;
             if (m_createItem)
             {
