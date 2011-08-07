@@ -580,8 +580,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 results = (Byte[])bformatter.Deserialize(stream);
                 if(hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
                 {
-                    // just want to see if this ever happens.. 
-                    m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash.");
+                    // seen this happen a couple times.. recovery seems to work good..
+                    if (!waserror)
+                    {
+                        if (RestoreBackup(hashCode)) return LoadFile(hashCode, true);
+                        else m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery");
+                    }
+                    else
+                        m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery 2");
                 }
                 return results;
             }
