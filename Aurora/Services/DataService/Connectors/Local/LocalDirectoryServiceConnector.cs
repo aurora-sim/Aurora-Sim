@@ -105,8 +105,8 @@ namespace Aurora.Services.DataService
             Values.Add(args.UserLocation.X);
             Values.Add(args.UserLocation.Y);
             Values.Add(args.UserLocation.Z);
-            Values.Add(args.Name);
-            Values.Add(args.Description);
+            Values.Add(args.Name.Replace("'", "\'"));
+            Values.Add(args.Description.Replace("'", "\'"));
             Values.Add(args.Flags);
             Values.Add(args.Dwell);
             //InfoUUID is the missing 'real' Gridwide ParcelID
