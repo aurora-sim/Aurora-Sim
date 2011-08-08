@@ -166,6 +166,7 @@ namespace Aurora.Modules.RegionLoader
             }
             region.NumberStartup = int.Parse (CStartNum.Text);
             region.Startup = ConvertIntToStartupType(CStartupType.SelectedIndex);
+            region.InfiniteRegion = cInfiniteRegion.Checked;
 
             m_connector.UpdateRegionInfo(region);
             CopyOverDefaultRegion (region.RegionName);
@@ -219,6 +220,7 @@ namespace Aurora.Modules.RegionLoader
             RegionSizeX.Text = region.RegionSizeX.ToString ();
             RegionSizeY.Text = region.RegionSizeY.ToString ();
             startupType.SelectedIndex = ConvertStartupType (region.Startup);
+            einfiniteRegion.Checked = region.InfiniteRegion;
             IScene scene;
             if (m_sceneManager.TryGetScene (region.RegionID, out scene))
                 SetOnlineStatus ();
@@ -343,6 +345,7 @@ namespace Aurora.Modules.RegionLoader
             region.RegionSizeX = int.Parse(RegionSizeX.Text);
             region.RegionSizeY = int.Parse(RegionSizeY.Text);
             region.Startup = ConvertIntToStartupType(startupType.SelectedIndex);
+            region.InfiniteRegion = einfiniteRegion.Checked;
 
             if ((region.RegionSizeX % Constants.MinRegionSize) != 0 || 
                 (region.RegionSizeY % Constants.MinRegionSize) != 0)
@@ -468,6 +471,11 @@ namespace Aurora.Modules.RegionLoader
 --Soft only loads parcels and terrain on startup (not prims). 
 --Medium does the same as Soft, except that it loads the prims as well.
 Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.");
+        }
+
+        private void InfiniteRegion_Click (object sender, EventArgs e)
+        {
+            MessageBox.Show("This disables the borders around the region, so that you can leave the boundries of the region and go into the 'void'.");
         }
 
         private void Export_Click(object sender, EventArgs e)
