@@ -573,13 +573,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if(outgoingPacket.FinishedMethod != null)
                 outgoingPacket.FinishedMethod(outgoingPacket);
-            if(!isResend && !isReliable && outgoingPacket.Category != ThrottleOutPacketType.Resend)
+            /*if(!isResend && !isReliable && outgoingPacket.Category != ThrottleOutPacketType.Resend)
             {
                 outgoingPacket.Buffer = null;
                 outgoingPacket.FinishedMethod = null;
                 outgoingPacket.Packet = null;
                 outgoingPacket = null;
-            }
+            }*/
         }
 
         protected override void PacketReceived(UDPPacketBuffer buffer)
