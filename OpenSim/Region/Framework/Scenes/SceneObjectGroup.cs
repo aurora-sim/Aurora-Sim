@@ -2705,6 +2705,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Position
 
+        private Vector3 m_lastSigInfiniteRegionPos = Vector3.Zero;
+        private List<GridRegion> m_nearbyInfiniteRegions = new List<GridRegion>();
         public void SetAbsolutePosition (bool UpdatePrimActor, Vector3 val)
         {
             if (!IsAttachment && RootPart.Shape.State == 0)
@@ -2714,64 +2716,118 @@ namespace OpenSim.Region.Framework.Scenes
                     val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
                     && !IsAttachmentCheckFull () && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
                 {
-                    //If we are headed out of the region, make sure we have a region there
-                    IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule> ();
-                    if (neighborService != null && !m_inTransit)
+                    if(Scene.RegionInfo.InfiniteRegion)
                     {
-                        m_inTransit = true;
-                        List<GridRegion> neighbors = neighborService.GetNeighbors (Scene);
-
-                        int RegionCrossX = Scene.RegionInfo.RegionLocX;
-                        int RegionCrossY = Scene.RegionInfo.RegionLocY;
-
-                        if (val.X < 0f)
-                            RegionCrossX -= Constants.RegionSize;
-                        if (val.Y < 0f)
-                            RegionCrossY -= Constants.RegionSize;
-                        if (val.X > Scene.RegionInfo.RegionSizeX)
-                            RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
-                        if (val.Y > Scene.RegionInfo.RegionSizeY)
-                            RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
+                        double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)val.X;
+                        double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)val.Y;
+                        if(m_lastSigInfiniteRegionPos.X - AbsolutePosition.X > 256 ||
+                            m_lastSigInfiniteRegionPos.X - AbsolutePosition.X < -256 ||
+                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y > 256 ||
+                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -256)
+                        {
+                            m_lastSigInfiniteRegionPos = AbsolutePosition;
+                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int)(TargetX - 256), (int)(TargetX + 256),
+                                (int)(TargetY - 256), (int)(TargetY + 256));
+                        }
                         GridRegion neighborRegion = null;
 
-                        foreach (GridRegion region in neighbors)
+                        foreach(GridRegion region in m_nearbyInfiniteRegions)
                         {
-                            if (region.RegionLocX == RegionCrossX &&
-                                region.RegionLocY == RegionCrossY)
+                            if(TargetX >= (double)region.RegionLocX
+                                && TargetY >= (double)region.RegionLocY
+                                && TargetX < (double)(region.RegionLocX + region.RegionSizeX)
+                                && TargetY < (double)(region.RegionLocY + region.RegionSizeY))
                             {
                                 neighborRegion = region;
                                 break;
                             }
                         }
 
-                        if (neighborRegion != null)
+                        if(neighborRegion != null)
                         {
                             //Fix the location that the prim will land
-                            if (val.X < 0)
+                            if(val.X < 0)
                                 val.X += neighborRegion.RegionSizeX;
-                            if (val.X > Scene.RegionInfo.RegionSizeX)
+                            if(val.X > Scene.RegionInfo.RegionSizeX)
                                 val.X -= Scene.RegionInfo.RegionSizeX;
-                            if (val.Y < 0)
+                            if(val.Y < 0)
                                 val.Y += neighborRegion.RegionSizeY;
-                            if (val.Y > Scene.RegionInfo.RegionSizeY)
+                            if(val.Y > Scene.RegionInfo.RegionSizeY)
                                 val.Y -= Scene.RegionInfo.RegionSizeY;
 
-                            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule> ();
-                            if (transferModule != null)
+                            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                            if(transferModule != null)
                             {
-                                if (transferModule.CrossGroupToNewRegion (this, val, neighborRegion))
+                                if(transferModule.CrossGroupToNewRegion(this, val, neighborRegion))
                                 {
                                     m_inTransit = false;
                                     return;
                                 }
                             }
                         }
-                        //The group should have crossed a region, but no region was found so return it instead
-                        m_log.Info ("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
-                        ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory> ();
-                        if (inventoryModule != null)
-                            inventoryModule.ReturnObjects (new ISceneEntity[1] { this }, UUID.Zero);
                         return;
+                    }
+                    else
+                    {
+                        //If we are headed out of the region, make sure we have a region there
+                        IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule>();
+                        if(neighborService != null && !m_inTransit)
+                        {
+                            m_inTransit = true;
+                            List<GridRegion> neighbors = neighborService.GetNeighbors(Scene);
+
+                            int RegionCrossX = Scene.RegionInfo.RegionLocX;
+                            int RegionCrossY = Scene.RegionInfo.RegionLocY;
+
+                            if(val.X < 0f)
+                                RegionCrossX -= Constants.RegionSize;
+                            if(val.Y < 0f)
+                                RegionCrossY -= Constants.RegionSize;
+                            if(val.X > Scene.RegionInfo.RegionSizeX)
+                                RegionCrossX += (int)Scene.RegionInfo.RegionSizeX;
+                            if(val.Y > Scene.RegionInfo.RegionSizeY)
+                                RegionCrossY += (int)Scene.RegionInfo.RegionSizeY;
+                            GridRegion neighborRegion = null;
+
+                            foreach(GridRegion region in neighbors)
+                            {
+                                if(region.RegionLocX == RegionCrossX &&
+                                    region.RegionLocY == RegionCrossY)
+                                {
+                                    neighborRegion = region;
+                                    break;
+                                }
+                            }
+
+                            if(neighborRegion != null)
+                            {
+                                //Fix the location that the prim will land
+                                if(val.X < 0)
+                                    val.X += neighborRegion.RegionSizeX;
+                                if(val.X > Scene.RegionInfo.RegionSizeX)
+                                    val.X -= Scene.RegionInfo.RegionSizeX;
+                                if(val.Y < 0)
+                                    val.Y += neighborRegion.RegionSizeY;
+                                if(val.Y > Scene.RegionInfo.RegionSizeY)
+                                    val.Y -= Scene.RegionInfo.RegionSizeY;
+
+                                IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                                if(transferModule != null)
+                                {
+                                    if(transferModule.CrossGroupToNewRegion(this, val, neighborRegion))
+                                    {
+                                        m_inTransit = false;
+                                        return;
+                                    }
+                                }
+                            }
+                            //The group should have crossed a region, but no region was found so return it instead
+                            m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition + " because it has gone out of bounds.");
+                            ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
+                            if(inventoryModule != null)
+                                inventoryModule.ReturnObjects(new ISceneEntity[1] { this }, UUID.Zero);
+                            return;
+                        }
                     }
                 }
             }

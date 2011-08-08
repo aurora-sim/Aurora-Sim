@@ -618,7 +618,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void EventSchExec (QueueItemStruct QIS)
         {
-            if (QIS.ID == null)
+            if(QIS.ID == null || QIS.ID.Script == null)
                 return;
 
             if (!QIS.ID.Running)

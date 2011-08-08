@@ -353,6 +353,7 @@ namespace OpenSim.Framework
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
             OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(delegate(int a) { return a;}));
             args["UDPPorts"] = ports;
+            args["InfiniteRegion"] = OSD.FromBoolean(InfiniteRegion);
             if (secure)
             {
                 args["disabled"] = OSD.FromBoolean(Disabled);
@@ -437,7 +438,10 @@ namespace OpenSim.Framework
                 NumberStartup = args["number_startup"].AsInteger();
             if (args.ContainsKey ("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger();
-            FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
+            if(args.ContainsKey("FindExternalIP"))
+                FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
+            if(args.ContainsKey("InfiniteRegion"))
+                InfiniteRegion = args["InfiniteRegion"].AsBoolean();
             if (args.ContainsKey("RegionSettings"))
             {
                 RegionSettings = new RegionSettings();
