@@ -262,10 +262,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_linearFrictionTimescale = new Vector3(pValue.X, pValue.Y, pValue.Z);
                     break;
                 case Vehicle.LINEAR_MOTOR_DIRECTION:
-                    if(pValue.X == 0 && pValue.Y == 0 && pValue.Z == 0)
-                        m_linearMotorDirection /= 2;
+                    if(pValue.X == 0)
+                        m_linearMotorDirection.X /= 5;
                     else
-                        m_linearMotorDirection = new Vector3(pValue.X, pValue.Y, pValue.Z);
+                        m_linearMotorDirection.X = pValue.X;
+                    if(pValue.Y == 0)
+                        m_linearMotorDirection.Y /= 5;
+                    else
+                        m_linearMotorDirection.Y = pValue.Y;
+                    if(pValue.Z == 0)
+                        m_linearMotorDirection.Z /= 5;
+                    else
+                        m_linearMotorDirection.Z = pValue.Z;
                     m_linearMotorDirectionLASTSET = m_linearMotorDirection;
                     m_linearMotorApply = 100;
                     break;
@@ -601,11 +609,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if(!addAmount.ApproxEquals(Vector3.Zero, 0.01f))
                 {
                     // decay applied velocity
-                    Vector3 decayfraction = Vector3.One;
-                    if(m_linearMotorDecayTimescale <= 1)
-                        decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale * m_linearMotorDecayTimescale) / (pTimestep))));
-                    else
-                        decayfraction = ((Vector3.One / ((m_linearMotorDecayTimescale) / (pTimestep))));
+                    float decayTime = m_linearMotorDecayTimescale / pTimestep;
+                    Vector3 decayfraction = Vector3.One / decayTime;
                     if(decayfraction.X > 0.9f)
                         decayfraction.X = 0.9f;
                     if(decayfraction.Y > 0.9f)
@@ -613,7 +618,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if(decayfraction.Z > 0.9f)
                         decayfraction.Z = 0.9f;
                     Vector3 decayAmt = (motorDirection * decayfraction);
-                    //Console.WriteLine("decay: " + decayfraction);
                     motorDirection -= decayAmt;
                     decayAmt = (m_linearMotorDirection * decayfraction);
                     m_linearMotorDirection -= decayAmt;
@@ -855,20 +859,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
             // apply friction
-            Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / (pTimestep * 5));
-            if(parent.LinkSetIsColliding)
+            Vector3 decayamount = Vector3.One / (m_linearFrictionTimescale / (pTimestep));
+            /*if(parent.LinkSetIsColliding)
             {
-                decayamount *= 250;
-                float length = m_lastLinearVelocityVector.LengthSquared();
-                if(length < 1)
-                    decayamount *= 2 - length;
-                if(decayamount.X > 1)
-                    decayamount.X = 1;
-                if(decayamount.Y > 1)
-                    decayamount.Y = 1;
-                if(decayamount.Z > 1)
-                    decayamount.Z = 1;
+            }*/
+            if(m_linearMotorDirectionLASTSET.X != 0 && (m_lastLinearVelocityVector.X / m_linearMotorDirectionLASTSET.X) < 10)
+                decayamount.X += 0.025f * (m_lastLinearVelocityVector.X / m_linearMotorDirectionLASTSET.X);
+            else if(m_linearMotorDirectionLASTSET.X != 0)
+            {
             }
+            if(m_linearMotorDirectionLASTSET.Y != 0 && (m_lastLinearVelocityVector.Y / m_linearMotorDirectionLASTSET.Y) < 10)
+                decayamount.Y += 0.025f * (m_lastLinearVelocityVector.Y / m_linearMotorDirectionLASTSET.Y);
+            if(m_linearMotorDirectionLASTSET.Z != 0 && (m_lastLinearVelocityVector.Z / m_linearMotorDirectionLASTSET.Z) < 10)
+                decayamount.Z += 0.025f * (m_lastLinearVelocityVector.Z / m_linearMotorDirectionLASTSET.Z);
+
+            if(m_linearMotorApply <= 0)
+                decayamount += new Vector3(0.1f, 0.1f, 0.1f);
+            if(decayamount.X > 1)
+                decayamount.X = 1;
+            if(decayamount.Y > 1)
+                decayamount.Y = 1;
+            if(decayamount.Z > 1)
+                decayamount.Z = 1;
             m_lastLinearVelocityVector -= m_lastLinearVelocityVector * decayamount;
             if(m_linearMotorApply <= 0 ? m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.1f) :
                 m_lastLinearVelocityVector.ApproxEquals(Vector3.Zero, 0.001f))
@@ -904,9 +916,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // ramp up to new value
                 //   current velocity  +=                         error                       /    (time to get there / step interval)
                 //                               requested speed            -  last motor speed
-                m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep * pTimestep * 16f));
-                m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
-                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep * pTimestep * 4f));
+                m_angularMotorVelocity.X += (m_angularMotorDirection.X - m_angularMotorVelocity.X) / (m_angularMotorTimescale / (pTimestep / 2));
+                m_angularMotorVelocity.Y += (m_angularMotorDirection.Y - m_angularMotorVelocity.Y) / (m_angularMotorTimescale / (pTimestep / 2));
+                m_angularMotorVelocity.Z += (m_angularMotorDirection.Z - m_angularMotorVelocity.Z) / (m_angularMotorTimescale / (pTimestep / 2));
                 m_angularMotorApply--;        // This is done so that if script request rate is less than phys frame rate the expected
                 // velocity may still be acheived.
                 m_angularMotorVelocity -= m_angularMotorVelocity / (m_angularMotorDecayTimescale / pTimestep);
@@ -996,7 +1008,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_bankingEfficiency != 0)
             {
                 Vector3 angularMotorVelocity = new Vector3 ();
-                if (m_angularMotorApply > 95)
+                if (m_angularMotorApply > 90)
                 {
                     // ramp up to new value
                     //   current velocity  +=                         error                       /    (time to get there / step interval)
@@ -1009,27 +1021,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // velocity may still be acheived.
 
                     Vector3 dir = Vector3.One * rotq;
-                    float mult = m_bankingMix * -1;//Changes which way it banks in and out of turns
+                    float mult = (m_bankingMix * m_bankingMix) * -1 * (m_bankingMix < 0 ? -1 : 1);//Changes which way it banks in and out of turns
 
                     //Use the square of the efficiency, as it looks much more how SL banking works
                     float effSquared = (m_bankingEfficiency * m_bankingEfficiency);
                     if (m_bankingEfficiency < 0)
                         effSquared *= -1;//Keep the negative!
 
-                    banking.Z += (effSquared * (mult)) * (angularMotorVelocity.X);
-                    m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
                     float mix = Math.Abs(m_bankingMix);
-                    if(!parent.LinkSetIsColliding && Math.Abs(m_lastAngularVelocity.Z) > mix) //If they are colliding, we probably shouldn't shove the prim around... probably
+                    banking.Z += (effSquared * (mult * mix)) * (angularMotorVelocity.X);
+                    m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
+                    if(!parent.LinkSetIsColliding/* && Math.Abs(angularMotorVelocity.X) > mix*/) //If they are colliding, we probably shouldn't shove the prim around... probably
                     {
-                        float angVelZ = m_lastAngularVelocity.Z;
-                        float mmix = Math.Abs(mix);
-                        if(angVelZ > mmix)
-                            angVelZ = mmix;
-                        else if(angVelZ < -mmix)
-                            angVelZ = -mmix;
-                        Vector3 bankingRot = new Vector3(angVelZ * (effSquared * 10 * mult), 0, 0);
+                        float angVelZ = angularMotorVelocity.X * -1;
+                        /*if(angVelZ > mix)
+                            angVelZ = mix;
+                        else if(angVelZ < -mix)
+                            angVelZ = -mix;*/
+                        //This controls how fast and how far the banking occurs
+                        Vector3 bankingRot = new Vector3(angVelZ * (effSquared * mult), 0, 0);
                         if(bankingRot.X > 3)
                             bankingRot.X = 3;
+                        else if(bankingRot.X < -3)
+                            bankingRot.X = -3;
                         bankingRot *= rotq;
                         banking += bankingRot;
                     }
