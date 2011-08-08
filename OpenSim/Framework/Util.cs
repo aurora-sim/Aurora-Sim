@@ -205,10 +205,10 @@ namespace OpenSim.Framework
 
         /// <summary>
         /// Get a normalized form of a 3d vector
+        /// The vector paramater cannot be <0,0,0>
         /// </summary>
         /// <param name="a">A 3d vector</param>
         /// <returns>A new vector which is normalized form of the vector</returns>
-        /// <remarks>The vector paramater cannot be <0,0,0></remarks>
         public static Vector3 GetNormalizedVector(Vector3 a)
         {
             if (IsZeroVector(a))

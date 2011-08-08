@@ -874,6 +874,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Reset ()
         {
+            if(m_culler == null)
+                return;
             //Don't reset the prim... the client is just in a child region now, we don't want to resent them all the prims
             //Reset the culler so that it doesn't cache too much
             m_culler.Reset ();

@@ -383,9 +383,11 @@ namespace OpenSim.Services.MessagingService
                 }
                 List<GridRegion> neighbors = GetNeighbors(ourRegion, DrawDistance);
 
+                ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+                IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
                 foreach(GridRegion neighbor in neighbors)
                 {
-                    if(neighbor.RegionHandle != requestingRegion)
+                    if(neighbor.RegionHandle != requestingRegion && clientCaps.GetCapsService(neighbor.RegionHandle) == null)
                     {
                         string reason;
                         AgentCircuitData regionCircuitData = circuit.Copy();
@@ -394,6 +396,41 @@ namespace OpenSim.Services.MessagingService
                         regionCircuitData.reallyischild = true;
                         bool useCallbacks = false;
                         InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData, ref nCopy,
+                            (uint)TeleportFlags.Default, null, out reason, out useCallbacks);
+                    }
+                    count++;
+                }
+            });
+        }
+
+        public virtual void EnableChildAgentsForPosition (IRegionClientCapsService caps, Vector3 position)
+        {
+            Util.FireAndForget(delegate(object o)
+            {
+                int count = 0;
+                int xMin = (int)(caps.Region.RegionLocX) + (int)(position.X) - 256;
+                int xMax = (int)(caps.Region.RegionLocX) + (int)(position.X) + 256;
+                int yMin = (int)(caps.Region.RegionLocY) + (int)(position.Y) - 256;
+                int yMax = (int)(caps.Region.RegionLocY) + (int)(position.Y) + 256;
+
+                //Ask the grid service about the range
+                List<GridRegion> neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(UUID.Zero,
+                    xMin, xMax, yMin, yMax);
+
+                ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+                IClientCapsService clientCaps = capsService.GetClientCapsService(caps.AgentID);
+                foreach(GridRegion neighbor in neighbors)
+                {
+                    if(neighbor.RegionHandle != caps.RegionHandle && 
+                        clientCaps.GetCapsService(neighbor.RegionHandle) == null)
+                    {
+                        string reason;
+                        AgentCircuitData regionCircuitData = caps.CircuitData.Copy();
+                        GridRegion nCopy = neighbor;
+                        regionCircuitData.child = true; //Fix child agent status
+                        regionCircuitData.reallyischild = true;
+                        bool useCallbacks = false;
+                        InformClientOfNeighbor(caps.AgentID, caps.RegionHandle, regionCircuitData, ref nCopy,
                             (uint)TeleportFlags.Default, null, out reason, out useCallbacks);
                     }
                     count++;
@@ -1008,7 +1045,7 @@ namespace OpenSim.Services.MessagingService
                     regionCaps.LastPosition = agentpos.Position;
 
                     //Tell all neighbor regions about the new position as well
-                    List<GridRegion> ourNeighbors = service.GetNeighbors (regionCaps.Region);
+                    List<GridRegion> ourNeighbors = GetRegions(regionCaps.ClientCaps);
                     foreach (GridRegion region in ourNeighbors)
                     {
                         //Update all the neighbors that we have
@@ -1017,8 +1054,19 @@ namespace OpenSim.Services.MessagingService
                             m_log.Info("[AgentProcessing]: Failed to inform " + region.RegionName + " about updating agent. ");
                         }
                     }
+
+                    EnableChildAgentsForPosition(regionCaps, agentpos.Position);
                 }
             }
+        }
+
+        private List<GridRegion> GetRegions (IClientCapsService iClientCapsService)
+        {
+            List<GridRegion> regions = new List<GridRegion>();
+
+            foreach(IRegionClientCapsService rccs in iClientCapsService.GetCapsServices())
+                regions.Add(rccs.Region);
+            return regions;
         }
 
         #endregion

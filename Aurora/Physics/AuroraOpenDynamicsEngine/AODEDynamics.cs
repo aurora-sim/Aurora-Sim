@@ -865,9 +865,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }*/
             if(m_linearMotorDirectionLASTSET.X != 0 && (m_lastLinearVelocityVector.X / m_linearMotorDirectionLASTSET.X) < 10)
                 decayamount.X += 0.025f * (m_lastLinearVelocityVector.X / m_linearMotorDirectionLASTSET.X);
-            else if(m_linearMotorDirectionLASTSET.X != 0)
-            {
-            }
             if(m_linearMotorDirectionLASTSET.Y != 0 && (m_lastLinearVelocityVector.Y / m_linearMotorDirectionLASTSET.Y) < 10)
                 decayamount.Y += 0.025f * (m_lastLinearVelocityVector.Y / m_linearMotorDirectionLASTSET.Y);
             if(m_linearMotorDirectionLASTSET.Z != 0 && (m_lastLinearVelocityVector.Z / m_linearMotorDirectionLASTSET.Z) < 10)

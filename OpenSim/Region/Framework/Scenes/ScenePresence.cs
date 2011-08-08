@@ -2205,7 +2205,8 @@ namespace OpenSim.Region.Framework.Scenes
         #region Border Crossing Methods
 
         private Dictionary<UUID, int> m_failedNeighborCrossing = new Dictionary<UUID, int>();
-        private List<GridRegion> m_regionsNearByForInfiniteRegionChecks = new List<GridRegion>();
+        private Vector3 m_lastSigInfiniteRegionPos = Vector3.Zero;
+        private List<GridRegion> m_nearbyInfiniteRegions = new List<GridRegion>();
 
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
@@ -2234,6 +2235,54 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if(Scene.RegionInfo.InfiniteRegion)
                     {
+                        double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)pos2.X;
+                        double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)pos2.Y;
+                        if(m_lastSigInfiniteRegionPos.X - AbsolutePosition.X > 256 ||
+                            m_lastSigInfiniteRegionPos.X - AbsolutePosition.X < -256 ||
+                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y > 256 ||
+                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -256)
+                        {
+                            m_lastSigInfiniteRegionPos = AbsolutePosition;
+                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int)(TargetX - 256), (int)(TargetX + 256),
+                                (int)(TargetY - 256), (int)(TargetY + 256));
+                        }
+                        GridRegion neighborRegion = null;
+
+                        foreach(GridRegion region in m_nearbyInfiniteRegions)
+                        {
+                            if(TargetX >= (double)region.RegionLocX
+                                && TargetY >= (double)region.RegionLocY
+                                && TargetX < (double)(region.RegionLocX + region.RegionSizeX)
+                                && TargetY < (double)(region.RegionLocY + region.RegionSizeY))
+                            {
+                                neighborRegion = region;
+                                break;
+                            }
+                        }
+
+                        if(neighborRegion != null)
+                        {
+                            if(m_failedNeighborCrossing.ContainsKey(neighborRegion.RegionID))
+                            {
+                                int diff = Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]);
+                                if(diff > 10 * 1000)
+                                    m_failedNeighborCrossing.Remove(neighborRegion.RegionID); //Only allow it to retry every 10 seconds
+                                else
+                                    return true;
+                            }
+
+                            InTransit();
+                            bool isFlying = false;
+
+                            if(m_physicsActor != null)
+                                isFlying = m_physicsActor.Flying;
+
+                            IEntityTransferModule transferModule = Scene.RequestModuleInterface<IEntityTransferModule>();
+                            if(transferModule != null)
+                                transferModule.Cross(this, isFlying, neighborRegion);
+                            else
+                                m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+                        }
                         return true;
                     }
                     else
