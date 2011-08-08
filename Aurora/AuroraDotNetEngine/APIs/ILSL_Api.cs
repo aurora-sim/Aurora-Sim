@@ -55,6 +55,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
          LSL_Float llAtan2(double x, double y);
               void llAttachToAvatar(int attachment);
            LSL_Key llAvatarOnSitTarget();
+           LSL_Key llAvatarOnLinkSitTarget ();
       LSL_Rotation llAxes2Rot(LSL_Vector fwd, LSL_Vector left, LSL_Vector up);
       LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, double angle);
        LSL_Integer llBase64ToInteger(string str);
@@ -63,6 +64,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llBreakLink(int linknum);
        LSL_Integer llCeil(double f);
               void llClearCameraParams();
+              LSL_Integer llClearLinkMedia (LSL_Integer link, LSL_Integer face);
           DateTime llCloseRemoteDataChannel(object channel);
          LSL_Float llCloud(LSL_Vector offset);
               void llCollisionFilter(string name, string id, int accept);
@@ -134,6 +136,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
            LSL_Key llGetKey();
            LSL_Key llGetLandOwnerAt(LSL_Vector pos);
            LSL_Key llGetLinkKey(int linknum);
+          LSL_List llGetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules);
         LSL_String llGetLinkName(int linknum);
        LSL_Integer llGetLinkNumber();
           LSL_List llGetLinkPrimitiveParams(int linknum, LSL_List rules);
@@ -211,6 +214,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_String llIntegerToBase64(int number);
         LSL_String llKey2Name(string id);
               void llLinkParticleSystem(int linknum, LSL_List rules);
+              void llLinkSitTarget (LSL_Integer link, LSL_Vector offset, LSL_Rotation rot);
         LSL_String llList2CSV(LSL_List src);
          LSL_Float llList2Float(LSL_List src, int index);
        LSL_Integer llList2Integer(LSL_List src, int index);
@@ -320,6 +324,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSetCameraParams(LSL_List rules);
               void llSetClickAction(int action);
               void llSetColor(LSL_Vector color, int face);
+              void llSetContentType (LSL_Key id, LSL_Integer type);
               void llSetDamage(double damage);
               void llSetForce(LSL_Vector force, int local);
               void llSetForceAndTorque(LSL_Vector force, LSL_Vector torque, int local);
@@ -327,10 +332,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSetInventoryPermMask(string item, int mask, int value);
               void llSetLinkAlpha(int linknumber, double alpha, int face);
               void llSetLinkColor(int linknumber, LSL_Vector color, int face);
+       LSL_Integer llSetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules);
               void llSetLinkPrimitiveParams(int linknumber, LSL_List rules);
           DateTime llSetLinkTexture(int linknumber, string texture, int face);
               void llSetLinkTextureAnim(int linknum, int mode, int face, int sizex, int sizey, double start, double length, double rate);
           DateTime llSetLocalRot(LSL_Rotation rot);
+       LSL_Integer llSetMemoryLimit (LSL_Integer limit);
               void llSetObjectDesc(string desc);
               void llSetObjectName(string name);
               void llSetObjectPermMask(int mask, int value);
@@ -338,10 +345,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSetPayPrice(int price, LSL_List quick_pay_buttons);
           DateTime llSetPos(LSL_Vector pos);
               void llSetPrimitiveParams(LSL_List rules);
+              void llSetLinkCamera (LSL_Integer link, LSL_Vector eye, LSL_Vector at);
               void llSetLinkPrimitiveParamsFast(int linknum, LSL_List rules);
           DateTime llSetPrimURL(string url);
               void llSetRemoteScriptAccessPin(int pin);
           DateTime llSetRot(LSL_Rotation rot);
+              void llSetRotationalVelocity (LSL_Vector force, LSL_Integer local);
               void llSetScale(LSL_Vector scale);
               void llSetScriptState(string name, int run);
               void llSetSitText(string text);
@@ -359,6 +368,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSetVehicleRotationParam(int param, LSL_Rotation rot);
               void llSetVehicleType(int type);
               void llSetVehicleVectorParam(int param, LSL_Vector vec);
+              void llSetVelocity (LSL_Vector force, LSL_Integer local);
               void llShout(int channelID, string text);
          LSL_Float llSin(double f);
               void llSitTarget(LSL_Vector offset, LSL_Rotation rot);

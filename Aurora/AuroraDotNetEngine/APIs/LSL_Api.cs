@@ -7551,7 +7551,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return ScriptBaseClass.NULL_KEY;
         }
 
-        public LSL_String llAvatarOnLinkSitTarget ()
+        public LSL_Key llAvatarOnLinkSitTarget ()
         {
             ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL");
 

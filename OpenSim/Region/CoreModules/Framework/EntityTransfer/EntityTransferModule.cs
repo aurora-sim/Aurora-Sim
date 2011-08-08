@@ -342,7 +342,12 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 }
             }
 
-            sp.Scene.AuroraEventManager.FireGenericEventHandler ("SendingAttachments", new object[2] { finalDestination, sp });
+            MakeChildAgent(sp, finalDestination);
+        }
+
+        public void MakeChildAgent (IScenePresence sp, GridRegion finalDestination)
+        {
+            sp.Scene.AuroraEventManager.FireGenericEventHandler("SendingAttachments", new object[2] { finalDestination, sp });
 
             //Kill the groups here, otherwise they will become ghost attachments 
             //  and stay in the sim, they'll get readded below into the new sim
