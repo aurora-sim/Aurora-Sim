@@ -1238,7 +1238,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (FallenStandUp)
                 {
                     //Poke the animator a bit
-                    Animator.GetMovementAnimation ();
+                    Animator.UpdateMovementAnimations(false);
                     m_bodyRot = bodyRotation;
                     AddNewMovement (Vector3.Zero, bodyRotation);
                     return;
@@ -2703,7 +2703,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
             if (Animator != null && m_parentID == UUID.Zero)
-                Animator.UpdateMovementAnimations ();
+                Animator.UpdateMovementAnimations (true);
         }
 
         #region Cached Attachments

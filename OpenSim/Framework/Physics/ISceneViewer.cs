@@ -169,7 +169,7 @@ namespace OpenSim.Framework
         AnimationSet Animations { get; }
         string CurrentMovementAnimation { get; }
         string GetMovementAnimation ();
-        void UpdateMovementAnimations ();
+        void UpdateMovementAnimations (bool sendTerseUpdate);
         void AddAnimation (UUID animID, UUID objectID);
         bool AddAnimation (string name, UUID objectID);
         void RemoveAnimation (UUID animID);

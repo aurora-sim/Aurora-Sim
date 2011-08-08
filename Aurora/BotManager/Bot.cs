@@ -820,7 +820,7 @@ namespace Aurora.BotManager
                 {
                     EventManager.FireGenericEventHandler ("ToAvatar", null);
                     //Fix the animation
-                    m_scenePresence.Animator.UpdateMovementAnimations ();
+                    m_scenePresence.Animator.UpdateMovementAnimations(false);
                 }
                 m_toAvatar = true;
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
@@ -834,7 +834,7 @@ namespace Aurora.BotManager
                 {
                     EventManager.FireGenericEventHandler ("LostAvatar", null);
                     //We stopped, fix the animation
-                    m_scenePresence.Animator.UpdateMovementAnimations ();
+                    m_scenePresence.Animator.UpdateMovementAnimations (false);
                 }
                 m_lostAvatar = true;
                 m_paused = true;
@@ -882,7 +882,7 @@ namespace Aurora.BotManager
                     m_scenePresence.PhysicsActor.Flying = false;
                     walkTo (m_scenePresence.AbsolutePosition);
                     //Fix the animation from flying > walking
-                    m_scenePresence.Animator.UpdateMovementAnimations ();
+                    m_scenePresence.Animator.UpdateMovementAnimations(false);
                 }
                 jumpTry = 0;
             }
