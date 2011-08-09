@@ -533,8 +533,11 @@ namespace OpenSim.Services.MessagingService
                     {
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
                         OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
-                        string ip = responseMap["OurIPForClient"].AsString();
-                        ipAddress = System.Net.IPAddress.Parse(ip);
+                        if(responseMap.ContainsKey("OurIPForClient"))
+                        {
+                            string ip = responseMap["OurIPForClient"].AsString();
+                            ipAddress = System.Net.IPAddress.Parse(ip);
+                        }
                         otherRegionService.AddCAPS (SimSeedCaps);
                         otherRegionsCapsURL = otherRegionService.CapsUrl;
                     }
@@ -1142,8 +1145,11 @@ namespace OpenSim.Services.MessagingService
                     {
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
                         OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
-                        string ip = responseMap["OurIPForClient"].AsString();
-                        ipAddress = System.Net.IPAddress.Parse(ip);
+                        if(responseMap.ContainsKey("OurIPForClient"))
+                        {
+                            string ip = responseMap["OurIPForClient"].AsString();
+                            ipAddress = System.Net.IPAddress.Parse(ip);
+                        }
                         region.ExternalEndPoint.Address = ipAddress;//Fix this so that it gets sent to the client that way
                         regionClientCaps.AddCAPS (SimSeedCaps);
                     }
