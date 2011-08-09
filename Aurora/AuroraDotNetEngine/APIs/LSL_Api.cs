@@ -3468,9 +3468,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         ISceneEntity new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
 
                         // If either of these are null, then there was an unknown error.
-                        if (new_group == null)
-                            continue;
-                        if (new_group.RootChild == null)
+                        if(new_group == null || new_group.RootChild == null)
                             continue;
 
                         // objects rezzed with this method are die_at_edge by default.
@@ -3483,7 +3481,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         float groupmass = new_group.GetMass();
 
-                        if(new_group.RootChild.PhysActor != null && new_group.RootChild.PhysActor.IsPhysical && llvel != Vector3.Zero)
+                        if(new_group.RootChild.PhysActor != null && llvel != Vector3.Zero)
                         {
                             //Apply the velocity to the object
                             //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);

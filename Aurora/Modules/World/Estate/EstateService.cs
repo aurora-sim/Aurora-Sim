@@ -823,7 +823,7 @@ namespace Aurora.Modules
 
             if (!ES.PublicAccess)
             {
-                reason = "You may not enter this region.";
+                reason = "You may not enter this region, Public access has been turned off.";
                 return false;
             }
 

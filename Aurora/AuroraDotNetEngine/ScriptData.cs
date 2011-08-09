@@ -760,7 +760,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
 
-            if (functionName == "control" || functionName == "state_entry" || functionName == "on_rez" || functionName == "link_message")
+            if (/*functionName == "control" || */functionName == "state_entry" || functionName == "on_rez" || functionName == "link_message")
             {
                 //For vehicles, otherwise breaks them. DO NOT REMOVE UNLESS YOU FIND A BETTER WAY TO FIX
                 return true;
@@ -798,6 +798,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
                     NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * 100);
+                    break;
+                case "control":
+                    if(NowTicks < NextEventDelay[functionName])
+                        return false;
+                    NextEventDelay[functionName] = NowTicks + (long)(0.5f * 100);
                     break;
                 default: //Default is 0.05 seconds for event limiting
                     if (!NextEventDelay.ContainsKey(functionName))
