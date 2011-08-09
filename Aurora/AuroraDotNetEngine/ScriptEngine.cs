@@ -982,7 +982,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             foreach (ScriptData id in ids)
             {
-                StateSave.SaveStateTo (id);
+                StateSave.SaveStateTo (id, true);
 
                 id.Part.ParentEntity.HasGroupChanged = true;
             }
