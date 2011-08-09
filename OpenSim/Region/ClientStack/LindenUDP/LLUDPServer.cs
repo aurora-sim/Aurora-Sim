@@ -893,7 +893,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void RemoveClient (IClientAPI client)
         {
-            m_currentClients.Remove (client);
+            m_currentClients.RemoveAll(delegate(IClientAPI testClient)
+            {
+                return client.AgentId == testClient.AgentId;
+            });
         }
 
         private bool AddNewClient(UseCircuitCodePacket useCircuitCode, IPEndPoint remoteEndPoint)
