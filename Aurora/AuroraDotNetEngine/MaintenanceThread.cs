@@ -486,11 +486,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int numberOfEmptyWork = 0;
             while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
             {
+                int numScriptsProcessed = 0;
+                int numSleepScriptsProcessed = 0;
+                const int minNumScriptsToProcess = 1;
             processMoreScripts:
                 QueueItemStruct QIS = null;
 
-                const int minNumScriptsToProcess = 50;
-                int numScriptsProcessed = 0;
                 //Check whether it is time, and then do the thread safety piece
                 if (Interlocked.CompareExchange (ref m_CheckingSleepers, 1, 0) == 0)
                 {
@@ -500,16 +501,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         {
                             QIS = SleepingScriptEvents.Dequeue ().Value;
                         restart:
-                            if (QIS.RunningNumber > 2 && SleepingScriptEventCount > 0)
+                            if(QIS.RunningNumber > 2 && SleepingScriptEventCount > 0 && numSleepScriptsProcessed < SleepingScriptEventCount)
                             {
                                 QIS.RunningNumber = 1;
                                 SleepingScriptEvents.Enqueue (QIS, QIS.EventsProcData.TimeCheck.Ticks);
-                                QIS = null;
                                 QIS = SleepingScriptEvents.Dequeue ().Value;
+                                numSleepScriptsProcessed++;
                                 goto restart;
                             }
-                            else
-                                SleepingScriptEventCount--;
                         }
                     }
                     if (QIS != null)
@@ -529,7 +528,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             //All done
                             Interlocked.Exchange (ref m_CheckingSleepers, 0);
                             //Execute the event
-                            EventSchExec (QIS);
+                            EventSchExec(QIS);
+                            lock(SleepingScriptEvents)
+                                SleepingScriptEventCount--;
                             numScriptsProcessed++;
                         }
                         else
@@ -538,7 +539,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             lock (SleepingScriptEvents)
                             {
                                 SleepingScriptEvents.Enqueue (QIS, QIS.EventsProcData.TimeCheck.Ticks);
-                                SleepingScriptEventCount++;
                             }
                             //All done
                             Interlocked.Exchange (ref m_CheckingSleepers, 0);
@@ -559,17 +559,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     lock (ScriptEvents)
                     {
                         if (ScriptEvents.Count > 0)
-                        {
                             QIS = ScriptEvents.Dequeue ();
-                            ScriptEventCount--;
-                            Interlocked.Exchange (ref m_CheckingEvents, 0);
-                        }
-                        else
-                            Interlocked.Exchange (ref m_CheckingEvents, 0);
+                        Interlocked.Exchange (ref m_CheckingEvents, 0);
                     }
                     if (QIS != null)
                     {
-                        EventSchExec (QIS);
+#if Debug
+                        m_log.Warn(QIS.functionName + "," + ScriptEvents.Count);
+#endif
+                        EventSchExec(QIS);
+                        lock(ScriptEvents)
+                            ScriptEventCount--;
                         numScriptsProcessed++;
                     }
                 }
@@ -591,7 +591,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         break; //No more events, end
                     }
-                    else
+                    else if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME / 20)
                         timeToSleep += 10;
                 }
                 else if (Interlocked.Read (ref scriptThreadpool.nthreads) > (ScriptEventCount + (int)(((float)SleepingScriptEventCount / 2f + 0.5f))) ||
@@ -602,13 +602,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         break; //Too many threads, kill some off
                     }
-                    else
+                    else if(numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME / 20)
                         timeToSleep += 5;
                 }
                 else
                     numberOfEmptyWork /= 2; //Cut it down, but don't zero it out, as this may just be one event
 #if Debug
-                m_log.Warn (timeToSleep);
+                m_log.Warn ("Sleep: " + timeToSleep);
 #endif
                 Interlocked.Increment (ref scriptThreadpool.nSleepingthreads);
                 Thread.Sleep (timeToSleep);
