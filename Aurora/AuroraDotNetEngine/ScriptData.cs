@@ -382,7 +382,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// Sets up the APIs for the script
         /// </summary>
         /// <param name="setInitialResetValues">Get the initial reset values needed to reset the script</param>
-        internal void SetApis(bool setInitialResetValues)
+        internal void SetApis()
         {
             Apis = new Dictionary<string, IScriptApi>();
 
@@ -707,7 +707,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (useDebug)
                 m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " + (DateTime.Now.ToUniversalTime() - StartTime).TotalSeconds);
 
-            SetApis (LastStateSave == null);
+            SetApis ();
 
             //Set the event flags
             Part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));

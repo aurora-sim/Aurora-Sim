@@ -100,6 +100,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims
+            if(entity == null || client == null || scene == null)
+                return false;
 
             bool cull = false;
             if (m_previousCulled.TryGetValue (entity, out cull))
