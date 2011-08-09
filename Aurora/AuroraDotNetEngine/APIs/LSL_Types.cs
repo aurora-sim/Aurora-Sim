@@ -110,9 +110,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return s;
             }
 
-            public static explicit operator Vector3(string s)
+            public static explicit operator Vector3 (string s)
             {
                 return new Vector3(s);
+            }
+
+            public static implicit operator bool (Vector3 s)
+            {
+                return s.x != 0 ||
+                    s.y != 0 ||
+                    s.z != 0;
             }
 
             public static implicit operator list(Vector3 vec)
@@ -374,6 +381,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return new Quaternion(s);
             }
 
+            public static implicit operator bool (Quaternion s)
+            {
+                return s.x != 0 ||
+                    s.y != 0 ||
+                    s.z != 0 ||
+                    s.s != 1;
+            }
+
             public static implicit operator list(Quaternion r)
             {
                 return new list(new object[] { r });
@@ -602,6 +617,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 Array.Resize(ref m_data, Length + 1);
                 m_data.SetValue(o, Length - 1);
+            }
+
+            public static implicit operator bool (list s)
+            {
+                return s.Length != 0;
             }
 
             public static list operator +(list a, LSLString s)
@@ -1434,8 +1454,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return true;
                 }
             }
-
-
 
             static public implicit operator String(LSLString s)
             {
