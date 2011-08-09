@@ -275,6 +275,7 @@ namespace OpenSim.Region.Framework.Scenes
         private Vector3 posLastTerseUpdate;
 
         private UUID CollisionSoundID = UUID.Zero;
+        private int CollisionSoundLastTriggered = 0;
 
         #endregion
 
@@ -2171,12 +2172,14 @@ namespace OpenSim.Region.Framework.Scenes
             //   as with lots of clients, this will lag the client badly.
             //
             // Moving collision sound ID inside this loop so that we don't trigger it too much
-            //if (CollisionSoundID != UUID.Zero)
-            //{
-            //    ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
-            //    module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
-            //    CollisionSoundID = UUID.Zero;
-            //}
+            if (CollisionSoundID != UUID.Zero && (CollisionSoundLastTriggered == 0 ||
+                Util.EnvironmentTickCount() - CollisionSoundLastTriggered > 0))
+            {
+                ISoundModule module = Scene.RequestModuleInterface<ISoundModule>();
+                module.TriggerSound(CollisionSoundID, UUID, UUID, UUID.Zero, 1, AbsolutePosition, Scene.RegionInfo.RegionHandle, 100);
+                CollisionSoundLastTriggered = Util.EnvironmentTickCount() + 100;//Only 10 a second please!
+                CollisionSoundID = UUID.Zero;
+            }
         }
 
         public void AddChildAgentUpdateTaint ()
@@ -2739,16 +2742,19 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
+            UUID SoundWoodCollision = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");
             //This is only used for collision sounds, which we have disabled ATM because they hit the client hard
-            /*//add the items that started colliding this time to the last colliders list.
+            //add the items that started colliding this time to the last colliders list.
             foreach (uint localID in coldata.Keys)
             {
                 //Play collision sounds
-                if (localID != 0 && CollisionSoundID == UUID.Zero && !IsChildAgent)
+                ISceneChildEntity child;
+                if (localID != 0 && CollisionSoundID == UUID.Zero && !IsChildAgent && (child = Scene.GetSceneObjectPart(localID)) != null &&
+                    child.ParentEntity.RootChild.PhysActor != null && child.ParentEntity.RootChild.PhysActor.IsPhysical)
                 {
-                    CollisionSoundID = Sounds.OBJECT_COLLISION;
+                    CollisionSoundID = SoundWoodCollision;
                 }
-            }*/
+            }
 
             if (coldata.Count != 0 && Animator != null)
             {

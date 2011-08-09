@@ -3098,10 +3098,7 @@ namespace OpenSim.Region.Framework.Scenes
                         break; // Agents will play the sound so we don't
 
                     case ActorTypes.Ground:
-                        if (collissionswith[startedColliders[0]].PenetrationDepth < 0.17)
-                            SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
-                        else
-                            SendSound(Sounds.OBJECT_COLLISION.ToString(), 1, true, 0, 0, false, false);
+                        SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
                         break; //Always play the click or thump sound when hitting ground
 
                     case ActorTypes.Prim:
