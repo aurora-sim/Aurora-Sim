@@ -160,7 +160,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// This makes sure that the cmd handler (for long running events like timers/listeners) is running
         /// </summary>
-        void PokeThreads();
+        /// <param name="itemID">Item causing the poke</param>
+        void PokeThreads(UUID itemID);
 
         /// <summary>
         /// Save states for all scripts that require it

@@ -124,7 +124,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (!value)
                 {
                     //Poke the threads to make sure they run
-                    MaintenanceThread.PokeThreads ();
+                    MaintenanceThread.PokeThreads(UUID.Zero);
                 }
                 else
                     MaintenanceThread.DisableThreads ();
@@ -143,7 +143,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (!value)
                 {
                     //Poke the threads to make sure they run
-                    MaintenanceThread.PokeThreads ();
+                    MaintenanceThread.PokeThreads(UUID.Zero);
                 }
                 else
                     MaintenanceThread.DisableThreads ();
@@ -421,7 +421,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 //Clear out all of the data on the threads that we have just to make sure everything is all clean
                 this.MaintenanceThread.DisableThreads ();
-                this.MaintenanceThread.PokeThreads ();
+                this.MaintenanceThread.PokeThreads(UUID.Zero);
                 ScriptData[] scripts = ScriptProtection.GetAllScripts ();
                 ScriptProtection.Reset (true);
                 foreach (ScriptData ID in scripts)
@@ -982,7 +982,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             foreach (ScriptData id in ids)
             {
-                StateSave.SaveStateTo (id, true);
+                StateSave.SaveStateTo (id, false);
 
                 id.Part.ParentEntity.HasGroupChanged = true;
             }
@@ -1320,9 +1320,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Make sure that the threads are running
         /// </summary>
-        public void PokeThreads()
+        public void PokeThreads(UUID itemID)
         {
-            MaintenanceThread.PokeThreads ();
+            MaintenanceThread.PokeThreads(itemID);
         }
 
         #endregion

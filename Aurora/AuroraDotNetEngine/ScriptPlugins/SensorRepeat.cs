@@ -143,7 +143,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
 
             //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads ();
+            m_ScriptEngine.MaintenanceThread.PokeThreads (ts.itemID);
         }
 
         public void RemoveScript(UUID objectID, UUID m_itemID)
@@ -209,7 +209,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             SensorSweep (ts);
 
             //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads ();
+            m_ScriptEngine.MaintenanceThread.PokeThreads(ts.itemID);
         }
 
         private void SensorSweep(SenseRepeatClass ts)
@@ -601,7 +601,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
 
             //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads ();
+            m_ScriptEngine.MaintenanceThread.PokeThreads(UUID.Zero);
         }
 
         public IScene findPrimsScene(UUID objectID)

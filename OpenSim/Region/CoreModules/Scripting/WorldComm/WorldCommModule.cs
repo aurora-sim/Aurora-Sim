@@ -176,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void AddBlockedChannel(int channel)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads(UUID.Zero);
             if (!BlockedChannels.Contains(channel))
                 BlockedChannels.Add(channel);
         }
@@ -204,7 +204,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads (itemID);
             return m_listenerManager.AddListener(itemID, hostID, channel, name, id, msg);
         }
 
@@ -218,7 +218,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void ListenControl(UUID itemID, int handle, int active)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads (itemID);
             if (active == 1)
                 m_listenerManager.Activate(itemID, handle);
             else if (active == 0)
@@ -233,7 +233,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void ListenRemove(UUID itemID, int handle)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads(itemID);
             m_listenerManager.Remove(itemID, handle);
         }
 
@@ -245,7 +245,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void DeleteListener(UUID itemID)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads(itemID);
             m_listenerManager.DeleteListener(itemID);
         }
 
@@ -322,7 +322,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position, float Range, UUID toID)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads(UUID.Zero);
             if (BlockedChannels.Contains(channel))
                 return;
             // m_log.DebugFormat("[WorldComm] got[2] type {0}, channel {1}, name {2}, id {3}, msg {4}",
@@ -384,7 +384,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         protected void QueueMessage(ListenerInfo li)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads ();
+            m_scriptModule.PokeThreads (li.GetItemID());
             lock (m_pending.SyncRoot)
             {
                 m_pending.Enqueue(li);

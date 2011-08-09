@@ -97,7 +97,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
 
             //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads ();
+            m_ScriptEngine.MaintenanceThread.PokeThreads(ts.itemID);
         }
 
         public void RemoveScript(UUID m_ID, UUID m_itemID)
@@ -171,7 +171,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
 
             //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads ();
+            m_ScriptEngine.MaintenanceThread.PokeThreads(ts.itemID);
         }
 
         public string Name

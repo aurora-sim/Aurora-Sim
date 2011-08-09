@@ -374,8 +374,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <summary>
         /// Makes sure that all the threads that need to be running are running and starts them if they need to be running
         /// </summary>
-        public void PokeThreads()
+        public void PokeThreads (UUID itemID)
         {
+            if(itemID != UUID.Zero)
+            {
+                ScriptData script = ScriptEngine.ScriptProtection.GetScript(itemID);
+                if(script != null && script.Script != null)
+                    script.Script.NeedsStateSaved = true;
+            }
             if (LUQueue.Count () > 0 && !ScriptChangeIsRunning)
                 StartThread ("Change");
             if (Interlocked.Read(ref CmdHandlerQueueIsRunning) == 0)
