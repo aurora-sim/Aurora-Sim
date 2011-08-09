@@ -1888,16 +1888,24 @@ namespace OpenSim.Framework
         }
 
         private static bool useLocalhostLoopback = false;
+        /// <summary>
+        /// Attempts to resolve the loopback issue, but only works if this is run on the same network as the iPAddress
+        /// </summary>
+        /// <param name="iPAddress"></param>
+        /// <param name="clientIP"></param>
+        /// <returns></returns>
         public static System.Net.IPAddress ResolveAddressForClient (System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
         {
+            clientIP = new IPEndPoint(iPAddress, 0);
             if (iPAddress.Equals (clientIP.Address))
             {
                 if (useLocalhostLoopback)
                     return IPAddress.Loopback;
                 if (iPAddress == IPAddress.Loopback)
                     return iPAddress;//Don't send something else if it is already on loopback
-                string hostName = System.Net.Dns.GetHostName ();
 #pragma warning disable 618
+                //The 'bad' way, only works for things on the same machine...
+                string hostName = System.Net.Dns.GetHostName();
                 IPHostEntry ipEntry = System.Net.Dns.GetHostByName (hostName);
 #pragma warning restore 618
                 IPAddress[] addr = ipEntry.AddressList;

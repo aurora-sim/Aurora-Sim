@@ -291,6 +291,11 @@ namespace OpenSim.Services.Interfaces
         AgentCircuitData CircuitData { get; }
 
         /// <summary>
+        /// The IP of the region adjusted for loopback
+        /// </summary>
+        IPAddress LoopbackRegionIP { get; set; }
+
+        /// <summary>
         /// The last position that we have for this agent
         /// </summary>
         Vector3 LastPosition { get; set; }

@@ -521,15 +521,20 @@ namespace OpenSim.Services.MessagingService
                 int requestedPort = 0;
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
                         TeleportFlags, agentData, out requestedPort, out reason);
+                if(requestedPort == 0)
+                    requestedPort = neighbor.ExternalEndPoint.Port;
                 circuitData.RegionUDPPort = requestedPort;//Fix the port
                 if (regionAccepted)
                 {
+                    System.Net.IPAddress ipAddress = neighbor.ExternalEndPoint.Address;
                     string otherRegionsCapsURL;
                     //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
                     if (reason != "")
                     {
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
                         OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
+                        string ip = responseMap["OurIPForClient"].AsString();
+                        ipAddress = System.Net.IPAddress.Parse(ip);
                         otherRegionService.AddCAPS (SimSeedCaps);
                         otherRegionsCapsURL = otherRegionService.CapsUrl;
                     }
@@ -545,11 +550,12 @@ namespace OpenSim.Services.MessagingService
 
                         #endregion
                     }
+                    otherRegionService.LoopbackRegionIP = ipAddress;
 
                     IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
 
                     EQService.EnableSimulator(neighbor.RegionHandle,
-                        Util.ResolveAddressForClient(neighbor.ExternalEndPoint.Address, clientCaps.ClientEndPoint).GetAddressBytes(),
+                        ipAddress.GetAddressBytes(),
                         requestedPort, AgentID,
                         neighbor.RegionSizeX, neighbor.RegionSizeY, requestingRegion);
 
@@ -558,7 +564,7 @@ namespace OpenSim.Services.MessagingService
                     // So let's wait
                     Thread.Sleep(300);
                     EQService.EstablishAgentCommunication(AgentID, neighbor.RegionHandle,
-                        Util.ResolveAddressForClient (neighbor.ExternalEndPoint.Address, clientCaps.ClientEndPoint).GetAddressBytes (),
+                        ipAddress.GetAddressBytes(),
                         requestedPort, otherRegionsCapsURL, neighbor.RegionSizeX,
                         neighbor.RegionSizeY,
                         requestingRegion);
@@ -649,7 +655,8 @@ namespace OpenSim.Services.MessagingService
                         destination.ExternalEndPoint.Port = circuit.RegionUDPPort;//Fix the port with the one the region said to use
 
                     EQService.TeleportFinishEvent (destination.RegionHandle, destination.Access,
-                        Util.ResolveAddressForClient (destination.ExternalEndPoint, clientCaps.ClientEndPoint),
+                        otherRegion.LoopbackRegionIP,
+                        destination.ExternalEndPoint.Port,
                         otherRegion.CapsUrl,
                         4, AgentID, TeleportFlags,
                         destination.RegionSizeX, destination.RegionSizeY,
@@ -964,7 +971,7 @@ namespace OpenSim.Services.MessagingService
 
                             IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionHandle);
                             //Tell the client about the transfer
-                            EQService.CrossRegion (crossingRegion.RegionHandle, pos, velocity, Util.ResolveAddressForClient (crossingRegion.ExternalEndPoint, clientCaps.ClientEndPoint), otherRegion.CapsUrl,
+                            EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, otherRegion.LoopbackRegionIP, crossingRegion.ExternalEndPoint.Port, otherRegion.CapsUrl,
                                                AgentID, circuit.SessionID,
                                                crossingRegion.RegionSizeX, crossingRegion.RegionSizeY,
                                                requestingRegion);
@@ -1128,12 +1135,16 @@ namespace OpenSim.Services.MessagingService
                     return success;
                 }
 
+                System.Net.IPAddress ipAddress = regionClientCaps.Region.ExternalEndPoint.Address;
                 if (capsService != null && reason != "")
                 {
                     try
                     {
                         OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
                         OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
+                        string ip = responseMap["OurIPForClient"].AsString();
+                        ipAddress = System.Net.IPAddress.Parse(ip);
+                        region.ExternalEndPoint.Address = ipAddress;//Fix this so that it gets sent to the client that way
                         regionClientCaps.AddCAPS (SimSeedCaps);
                     }
                     catch

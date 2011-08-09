@@ -58,9 +58,15 @@ namespace OpenSim.Services.CapsService
         private bool m_disabled = true;
         private AgentCircuitData m_circuitData;
         private IHttpServer m_server;
+        private System.Net.IPAddress m_LoopbackRegionIP;
         public AgentCircuitData CircuitData
         {
             get { return m_circuitData; }
+        }
+        public System.Net.IPAddress LoopbackRegionIP
+        {
+            get { return m_LoopbackRegionIP; }
+            set { m_LoopbackRegionIP = value; }
         }
         public bool Disabled
         {

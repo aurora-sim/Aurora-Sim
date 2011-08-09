@@ -335,7 +335,8 @@ namespace OpenSim.Services.LLLoginService
         private void FillOutRegionData(AgentCircuitData circuitData, GridRegion destination)
         {
             IPEndPoint endPoint = destination.ExternalEndPoint;
-            endPoint = Util.ResolveAddressForClient (endPoint, circuitData.ClientIPEndPoint);//We can use this with certainty, we logged them in!
+            //We don't need this anymore, we set this from what we get from the region
+            //endPoint = Util.ResolveAddressForClient (endPoint, circuitData.ClientIPEndPoint);
             SimAddress = endPoint.Address.ToString();
             SimPort = (uint)circuitData.RegionUDPPort;
             RegionX = (uint)destination.RegionLocX;

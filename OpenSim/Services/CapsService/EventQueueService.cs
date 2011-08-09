@@ -164,21 +164,21 @@ namespace OpenSim.Services.CapsService
         }
 
         public virtual void TeleportFinishEvent(ulong regionHandle, byte simAccess,
-                                        IPEndPoint regionExternalEndPoint, string capsURL,
+                                        IPAddress address, int port, string capsURL,
                                         uint locationID,
                                         UUID avatarID, uint teleportFlags, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
             //Blank (for the CapsUrl) as we do not know what the CapsURL is on the sim side, it will be fixed when it reaches the grid server
-            OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, regionExternalEndPoint,
+            OSD item = EventQueueHelper.TeleportFinishEvent(regionHandle, simAccess, address, port,
                                                             locationID, capsURL, avatarID, teleportFlags, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }
 
         public virtual void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
-                                IPEndPoint newRegionExternalEndPoint, string capsURL,
+                                IPAddress address, int port, string capsURL,
                                 UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, ulong RegionHandle)
         {
-            OSD item = EventQueueHelper.CrossRegion(handle, pos, lookAt, newRegionExternalEndPoint,
+            OSD item = EventQueueHelper.CrossRegion(handle, pos, lookAt, address, port,
                                                     capsURL, avatarID, sessionID, RegionSizeX, RegionSizeY);
             Enqueue(item, avatarID, RegionHandle);
         }

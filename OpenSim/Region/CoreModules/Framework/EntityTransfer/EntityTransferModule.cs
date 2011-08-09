@@ -1055,6 +1055,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
             OSDMap responseMap = new OSDMap ();
             responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps (agent.AgentID);
+            responseMap["OurIPForClient"] = Util.ResolveAddressForClient(new GridRegion(scene.RegionInfo).ExternalEndPoint.Address, new IPEndPoint(IPAddress.Parse(agent.IPAddress), 0)).ToString();
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;

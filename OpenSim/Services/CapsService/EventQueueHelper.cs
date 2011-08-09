@@ -132,7 +132,7 @@ namespace OpenSim.Services.CapsService
         }
         
         public static OSD CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
-                                      IPEndPoint newRegionExternalEndPoint,
+                                      IPAddress address, int port,
                                       string capsURL, UUID agentID, UUID sessionID, int RegionSizeX, int RegionSizeY)
         {
             OSDArray lookAtArr = new OSDArray(3);
@@ -162,8 +162,8 @@ namespace OpenSim.Services.CapsService
             OSDMap regionDataMap = new OSDMap(4);
             regionDataMap.Add("RegionHandle", OSD.FromBinary(ulongToByteArray(handle)));
             regionDataMap.Add("SeedCapability", OSD.FromString(capsURL));
-            regionDataMap.Add("SimIP", OSD.FromBinary(newRegionExternalEndPoint.Address.GetAddressBytes()));
-            regionDataMap.Add("SimPort", OSD.FromInteger(newRegionExternalEndPoint.Port));
+            regionDataMap.Add("SimIP", OSD.FromBinary(address.GetAddressBytes()));
+            regionDataMap.Add("SimPort", OSD.FromInteger(port));
 
             regionDataMap.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
             regionDataMap.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
@@ -180,7 +180,7 @@ namespace OpenSim.Services.CapsService
         }
 
         public static OSD TeleportFinishEvent(
-            ulong regionHandle, byte simAccess, IPEndPoint regionExternalEndPoint,
+            ulong regionHandle, byte simAccess, IPAddress address, int port,
             uint locationID, string capsURL, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY)
         {
             OSDMap info = new OSDMap();
@@ -189,8 +189,8 @@ namespace OpenSim.Services.CapsService
             info.Add("RegionHandle", OSD.FromBinary(ulongToByteArray(regionHandle)));
             info.Add("SeedCapability", OSD.FromString(capsURL));
             info.Add("SimAccess", OSD.FromInteger(simAccess));
-            info.Add("SimIP", OSD.FromBinary(regionExternalEndPoint.Address.GetAddressBytes()));
-            info.Add("SimPort", OSD.FromInteger(regionExternalEndPoint.Port));
+            info.Add("SimIP", OSD.FromBinary(address.GetAddressBytes()));
+            info.Add("SimPort", OSD.FromInteger(port));
             info.Add("TeleportFlags", OSD.FromBinary(uintToByteArray(teleportFlags)));
             
             info.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
