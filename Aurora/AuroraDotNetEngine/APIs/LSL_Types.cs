@@ -47,11 +47,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             #region Constructors
 
-            public Vector3(Vector3 vector)
+            public Vector3 (Vector3 vector)
             {
                 x = (float)vector.x;
                 y = (float)vector.y;
                 z = (float)vector.z;
+            }
+
+            public Vector3 (OpenMetaverse.Vector3 vector)
+            {
+                x = (float)vector.X;
+                y = (float)vector.Y;
+                z = (float)vector.Z;
             }
 
             public Vector3(double X, double Y, double Z)

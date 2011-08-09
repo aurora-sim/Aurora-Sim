@@ -3481,17 +3481,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         float groupmass = new_group.GetMass();
 
-                        if(new_group.RootChild.PhysActor != null && llvel != Vector3.Zero)
-                        {
-                            //Apply the velocity to the object
-                            //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
-                            // @Above: Err.... no. Read http://lslwiki.net/lslwiki/wakka.php?wakka=llRezObject
-                            //    Notice the "Creates ("rezzes") object's inventory object centered at position pos (in region coordinates) with velocity vel"
-                            //    This means SET the velocity to X, not just temperarily add it!
-                            //   -- Revolution Smythe
-                            llSetForce(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
-                        }
-
                         //Recoil to the av
                         if (m_host.IsAttachment && doRecoil)
                         {
@@ -3572,8 +3561,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         group.AbsolutePosition = offset;
                     }
 
-                    World.SceneGraph.AddPrimToScene(group);
-
                     ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
 
                     // Since renaming the item in the inventory does not affect the name stored
@@ -3581,7 +3568,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // object itself before we rez.
                     rootPart.Name = item.Name;
                     rootPart.Description = item.Description;
-
 
                     group.SetGroup(sourcePart.GroupID, null);
 
@@ -3626,12 +3612,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     group.UpdateGroupRotationR(rot);
 
                     //group.ApplyPhysics(m_physicalPrim);
-                    if (group.RootPart.PhysActor != null && group.RootPart.PhysActor.IsPhysical && vel != Vector3.Zero)
+                    World.SceneGraph.AddPrimToScene(group);
+                    if((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                     {
-                        group.RootPart.ApplyImpulse((vel * group.GetMass()), false);
-                        group.Velocity = vel;
+                        group.RootPart.PhysActor.OnPhysicalRepresentationChanged += delegate()
+                        {
+                            float groupmass = group.GetMass();
+                            //Apply the velocity to the object
+                            //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
+                            // @Above: Err.... no. Read http://lslwiki.net/lslwiki/wakka.php?wakka=llRezObject
+                            //    Notice the "Creates ("rezzes") object's inventory object centered at position pos (in region coordinates) with velocity vel"
+                            //    This means SET the velocity to X, not just temperarily add it!
+                            //   -- Revolution Smythe
+                            llSetForce(new LSL_Vector(vel * groupmass), 0);
+                            group.RootPart.PhysActor.ForceSetVelocity(vel * groupmass);
+                            group.RootPart.PhysActor.Velocity = vel * groupmass;
+                        };
                     }
-                    group.CreateScriptInstances(param, true, 2, RezzedFrom);
+
+                    group.CreateScriptInstances(param, true, StateSource.ScriptedRez, RezzedFrom);
 
                     if (!World.Permissions.BypassPermissions())
                     {
@@ -4299,7 +4298,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         group.ClearPartAttachmentData();
 
                     // Fire on_rez
-                    group.CreateScriptInstances(0, true, 0, UUID.Zero);
+                    group.CreateScriptInstances(0, true, StateSource.ScriptedRez, UUID.Zero);
                     rootPart.ParentEntity.ResumeScripts();
                     group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
