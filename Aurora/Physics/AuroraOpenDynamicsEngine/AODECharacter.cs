@@ -918,8 +918,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if(_target_velocity == Vector3.Zero && vec.X == 0 && vec.Y == 0)
                 {
-                    vec.X = vel.X * timeStep * -1 * PID_D;
-                    vec.Y = vel.Y * timeStep * -1 * PID_D;
+                    vec.X = vel.X * timeStep * -1 * PID_D * 5;
+                    vec.Y = vel.Y * timeStep * -1 * PID_D * 5;
                     vec.Z += 100;
                 }
             }
@@ -969,7 +969,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
+                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.01 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
                 m_isJumping = false;
@@ -992,6 +992,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Y = -vel.Y * PID_D + (_zeroPosition.Y - tempPos.Y) * PID_P;
                     if(notMoving)
                         vec.Z = 0;
+                    else
+                    {
+                        if(!realFlying)
+                            vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D * 5;
+                        else
+                            vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D * 0.5f;
+                        _parent_scene.CalculateGravity(m_mass, tempPos, true, 0.15f, ref gravForce);
+                        vec += gravForce;
+                    }
                 }
             }
             else
@@ -1005,19 +1014,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         // We're standing or walking on something
                         if (_target_velocity.X != 0.0f)
-                            vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
+                            vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
                         if (_target_velocity.Y != 0.0f)
-                            vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
+                            vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
                         if (_target_velocity.Z != 0.0f)
-                            vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D;// + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
+                            vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D;// + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
                     }
                     else
                     {
                         // We're flying and colliding with something
-                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.5f;
-                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.5f;
+                        vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 0.5f;
+                        vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.5f;
                         //if(_target_velocity.Z > 0)
-                            vec.Z = (_target_velocity.Z * movementmult - vel.Z) * PID_D * 0.5f;
+                            vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D * 0.5f;
                     }
                 }
                 else
@@ -1025,15 +1034,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (flying)
                     {
                         // we're flying
-                        vec.X = (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
-                        vec.Y = (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
+                        vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
+                        vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
                     }
                     else
                     {
                         // we're not colliding and we're not flying so that means we're falling!
                         // m_iscolliding includes collisions with the ground.
-                        vec.X = (_target_velocity.X - vel.X) * PID_D * 0.85f;
-                        vec.Y = (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
+                        vec.X += (_target_velocity.X - vel.X) * PID_D * 0.85f;
+                        vec.Y += (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
                     }
                 }
 
@@ -1195,8 +1204,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if(vec == Vector3.Zero) //if we arn't moving, STOP
                     {
-                        m_lastForceApplied = 0;
-                        d.BodySetLinearVel (Body, vec.X, vec.Y, vec.Z);
+                        if(m_lastForceApplied != -1)
+                        {
+                            m_lastForceApplied = -1;
+                            d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                        }
                     }
                     else
                     {
