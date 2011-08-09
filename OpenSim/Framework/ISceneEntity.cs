@@ -475,6 +475,16 @@ namespace OpenSim.Framework
         void ExtraFromXmlString (string xmlstr);
     }
 
+    public delegate void BlankHandler ();
+
+    public enum StateSource
+    {
+        NewRez = 0,
+        PrimCrossing = 1,
+        ScriptedRez = 2,
+        AttachedRez = 3
+    }
+
     public interface ISceneEntity : IEntity
     {
         #region Get/Set
@@ -515,6 +525,8 @@ namespace OpenSim.Framework
 
         #endregion
 
+        event BlankHandler OnFinishedPhysicalRepresentationBuilding;
+
         List<UUID> SitTargetAvatar { get; }
 
         void ClearUndoState ();
@@ -553,7 +565,7 @@ namespace OpenSim.Framework
 
         void SetAttachmentPoint (byte p);
 
-        void CreateScriptInstances (int p, bool p_2, int p_3, OpenMetaverse.UUID uUID);
+        void CreateScriptInstances (int p, bool p_2, StateSource stateSource, OpenMetaverse.UUID uUID);
 
         void ResumeScripts ();
 
@@ -1231,6 +1243,13 @@ namespace OpenSim.Framework
         public virtual void ClearVelocity ()
         {
         }
+
+        public event BlankHandler OnPhysicalRepresentationChanged;
+        public void FirePhysicalRepresentationChanged ()
+        {
+            if(OnPhysicalRepresentationChanged != null)
+                OnPhysicalRepresentationChanged();
+        }
     }
 
     public abstract class PhysicsActor
@@ -1422,7 +1441,7 @@ namespace OpenSim.Framework
         /// Fired when a new script is created.
         /// </summary>
         public event NewRezScripts OnRezScripts;
-        public delegate void NewRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
+        public delegate void NewRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom);
 
         public delegate void RemoveScript (uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
@@ -2004,7 +2023,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
+        public void TriggerRezScripts (ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)

@@ -105,6 +105,7 @@ namespace OpenSim.Region.Framework.Scenes
     /// </summary>
     public partial class SceneObjectGroup : EntityBase, ISceneObject //(ISceneObject implements ISceneEntity and IEntity)
     {
+        public event BlankHandler OnFinishedPhysicalRepresentationBuilding;
         public bool m_isLoaded = false;
         private Vector3 m_lastSignificantPosition = Vector3.Zero;
         public Vector3 LastSignificantPosition
@@ -1586,6 +1587,8 @@ namespace OpenSim.Region.Framework.Scenes
                         part.PhysActor.BuildingRepresentation = false;
                     }
                 }
+                if(OnFinishedPhysicalRepresentationBuilding != null)
+                    OnFinishedPhysicalRepresentationBuilding();
             }
         }
 
@@ -3379,12 +3382,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float GetMass ()
         {
-            float retmass = 0f;
-            foreach (SceneObjectPart part in m_partsList)
-            {
-                retmass += part.GetMass ();
-            }
-            return retmass;
+            return RootChild.GetMass();
         }
 
         public void CheckSculptAndLoad ()

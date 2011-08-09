@@ -343,7 +343,7 @@ namespace Aurora.Modules
                 {
                     if (group is SceneObjectGroup)
                     {
-                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, 0, UUID.Zero);
+                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
                         ((SceneObjectGroup)group).ResumeScripts();
                     }
                 }
@@ -886,7 +886,7 @@ namespace Aurora.Modules
                     {
                         sceneObject.HasGroupChanged = true;
                         sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
-                        sceneObject.CreateScriptInstances (0, false, 0, UUID.Zero);
+                        sceneObject.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
                         sceneObject.ResumeScripts ();
                     }
                 }

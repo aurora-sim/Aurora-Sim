@@ -2328,6 +2328,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             changeSelectedStatus (m_isSelected);
             resetCollisionAccounting ();
+            FirePhysicalRepresentationChanged();
         }
 
 

@@ -88,7 +88,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="startParam"></param>
         /// <param name="postOnRez"></param>
         /// <param name="stateSource"></param>
-        void UpdateScript(UUID partID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource);
+        void UpdateScript (UUID partID, UUID itemID, string script, int startParam, bool postOnRez, StateSource stateSource);
 
         /// <summary>
         /// Stops all scripts that the ScriptEngine is running

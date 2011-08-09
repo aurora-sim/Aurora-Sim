@@ -2569,7 +2569,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 if(sceneObject.RootChild.IsSelected)
                                     sceneObject.RootChild.CreateSelected = true;
                                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
-                                sceneObject.CreateScriptInstances(0, false, 1, UUID.Zero);
+                                sceneObject.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero);
                                 sceneObject.ResumeScripts();
 
                                 sceneObject.RootChild.PhysActor.ForceSetVelocity(cAgent.Velocity);

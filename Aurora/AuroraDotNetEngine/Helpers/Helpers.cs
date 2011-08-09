@@ -359,14 +359,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Stop = 2
     }
 
-    public enum StateSource
-    {
-        NewRez = 0,
-        PrimCrossing = 1,
-        ScriptedRez = 2,
-        AttachedRez = 3
-    }
-
     //////////////////////////////////////////////////////////////
     //
     // Level description

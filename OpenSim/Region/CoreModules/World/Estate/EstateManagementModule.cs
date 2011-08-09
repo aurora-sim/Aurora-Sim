@@ -856,7 +856,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     {
                         if (ent is SceneObjectGroup)
                         {
-                            ((SceneObjectGroup)ent).CreateScriptInstances (0, false, 0, UUID.Zero);
+                            ((SceneObjectGroup)ent).CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
                             ((SceneObjectGroup)ent).ResumeScripts ();
                         }
                     }

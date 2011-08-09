@@ -281,7 +281,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances(int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
+        public void CreateScriptInstances (int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
         {
             List<TaskInventoryItem> LSLItems = GetInventoryScripts();
             if (LSLItems.Count == 0)
@@ -346,7 +346,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public void CreateScriptInstance(TaskInventoryItem item, int startParam, bool postOnRez, int stateSource)
+        public void CreateScriptInstance (TaskInventoryItem item, int startParam, bool postOnRez, StateSource stateSource)
         {
             // m_log.InfoFormat(
             //     "[PRIM INVENTORY]: " +
@@ -378,7 +378,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public void UpdateScriptInstance(UUID itemID, int startParam, bool postOnRez, int stateSource)
+        public void UpdateScriptInstance (UUID itemID, int startParam, bool postOnRez, StateSource stateSource)
         {
             TaskInventoryItem item = m_items[itemID];
             if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
@@ -422,7 +422,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="itemId">
         /// A <see cref="UUID"/>
         /// </param>
-        public void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, int stateSource)
+        public void CreateScriptInstance (UUID itemId, int startParam, bool postOnRez, StateSource stateSource)
         {
             TaskInventoryItem item = GetInventoryItem(itemId);
             if (item != null)

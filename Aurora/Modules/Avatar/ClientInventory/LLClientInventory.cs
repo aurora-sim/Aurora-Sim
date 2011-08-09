@@ -1240,7 +1240,7 @@ namespace OpenSim.Region.Framework.Scenes
                 part.Inventory.AddInventoryItem(taskItem, false);
                 part.GetProperties(remoteClient);
 
-                part.Inventory.CreateScriptInstance(taskItem, 0, false, 0);
+                part.Inventory.CreateScriptInstance(taskItem, 0, false, StateSource.NewRez);
                 part.ParentEntity.ResumeScripts();
             }
         }
@@ -1769,7 +1769,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (running > 0)
             {
-                destPart.Inventory.CreateScriptInstance(destTaskItem, start_param, false, 0);
+                destPart.Inventory.CreateScriptInstance(destTaskItem, start_param, false, StateSource.NewRez);
             }
 
             destPart.ParentEntity.ResumeScripts();
@@ -2287,7 +2287,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // Needs to determine which engine was running it and use that
                     //
-                    part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, 0);
+                    part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, StateSource.NewRez);
                     errors = part.Inventory.GetScriptErrors(item.ItemID);
                 }
                 else

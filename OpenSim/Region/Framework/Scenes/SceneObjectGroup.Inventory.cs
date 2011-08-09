@@ -64,7 +64,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Start the scripts contained in all the prims in this group.
         /// </summary>
         public void CreateScriptInstances(int startParam, bool postOnRez,
-                int stateSource, UUID RezzedFrom)
+                StateSource stateSource, UUID RezzedFrom)
         {
             // Don't start scripts if they're turned off in the region!
             if (!m_scene.RegionInfo.RegionSettings.DisableScripts)

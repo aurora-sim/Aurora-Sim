@@ -849,7 +849,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             }
 
             // Fire on_rez
-            group.CreateScriptInstances (0, true, 0, UUID.Zero);
+            group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero);
             rootPart.ParentEntity.ResumeScripts ();
 
             group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
@@ -985,7 +985,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
 
                 // Fire on_rez
-                group.CreateScriptInstances(0, true, 0, UUID.Zero);
+                group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero);
                 rootPart.ParentGroup.ResumeScripts();
 
                 if (!m_scene.Permissions.BypassPermissions())

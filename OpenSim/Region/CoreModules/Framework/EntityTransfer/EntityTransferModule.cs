@@ -921,7 +921,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 return false;
             }
 
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, 1, UUID.Zero);
+            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero);
             newObject.RootPart.ParentGroup.ResumeScripts();
 
             return true;

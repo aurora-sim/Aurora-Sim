@@ -776,13 +776,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name="stateSource"></param>
         /// <param name="RezzedFrom"></param>
         public void rez_scripts(ISceneChildEntity part, TaskInventoryItem[] items,
-                int startParam, bool postOnRez, int stateSource, UUID RezzedFrom)
+                int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
         {
             List<LUStruct> ItemsToStart = new List<LUStruct>();
             foreach (TaskInventoryItem item in items)
             {
                 LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID,
-                        startParam, postOnRez, (StateSource)stateSource, RezzedFrom);
+                        startParam, postOnRez, stateSource, RezzedFrom);
                 if (itemToQueue.Action != LUType.Unknown)
                     ItemsToStart.Add(itemToQueue);
             }

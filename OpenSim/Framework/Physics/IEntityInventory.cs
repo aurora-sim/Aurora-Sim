@@ -79,7 +79,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// Start all the scripts contained in this entity's inventory
         /// </summary>
-        void CreateScriptInstances(int startParam, bool postOnRez, int stateSource, UUID RezzedFrom);
+        void CreateScriptInstances (int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom);
 
         ArrayList GetScriptErrors(UUID itemID);
         void ResumeScripts();
@@ -100,7 +100,7 @@ namespace OpenSim.Framework
         /// <param name="postOnRez"></param>
         /// <param name="stateSource"></param>
         void CreateScriptInstance(
-            TaskInventoryItem item, int startParam, bool postOnRez, int stateSource);
+            TaskInventoryItem item, int startParam, bool postOnRez, StateSource stateSource);
 
         /// <summary>
         /// Start a script which is in this entity's inventory.
@@ -110,7 +110,7 @@ namespace OpenSim.Framework
         /// <param name="postOnRez"></param>
         /// <param name="engine"></param>
         /// <param name="stateSource"></param>
-        void CreateScriptInstance(UUID itemId, int startParam, bool postOnRez, int stateSource);
+        void CreateScriptInstance (UUID itemId, int startParam, bool postOnRez, StateSource stateSource);
 
         /// <summary>
         /// Updates a script instance in this prim's inventory.
@@ -119,7 +119,7 @@ namespace OpenSim.Framework
         /// <param name="startParam"></param>
         /// <param name="postOnRez"></param>
         /// <param name="stateSource"></param>
-        void UpdateScriptInstance(UUID itemId, int startParam, bool postOnRez, int stateSource);
+        void UpdateScriptInstance (UUID itemId, int startParam, bool postOnRez, StateSource stateSource);
         
         /// <summary>
         /// Stop a script which is in this prim's inventory.

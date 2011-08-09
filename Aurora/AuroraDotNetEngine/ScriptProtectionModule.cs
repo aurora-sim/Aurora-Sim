@@ -421,6 +421,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void RemovePreviouslyCompiled (string source)
         {
+            if(string.IsNullOrEmpty(source))
+                return;
             //string key = source.Length.ToString() + source.GetHashCode().ToString();
             string key = Util.Md5Hash (source);
             lock (PreviouslyCompiled)

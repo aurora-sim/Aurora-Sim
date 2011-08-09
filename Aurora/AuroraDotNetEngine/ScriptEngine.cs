@@ -943,7 +943,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return ls;
         }
 
-        public void UpdateScript(UUID partID, UUID itemID, string script, int startParam, bool postOnRez, int stateSource)
+        public void UpdateScript (UUID partID, UUID itemID, string script, int startParam, bool postOnRez, StateSource stateSource)
         {
             ScriptData id = ScriptProtection.GetScript(partID, itemID);
             LUStruct ls = new LUStruct();
@@ -951,13 +951,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (id == null)
             {
                 MaintenanceThread.AddScriptChange (new LUStruct[1]{ StartScript (findPrim (partID), itemID, startParam, postOnRez,
-                    (StateSource)stateSource, UUID.Zero) }, LoadPriority.Restart);
+                    stateSource, UUID.Zero) }, LoadPriority.Restart);
                 return;
             }
             ls.Action = LUType.Reupload;
             id.PostOnRez = postOnRez;
             id.StartParam = startParam;
-            id.stateSource = (StateSource)stateSource;
+            id.stateSource = stateSource;
             id.Source = script;
             id.EventDelayTicks = 0;
             id.Part = findPrim(partID);
