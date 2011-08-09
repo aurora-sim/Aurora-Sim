@@ -1076,7 +1076,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     CreateFromData(SD.Part.UUID, SD.ItemID, SD.Part.UUID, Plugins);
 
                     SD.World = newPart.ParentGroup.Scene;
-                    SD.SetApis(true);
+                    SD.SetApis();
 
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, false);
 

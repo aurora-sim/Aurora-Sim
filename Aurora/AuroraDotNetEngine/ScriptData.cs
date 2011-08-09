@@ -392,8 +392,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Apis[api.Name].Initialize(m_ScriptEngine, Part, Part.LocalId, ItemID, ScriptEngine.ScriptProtection);
                 Script.InitApi(api);
             }
-            if(setInitialResetValues)
-                Script.UpdateInitialValues();
+            //We must always do this, as reset doesn't care whether there is a state save or not, we must have the defaults
+            Script.UpdateInitialValues();
         }
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
