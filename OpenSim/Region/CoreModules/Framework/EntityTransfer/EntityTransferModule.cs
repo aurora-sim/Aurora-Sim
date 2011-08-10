@@ -290,7 +290,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             agentCircuit.child = false;
             //Make sure the appearnace is right
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
-            agentCircuit.Appearance = appearance.Appearance;
+            if(appearance != null)
+                agentCircuit.Appearance = appearance.Appearance;
 
             AgentData agent = new AgentData();
             sp.CopyTo(agent);

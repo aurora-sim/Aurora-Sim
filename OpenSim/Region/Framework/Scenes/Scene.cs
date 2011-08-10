@@ -639,11 +639,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_eventManager.TriggerOnNewPresence (sp);
 
                 //Make sure the appearanace is updated
-                if (aCircuit != null)
+                if(aCircuit != null && aCircuit.Appearance != null)
                 {
                     IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
-                    if (appearance != null)
+                    if(appearance != null)
                         appearance.Appearance = aCircuit.Appearance;
+                    else
+                        appearance.Appearance = sp.Scene.AvatarService.GetAppearance(sp.UUID);
                 }
 
                 if (GetScenePresence(client.AgentId) != null)

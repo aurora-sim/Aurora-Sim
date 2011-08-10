@@ -1124,10 +1124,7 @@ namespace OpenSim.Services.LLLoginService
             if (appearance != null)
                 aCircuit.Appearance = appearance;
             else
-            {
-                m_log.Warn("Could not find appearance for acircuit!");
                 aCircuit.Appearance = new AvatarAppearance(account.PrincipalID);
-            }
 
             aCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath();
             aCircuit.child = false; // the first login agent is root
