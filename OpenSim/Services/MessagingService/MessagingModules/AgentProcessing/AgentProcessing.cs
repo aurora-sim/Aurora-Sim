@@ -659,7 +659,7 @@ namespace OpenSim.Services.MessagingService
 
                     EQService.TeleportFinishEvent (destination.RegionHandle, destination.Access,
                         otherRegion.LoopbackRegionIP,
-                        destination.ExternalEndPoint.Port,
+                        circuit.RegionUDPPort,
                         otherRegion.CapsUrl,
                         4, AgentID, TeleportFlags,
                         destination.RegionSizeX, destination.RegionSizeY,
@@ -974,10 +974,15 @@ namespace OpenSim.Services.MessagingService
 
                             IRegionClientCapsService otherRegion = clientCaps.GetCapsService(crossingRegion.RegionHandle);
                             //Tell the client about the transfer
-                            EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, otherRegion.LoopbackRegionIP, crossingRegion.ExternalEndPoint.Port, otherRegion.CapsUrl,
-                                               AgentID, circuit.SessionID,
-                                               crossingRegion.RegionSizeX, crossingRegion.RegionSizeY,
-                                               requestingRegion);
+                            EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, 
+                                otherRegion.LoopbackRegionIP,
+                                circuit.RegionUDPPort,
+                                otherRegion.CapsUrl,
+                                AgentID, 
+                                circuit.SessionID,
+                                crossingRegion.RegionSizeX,
+                                crossingRegion.RegionSizeY,
+                                requestingRegion);
 
                             result = WaitForCallback(AgentID);
                             if (!result)
