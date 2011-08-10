@@ -313,7 +313,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //This object entered our draw distance on its own, and we havn't seen it before
                 flags = PrimUpdateFlags.ForcedFullUpdate;
-                lastGrpsInView.Add (part.ParentEntity);
+                foreach(ISceneChildEntity child in part.ParentEntity.ChildrenEntities())
+                {
+                    EntityUpdate update = new EntityUpdate(child, flags);
+                    QueueEntityUpdate(update);
+                }
+                lastGrpsInView.Add(part.ParentEntity);
+                return;
             }
 
             EntityUpdate o = new EntityUpdate (part, flags);
