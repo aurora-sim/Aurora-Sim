@@ -83,5 +83,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             FinishedMethod = finishedMethod;
             Packet = packet;
         }
+
+        public void Destroy ()
+        {
+            if(!PacketPool.Instance.ReturnPacket(Packet))
+                Packet = null;
+            Buffer = null;
+            FinishedMethod = null;
+            UnackedMethod = null;
+            Client = null;
+            SequenceNumber = 0;
+        }
     }
 }

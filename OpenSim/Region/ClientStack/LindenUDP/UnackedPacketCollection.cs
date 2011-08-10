@@ -205,14 +205,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             if (rtt > 0)
                                 ackedPacket.Client.UpdateRoundTrip(rtt);
                         }
-
-                        if(!OpenSim.Framework.PacketPool.Instance.ReturnPacket(ackedPacket.Packet))
-                            ackedPacket.Packet = null;
-                        ackedPacket.Buffer = null;
-                        ackedPacket.FinishedMethod = null;
-                        ackedPacket.Client = null;
-                        ackedPacket.SequenceNumber = 0;
-                        ackedPacket = null;
+                        ackedPacket.Destroy();
                     }
                 }
             }
@@ -229,6 +222,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         // Update stats
                         Interlocked.Add(ref removedPacket.Client.UnackedBytes, -removedPacket.Buffer.DataLength);
+                        removedPacket.Destroy();
                     }
                 }
             }
