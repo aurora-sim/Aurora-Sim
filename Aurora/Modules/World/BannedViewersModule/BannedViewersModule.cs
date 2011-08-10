@@ -47,7 +47,7 @@ namespace Aurora.Modules
         private bool m_banEvilViewersByDefault = true;
         private bool m_enabled = true;
         private bool m_useIncludeList = false;
-        private OSDMap m_map = null;
+        private static OSDMap m_map = null;
         private string m_viewerTagURL = "http://viewertags.com/app/client_list.xml";
 
         public List<string> BannedViewers
@@ -125,7 +125,9 @@ namespace Aurora.Modules
             {
                 //Read the website once!
                 if (m_map == null)
-                    m_map = (OSDMap)OSDParser.Deserialize (Utilities.ReadExternalWebsite (m_viewerTagURL));
+                    m_map = OSDParser.Deserialize (Utilities.ReadExternalWebsite (m_viewerTagURL)) as OSDMap;
+                if (m_map == null)
+                    return;
                 
                 //This is the givaway texture!
                 for (int i = 0; i < textureEntry.FaceTextures.Length; i++)

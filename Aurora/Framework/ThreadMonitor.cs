@@ -148,7 +148,7 @@ namespace Aurora.Framework
         /// <param name="timeout"></param>
         /// <param name="enumerator"></param>
         /// <returns></returns>
-        protected bool CallAndWait(int timeout, Heartbeat enumerator, out bool isRunning)
+        public static bool CallAndWait(int timeout, Heartbeat enumerator, out bool isRunning)
         {
             isRunning = false;
             bool RetVal = false;

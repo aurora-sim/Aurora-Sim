@@ -65,7 +65,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="configSource"></param>
         /// <param name="clientServer"> </param>
         /// <returns></returns>
-        protected Scene SetupScene (RegionInfo regionInfo, IConfigSource configSource)
+        protected IScene SetupScene (RegionInfo regionInfo, IConfigSource configSource)
         {
             AgentCircuitManager circuitManager = new AgentCircuitManager ();
             List<IClientNetworkServer> clientServers = AuroraModuleLoader.PickupModules<IClientNetworkServer> ();
@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            Scene scene = new Scene ();
+            Scene scene = new Scene();
             scene.AddModuleInterfaces (m_openSimBase.ApplicationRegistry.GetInterfaces ());
             scene.Initialize (regionInfo, circuitManager, allClientServers);
 

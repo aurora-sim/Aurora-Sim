@@ -245,8 +245,8 @@ namespace Aurora.Modules
                         break;
                 }
 
-                foreach (ISceneEntity g in deletes)
-                    DeleteSceneObject (g, true, true);
+                m_log.Warn("Deleting " + deletes.Count + " objects.");
+                DeleteSceneObjects(deletes.ToArray(), true, true);
             }
 
             #endregion
