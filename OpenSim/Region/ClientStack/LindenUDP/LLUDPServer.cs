@@ -604,7 +604,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             try
             {
-                packet = Packet.BuildPacket(buffer.Data, ref packetEnd,
+                packet = PacketPool.Instance.GetPacket(buffer.Data, ref packetEnd,
                     // Only allocate a buffer for zerodecoding if the packet is zerocoded
                     ((buffer.Data[0] & Helpers.MSG_ZEROCODED) != 0) ? new byte[4096] : null);
             }

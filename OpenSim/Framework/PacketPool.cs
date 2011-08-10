@@ -45,7 +45,7 @@ namespace OpenSim.Framework
         private bool dataBlockPoolEnabled = true;
 
         private readonly object m_poolLock = new object();
-        private readonly Dictionary<PacketType, Stack<Packet>> pool = new Dictionary<PacketType, Stack<Packet>>();
+        private readonly Dictionary<int, Stack<Packet>> pool = new Dictionary<int, Stack<Packet>>();
 
         private static Dictionary<Type, Stack<Object>> DataBlocks =
                 new Dictionary<Type, Stack<Object>>();
@@ -71,8 +71,14 @@ namespace OpenSim.Framework
             get { return dataBlockPoolEnabled; }
         }
 
+        /// <summary>
+        /// For outgoing packets that just have the packet type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public Packet GetPacket(PacketType type)
         {
+            int t = (int)type;
             Packet packet;
 
             if (!packetPoolEnabled)
@@ -80,7 +86,7 @@ namespace OpenSim.Framework
 
             lock(m_poolLock)
             {
-                if (!pool.ContainsKey(type) || (pool[type]).Count == 0)
+                if (!pool.ContainsKey(t) || (pool[t]).Count == 0)
                 {
                     // Creating a new packet if we cannot reuse an old package
                     packet = Packet.BuildPacket(type);
@@ -91,14 +97,13 @@ namespace OpenSim.Framework
 #if Debug
                     m_log.Info("[PacketPool]: Using " + type);
 #endif
-                    packet = (pool[type]).Pop();
+                    packet = (pool[t]).Pop();
                 }
             }
 
             return packet;
         }
 
-        // private byte[] decoded_header = new byte[10];
         private static PacketType GetType(byte[] bytes)
         {
             byte[] decoded_header = new byte[10 + 8];
@@ -136,11 +141,19 @@ namespace OpenSim.Framework
             return Packet.GetType(id, freq);
         }
 
+        /// <summary>
+        /// For incoming packets that are just types
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="packetEnd"></param>
+        /// <param name="zeroBuffer"></param>
+        /// <returns></returns>
         public Packet GetPacket(byte[] bytes, ref int packetEnd, byte[] zeroBuffer)
         {
             PacketType type = GetType(bytes);
 
-            Array.Clear(zeroBuffer, 0, zeroBuffer.Length);
+            if(zeroBuffer != null)
+                Array.Clear(zeroBuffer, 0, zeroBuffer.Length);
 
             int i = 0;
             Packet packet = GetPacket(type);
@@ -157,7 +170,7 @@ namespace OpenSim.Framework
         /// <param name="packet"></param>
         public bool ReturnPacket(Packet packet)
         {
-            if (dataBlockPoolEnabled)
+            /*if (dataBlockPoolEnabled)
             {
                 switch (packet.Type)
                 {
@@ -178,15 +191,36 @@ namespace OpenSim.Framework
                         itoup.ObjectData = null;
                         break;
                 }
-            }
+            }*/
 
             if (packetPoolEnabled)
             {
                 switch (packet.Type)
                 {
                     // List pooling packets here
+
                     case PacketType.ObjectUpdate:
+                        lock(m_poolLock)
+                        {
+                            //Special case, this packet gets sent as a ObjectUpdate for both compressed and non compressed
+                            int t = (int)packet.Type;
+                            if(packet is ObjectUpdateCompressedPacket)
+                                t = (int)PacketType.ObjectUpdateCompressed;
+                            
+#if Debug
+                            m_log.Info("[PacketPool]: Returning " + type);
+#endif
+
+                            if (!pool.ContainsKey(t))
+                                pool[t] = new Stack<Packet>();
+
+                            if ((pool[t]).Count < 50)
+                                (pool[t]).Push(packet);
+                        }
+                        return true;
+                    //Outgoing packets:
                     case PacketType.ObjectUpdateCompressed:
+                    case PacketType.ObjectUpdateCached:
                     case PacketType.ImprovedTerseObjectUpdate:
                     case PacketType.ObjectDelete:
                     case PacketType.LayerData:
@@ -194,19 +228,33 @@ namespace OpenSim.Framework
                     case PacketType.PacketAck:
                     case PacketType.StartPingCheck:
                     case PacketType.CompletePingCheck:
+                    case PacketType.InventoryDescendents:
+                        //Incoming packets:
+                    case PacketType.AgentUpdate:
+                    case PacketType.AgentAnimation:
+                    case PacketType.AvatarAnimation:
+                    case PacketType.CoarseLocationUpdate:
+                    case PacketType.ImageData:
+                    case PacketType.ImagePacket:
+                    case PacketType.MapBlockReply:
+                    case PacketType.MapBlockRequest:
+                    case PacketType.MapItemReply:
+                    case PacketType.MapItemRequest:
+                    case PacketType.SendXferPacket:
+                    case PacketType.TransferPacket:
                         lock(m_poolLock)
                         {
-                            PacketType type = packet.Type;
+                            int t = (int)packet.Type;
                             
 #if Debug
                             m_log.Info("[PacketPool]: Returning " + type);
 #endif
 
-                            if (!pool.ContainsKey(type))
-                                pool[type] = new Stack<Packet>();
+                            if (!pool.ContainsKey(t))
+                                pool[t] = new Stack<Packet>();
 
-                            if ((pool[type]).Count < 50)
-                                (pool[type]).Push(packet);
+                            if ((pool[t]).Count < 50)
+                                (pool[t]).Push(packet);
                         }
                         return true;
                     

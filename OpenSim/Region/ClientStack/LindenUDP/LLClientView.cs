@@ -696,19 +696,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Packet Handling
 
-        public void ActivateGesture(UUID assetId, UUID gestureId)
-        {
-        }
-
-        public void DeactivateGesture(UUID assetId, UUID gestureId)
-        {
-        }
-
-        // Sound
-        public void SoundTrigger(UUID soundId, UUID owerid, UUID Objectid, UUID ParentId, float Gain, Vector3 Position, UInt64 Handle)
-        {
-        }
-
         #region Scene/Avatar to Client
 
         public void SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args)
@@ -3397,8 +3384,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Scene/Avatar to Client
 
-        // Gesture
-
         #region Appearance/ Wearables Methods
 
         public void SendWearables(AvatarWearable[] wearables, int serial)
@@ -4016,34 +4001,34 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #endregion Primitive Packet/Data Sending Methods
 
-        void HandleQueueEmpty(object o )
-            {
-        // arraytmp  0 contains current number of packets in task
-        // arraytmp  1 contains current number of packets in avatarinfo
-        // arraytmp  2 contains current number of packets in texture
+        void HandleQueueEmpty (object o)
+        {
+            // arraytmp  0 contains current number of packets in task
+            // arraytmp  1 contains current number of packets in avatarinfo
+            // arraytmp  2 contains current number of packets in texture
 
             int[] arraytmp = (int[])o;
             int ptmp = m_udpServer.PrimUpdatesPerCallback - arraytmp[0];
             int atmp = m_udpServer.AvatarUpdatesPerCallBack - arraytmp[1];
 
-            if (ptmp < 0)
+            if(ptmp < 0)
                 ptmp = 0;
-            if (atmp < 0)
+            if(atmp < 0)
                 atmp = 0;
 
-            if (ptmp + atmp != 0)
-                DequeueUpdates(ptmp,atmp);
+            if(ptmp + atmp != 0)
+                DequeueUpdates(ptmp, atmp);
 
-            if (m_udpServer.TextureSendLimit > arraytmp[2])
+            if(m_udpServer.TextureSendLimit > arraytmp[2])
                 ProcessTextureRequests(m_udpServer.TextureSendLimit);
-            }
+        }
 
-        void ProcessTextureRequests(int numPackets)
-            {
+        void ProcessTextureRequests (int numPackets)
+        {
             int tmp = m_udpClient.GetCurTexPacksInQueue();
-            if (m_imageManager != null)
+            if(m_imageManager != null)
                 m_imageManager.ProcessImageQueue(numPackets);
-            }
+        }
 
         public void SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID)
         {
@@ -5382,7 +5367,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.MuteListRequest, HandleMuteListRequest, true);
             AddLocalPacketHandler(PacketType.UseCircuitCode, HandleUseCircuitCode);
             AddLocalPacketHandler(PacketType.AgentHeightWidth, HandleAgentHeightWidth, false);
-            AddLocalPacketHandler(PacketType.InventoryDescendents, HandleInventoryDescendents);
             AddLocalPacketHandler(PacketType.DirPlacesQuery, HandleDirPlacesQuery);
             AddLocalPacketHandler(PacketType.DirFindQuery, HandleDirFindQuery);
             AddLocalPacketHandler(PacketType.DirLandQuery, HandleDirLandQuery);
@@ -10195,22 +10179,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
-        private bool HandleTransferAbort(IClientAPI sender, Packet Pack)
-        {
-            return true;
-        }
-
         private bool HandleUseCircuitCode(IClientAPI sender, Packet Pack)
         {
             return true;
         }
 
         private bool HandleAgentHeightWidth(IClientAPI sender, Packet Pack)
-        {
-            return true;
-        }
-
-        private bool HandleInventoryDescendents(IClientAPI sender, Packet Pack)
         {
             return true;
         }
@@ -12243,6 +12217,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (!ProcessPacketMethod(packet))
                 m_log.Warn("[CLIENT]: unhandled packet " + packet.Type);
+
+            //Give the packet back to the pool now, we've processed it
+            PacketPool.Instance.ReturnPacket(packet);
         }
 
         private static PrimitiveBaseShape GetShapeFromAddPacket(ObjectAddPacket addPacket)
@@ -12385,6 +12362,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return m_udpClient.GetStats();
         }
 
+        private List<UUID> m_transfersToAbort = new List<UUID>();
+        private bool HandleTransferAbort (IClientAPI sender, Packet Pack)
+        {
+            TransferAbortPacket transferAbort = (TransferAbortPacket)Pack;
+            m_transfersToAbort.Add(transferAbort.TransferInfo.TransferID);
+            return true;
+        }
+
         /// <summary>
         /// Make an asset request to the asset service in response to a client request.
         /// </summary>
@@ -12430,6 +12415,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 requestID = new UUID(transferRequest.TransferInfo.Params, 80);
                 source = (byte)SourceType.SimInventoryItem;
             }
+
+            if(m_transfersToAbort.Contains(requestID))
+                return;//They wanted to cancel it
 
             // The asset is known to exist and is in our cache, so add it to the AssetRequests list
             AssetRequestToClient req = new AssetRequestToClient();
