@@ -156,6 +156,8 @@ namespace Aurora.BotManager
             //This adds them to the scene and sets them inworld
             scene.AddNewClient (m_character);
             IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
+            if(SP == null)
+                return UUID.Zero;//Failed!
             m_character.Initialize (SP);
             SP.MakeRootAgent (m_character.StartPos, false, true);
             //Move them
