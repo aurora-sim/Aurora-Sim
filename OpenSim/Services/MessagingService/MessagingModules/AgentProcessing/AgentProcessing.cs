@@ -521,8 +521,6 @@ namespace OpenSim.Services.MessagingService
                 int requestedPort = 0;
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
                         TeleportFlags, agentData, out requestedPort, out reason);
-                if(requestedPort == 0)
-                    requestedPort = neighbor.ExternalEndPoint.Port;
                 if (regionAccepted)
                 {
                     System.Net.IPAddress ipAddress = neighbor.ExternalEndPoint.Address;
@@ -552,6 +550,10 @@ namespace OpenSim.Services.MessagingService
 
                         #endregion
                     }
+                    if(ipAddress == null)
+                        ipAddress = neighbor.ExternalEndPoint.Address;
+                    if(requestedPort == 0)
+                        requestedPort = neighbor.ExternalEndPoint.Port;
                     otherRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
                     otherRegionService.LoopbackRegionIP = ipAddress;
                     otherRegionService.CircuitData.RegionUDPPort = requestedPort;

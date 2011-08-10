@@ -148,7 +148,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 int x;
                 for (x = 0; x < retval.Width; x++)
                 {
-                    retval[x, (retval.Height - 1) - y] = bs.ReadByte () * (bs.ReadByte () / (retval.Height / 2));
+                    retval[x, (retval.Width - 1) - y] = bs.ReadByte() * (bs.ReadByte() / 128f);
                     bs.ReadBytes(11); // Advance the stream to next bytes.
                 }
             }
