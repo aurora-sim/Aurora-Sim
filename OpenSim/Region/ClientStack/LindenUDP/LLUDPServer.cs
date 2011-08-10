@@ -398,7 +398,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     blocks.Add(block);
                 }
 
-                PacketAckPacket packet = new PacketAckPacket();
+                PacketAckPacket packet = (PacketAckPacket)PacketPool.Instance.GetPacket(PacketType.PacketAck);
                 packet.Header.Reliable = false;
                 packet.Packets = blocks.ToArray();
 
@@ -420,7 +420,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void CompletePing(LLUDPClient udpClient, byte pingID)
         {
-            CompletePingCheckPacket completePing = new CompletePingCheckPacket();
+            CompletePingCheckPacket completePing = (CompletePingCheckPacket)PacketPool.Instance.GetPacket(PacketType.CompletePingCheck);
             completePing.PingID.PingID = pingID;
             SendPacket(udpClient, completePing, ThrottleOutPacketType.OutBand, false, null, null);
         }
@@ -541,6 +541,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #region Sequence Number Assignment
 
+            bool canBeRemoved = false;
             if (!isResend)
             {
                 // Not a resend, assign a new sequence number
@@ -548,12 +549,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 Utils.UIntToBytesBig(sequenceNumber, buffer.Data, 1);
                 outgoingPacket.SequenceNumber = sequenceNumber;
 
-                if (isReliable)
+                if(isReliable)
                 {
                     // Add this packet to the list of ACK responses we are waiting on from the server
                     udpClient.NeedAcks.Add(outgoingPacket);
                     Interlocked.Add(ref udpClient.UnackedBytes, outgoingPacket.Buffer.DataLength);
                 }
+                else
+                    canBeRemoved = true;
             }
 
             #endregion Sequence Number Assignment
@@ -573,13 +576,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if(outgoingPacket.FinishedMethod != null)
                 outgoingPacket.FinishedMethod(outgoingPacket);
-            /*if(!isResend && !isReliable && outgoingPacket.Category != ThrottleOutPacketType.Resend)
+
+            if(canBeRemoved)
             {
+                if(!PacketPool.Instance.ReturnPacket(outgoingPacket.Packet))
+                    outgoingPacket.Packet = null;
                 outgoingPacket.Buffer = null;
                 outgoingPacket.FinishedMethod = null;
-                outgoingPacket.Packet = null;
+                outgoingPacket.Client = null;
+                outgoingPacket.SequenceNumber = 0;
                 outgoingPacket = null;
-            }*/
+            }
         }
 
         protected override void PacketReceived(UDPPacketBuffer buffer)

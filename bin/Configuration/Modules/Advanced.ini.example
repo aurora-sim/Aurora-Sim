@@ -1,7 +1,7 @@
 [PacketPool]
     ;; Enables the experimental packet pool. Yes, we've been here before.
-    ;RecyclePackets = true;
-    ;RecycleDataBlocks = true;
+    RecyclePackets = true;
+    RecycleDataBlocks = false;
 
 [InterestManagement]
     ;; This section controls how updates for prims and avatars are sent to the client

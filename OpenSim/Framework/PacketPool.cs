@@ -24,6 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+//#define Debug
 
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,6 @@ using log4net;
 
 namespace OpenSim.Framework
 {
-
     public sealed class PacketPool
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -88,6 +88,9 @@ namespace OpenSim.Framework
                 else
                 {
                     // Recycle old packages
+#if Debug
+                    m_log.Info("[PacketPool]: Using " + type);
+#endif
                     packet = (pool[type]).Pop();
                 }
             }
@@ -152,7 +155,7 @@ namespace OpenSim.Framework
         /// Return a packet to the packet pool
         /// </summary>
         /// <param name="packet"></param>
-        public void ReturnPacket(Packet packet)
+        public bool ReturnPacket(Packet packet)
         {
             if (dataBlockPoolEnabled)
             {
@@ -182,15 +185,22 @@ namespace OpenSim.Framework
                 switch (packet.Type)
                 {
                     // List pooling packets here
-                    case PacketType.PacketAck:
                     case PacketType.ObjectUpdate:
+                    case PacketType.ObjectUpdateCompressed:
                     case PacketType.ImprovedTerseObjectUpdate:
                     case PacketType.ObjectDelete:
-                    case PacketType.ObjectUpdateCompressed:
                     case PacketType.LayerData:
+                    case PacketType.FetchInventoryReply:
+                    case PacketType.PacketAck:
+                    case PacketType.StartPingCheck:
+                    case PacketType.CompletePingCheck:
                         lock(m_poolLock)
                         {
                             PacketType type = packet.Type;
+                            
+#if Debug
+                            m_log.Info("[PacketPool]: Returning " + type);
+#endif
 
                             if (!pool.ContainsKey(type))
                                 pool[type] = new Stack<Packet>();
@@ -198,13 +208,14 @@ namespace OpenSim.Framework
                             if ((pool[type]).Count < 50)
                                 (pool[type]).Push(packet);
                         }
-                        break;
+                        return true;
                     
                     // Other packets wont pool
                     default:
-                        return;
+                        break;
                 }
             }
+            return false;
         }
 
         public static T GetDataBlock<T>() where T: new()

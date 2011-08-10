@@ -162,7 +162,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 // As with other network applications, assume that an expired packet is
                 // an indication of some network problem, slow transmission
-            expiredPackets[0].Client.SlowDownSend();
+                expiredPackets[0].Client.SlowDownSend();
             }
 
             return expiredPackets;
@@ -205,6 +205,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             if (rtt > 0)
                                 ackedPacket.Client.UpdateRoundTrip(rtt);
                         }
+
+                        if(!OpenSim.Framework.PacketPool.Instance.ReturnPacket(ackedPacket.Packet))
+                            ackedPacket.Packet = null;
+                        ackedPacket.Buffer = null;
+                        ackedPacket.FinishedMethod = null;
+                        ackedPacket.Client = null;
+                        ackedPacket.SequenceNumber = 0;
                         ackedPacket = null;
                     }
                 }
