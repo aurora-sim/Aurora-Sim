@@ -42,7 +42,7 @@ namespace Aurora.Modules
 {
     public class IWCAssetConnector : IAssetService, IService
     {
-        protected AssetService m_localService;
+        protected IAssetService m_localService;
         protected AssetServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
 
@@ -71,13 +71,24 @@ namespace Aurora.Modules
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
+            
+            string localAssetHandler = handlerConfig.GetString("LocalAssetHandler", "AssetService");
+            List<IAssetService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IAssetService>();
+            foreach(IAssetService s in services)
+                if(s.GetType().Name == localAssetHandler)
+                    m_localService = s;
 
-            m_localService = new AssetService();
+            if(m_localService == null)
+                m_localService = new AssetService();
             m_localService.Configure(config, registry);
             m_remoteService = new AssetServicesConnector();
             m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IAssetService>(this);
             m_registry = registry;
+        }
+
+        public void Configure (IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

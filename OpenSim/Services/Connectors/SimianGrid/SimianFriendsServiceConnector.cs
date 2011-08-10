@@ -44,7 +44,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// <summary>
     /// Stores and retrieves friend lists from the SimianGrid backend
     /// </summary>
-    public class SimianFriendsServiceConnector : IFriendsService
+    public class SimianFriendsServiceConnector : IFriendsService, IService
     {
         private static readonly ILog m_log =
                 LogManager.GetLogger(
@@ -76,6 +76,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+
+        public void FinishedStartup ()
         {
         }
 

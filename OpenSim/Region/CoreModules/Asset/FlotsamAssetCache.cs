@@ -204,6 +204,10 @@ namespace Flotsam.RegionModules.AssetCache
             }
         }
 
+        public void Configure (IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_AssetService = registry.RequestModuleInterface<IAssetService>();

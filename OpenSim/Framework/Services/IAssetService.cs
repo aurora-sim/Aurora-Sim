@@ -119,6 +119,12 @@ namespace OpenSim.Services.Interfaces
         {
             get;
         }
+
+        void Configure (Nini.Config.IConfigSource config, IRegistryCore registry);
+
+        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+
+        void FinishedStartup ();
     }
 
     public interface IAssetDataPlugin : IAuroraDataPlugin

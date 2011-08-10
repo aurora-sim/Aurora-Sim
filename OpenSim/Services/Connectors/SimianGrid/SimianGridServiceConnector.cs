@@ -89,6 +89,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
+        public void Configure (IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             CheckForScenes(registry);

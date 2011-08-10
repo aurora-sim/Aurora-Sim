@@ -199,6 +199,12 @@ namespace OpenSim.Services.Interfaces
         /// The local service (if one exists)
         /// </summary>
         IAgentInfoService InnerService { get; }
+
+        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+
+        void FinishedStartup ();
+
+        void Initialize (Nini.Config.IConfigSource config, IRegistryCore registry);
     }
 
     public interface IAgentInfoConnector : IAuroraDataPlugin

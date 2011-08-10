@@ -191,6 +191,12 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <returns></returns>
         bool VerifyRegionSessionID(GridRegion r, UUID SessionID);
+
+        void Configure (Nini.Config.IConfigSource config, IRegistryCore registry);
+
+        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+
+        void FinishedStartup ();
     }
 
     public class GridRegion

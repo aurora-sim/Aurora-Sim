@@ -119,13 +119,16 @@
     
 [Includes]
     ;;
-    ;; Select only one of the next two
+    ;; Select only one of the next three
     ;
     ;; Main configuration without IWC
     Include-Main = AuroraServerConfiguration/Main.ini
     
     ;; Configuration with IWC enabled
     ;Include-IWCMain = AuroraServerConfiguration/IWCMain.ini
+    
+    ;; Configuration with IWC and HG (not included) enabled
+    ;Include-IWCHGMain = AuroraServerConfiguration/IWCHGMain.ini
     
 	
     ;;Other .ini files to add...

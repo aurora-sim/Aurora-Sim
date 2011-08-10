@@ -42,7 +42,7 @@ namespace Aurora.Modules
 {
     public class IWCGridConnector : IGridService, IService
     {
-        protected GridService m_localService;
+        protected IGridService m_localService;
         protected GridServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
 
@@ -72,12 +72,23 @@ namespace Aurora.Modules
             if (handlerConfig.GetString("GridHandler", "") != Name)
                 return;
 
+            string localHandler = handlerConfig.GetString("LocalGridHandler", "GridService");
+            List<IGridService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IGridService>();
+            foreach(IGridService s in services)
+                if(s.GetType().Name == localHandler)
+                    m_localService = s;
+
             m_registry = registry;
-            m_localService = new GridService();
+            if(m_localService == null)
+                m_localService = new GridService();
             m_localService.Configure(config, registry);
             m_remoteService = new GridServicesConnector();
             m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IGridService>(this);
+        }
+
+        public void Configure (IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

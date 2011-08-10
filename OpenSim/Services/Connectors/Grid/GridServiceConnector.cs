@@ -806,6 +806,10 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IGridService>(this);
         }
 
+        public void Configure (IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         public virtual void Start (IConfigSource config, IRegistryCore registry)
         {
         }

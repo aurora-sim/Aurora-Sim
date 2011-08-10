@@ -42,7 +42,7 @@ namespace Aurora.Modules
 {
     public class IWCAgentInfoConnector : IAgentInfoService, IService
     {
-        protected AgentInfoService m_localService;
+        protected IAgentInfoService m_localService;
         protected AgentInfoConnector m_remoteService;
         protected IRegistryCore m_registry;
 
@@ -72,7 +72,13 @@ namespace Aurora.Modules
             if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
                 return;
 
-            m_localService = new AgentInfoService();
+            string localAssetHandler = handlerConfig.GetString("LocalAgentInfoHandler", "AgentInfoService");
+            List<IAgentInfoService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IAgentInfoService>();
+            foreach(IAgentInfoService s in services)
+                if(s.GetType().Name == localAssetHandler)
+                    m_localService = s;
+            if(m_localService == null)
+                m_localService = new AgentInfoService();
             m_localService.Initialize(config, registry);
             m_remoteService = new AgentInfoConnector();
             m_remoteService.Initialize(config, registry);

@@ -373,6 +373,12 @@ namespace OpenSim.Services.Connectors
         {
         }
 
+        public void Configure (IConfigSource config, IRegistryCore registry)
+        {
+        }
+
         #endregion
+
+
     }
 }

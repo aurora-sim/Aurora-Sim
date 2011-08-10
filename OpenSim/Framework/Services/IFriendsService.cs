@@ -115,5 +115,11 @@ namespace OpenSim.Services.Interfaces
         /// The local service (if possible)
         /// </summary>
         IFriendsService InnerService { get; }
+
+        void Initialize (Nini.Config.IConfigSource config, IRegistryCore registry);
+
+        void FinishedStartup ();
+
+        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
     }
 }

@@ -43,7 +43,7 @@ namespace Aurora.Modules
 {
     public class IWCFriendsConnector : IFriendsService, IService
     {
-        protected FriendsService m_localService;
+        protected IFriendsService m_localService;
         protected FriendsServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
 
@@ -73,7 +73,14 @@ namespace Aurora.Modules
             if (handlerConfig.GetString ("FriendsHandler", "") != Name)
                 return;
 
-            m_localService = new FriendsService ();
+            string localHandler = handlerConfig.GetString("LocalFriendsHandler", "FriendsService");
+            List<IFriendsService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IFriendsService>();
+            foreach(IFriendsService s in services)
+                if(s.GetType().Name == localHandler)
+                    m_localService = s;
+
+            if(m_localService == null)
+                m_localService = new FriendsService ();
             m_localService.Initialize(config, registry);
             m_remoteService = new FriendsServicesConnector ();
             m_remoteService.Initialize(config, registry);
