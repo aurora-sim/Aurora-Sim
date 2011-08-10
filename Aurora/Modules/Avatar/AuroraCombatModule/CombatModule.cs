@@ -303,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
 
             public void PhysicsActor_OnCollisionUpdate(EventArgs e)
             {
-                if (m_SP == null || m_SP.Invulnerable || HasLeftCombat || e == null)
+                if(m_SP == null || m_SP.Scene == null || m_SP.Invulnerable || HasLeftCombat || e == null)
                     return;
 
                 CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
