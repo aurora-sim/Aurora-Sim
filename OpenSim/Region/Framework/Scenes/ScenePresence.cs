@@ -2195,6 +2195,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Dictionary<UUID, int> m_failedNeighborCrossing = new Dictionary<UUID, int>();
         private Vector3 m_lastSigInfiniteRegionPos = Vector3.Zero;
+        private bool m_foundNeighbors = false;
         private List<GridRegion> m_nearbyInfiniteRegions = new List<GridRegion>();
 
         /// <summary>
@@ -2224,12 +2225,20 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if(Scene.RegionInfo.InfiniteRegion)
                     {
+                        if(!m_foundNeighbors)
+                        {
+                            m_foundNeighbors = true;
+                            m_lastSigInfiniteRegionPos = AbsolutePosition;
+                            IGridRegisterModule neighborService = Scene.RequestModuleInterface<IGridRegisterModule>();
+                            if(neighborService != null)
+                                m_nearbyInfiniteRegions = neighborService.GetNeighbors(Scene);
+                        }
                         double TargetX = (double)Scene.RegionInfo.RegionLocX + (double)pos2.X;
                         double TargetY = (double)Scene.RegionInfo.RegionLocY + (double)pos2.Y;
-                        if(m_lastSigInfiniteRegionPos.X - AbsolutePosition.X > 256 ||
-                            m_lastSigInfiniteRegionPos.X - AbsolutePosition.X < -256 ||
-                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y > 256 ||
-                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -256)
+                        if(m_lastSigInfiniteRegionPos.X - AbsolutePosition.X > 128 ||
+                            m_lastSigInfiniteRegionPos.X - AbsolutePosition.X < -128 ||
+                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y > 128 ||
+                            m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -128)
                         {
                             m_lastSigInfiniteRegionPos = AbsolutePosition;
                             m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int)(TargetX - 256), (int)(TargetX + 256),
