@@ -578,7 +578,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 outgoingPacket.FinishedMethod(outgoingPacket);
 
             if(canBeRemoved)
-                outgoingPacket.Destroy();
+                outgoingPacket.Destroy(1);
         }
 
         protected override void PacketReceived(UDPPacketBuffer buffer)

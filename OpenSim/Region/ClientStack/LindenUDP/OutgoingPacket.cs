@@ -63,6 +63,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>The packet we are sending</summary>
         public Packet Packet;
 
+        public int WhoDoneIt = 0;
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -84,8 +86,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Packet = packet;
         }
 
-        public void Destroy ()
+        public void Destroy (int whoDoneIt)
         {
+            WhoDoneIt = whoDoneIt;
             if(!PacketPool.Instance.ReturnPacket(Packet))
                 Packet = null;
             Buffer = null;

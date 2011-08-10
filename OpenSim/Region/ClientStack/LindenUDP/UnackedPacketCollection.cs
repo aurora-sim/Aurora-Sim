@@ -61,13 +61,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>Holds the actual unacked packet data, sorted by sequence number</summary>
-        private Dictionary<uint, OutgoingPacket> m_packets = new Dictionary<uint, OutgoingPacket>();
+        private readonly Dictionary<uint, OutgoingPacket> m_packets = new Dictionary<uint, OutgoingPacket>();
         /// <summary>Holds packets that need to be added to the unacknowledged list</summary>
-        private LocklessQueue<OutgoingPacket> m_pendingAdds = new LocklessQueue<OutgoingPacket>();
+        private readonly LocklessQueue<OutgoingPacket> m_pendingAdds = new LocklessQueue<OutgoingPacket>();
         /// <summary>Holds information about pending acknowledgements</summary>
-        private LocklessQueue<PendingAck> m_pendingAcknowledgements = new LocklessQueue<PendingAck>();
+        private readonly LocklessQueue<PendingAck> m_pendingAcknowledgements = new LocklessQueue<PendingAck>();
         /// <summary>Holds information about pending removals</summary>
-        private LocklessQueue<uint> m_pendingRemoves = new LocklessQueue<uint>();
+        private readonly LocklessQueue<uint> m_pendingRemoves = new LocklessQueue<uint>();
 
         /// <summary>
         /// Add an unacked packet to the collection
@@ -198,14 +198,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // Update stats
                         Interlocked.Add(ref ackedPacket.Client.UnackedBytes, -ackedPacket.Buffer.DataLength);
 
-                        if (!pendingAcknowledgement.FromResend)
+                        if(!pendingAcknowledgement.FromResend)
                         {
                             // Calculate the round-trip time for this packet and its ACK
                             int rtt = pendingAcknowledgement.RemoveTime - ackedPacket.TickCount;
-                            if (rtt > 0)
+                            if(rtt > 0)
                                 ackedPacket.Client.UpdateRoundTrip(rtt);
                         }
-                        ackedPacket.Destroy();
                     }
                 }
             }
@@ -222,7 +221,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         // Update stats
                         Interlocked.Add(ref removedPacket.Client.UnackedBytes, -removedPacket.Buffer.DataLength);
-                        removedPacket.Destroy();
+                        removedPacket.Destroy(3);
                     }
                 }
             }
