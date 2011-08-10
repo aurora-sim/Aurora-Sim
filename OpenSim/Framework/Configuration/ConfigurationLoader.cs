@@ -236,7 +236,7 @@ namespace OpenSim.Framework
             List<string> triedPaths = new List<string> ();
             for (int i = 0 ; i < sources.Count ; i++)
             {
-                //Read all .example files first, then read all the normal ones
+                //Read all non .example files first, then read all the example ones
 
                 if (File.Exists (sources[i]) &&
                     ReadConfig (sources[i], i, m_fakeconfig))
@@ -250,7 +250,7 @@ namespace OpenSim.Framework
             //
             for (int i = 0 ; i < sources.Count ; i++)
             {
-                //Read all .example files first, then read all the normal ones
+                //Read all non .example files first, then read all the example ones
 
                 if (File.Exists (sources[i]))
                     ReadConfig (sources[i], i, m_config);
@@ -343,9 +343,20 @@ namespace OpenSim.Framework
                                 chunkWithWildcards = file.Substring (wildcardIndex);
                             }
                             string path = Path.Combine (basePath, chunkWithoutWildcards + chunkWithWildcards);
-                            string[] paths = new string[1] { path };
+                            List<string> paths = new List<string>(new string[1]{path});
                             if (path.Contains ("*"))
-                                paths = Util.GetSubFiles (path);
+                                if(path.Contains("*.ini"))
+                                {
+                                    paths.AddRange(Util.GetSubFiles(path));
+                                    List<string> examplefiles = new List<string>(Util.GetSubFiles(path.Replace(".ini", ".ini.example")));
+                                    examplefiles.RemoveAll(delegate(string s)
+                                    {
+                                        return paths.Contains(s.Replace(".example",""));
+                                    });
+                                    paths.AddRange(examplefiles);
+                                }
+                                else
+                                    paths.AddRange(Util.GetSubFiles (path));
                             foreach (string p in paths)
                             {
                                 if (!sources.Contains (p))
