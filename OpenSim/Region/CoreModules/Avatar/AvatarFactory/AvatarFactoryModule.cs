@@ -680,6 +680,16 @@ textures 1
                     {
                         NeedsRebake = true;
                         wear.ItemID = module.DefaultUnderpants;
+                        InventoryItemBase item = new InventoryItemBase(UUID.Random());
+                        item.InvType = (int)InventoryType.Wearable;
+                        item.AssetType = (int)AssetType.Clothing;
+                        item.Name = "Default Underpants";
+                        item.Folder = m_scene.InventoryService.GetFolderForType(client.AgentId, InventoryType.Wearable, AssetType.Clothing).ID;
+                        item.Owner = client.AgentId;
+                        item.CurrentPermissions = 0;//Locked
+                        item.CreatorId = UUID.Zero.ToString();
+                        item.AssetID = module.DefaultUnderpants;
+                        client.SendInventoryItemCreateUpdate(item, 0);
                     }
                     else if (wear.Type == 10 & wear.ItemID == UUID.Zero)
                     {
@@ -702,13 +712,24 @@ textures 1
                         }
                         item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underPantsUUID;
-                        m_scene.InventoryService.AddItem (item);
+                        m_scene.InventoryService.AddItem(item);
+                        client.SendInventoryItemCreateUpdate(item, 0);
                         wear.ItemID = item.ID;
                     }
                     if (wear.Type == 11 && wear.ItemID == UUID.Zero && module.DefaultUndershirt != UUID.Zero)
                     {
                         NeedsRebake = true;
                         wear.ItemID = module.DefaultUndershirt;
+                        InventoryItemBase item = new InventoryItemBase(UUID.Random());
+                        item.InvType = (int)InventoryType.Wearable;
+                        item.AssetType = (int)AssetType.Clothing;
+                        item.Name = "Default Undershirt";
+                        item.Folder = m_scene.InventoryService.GetFolderForType(client.AgentId, InventoryType.Wearable, AssetType.Clothing).ID;
+                        item.Owner = client.AgentId;
+                        item.CurrentPermissions = 0;//Locked
+                        item.CreatorId = UUID.Zero.ToString();
+                        item.AssetID = module.DefaultUndershirt;
+                        client.SendInventoryItemCreateUpdate(item, 0);
                     }
                     else if (wear.Type == 11 & wear.ItemID == UUID.Zero)
                     {
@@ -731,7 +752,8 @@ textures 1
                         }
                         item.CreatorId = UUID.Zero.ToString ();
                         item.AssetID = m_underShirtUUID;
-                        m_scene.InventoryService.AddItem (item);
+                        m_scene.InventoryService.AddItem(item);
+                        client.SendInventoryItemCreateUpdate(item, 0);
                         wear.ItemID = item.ID;
                     }
                 }
