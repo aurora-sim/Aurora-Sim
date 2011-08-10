@@ -210,7 +210,12 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         public string ServerURI
         {
-            get { return m_serverURI; }
+            get 
+            {
+                if(string.IsNullOrEmpty(m_serverURI))
+                    return "http://" + ExternalHostName + ":" + HttpPort;
+                return m_serverURI; 
+            }
             set { m_serverURI = value; }
         }
         protected string m_serverURI;
