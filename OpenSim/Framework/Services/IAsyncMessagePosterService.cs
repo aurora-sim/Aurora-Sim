@@ -114,7 +114,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="region"></param>
         /// <param name="aCircuit"></param>
         /// <param name="reason"></param>
-        bool LoginAgent (GridRegion region, AgentCircuitData aCircuit, out string reason);
+        bool LoginAgent (GridRegion region, ref AgentCircuitData aCircuit, out string reason);
 
         /// <summary>
         /// Logout all agents in the given region

@@ -12243,8 +12243,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (!ProcessPacketMethod(packet))
                 m_log.Warn("[CLIENT]: unhandled packet " + packet.Type);
-
-            PacketPool.Instance.ReturnPacket(packet);
         }
 
         private static PrimitiveBaseShape GetShapeFromAddPacket(ObjectAddPacket addPacket)

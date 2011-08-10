@@ -341,15 +341,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-
-        public void SlowDownSend()
-            {
+        public void SlowDownSend ()
+        {
             float tmp = (float)m_throttle.MaxBurst * 0.95f;
-            if (tmp < TotalRateMin)
+            if(tmp < TotalRateMin)
                 tmp = (float)TotalRateMin;
             m_throttle.MaxBurst = (int)tmp;
             m_throttle.DripRate = (int)tmp;
-            }
+        }
 
         public void SetThrottles(byte[] throttleData)
         {
@@ -451,19 +450,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return data;
         }
 
-        public bool EnqueueOutgoing(OutgoingPacket packet)
+        public bool EnqueueOutgoing (OutgoingPacket packet)
         {
             int category = (int)packet.Category;
             int prio;
 
-
-            if (category >= 0 && category < (int) ThrottleOutPacketType.Count)
-                {
+            if(category >= 0 && category < (int)ThrottleOutPacketType.Count)
+            {
                 //All packets are enqueued, except those that don't have a queue
                 prio = MapCatsToPriority[category];
                 m_outbox.Enqueue(prio, (object)packet);
                 return true;
-                }
+            }
             else
             {
                 // We don't have a token bucket for this category,
@@ -473,8 +471,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        // tries to send queued packets
-        /// 
+        /// tries to send queued packets
+        /// </summary>
         /// <remarks>This function is only called from a synchronous loop in the
         /// UDPServer so we don't need to bother making this thread safe</remarks>
         /// <returns>True if any packets were sent, otherwise false</returns>

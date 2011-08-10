@@ -523,7 +523,6 @@ namespace OpenSim.Services.MessagingService
                         TeleportFlags, agentData, out requestedPort, out reason);
                 if(requestedPort == 0)
                     requestedPort = neighbor.ExternalEndPoint.Port;
-                circuitData.RegionUDPPort = requestedPort;//Fix the port
                 if (regionAccepted)
                 {
                     System.Net.IPAddress ipAddress = neighbor.ExternalEndPoint.Address;
@@ -553,7 +552,10 @@ namespace OpenSim.Services.MessagingService
 
                         #endregion
                     }
+                    otherRegionService = clientCaps.GetCapsService(neighbor.RegionHandle);
                     otherRegionService.LoopbackRegionIP = ipAddress;
+                    otherRegionService.CircuitData.RegionUDPPort = requestedPort;
+                    circuitData.RegionUDPPort = requestedPort;//Fix the port
 
                     IEventQueueService EQService = m_registry.RequestModuleInterface<IEventQueueService>();
 
@@ -652,14 +654,9 @@ namespace OpenSim.Services.MessagingService
 
                     IRegionClientCapsService otherRegion = clientCaps.GetCapsService(destination.RegionHandle);
 
-                    if (circuit.RegionUDPPort == 0)
-                        circuit.RegionUDPPort = destination.ExternalEndPoint.Port;
-                    else
-                        destination.ExternalEndPoint.Port = circuit.RegionUDPPort;//Fix the port with the one the region said to use
-
                     EQService.TeleportFinishEvent (destination.RegionHandle, destination.Access,
                         otherRegion.LoopbackRegionIP,
-                        circuit.RegionUDPPort,
+                        otherRegion.CircuitData.RegionUDPPort,
                         otherRegion.CapsUrl,
                         4, AgentID, TeleportFlags,
                         destination.RegionSizeX, destination.RegionSizeY,
@@ -976,7 +973,7 @@ namespace OpenSim.Services.MessagingService
                             //Tell the client about the transfer
                             EQService.CrossRegion(crossingRegion.RegionHandle, pos, velocity, 
                                 otherRegion.LoopbackRegionIP,
-                                circuit.RegionUDPPort,
+                                otherRegion.CircuitData.RegionUDPPort,
                                 otherRegion.CapsUrl,
                                 AgentID, 
                                 circuit.SessionID,
@@ -1088,7 +1085,7 @@ namespace OpenSim.Services.MessagingService
 
         #region Login initial agent
 
-        public virtual bool LoginAgent (GridRegion region, AgentCircuitData aCircuit, out string reason)
+        public virtual bool LoginAgent (GridRegion region, ref AgentCircuitData aCircuit, out string reason)
         {
             bool success = false;
             reason = "Could not find the simulation service";
@@ -1100,13 +1097,15 @@ namespace OpenSim.Services.MessagingService
                 // If CreateAgent is successful, it passes back a OSDMap of params that the client 
                 //    wants to inform us about, and it includes the Caps SEED url for the region
                 IRegionClientCapsService regionClientCaps = null;
+                IClientCapsService clientCaps = null;
                 if (capsService != null)
                 {
                     //Remove any previous users
                     string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath ();
                     capsService.CreateCAPS (aCircuit.AgentID, CapsUtil.GetCapsSeedPath (ServerCapsBase), region.RegionHandle, true, aCircuit);
 
-                    regionClientCaps = capsService.GetClientCapsService (aCircuit.AgentID).GetCapsService (region.RegionHandle);
+                    clientCaps = capsService.GetClientCapsService (aCircuit.AgentID);
+                    regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
                 }
 
 
@@ -1117,6 +1116,8 @@ namespace OpenSim.Services.MessagingService
                 int requestedUDPPort = 0;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
                 success = SimulationService.CreateAgent (region, ref aCircuit, aCircuit.teleportFlags, null, out requestedUDPPort, out reason);
+                if(requestedUDPPort == 0)
+                    requestedUDPPort = region.ExternalEndPoint.Port;
                 aCircuit.RegionUDPPort = requestedUDPPort;
 
                 if (!success) // If it failed, do not set up any CapsService for the client
@@ -1157,6 +1158,9 @@ namespace OpenSim.Services.MessagingService
                         }
                         region.ExternalEndPoint.Address = ipAddress;//Fix this so that it gets sent to the client that way
                         regionClientCaps.AddCAPS (SimSeedCaps);
+                        regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
+                        regionClientCaps.LoopbackRegionIP = ipAddress;
+                        regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
                     }
                     catch
                     {

@@ -1037,7 +1037,7 @@ namespace OpenSim.Services.LLLoginService
             circuitCode = (uint)Util.RandomClass.Next(); ;
             aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP);
             aCircuit.teleportFlags = (uint)tpFlags;
-            success = LaunchAgentDirectly(destination, aCircuit, out reason);
+            success = LaunchAgentDirectly(destination, ref aCircuit, out reason);
             if (!success && m_GridService != null)
             {
                 //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
@@ -1100,7 +1100,7 @@ namespace OpenSim.Services.LLLoginService
             foreach (GridRegion r in regions)
             {
                 string reason;
-                bool success = LaunchAgentDirectly(r, aCircuit, out reason);
+                bool success = LaunchAgentDirectly(r, ref aCircuit, out reason);
                 if (success)
                 {
                     aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP);
@@ -1138,9 +1138,9 @@ namespace OpenSim.Services.LLLoginService
             return aCircuit;
         }
 
-        protected bool LaunchAgentDirectly(GridRegion region, AgentCircuitData aCircuit, out string reason)
+        protected bool LaunchAgentDirectly(GridRegion region, ref AgentCircuitData aCircuit, out string reason)
         {
-            return m_registry.RequestModuleInterface<IAgentProcessing> ().LoginAgent (region, aCircuit, out reason);
+            return m_registry.RequestModuleInterface<IAgentProcessing> ().LoginAgent (region, ref aCircuit, out reason);
         }
 
         #region Console Commands
