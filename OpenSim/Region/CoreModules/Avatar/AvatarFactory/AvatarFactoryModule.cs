@@ -525,10 +525,12 @@ textures 1
 
             lock (m_saveQueueData)
             {
-                if (!m_saveQueueData.ContainsKey(agentid))
+                IScenePresence sp = m_scene.GetScenePresence(agentid);
+                if (sp == null && !m_saveQueueData.ContainsKey(agentid))
                     return;
 
-                AvatarAppearance appearance = m_saveQueueData[agentid];
+                AvatarAppearance appearance = sp != null ? sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance :
+                    m_saveQueueData[agentid];
 
                 m_scene.AvatarService.SetAppearance(agentid, appearance);
 
@@ -770,6 +772,7 @@ textures 1
                         sp.ControllingClient.SendRebakeAvatarTextures (face.TextureID);
                 }
             }
+            QueueAppearanceSave(sp.UUID);
             //Send the wearables HERE so that the client knows what it is wearing
             //sp.ControllingClient.SendWearables(sp.Appearance.Wearables, sp.Appearance.Serial);
             //Do not save or send the appearance! The client loops back and sends a bunch of SetAppearance
