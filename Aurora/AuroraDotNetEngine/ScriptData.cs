@@ -709,9 +709,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             SetApis ();
 
-            //Set the event flags
-            Part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
-
             //Now do the full state save finding now that we have an app domain.
             if (LastStateSave != null)
             {
@@ -731,6 +728,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //Make a new state save now
                 m_ScriptEngine.StateSave.SaveStateTo (this, true);
             }
+
+            //Set the event flags
+            Part.SetScriptEvents(ItemID, Script.GetStateEventFlags(State));
 
             // Add it to our script memstruct so it can be found by other scripts
             ScriptEngine.ScriptProtection.AddNewScript(this);
