@@ -582,6 +582,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_ValidgrpOOB = true;
         }
 
+        public override int GetHashCode ()
+        {
+            return UUID.GetHashCode();
+        }
+
         public void SetFromItemID (UUID AssetId)
         {
             foreach (SceneObjectPart part in m_partsList)

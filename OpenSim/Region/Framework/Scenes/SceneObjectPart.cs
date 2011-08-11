@@ -905,6 +905,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_inventory = new SceneObjectPartInventory(this);
         }
 
+        public override int GetHashCode ()
+        {
+            return UUID.GetHashCode();
+        }
+
         #endregion Constructors
 
         #region XML Schema
