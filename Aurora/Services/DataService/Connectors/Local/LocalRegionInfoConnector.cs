@@ -98,9 +98,7 @@ namespace Aurora.Services.DataService
             {
                 replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[i]));
                 if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
-                {
                     replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
-                }
                 else
                     replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
                 Infos.Add(replyData);
