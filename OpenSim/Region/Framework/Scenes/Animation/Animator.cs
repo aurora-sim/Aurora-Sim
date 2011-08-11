@@ -57,7 +57,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         }
 
         private static AvatarAnimations m_defaultAnimations = null;
-
         public static AvatarAnimations DefaultAnimations
         {
             get
@@ -117,6 +116,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             return true;
         }
 
+        /// <summary>
+        /// Remove the given animation from the list of current animations
+        /// </summary>
+        /// <param name="animID"></param>
         public void RemoveAnimation(UUID animID)
         {
             if (m_scenePresence.IsChildAgent)
@@ -125,8 +128,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             if (m_animations.Remove(animID))
                 SendAnimPack();
         }
-        
-        // Called from scripts
+
+        /// <summary>
+        /// Remove the given animation from the list of current animations
+        /// </summary>
+        /// <param name="name"></param>
         public bool RemoveAnimation(string name)
         {
             if (m_scenePresence.IsChildAgent)
@@ -140,6 +146,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             return true;
         }
         
+        /// <summary>
+        /// Clear out all animations
+        /// </summary>
         public void ResetAnimations()
         {
             m_animations.Clear();
@@ -456,6 +465,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 m_scenePresence.SendTerseUpdateToAllClients ();//Send the terse update alone then
         }
 
+        /// <summary>
+        /// Gets a list of the animations that are currently in use by this avatar
+        /// </summary>
+        /// <returns></returns>
         public UUID[] GetAnimationArray()
         {
             UUID[] animIDs;
@@ -466,7 +479,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         }
         
         /// <summary>
-        ///
+        /// Sends all clients the given information for this avatar
         /// </summary>
         /// <param name="animations"></param>
         /// <param name="seqs"></param>
@@ -490,6 +503,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 });
         }
 
+        /// <summary>
+        /// Send an animation update to the given client
+        /// </summary>
+        /// <param name="client"></param>
         public void SendAnimPackToClient(IClientAPI client)
         {
             if (m_scenePresence.IsChildAgent)
@@ -529,6 +546,9 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             SendAnimPack(animIDs, sequenceNums, objectIDs);
         }
 
+        /// <summary>
+        /// Close out and remove any current data
+        /// </summary>
         public void Close()
         {
             m_animations = null;

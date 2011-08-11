@@ -49,7 +49,7 @@ using Aurora.Simulation.Base;
 
 namespace Flotsam.RegionModules.AssetCache
 {
-    public class FlotsamAssetCache : IService, IImprovedAssetCache, IAssetService
+    public class FlotsamAssetCache : IService, IImprovedAssetCache
     {
         #region Declares
 
@@ -101,11 +101,6 @@ namespace Flotsam.RegionModules.AssetCache
         private ISimulationBase m_simulationBase;
 
         private bool m_DeepScanBeforePurge;
-
-        public IAssetService InnerService
-        {
-            get { return this; }
-        }
 
         public FlotsamAssetCache()
         {
@@ -506,7 +501,6 @@ namespace Flotsam.RegionModules.AssetCache
         /// <param name="dir"></param>
         private void CleanExpiredFiles(string dir, DateTime purgeLine)
         {
-
             foreach (string file in Directory.GetFiles(dir))
             {
                 lock (m_fileCacheLock)
@@ -864,50 +858,6 @@ namespace Flotsam.RegionModules.AssetCache
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache <datetime> - Purge assets older then the specified date & time");
 
             }
-        }
-
-        #endregion
-
-        #region IAssetService Members
-
-        public byte[] GetData(string id)
-        {
-            AssetBase asset = Get(id);
-            return asset.Data;
-        }
-
-        public bool Get(string id, object sender, AssetRetrieved handler)
-        {
-            AssetBase asset = Get(id);
-            handler(id, sender, asset);
-            return true;
-        }
-
-        public UUID Store(AssetBase asset)
-        {
-            if (asset.ID == UUID.Zero)
-            {
-                asset.ID = UUID.Random();
-            }
-
-            Cache(asset);
-
-            return asset.ID;
-
-        }
-
-        public bool UpdateContent(UUID id, byte[] data)
-        {
-            AssetBase asset = Get(id.ToString());
-            asset.Data = data;
-            Cache(asset);
-            return true;
-        }
-
-        public bool Delete(UUID id)
-        {
-            Expire(id.ToString());
-            return true;
         }
 
         #endregion
