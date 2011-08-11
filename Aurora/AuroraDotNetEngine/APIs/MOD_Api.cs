@@ -152,7 +152,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string modSendCommand(string module, string command, string k)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "modSendCommand", m_host, "MOD");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "modSendCommand", m_host, "MOD", m_itemID)) return "";
             
             UUID req = UUID.Random();
 

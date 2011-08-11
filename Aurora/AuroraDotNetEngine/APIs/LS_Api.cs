@@ -158,7 +158,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns>List of windlight parameters</returns>
         public LSL_List lsGetWindlightScene(LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS", m_itemID)) return new LSL_List();
 
             /*RegionLightShareData wl = m_lightShareModule.WindLightSettings;
 
@@ -481,7 +481,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns>success: true or false</returns>
         public int lsSetWindlightScene(LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "lsSetWindlightScene", m_host, "LS");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "lsSetWindlightScene", m_host, "LS", m_itemID)) return 0;
             
             if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) && World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
             {

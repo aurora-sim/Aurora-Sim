@@ -398,6 +398,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void DisplayUserNotification(string message, string stage, bool postScriptCAPSError, bool IsError)
         {
+            if(message == "")
+                return;//No blank messages
+
             IScenePresence presence = World.GetScenePresence(Part.OwnerID);
             if (presence != null && (!PostOnRez) && postScriptCAPSError)
                 if (m_ScriptEngine.ChatCompileErrorsToDebugChannel)

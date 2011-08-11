@@ -44,6 +44,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         #region Declares
 
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private IConfig m_config;
         private ScriptEngine m_scriptEngine;
         private bool allowHTMLLinking = true;
@@ -62,7 +64,76 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ThreatLevelDefinition m_threatLevelHigh;
         public ThreatLevelDefinition m_threatLevelVeryHigh;
         public ThreatLevelDefinition m_threatLevelSevere;
-        
+        private bool m_allowFunctionLimiting = false;
+
+        #region Limiting of functions
+
+        private Dictionary<UUID, Dictionary<string, LimitReq>> m_functionLimiting = new Dictionary<UUID, Dictionary<string, LimitReq>>();
+        private Dictionary<string, LimitDef> m_functionsToLimit = new Dictionary<string, LimitDef>();
+
+        private class LimitDef
+        {
+            /// <summary>
+            /// The max number of times a function can be fired (in total, does not decrease)
+            /// </summary>
+            public int MaxNumberOfTimes = 0;
+            /// <summary>
+            /// Time (in ms) that a function has to wait before being fired again
+            /// </summary>
+            public int TimeScale = 0;
+            /// <summary>
+            /// The number of times a function can be fired over the timescale
+            /// </summary>
+            public int FunctionsOverTimeScale = 0;
+            /// <summary>
+            /// The group that will be limited by this function
+            /// </summary>
+            public LimitType Type = LimitType.None;
+            /// <summary>
+            /// What alert will be triggered by the limitor if it does limit
+            /// </summary>
+            public LimitAlert Alert = LimitAlert.None;
+            /// <summary>
+            /// What action will be taken
+            /// </summary>
+            public LimitAction Action = LimitAction.None;
+        }
+
+        private class LimitReq
+        {
+            public int NumberOfTimesFired;
+            public int LastFired = 0;
+            public int FunctionsSinceLastFired = 0;
+        }
+
+        private enum LimitType
+        {
+            None,
+            Script,
+            Owner,
+            Group,
+            Prim
+        }
+
+        private enum LimitAlert
+        {
+            None,
+            Console,
+            Inworld,
+            ConsoleAndInworld
+        }
+
+        private enum LimitAction
+        {
+            None,
+            Drop,
+            Delay, //Not Implemented
+            TerminateScript,
+            TerminateEvent
+        }
+
+        #endregion
+
         public Dictionary<UUID, UUID> ScriptsItems = new Dictionary<UUID, UUID>();
         public Dictionary<UUID, Dictionary<UUID, ScriptData>> Scripts = new Dictionary<UUID, Dictionary<UUID, ScriptData>>();
         
@@ -344,9 +415,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 		
-		public void CheckThreatLevel(ThreatLevel level, string function, ISceneChildEntity m_host, string API)
+		public bool CheckThreatLevel(ThreatLevel level, string function, ISceneChildEntity m_host, string API, UUID itemID)
         {
             GetDefinition(level).CheckThreatLevel (function, m_host, API);
+            return CheckFunctionLimits(function, m_host, API, itemID);
         }
 
         public ThreatLevelDefinition GetDefinition (ThreatLevel level)
@@ -378,8 +450,144 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             throw new Exception(surMessage + msg);
         }
 
-		#endregion
-        
+        #region Limitation Functions
+
+        private bool CheckFunctionLimits (string function, ISceneChildEntity m_host, string API, UUID itemID)
+        {
+            LimitDef d = null;
+            bool isAPI = m_functionsToLimit.TryGetValue(API, out d);
+            bool isFunction = m_functionsToLimit.TryGetValue(function, out d);//Function overrides API
+            if(m_allowFunctionLimiting && (isAPI || isFunction))
+            {
+                //Get the list for the given type
+                Dictionary<string, LimitReq> functions;
+                bool doInsert = false;
+                if(d.Type == LimitType.Owner)
+                {
+                    if(!m_functionLimiting.TryGetValue(m_host.OwnerID, out functions))
+                    {
+                        doInsert = true;
+                        functions = new Dictionary<string, LimitReq>();
+                    }
+                }
+                else if(d.Type == LimitType.Script)
+                {
+                    if(!m_functionLimiting.TryGetValue(itemID, out functions))
+                    {
+                        doInsert = true;
+                        functions = new Dictionary<string, LimitReq>();
+                    }
+                }
+                else if(d.Type == LimitType.Group)
+                {
+                    if(!m_functionLimiting.TryGetValue(m_host.ParentEntity.UUID, out functions))
+                    {
+                        doInsert = true;
+                        functions = new Dictionary<string, LimitReq>();
+                    }
+                }
+                else if(d.Type == LimitType.Prim)
+                {
+                    if(!m_functionLimiting.TryGetValue(m_host.UUID, out functions))
+                    {
+                        doInsert = true;
+                        functions = new Dictionary<string, LimitReq>();
+                    }
+                }
+                else
+                    return false;
+
+                LimitReq r;
+                if(!functions.TryGetValue(function, out r))
+                    r = new LimitReq();
+
+                if(d.MaxNumberOfTimes != 0)
+                {
+                    if(r.NumberOfTimesFired + 1 > d.MaxNumberOfTimes)//Too Many, kill it
+                    {
+                        TriggerAlert(function, d,
+                            "You have exceeded the number of times this function (" + function + ") is allowed to be fired",
+                            m_host);
+                        return TriggerAction(d, m_host, itemID);
+                    }
+                    r.NumberOfTimesFired++;
+                }
+                if(d.TimeScale != 0)
+                {
+                    if(r.LastFired != 0 && Util.EnvironmentTickCountSubtract(r.LastFired) < d.TimeScale)
+                    {
+                        if(r.FunctionsSinceLastFired + 1 > d.FunctionsOverTimeScale)
+                        {
+                            TriggerAlert(function, d,
+                                "You have fired the given function " + function + " too quickly.", m_host);
+                            return TriggerAction(d, m_host, itemID);
+                        }
+                    }
+                    else
+                    {
+                        r.LastFired = Util.EnvironmentTickCount();
+                        r.FunctionsSinceLastFired = 0;//Clear it out again
+                    }
+                    r.FunctionsSinceLastFired++;
+                }
+                //Put it back where it came from
+                functions[isFunction ? function : API] = r;
+                if(doInsert)
+                    if(d.Type == LimitType.Owner)
+                        m_functionLimiting[m_host.OwnerID] = functions;
+                    else if(d.Type == LimitType.Script)
+                        m_functionLimiting[itemID] = functions;
+                    else if(d.Type == LimitType.Group)
+                        m_functionLimiting[m_host.ParentEntity.UUID] = functions;
+                    else if(d.Type == LimitType.Prim)
+                        m_functionLimiting[m_host.UUID] = functions;
+            }
+            return false;
+        }
+
+        private void TriggerAlert (string function, LimitDef d, string message, ISceneChildEntity host)
+        {
+            if(d.Alert == LimitAlert.Console || d.Alert == LimitAlert.ConsoleAndInworld)
+                m_log.Warn("[Limitor]: " + message);
+            if(d.Alert == LimitAlert.Inworld || d.Alert == LimitAlert.ConsoleAndInworld)
+            {
+                IChatModule chatModule = host.ParentEntity.Scene.RequestModuleInterface<IChatModule>();
+                if(chatModule != null)
+                    chatModule.SimChat("[Limitor]: " + message, ChatTypeEnum.DebugChannel,
+                        2147483647, host.AbsolutePosition, host.Name, host.UUID, false, host.ParentEntity.Scene);
+            }
+        }
+
+        /// <summary>
+        /// Fires the action associated with the limitation
+        /// </summary>
+        /// <param name="d"></param>
+        /// <param name="m_host"></param>
+        /// <param name="itemID"></param>
+        /// <returns>Whether the event should be dropped</returns>
+        private bool TriggerAction (LimitDef d, ISceneChildEntity m_host, UUID itemID)
+        {
+            if(d.Action == LimitAction.None)
+                return false;
+            else if(d.Action == LimitAction.Drop)
+                return true;//Drop it
+            else if(d.Action == LimitAction.TerminateEvent)
+                throw new Exception("");//Blank messages kill events, but don't show anything on the console/inworld
+            else if(d.Action == LimitAction.TerminateScript)
+            {
+                ScriptData script = GetScript(itemID);
+                script.IgnoreNew = true;//Blocks all new events, can be reversed by resetting or resaving the script
+                throw new Exception("");//Blank messages kill events, but don't show anything on the console/inworld
+            }
+            else if(d.Action == LimitAction.Delay)
+                m_log.Warn("Function delaying is not implemented");
+            return false;
+        }
+
+        #endregion
+
+        #endregion
+
         #region Previously Compiled Scripts
 
         /// <summary>

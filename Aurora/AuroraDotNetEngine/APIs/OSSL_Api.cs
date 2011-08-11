@@ -191,7 +191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //
         public LSL_Integer osSetTerrainHeight(int x, int y, double val)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTerrainSetHeight", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTerrainSetHeight", m_host, "OSSL", m_itemID)) return new LSL_Integer();
 
             if (x > (World.RegionInfo.RegionSizeX - 1) || x < 0 || y > (World.RegionInfo.RegionSizeY - 1) || y < 0)
                 OSSLError("osTerrainSetHeight: Coordinate out of bounds");
@@ -212,7 +212,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Float osGetTerrainHeight(int x, int y)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTerrainGetHeight", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTerrainGetHeight", m_host, "OSSL", m_itemID)) return new LSL_Float();
 
 
             if (x > (World.RegionInfo.RegionSizeX - 1) || x < 0 || y > (World.RegionInfo.RegionSizeY - 1) || y < 0)
@@ -224,7 +224,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osTerrainFlush()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osTerrainFlush", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osTerrainFlush", m_host, "OSSL", m_itemID)) return;
 
             ITerrainModule terrainModule = World.RequestModuleInterface<ITerrainModule>();
             if (terrainModule != null) terrainModule.TaintTerrain();
@@ -238,7 +238,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // The underlying functionality is fixed, since the security
             // as such is sound
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osRegionRestart", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osRegionRestart", m_host, "OSSL", m_itemID)) return new int();
 
             IRestartModule restartModule = World.RequestModuleInterface<IRestartModule>();
             if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false) && (restartModule != null))
@@ -272,7 +272,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osShutDown()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osShutDown", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osShutDown", m_host, "OSSL", m_itemID)) return;
 
             if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
             {
@@ -285,7 +285,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osReturnObjects(LSL_Float Parameter)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osShutDown", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osShutDown", m_host, "OSSL", m_itemID)) return;
 
             Dictionary<UUID, List<ISceneEntity>> returns =
                     new Dictionary<UUID, List<ISceneEntity>>();
@@ -393,7 +393,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // It's high griefing potential makes this classification
             // necessary
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osRegionNotice", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osRegionNotice", m_host, "OSSL", m_itemID)) return;
 
 
 
@@ -408,7 +408,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // This function has no security. It can be used to destroy
             // arbitrary builds the user would normally have no rights to
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetRot", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetRot", m_host, "OSSL", m_itemID)) return;
 
 
             IEntity entity;
@@ -431,7 +431,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // This may be upgraded depending on the griefing or DOS
             // potential, or guarded with a delay
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURL", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURL", m_host, "OSSL", m_itemID)) return "";
 
 
             IDynamicTextureManager textureManager = World.RequestModuleInterface<IDynamicTextureManager>();
@@ -455,7 +455,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string osSetDynamicTextureURLBlend(string dynamicID, string contentType, string url, string extraParams,
                                              int timer, int alpha)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlend", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlend", m_host, "OSSL", m_itemID)) return "";
 
 
             IDynamicTextureManager textureManager = World.RequestModuleInterface<IDynamicTextureManager>();
@@ -479,7 +479,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string osSetDynamicTextureURLBlendFace(string dynamicID, string contentType, string url, string extraParams,
                                              bool blend, int disp, int timer, int alpha, int face)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlendFace", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureURLBlendFace", m_host, "OSSL", m_itemID)) return "";
 
 
             IDynamicTextureManager textureManager = World.RequestModuleInterface<IDynamicTextureManager>();
@@ -503,7 +503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string osSetDynamicTextureData(string dynamicID, string contentType, string data, string extraParams,
                                            int timer)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureData", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureData", m_host, "OSSL", m_itemID)) return "";
 
 
             IDynamicTextureManager textureManager = World.RequestModuleInterface<IDynamicTextureManager>();
@@ -536,7 +536,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string osSetDynamicTextureDataBlend(string dynamicID, string contentType, string data, string extraParams,
                                           int timer, int alpha)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlend", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlend", m_host, "OSSL", m_itemID)) return "";
 
 
             IDynamicTextureManager textureManager = World.RequestModuleInterface<IDynamicTextureManager>();
@@ -569,7 +569,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string osSetDynamicTextureDataBlendFace(string dynamicID, string contentType, string data, string extraParams,
                                           bool blend, int disp, int timer, int alpha, int face)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlendFace", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetDynamicTextureDataBlendFace", m_host, "OSSL", m_itemID)) return "";
 
 
             IDynamicTextureManager textureManager = World.RequestModuleInterface<IDynamicTextureManager>();
@@ -601,7 +601,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public bool osConsoleCommand(string command)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osConsoleCommand", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osConsoleCommand", m_host, "OSSL", m_itemID)) return false;
 
 
             if (m_ScriptEngine.Config.GetBoolean("AllowosConsoleCommand", false))
@@ -617,7 +617,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osSetPrimFloatOnWater(int floatYN)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetPrimFloatOnWater", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetPrimFloatOnWater", m_host, "OSSL", m_itemID)) return;
 
             if (m_host.ParentEntity != null)
             {
@@ -663,7 +663,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
             // Threat level None because this is what can already be done with the World Map in the viewer
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL", m_itemID)) return DateTime.Now;
 
             GridRegion regInfo;
             List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
@@ -686,7 +686,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public DateTime osTeleportOwner(int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL", m_itemID)) return DateTime.Now;
 
             GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.ScopeID, (int)(regionX * Constants.RegionSize), (int)(regionY * Constants.RegionSize));
             // Try to link the region
@@ -704,7 +704,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // High because there is no security check. High griefer potential
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL", m_itemID)) return DateTime.Now;
 
             UUID AgentID;
             if (UUID.TryParse(agent, out AgentID))
@@ -729,7 +729,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // High because there is no security check. High griefer potential
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL", m_itemID)) return DateTime.Now;
 
             ulong regionHandle = Utils.UIntsToLong(((uint)regionX * (uint)Constants.RegionSize), ((uint)regionY * (uint)Constants.RegionSize));
 
@@ -757,7 +757,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //information leak.
         public LSL_String osGetAgentIP(string agent)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetAgentIP", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetAgentIP", m_host, "OSSL", m_itemID)) return new LSL_String();
 
             UUID avatarID = (UUID)agent;
 
@@ -780,7 +780,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // threat level is None as we could get this information with an
             // in-world script as well, just not as efficient
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAgents", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAgents", m_host, "OSSL", m_itemID)) return new LSL_List();
 
             LSL_List result = new LSL_List();
             World.ForEachScenePresence(delegate(IScenePresence sp)
@@ -794,7 +794,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         // Adam's super super custom animation functions
         public void osAvatarPlayAnimation(string avatar, string animation)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarPlayAnimation", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarPlayAnimation", m_host, "OSSL", m_itemID)) return;
 
             UUID avatarID = (UUID)avatar;
 
@@ -827,7 +827,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osAvatarStopAnimation(string avatar, string animation)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarStopAnimation", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarStopAnimation", m_host, "OSSL", m_itemID)) return;
 
             UUID avatarID = (UUID)avatar;
 
@@ -862,7 +862,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //Texture draw functions
         public string osMovePen(string drawList, int x, int y)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osMovePen", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osMovePen", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "MoveTo " + x + "," + y + ";";
@@ -871,7 +871,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawLine(string drawList, int startX, int startY, int endX, int endY)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawLine", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawLine", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "MoveTo " + startX + "," + startY + "; LineTo " + endX + "," + endY + "; ";
@@ -880,7 +880,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawLine(string drawList, int endX, int endY)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawLine", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawLine", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "LineTo " + endX + "," + endY + "; ";
@@ -889,7 +889,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawText(string drawList, string text)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawText", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawText", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "Text " + text + "; ";
@@ -898,7 +898,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawEllipse(string drawList, int width, int height)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawEllipse", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawEllipse", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "Ellipse " + width + "," + height + "; ";
@@ -907,7 +907,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawRectangle(string drawList, int width, int height)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawRectangle", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawRectangle", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "Rectangle " + width + "," + height + "; ";
@@ -916,7 +916,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawFilledRectangle(string drawList, int width, int height)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledRectangle", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledRectangle", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "FillRectangle " + width + "," + height + "; ";
@@ -925,7 +925,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawFilledPolygon(string drawList, LSL_List x, LSL_List y)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon", m_host, "OSSL", m_itemID)) return "";
 
 
 
@@ -944,7 +944,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawPolygon(string drawList, LSL_List x, LSL_List y)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawFilledPolygon", m_host, "OSSL", m_itemID)) return "";
 
 
 
@@ -963,7 +963,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osSetFontSize(string drawList, int fontSize)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetFontSize", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetFontSize", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "FontSize " + fontSize + "; ";
@@ -972,7 +972,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osSetFontName(string drawList, string fontName)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetFontName", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetFontName", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "FontName " + fontName + "; ";
@@ -981,7 +981,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osSetPenSize(string drawList, int penSize)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenSize", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenSize", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "PenSize " + penSize + "; ";
@@ -990,7 +990,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osSetPenColour(string drawList, string colour)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "PenColour " + colour + "; ";
@@ -999,7 +999,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osSetPenCap(string drawList, string direction, string type)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "PenCap " + direction + "," + type + "; ";
@@ -1008,7 +1008,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osDrawImage(string drawList, int width, int height, string imageUrl)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawImage", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osDrawImage", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "Image " + width + "," + height + "," + imageUrl + "; ";
@@ -1017,7 +1017,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osGetDrawStringSize", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osGetDrawStringSize", m_host, "OSSL", m_itemID)) return new LSL_Vector();
 
 
             LSL_Vector vec = new LSL_Vector(0, 0, 0);
@@ -1035,7 +1035,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osSetRegionWaterHeight(double height)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetRegionWaterHeight", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetRegionWaterHeight", m_host, "OSSL", m_itemID)) return;
 
 
             //Check to make sure that the script's owner is the estate manager/master
@@ -1054,7 +1054,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="sunHour">The "Sun Hour" that is desired, 0...24, with 0 just after SunRise</param>
         public void osSetRegionSunSettings(bool useEstateSun, bool sunFixed, double sunHour)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Nuisance, "osSetRegionSunSettings", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Nuisance, "osSetRegionSunSettings", m_host, "OSSL", m_itemID)) return;
 
 
             //Check to make sure that the script's owner is the estate manager/master
@@ -1084,7 +1084,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="sunHour">The "Sun Hour" that is desired, 0...24, with 0 just after SunRise</param>
         public void osSetEstateSunSettings(bool sunFixed, double sunHour)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Nuisance, "osSetEstateSunSettings", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Nuisance, "osSetEstateSunSettings", m_host, "OSSL", m_itemID)) return;
 
 
             //Check to make sure that the script's owner is the estate manager/master
@@ -1112,7 +1112,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         public double osGetCurrentSunHour()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetCurrentSunHour", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetCurrentSunHour", m_host, "OSSL", m_itemID)) return 0;
 
 
 
@@ -1131,7 +1131,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public double osSunGetParam(string param)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunGetParam", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunGetParam", m_host, "OSSL", m_itemID)) return 0;
 
 
             double value = 0.0;
@@ -1147,7 +1147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osSunSetParam(string param, double value)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunSetParam", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunSetParam", m_host, "OSSL", m_itemID)) return;
 
 
             ISunModule module = World.RequestModuleInterface<ISunModule>();
@@ -1161,7 +1161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osWindActiveModelPluginName()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osWindActiveModelPluginName", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osWindActiveModelPluginName", m_host, "OSSL", m_itemID)) return "";
 
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1175,7 +1175,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osSetWindParam(string plugin, string param, LSL_Float value)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetWindParam", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetWindParam", m_host, "OSSL", m_itemID)) return;
 
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
@@ -1191,7 +1191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Float osGetWindParam(string plugin, string param)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamGet", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osWindParamGet", m_host, "OSSL", m_itemID)) return new LSL_Float();
 
             IWindModule module = World.RequestModuleInterface<IWindModule>();
             if (module != null)
@@ -1205,7 +1205,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         // Routines for creating and managing parcels programmatically
         public void osParcelJoin(LSL_Vector pos1, LSL_Vector pos2)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelJoin", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelJoin", m_host, "OSSL", m_itemID)) return;
 
 
             int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
@@ -1222,7 +1222,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osParcelSubdivide(LSL_Vector pos1, LSL_Vector pos2)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSubdivide", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSubdivide", m_host, "OSSL", m_itemID)) return;
 
 
             int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
@@ -1239,7 +1239,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osParcelSetDetails(LSL_Vector pos, LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSetDetails", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSetDetails", m_host, "OSSL", m_itemID)) return;
 
 
             // Get a reference to the land data and make sure the owner of the script
@@ -1281,13 +1281,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             break;
 
                         case 2:
-                            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
+                            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL", m_itemID)) return;
                             if (UUID.TryParse(arg, out uuid))
                                 newLand.OwnerID = uuid;
                             break;
 
                         case 3:
-                            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL");
+                            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL", m_itemID)) return;
                             if (UUID.TryParse(arg, out uuid))
                                 newLand.GroupID = uuid;
                             break;
@@ -1305,7 +1305,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // is not allowed to contain any.
             // This really should be removed.
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osList2Double", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osList2Double", m_host, "OSSL", m_itemID)) return 0;
 
 
             if (index < 0)
@@ -1323,7 +1323,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // What actually is the difference to the LL function?
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL", m_itemID)) return;
 
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
@@ -1342,7 +1342,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             // What actually is the difference to the LL function?
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osSetParcelMediaURL", m_host, "OSSL", m_itemID)) return;
 
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
@@ -1373,7 +1373,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // that trigger engine-specific failures.
             // Besides, public grid users aren't supposed to know.
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetScriptEngineName", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetScriptEngineName", m_host, "OSSL", m_itemID)) return "";
 
 
 
@@ -1406,7 +1406,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // require their user to know what they are doing (see script
             // kiddie)
             //
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetSimulatorVersion", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetSimulatorVersion", m_host, "OSSL", m_itemID)) return "";
 
             ISimulationBase simulationBase = World.RequestModuleInterface<ISimulationBase>();
             if (simulationBase != null)
@@ -1416,7 +1416,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public Hashtable osParseJSON(string JSON)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSON", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSON", m_host, "OSSL", m_itemID)) return new Hashtable();
 
 
 
@@ -1623,7 +1623,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         // the dataserver function is passed the ID of the calling function and a string message
         public void osMessageObject(LSL_Key objectUUID, string message)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osMessageObject", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osMessageObject", m_host, "OSSL", m_itemID)) return;
 
 
             object[] resobj = new object[] { new LSL_Types.LSLString(m_host.UUID.ToString()), new LSL_Types.LSLString(message) };
@@ -1640,7 +1640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //
         public void osMakeNotecard(string notecardName, LSL_Types.list contents)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osMakeNotecard", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osMakeNotecard", m_host, "OSSL", m_itemID)) return;
 
 
             // Create new asset
@@ -1698,7 +1698,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 */
         public string osGetNotecardLine(string name, int line)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecardLine", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecardLine", m_host, "OSSL", m_itemID)) return "";
 
 
             UUID assetID = UUID.Zero;
@@ -1750,7 +1750,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osGetNotecard(string name)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecard", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNotecard", m_host, "OSSL", m_itemID)) return "";
 
 
             UUID assetID = UUID.Zero;
@@ -1808,7 +1808,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public int osGetNumberOfNotecardLines(string name)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNumberOfNotecardLines", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osGetNumberOfNotecardLines", m_host, "OSSL", m_itemID)) return 0;
 
 
             UUID assetID = UUID.Zero;
@@ -1853,7 +1853,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osAvatarName2Key(string firstname, string lastname)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAvatarName2Key", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAvatarName2Key", m_host, "OSSL", m_itemID)) return "";
 
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, firstname + " " + lastname);
             if (null == account)
@@ -1868,7 +1868,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osKey2Name(string id)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osKey2Name", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osKey2Name", m_host, "OSSL", m_itemID)) return "";
             UUID key = new UUID();
 
             if (UUID.TryParse(id, out key))
@@ -1898,7 +1898,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         ///
         public string osGetGridNick()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridNick", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridNick", m_host, "OSSL", m_itemID)) return "";
 
             string nick = "hippogrid";
             IConfigSource config = m_ScriptEngine.ConfigSource;
@@ -1909,7 +1909,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osGetGridName()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridName", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridName", m_host, "OSSL", m_itemID)) return "";
 
             string name = "the lost continent of hippo";
             IConfigSource config = m_ScriptEngine.ConfigSource;
@@ -1920,7 +1920,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osGetGridLoginURI()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridLoginURI", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetGridLoginURI", m_host, "OSSL", m_itemID)) return "";
 
             string loginURI = "http://127.0.0.1:9000/";
             IConfigSource config = m_ScriptEngine.ConfigSource;
@@ -1931,7 +1931,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_String osFormatString(string str, LSL_List strings)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osFormatString", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osFormatString", m_host, "OSSL", m_itemID)) return new LSL_String();
 
 
             return String.Format(str, strings.Data);
@@ -1939,7 +1939,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List osMatchString(string src, string pattern, int start)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osMatchString", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osMatchString", m_host, "OSSL", m_itemID)) return new LSL_List();
 
 
             LSL_List result = new LSL_List();
@@ -1980,7 +1980,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osLoadedCreationDate()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationDate", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationDate", m_host, "OSSL", m_itemID)) return "";
 
 
             return World.RegionInfo.RegionSettings.LoadedCreationDate;
@@ -1988,7 +1988,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osLoadedCreationTime()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationTime", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationTime", m_host, "OSSL", m_itemID)) return "";
 
 
             return World.RegionInfo.RegionSettings.LoadedCreationTime;
@@ -1996,7 +1996,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osLoadedCreationID()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationID", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osLoadedCreationID", m_host, "OSSL", m_itemID)) return "";
 
 
             return World.RegionInfo.RegionSettings.LoadedCreationID;
@@ -2010,7 +2010,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //
         public LSL_List osGetLinkPrimitiveParams(int linknumber, LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetLinkPrimitiveParams", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetLinkPrimitiveParams", m_host, "OSSL", m_itemID)) return new LSL_List();
 
             InitLSL();
             LSL_List retVal = new LSL_List();
@@ -2030,7 +2030,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         public LSL_Key osGetMapTexture()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetMapTexture", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetMapTexture", m_host, "OSSL", m_itemID)) return new LSL_Key();
             return World.RegionInfo.RegionSettings.TerrainImageID.ToString();
         }
 
@@ -2041,7 +2041,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         public LSL_Key osGetRegionMapTexture(string regionName)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetRegionMapTexture", m_host, "OSSL", m_itemID)) return new LSL_Key();
             IScene scene = m_host.ParentEntity.Scene;
             UUID key = UUID.Zero;
             GridRegion region;
@@ -2068,7 +2068,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns>List of floats</returns>
         public LSL_List osGetRegionStats()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetRegionStats", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetRegionStats", m_host, "OSSL", m_itemID)) return new LSL_List();
 
             LSL_List ret = new LSL_List();
             IMonitorModule mod = World.RequestModuleInterface<IMonitorModule>();
@@ -2086,7 +2086,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public int osGetSimulatorMemory()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetSimulatorMemory", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osGetSimulatorMemory", m_host, "OSSL", m_itemID)) return 0;
 
             long pws = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
 
@@ -2100,7 +2100,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osSetSpeed(LSL_Key UUID, LSL_Float SpeedModifier)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL", m_itemID)) return;
 
             IScenePresence avatar = World.GetScenePresence(new UUID(UUID));
             if (avatar != null)
@@ -2117,7 +2117,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osKickAvatar(LSL_String FirstName, LSL_String SurName, LSL_String alert)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL", m_itemID)) return;
             World.ForEachScenePresence(delegate(IScenePresence sp)
             {
                 if (!sp.IsChildAgent &&
@@ -2137,7 +2137,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetPrimitiveParams", m_host, "OSSL", m_itemID)) return new LSL_List();
 
             InitLSL();
             return m_LSL_Api.GetLinkPrimitiveParamsEx(prim, rules);
@@ -2145,7 +2145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osSetPrimitiveParams(LSL_Key prim, LSL_List rules)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL", m_itemID)) return;
 
             InitLSL();
             m_LSL_Api.SetPrimitiveParamsEx(prim, rules);
@@ -2156,7 +2156,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// </summary>
         public void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL", m_itemID)) return;
 
             osSetProjectionParams(UUID.Zero.ToString(), projection, texture, fov, focus, amb);
         }
@@ -2166,7 +2166,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// </summary>
         public void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetProjectionParams", m_host, "OSSL", m_itemID)) return;
 
             ISceneChildEntity obj = null;
             if (prim == UUID.Zero.ToString())
@@ -2198,7 +2198,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns>Strided list of the UUID, position and name of each avatar in the region</returns>
         public LSL_List osGetAvatarList()
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAvatarList", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetAvatarList", m_host, "OSSL", m_itemID)) return new LSL_List();
 
             LSL_List result = new LSL_List();
             World.ForEachScenePresence(delegate(IScenePresence avatar)
@@ -2218,7 +2218,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_String GroupName, LSL_String RequestedRole)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAddAgentToGroup", m_host, "OSSL", m_itemID)) return new LSL_Integer();
 
             IGroupsServicesConnector m_groupData = World.RequestModuleInterface<IGroupsServicesConnector>();
 
@@ -2262,7 +2262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         public LSL_String osUnixTimeToTimestamp(long time)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osUnixTimeToTimestamp", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osUnixTimeToTimestamp", m_host, "OSSL", m_itemID)) return new LSL_String();
             long baseTicks = 621355968000000000;
             long tickResolution = 10000000;
             long epochTicks = (time * tickResolution) + baseTicks;
@@ -2273,7 +2273,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osCauseDamage(string avatar, double damage)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL", m_itemID)) return;
 
             UUID avatarId = new UUID(avatar);
             Vector3 pos = m_host.GetWorldPosition();
@@ -2296,7 +2296,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osCauseDamage(string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseDamage", m_host, "OSSL", m_itemID)) return;
 
             UUID avatarId = new UUID(avatar);
             Vector3 pos = m_host.GetWorldPosition();
@@ -2321,7 +2321,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osCauseHealing(string avatar, double healing)
         {
-            ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseHealing", m_host, "OSSL");
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osCauseHealing", m_host, "OSSL", m_itemID)) return;
 
 
             UUID avatarId = new UUID(avatar);
