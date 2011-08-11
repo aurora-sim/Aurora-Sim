@@ -573,9 +573,13 @@ namespace OpenSim.Region.Framework.Scenes
                             remoteClient.SendAlertMessage("You cannot create a landmark here.");
                         }
                     }
-                    if (invType == (sbyte)InventoryType.LSL)
+                    if(invType == (sbyte)InventoryType.LSL)
                     {
                         data = Encoding.ASCII.GetBytes(DefaultLSLScript);
+                    }
+                    if(invType == (sbyte)InventoryType.CallingCard)
+                    {
+                        return;
                     }
                     if (invType == (sbyte)InventoryType.Notecard)
                     {

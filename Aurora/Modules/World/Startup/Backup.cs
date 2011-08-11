@@ -161,8 +161,6 @@ namespace Aurora.Modules
                 = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
             protected IScene m_scene;
             protected bool m_LoadingPrims = false;
-            protected bool m_haveLoadedPrims = false;
-            protected bool m_haveLoadedParcels = false;
 
             #endregion
 
@@ -339,13 +337,10 @@ namespace Aurora.Modules
                 //Set loading prims here to block backup
                 LoadingPrims = true;
                 ISceneEntity[] entities = m_scene.Entities.GetEntities();
-                foreach (ISceneEntity group in entities)
+                foreach(ISceneEntity group in entities)
                 {
-                    if (group is SceneObjectGroup)
-                    {
-                        ((SceneObjectGroup)group).CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
-                        ((SceneObjectGroup)group).ResumeScripts();
-                    }
+                    group.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
+                    group.ResumeScripts();
                 }
                 //Now reset it
                 LoadingPrims = false;
@@ -372,14 +367,14 @@ namespace Aurora.Modules
                 try
                 {
                     LoadingPrims = true;
-                    List<SceneObjectGroup> groups = new List<SceneObjectGroup>();
+                    List<ISceneEntity> groups = new List<ISceneEntity>();
                     lock (m_scene.Entities)
                     {
                         ISceneEntity[] entities = m_scene.Entities.GetEntities();
                         foreach (ISceneEntity entity in entities)
                         {
-                            if (entity is SceneObjectGroup && !((SceneObjectGroup)entity).IsAttachment)
-                                groups.Add((SceneObjectGroup)entity);
+                            if (entity.IsAttachment)
+                                groups.Add(entity);
                         }
                     }
                     //Delete all the groups now
@@ -396,7 +391,6 @@ namespace Aurora.Modules
 
             public void ResetRegionToStartupDefault ()
             {
-                m_haveLoadedPrims = false;
                 //Add the loading prims piece just to be safe
                 LoadingPrims = true;
 

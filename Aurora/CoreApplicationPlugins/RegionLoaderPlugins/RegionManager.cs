@@ -179,6 +179,7 @@ namespace Aurora.Modules.RegionLoader
             {
                 m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
                 SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+                manager.AllRegions++;
                 manager.StartNewRegion(region);
             }
             RefreshCurrentRegions();
@@ -535,6 +536,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
             Util.FireAndForget (delegate (object o)
             {
+                m_sceneManager.AllRegions++;
                 m_sceneManager.StartNewRegion (region);
                 if (CurrentRegionID == region.RegionID)
                     SetOnlineStatus ();
@@ -547,6 +549,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             SetStoppingStatus ();
             Util.FireAndForget (delegate (object o)
             {
+                m_sceneManager.AllRegions--;
                 m_sceneManager.TryGetScene (CurrentRegionID, out scene);
                 m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
                 if(CurrentRegionID == scene.RegionInfo.RegionID)
