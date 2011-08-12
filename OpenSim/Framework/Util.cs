@@ -1896,7 +1896,6 @@ namespace OpenSim.Framework
         /// <returns></returns>
         public static System.Net.IPAddress ResolveAddressForClient (System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
         {
-            clientIP = new IPEndPoint(iPAddress, 0);
             if (iPAddress.Equals (clientIP.Address))
             {
                 if (useLocalhostLoopback)
