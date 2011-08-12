@@ -648,8 +648,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!actor_name_map.TryGetValue (g2, out p2))
                 p2 = PANull;
             if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
-                if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
-                    return;//If its frozen, don't collide it against other objects, let them collide against it
+                if(p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
+                {
+                    (p1 as AuroraODEPrim)._zeroFlag = false;
+                    (p2 as AuroraODEPrim)._zeroFlag = false;
+                }
                 else
                     (p1 as AuroraODEPrim)._zeroFlag = false;
             try
@@ -1218,7 +1221,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 foreach (AuroraODEPrim chr in _activeprims)
                 {
                     if (chr.Body != IntPtr.Zero && d.BodyIsEnabled(chr.Body) &&
-                        (!chr.m_disabled) && (!chr.m_frozen) && !(chr._zeroFlag))
+                        (!chr.m_disabled) && (!chr.m_frozen))
                     {
                         try
                         {
@@ -2821,7 +2824,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             Vector3 windSpeed = m_windModule.WindSpeed ((int)AbsolutePosition.X, (int)AbsolutePosition.Y, (int)AbsolutePosition.Z);
             force = (windSpeed) / (mass);
-            //force /= 20f;//Constant that doesn't make it too windy
+            force /= 20f;//Constant that doesn't make it too windy
         }
 
         #endregion

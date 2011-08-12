@@ -1828,9 +1828,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy += m_force.Y;
                     fz += m_force.Z;
 
-                    fx += m_pushForce.X;
-                    fy += m_pushForce.Y;
-                    fz += m_pushForce.Z;
+                    fx += m_pushForce.X * 10;
+                    fy += m_pushForce.Y * 10;
+                    fz += m_pushForce.Z * 10;
 
                     //This is for llSetForce and friends, we don't remove it... even if it seems weird
                     //m_force = Vector3.Zero;
@@ -1846,13 +1846,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_pushForce = Vector3.Zero;
 
                     #region drag and forces accumulators
-
-                    float drag = -m_mass * 0.2f;
-
-                    fx += drag * vel.X;
-                    fy += drag * vel.Y;
-                    fz += drag * vel.Z;
-
 
                     Vector3 newtorque;
                     newtorque.X = m_angularforceacc.X;
@@ -1888,7 +1881,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         fz = 0;
 
                     //Keep us out of terrain if possible
-                    float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
+                    //Not really needed... I fixed the bug where things would fall under the terrain
+                    /*float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
                     Vector3 rotSize = Size * Orientation;
                     float ourBasePos = (dcpos.Z + (rotSize.Z / 2));
                     if (!_parent_entity.VolumeDetectActive && terrainHeight > ourBasePos)
@@ -1900,41 +1894,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         forceUpdate = true;
                         if(m_previousForceIsSame != 0)
                             m_previousForceIsSame = 0;
-                    }
-
-                    #region Check for underground
-
-                    /*if (!(Position.X < 0.25f || Position.Y < 0.25f ||
-                        Position.X > _parent_scene.Region.RegionSizeX - .25f ||
-                        Position.Y > _parent_scene.Region.RegionSizeY - .25f))
-                    {
-                        float groundHeight = _parent_scene.GetTerrainHeightAtXY (
-                                   dcpos.X + (dcpos.X == 0 ? dcpos.X : timestep * 0.75f * vel.X),
-                                   dcpos.Y + (dcpos.Y == 0 ? dcpos.Y : timestep * 0.75f * vel.Y));
-                        
-                        d.Quaternion rot = d.BodyGetQuaternion (Body);
-                        Vector3 size = Size * new Quaternion(rot.X, rot.Y, rot.Z, rot.W);
-                        if ((dcpos.Z - (size.Z / 2)) < groundHeight)
-                        {
-                            _target_velocity.Z = 0;
-                            fz = -vel.Z * PID_D * 2f + ((groundHeight - (dcpos.Z - size.Z / 2)) * _parent_scene.PID_P);
-                        }
-                        if (dcpos.Z - (size.Z / 2) - groundHeight < 0.12f)
-                        {
-                            iscolliding = true;
-                            ContactPoint point = new ContactPoint ();
-                            point.PenetrationDepth = vel.Z;
-                            point.Position = Position;
-                            point.SurfaceNormal = Vector3.Zero;
-
-                            //0 is the ground localID
-                            AddCollisionEvent (0, point);
-                        }
                     }*/
 
-                    #endregion
-
-                    if (!forceUpdate && m_lastposition != Vector3.Zero && ((Math.Abs (m_lastposition.X - _position.X) > 0.1)
+                    /*if (!forceUpdate && m_lastposition != Vector3.Zero && ((Math.Abs (m_lastposition.X - _position.X) > 0.1)
                         || (Math.Abs (m_lastposition.Y - _position.Y) > 0.1)
                         || (Math.Abs (m_lastposition.Z - _position.Z) > 0.1))
                         //|| (Math.Abs (m_lastorientation.X - _orientation.X) > 0.1)
@@ -1944,38 +1906,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         forceUpdate = true;
                         m_previousForceIsSame = 0;
-                    }
+                    }*/
 
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
                     if (fx != 0 || fy != 0 || fz != 0 || newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
                     {
-                        /*if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
-                        {
-                            d.BodySetAngularVel (Body, 0, 0, 0);
-                            d.Quaternion lockedAxis = new d.Quaternion ();
-                            lockedAxis.X = _orientation.X;
-                            lockedAxis.Y = _orientation.Y;
-                            lockedAxis.Z = _orientation.Z;
-                            lockedAxis.W = _orientation.W;
-                            d.BodySetQuaternion (Body, ref lockedAxis);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.0000000001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0000000001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
-                            d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);
-                        }*/
-
                         if (Body != IntPtr.Zero)
                         {
                             //ODE autodisables not moving prims, accept it and reenable when we need to
-                            if (!_zeroFlag && !d.BodyIsEnabled (Body))
+                            if (!d.BodyIsEnabled (Body))
                                 d.BodyEnable (Body);
                             if (fx != 0 || fy != 0 || fz != 0)
                             {
-                                if (Math.Abs(m_PreviousForce.X - fx) > 0.03f ||
-                                    Math.Abs(m_PreviousForce.Y - fy) > 0.03f ||
-                                    Math.Abs(m_PreviousForce.Z - fz) > 0.03f ||
+                                if (Math.Abs(m_PreviousForce.X - fx) > 0.1f ||
+                                    Math.Abs(m_PreviousForce.Y - fy) > 0.1f ||
+                                    Math.Abs(m_PreviousForce.Z - fz) > 0.1f ||
                                     m_isSelected)
                                     m_previousForceIsSame = 0;
                                 else if (!m_isSelected)
@@ -2111,7 +2056,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
-                        m_lastVelocity = _velocity; // for accelaration
                         _position.X = (float)lpos.X;
                         _position.Y = (float)lpos.Y;
                         _position.Z = (float)lpos.Z;
@@ -2122,20 +2066,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _orientation.W = (float)ori.W;
 
                     if (!_zeroFlag &&
-                        //                        (Math.Abs(m_lastposition.X - lpos.X) < 0.001)
-                        //                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.001)
-                        //                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.001)
-                        //                        && (Math.Abs(m_lastorientation.X - ori.X) < 0.001)
-                        //                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
-                        //                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
-                        //                        &&
-                        (((Math.Abs (vel.X) < 0.01)
-                        && (Math.Abs (vel.Y) < 0.01)
-                        && (Math.Abs (vel.Z) < 0.01)
-                        && (Math.Abs (rotvel.X) < 0.001)
-                        && (Math.Abs (rotvel.Y) < 0.001)
-                        && (Math.Abs (rotvel.Z) < 0.001)) &&
-                        m_previousForceIsSame > previousForceSameMax)
+                        (((Math.Abs (vel.X) < 0.02)
+                        && (Math.Abs (vel.Y) < 0.02)
+                        && (Math.Abs (vel.Z) < 0.02))
+                        /*&& (Math.Abs (rotvel.X) < 0.01)//This makes stacks of prims not stop collding :/
+                        && (Math.Abs (rotvel.Y) < 0.01)
+                        && (Math.Abs (rotvel.Z) < 0.01))*/
+                        && m_previousForceIsSame > previousForceSameMax)
                         && m_vehicle.Type == Vehicle.TYPE_NONE)
                     {
                         _zeroFlag = true;
@@ -2154,9 +2091,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastposition = _position;
                         m_lastorientation = _orientation;
 
-                        _velocity.X = 0.0f;
-                        _velocity.Y = 0.0f;
-                        _velocity.Z = 0.0f;
+                        //Keep the velocity, it won't be sent anywhere outside of the physics engine because of the _zeroFlag checks
+                        //And this allows us to keep the _zeroFlag check a bit more stable
+                        m_lastVelocity = _velocity; // for accelaration
+                        _velocity.X = (float)vel.X;
+                        _velocity.Y = (float)vel.Y;
+                        _velocity.Z = (float)vel.Z;
 
                         _acceleration.X = 0;
                         _acceleration.Y = 0;
@@ -2168,16 +2108,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         // better let ode keep dealing with small values --Ubit
                         //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
-                        d.BodySetLinearVel (Body, 0, 0, 0.01f);
-                        d.BodySetAngularVel (Body, 0, 0, 0);
+                        d.BodySetLinearVel(Body, 0, 0, 0);
+                        d.BodySetAngularVel(Body, 0, 0, 0);
+                        d.BodySetForce(Body, 0, 0, 0);
                         //Physical prims fall through things if this is set when things are moving, so only do it if we are almost stopped
-                        if ((Math.Abs (vel.X) < 0.01)
-                        && (Math.Abs (vel.Y) < 0.01)
-                        && (Math.Abs (vel.Z) < 0.01))
+                        /*if ((Math.Abs (vel.X) < 0.01)
+                            && (Math.Abs (vel.Y) < 0.01)
+                            && (Math.Abs (vel.Z) < 0.01))
                         {
                             if (d.BodyIsEnabled (Body))
                                 d.BodyDisable (Body);
-                        }
+                        }*/
 
                         if (m_lastUpdateSent > 0)
                         {
@@ -2196,6 +2137,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if (m_vehicle.Type == Vehicle.TYPE_NONE)
                         {
+                            m_lastVelocity = _velocity; // for accelaration
                             _velocity.X = (float)vel.X;
                             _velocity.Y = (float)vel.Y;
                             _velocity.Z = (float)vel.Z;
@@ -2216,13 +2158,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_UpdateTimecntr = 0;
 
                     if (!_zeroFlag && !needupdate && (
-                         (Math.Abs (m_lastposition.X - _position.X) > 0.01)
+                        /* (Math.Abs (m_lastposition.X - _position.X) > 0.01)
                         || (Math.Abs (m_lastposition.Y - _position.Y) > 0.01)
-                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.01)
-                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.001)
+                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.01)*/
+                        /*(Math.Abs (m_lastorientation.X - _orientation.X) > 0.001)
                         || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.001)
-                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.001)
-                        || (Math.Abs (m_lastVelocity.X - _velocity.X) > 0.01)
+                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.001)*/
+                        (Math.Abs (m_lastVelocity.X - _velocity.X) > 0.01)
                         || (Math.Abs (m_lastVelocity.Y - _velocity.Y) > 0.01)
                         || (Math.Abs (m_lastVelocity.Z - _velocity.Z) > 0.01)
                         ))
@@ -2232,7 +2174,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         //if (!m_throttleUpdates || throttleCounter > (_parent_scene.geomUpdatesPerThrottledUpdate * td))
                             needupdate = true;
                         //else
-                            throttleCounter += 1;
+                        //    throttleCounter += 1;
                     }
 
 
@@ -3396,6 +3338,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             contact.surface.mu = 800;
             if(actorType == ActorTypes.Prim)
                 contact.surface.mu *= _parent_entity.Friction;
+            else if(actorType == ActorTypes.Ground)
+                contact.surface.mu *= 2;
             if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
                 contact.surface.mu *= 0.05f;
             contact.surface.mu2 = contact.surface.mu;
