@@ -440,7 +440,7 @@ namespace OpenSim.Framework
                 Startup = (StartupType)args["startupType"].AsInteger();
             if(args.ContainsKey("FindExternalIP"))
                 FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
-            else
+            else if(ExternalHostName != "DEFAULT")
                 FindExternalAutomatically = false;
             if(args.ContainsKey("InfiniteRegion"))
                 InfiniteRegion = args["InfiniteRegion"].AsBoolean();
