@@ -338,10 +338,20 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 m_log.InfoFormat(
                     "[REGIONINFO]: Resolving SYSTEMIP to {0} for external hostname of region {1}",
                     region.ExternalHostName, name);
+                region.FindExternalAutomatically = false;
+            }
+            else if(externalName == "DEFAULT")
+            {
+                region.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
+                region.FindExternalAutomatically = true;
+                m_log.InfoFormat(
+                    "[REGIONINFO]: Resolving DEFAULT to {0} for external hostname of region {1}",
+                    region.ExternalHostName, name);
             }
             else
             {
                 region.ExternalHostName = Util.ResolveEndPoint(externalName, port).Address.ToString();
+                region.FindExternalAutomatically = false;
             }
 
             region.RegionType = config.GetString("RegionType", region.RegionType);
