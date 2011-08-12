@@ -150,22 +150,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Constructor
         
         public ScriptProtectionModule(ScriptEngine engine, IConfig config)
-		{
+        {
+		}
+
+        public void Initialize (ScriptEngine engine, IConfig config)
+        {
             m_config = config;
             m_scriptEngine = engine;
             EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").Split(','));
 
             allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);
 
-            m_threatLevelNone = new ThreatLevelDefinition (ThreatLevel.None, UserSetHelpers.ParseUserSetConfigSetting (config, "NoneUserSet", UserSet.None), this);
-            m_threatLevelNuisance = new ThreatLevelDefinition (ThreatLevel.Nuisance, UserSetHelpers.ParseUserSetConfigSetting (config, "NuisanceUserSet", UserSet.None), this);
-            m_threatLevelVeryLow = new ThreatLevelDefinition (ThreatLevel.VeryLow, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryLowUserSet", UserSet.None), this);
-            m_threatLevelLow = new ThreatLevelDefinition (ThreatLevel.Low, UserSetHelpers.ParseUserSetConfigSetting (config, "LowUserSet", UserSet.None), this);
-            m_threatLevelModerate = new ThreatLevelDefinition (ThreatLevel.Moderate, UserSetHelpers.ParseUserSetConfigSetting (config, "ModerateUserSet", UserSet.None), this);
-            m_threatLevelHigh = new ThreatLevelDefinition (ThreatLevel.High, UserSetHelpers.ParseUserSetConfigSetting (config, "HighUserSet", UserSet.None), this);
-            m_threatLevelVeryHigh = new ThreatLevelDefinition (ThreatLevel.VeryHigh, UserSetHelpers.ParseUserSetConfigSetting (config, "VeryHighUserSet", UserSet.None), this);
-            m_threatLevelSevere = new ThreatLevelDefinition (ThreatLevel.Severe, UserSetHelpers.ParseUserSetConfigSetting (config, "SevereUserSet", UserSet.None), this);
-		}
+            m_threatLevelNone = new ThreatLevelDefinition(ThreatLevel.None, UserSetHelpers.ParseUserSetConfigSetting(config, "NoneUserSet", UserSet.None), this);
+            m_threatLevelNuisance = new ThreatLevelDefinition(ThreatLevel.Nuisance, UserSetHelpers.ParseUserSetConfigSetting(config, "NuisanceUserSet", UserSet.None), this);
+            m_threatLevelVeryLow = new ThreatLevelDefinition(ThreatLevel.VeryLow, UserSetHelpers.ParseUserSetConfigSetting(config, "VeryLowUserSet", UserSet.None), this);
+            m_threatLevelLow = new ThreatLevelDefinition(ThreatLevel.Low, UserSetHelpers.ParseUserSetConfigSetting(config, "LowUserSet", UserSet.None), this);
+            m_threatLevelModerate = new ThreatLevelDefinition(ThreatLevel.Moderate, UserSetHelpers.ParseUserSetConfigSetting(config, "ModerateUserSet", UserSet.None), this);
+            m_threatLevelHigh = new ThreatLevelDefinition(ThreatLevel.High, UserSetHelpers.ParseUserSetConfigSetting(config, "HighUserSet", UserSet.None), this);
+            m_threatLevelVeryHigh = new ThreatLevelDefinition(ThreatLevel.VeryHigh, UserSetHelpers.ParseUserSetConfigSetting(config, "VeryHighUserSet", UserSet.None), this);
+            m_threatLevelSevere = new ThreatLevelDefinition(ThreatLevel.Severe, UserSetHelpers.ParseUserSetConfigSetting(config, "SevereUserSet", UserSet.None), this);
+        }
         
 		#endregion
         
