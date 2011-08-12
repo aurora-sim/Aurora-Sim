@@ -495,7 +495,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
                 else
-                    return false;
+                    return true;
 
                 LimitReq r;
                 if(!functions.TryGetValue(function, out r))
@@ -542,7 +542,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     else if(d.Type == LimitType.Prim)
                         m_functionLimiting[m_host.UUID] = functions;
             }
-            return false;
+            return true;
         }
 
         private void TriggerAlert (string function, LimitDef d, string message, ISceneChildEntity host)
@@ -568,9 +568,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private bool TriggerAction (LimitDef d, ISceneChildEntity m_host, UUID itemID)
         {
             if(d.Action == LimitAction.None)
-                return false;
+                return true;
             else if(d.Action == LimitAction.Drop)
-                return true;//Drop it
+                return false;//Drop it
             else if(d.Action == LimitAction.TerminateEvent)
                 throw new Exception("");//Blank messages kill events, but don't show anything on the console/inworld
             else if(d.Action == LimitAction.TerminateScript)
@@ -581,7 +581,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             else if(d.Action == LimitAction.Delay)
                 m_log.Warn("Function delaying is not implemented");
-            return false;
+            return true;
         }
 
         #endregion
