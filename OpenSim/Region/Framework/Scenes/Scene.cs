@@ -634,7 +634,6 @@ namespace OpenSim.Region.Framework.Scenes
                 IScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence (client);
                 sp.IsChildAgent = aCircuit.child;
 
-
                 //Trigger events
                 m_eventManager.TriggerOnNewPresence (sp);
 
@@ -658,9 +657,10 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add the client to login stats
                 ILoginMonitor monitor = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
                 if ((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0 && monitor != null)
-                {
                     monitor.AddSuccessfulLogin();
-                }
+
+                if(sp.IsChildAgent)//If we're a child, trigger this so that we get updated in the modules
+                    EventManager.TriggerSignificantClientMovement(sp);
             }
             catch(Exception ex)
             {
