@@ -114,35 +114,37 @@ namespace Aurora.Services.DataService
             return A.NumberStartup.CompareTo(B.NumberStartup);
         }
 
-        public RegionInfo GetRegionInfo(UUID regionID)
+        public RegionInfo GetRegionInfo (UUID regionID, bool convertDNSNames)
         {
             List<string> RetVal = GD.Query("RegionID", regionID, "simulator", "RegionInfo");
             RegionInfo replyData = new RegionInfo();
             if (RetVal.Count == 0)
                 return null;
             replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
-            if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+            if(convertDNSNames)
             {
-                replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
+                if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+                    replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
+                else
+                    replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             }
-            else
-                replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             return replyData;
         }
 
-        public RegionInfo GetRegionInfo(string regionName)
+        public RegionInfo GetRegionInfo (string regionName, bool convertDNSNames)
         {
             List<string> RetVal = GD.Query("RegionName", regionName, "simulator", "RegionInfo");
             RegionInfo replyData = new RegionInfo();
             if (RetVal.Count == 0)
                 return null;
             replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
-            if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+            if(convertDNSNames)
             {
-                replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
+                if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+                    replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
+                else
+                    replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             }
-            else
-                replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             return replyData;
         }
 

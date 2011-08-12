@@ -47,15 +47,17 @@ namespace Aurora.Framework
         /// Gets a specific region info for the given region ID
         /// </summary>
         /// <param name="regionID"></param>
+        /// <param name="convertDNSNames"></param>
         /// <returns></returns>
-        RegionInfo GetRegionInfo(UUID regionID);
+        RegionInfo GetRegionInfo(UUID regionID, bool convertDNSNames);
 
         /// <summary>
         /// Gets a specific region info for the given region name
         /// </summary>
         /// <param name="regionName"></param>
+        /// <param name="convertDNSNames"></param>
         /// <returns></returns>
-        RegionInfo GetRegionInfo(string regionName);
+        RegionInfo GetRegionInfo (string regionName, bool convertDNSNames);
 
         /// <summary>
         /// Updates the region info for the given region

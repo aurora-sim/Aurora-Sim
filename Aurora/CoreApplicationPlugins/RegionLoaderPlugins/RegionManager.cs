@@ -187,7 +187,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
         {
-            RegionInfo region = m_connector.GetRegionInfo(RegionToFind.Text);
+            RegionInfo region = m_connector.GetRegionInfo(RegionToFind.Text, false);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -291,7 +291,7 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("Select a valid region from the list.");
                 return;
             }
-            RegionInfo region = m_connector.GetRegionInfo(item.ToString());
+            RegionInfo region = m_connector.GetRegionInfo(item.ToString(), false);
             if (region == null)
             {
                 MessageBox.Show("You must enter a valid region name!");
@@ -367,7 +367,7 @@ namespace Aurora.Modules.RegionLoader
         private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             object item = RegionListBox.Items[RegionListBox.SelectedIndex];
-            RegionInfo region = m_connector.GetRegionInfo(item.ToString());
+            RegionInfo region = m_connector.GetRegionInfo(item.ToString(), false);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -486,7 +486,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 MessageBox.Show("Select a region before attempting to export.");
                 return;
             }
-            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
+            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID, false);
             if (region != null) //It never should be, but who knows
             {
                 //Make sure the directory exists
@@ -533,7 +533,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void putOnline_Click (object sender, EventArgs e)
         {
             SetStartingStatus ();
-            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
+            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID, true);
             Util.FireAndForget (delegate (object o)
             {
                 m_sceneManager.AllRegions++;
@@ -568,7 +568,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void deleteregion_Click (object sender, EventArgs e)
         {
-            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
+            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID, false);
             if (region != null) //It never should be, but who knows
             {
                 DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
