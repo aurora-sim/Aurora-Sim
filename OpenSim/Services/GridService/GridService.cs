@@ -465,7 +465,6 @@ namespace OpenSim.Services.GridService
 
                 FixNeighbors (region, GetNeighbors (region), true);
                 return true;
-
             }
 
             FixNeighbors (region, GetNeighbors (region), true);

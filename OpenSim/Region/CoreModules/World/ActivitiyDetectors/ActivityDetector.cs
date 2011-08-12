@@ -156,6 +156,22 @@ namespace OpenSim.Region.CoreModules
                     m_zombieAgents.Remove (client.AgentId);
                     return; //They are a known zombie, just clear them out and go on with life!
                 }
+                AgentPosition agentpos = new AgentPosition();
+                agentpos.AgentID = sp.UUID;
+                agentpos.AtAxis = sp.CameraAtAxis;
+                agentpos.Center = sp.CameraPosition;
+                agentpos.Far = sp.DrawDistance;
+                agentpos.LeftAxis = Vector3.Zero;
+                agentpos.Position = sp.AbsolutePosition;
+                agentpos.RegionHandle = sp.Scene.RegionInfo.RegionHandle;
+                agentpos.Size = sp.PhysicsActor != null ? sp.PhysicsActor.Size : new Vector3(0, 0, 1.8f);
+                agentpos.UpAxis = Vector3.Zero;
+                agentpos.Velocity = sp.Velocity;
+
+                //Send the child agent data update
+                ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
+                if(syncPoster != null)
+                    syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, sp.Scene.RegionInfo.RegionHandle), sp.Scene.RegionInfo.RegionHandle);
                 client.Scene.RequestModuleInterface<ISyncMessagePosterService> ().Get (SyncMessageHelper.AgentLoggedOut (client.AgentId, client.Scene.RegionInfo.RegionHandle), client.AgentId, client.Scene.RegionInfo.RegionHandle);
             }
         }

@@ -123,7 +123,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // PhysX does this (runs in the background).
 
-            if (_PhyScene.IsThreaded)
+            if(_PhyScene != null && _PhyScene.IsThreaded)
             {
                 _PhyScene.GetResults();
             }
@@ -160,6 +160,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal float UpdatePhysics(double elapsed)
         {
+            if(_PhyScene == null)
+                return 0;
             lock (m_syncRoot)
             {
                 // Update DisableCollisions 

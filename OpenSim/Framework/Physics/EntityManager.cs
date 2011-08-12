@@ -36,21 +36,21 @@ namespace OpenSim.Framework
 {
     public class EntityManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> ();
-        private object m_objectEntitiesLock = new object ();
-        private readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence> ();
-        private readonly List<IScenePresence> m_presenceEntitiesList = new List<IScenePresence> ();
-        private object m_presenceEntitiesLock = new object ();
-        private readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> ();
-        private object m_child_2_parent_entitiesLock = new object ();
+        protected static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
+        protected readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity> m_objectEntities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, ISceneEntity>();
+        protected object m_objectEntitiesLock = new object();
+        protected readonly Dictionary<UUID, IScenePresence> m_presenceEntities = new Dictionary<UUID, IScenePresence>();
+        protected readonly List<IScenePresence> m_presenceEntitiesList = new List<IScenePresence>();
+        protected object m_presenceEntitiesLock = new object();
+        protected readonly Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities = new Aurora.Framework.DoubleKeyDictionary<UUID, uint, UUID>();
+        protected object m_child_2_parent_entitiesLock = new object();
 
-        public int Count
+        public virtual int Count
         {
             get { return m_objectEntities.Count + this.GetPresenceCount(); }
         }
 
-        public bool Add (IEntity entity)
+        public virtual bool Add (IEntity entity)
         {
             if (entity.LocalId == 0)
             {
@@ -93,7 +93,7 @@ namespace OpenSim.Framework
             return true;
         }
 
-        public void Clear ()
+        public virtual void Clear ()
         {
             lock (m_objectEntitiesLock)
                 m_objectEntities.Clear ();
@@ -106,7 +106,7 @@ namespace OpenSim.Framework
                 m_child_2_parent_entities.Clear ();
         }
 
-        public bool Remove (IEntity entity)
+        public virtual bool Remove (IEntity entity)
         {
             if (entity == null)
                 return false;
@@ -147,17 +147,17 @@ namespace OpenSim.Framework
             }
         }
 
-        public List<IScenePresence> GetPresences ()
+        public virtual List<IScenePresence> GetPresences ()
         {
             return m_presenceEntitiesList;
         }
 
-        public int GetPresenceCount ()
+        public virtual int GetPresenceCount ()
         {
             return m_presenceEntitiesList.Count;
         }
 
-        public IScenePresence[] GetPresences (Vector3 pos, float radius)
+        public virtual IScenePresence[] GetPresences (Vector3 pos, float radius)
         {
             lock (m_presenceEntitiesLock)
             {
@@ -172,7 +172,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public ISceneEntity[] GetEntities ()
+        public virtual ISceneEntity[] GetEntities ()
         {
             lock (m_objectEntitiesLock)
             {
@@ -185,7 +185,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public ISceneEntity[] GetEntities (Vector3 pos, float radius)
+        public virtual ISceneEntity[] GetEntities (Vector3 pos, float radius)
         {
             lock (m_objectEntitiesLock)
             {
@@ -201,7 +201,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public bool TryGetPresenceValue (UUID key, out IScenePresence presence)
+        public virtual bool TryGetPresenceValue (UUID key, out IScenePresence presence)
         {
             lock (m_presenceEntitiesLock)
             {
@@ -209,12 +209,12 @@ namespace OpenSim.Framework
             }
         }
 
-        public bool TryGetValue (UUID key, out IEntity obj)
+        public virtual bool TryGetValue (UUID key, out IEntity obj)
         {
             return InternalTryGetValue (key, true, out obj);
         }
 
-        private bool InternalTryGetValue (UUID key, bool checkRecursive, out IEntity obj)
+        protected virtual bool InternalTryGetValue (UUID key, bool checkRecursive, out IEntity obj)
         {
             IScenePresence presence;
             bool gotit;
@@ -245,12 +245,12 @@ namespace OpenSim.Framework
             return false;
         }
 
-        public bool TryGetValue (uint key, out IEntity obj)
+        public virtual bool TryGetValue (uint key, out IEntity obj)
         {
             return InternalTryGetValue (key, true, out obj);
         }
 
-        private bool InternalTryGetValue (uint key, bool checkRecursive, out IEntity obj)
+        protected virtual bool InternalTryGetValue (uint key, bool checkRecursive, out IEntity obj)
         {
             ISceneEntity entity;
             bool gotit;
@@ -278,7 +278,7 @@ namespace OpenSim.Framework
         /// <param name="childkey"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public bool TryGetChildPrimParent (UUID childkey, out IEntity obj)
+        public virtual bool TryGetChildPrimParent (UUID childkey, out IEntity obj)
         {
             UUID ParentKey = UUID.Zero;
             bool gotit;
@@ -298,7 +298,7 @@ namespace OpenSim.Framework
         /// <param name="childkey"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public bool TryGetChildPrimParent (uint childkey, out IEntity obj)
+        public virtual bool TryGetChildPrimParent (uint childkey, out IEntity obj)
         {
             bool gotit;
             UUID ParentKey = UUID.Zero;
@@ -312,7 +312,7 @@ namespace OpenSim.Framework
             return false;
         }
 
-        public bool TryGetChildPrim (uint childkey, out ISceneChildEntity child)
+        public virtual bool TryGetChildPrim (uint childkey, out ISceneChildEntity child)
         {
             child = null;
 
@@ -327,7 +327,7 @@ namespace OpenSim.Framework
             return true;
         }
 
-        internal bool TryGetChildPrim (UUID objectID, out ISceneChildEntity childPrim)
+        protected virtual bool TryGetChildPrim (UUID objectID, out ISceneChildEntity childPrim)
         {
             childPrim = null;
 
