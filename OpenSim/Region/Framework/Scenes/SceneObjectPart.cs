@@ -3756,7 +3756,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.Scene.PhysicsReturns.Add(ParentGroup);
         }
 
-        public void PhysicsRequestingTerseUpdate()
+        public virtual void PhysicsRequestingTerseUpdate()
         {
             if (PhysActor != null)
             {
@@ -3764,7 +3764,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_parentGroup.SetAbsolutePosition(false,PhysActor.Position);
                 //m_parentGroup.RootPart.m_groupPosition = newpos;
             }
-            ScheduleTerseUpdate();
+            ScheduleUpdate(PrimUpdateFlags.TerseUpdate);
         }
 
         public void PreloadSound(string sound)
@@ -3950,73 +3950,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// Tell all avatars in the Scene about the new update
         /// </summary>
         /// <param name="UpdateFlags"></param>
-        public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
+        public void ScheduleUpdate (PrimUpdateFlags UpdateFlags)
         {
-            if (!IsTerse (UpdateFlags) || ShouldScheduleUpdate(UpdateFlags))
-            {
-                m_parentGroup.Scene.ForEachScenePresence (delegate (IScenePresence avatar)
+            m_parentGroup.Scene.ForEachScenePresence(delegate(IScenePresence avatar)
                 {
-                    avatar.AddUpdateToAvatar (this, UpdateFlags);
+                    avatar.AddUpdateToAvatar(this, UpdateFlags);
                 });
-            }
-        }
-
-        /// <summary>
-        /// Tell a specific avatar about the update
-        /// </summary>
-        /// <param name="UpdateFlags"></param>
-        /// <param name="avatar"></param>
-        public void ScheduleUpdateToAvatar (PrimUpdateFlags UpdateFlags, IScenePresence avatar)
-        {
-            if (!IsTerse(UpdateFlags) || ShouldScheduleUpdate(UpdateFlags))
-                avatar.AddUpdateToAvatar (this, UpdateFlags);
-        }
-
-        /// <summary>
-        /// Make sure that we should send the specified update to the client
-        /// </summary>
-        /// <param name="UpdateFlags"></param>
-        /// <returns></returns>
-        protected bool ShouldScheduleUpdate(PrimUpdateFlags UpdateFlags)
-        {
-            // Check that the group was not deleted before the scheduled update
-            // FIXME: This is merely a temporary measure to reduce the incidence of failure when
-            // an object has been deleted from a scene before update was processed.
-            // A more fundamental overhaul of the update mechanism is required to eliminate all
-            // the race conditions.
-            if (ParentGroup != null && ParentGroup.Scene != null && !ParentGroup.IsDeleted)
-            {
-                const float ROTATION_TOLERANCE = 0.01f;
-                const float VELOCITY_TOLERANCE = 0.001f;
-                const float POSITION_TOLERANCE = 0.01f;
-
-                // Throw away duplicate or insignificant updates
-                if (!RotationOffset.ApproxEquals (m_lastRotation, ROTATION_TOLERANCE) ||
-                    !Acceleration.Equals (m_lastAcceleration) ||
-                    !Velocity.ApproxEquals (m_lastVelocity, VELOCITY_TOLERANCE) ||
-                    !Velocity.ApproxEquals (Vector3.Zero, VELOCITY_TOLERANCE) ||
-                    !AngularVelocity.ApproxEquals (m_lastAngularVelocity, VELOCITY_TOLERANCE) ||
-                    !OffsetPosition.ApproxEquals (m_lastPosition, POSITION_TOLERANCE) ||
-                    !GroupPosition.ApproxEquals (m_lastGroupPosition, POSITION_TOLERANCE))
-                {
-                    // Update the "last" values
-                    m_lastPosition = OffsetPosition;
-                    m_lastGroupPosition = GroupPosition;
-                    m_lastRotation = RotationOffset;
-                    m_lastVelocity = Velocity;
-                    m_lastAcceleration = Acceleration;
-                    m_lastAngularVelocity = AngularVelocity;
-                }
-                else
-                {
-                    IMonitorModule m = ParentGroup.Scene.RequestModuleInterface<IMonitorModule> ();
-                    if (m != null && ParentGroup.Scene.RegionInfo != null)
-                        ((IObjectUpdateMonitor)m.GetMonitor (ParentGroup.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.PrimUpdates)).AddLimitedPrims (1);
-                    return false;
-                }
-                return true;
-            }
-            return false;
         }
 
         public void ScriptSetPhantomStatus(bool Phantom)

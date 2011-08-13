@@ -1884,14 +1884,12 @@ namespace OpenSim.Region.Framework.Scenes
         public void ScheduleGroupUpdateToAvatar (IScenePresence presence, PrimUpdateFlags UpdateFlags)
         {
             //We have to send the root part first as the client wants it that way
-            RootPart.ScheduleUpdateToAvatar(UpdateFlags, presence);
+            presence.AddUpdateToAvatar(RootPart, UpdateFlags);
 
             foreach (SceneObjectPart part in m_partsList)
             {
                 if (part != RootPart)
-                {
-                    part.ScheduleUpdateToAvatar (UpdateFlags, presence);
-                }
+                    presence.AddUpdateToAvatar(part, UpdateFlags);
             }
         }
 

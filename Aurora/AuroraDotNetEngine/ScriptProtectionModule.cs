@@ -157,7 +157,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             m_config = config;
             m_scriptEngine = engine;
-            EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").Split(','));
+            EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").ToLower().Split(','));
 
             allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);
 
@@ -414,7 +414,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool CheckAPI(string Name)
         {
-            if (!EnabledAPIs.Contains(Name))
+            if (!EnabledAPIs.Contains(Name.ToLower()))
                 return false;
             return true;
         }
