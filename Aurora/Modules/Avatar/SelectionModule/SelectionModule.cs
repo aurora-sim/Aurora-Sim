@@ -323,12 +323,12 @@ namespace Aurora.Modules
 
         protected class PerClientSelectionParticles
         {
-            protected int SendEffectPackets = -1;
             protected IScenePresence m_presence;
             protected SelectionModule m_module;
             protected bool m_IsSelecting = false;
             protected ISceneChildEntity m_SelectedUUID = null;
             protected byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
+            protected int m_effectsLastSent = 0;
 
             public PerClientSelectionParticles (IScenePresence presence, SelectionModule mod)
             {
@@ -344,7 +344,6 @@ namespace Aurora.Modules
                 m_IsSelecting = false;
                 m_module = null;
                 m_EffectColor = null;
-                SendEffectPackets = 0;
                 if(m_presence != null)
                     m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
                 m_presence = null;
@@ -372,12 +371,12 @@ namespace Aurora.Modules
             {
                 if (m_presence == null)
                     return; //We can't deregister ourselves... our reference is lost... so just hope we stop getting called soon
-                if (!m_presence.IsChildAgent && m_module.UseSelectionParticles && SendEffectPackets > 7)
+                if (!m_presence.IsChildAgent && m_module.UseSelectionParticles && (m_effectsLastSent == 0 ||
+                    Util.EnvironmentTickCountSubtract(m_effectsLastSent) > 900))
                 {
                     SendViewerEffects();
-                    SendEffectPackets = -1;
+                    m_effectsLastSent = Util.EnvironmentTickCount();
                 }
-                SendEffectPackets++;
             }
 
             /// <summary>
