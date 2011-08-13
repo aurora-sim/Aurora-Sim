@@ -52,6 +52,7 @@ namespace OpenSim.Framework
         // Raising the event on the object, so don't need to provide location..  further up the tree knows that info.
 
         public Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
+        public bool Cleared = false;
 
         public CollisionEventUpdate(Dictionary<uint, ContactPoint> objCollisionList)
         {
@@ -65,6 +66,7 @@ namespace OpenSim.Framework
 
         public void addCollider(uint localID, ContactPoint contact)
         {
+            Cleared = false;
             ContactPoint oldCol;
             if (!m_objCollisionList.TryGetValue(localID, out oldCol))
                 m_objCollisionList.Add(localID, contact);
@@ -80,6 +82,7 @@ namespace OpenSim.Framework
         /// </summary>
         public void Clear ()
         {
+            Cleared = true;
             m_objCollisionList.Clear ();
         }
     }

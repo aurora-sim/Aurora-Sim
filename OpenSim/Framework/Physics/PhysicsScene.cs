@@ -210,6 +210,10 @@ namespace OpenSim.Framework
         public virtual void AddGravityPoint (bool isApplyingForces, Vector3 position, float forceX, float forceY, float forceZ, float gravForce, float radius, int identifier)
         {
         }
+
+        public virtual void UpdatesLoop ()
+        {
+        }
     }
 
     public class NullPhysicsScene : PhysicsScene
