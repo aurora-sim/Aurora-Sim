@@ -1409,15 +1409,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if(needSendUpdate)
             {
-                base.RequestPhysicsterseUpdate();
                 base.TriggerSignificantMovement();
+                //Tell any listeners about the new info
+                // This is for animations
+                base.TriggerMovementUpdate();
             }
             else if(needSendSigPos)
+            {
+                //Tell any listeners about the new info
+                // This is for animations
+                base.TriggerMovementUpdate();
                 base.TriggerSignificantMovement();
+            }
 
-            //Tell any listeners about the new info
-            // This is for animations
-            base.TriggerMovementUpdate();
         }
 
         #endregion
