@@ -82,6 +82,8 @@ namespace Aurora.Framework
                     dllBlackList.Add (Path.Combine (dir.FullName, "AprSharp.dll"));
                     dllBlackList.Add (Path.Combine (dir.FullName, "Axiom.MathLib.dll"));
                     dllBlackList.Add (Path.Combine (dir.FullName, "BclExtras35.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "BulletSim.dll"));
+                    dllBlackList.Add (Path.Combine (dir.FullName, "BulletSim-x86_64.dll"));
                     dllBlackList.Add (Path.Combine (dir.FullName, "BulletDotNET.dll"));
                     dllBlackList.Add (Path.Combine (dir.FullName, "C5.dll"));
                     dllBlackList.Add (Path.Combine (dir.FullName, "Castle.Core.dll"));
