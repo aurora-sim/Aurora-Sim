@@ -105,7 +105,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public Vector3 gravityVector = new Vector3 ();
         public Vector3 gravityVectorNormalized = new Vector3 ();
         public bool m_hasSetUpPrims = false;
-        private const int maxContactsbeforedeath = 5000;
+        private const int maxContactsbeforedeath = 2000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
         private float contactsurfacelayer = 0.001f;
@@ -2190,7 +2190,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
-                        int tlimit = 50000;
+                        int tlimit = 50;
                         AODEchangeitem item;
                         bool continueProcessing = false;
                         while (GetNextChange(out item))
@@ -2289,34 +2289,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             collision_optimized(timeElapsed);
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
-
-                        int SendCollisionsTime = Util.EnvironmentTickCount();
-                        if (!continueProcessing && !DisableCollisions)
-                        {
-                            lock (_collisionEventListLock)
-                            {
-                                foreach (PhysicsActor obj in _collisionEventPrimList)
-                                {
-                                    if (obj == null)
-                                        continue;
-
-                                    obj.SendCollisions();
-                                }
-                                foreach (AuroraODECharacter av in _characters)
-                                {
-                                    if (av == null)
-                                        continue;
-
-                                    av.SendCollisions ();
-                                }
-                            }
-                        }
                         if(!continueProcessing)
                         {
-                            m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
-
-                            m_global_contactcount = 0;
                             d.WorldQuickStep(world, ODE_STEPSIZE);
+                            m_global_contactcount = 0;
                             d.JointGroupEmpty(contactgroup);
                             //ode.dunlock(world);
                         }
@@ -2329,56 +2305,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     step_time -= ODE_STEPSIZE;
                     nodesteps++;
                 }
-                int AvatarUpdatePosAndVelocity = Util.EnvironmentTickCount();
-
-                if (!DisableCollisions)
-                {
-                    lock (_characters)
-                    {
-                        foreach (AuroraODECharacter actor in _characters)
-                        {
-                            if (actor != null)
-                            {
-                                if (actor.bad)
-                                    m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
-                                else
-                                    actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-                            }
-                        }
-                    }
-                }
-                lock (_badCharacter)
-                {
-                    if (_badCharacter.Count > 0)
-                    {
-                        foreach (AuroraODECharacter chr in _badCharacter)
-                        {
-                            RemoveCharacter(chr);
-                        }
-                        _badCharacter.Clear();
-                    }
-                }
-
-                m_StatAvatarUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(AvatarUpdatePosAndVelocity);
-
-                int PrimUpdatePosAndVelocity = Util.EnvironmentTickCount();
-
-                if (!DisableCollisions)
-                {
-                    lock (_activeprimsLock)
-                    {
-                        foreach (AuroraODEPrim actor in _activeprims)
-                        {
-                            if (actor.IsPhysical)
-                            {
-                                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-                            }
-                        }
-                    }
-                }
-
-                m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
-
+                
                 // Finished with all sim stepping. If requested, dump world state to file for debugging.
                 // This overwrites all dump files in-place. Should this be a growing logfile, or separate snapshots?
                 if (physics_logging && (physics_logging_interval > 0) && (framecount % physics_logging_interval == 0))
@@ -2445,6 +2372,82 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             m_StatUnlockedArea = Util.EnvironmentTickCountSubtract(UnlockedArea);
+        }
+
+        public override void UpdatesLoop ()
+        {
+            int SendCollisionsTime = Util.EnvironmentTickCount();
+            if(!DisableCollisions)
+            {
+                lock(_collisionEventListLock)
+                {
+                    foreach(PhysicsActor obj in _collisionEventPrimList)
+                    {
+                        if(obj == null)
+                            continue;
+
+                        obj.SendCollisions();
+                    }
+                    foreach(AuroraODECharacter av in _characters)
+                    {
+                        if(av == null)
+                            continue;
+
+                        av.SendCollisions();
+                    }
+                }
+            }
+            m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
+
+            int AvatarUpdatePosAndVelocity = Util.EnvironmentTickCount();
+
+            if(!DisableCollisions)
+            {
+                lock(_characters)
+                {
+                    foreach(AuroraODECharacter actor in _characters)
+                    {
+                        if(actor != null)
+                        {
+                            if(actor.bad)
+                                m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
+                            else
+                                actor.UpdatePositionAndVelocity(10 * ODE_STEPSIZE);
+                        }
+                    }
+                }
+            }
+            lock(_badCharacter)
+            {
+                if(_badCharacter.Count > 0)
+                {
+                    foreach(AuroraODECharacter chr in _badCharacter)
+                    {
+                        RemoveCharacter(chr);
+                    }
+                    _badCharacter.Clear();
+                }
+            }
+
+            m_StatAvatarUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(AvatarUpdatePosAndVelocity);
+
+            int PrimUpdatePosAndVelocity = Util.EnvironmentTickCount();
+
+            if(!DisableCollisions)
+            {
+                lock(_activeprimsLock)
+                {
+                    foreach(AuroraODEPrim actor in _activeprims)
+                    {
+                        if(actor.IsPhysical)
+                        {
+                            actor.UpdatePositionAndVelocity(10 * ODE_STEPSIZE);
+                        }
+                    }
+                }
+            }
+
+            m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
         }
 
         #endregion
