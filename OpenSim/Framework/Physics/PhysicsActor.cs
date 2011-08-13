@@ -85,6 +85,11 @@ namespace OpenSim.Framework
             Cleared = true;
             m_objCollisionList.Clear ();
         }
+
+        public CollisionEventUpdate Copy ()
+        {
+            return new CollisionEventUpdate(m_objCollisionList);
+        }
     }
 
     public class NullObjectPhysicsActor : PhysicsObject

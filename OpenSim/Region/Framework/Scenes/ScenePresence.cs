@@ -2761,6 +2761,7 @@ namespace OpenSim.Region.Framework.Scenes
                     child.ParentEntity.RootChild.PhysActor != null && child.ParentEntity.RootChild.PhysActor.IsPhysical)
                 {
                     CollisionSoundID = SoundWoodCollision;
+                    break;
                 }
             }
 

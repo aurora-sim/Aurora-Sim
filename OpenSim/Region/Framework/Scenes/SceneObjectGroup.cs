@@ -393,9 +393,9 @@ namespace OpenSim.Region.Framework.Scenes
         public override Vector3 AbsolutePosition
         {
             get { return m_rootPart.GroupPosition; }
-        set
+            set
             {
-            SetAbsolutePosition(true, value);
+                SetAbsolutePosition(true, value);
             }
         }
 

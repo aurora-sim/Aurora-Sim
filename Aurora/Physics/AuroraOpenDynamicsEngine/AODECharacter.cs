@@ -1616,9 +1616,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!IsPhysical)
                 return;//Not physical, its not supposed to be here
 
-            base.SendCollisionUpdate (CollisionEventsThisFrame);
-
-            CollisionEventsThisFrame.Clear ();
+            if(!CollisionEventsThisFrame.Cleared)
+            {
+                base.SendCollisionUpdate(CollisionEventsThisFrame.Copy());
+                CollisionEventsThisFrame.Clear();
+            }
         }
 
         public override bool SubscribedEvents()

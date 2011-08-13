@@ -3048,7 +3048,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (CollisionEventsThisFrame == null || m_frozen)//No collisions or frozen, don't mess with it
                 return;
-            base.SendCollisionUpdate (CollisionEventsThisFrame);
+            base.SendCollisionUpdate(CollisionEventsThisFrame.Copy());
             if (CollisionEventsThisFrame.m_objCollisionList.Count == 0)
                 CollisionEventsThisFrame = null;
             else
