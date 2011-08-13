@@ -2715,12 +2715,12 @@ namespace OpenSim.Region.Framework.Scenes
         private List<GridRegion> m_nearbyInfiniteRegions = new List<GridRegion>();
         public void SetAbsolutePosition (bool UpdatePrimActor, Vector3 val)
         {
-            if (!IsAttachment && RootPart.Shape.State == 0)
+            if (!IsAttachment && RootPart != null && RootPart.Shape != null && Scene != null && RootPart.Shape.State == 0)
             {
                 IBackupModule backup = Scene.RequestModuleInterface<IBackupModule> ();
                 if ((val.X < 0f || val.Y < 0f || val.Z < 0f ||
                     val.X > Scene.RegionInfo.RegionSizeX || val.Y > Scene.RegionInfo.RegionSizeY)
-                    && !IsAttachmentCheckFull () && (backup == null || (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
+                    && !IsAttachmentCheckFull () && (backup != null && !backup.LoadingPrims))) //Don't do it when backup is loading prims, otherwise it lags the region out
                 {
                     if(Scene.RegionInfo.InfiniteRegion)
                     {
@@ -2838,7 +2838,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (RootPart.GetStatusSandbox ())
+            if (RootPart != null && RootPart.GetStatusSandbox ())
             {
                 if (Util.GetDistanceTo (RootPart.StatusSandboxPos, val) > 10)
                 {
