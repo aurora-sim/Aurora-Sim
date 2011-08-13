@@ -70,7 +70,7 @@ namespace OpenSim.Region.Framework.Scenes
         private int m_cachedYOffset = 0;
         private float m_sizeToForceDualCulling = 10f;
         private int m_lastCached = 0;
-        private Dictionary<IEntity, bool> m_previousCulled = new Dictionary<IEntity, bool> ();
+        private Dictionary<uint, bool> m_previousCulled = new Dictionary<uint, bool>();
 
         public bool UseCulling
         {
@@ -104,31 +104,37 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
 
             bool cull = false;
-            if (m_previousCulled.TryGetValue (entity, out cull))
+            lock(m_previousCulled)
             {
-                if (Util.EnvironmentTickCountSubtract (m_lastCached) > 5 * 1000)//Only recheck every 5 seconds
+                if(m_previousCulled.TryGetValue(entity.LocalId, out cull))
                 {
-                    m_lastCached = Util.EnvironmentTickCount ();
-                    m_previousCulled.Clear ();
+                    if(Util.EnvironmentTickCountSubtract(m_lastCached) > 5 * 1000)//Only recheck every 5 seconds
+                    {
+                        m_lastCached = Util.EnvironmentTickCount();
+                        m_previousCulled.Clear();
+                    }
+                    else
+                        return cull;
                 }
-                else
-                    return cull;
             }
 
             if (m_useDistanceCulling && !DistanceCulling (client, entity, scene))
             {
-                m_previousCulled[entity] = false;
+                lock(m_previousCulled)
+                    m_previousCulled[entity.LocalId] = false;
                 return false;
             }
 
             if (!ParcelPrivateCulling (client, entity))
             {
-                m_previousCulled[entity] = false;
+                lock(m_previousCulled)
+                    m_previousCulled[entity.LocalId] = false;
                 return false;
             }
 
             //No more, guess its fine
-            m_previousCulled[entity] = true;
+            lock(m_previousCulled)
+                m_previousCulled[entity.LocalId] = true;
             return true;
         }
 

@@ -302,6 +302,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
         {
+            if(m_presence == null)
+                return;
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, part.ParentEntity, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view

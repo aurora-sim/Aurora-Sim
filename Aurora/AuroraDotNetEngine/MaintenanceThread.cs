@@ -492,9 +492,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             int numberOfEmptyWork = 0;
             while (!m_ScriptEngine.ConsoleDisabled && !m_ScriptEngine.Disabled)
             {
-                int numScriptsProcessed = 0;
+                //int numScriptsProcessed = 0;
                 int numSleepScriptsProcessed = 0;
-                const int minNumScriptsToProcess = 1;
+                //const int minNumScriptsToProcess = 1;
             processMoreScripts:
                 QueueItemStruct QIS = null;
 
@@ -537,7 +537,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             EventSchExec(QIS);
                             lock(SleepingScriptEvents)
                                 SleepingScriptEventCount--;
-                            numScriptsProcessed++;
+                            //numScriptsProcessed++;
                         }
                         else
                         {
@@ -576,12 +576,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         EventSchExec(QIS);
                         lock(ScriptEvents)
                             ScriptEventCount--;
-                        numScriptsProcessed++;
+                        //numScriptsProcessed++;
                     }
                 }
                 //Process a bunch each time
-                if (ScriptEventCount > 0 && numScriptsProcessed < minNumScriptsToProcess)
-                    goto processMoreScripts;
+                //if (ScriptEventCount > 0 && numScriptsProcessed < minNumScriptsToProcess)
+                //    goto processMoreScripts;
 
                 if (ScriptEventCount == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
