@@ -79,7 +79,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                 scene.EventManager.OnNewClient += NewClient;
                 scene.EventManager.OnClosingClient += OnClosingClient;
-                scene.EventManager.OnClientClosed += OnClientClosed;
+                scene.EventManager.OnRemovePresence += OnRemovePresence;
             }
 
             // EVIL HACK!
@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                 scene.EventManager.OnNewClient -= NewClient;
                 scene.EventManager.OnClosingClient -= OnClosingClient;
-                scene.EventManager.OnClientClosed -= OnClientClosed;
+                scene.EventManager.OnRemovePresence -= OnRemovePresence;
             }
         }
 
@@ -145,11 +145,10 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             client.OnXferReceive -= HandleXfer;
         }
 
-        private void OnClientClosed(UUID clientID, IScene scene)
+        private void OnRemovePresence (IScenePresence SP)
         {
-            IScenePresence SP = scene.GetScenePresence (clientID);
             if(SP != null && !SP.IsChildAgent)
-                RemoveAgentAssetTransactions(clientID);
+                RemoveAgentAssetTransactions(SP.UUID);
         }
 
         #region AgentAssetTransactions

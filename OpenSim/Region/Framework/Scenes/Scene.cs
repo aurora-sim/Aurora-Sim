@@ -693,7 +693,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (presence.ParentID != UUID.Zero)
                 presence.StandUp ();
 
-            EventManager.TriggerClientClosed (presence.UUID, this);
             EventManager.TriggerOnClosingClient (presence.ControllingClient);
             EventManager.TriggerOnRemovePresence (presence);
 

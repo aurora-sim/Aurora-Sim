@@ -364,7 +364,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Falling/Floating/Landing
 
-            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && m_scenePresence.Velocity.Z < -2)
+            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && actor.Velocity.Z < -2)
             {
                 //Always return falldown immediately as there shouldn't be a waiting period
                 if(m_animTickFall == 0)

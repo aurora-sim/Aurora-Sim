@@ -495,7 +495,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //int numScriptsProcessed = 0;
                 int numSleepScriptsProcessed = 0;
                 //const int minNumScriptsToProcess = 1;
-            processMoreScripts:
+            //processMoreScripts:
                 QueueItemStruct QIS = null;
 
                 //Check whether it is time, and then do the thread safety piece

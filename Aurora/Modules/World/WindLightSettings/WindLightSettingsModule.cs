@@ -87,24 +87,24 @@ namespace Aurora.Modules
             if (RegionInfoConnector != null)
                 m_WindlightSettings = RegionInfoConnector.LoadRegionWindlightSettings(m_scene.RegionInfo.RegionID);
 
-            scene.EventManager.OnClientClosed += EventManager_OnClientClosed;
+            scene.EventManager.OnRemovePresence += OnRemovePresence;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnSignificantClientMovement += OnSignificantClientMovement;
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringNewParcel;
         }
 
-        void EventManager_OnClientClosed(UUID clientID, IScene scene)
+        void OnRemovePresence (IScenePresence sp)
         {
             //They are leaving, clear it out
-            m_preivouslySentWindLight.Remove(clientID);
+            m_preivouslySentWindLight.Remove(sp.UUID);
         }
 
         public void RemoveRegion (IScene scene)
         {
             m_scene.UnregisterModuleInterface<IWindLightSettingsModule>(this);
-            
-            scene.EventManager.OnClientClosed -= new EventManager.ClientClosed(EventManager_OnClientClosed);
+
+            scene.EventManager.OnRemovePresence -= OnRemovePresence;
             scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
             scene.EventManager.OnSignificantClientMovement -= OnSignificantClientMovement;

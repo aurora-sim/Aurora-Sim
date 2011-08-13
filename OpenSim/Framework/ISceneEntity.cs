@@ -1482,10 +1482,6 @@ namespace OpenSim.Framework
 
         public event IncomingInstantMessage OnUnhandledInstantMessage;
 
-        public delegate void ClientClosed (UUID clientID, IScene scene);
-
-        public event ClientClosed OnClientClosed;
-
         /// <summary>
         /// This is fired when a scene object property that a script might be interested in (such as color, scale or
         /// inventory) changes.  Only enough information is sent for the LSL changed event
@@ -2288,27 +2284,6 @@ namespace OpenSim.Framework
                     {
                         m_log.ErrorFormat (
                             "[EVENT MANAGER]: Delegate for TriggerOnAttach failed - continuing.  {0} {1}",
-                            e.ToString (), e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerClientClosed (UUID ClientID, IScene scene)
-        {
-            ClientClosed handlerClientClosed = OnClientClosed;
-            if (handlerClientClosed != null)
-            {
-                foreach (ClientClosed d in handlerClientClosed.GetInvocationList ())
-                {
-                    try
-                    {
-                        d (ClientID, scene);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat (
-                            "[EVENT MANAGER]: Delegate for TriggerClientClosed failed - continuing.  {0} {1}",
                             e.ToString (), e.StackTrace);
                     }
                 }

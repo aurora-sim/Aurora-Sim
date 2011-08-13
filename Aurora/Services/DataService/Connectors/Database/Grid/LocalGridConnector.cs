@@ -239,6 +239,7 @@ namespace Aurora.Services.DataService
         public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
             List<GridRegion> Regions = Get((int)RegionFlags.Safe, scopeID);
+            Regions.AddRange(Get((int)RegionFlags.RegionOnline, scopeID));
 
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             Regions.Sort(distanceComparer);

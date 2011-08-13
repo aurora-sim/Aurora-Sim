@@ -78,7 +78,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
-            scene.EventManager.OnClientClosed += ClientLoggedOut;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
@@ -95,7 +94,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                     m_Scenelist.Clear();
                     scene.EventManager.OnNewClient -= OnNewClient;
                     scene.EventManager.OnClosingClient -= OnClosingClient;
-                    scene.EventManager.OnClientClosed -= ClientLoggedOut;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
                 }
             }
@@ -106,7 +104,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             m_Scenelist.Remove (scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
-            scene.EventManager.OnClientClosed -= ClientLoggedOut;
             scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;
         }
 
@@ -344,10 +341,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                         m_TransferModule.SendInstantMessage(im);
                 }
             }
-        }
-
-        public void ClientLoggedOut(UUID agentID, IScene scene)
-        {
         }
 
         /// <summary>
