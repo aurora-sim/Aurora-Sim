@@ -771,7 +771,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sceneViewer = new SceneViewer(this);
         }
 
-        public void RegisterToEvents()
+        public virtual void RegisterToEvents()
         {
             m_controllingClient.OnCompleteMovementToRegion += CompleteMovement;
             m_controllingClient.OnAgentUpdate += HandleAgentUpdate;
@@ -823,7 +823,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        public uint GenerateClientFlags (ISceneChildEntity part)
+        public virtual uint GenerateClientFlags (ISceneChildEntity part)
         {
             return m_scene.Permissions.GenerateClientFlags(m_uuid, part);
         }
@@ -835,7 +835,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This is called when an agent teleports into a region, or if an
         /// agent crosses into this region from a neighbor over the border
         /// </summary>
-        public void MakeRootAgent(Vector3 pos, bool isFlying, bool makePhysicalActor)
+        public virtual void MakeRootAgent (Vector3 pos, bool isFlying, bool makePhysicalActor)
         {
             AbsolutePosition = pos;
 
@@ -919,7 +919,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// It doesn't get called for a teleport.  Reason being, an agent that
         /// teleports out may not end up anywhere near this region
         /// </summary>
-        public void MakeChildAgent(GridRegion destindation)
+        public virtual void MakeChildAgent (GridRegion destindation)
         {
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
@@ -948,7 +948,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Removes physics plugin scene representation of this agent if it exists.
         /// </summary>
-        private void RemoveFromPhysicalScene()
+        public virtual void RemoveFromPhysicalScene ()
         {
             try
             {
@@ -980,7 +980,7 @@ namespace OpenSim.Region.Framework.Scenes
             catch { }
         }
 
-        public void Teleport(Vector3 pos)
+        public virtual void Teleport (Vector3 pos)
         {
             bool isFlying = false;
             if (m_physicsActor != null)
@@ -997,7 +997,7 @@ namespace OpenSim.Region.Framework.Scenes
             SendTerseUpdateToAllClients();
         }
 
-        public void TeleportWithMomentum(Vector3 pos)
+        public virtual void TeleportWithMomentum (Vector3 pos)
         {
             bool isFlying = false;
             if (m_physicsActor != null)
@@ -1013,7 +1013,7 @@ namespace OpenSim.Region.Framework.Scenes
             SendTerseUpdateToAllClients();
         }
 
-        public void StopFlying()
+        public virtual void StopFlying ()
         {
             ControllingClient.StopFlying(this);
         }
@@ -1120,7 +1120,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// This is the event handler for client movement. If a client is moving, this event is triggering.
         /// </summary>
-        public void HandleAgentUpdate(IClientAPI remoteClient, AgentUpdateArgs agentData)
+        public virtual void HandleAgentUpdate (IClientAPI remoteClient, AgentUpdateArgs agentData)
         {
             m_perfMonMS = Util.EnvironmentTickCount();
 
@@ -1582,7 +1582,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Perform the logic necessary to stand the avatar up.  This method also executes
         /// the stand animation.
         /// </summary>
-        public void StandUp()
+        public virtual void StandUp ()
         {
             SitGround = false;
 
@@ -2000,7 +2000,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Overridden Methods
 
-        public void Update()
+        public virtual void Update ()
         {
             if (!IsChildAgent && m_parentID != UUID.Zero)
             {
@@ -2072,7 +2072,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Sends a location update to the client connected to this scenePresence
         /// </summary>
         /// <param name="remoteClient"></param>
-        public void SendTerseUpdateToClient (IScenePresence remoteClient)
+        public virtual void SendTerseUpdateToClient (IScenePresence remoteClient)
         {
             //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
             remoteClient.SceneViewer.QueuePresenceForUpdate (
@@ -2083,7 +2083,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Send a location/velocity/accelleration update to all agents in scene (from the physics engine)
         /// </summary>
-        public void SendPhysicsTerseUpdateToAllClients()
+        public virtual void SendPhysicsTerseUpdateToAllClients ()
         {
             Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.TerseUpdate);
         }
@@ -2091,7 +2091,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Send a location/velocity/accelleration update to all agents in scene
         /// </summary>
-        public void SendTerseUpdateToAllClients ()
+        public virtual void SendTerseUpdateToAllClients ()
         {
             m_perfMonMS = Util.EnvironmentTickCount();
 
@@ -2105,7 +2105,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void SendCoarseLocations(List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
+        public virtual void SendCoarseLocations (List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
         {
             SendCourseLocationsMethod d = m_sendCourseLocationsMethod;
             if (d != null)
@@ -2114,13 +2114,13 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void SetSendCourseLocationMethod(SendCourseLocationsMethod d)
+        public virtual void SetSendCourseLocationMethod (SendCourseLocationsMethod d)
         {
             if (d != null)
                 m_sendCourseLocationsMethod = d;
         }
 
-        public void SendCoarseLocationsDefault (UUID sceneId, IScenePresence p, List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
+        public virtual void SendCoarseLocationsDefault (UUID sceneId, IScenePresence p, List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
         {
             m_perfMonMS = Util.EnvironmentTickCount();
             m_controllingClient.SendCoarseLocationUpdate(avatarUUIDs, coarseLocations);
@@ -2136,7 +2136,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// This checks for a significant movement and sends a courselocationchange update
         /// </summary>
-        protected void CheckForSignificantMovement ()
+        protected virtual void CheckForSignificantMovement ()
         {
             // Movement updates for agents in neighboring regions are sent directly to clients.
             // This value only affects how often agent positions are sent to neighbor regions
@@ -2182,7 +2182,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void AddChildAgentUpdateTaint ()
+        public virtual void AddChildAgentUpdateTaint ()
         {
             Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
             m_enqueueSendChildAgentUpdate = true;
@@ -2201,7 +2201,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
         /// </summary>
-        protected bool CheckForBorderCrossing()
+        protected virtual bool CheckForBorderCrossing ()
         {
             if (IsChildAgent)
                 return false;
@@ -2357,7 +2357,7 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        public void InTransit()
+        public virtual void InTransit ()
         {
             m_inTransit = true;
 
@@ -2410,7 +2410,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Child Agent Updates
 
-        public void ChildAgentDataUpdate(AgentData cAgentData)
+        public virtual void ChildAgentDataUpdate (AgentData cAgentData)
         {
             //m_log.Debug("   >>> ChildAgentDataUpdate <<< " + Scene.RegionInfo.RegionName);
             //if (!IsChildAgent)
@@ -2423,7 +2423,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// This updates important decision making data about a child agent
         /// The main purpose is to figure out what objects to send to a child agent that's in a neighboring region
         /// </summary>
-        public void ChildAgentDataUpdate(AgentPosition cAgentData, int tRegionX, int tRegionY, int rRegionX, int rRegionY)
+        public virtual void ChildAgentDataUpdate (AgentPosition cAgentData, int tRegionX, int tRegionY, int rRegionX, int rRegionY)
         {
             if (!IsChildAgent)
                 return;
@@ -2446,7 +2446,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_savedVelocity = cAgentData.Velocity;
         }
 
-        public void CopyTo(AgentData cAgent)
+        public virtual void CopyTo (AgentData cAgent)
         {
             cAgent.AgentID = UUID;
             cAgent.RegionID = Scene.RegionInfo.RegionID;
@@ -2519,7 +2519,7 @@ namespace OpenSim.Region.Framework.Scenes
                 cAgent.Anims = Animator.Animations.ToArray();
         }
 
-        public void CopyFrom(AgentData cAgent)
+        public virtual void CopyFrom (AgentData cAgent)
         {
             try
             {
@@ -2630,7 +2630,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Adds a physical representation of the avatar to the Physics plugin
         /// </summary>
-        public void AddToPhysicalScene(bool isFlying, bool AddAvHeightToPosition)
+        public virtual void AddToPhysicalScene (bool isFlying, bool AddAvHeightToPosition)
         {
             //Make sure we arn't already doing this
             if (m_creatingPhysicalRepresentation)
@@ -2681,7 +2681,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Sets avatar height in the phyiscs plugin
         /// </summary>
-        public void SetHeight (float height)
+        public virtual void SetHeight (float height)
         {
             //If the av exists, set their new size, if not, add them to the region
             if (height != 0 && PhysicsActor != null && !IsChildAgent)
@@ -2736,7 +2736,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         // Event called by the physics plugin to tell the avatar about a collision.
-        private void PhysicsCollisionUpdate(EventArgs e)
+        protected virtual void PhysicsCollisionUpdate (EventArgs e)
         {
             if (e == null)
                 return;
@@ -2813,7 +2813,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void PushForce(Vector3 impulse)
+        public virtual void PushForce (Vector3 impulse)
         {
             if (PhysicsActor != null)
             {
@@ -2823,7 +2823,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        public void Close()
+        public virtual void Close ()
         {
             m_sceneViewer.Close();
 
@@ -2839,7 +2839,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="presence"></param>
         /// <param name="flags"></param>
-        public void AddUpdateToAvatar(ISceneChildEntity part, PrimUpdateFlags flags)
+        public virtual void AddUpdateToAvatar (ISceneChildEntity part, PrimUpdateFlags flags)
         {
             m_sceneViewer.QueuePartForUpdate(part, flags);
         }

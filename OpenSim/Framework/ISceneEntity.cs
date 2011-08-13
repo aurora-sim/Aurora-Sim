@@ -1052,7 +1052,8 @@ namespace OpenSim.Framework
         Movement = 0,
         TerseUpdate = 1,
         SignificantMovement = 2,
-        Other = 4
+        ObjectUpdates = 3,
+        Other = 5
     }
 
     /// <summary>

@@ -631,7 +631,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_clientManager.Add (client);
 
                 //Create the scenepresence
-                IScenePresence sp = m_sceneGraph.CreateAndAddChildScenePresence (client);
+                IScenePresence sp = CreateAndAddChildScenePresence (client);
                 sp.IsChildAgent = aCircuit.child;
 
                 //Trigger events
@@ -666,6 +666,16 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.Warn("[Scene]: Error in AddNewClient: " + ex.ToString());
             }
+        }
+
+        protected internal IScenePresence CreateAndAddChildScenePresence (IClientAPI client)
+        {
+            ScenePresence newAvatar = new ScenePresence(client, this);
+            newAvatar.IsChildAgent = true;
+
+            m_sceneGraph.AddScenePresence(newAvatar);
+
+            return newAvatar;
         }
 
         /// <summary>
