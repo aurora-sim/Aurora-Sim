@@ -115,7 +115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
             info.priority = ThreadPriority.Normal;
             info.Threads = 1;
-            info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 100);
+            info.MaxSleepTime = Engine.Config.GetInt ("SleepTime", 1);
             info.SleepIncrementTime = Engine.Config.GetInt ("SleepIncrementTime", 1);
             info.Name = "Script Cmd Thread Pools";
             cmdThreadpool = new AuroraThreadPool (info);

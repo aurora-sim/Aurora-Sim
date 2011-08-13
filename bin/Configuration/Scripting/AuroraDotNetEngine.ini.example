@@ -3,9 +3,13 @@
     ;; Enabled true / false
     Enabled = true
 
-    ;; The amount of time the script engine sleeps before executing loops. The higher, the slower script loading; the lower, the more CPU wasted.
+    ;; The max amount of time the script engine sleeps before executing loops. The higher, the slower script loading; the lower, the more CPU wasted.
     ;; Default is 100
     SleepTime = 100
+	
+	;; The amount of threads to run simultaneously for script events
+	;; Default is 1
+	Threads = 1
 
     ;; Should all script errors be shown on the console
     ;; Default is false.
