@@ -1049,11 +1049,11 @@ namespace OpenSim.Framework
 
     public enum PresenceTaint
     {
-        Movement = 0,
         TerseUpdate = 1,
         SignificantMovement = 2,
-        ObjectUpdates = 3,
-        Other = 5
+        ObjectUpdates = 4,
+        Movement = 8,
+        Other = 16
     }
 
     /// <summary>

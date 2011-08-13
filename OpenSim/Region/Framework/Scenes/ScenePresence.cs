@@ -960,8 +960,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
-                    //if (m_physicsActor != null)
-                    //    m_physicsActor.OnRequestTerseUpdate -= SendPhysicsTerseUpdateToAllClients;
+                    if (m_physicsActor != null)
+                        m_physicsActor.OnRequestTerseUpdate -= SendPhysicsTerseUpdateToAllClients;
                     if (m_physicsActor != null)
                         m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
                     if (m_physicsActor != null)
@@ -2021,12 +2021,12 @@ namespace OpenSim.Region.Framework.Scenes
                     OnSignificantClientMovement ();
                 m_scene.EventManager.TriggerSignificantClientMovement(this);
             }
-            /*if ((Taints & PresenceTaint.TerseUpdate) == PresenceTaint.TerseUpdate)
+            if ((Taints & PresenceTaint.TerseUpdate) == PresenceTaint.TerseUpdate)
             {
                 Taints &= ~PresenceTaint.TerseUpdate;
                 //Send the terse update
-                //SendTerseUpdateToAllClients ();
-            }*/
+                SendTerseUpdateToAllClients ();
+            }
             if ((Taints & PresenceTaint.Movement) == PresenceTaint.Movement)
             {
                 Taints &= ~PresenceTaint.Movement;
@@ -2179,6 +2179,11 @@ namespace OpenSim.Region.Framework.Scenes
             Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
             m_enqueueSendChildAgentUpdate = true;
             m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(1);
+        }
+
+        public virtual void SendPhysicsTerseUpdateToAllClients ()
+        {
+            Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.TerseUpdate);
         }
 
         #endregion
@@ -2652,7 +2657,7 @@ namespace OpenSim.Region.Framework.Scenes
                                                  new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
-            //m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
+            m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnPositionAndVelocityUpdate += PhysicsUpdatePosAndVelocity;
