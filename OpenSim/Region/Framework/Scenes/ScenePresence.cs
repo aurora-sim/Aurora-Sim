@@ -960,8 +960,8 @@ namespace OpenSim.Region.Framework.Scenes
                         m_scene.PhysicsScene.RemoveAvatar(m_physicsActor);
                     if (m_physicsActor != null)
                         m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
-                    if (m_physicsActor != null)
-                        m_physicsActor.OnRequestTerseUpdate -= SendPhysicsTerseUpdateToAllClients;
+                    //if (m_physicsActor != null)
+                    //    m_physicsActor.OnRequestTerseUpdate -= SendPhysicsTerseUpdateToAllClients;
                     if (m_physicsActor != null)
                         m_physicsActor.OnSignificantMovement -= CheckForSignificantMovement;
                     if (m_physicsActor != null)
@@ -1473,7 +1473,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (Velocity != Vector3.Zero && Math.Abs (Velocity.Z) > 0.05 && (lengthSquared <= LAND_VELOCITYMAG_MAX))
                         {
                             StopFlying ();
-                            SendPhysicsTerseUpdateToAllClients ();
+                            SendTerseUpdateToAllClients ();
                         }
                     }
                 }
@@ -2081,14 +2081,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Send a location/velocity/accelleration update to all agents in scene (from the physics engine)
-        /// </summary>
-        public virtual void SendPhysicsTerseUpdateToAllClients ()
-        {
-            Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.TerseUpdate);
-        }
-
-        /// <summary>
         /// Send a location/velocity/accelleration update to all agents in scene
         /// </summary>
         public virtual void SendTerseUpdateToAllClients ()
@@ -2660,7 +2652,7 @@ namespace OpenSim.Region.Framework.Scenes
                                                  new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
 
             scene.AddPhysicsActorTaint(m_physicsActor);
-            m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
+            //m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;
             m_physicsActor.OnPositionAndVelocityUpdate += PhysicsUpdatePosAndVelocity;
