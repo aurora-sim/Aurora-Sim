@@ -2709,6 +2709,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
             //Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Movement);
+            if(Animator != null && m_parentID == UUID.Zero)
+                Animator.UpdateMovementAnimations(true);
         }
 
         private void UpdatePosAndVelocity ()

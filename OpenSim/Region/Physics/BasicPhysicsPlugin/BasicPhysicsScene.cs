@@ -98,9 +98,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override float Simulate(float timeStep)
+        public override void Simulate(float timeStep)
         {
-            float fps = 0;
             for (int i = 0; i < _actors.Count; ++i)
             {
                 PhysicsActor actor = _actors[i];
@@ -154,8 +153,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 actor.Position = actorPosition;
                 actor.Velocity = actorVelocity;
             }
-
-            return fps;
         }
 
         public override void SetWaterLevel (double height, short[] map)

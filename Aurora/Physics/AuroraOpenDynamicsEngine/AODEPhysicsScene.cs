@@ -2102,7 +2102,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         /// <param name="timeStep"></param>
         /// <returns></returns>
-        public override float Simulate(float timeElapsed)
+        public override void Simulate(float timeElapsed)
         {
             if (framecount >= int.MaxValue)
                 framecount = 0;
@@ -2112,7 +2112,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             framecount++;
 
-            float fps = 0;
             //m_log.Info(timeStep.ToString());
             step_time += timeElapsed;
 
@@ -2164,9 +2163,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             lock (OdeLock)
             {
                 int nodesteps = 0;
-
-                // Figure out the Frames Per Second we're going at.
-                fps = (step_time / ODE_STEPSIZE) * 1000;
 
                 if (step_time > 0.5f)
                     step_time = 0.5f; //Don't get ODE stuck in an eternal processing loop with huge step times
@@ -2224,7 +2220,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             mesher.FinishedMeshing ();
                         }
                         else if (!m_hasSetUpPrims)
-                            return fps;//Don't do physics until the sim is completely set up
+                            return;//Don't do physics until the sim is completely set up
 
                         m_StatPhysicsTaintTime = Util.EnvironmentTickCountSubtract(PhysicsTaintTime);
 
@@ -2449,8 +2445,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             m_StatUnlockedArea = Util.EnvironmentTickCountSubtract(UnlockedArea);
-
-            return fps;
         }
 
         #endregion

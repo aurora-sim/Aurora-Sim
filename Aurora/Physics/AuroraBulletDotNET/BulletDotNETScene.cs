@@ -356,7 +356,7 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                 usingGImpactAlgorithm = true;
         }
 
-        public override float Simulate(float timeStep)
+        public override void Simulate(float timeStep)
         {
             Locked = true;
             float steps = 0;
@@ -470,7 +470,6 @@ namespace OpenSim.Region.Physics.BulletDotNETPlugin
                         m_taintedActors.Add(actor);
                 }
             }
-            return steps;
         }
 
         private void ProcessContact(uint cont, uint contWith, ContactPoint contact, 

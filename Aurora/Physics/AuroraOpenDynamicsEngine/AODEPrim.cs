@@ -1645,7 +1645,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fy += windForce.Y;
                     fz += windForce.Z;
 
-                    #region PID
+                    /*#region PID
                     if (_parent_entity.PIDActive)
                     {
                         //Console.WriteLine("PID " +  m_primName);
@@ -1706,7 +1706,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
                                 d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
                                 d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);*/
+                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);
                             }
                             return;
                         }
@@ -1723,8 +1723,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D)));
                         }
                     }        // end if (m_usePID)
-                    #endregion
-                    #region Hover PID
+                    #endregion*/
+                    /*#region Hover PID
                     // Hover PID Controller needs to be mutually exlusive to MoveTo PID controller
                     if (_parent_entity.PIDHoverActive && !_parent_entity.PIDActive)
                     {
@@ -1814,7 +1814,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D)));
                         }
                     }
-                    #endregion
+                    #endregion*/
 
                     fx *= m_mass;
                     fy *= m_mass;

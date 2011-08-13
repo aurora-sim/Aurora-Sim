@@ -5632,38 +5632,60 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
-                if (PhysActor == null)
+                //PID movement
+                // Has to be physical (works with phantom too)
+                if(PIDActive && ((Flags & PrimFlags.Physics) != 0))
                 {
-                    //Non physical PID movement
-                    // Has to be phantom and physical
-                    if (PIDActive && ((Flags & PrimFlags.Phantom) != 0) &&
-                        ((Flags & PrimFlags.Physics) != 0))
+                    Vector3 _target_velocity =
+                            new Vector3(
+                                (float)(PIDTarget.X - m_initialPIDLocation.X) * (PIDTau),
+                                (float)(PIDTarget.Y - m_initialPIDLocation.Y) * (PIDTau),
+                                (float)(PIDTarget.Z - m_initialPIDLocation.Z) * (PIDTau)
+                                );
+                    if(PIDTarget.ApproxEquals(AbsolutePosition, 0.1f))
                     {
-                        Vector3 _target_velocity =
-                                new Vector3(
-                                    (float)(PIDTarget.X - m_initialPIDLocation.X) * (PIDTau * ParentGroup.Scene.PhysicsScene.StepTime * 0.75f),
-                                    (float)(PIDTarget.Y - m_initialPIDLocation.Y) * (PIDTau * ParentGroup.Scene.PhysicsScene.StepTime * 0.75f),
-                                    (float)(PIDTarget.Z - m_initialPIDLocation.Z) * (PIDTau * ParentGroup.Scene.PhysicsScene.StepTime * 0.75f)
-                                    );
-                        if (PIDTarget.ApproxEquals(AbsolutePosition, 0.1f))
-                        {
-                            ParentGroup.SetAbsolutePosition(false, PIDTarget + _target_velocity);
-                            this.ScheduleTerseUpdate();
-                            //End the movement
-                            SetMoveToTarget(false, Vector3.Zero, 0);
-                        }
-                        else
-                        {
-                            ParentGroup.SetAbsolutePosition(false, AbsolutePosition + _target_velocity);
-                            this.ScheduleTerseUpdate();
-                        }
+                        ParentGroup.Velocity = Vector3.Zero;
+                        ParentGroup.SetAbsolutePosition(true, PIDTarget);
+                        this.ScheduleTerseUpdate();
+                        //End the movement
+                        //SetMoveToTarget(false, Vector3.Zero, 0);
+                    }
+                    else
+                    {
+                        //ParentGroup.SetAbsolutePosition(true, ParentGroup.AbsolutePosition + _target_velocity);
+                        Velocity = _target_velocity;
+                        this.ScheduleTerseUpdate();
                     }
                 }
-                /*else
+                else if(PIDHoverActive)
                 {
-                    //Reset the PID attributes
-
-                }*/
+                    Vector3 _target_velocity;
+                    ITerrainChannel terrain = ParentGroup.Scene.RequestModuleInterface<ITerrainChannel>();
+                    if(terrain == null)
+                        return;
+                    float groundHeight = terrain[(int)ParentGroup.AbsolutePosition.X, (int)ParentGroup.AbsolutePosition.Y];
+                    switch(PIDHoverType)
+                    {
+                        case PIDHoverType.Ground:
+                            _target_velocity =
+                                    new Vector3(
+                                        0, 0, (float)((groundHeight + PIDHoverHeight) - m_initialPIDLocation.Z) * (PIDTau)
+                                        );
+                            break;
+                        case PIDHoverType.GroundAndWater:
+                            if(ParentGroup.Scene.RegionInfo.RegionSettings.WaterHeight < groundHeight)
+                                groundHeight = (float)ParentGroup.Scene.RegionInfo.RegionSettings.WaterHeight;
+                            _target_velocity =
+                                    new Vector3(
+                                        0, 0, (float)((groundHeight + PIDHoverHeight) - m_initialPIDLocation.Z) * (PIDTau)
+                                        );
+                            break;
+                        default:
+                            return;
+                    }
+                    Velocity = _target_velocity;
+                    this.ScheduleTerseUpdate();
+                }
                 if (APIDEnabled)
                 {
                     if (Single.IsNaN(APIDTarget.W) == true)

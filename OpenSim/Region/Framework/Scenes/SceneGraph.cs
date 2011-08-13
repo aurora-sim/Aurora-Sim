@@ -158,10 +158,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        protected internal float UpdatePhysics(double elapsed)
+        protected internal void UpdatePhysics(double elapsed)
         {
             if(_PhyScene == null)
-                return 0;
+                return;
             lock (m_syncRoot)
             {
                 // Update DisableCollisions 
@@ -183,7 +183,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //
                 // Therefore, JointMoved and JointDeactivated events will be fired as a result of the following Simulate().
 
-                return _PhyScene.Simulate((float)elapsed);
+                _PhyScene.Simulate((float)elapsed);
             }
         }
 

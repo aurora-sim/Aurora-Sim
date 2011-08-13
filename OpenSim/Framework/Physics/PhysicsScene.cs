@@ -81,7 +81,7 @@ namespace OpenSim.Framework
 
         public abstract void AddPhysicsActorTaint(PhysicsActor prim);
 
-        public abstract float Simulate(float timeStep);
+        public abstract void Simulate(float timeStep);
 
         public virtual void GetResults() { }
 
@@ -260,11 +260,9 @@ namespace OpenSim.Framework
         {
         }
 
-        public override float Simulate (float timeStep)
+        public override void Simulate (float timeStep)
         {
             m_workIndicator = (m_workIndicator + 1) % 10;
-
-            return 0f;
         }
 
         public override void SetTerrain (ITerrainChannel channel, short[] heightMap)
