@@ -285,6 +285,8 @@ namespace Aurora.Modules.RegionLoader
 
         private new void Update()
         {
+            if(RegionListBox.SelectedIndex < 0)
+                return;
             object item = RegionListBox.Items[RegionListBox.SelectedIndex];
             if(item == null)
             {
@@ -366,6 +368,8 @@ namespace Aurora.Modules.RegionLoader
 
         private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if(RegionListBox.SelectedIndex < 0)
+                return;
             object item = RegionListBox.Items[RegionListBox.SelectedIndex];
             RegionInfo region = m_connector.GetRegionInfo(item.ToString(), false);
             if (region == null)

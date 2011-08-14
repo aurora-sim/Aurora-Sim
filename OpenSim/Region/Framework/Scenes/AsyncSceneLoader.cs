@@ -26,7 +26,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool enabled = false;
             if (m_openSimBase.ConfigSource.Configs["SceneLoader"] != null)
-                enabled = m_openSimBase.ConfigSource.Configs["AsyncSceneLoader"].GetBoolean ("Enabled", false);
+                enabled = m_openSimBase.ConfigSource.Configs["SceneLoader"].GetBoolean("AsyncSceneLoader", false);
 
             if (enabled)
                 m_openSimBase.ApplicationRegistry.RegisterModuleInterface<ISceneLoader> (this);

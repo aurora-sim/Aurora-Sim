@@ -26,7 +26,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool enabled = true;
             if (m_openSimBase.ConfigSource.Configs["SceneLoader"] != null)
-                enabled = m_openSimBase.ConfigSource.Configs["SceneLoader"].GetBoolean ("Enabled", true);
+                enabled = m_openSimBase.ConfigSource.Configs["SceneLoader"].GetBoolean("SceneLoader", true);
 
             if (enabled)
                 m_openSimBase.ApplicationRegistry.RegisterModuleInterface<ISceneLoader> (this);
