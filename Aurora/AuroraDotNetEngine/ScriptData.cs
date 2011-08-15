@@ -459,11 +459,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 if (stateSource == StateSource.AttachedRez)
                     m_ScriptEngine.AddToScriptQueue(this, "attach", new DetectParams[0], EventPriority.FirstStart, new object[] { new LSL_Types.LSLString(Part.AttachedAvatar.ToString()) });
-                else if (stateSource == StateSource.NewRez)
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(256) });
+                else if (stateSource == StateSource.RegionStart)
+                    // CHANGED_REGION_START
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger((int)Changed.REGION_RESTART) });
                 else if (stateSource == StateSource.PrimCrossing)
                     // CHANGED_REGION
-                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(512) });
+                    // note: CHANGED_TELEPORT should occur on any teleport of an attachment within a region too and is taken care of elsewhere
+                    m_ScriptEngine.AddToScriptQueue(this, "changed", new DetectParams[0], EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger((int)Changed.REGION) });
+                // note: StateSource.NewRez doesn't do anything (PostOnRez controls on_rez)
             }
             else
             {
