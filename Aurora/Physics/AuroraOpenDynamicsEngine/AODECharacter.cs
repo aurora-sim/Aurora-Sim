@@ -1360,7 +1360,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 0.1f;
+            const float VELOCITY_TOLERANCE = 0.025f;
             //const float ANG_VELOCITY_TOLERANCE = 0.05f;
             const float POSITION_TOLERANCE = 5f;
             bool needSendUpdate = false;
