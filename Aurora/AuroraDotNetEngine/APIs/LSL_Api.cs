@@ -9040,8 +9040,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 int remain = rules.Length - idx;
                 Primitive.TextureEntry tex = part.Shape.Textures;
                 int face = 0;
-                //if (idx < rules.Length)
-                //    face = (int)rules.GetLSLIntegerItem(idx++);
 
                 if (code == (int)ScriptBaseClass.PRIM_NAME)
                 {
@@ -9127,8 +9125,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     double topshearx = (double)(sbyte)Shape.PathShearX / 100.0; // Fix negative values for PathShearX
                     double topsheary = (double)(sbyte)Shape.PathShearY / 100.0; // and PathShearY.
                     if(primType == ScriptBaseClass.PRIM_TYPE_BOX ||
-                         ScriptBaseClass.PRIM_TYPE_CYLINDER ||
-                         ScriptBaseClass.PRIM_TYPE_PRISM)
+                       primType == ScriptBaseClass.PRIM_TYPE_CYLINDER ||
+                       primType == ScriptBaseClass.PRIM_TYPE_PRISM)
                     {
                         res.Add(new LSL_Integer(Shape.ProfileCurve));
                         res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0, 1 - Shape.ProfileEnd / 50000.0, 0));
@@ -9153,8 +9151,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         res.Add(new LSL_Integer(Shape.SculptType));
                     }
                     if(primType == ScriptBaseClass.PRIM_TYPE_RING ||
-                     ScriptBaseClass.PRIM_TYPE_TUBE ||
-                     ScriptBaseClass.PRIM_TYPE_TORUS)
+                       primType == ScriptBaseClass.PRIM_TYPE_TUBE ||
+                       primType == ScriptBaseClass.PRIM_TYPE_TORUS)
                     {
                         // holeshape
                         res.Add(new LSL_Integer(Shape.ProfileCurve));
@@ -9198,7 +9196,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if(remain < 1)
                         return res;
-
+                    face = (int)rules.GetLSLIntegerItem(idx++);
                     if(face == ScriptBaseClass.ALL_SIDES)
                     {
                         for(face = 0; face < GetNumberOfSides(part); face++)
@@ -9237,7 +9235,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if(remain < 1)
                         return res;
-
+                    face = (int)rules.GetLSLIntegerItem(idx++);
                     tex = part.Shape.Textures;
                     Color4 texcolor;
                     if(face == ScriptBaseClass.ALL_SIDES)
