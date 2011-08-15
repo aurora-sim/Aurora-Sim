@@ -923,7 +923,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Z += 100;
                 }
             }
-            if(!Flying && _target_velocity == Vector3.Zero &&
+            if(Flying && _target_velocity == Vector3.Zero &&
                 Math.Abs(vel.Z) < 0.1)
                 notMoving = true;
 

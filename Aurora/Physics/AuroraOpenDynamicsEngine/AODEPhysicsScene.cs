@@ -2388,6 +2388,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         obj.SendCollisions();
                     }
+                }
+                lock(_characters)
+                {
                     foreach(AuroraODECharacter av in _characters)
                     {
                         if(av == null)

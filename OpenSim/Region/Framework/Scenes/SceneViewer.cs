@@ -479,7 +479,7 @@ namespace OpenSim.Region.Framework.Scenes
             HashSet<IScenePresence> NewPresencesInView = new HashSet<IScenePresence>();
 
             //Check for scenepresences as well
-            List<IScenePresence> presences = m_presence.Scene.Entities.GetPresences ();
+            List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences ());
             foreach (IScenePresence presence in presences)
             {
                 if (presence != null && presence.UUID != m_presence.UUID)
