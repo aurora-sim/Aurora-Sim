@@ -67,18 +67,18 @@ namespace OpenSim.Framework
         public void addCollider(uint localID, ContactPoint contact)
         {
             Cleared = false;
-            ContactPoint oldCol;
+            /*ContactPoint oldCol;
             if(!m_objCollisionList.TryGetValue(localID, out oldCol))
             {
-                lock(m_objCollisionList)
-                    m_objCollisionList.Add(localID, contact);
-            }
+                */lock(m_objCollisionList)
+                    m_objCollisionList[localID] = contact;
+            /*}
             else
             {
                 if(oldCol.PenetrationDepth < contact.PenetrationDepth)
                     lock(m_objCollisionList)
                         m_objCollisionList[localID] = contact;
-            }
+            }*/
         }
 
         /// <summary>

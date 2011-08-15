@@ -1357,10 +1357,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_UpdateTimecntr = 0;
 
             const float VELOCITY_TOLERANCE = 0.1f;
-            const float ANG_VELOCITY_TOLERANCE = 0.1f;
+            const float ANG_VELOCITY_TOLERANCE = 0.05f;
             const float POSITION_TOLERANCE = 0.25f;
             bool needSendUpdate = false;
-            bool needSendSigPos = false;
 
             //Check to see whether we need to trigger the significant movement method in the presence
             // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
@@ -1404,7 +1403,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE))
             {
                 m_lastPosition = _position;
-                needSendSigPos = false;
+                needSendUpdate = true;
             }
 
             if(needSendUpdate)
@@ -1413,13 +1412,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //Tell any listeners about the new info
                 // This is for animations
                 base.TriggerMovementUpdate();
-            }
-            else if(needSendSigPos)
-            {
-                //Tell any listeners about the new info
-                // This is for animations
-                base.TriggerMovementUpdate();
-                base.TriggerSignificantMovement();
             }
 
         }

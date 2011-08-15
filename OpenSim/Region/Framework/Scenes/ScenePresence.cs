@@ -2732,6 +2732,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        private static UUID SoundWoodCollision = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");
         // Event called by the physics plugin to tell the avatar about a collision.
         protected virtual void PhysicsCollisionUpdate (EventArgs e)
         {
@@ -2750,7 +2751,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            UUID SoundWoodCollision = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");
             //This is only used for collision sounds, which we have disabled ATM because they hit the client hard
             //add the items that started colliding this time to the last colliders list.
             foreach (uint localID in coldata.Keys)
