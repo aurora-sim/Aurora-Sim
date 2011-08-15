@@ -5394,36 +5394,44 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             Primitive.TextureEntry oldEntry = m_shape.Textures;
             m_shape.TextureEntry = textureEntry;
+            bool textureChanged = false;
+            bool colorChanged = false;
             if (m_shape.Textures.DefaultTexture.RGBA.A != oldEntry.DefaultTexture.RGBA.A ||
                 m_shape.Textures.DefaultTexture.RGBA.R != oldEntry.DefaultTexture.RGBA.R ||
                 m_shape.Textures.DefaultTexture.RGBA.G != oldEntry.DefaultTexture.RGBA.G ||
                 m_shape.Textures.DefaultTexture.RGBA.B != oldEntry.DefaultTexture.RGBA.B)
             {
-                TriggerScriptChangedEvent(Changed.COLOR);
+                colorChanged = true;
             }
-            else
+            if (m_shape.Textures.DefaultTexture.TextureID != oldEntry.DefaultTexture.TextureID)
             {
-                for (int i = 0; i < 6; i++)
+                textureChanged = true;
+            }
+
+            if (!(colorChanged && textureChanged)) // if both already changed so don't bother checking further
+            {
+                for (int i = 0; i < GetNumberOfSides(); i++)
                 {
-                    if (m_shape != null && m_shape.Textures != null && 
-                        m_shape.Textures.FaceTextures[i] != null &&
-                        oldEntry != null && oldEntry.FaceTextures[i] != null)
+                    if (m_shape.Textures.FaceTextures[i] != null &&
+                        oldEntry.FaceTextures[i] != null)
                     {
                         if (m_shape.Textures.FaceTextures[i].RGBA.A != oldEntry.FaceTextures[i].RGBA.A ||
                             m_shape.Textures.FaceTextures[i].RGBA.R != oldEntry.FaceTextures[i].RGBA.R ||
                             m_shape.Textures.FaceTextures[i].RGBA.G != oldEntry.FaceTextures[i].RGBA.G ||
                             m_shape.Textures.FaceTextures[i].RGBA.B != oldEntry.FaceTextures[i].RGBA.B)
                         {
-                            TriggerScriptChangedEvent(Changed.COLOR);
+                            colorChanged = true;
                         }
                         if (m_shape.Textures.FaceTextures[i].TextureID != oldEntry.FaceTextures[i].TextureID)
                         {
-                            TriggerScriptChangedEvent(Changed.TEXTURE);
+                            textureChanged = true;
                         }
                     }
                 }
             }
 
+            if (colorChanged) TriggerScriptChangedEvent(Changed.COLOR);
+            if (textureChanged) TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }

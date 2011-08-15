@@ -2715,7 +2715,7 @@ namespace OpenSim.Region.Framework.Scenes
         private List<GridRegion> m_nearbyInfiniteRegions = new List<GridRegion>();
         public void SetAbsolutePosition (bool UpdatePrimActor, Vector3 val)
         {
-            if (!IsAttachment && RootPart != null && RootPart.Shape != null && Scene != null && RootPart.Shape.State == 0)
+            if (!IsAttachment && RootPart != null && RootPart.Shape != null && Scene != null && Scene.RegionInfo != null && RootPart.Shape.State == 0)
             {
                 IBackupModule backup = Scene.RequestModuleInterface<IBackupModule> ();
                 if ((val.X < 0f || val.Y < 0f || val.Z < 0f ||
