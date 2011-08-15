@@ -887,6 +887,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                            tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
             if((tempPos.Z - AvatarHalfsize) < groundHeight)
             {
+                if(_target_velocity == Vector3.Zero &&
+                    Math.Abs(vel.Z) < 0.1)
+                    notMoving = true;
                 if(!flying)
                 {
                     //if (_target_velocity.Z < 0)
@@ -920,7 +923,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Z += 100;
                 }
             }
-            if(_target_velocity == Vector3.Zero &&
+            if(!Flying && _target_velocity == Vector3.Zero &&
                 Math.Abs(vel.Z) < 0.1)
                 notMoving = true;
 
@@ -1351,7 +1354,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // slow down updates
             m_UpdateTimecntr += timestep;
-            m_UpdateFPScntr = 2.5f * _parent_scene.StepTime * 10 * (5 - (_parent_scene.TimeDilation * 5));
+            m_UpdateFPScntr = 2.5f * _parent_scene.StepTime * 10 * (6 - (_parent_scene.TimeDilation * 5));
             if(m_UpdateTimecntr < m_UpdateFPScntr)
                 return;
 
@@ -1381,7 +1384,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
                 ))
             {
-                m_log.Warn("Vel change - " + length);
+                //m_log.Warn("Vel change - " + length);
                 // Update the "last" values
                 needSendUpdate = true;
                 m_ZeroUpdateSent = 10;
