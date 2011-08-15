@@ -999,8 +999,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupMembershipData membership = m_groupData.GetAgentActiveMembership(UUID.Zero, avatarID);
             if (membership != null)
             {
+                m_cachedGroupTitles[avatarID] = membership.GroupTitle;
                 return membership.GroupTitle;
-            } 
+            }
+            m_cachedGroupTitles[avatarID] = "";
             return string.Empty;
         }
 
