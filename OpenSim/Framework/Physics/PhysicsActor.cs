@@ -88,7 +88,10 @@ namespace OpenSim.Framework
 
         public CollisionEventUpdate Copy ()
         {
-            return new CollisionEventUpdate(m_objCollisionList);
+            CollisionEventUpdate c = new CollisionEventUpdate();
+            foreach(KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
+                c.m_objCollisionList.Add(kvp.Key, kvp.Value);
+            return c;
         }
     }
 

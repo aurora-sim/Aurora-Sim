@@ -290,10 +290,19 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Send a terse as well, since we are sending an animation
-            QueuePresenceForUpdateInternal (presence, PrimUpdateFlags.TerseUpdate);
+            if(presence.SittingOnUUID == UUID.Zero) //As long as we arn't sitting, in which we don't get terse updates
+                QueuePresenceForUpdateInternal(presence, PrimUpdateFlags.TerseUpdate);
 
             lock (m_presenceAnimationsToSendLock)
                 m_presenceAnimationsToSend.Enqueue(animation);
+        }
+
+        public void ClearPresenceUpdates (IScenePresence presence)
+        {
+            lock(m_presenceUpdatesToSendLock)
+            {
+                m_presenceUpdatesToSend.Remove(presence.UUID);
+            }
         }
 
         /// <summary>
@@ -342,6 +351,10 @@ namespace OpenSim.Region.Framework.Scenes
                     o.Flags = o.Flags | update.Flags;
                     m_objectUpdatesToSend.Remove(update.Entity.UUID);
                 }
+                if(o.Entity.UUID == UUID.Zero ||
+                    o.Entity.LocalId == 0)
+                {
+                }
                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, o.Entity.UUID, o);
             }
         }
@@ -357,6 +370,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_objectPropertiesToSend.Remove(entity.UUID);
                     //Insert at the end
+                    if(entity.UUID == UUID.Zero ||
+                        entity.LocalId == 0)
+                    {
+                    }
                     m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
                 }
             }

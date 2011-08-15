@@ -961,6 +961,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
                 if (transferModule != null)
                     transferModule.IncomingCloseAgent (m_scene, udpClient.AgentID);
+                RemoveClient(client);
             }
         }
 

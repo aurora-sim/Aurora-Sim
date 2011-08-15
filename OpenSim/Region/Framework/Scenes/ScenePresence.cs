@@ -1064,12 +1064,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
 
-            string reason;
+            string reason = "";
             Vector3 pos;
             //Get a good position and make sure that we exist in the grid
             AgentCircuitData agent = m_scene.AuthenticateHandler.GetAgentCircuitData (UUID);
 
-            if (!Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
+            if (agent == null || !Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
             {
                 m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
                     ", reason: " + reason);
@@ -1817,6 +1817,9 @@ namespace OpenSim.Region.Framework.Scenes
                 forceMouselook = part.ForceMouselook;
                 
                 ControllingClient.SendSitResponse(part.UUID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
+                //Remove any bad terse updates lieing around
+                SceneViewer.ClearPresenceUpdates(this);
+                System.Threading.Thread.Sleep(10);//Sleep for a little bit to make sure all other threads are finished sending anything
                 // This calls HandleAgentSit twice, once from here, and the client calls
                 // HandleAgentSit itself after it gets to the location
                 // It doesn't get to the location until we've moved them there though
@@ -1935,10 +1938,6 @@ namespace OpenSim.Region.Framework.Scenes
                         sp.ControllingClient.SendAvatarDataImmediate (this);
                 }
                 Animator.TrySetMovementAnimation(sitAnimation);
-                // This may seem stupid, but Our Full updates don't send avatar rotation :P
-                // So we're also sending a terse update (which has avatar rotation)
-                // [Update] We do now.
-                SendTerseUpdateToAllClients();
             }
         }
 

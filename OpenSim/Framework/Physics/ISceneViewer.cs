@@ -122,6 +122,12 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="sp"></param>
         void RemoveAvatarFromView (IScenePresence sp);
+
+        /// <summary>
+        /// Remove updates for the given avatar
+        /// </summary>
+        /// <param name="presence"></param>
+        void ClearPresenceUpdates (IScenePresence presence);
     }
 
     public class AnimationGroup
