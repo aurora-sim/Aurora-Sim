@@ -2801,7 +2801,6 @@ namespace OpenSim.Region.Framework.Scenes
                                     if (PhysicsActor != null && PhysicsActor.IsColliding && PhysicsActor.Velocity != Vector3.Zero)
                                     {
                                         CollisionPlane = newPlane;
-                                        SendTerseUpdateToAllClients ();
                                     }
                                 }
                             }
