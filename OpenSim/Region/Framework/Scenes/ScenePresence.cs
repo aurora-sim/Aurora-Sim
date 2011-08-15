@@ -2037,6 +2037,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (DateTime.Now > m_enqueueSendChildAgentUpdateTime)
                 {
+                    Taints &= ~PresenceTaint.Other;
                     //Reset it now
                     m_enqueueSendChildAgentUpdateTime = new DateTime ();
                     m_enqueueSendChildAgentUpdate = false;
@@ -2059,7 +2060,7 @@ namespace OpenSim.Region.Framework.Scenes
                         syncPoster.Post (SyncMessageHelper.SendChildAgentUpdate (agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
                 }
                 else
-                    IsTainted = true;//We havn't sent the update yet, keep tainting
+                    Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.Other);//We havn't sent the update yet, keep tainting
             }
         }
 

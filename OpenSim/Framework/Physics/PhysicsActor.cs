@@ -68,12 +68,16 @@ namespace OpenSim.Framework
         {
             Cleared = false;
             ContactPoint oldCol;
-            if (!m_objCollisionList.TryGetValue(localID, out oldCol))
-                m_objCollisionList.Add(localID, contact);
+            if(!m_objCollisionList.TryGetValue(localID, out oldCol))
+            {
+                lock(m_objCollisionList)
+                    m_objCollisionList.Add(localID, contact);
+            }
             else
             {
-                if (oldCol.PenetrationDepth < contact.PenetrationDepth)
-                    m_objCollisionList[localID] = contact;
+                if(oldCol.PenetrationDepth < contact.PenetrationDepth)
+                    lock(m_objCollisionList)
+                        m_objCollisionList[localID] = contact;
             }
         }
 
@@ -83,14 +87,18 @@ namespace OpenSim.Framework
         public void Clear ()
         {
             Cleared = true;
-            m_objCollisionList.Clear ();
+            lock(m_objCollisionList)
+                m_objCollisionList.Clear ();
         }
 
         public CollisionEventUpdate Copy ()
         {
             CollisionEventUpdate c = new CollisionEventUpdate();
-            foreach(KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
-                c.m_objCollisionList.Add(kvp.Key, kvp.Value);
+            lock(m_objCollisionList)
+            {
+                foreach(KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
+                    c.m_objCollisionList.Add(kvp.Key, kvp.Value);
+            }
             return c;
         }
     }

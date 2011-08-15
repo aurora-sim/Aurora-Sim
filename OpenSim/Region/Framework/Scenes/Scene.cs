@@ -619,15 +619,18 @@ namespace OpenSim.Region.Framework.Scenes
         /// Used by NPCs to add themselves to the Scene
         /// </summary>
         /// <param name="client"></param>
-        public void AddNewClient(IClientAPI client)
+        public void AddNewClient (IClientAPI client, BlankHandler completed)
         {
             try
             {
                 System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
                 AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
 
-                if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
+                if(aCircuit == null) // no good, didn't pass NewUserConnection successfully
+                {
+                    completed();
                     return;
+                }
 
                 m_clientManager.Add (client);
 
@@ -662,6 +665,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if(sp.IsChildAgent)//If we're a child, trigger this so that we get updated in the modules
                     EventManager.TriggerSignificantClientMovement(sp);
+                completed();
             }
             catch(Exception ex)
             {
