@@ -170,11 +170,8 @@ namespace Aurora.BotManager
             //Move them
             SP.Teleport(startPos);
 
-            /*IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
             appearance.InitialHasWearablesBeenSent = true;
-            appearance.Appearance.SetAppearance(appearance.Appearance.Texture, appearance.Appearance.VisualParams);
-            //appearance.SendAvatarDataToAllAgents(true);
-            appearance.SendAppearanceToAllOtherAgents();*/
 
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, m_character);
