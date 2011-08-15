@@ -482,7 +482,8 @@ namespace OpenSim.Framework
         NewRez = 0,
         PrimCrossing = 1,
         ScriptedRez = 2,
-        AttachedRez = 3
+        AttachedRez = 3,
+        RegionStart = 4
     }
 
     public interface ISceneEntity : IEntity
