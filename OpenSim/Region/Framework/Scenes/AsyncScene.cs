@@ -587,7 +587,13 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if(m_frame % m_update_events == 0)
                     {
-                        m_sceneGraph.PhysicsScene.UpdatesLoop();
+                        try
+                        {
+                            m_sceneGraph.PhysicsScene.UpdatesLoop();
+                        }
+                        catch
+                        {
+                        }
                     }
 
                     if (m_frame % m_update_events == 0)
