@@ -5408,7 +5408,7 @@ namespace OpenSim.Region.Framework.Scenes
                 textureChanged = true;
             }
 
-            if (colorChanged && textureChanged) // both already changed so don't bother checking further
+            if (!(colorChanged && textureChanged)) // if both already changed so don't bother checking further
             {
                 for (int i = 0; i < GetNumberOfSides(); i++)
                 {
