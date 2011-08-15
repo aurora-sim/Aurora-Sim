@@ -1064,12 +1064,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
 
-            string reason;
+            string reason = "";
             Vector3 pos;
             //Get a good position and make sure that we exist in the grid
             AgentCircuitData agent = m_scene.AuthenticateHandler.GetAgentCircuitData (UUID);
 
-            if (!Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
+            if (agent == null || !Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
             {
                 m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
                     ", reason: " + reason);
@@ -1817,6 +1817,9 @@ namespace OpenSim.Region.Framework.Scenes
                 forceMouselook = part.ForceMouselook;
                 
                 ControllingClient.SendSitResponse(part.UUID, offset, sitOrientation, autopilot, cameraAtOffset, cameraEyeOffset, forceMouselook);
+                //Remove any bad terse updates lieing around
+                SceneViewer.ClearPresenceUpdates(this);
+                System.Threading.Thread.Sleep(10);//Sleep for a little bit to make sure all other threads are finished sending anything
                 // This calls HandleAgentSit twice, once from here, and the client calls
                 // HandleAgentSit itself after it gets to the location
                 // It doesn't get to the location until we've moved them there though
@@ -1935,10 +1938,6 @@ namespace OpenSim.Region.Framework.Scenes
                         sp.ControllingClient.SendAvatarDataImmediate (this);
                 }
                 Animator.TrySetMovementAnimation(sitAnimation);
-                // This may seem stupid, but Our Full updates don't send avatar rotation :P
-                // So we're also sending a terse update (which has avatar rotation)
-                // [Update] We do now.
-                SendTerseUpdateToAllClients();
             }
         }
 
@@ -2038,6 +2037,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (DateTime.Now > m_enqueueSendChildAgentUpdateTime)
                 {
+                    Taints &= ~PresenceTaint.Other;
                     //Reset it now
                     m_enqueueSendChildAgentUpdateTime = new DateTime ();
                     m_enqueueSendChildAgentUpdate = false;
@@ -2060,7 +2060,7 @@ namespace OpenSim.Region.Framework.Scenes
                         syncPoster.Post (SyncMessageHelper.SendChildAgentUpdate (agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
                 }
                 else
-                    IsTainted = true;//We havn't sent the update yet, keep tainting
+                    Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.Other);//We havn't sent the update yet, keep tainting
             }
         }
 
@@ -2732,6 +2732,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
+        private static UUID SoundWoodCollision = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");
         // Event called by the physics plugin to tell the avatar about a collision.
         protected virtual void PhysicsCollisionUpdate (EventArgs e)
         {
@@ -2750,7 +2751,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            UUID SoundWoodCollision = new UUID("063c97d3-033a-4e9b-98d8-05c8074922cb");
             //This is only used for collision sounds, which we have disabled ATM because they hit the client hard
             //add the items that started colliding this time to the last colliders list.
             foreach (uint localID in coldata.Keys)
@@ -2801,7 +2801,6 @@ namespace OpenSim.Region.Framework.Scenes
                                     if (PhysicsActor != null && PhysicsActor.IsColliding && PhysicsActor.Velocity != Vector3.Zero)
                                     {
                                         CollisionPlane = newPlane;
-                                        SendTerseUpdateToAllClients ();
                                     }
                                 }
                             }

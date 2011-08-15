@@ -923,6 +923,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Z += 100;
                 }
             }
+            if(Flying && _target_velocity == Vector3.Zero &&
+                Math.Abs(vel.Z) < 0.1)
+                notMoving = true;
 
             #endregion
 
@@ -969,7 +972,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //  if velocity is zero, use position control; otherwise, velocity control
             if (_target_velocity == Vector3.Zero &&
-                Math.Abs (vel.X) < 0.05 && Math.Abs (vel.Y) < 0.05 && Math.Abs (vel.Z) < 0.05 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
+                Math.Abs (vel.X) < 0.1 && Math.Abs (vel.Y) < 0.1 && Math.Abs (vel.Z) < 0.1 && (this.m_iscolliding || this.flying || (this._zeroFlag && _wasZeroFlagFlying == flying)))
             //This is so that if we get moved by something else, it will update us in the client
             {
                 m_isJumping = false;
@@ -1351,27 +1354,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // slow down updates
             m_UpdateTimecntr += timestep;
+            m_UpdateFPScntr = 2.5f * _parent_scene.StepTime * 10 * (6 - (_parent_scene.TimeDilation * 5));
             if(m_UpdateTimecntr < m_UpdateFPScntr)
                 return;
 
             m_UpdateTimecntr = 0;
 
-            const float VELOCITY_TOLERANCE = 0.1f;
-            const float ANG_VELOCITY_TOLERANCE = 0.1f;
-            const float POSITION_TOLERANCE = 0.25f;
+            const float VELOCITY_TOLERANCE = 0.025f;
+            //const float ANG_VELOCITY_TOLERANCE = 0.05f;
+            const float POSITION_TOLERANCE = 5f;
             bool needSendUpdate = false;
-            bool needSendSigPos = false;
 
             //Check to see whether we need to trigger the significant movement method in the presence
             // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
             // but simulator does not process rotation changes
             float length = (Velocity - m_lastVelocity).LengthSquared();
-            float anglength = (m_rotationalVelocity - m_lastAngVelocity).LengthSquared();
+            //The rotational velocity check... is odd and doesn't work right, so ignore it here
+            // Velocity (when turning) will change enough to trigger the updates
+            //float anglength = (m_rotationalVelocity - m_lastAngVelocity).LengthSquared();
             if(//!VelIsZero &&
                 //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                 (
-                (length > VELOCITY_TOLERANCE) ||
-                (anglength > ANG_VELOCITY_TOLERANCE)// ||
+                (length > VELOCITY_TOLERANCE)// ||
+                //(anglength > ANG_VELOCITY_TOLERANCE) ||
                 //true
                 //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
                 //                    (Math.Abs(_lastorientation.Y - _orientation.Y) > 0.001) ||
@@ -1379,7 +1384,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
                 ))
             {
-                //m_log.Warn("Vel change - " + length + ", " + d.BodyIsEnabled(Body));
+                //m_log.Warn("Vel change - " + length);
                 // Update the "last" values
                 needSendUpdate = true;
                 m_ZeroUpdateSent = 10;
@@ -1404,7 +1409,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE))
             {
                 m_lastPosition = _position;
-                needSendSigPos = false;
+                needSendUpdate = true;
             }
 
             if(needSendUpdate)
@@ -1413,13 +1418,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //Tell any listeners about the new info
                 // This is for animations
                 base.TriggerMovementUpdate();
-            }
-            else if(needSendSigPos)
-            {
-                //Tell any listeners about the new info
-                // This is for animations
-                base.TriggerMovementUpdate();
-                base.TriggerSignificantMovement();
             }
 
         }

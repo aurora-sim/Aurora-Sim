@@ -1264,14 +1264,15 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public ILandObject GetLandObject(int x, int y)
         {
-            if (x >= m_scene.RegionInfo.RegionSizeX || y >= m_scene.RegionInfo.RegionSizeY || x < 0 || y < 0)
+            RegionInfo r = m_scene.RegionInfo;
+            if (x >= r.RegionSizeX || y >= r.RegionSizeY || x < 0 || y < 0)
             {
-                if (x >= m_scene.RegionInfo.RegionSizeX)
-                    x = m_scene.RegionInfo.RegionSizeX - 1;
+                if (x >= r.RegionSizeX)
+                    x = r.RegionSizeX - 1;
                 if (x < 0)
                     x = 1;
-                if (y >= m_scene.RegionInfo.RegionSizeY)
-                    y = m_scene.RegionInfo.RegionSizeY - 1;
+                if (y >= r.RegionSizeY)
+                    y = r.RegionSizeY - 1;
                 if (y < 0)
                     y = 1;
             }
@@ -1542,11 +1543,17 @@ namespace OpenSim.Region.CoreModules.World.Land
                             ILandObject southParcel = null;
                             if (x > 0)
                             {
-                                westParcel = GetLandObject((x - 1) * 4, y * 4);
+                                if(currentParcelBlock.ContainsPoint((x - 1) * LAND_OVERLAY_CHUNKS, y * LAND_OVERLAY_CHUNKS))
+                                    westParcel = currentParcelBlock;
+                                else
+                                    westParcel = GetLandObject((x - 1) * LAND_OVERLAY_CHUNKS, y * LAND_OVERLAY_CHUNKS);
                             }
                             if (y > 0)
                             {
-                                southParcel = GetLandObject(x * 4, (y - 1) * 4);
+                                if(currentParcelBlock.ContainsPoint(x * LAND_OVERLAY_CHUNKS, (y - 1) * LAND_OVERLAY_CHUNKS))
+                                    southParcel = currentParcelBlock;
+                                else
+                                    southParcel = GetLandObject(x * LAND_OVERLAY_CHUNKS, (y - 1) * LAND_OVERLAY_CHUNKS);
                             }
 
                             if (x == 0)

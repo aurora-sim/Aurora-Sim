@@ -85,6 +85,12 @@
     ;; Default is false
     NoTerrain = false
 
+[SceneLoader]
+    ;; The 'standard' 1 thread per Scene world
+    SceneLoader = true
+	;; The new experimental Async-Sim work which uses async physics
+	AsyncSceneLoader = false
+
 [ApplicationPlugins]
     LoadRegionsPlugin = LoadRegionsPlugin
     RegionModulesControllerPlugin = RegionModulesControllerPlugin

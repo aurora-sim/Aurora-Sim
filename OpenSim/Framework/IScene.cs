@@ -104,7 +104,7 @@ namespace OpenSim.Framework
         #region Client Methods
 
         ClientManager ClientManager { get; }
-        void AddNewClient (IClientAPI client);
+        void AddNewClient (IClientAPI client, BlankHandler completed);
         IScenePresence GetScenePresence (UUID uUID);
         List<IScenePresence> GetScenePresences ();
         int GetScenePresenceCount();

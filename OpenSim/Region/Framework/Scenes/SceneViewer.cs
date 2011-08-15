@@ -71,7 +71,7 @@ namespace OpenSim.Region.Framework.Scenes
 #if UseRemovingEntityUpdates
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
 #elif UseDictionaryForEntityUpdates
-        private Dictionary<UUID, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<UUID, EntityUpdate> ();
+        private Dictionary<uint, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<uint, EntityUpdate> ();
 #else
         private Queue<EntityUpdate> m_presenceUpdatesToSend = new Queue<EntityUpdate>();
 #endif
@@ -199,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Very much so... the client cannot get a terse update before a full update -7/25
             if (!lastPresencesDInView.ContainsKey (presence.UUID))
                 return;//Only send updates if they are in view
-            QueuePresenceForUpdateInternal (presence, flags);
+            AddPresenceUpdate(presence, flags);
         }
 
         public void QueuePresenceForFullUpdate (IScenePresence presence, bool forced)
@@ -221,23 +221,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             SendFullUpdateForPresence (presence);
             AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
-        }
-
-        private void QueuePresenceForUpdateInternal (IScenePresence presence, PrimUpdateFlags flags)
-        {
-            if (m_presence.DrawDistance != 0 &&
-                (!(m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)) &&
-                    !lastPresencesDInView.ContainsKey (presence.UUID))
-            {
-                //The presence just entered our view, we need to send a full update
-                lastPresencesInView.Add (presence);
-                lastPresencesDInView.Add (presence.UUID, presence);
-                SendFullUpdateForPresence (presence);
-                return;
-            }
-
-            AddPresenceUpdate (presence, flags);
         }
 
         private void AddPresenceUpdate (IScenePresence presence, PrimUpdateFlags flags)
@@ -262,7 +245,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presenceUpdatesToSend.Insert (m_presenceUpdatesToSend.Count, presence.UUID, o);
 #elif UseDictionaryForEntityUpdates
                 EntityUpdate o = null;
-                if(!m_presenceUpdatesToSend.TryGetValue(presence.UUID, out o))
+                if(!m_presenceUpdatesToSend.TryGetValue(presence.LocalId, out o))
                     o = new EntityUpdate (presence, flags);
                 else
                 {
@@ -272,7 +255,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;//All done, its updated, no need to readd
                 }
 
-                m_presenceUpdatesToSend[presence.UUID] = o;
+                m_presenceUpdatesToSend[presence.LocalId] = o;
 #else
                 m_presenceUpdatesToSend.Enqueue (new EntityUpdate (presence, flags));
 #endif
@@ -290,10 +273,27 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //Send a terse as well, since we are sending an animation
-            QueuePresenceForUpdateInternal (presence, PrimUpdateFlags.TerseUpdate);
+            if(m_presence.LocalId == presence.LocalId &&
+                presence.SittingOnUUID == UUID.Zero) //As long as we arn't sitting, in which we don't get terse updates
+            {
+                //Is this really necessary? -7/21
+                //Very much so... the client cannot get a terse update before a full update -7/25
+                if(lastPresencesDInView.ContainsKey(presence.UUID))
+                    AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);//Only send updates if they are in view
+            }
+            else
+                AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
 
             lock (m_presenceAnimationsToSendLock)
                 m_presenceAnimationsToSend.Enqueue(animation);
+        }
+
+        public void ClearPresenceUpdates (IScenePresence presence)
+        {
+            lock(m_presenceUpdatesToSendLock)
+            {
+                m_presenceUpdatesToSend.Remove(presence.LocalId);
+            }
         }
 
         /// <summary>
@@ -342,6 +342,10 @@ namespace OpenSim.Region.Framework.Scenes
                     o.Flags = o.Flags | update.Flags;
                     m_objectUpdatesToSend.Remove(update.Entity.UUID);
                 }
+                if(o.Entity.UUID == UUID.Zero ||
+                    o.Entity.LocalId == 0)
+                {
+                }
                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, o.Entity.UUID, o);
             }
         }
@@ -357,6 +361,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_objectPropertiesToSend.Remove(entity.UUID);
                     //Insert at the end
+                    if(entity.UUID == UUID.Zero ||
+                        entity.LocalId == 0)
+                    {
+                    }
                     m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
                 }
             }
@@ -471,7 +479,7 @@ namespace OpenSim.Region.Framework.Scenes
             HashSet<IScenePresence> NewPresencesInView = new HashSet<IScenePresence>();
 
             //Check for scenepresences as well
-            List<IScenePresence> presences = m_presence.Scene.Entities.GetPresences ();
+            List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences ());
             foreach (IScenePresence presence in presences)
             {
                 if (presence != null && presence.UUID != m_presence.UUID)
@@ -640,9 +648,9 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
 #if UseDictionaryForEntityUpdates
-                        Dictionary<UUID, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator ();
+                        Dictionary<uint, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator ();
                         e.MoveNext ();
-                        List<UUID> entitiesToRemove = new List<UUID> ();
+                        List<uint> entitiesToRemove = new List<uint>();
 #endif
                         int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
                         for (int i = 0; i < count; i++)
@@ -663,7 +671,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 updates.Add (update);
 #elif UseDictionaryForEntityUpdates
                             EntityUpdate update = e.Current.Value;
-                            entitiesToRemove.Add (update.Entity.UUID);//Remove it later
+                            entitiesToRemove.Add (update.Entity.LocalId);//Remove it later
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
                                 SendFullUpdateForPresence ((IScenePresence)update.Entity);
                             else
@@ -678,7 +686,7 @@ namespace OpenSim.Region.Framework.Scenes
 #endif
                         }
 #if UseDictionaryForEntityUpdates
-                        foreach (UUID id in entitiesToRemove)
+                        foreach (uint id in entitiesToRemove)
                         {
                             m_presenceUpdatesToSend.Remove (id);
                         }

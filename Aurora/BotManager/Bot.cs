@@ -540,6 +540,8 @@ namespace Aurora.BotManager
                 StopMoving (lastFlying, false);
                 return;
             }
+            if(m_scenePresence.PhysicsActor == null)
+                return;
 
             Vector3 pos;
             TravelMode state;

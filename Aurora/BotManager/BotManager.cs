@@ -154,26 +154,29 @@ namespace Aurora.BotManager
 
             scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
-            scene.AddNewClient (m_character);
-            IScenePresence SP = scene.GetScenePresence (m_character.AgentId);
+            bool done = false;
+            scene.AddNewClient(m_character, delegate()
+            {
+                done = true;
+            });
+            while(!done)
+                System.Threading.Thread.Sleep(3);
+
+            IScenePresence SP = scene.GetScenePresence(m_character.AgentId);
             if(SP == null)
                 return UUID.Zero;//Failed!
-            m_character.Initialize (SP);
-            SP.MakeRootAgent (m_character.StartPos, false, true);
+            m_character.Initialize(SP);
+            SP.MakeRootAgent(m_character.StartPos, false, true);
             //Move them
-            SP.Teleport (startPos);
+            SP.Teleport(startPos);
 
-            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
+            IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
             appearance.InitialHasWearablesBeenSent = true;
-            appearance.Appearance.SetAppearance (appearance.Appearance.Texture, appearance.Appearance.VisualParams);
-            appearance.SendAvatarDataToAllAgents (true);
-            appearance.SendAppearanceToAllOtherAgents ();
 
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, m_character);
 
             m_log.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
-
             //Return their UUID
             return m_character.AgentId;
         }

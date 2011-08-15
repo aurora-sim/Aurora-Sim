@@ -9,14 +9,14 @@ using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public class SceneLoader : ISceneLoader, IApplicationPlugin
+    public class AsyncSceneLoader : ISceneLoader, IApplicationPlugin
     {
         private IConfigSource m_configSource;
         private ISimulationBase m_openSimBase;
 
         public string Name
         {
-            get { return "SceneLoader"; }
+            get { return "AsyncSceneLoader"; }
         }
 
         public void Initialize (ISimulationBase openSim)
@@ -24,9 +24,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_openSimBase = openSim;
             m_configSource = openSim.ConfigSource;
 
-            bool enabled = true;
+            bool enabled = false;
             if (m_openSimBase.ConfigSource.Configs["SceneLoader"] != null)
-                enabled = m_openSimBase.ConfigSource.Configs["SceneLoader"].GetBoolean("SceneLoader", true);
+                enabled = m_openSimBase.ConfigSource.Configs["SceneLoader"].GetBoolean("AsyncSceneLoader", false);
 
             if (enabled)
                 m_openSimBase.ApplicationRegistry.RegisterModuleInterface<ISceneLoader> (this);
@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            Scene scene = new Scene();
+            AsyncScene scene = new AsyncScene();
             scene.AddModuleInterfaces (m_openSimBase.ApplicationRegistry.GetInterfaces ());
             scene.Initialize (regionInfo, circuitManager, allClientServers);
 

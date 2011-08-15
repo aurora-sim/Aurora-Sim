@@ -63,3 +63,7 @@
 	;; *not recognized by all viewers
 	;; MaxGroups = 50
 	
+	;; message: optional: tells what this grid is about and any info you want to show up when this grid is select in the grid manager
+	;; *not recognized by all viewers
+	;; message = "this is a test message"
+	

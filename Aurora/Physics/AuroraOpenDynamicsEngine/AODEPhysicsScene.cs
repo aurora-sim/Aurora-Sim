@@ -953,6 +953,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 // Use the Movement prim contact
                                 AvatarMovementprimContact.geom = curContact;
+                                AvatarMovementprimContact.surface.mu = 200;
                                 if (m_filterCollisions)
                                     _perloopContact.Add (curContact);
                                 if (m_global_contactcount < m_currentmaxContactsbeforedeath)
@@ -2388,6 +2389,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         obj.SendCollisions();
                     }
+                }
+                lock(_characters)
+                {
                     foreach(AuroraODECharacter av in _characters)
                     {
                         if(av == null)

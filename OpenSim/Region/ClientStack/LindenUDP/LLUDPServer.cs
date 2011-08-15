@@ -940,7 +940,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 client.DisableFacelights = m_disableFacelights;
 
                 // Start the IClientAPI
-                m_scene.AddNewClient(client);
+                m_scene.AddNewClient(client, BlankDelegate);
                 m_currentClients.Add (client);
             }
             else
@@ -950,6 +950,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             return true;
         }
+
+        private void BlankDelegate () { }
 
         private void RemoveClient(LLUDPClient udpClient)
         {
@@ -961,6 +963,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
                 if (transferModule != null)
                     transferModule.IncomingCloseAgent (m_scene, udpClient.AgentID);
+                RemoveClient(client);
             }
         }
 

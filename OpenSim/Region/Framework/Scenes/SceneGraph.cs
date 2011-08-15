@@ -143,18 +143,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal void UpdateEntities()
         {
+            IScenePresence[] presences;
             lock (m_taintedPresencesLock)
             {
-                foreach (IScenePresence presence in m_taintedPresences)
-                {
-                    presence.IsTainted = false;//We set this first so that it is cleared out, but also so that the method can re-taint us
-                    presence.Update ();
-                }
-                //Clear out all the finished ones
-                m_taintedPresences.RemoveAll (delegate (IScenePresence sp)
-                {
-                    return !sp.IsTainted;
-                });
+                presences = new IScenePresence[m_taintedPresences.Count];
+                m_taintedPresences.CopyTo(presences);
+                m_taintedPresences.Clear();
+            }
+            foreach (IScenePresence presence in m_taintedPresences)
+            {
+                presence.IsTainted = false;//We set this first so that it is cleared out, but also so that the method can re-taint us
+                presence.Update ();
             }
         }
 

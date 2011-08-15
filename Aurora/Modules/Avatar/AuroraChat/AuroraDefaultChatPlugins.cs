@@ -462,7 +462,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
         public void OnClosingClient (UUID clientID, IScene scene)
         {
             IScenePresence client = scene.GetScenePresence (clientID);
-            if (!client.IsChildAgent)
+            if (client != null && !client.IsChildAgent)
             {
                 //Clear out the auth speakers list
                 lock (m_authorizedSpeakers)

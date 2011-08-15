@@ -123,6 +123,8 @@ namespace OpenSim.Services.CapsService
                 List<string> serverURIs = configService.FindValueOf (avatarID.ToString (), regionHandle.ToString(), "EventQueueServiceURI");
                 foreach (string serverURI in serverURIs)
                 {
+                    if(serverURI == "")
+                        continue;
                     if (runasync)
                     {
                         /*AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
