@@ -88,8 +88,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         // KF: These next 7 params apply to llSetHoverHeight(float height, integer water, float tau),
         // and are for non-VEHICLES only.
 
-        private float m_groundHeight;
-        private float m_waterHeight;
         private float m_buoyancy;                //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle. 
 
         // private float m_tensor = 5f;
@@ -164,7 +162,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private int m_lastUpdateSent = 0;
 
         public IntPtr Body = IntPtr.Zero;
-        private Vector3 _target_velocity;
         public d.Mass primdMass;
         float primMass; // prim own mass
         float _mass; // prim or object mass

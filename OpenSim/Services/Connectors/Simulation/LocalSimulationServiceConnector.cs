@@ -157,14 +157,14 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool UpdateAgent(GridRegion destination, AgentData cAgentData)
         {
-            if (destination == null)
+            if(destination == null || m_sceneList.Count == 0 || cAgentData == null)
                 return false;
 
             bool retVal = false;
-            foreach (IScene s in m_sceneList)
+            IEntityTransferModule transferModule = m_sceneList[0].RequestModuleInterface<IEntityTransferModule>();
+            if(transferModule != null)
             {
-                IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
-                if(transferModule != null)
+                foreach(IScene s in m_sceneList)
                 {
                     if(destination.RegionID == s.RegionInfo.RegionID)
                         retVal = transferModule.IncomingChildAgentDataUpdate(s, cAgentData);

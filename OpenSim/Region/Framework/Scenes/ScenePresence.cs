@@ -843,11 +843,6 @@ namespace OpenSim.Region.Framework.Scenes
             int ymult = m_savedVelocity.Y > 0 ? 1 : -1;
             Vector3 look = new Vector3 (0.99f * xmult, 0.99f * ymult, 0);
 
-            //Put the agent in an allowed area and above the terrain.
-            IParcelManagementModule parcelManagement = RequestModuleInterface<IParcelManagementModule> ();
-            if (parcelManagement != null)
-                AbsolutePosition = parcelManagement.GetNearestAllowedPosition (this);
-
             IsChildAgent = false;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better

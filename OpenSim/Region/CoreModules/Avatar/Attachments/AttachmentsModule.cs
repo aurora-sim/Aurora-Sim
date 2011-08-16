@@ -164,6 +164,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
                 }
             }
+
+            foreach(IScenePresence sp in presence.Scene.GetScenePresences())
+                sp.SceneViewer.QueuePresenceForFullUpdate(presence, true);
         }
 
         protected UUID ClientRezSingleAttachmentFromInventory(

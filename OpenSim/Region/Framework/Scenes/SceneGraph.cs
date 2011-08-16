@@ -150,7 +150,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_taintedPresences.CopyTo(presences);
                 m_taintedPresences.Clear();
             }
-            foreach (IScenePresence presence in m_taintedPresences)
+            foreach(IScenePresence presence in presences)
             {
                 presence.IsTainted = false;//We set this first so that it is cleared out, but also so that the method can re-taint us
                 presence.Update ();

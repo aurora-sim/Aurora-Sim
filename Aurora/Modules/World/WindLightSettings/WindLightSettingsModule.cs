@@ -121,7 +121,7 @@ namespace Aurora.Modules
 
         public string Name
         {
-            get { return "LightShare2Module"; }
+            get { return "WindlightSettingsModule"; }
         }
 
         #endregion
