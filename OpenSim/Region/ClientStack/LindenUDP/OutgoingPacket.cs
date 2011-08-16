@@ -89,13 +89,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Destroy (int whoDoneIt)
         {
             WhoDoneIt = whoDoneIt;
-            if(!PacketPool.Instance.ReturnPacket(Packet))
+            /*if(!PacketPool.Instance.ReturnPacket(Packet))
                 Packet = null;
             Buffer = null;
             FinishedMethod = null;
             UnackedMethod = null;
             Client = null;
-            SequenceNumber = 0;
+            SequenceNumber = 0;*/
         }
     }
 }
