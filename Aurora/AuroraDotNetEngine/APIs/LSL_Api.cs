@@ -11380,7 +11380,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             httpHeaders["X-SecondLife-Owner-Key"] = m_host.OwnerID.ToString();
             string userAgent = "";
             if (config.Configs["LSLRemoting"] != null)
-                shard = config.Configs["LSLRemoting"].GetString("user_agent", null);
+                userAgent = config.Configs["LSLRemoting"].GetString("user_agent", null);
 
             if (userAgent != null)
                 httpHeaders["User-Agent"] = userAgent;
