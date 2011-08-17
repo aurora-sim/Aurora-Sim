@@ -519,6 +519,8 @@ namespace OpenSim.Services.MessagingService
                 circuitData.lastname = clientCaps.AccountInfo.LastName;
 
                 int requestedPort = 0;
+                if(circuitData.child)
+                    circuitData.reallyischild = true;
                 bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
                         TeleportFlags, agentData, out requestedPort, out reason);
                 if (regionAccepted)
@@ -1163,6 +1165,7 @@ namespace OpenSim.Services.MessagingService
                         regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
                         regionClientCaps.LoopbackRegionIP = ipAddress;
                         regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
+                        regionClientCaps.RootAgent = true;
                     }
                     catch
                     {

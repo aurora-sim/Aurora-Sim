@@ -161,19 +161,19 @@ namespace OpenSim.Services
                     HomePosition = Vector3.Zero,
                     HomeRegionID = UUID.Zero,
                     Info = new OpenMetaverse.StructuredData.OSDMap (),
-                    LastLogin = DateTime.Now,
-                    LastLogout = DateTime.Now
+                    LastLogin = DateTime.Now.ToUniversalTime(),
+                    LastLogout = DateTime.Now.ToUniversalTime(),
                 });
             }
             if (m_lockedUsers.Contains (userID))
                 return; //User is locked, leave them alone
             if(loggingIn)
                 if(enteringRegion == UUID.Zero)
-                    m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), Util.ToUnixTime (DateTime.Now) });
+                    m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now.ToUniversalTime()), Util.ToUnixTime (DateTime.Now.ToUniversalTime()) });
                 else
-                    m_agentInfoConnector.Update (userID, new string[4] { "IsOnline", "LastLogin", "CurrentRegionID", "LastSeen" }, new object[4] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), enteringRegion, Util.ToUnixTime (DateTime.Now) });
+                    m_agentInfoConnector.Update (userID, new string[4] { "IsOnline", "LastLogin", "CurrentRegionID", "LastSeen" }, new object[4] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now.ToUniversalTime()), enteringRegion, Util.ToUnixTime (DateTime.Now.ToUniversalTime()) });
             else
-                m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogout", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now), Util.ToUnixTime (DateTime.Now) });
+                m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogout", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now.ToUniversalTime()), Util.ToUnixTime (DateTime.Now.ToUniversalTime()) });
 
             if (fireLoggedInEvent)
             {

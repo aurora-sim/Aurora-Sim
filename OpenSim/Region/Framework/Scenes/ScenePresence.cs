@@ -2538,7 +2538,10 @@ namespace OpenSim.Region.Framework.Scenes
                 DrawDistance = cAgent.DrawDistance;
                 m_setAlwaysRun = cAgent.AlwaysRun;
                 if(cAgent.IsCrossing)
-                    m_scene.AuthenticateHandler.GetAgentCircuitData (UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
+                {
+                    m_scene.AuthenticateHandler.GetAgentCircuitData(UUID).teleportFlags |= (uint)OpenMetaverse.TeleportFlags.ViaRegionID;
+                    m_scene.AuthenticateHandler.GetAgentCircuitData(UUID).reallyischild = false;//We're going to be a root
+                }
                 IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
                 if (appearance != null)
                 {

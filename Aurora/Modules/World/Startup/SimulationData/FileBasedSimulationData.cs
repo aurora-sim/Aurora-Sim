@@ -766,7 +766,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
             {
                 SaveBackup(m_saveDirectory + "/", false);
             }
-            catch
+            catch(Exception ex)
             {
                 m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex.ToString());
             }
