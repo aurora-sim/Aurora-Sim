@@ -166,8 +166,15 @@ namespace Aurora.Modules.FileBasedSimulationData
             if (FunctionName == "Backup")
             {
                 m_saveTimer.Stop ();
-                m_requiresSave = false;
-                SaveBackup (m_saveDirectory + "/", false);
+                try
+                {
+                    SaveBackup (m_saveDirectory + "/", false);
+                    m_requiresSave = false;
+                }
+                catch(Exception ex)
+                {
+                    m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex.ToString());
+                }
                 m_saveTimer.Start (); //Restart it as we just did a backup
             }
             return null;
@@ -183,8 +190,15 @@ namespace Aurora.Modules.FileBasedSimulationData
             if (m_requiresSave)
             {
                 m_saveTimer.Stop ();
-                SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
-                m_requiresSave = false;
+                try
+                {
+                    SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
+                    m_requiresSave = false;
+                }
+                catch(Exception ex)
+                {
+                    m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex.ToString());
+                }
                 m_saveTimer.Start (); //Restart it as we just did a backup
             }
             else
@@ -198,7 +212,14 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// <param name="e"></param>
         void m_backupSaveTimer_Elapsed (object sender, ElapsedEventArgs e)
         {
-            SaveBackup (m_oldSaveDirectory + "/", true);
+            try
+            {
+                SaveBackup (m_oldSaveDirectory + "/", true);
+            }
+            catch(Exception ex)
+            {
+                m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex.ToString());
+            }
         }
 
         /// <summary>
@@ -741,7 +762,14 @@ More configuration options and info can be found in the Configuration/Data/FileB
         public virtual void Shutdown ()
         {
             //The sim is shutting down, we need to save one last backup
-            SaveBackup (m_saveDirectory + "/", false);
+            try
+            {
+                SaveBackup(m_saveDirectory + "/", false);
+            }
+            catch
+            {
+                m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex.ToString());
+            }
         }
 
         public virtual void Tainted ()
