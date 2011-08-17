@@ -530,7 +530,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessInventorySerial(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.InventorySerial = (uint)reader.ReadElementContentAsInt("InventorySerial", String.Empty);
+            obj.InventorySerial = uint.Parse(reader.ReadElementContentAsString("InventorySerial", String.Empty));
         }
 
         private static void ProcessTaskInventory(SceneObjectPart obj, XmlTextReader reader)
@@ -696,7 +696,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessCategory(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.Category = (uint)reader.ReadElementContentAsInt("Category", String.Empty);
+            obj.Category = uint.Parse(reader.ReadElementContentAsString("Category", String.Empty));
         }
 
         private static void ProcessSalePrice(SceneObjectPart obj, XmlTextReader reader)
@@ -731,27 +731,28 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessBaseMask(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.BaseMask = (uint)reader.ReadElementContentAsInt("BaseMask", String.Empty);
+            obj.BaseMask = uint.Parse(reader.ReadElementContentAsString("BaseMask", String.Empty));
         }
 
         private static void ProcessOwnerMask(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.OwnerMask = (uint)reader.ReadElementContentAsInt("OwnerMask", String.Empty);
+            obj.OwnerMask = uint.Parse(reader.ReadElementContentAsString("OwnerMask", String.Empty));
         }
 
         private static void ProcessGroupMask(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.GroupMask = (uint)reader.ReadElementContentAsInt("GroupMask", String.Empty);
+            obj.GroupMask = uint.Parse(reader.ReadElementContentAsString("GroupMask", String.Empty));
         }
 
         private static void ProcessEveryoneMask(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.EveryoneMask = (uint)reader.ReadElementContentAsInt("EveryoneMask", String.Empty);
+
+            obj.EveryoneMask = uint.Parse(reader.ReadElementContentAsString("EveryoneMask", String.Empty));
         }
 
         private static void ProcessNextOwnerMask(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.NextOwnerMask = (uint)reader.ReadElementContentAsInt("NextOwnerMask", String.Empty);
+            obj.NextOwnerMask = uint.Parse(reader.ReadElementContentAsString("NextOwnerMask", String.Empty));
         }
 
         private static void ProcessFlags(SceneObjectPart obj, XmlTextReader reader)
@@ -770,7 +771,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessCollisionSoundVolume(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.CollisionSoundVolume = reader.ReadElementContentAsFloat("CollisionSoundVolume", String.Empty);
+            obj.CollisionSoundVolume = float.Parse(reader.ReadElementContentAsString("CollisionSoundVolume", String.Empty));
         }
 
         private static void ProcessMediaUrl(SceneObjectPart obj, XmlTextReader reader)
@@ -790,27 +791,27 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         
         private static void ProcessPayPrice0(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.PayPrice[0] = (int)reader.ReadElementContentAsInt("PayPrice0", String.Empty);
+            obj.PayPrice[0] = int.Parse(reader.ReadElementContentAsString("PayPrice0", String.Empty));
         }
 
         private static void ProcessPayPrice1(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.PayPrice[1] = (int)reader.ReadElementContentAsInt("PayPrice1", String.Empty);
+            obj.PayPrice[1] = int.Parse(reader.ReadElementContentAsString("PayPrice1", String.Empty));
         }
 
         private static void ProcessPayPrice2(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.PayPrice[2] = (int)reader.ReadElementContentAsInt("PayPrice2", String.Empty);
+            obj.PayPrice[2] = int.Parse(reader.ReadElementContentAsString("PayPrice2", String.Empty));
         }
 
         private static void ProcessPayPrice3(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.PayPrice[3] = (int)reader.ReadElementContentAsInt("PayPrice3", String.Empty);
+            obj.PayPrice[3] = int.Parse(reader.ReadElementContentAsString("PayPrice3", String.Empty));
         }
 
         private static void ProcessPayPrice4(SceneObjectPart obj, XmlTextReader reader)
         {
-            obj.PayPrice[4] = (int)reader.ReadElementContentAsInt("PayPrice4", String.Empty);
+            obj.PayPrice[4] = int.Parse(reader.ReadElementContentAsString("PayPrice4", String.Empty));
         }
 
         #endregion
@@ -823,12 +824,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessTIBasePermissions(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.BasePermissions = (uint)reader.ReadElementContentAsInt("BasePermissions", String.Empty);
+            item.BasePermissions = uint.Parse(reader.ReadElementContentAsString("BasePermissions", String.Empty));
         }
 
         private static void ProcessTICreationDate(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.CreationDate = (uint)reader.ReadElementContentAsInt("CreationDate", String.Empty);
+            item.CreationDate = uint.Parse(reader.ReadElementContentAsString("CreationDate", String.Empty));
         }
 
         private static void ProcessTICreatorID(TaskInventoryItem item, XmlTextReader reader)
@@ -848,12 +849,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessTIEveryonePermissions(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.EveryonePermissions = (uint)reader.ReadElementContentAsInt("EveryonePermissions", String.Empty);
+            item.EveryonePermissions = uint.Parse(reader.ReadElementContentAsString("EveryonePermissions", String.Empty));
         }
 
         private static void ProcessTIFlags(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.Flags = (uint)reader.ReadElementContentAsInt("Flags", String.Empty);
+            item.Flags = uint.Parse(reader.ReadElementContentAsString("Flags", String.Empty));
         }
 
         private static void ProcessTIGroupID(TaskInventoryItem item, XmlTextReader reader)
@@ -863,7 +864,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessTIGroupPermissions(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.GroupPermissions = (uint)reader.ReadElementContentAsInt("GroupPermissions", String.Empty);
+            item.GroupPermissions = uint.Parse(reader.ReadElementContentAsString("GroupPermissions", String.Empty));
         }
 
         private static void ProcessTIInvType(TaskInventoryItem item, XmlTextReader reader)
@@ -895,7 +896,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessTINextPermissions(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.NextPermissions = (uint)reader.ReadElementContentAsInt("NextPermissions", String.Empty);
+            item.NextPermissions = uint.Parse(reader.ReadElementContentAsString("NextPermissions", String.Empty));
         }
 
         private static void ProcessTIOwnerID(TaskInventoryItem item, XmlTextReader reader)
@@ -905,7 +906,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static void ProcessTICurrentPermissions(TaskInventoryItem item, XmlTextReader reader)
         {
-            item.CurrentPermissions = (uint)reader.ReadElementContentAsInt("CurrentPermissions", String.Empty);
+            item.CurrentPermissions = uint.Parse(reader.ReadElementContentAsString("CurrentPermissions", String.Empty));
         }
 
         private static void ProcessTIParentID(TaskInventoryItem item, XmlTextReader reader)
@@ -1652,13 +1653,21 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 while (reader.NodeType != XmlNodeType.EndElement)
                 {
                     TaskInventoryXmlProcessor p = null;
-                    if (m_TaskInventoryXmlProcessors.TryGetValue(reader.Name, out p))
-                        p(item, reader);
-                    else
+                    try
                     {
-                        //                        m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element in TaskInventory {0}, {1}", reader.Name, reader.Value);
-                        reader.ReadOuterXml();
+                        if (m_TaskInventoryXmlProcessors.TryGetValue(reader.Name, out p))
+                            p(item, reader);
+                        else
+                        {
+                            //m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element in TaskInventory {0}, {1}", reader.Name, reader.Value);
+                            reader.ReadOuterXml();
+                        }
                     }
+                    catch (Exception e)
+                    {
+                        m_log.DebugFormat("[SceneObjectSerializer]: exception while parsing Inventory Items {0}: {1}", reader.Name, e);
+                    }
+                    
                 }
                 reader.ReadEndElement(); // TaskInventoryItem
                 tinv.Add(item.ItemID, item);
