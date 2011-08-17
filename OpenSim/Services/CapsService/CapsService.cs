@@ -132,18 +132,16 @@ namespace OpenSim.Services.CapsService
                 }
             }
             m_log.WarnFormat ("{0} agents found: ", count);
-            foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
+            foreach (IClientCapsService clientCaps in this.m_ClientCapsServices.Values)
             {
-                foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients())
+                foreach(IRegionClientCapsService caps in clientCaps.GetCapsServices())
                 {
-                    if ((clientCaps.RootAgent || showChildAgents))
+                    if((caps.RootAgent || showChildAgents))
                     {
-                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
-                        uint x, y;
-                        Utils.LongToUInts(regionCaps.RegionHandle, out x, out y);
-                        GridRegion region = gridService.GetRegionByPosition(UUID.Zero, (int)x, (int)y);
-                        UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, clientCaps.AgentID);
-                        m_log.InfoFormat("Region - {0}, User {1}, {2}, {3}", region.RegionName,account.Name, clientCaps.RootAgent ? "Root Agent" : "Child Agent", clientCaps.Disabled ? "Disabled" : "Not Disabled");
+                        m_log.InfoFormat("Region - {0}, User {1}, {2}, {3}", 
+                            caps.Region.RegionName, clientCaps.AccountInfo.Name,
+                            caps.RootAgent ? "Root Agent" : "Child Agent",
+                            caps.Disabled ? "Disabled" : "Not Disabled");
                     }
                 }
             }
