@@ -243,7 +243,7 @@ namespace Aurora.Modules
                     }
                 }
 
-                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
+                if(im.dialog == (byte)InstantMessageDialog.MessageFromAgent && !im.fromGroup)
                 {
                     IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
@@ -268,7 +268,7 @@ namespace Aurora.Modules
             }
             else if (im.offline == 0)
             {
-                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
+                if(im.dialog == (byte)InstantMessageDialog.MessageFromAgent && !im.fromGroup)
                 {
                     IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)

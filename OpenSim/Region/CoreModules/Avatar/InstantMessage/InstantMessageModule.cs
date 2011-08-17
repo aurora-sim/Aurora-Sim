@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         void EventManager_OnClosingClient(IClientAPI client)
         {
-            client.OnInstantMessage -= OnInstantMessage;
+            //client.OnInstantMessage -= OnInstantMessage;
         }
 
         void EventManager_OnNewClient(IClientAPI client)
