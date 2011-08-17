@@ -709,8 +709,8 @@ namespace Aurora.Modules
 
             public void BeginLoadModuleFromArchive(IScene scene)
             {
-                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
+                IScriptModule[] modules = scene.RequestModuleInterfaces<IScriptModule>();
                 IParcelManagementModule parcelModule = scene.RequestModuleInterface<IParcelManagementModule>();
                 //Disable the script engine so that it doesn't load in the background and kill OAR loading
                 foreach (IScriptModule module in modules)
@@ -738,8 +738,8 @@ namespace Aurora.Modules
 
             public void EndLoadModuleFromArchive(IScene scene)
             {
-                IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
+                IScriptModule[] modules = scene.RequestModuleInterfaces<IScriptModule>();
                 //Reeanble now that we are done
                 foreach (IScriptModule module in modules)
                 {
@@ -750,12 +750,12 @@ namespace Aurora.Modules
                     backup.LoadingPrims = false;
 
                 //Update the database as well!
-                IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                IParcelManagementModule parcelManagementModule = scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagementModule != null && !m_merge) //Only if we are not merging
                 {
                     if (m_parcels.Count > 0)
                     {
-                        m_scene.EventManager.TriggerIncomingLandDataFromStorage (m_parcels);
+                        scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels);
                         //Update the database as well!
                         if (parcelManagementModule != null)
                         {
@@ -787,28 +787,28 @@ namespace Aurora.Modules
                 #region New Style Terrain Loading
                 else if (filePath.StartsWith ("newstyleterrain/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
-                    terrainModule.TerrainMap = ReadTerrain (data);
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
+                    terrainModule.TerrainMap = ReadTerrain(data, scene);
                 }
                 else if (filePath.StartsWith ("newstylerevertterrain/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
-                    terrainModule.TerrainRevertMap = ReadTerrain (data);
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
+                    terrainModule.TerrainRevertMap = ReadTerrain(data, scene);
                 }
                 else if (filePath.StartsWith ("newstylewater/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
-                    terrainModule.TerrainWaterMap = ReadTerrain (data);
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
+                    terrainModule.TerrainWaterMap = ReadTerrain(data, scene);
                 }
                 else if (filePath.StartsWith ("newstylerevertwater/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
-                    terrainModule.TerrainWaterRevertMap = ReadTerrain (data);
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
+                    terrainModule.TerrainWaterRevertMap = ReadTerrain(data, scene);
                 }
                 #endregion
                 else if (filePath.StartsWith ("terrain/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
 
                     MemoryStream ms = new MemoryStream (data);
                     terrainModule.LoadFromStream (filePath, ms, 0, 0);
@@ -816,7 +816,7 @@ namespace Aurora.Modules
                 }
                 else if (filePath.StartsWith ("revertterrain/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
 
                     MemoryStream ms = new MemoryStream (data);
                     terrainModule.LoadRevertMapFromStream (filePath, ms, 0, 0);
@@ -824,7 +824,7 @@ namespace Aurora.Modules
                 }
                 else if (filePath.StartsWith ("water/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
 
                     MemoryStream ms = new MemoryStream (data);
                     terrainModule.LoadWaterFromStream (filePath, ms, 0, 0);
@@ -832,7 +832,7 @@ namespace Aurora.Modules
                 }
                 else if (filePath.StartsWith ("revertwater/"))
                 {
-                    ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule> ();
+                    ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
 
                     MemoryStream ms = new MemoryStream (data);
                     terrainModule.LoadWaterRevertMapFromStream (filePath, ms, 0, 0);
@@ -866,17 +866,17 @@ namespace Aurora.Modules
                             {
                                 if (!ResolveUserUuid (kvp.Value.OwnerID))
                                 {
-                                    kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                    kvp.Value.OwnerID = scene.RegionInfo.EstateSettings.EstateOwner;
                                 }
                                 if (!ResolveUserUuid (kvp.Value.CreatorID))
                                 {
-                                    kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                                    kvp.Value.CreatorID = scene.RegionInfo.EstateSettings.EstateOwner;
                                 }
                             }
                         }
                     }
 
-                    if (m_scene.SceneGraph.AddPrimToScene (sceneObject))
+                    if(scene.SceneGraph.AddPrimToScene(sceneObject))
                     {
                         sceneObject.HasGroupChanged = true;
                         sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
@@ -890,18 +890,18 @@ namespace Aurora.Modules
                     {
                         AssetBase asset = new AssetBase();
                         asset.Unpack(OSDParser.DeserializeJson(UTF8Encoding.UTF8.GetString(data)));
-                        bool exists = m_scene.AssetService.Get(asset.IDString) != null;
+                        bool exists = scene.AssetService.Get(asset.IDString) != null;
                         if(!exists && asset != null)
-                            m_scene.AssetService.Store(asset);
+                            scene.AssetService.Store(asset);
                     }
                 }
             }
 
-            private ITerrainChannel ReadTerrain (byte[] data)
+            private ITerrainChannel ReadTerrain (byte[] data, IScene scene)
             {
                 short[] sdata = new short[data.Length / 2];
                 System.Buffer.BlockCopy (data, 0, sdata, 0, data.Length);
-                return new TerrainChannel (sdata, m_scene);
+                return new TerrainChannel(sdata, scene);
             }
 
             private bool ResolveUserUuid (UUID uuid)
