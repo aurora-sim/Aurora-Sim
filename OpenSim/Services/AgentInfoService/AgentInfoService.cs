@@ -118,6 +118,8 @@ namespace OpenSim.Services
                 UserInfo user = GetUserInfo(userIDs[i]);
                 if (user != null && user.IsOnline)
                     infos[i] = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, user.CurrentRegionID).ServerURI;
+                else if(user == null)
+                    infos[i] = "NonExistant";
                 else
                     infos[i] = "NotOnline";
             }

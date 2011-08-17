@@ -503,6 +503,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         HandleUndeliveredMessage(im, m_result, "User is not set as online by presence service.");
                         continue;
                     }
+                    else if(AgentLocations[i] == "NonExistant")
+                    {
+                        IMUsersCache.Remove(users[i]);
+                        m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] + ", user does not exist");
+                        HandleUndeliveredMessage(im, m_result, "User does not exist.");
+                        continue;
+                    }
                     else
                         HTTPPaths.Add(users[i], AgentLocations[i]);
                 }
@@ -628,6 +635,13 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     }
                     m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
                     HandleUndeliveredMessage(im, result, "User is not set as online by presence service.");
+                    return;
+                }
+                else if(AgentLocations[0] == "NonExistant")
+                {
+                    IMUsersCache.Remove(toAgentID);
+                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + toAgentID + ", user does not exist");
+                    HandleUndeliveredMessage(im, m_result, "User does not exist.");
                     return;
                 }
                 else //Found the agent, use this location

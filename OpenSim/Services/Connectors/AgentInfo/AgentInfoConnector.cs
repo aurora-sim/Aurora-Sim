@@ -144,15 +144,14 @@ namespace OpenSim.Services.Connectors
         public string[] GetAgentsLocations(string requestor, string[] userIDs)
         {
             List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
-            List<string> retVal = new List<string>();
+            List<string> retVal = new List<string>(userIDs.Length);
             foreach (string url in urls)
             {
                 OSDMap request = new OSDMap();
                 OSDArray requestArray = new OSDArray();
                 for (int i = 0; i < userIDs.Length; i++)
-                {
                     requestArray.Add(userIDs[i]);
-                }
+
                 request["userIDs"] = requestArray;
                 request["requestor"] = requestor;
                 request["Method"] = "GetAgentsLocations";
@@ -165,9 +164,7 @@ namespace OpenSim.Services.Connectors
                         OSDMap innerresult = (OSDMap)r;
                         OSDArray resultArray = (OSDArray)innerresult["Result"];
                         foreach (OSD o in resultArray)
-                        {
                             retVal.Add (o.AsString ());
-                        }
                     }
                 }
                 catch
