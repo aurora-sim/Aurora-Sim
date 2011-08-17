@@ -362,7 +362,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             foreach (IComponent component in m_components.Values)
             {
                 //Add the componet to the map by its name
-                OSD o = component.GetState(oldID);
+                OSD o = component.GetState(oldID, true);
                 if (o != null && o.Type != OSDType.Unknown)
                     SetComponentState(part, component.Name, o); 
             }
@@ -417,7 +417,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             foreach (IComponent component in m_components.Values)
             {
                 //Add the componet to the map by its name
-                OSD o = component.GetState(obj.UUID);
+                OSD o = component.GetState(obj.UUID, true);
                 if(o != null && o.Type != OSDType.Unknown)
                     ComponentsBody.Add(component.Name, o);
             }
@@ -481,7 +481,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             get { return m_name; }
         }
 
-        public virtual OSD GetState(UUID obj)
+        public virtual OSD GetState(UUID obj, bool copy)
         {
             OSD o = null;
             lock (m_statesLock)
@@ -490,6 +490,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 {
                     if (o == m_defaultValue)
                         return null;
+                    if(copy)
+                        return o.Copy();
                     return o;
                 }
             }
