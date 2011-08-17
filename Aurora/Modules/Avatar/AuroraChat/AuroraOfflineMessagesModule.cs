@@ -207,7 +207,7 @@ namespace Aurora.Modules
             if (!OfflineMessagesConnector.AddOfflineMessage (im))
             {
                 IClientAPI client = FindClient (im.fromAgentID);
-                if (client != null)
+                if (client != null && !im.fromGroup)
                     client.SendInstantMessage (new GridInstantMessage (
                             null, im.toAgentID,
                             "System", im.fromAgentID,

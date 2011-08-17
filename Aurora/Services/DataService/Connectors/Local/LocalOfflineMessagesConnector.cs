@@ -43,6 +43,8 @@ namespace Aurora.Services.DataService
 	{
         private IGenericData GD = null;
         private int m_maxOfflineMessages = 20;
+        private int m_maxGroupOfflineMessages = 50;
+        private bool m_saveGroupOfflineMessages = true;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
@@ -55,8 +57,10 @@ namespace Aurora.Services.DataService
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
 
-            m_maxOfflineMessages = source.Configs["AuroraConnectors"].GetInt ("MaxOfflineMessages", m_maxOfflineMessages);
-            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "LocalConnector")
+            m_maxOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxOfflineMessages", m_maxOfflineMessages);
+            m_maxGroupOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxGroupOfflineMessages", m_maxGroupOfflineMessages);
+            m_saveGroupOfflineMessages = source.Configs["AuroraConnectors"].GetBoolean("SaveOfflineGroupChatMessages", m_saveGroupOfflineMessages);
+            if(source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -80,8 +84,10 @@ namespace Aurora.Services.DataService
 		{
             //Get all the messages
             List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD, new GridInstantMessage());
+            Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD, new GridInstantMessage()));
             //Clear them out now that we have them
             GenericUtils.RemoveGeneric(agentID, "OfflineMessages", GD);
+            GenericUtils.RemoveGeneric(agentID, "GroupOfflineMessages", GD);
             return Messages.ToArray();
 		}
 
@@ -91,10 +97,25 @@ namespace Aurora.Services.DataService
         /// <param name="message"></param>
         public bool AddOfflineMessage(GridInstantMessage message)
 		{
-            if(GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
+            if(message.fromGroup)
             {
-                GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
-                return true;
+                if(!m_saveGroupOfflineMessages)
+                    return false;
+                if(m_maxGroupOfflineMessages <= 0 ||
+                    GenericUtils.GetGenericCount(message.toAgentID, "GroupOfflineMessages", GD) < m_maxOfflineMessages)
+                {
+                    GenericUtils.AddGeneric(message.toAgentID, "GroupOfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+                    return true;
+                }
+            }
+            else
+            {
+                if(m_maxOfflineMessages <= 0 ||
+                    GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
+                {
+                    GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+                    return true;
+                }
             }
             return false;
 		}

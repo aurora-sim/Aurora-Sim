@@ -86,9 +86,27 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static int GetGenericCount (UUID OwnerID, string Type, IGenericData GD)
         {
-            List<string> retVal = GD.Query (new string[] { "OwnerID", "Type" }, new object[] { OwnerID, Type }, "generics", "count(*)");
+            List<string> retVal = GD.Query(new string[] { "OwnerID", "Type" }, new object[] { OwnerID, Type }, "generics", "count(*)");
 
-            if (retVal == null || retVal.Count == 0)
+            if(retVal == null || retVal.Count == 0)
+                return 0;
+
+            return int.Parse(retVal[0]);
+        }
+
+        /// <summary>
+        /// Gets the number of generic entries
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="OwnerID"></param>
+        /// <param name="Type"></param>
+        /// <param name="GD"></param>
+        /// <returns></returns>
+        public static int GetGenericCount (UUID OwnerID, string Type, string Key, IGenericData GD)
+        {
+            List<string> retVal = GD.Query(new string[] { "OwnerID", "Type", "`Key`" }, new object[] { OwnerID, Type, Key }, "generics", "count(*)");
+
+            if(retVal == null || retVal.Count == 0)
                 return 0;
 
             return int.Parse(retVal[0]);

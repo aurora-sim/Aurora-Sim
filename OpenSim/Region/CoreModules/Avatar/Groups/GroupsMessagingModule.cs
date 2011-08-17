@@ -228,6 +228,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     IClientAPI client = GetActiveClient(member.AvatarKey);
                     if(client != null)
+                    {
                         client.Scene.RequestModuleInterface<IEventQueueService>().ChatterboxInvitation(
                         session.SessionID
                         , session.Name
@@ -246,6 +247,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                         , OpenMetaverse.Utils.StringToBytes(session.Name)
                         , client.Scene.RegionInfo.RegionHandle
                         );
+                    }
                     else
                         agentsToSendTo.Add(member.AvatarKey);//Forward it on, the other sim should take care of it
                 }

@@ -129,7 +129,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 for(int i = 0; i < AgentsToSendTo.Count; i++)
                 {
                     IScenePresence user;
-                    if (scene.TryGetScenePresence (AgentsToSendTo[i], out user))
+                    if(!RemoveUsers.Contains(AgentsToSendTo[i]) &&
+                        scene.TryGetScenePresence(AgentsToSendTo[i], out user))
                     {
                         // Local message
                         user.ControllingClient.SendInstantMessage (im);
