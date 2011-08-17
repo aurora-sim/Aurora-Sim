@@ -553,6 +553,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         #region ClientEvents
         private void OnInstantMessage(IClientAPI remoteClient, GridInstantMessage im)
         {
+            IScenePresence presence;
+            if((presence = remoteClient.Scene.GetScenePresence(remoteClient.AgentId)) == null || presence.IsChildAgent)
+                return; //Must exist and not be a child
             if (m_debugEnabled)
             {
                 m_log.DebugFormat("[GROUPS-MESSAGING]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
