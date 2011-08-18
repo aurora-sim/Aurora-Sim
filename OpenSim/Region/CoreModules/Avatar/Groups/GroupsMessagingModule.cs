@@ -204,7 +204,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.ParentEstateID = 0;
             msg.Position = Vector3.Zero;
             msg.RegionID = UUID.Zero;
-            msg.binaryBucket = im.binaryBucket;
+            ChatSession session = m_groupData.GetSession(im.imSessionID);
+            msg.binaryBucket = OpenMetaverse.Utils.StringToBytes(session.Name);
             msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
 
             msg.fromAgentID = im.fromAgentID;
