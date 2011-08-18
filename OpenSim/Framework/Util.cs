@@ -1712,7 +1712,7 @@ namespace OpenSim.Framework
 
         private static bool CheckInternetConnection ()
         {
-            if(!m_noInternetConnection)
+            if(m_noInternetConnection)
             {
                 if(Util.EnvironmentTickCountSubtract(m_nextInternetConnectionCheck) > 5 * 60 /*5mins*/)
                     return true;//Try again
@@ -1724,13 +1724,13 @@ namespace OpenSim.Framework
 
         private static void InternetSuccess ()
         {
-            m_noInternetConnection = true;
+            m_noInternetConnection = false;
         }
 
         private static void InternetFailure ()
         {
             m_nextInternetConnectionCheck = Util.EnvironmentTickCount();
-            m_noInternetConnection = false;
+            m_noInternetConnection = true;
         }
 
         /// <summary>

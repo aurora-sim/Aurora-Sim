@@ -57,10 +57,12 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         private int m_checkTime = 500; // milliseconds to wait between checks for appearance updates
         private System.Timers.Timer m_updateTimer = new System.Timers.Timer();
         private Dictionary<UUID, long> m_savequeue = new Dictionary<UUID, long>();
+        private Dictionary<UUID, long> m_savetexturequeue = new Dictionary<UUID, long>();
         private Dictionary<UUID, long> m_sendqueue = new Dictionary<UUID, long>();
         private Dictionary<UUID, long> m_initialsendqueue = new Dictionary<UUID, long>();
         private Dictionary<UUID, AvatarAppearance> m_saveQueueData = new Dictionary<UUID, AvatarAppearance>();
-
+        private Dictionary<UUID, AvatarAppearance> m_saveTextureQueueData = new Dictionary<UUID, AvatarAppearance>();
+        
         private object m_setAppearanceLock = new object();
 
         #endregion
@@ -449,26 +451,48 @@ textures 1
             }
         }
 
-        public void QueueAppearanceSave(UUID agentid)
+        public void QueueAppearanceSave (UUID agentid)
         {
             // m_log.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
 
             // 10000 ticks per millisecond, 1000 milliseconds per second
             long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
-            lock (m_savequeue)
+            lock(m_savequeue)
             {
                 IScenePresence sp = m_scene.GetScenePresence(agentid);
-                if (sp == null)
+                if(sp == null)
                 {
                     m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
                     return;
                 }
-                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
+                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
                 m_savequeue[agentid] = timestamp;
-                lock (m_saveQueueData)
-                {
+                lock(m_saveQueueData)
                     m_saveQueueData[agentid] = appearance.Appearance;
+
+                m_updateTimer.Start();
+            }
+        }
+
+        public void QueueTexturesAppearanceSave (UUID agentid)
+        {
+            // m_log.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
+
+            // 10000 ticks per millisecond, 1000 milliseconds per second
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
+            lock(m_savequeue)
+            {
+                IScenePresence sp = m_scene.GetScenePresence(agentid);
+                if(sp == null)
+                {
+                    m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
+                    return;
                 }
+                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+                m_savetexturequeue[agentid] = timestamp;
+                lock(m_saveQueueData)
+                    m_saveTextureQueueData[agentid] = appearance.Appearance;
+
                 m_updateTimer.Start();
             }
         }
@@ -511,7 +535,7 @@ textures 1
             sp.Animator.SendAnimPack();
         }
 
-        private void HandleAppearanceSave(UUID agentid)
+        private void HandleAppearanceSave(UUID agentid, bool texture)
         {
             //If the avatar changes appearance, then proptly logs out, this will break!
             //ScenePresence sp = m_scene.GetScenePresence(agentid);
@@ -531,6 +555,13 @@ textures 1
 
                 AvatarAppearance appearance = sp != null ? sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance :
                     m_saveQueueData[agentid];
+
+                if(!texture)
+                    //If it is only a visual params, it will have a texture coming after it,
+                    //which will null this increment out (in theory), but this is needed so
+                    //that if something goes wrong and it doesn't send the texture serial, such
+                    //as if the client logs out, that the textures will be rebaked on the next login
+                    appearance.Serial++;
 
                 m_scene.AvatarService.SetAppearance(agentid, appearance);
 
@@ -598,15 +629,28 @@ textures 1
                 }
             }
 
-            lock (m_savequeue)
+            lock(m_savequeue)
             {
                 Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_savequeue);
-                foreach (KeyValuePair<UUID, long> kvp in saves)
+                foreach(KeyValuePair<UUID, long> kvp in saves)
                 {
-                    if (kvp.Value < now)
+                    if(kvp.Value < now)
                     {
-                        Util.FireAndForget(delegate(object o) { HandleAppearanceSave(kvp.Key); });
+                        Util.FireAndForget(delegate(object o) { HandleAppearanceSave(kvp.Key, false); });
                         m_savequeue.Remove(kvp.Key);
+                    }
+                }
+            }
+
+            lock(m_savetexturequeue)
+            {
+                Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_savetexturequeue);
+                foreach(KeyValuePair<UUID, long> kvp in saves)
+                {
+                    if(kvp.Value < now)
+                    {
+                        Util.FireAndForget(delegate(object o) { HandleAppearanceSave(kvp.Key, true); });
+                        m_savetexturequeue.Remove(kvp.Key);
                     }
                 }
             }
@@ -624,7 +668,7 @@ textures 1
                 }
             }
 
-            if (m_savequeue.Count == 0 && m_sendqueue.Count == 0 && m_initialsendqueue.Count == 0)
+            if(m_savequeue.Count == 0 && m_savetexturequeue.Count == 0 && m_sendqueue.Count == 0 && m_initialsendqueue.Count == 0)
                 m_updateTimer.Stop();
         }
 
@@ -1126,6 +1170,7 @@ textures 1
                     m_InitialHasWearablesBeenSent = true;
                     m_log.Warn ("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name + " was added and appearance was not sent, force sending now.");
 
+                    Appearance.Serial++;
                     m_sp.ControllingClient.SendWearables (Appearance.Wearables, Appearance.Serial);
 
                     //Send rebakes if needed
