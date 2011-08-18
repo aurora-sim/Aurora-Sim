@@ -367,7 +367,7 @@ namespace Aurora.Framework
                     }
                     catch (Exception iex)
                     {
-                        m_log.Error ("FAILED TO GET EXTERNAL HOST NAME: " + iex.ToString () + ", setting to internal...");
+                        m_log.Error ("[Utilities]: Failed to get external IP, " + iex.ToString () + ", please check your internet connection (if this applies), setting to internal...");
                         externalIp = "127.0.0.1";
                     }
                 }

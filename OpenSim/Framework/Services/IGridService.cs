@@ -387,7 +387,7 @@ namespace OpenSim.Services.Interfaces
             get
             {
                 if (m_remoteEndPoint == null && m_externalHostName != null && m_internalEndPoint != null)
-                    m_remoteEndPoint = Util.ResolveEndPoint(m_externalHostName, m_internalEndPoint.Port);
+                    m_remoteEndPoint = NetworkUtils.ResolveEndPoint(m_externalHostName, m_internalEndPoint.Port);
 
                 return m_remoteEndPoint;
             }

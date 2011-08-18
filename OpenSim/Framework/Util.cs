@@ -528,128 +528,6 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Converts a URL to a IPAddress
-        /// </summary>
-        /// <param name="url">URL Standard Format</param>
-        /// <returns>A resolved IP Address</returns>
-        public static IPAddress GetHostFromURL(string url)
-        {
-            return GetHostFromDNS(url.Split(new char[] {'/', ':'})[3]);
-        }
-
-        private static ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress> ();
-        /// <summary>
-        /// Returns a IP address from a specified DNS, favouring IPv4 addresses.
-        /// </summary>
-        /// <param name="dnsAddress">DNS Hostname</param>
-        /// <returns>An IP address, or null</returns>
-        public static IPAddress GetHostFromDNS(string dnsAddress)
-        {
-            dnsAddress = dnsAddress.Replace ("http://", "").Replace ("https://", "");
-            if (dnsAddress.EndsWith ("/"))
-                dnsAddress = dnsAddress.Remove (dnsAddress.Length - 1);
-            if (dnsAddress.Contains (":"))
-                dnsAddress = dnsAddress.Split (':')[0];
-            IPAddress ipa;
-            if (m_dnsCache.TryGetValue (dnsAddress, out ipa))
-                return ipa;
-            // Is it already a valid IP? No need to look it up.
-            if (IPAddress.TryParse (dnsAddress, out ipa))
-            {
-                m_dnsCache.Add (dnsAddress, ipa, 30 * 60/*30mins*/);
-                return ipa;
-            }
-            try
-            {
-                if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
-                {
-                    m_dnsCache.Add (dnsAddress, ipa, 30 * 60/*30mins*/);
-                    return ipa;
-                }
-            }
-            catch { }
-            IPAddress[] hosts = null;
-
-            // Not an IP, lookup required
-            try
-            {
-                hosts = Dns.GetHostEntry(dnsAddress).AddressList;
-            }
-            catch (Exception e)
-            {
-                m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
-
-                // Still going to throw the exception on for now, since this was what was happening in the first place
-                throw e;
-            }
-
-            foreach (IPAddress host in hosts)
-            {
-                if (host.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    m_dnsCache.Add (dnsAddress, host, 30 * 60/*30mins*/);
-                    return host;
-                }
-            }
-
-            if (hosts.Length > 0)
-            {
-                m_dnsCache.Add (dnsAddress, hosts[0], 30 * 60/*30mins*/);
-                return hosts[0];
-            }
-
-            return null;
-        }
-
-        public static Uri GetURI(string protocol, string hostname, int port, string path)
-        {
-            return new UriBuilder(protocol, hostname, port, path).Uri;
-        }
-
-        /// <summary>
-        /// Gets a list of all local system IP addresses
-        /// </summary>
-        /// <returns></returns>
-        public static IPAddress[] GetLocalHosts()
-        {
-            return Dns.GetHostAddresses(Dns.GetHostName());
-        }
-
-        public static IPAddress GetLocalHost()
-        {
-            IPAddress[] iplist = GetLocalHosts();
-
-            if (iplist.Length == 0) // No accessible external interfaces
-            {
-                IPAddress[] loopback = Dns.GetHostAddresses("localhost");
-                IPAddress localhost = loopback[0];
-
-                return localhost;
-            }
-
-            foreach (IPAddress host in iplist)
-            {
-                if (!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return host;
-                }
-            }
-
-            if (iplist.Length > 0)
-            {
-                foreach (IPAddress host in iplist)
-                {
-                    if (host.AddressFamily == AddressFamily.InterNetwork)
-                        return host;
-                }
-                // Well all else failed...
-                return iplist[0];
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// Removes all invalid path chars (OS dependent)
         /// </summary>
         /// <param name="path">path</param>
@@ -1368,32 +1246,6 @@ namespace OpenSim.Framework
             return found.ToArray ();
         }
 
-        public static string ServerURI(string uri)
-        {
-            if (uri == string.Empty)
-                return string.Empty;
-
-            // Get rid of eventual slashes at the end
-            uri = uri.TrimEnd('/');
-
-            IPAddress ipaddr1 = null;
-            string port1 = "";
-            try
-            {
-                ipaddr1 = Util.GetHostFromURL(uri);
-            }
-            catch { }
-
-            try
-            {
-                port1 = uri.Split(new char[] { ':' })[2];
-            }
-            catch { }
-
-            // We tried our best to convert the domain names to IP addresses
-            return (ipaddr1 != null) ? "http://" + ipaddr1.ToString() + ":" + port1 : uri;
-        }
-        
         public static byte[] StringToBytes256(string str, params object[] args)
         {
             return StringToBytes256(string.Format(str, args));
@@ -1704,99 +1556,6 @@ namespace OpenSim.Framework
             return retVal;
         }
 
-        public static IPEndPoint ResolveEndPoint(string hostName, int port)
-        {
-            IPEndPoint endpoint = null;
-            // Old one defaults to IPv6
-            //return new IPEndPoint(Dns.GetHostAddresses(m_externalHostName)[0], m_internalEndPoint.Port);
-
-            IPAddress ia = null;
-            // If it is already an IP, don't resolve it - just return directly
-            if (IPAddress.TryParse(hostName, out ia))
-            {
-                endpoint = new IPEndPoint(ia, port);
-                return endpoint;
-            }
-
-            try
-            {
-                if (IPAddress.TryParse(hostName.Split(':')[0], out ia))
-                {
-                    endpoint = new IPEndPoint(ia, port);
-                    return endpoint;
-                }
-            }
-            catch { }
-            // Reset for next check
-            ia = null;
-            try
-            {
-                foreach (IPAddress Adr in Dns.GetHostAddresses(hostName))
-                {
-                    if (ia == null)
-                        ia = Adr;
-
-                    if (Adr.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        ia = Adr;
-                        break;
-                    }
-                }
-            }
-            catch (SocketException e)
-            {
-                throw new Exception(
-                    "Unable to resolve local hostname " + hostName + " innerException of type '" +
-                    e + "' attached to this exception", e);
-            }
-            endpoint = new IPEndPoint(ia, port);
-            return endpoint;
-        }
-
-		/// <summary>
-        /// Gets the client IP address
-        /// </summary>
-        /// <param name="xff"></param>
-        /// <returns></returns>
-        public static IPEndPoint GetClientIPFromXFF(string xff)
-        {
-            if (xff == string.Empty)
-                return null;
-
-            string[] parts = xff.Split(new char[] { ',' });
-            if (parts.Length > 0)
-            {
-                try
-                {
-                    return new IPEndPoint(IPAddress.Parse(parts[0]), 0);
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
-                }
-            }
-
-            return null;
-        }
-
-        public static string GetCallerIP(Hashtable req)
-        {
-            if (req.ContainsKey("headers"))
-            {
-                try
-                {
-                    Hashtable headers = (Hashtable)req["headers"];
-                    if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
-                        return headers["remote_addr"].ToString();
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
-                }
-            }
-            return string.Empty;
-        }
-
         public static void UlongToInts(ulong regionHandle, out int x, out int y)
         {
             uint xx, yy;
@@ -1886,6 +1645,104 @@ namespace OpenSim.Framework
         {
             l.ExitWriteLock ();
         }
+    }
+
+    public class NetworkUtils
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        public static IPEndPoint ResolveEndPoint (string hostName, int port)
+        {
+            IPEndPoint endpoint = null;
+            // Old one defaults to IPv6
+            //return new IPEndPoint(Dns.GetHostAddresses(m_externalHostName)[0], m_internalEndPoint.Port);
+
+            IPAddress ia = null;
+            // If it is already an IP, don't resolve it - just return directly
+            if(IPAddress.TryParse(hostName, out ia))
+            {
+                endpoint = new IPEndPoint(ia, port);
+                return endpoint;
+            }
+
+            try
+            {
+                if(IPAddress.TryParse(hostName.Split(':')[0], out ia))
+                {
+                    endpoint = new IPEndPoint(ia, port);
+                    return endpoint;
+                }
+            }
+            catch { }
+            // Reset for next check
+            ia = null;
+            try
+            {
+                foreach(IPAddress Adr in Dns.GetHostAddresses(hostName))
+                {
+                    if(ia == null)
+                        ia = Adr;
+
+                    if(Adr.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        ia = Adr;
+                        break;
+                    }
+                }
+            }
+            catch(SocketException e)
+            {
+                throw new Exception(
+                    "Unable to resolve local hostname " + hostName + " innerException of type '" +
+                    e + "' attached to this exception", e);
+            }
+            endpoint = new IPEndPoint(ia, port);
+            return endpoint;
+        }
+
+        /// <summary>
+        /// Gets the client IP address
+        /// </summary>
+        /// <param name="xff"></param>
+        /// <returns></returns>
+        public static IPEndPoint GetClientIPFromXFF (string xff)
+        {
+            if(xff == string.Empty)
+                return null;
+
+            string[] parts = xff.Split(new char[] { ',' });
+            if(parts.Length > 0)
+            {
+                try
+                {
+                    return new IPEndPoint(IPAddress.Parse(parts[0]), 0);
+                }
+                catch(Exception e)
+                {
+                    m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
+                }
+            }
+
+            return null;
+        }
+
+        public static string GetCallerIP (Hashtable req)
+        {
+            if(req.ContainsKey("headers"))
+            {
+                try
+                {
+                    Hashtable headers = (Hashtable)req["headers"];
+                    if(headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
+                        return headers["remote_addr"].ToString();
+                }
+                catch(Exception e)
+                {
+                    m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
+                }
+            }
+            return string.Empty;
+        }
 
         private static bool useLocalhostLoopback = false;
         /// <summary>
@@ -1917,6 +1774,154 @@ namespace OpenSim.Framework
         {
             iPAddress.Address = ResolveAddressForClient (iPAddress.Address, clientIP);
             return iPAddress;
+        }
+
+        public static string ServerURI (string uri)
+        {
+            if(uri == string.Empty)
+                return string.Empty;
+
+            // Get rid of eventual slashes at the end
+            uri = uri.TrimEnd('/');
+
+            IPAddress ipaddr1 = null;
+            string port1 = "";
+            try
+            {
+                ipaddr1 = NetworkUtils.GetHostFromURL(uri);
+            }
+            catch { }
+
+            try
+            {
+                port1 = uri.Split(new char[] { ':' })[2];
+            }
+            catch { }
+
+            // We tried our best to convert the domain names to IP addresses
+            return (ipaddr1 != null) ? "http://" + ipaddr1.ToString() + ":" + port1 : uri;
+        }
+
+        /// <summary>
+        /// Converts a URL to a IPAddress
+        /// </summary>
+        /// <param name="url">URL Standard Format</param>
+        /// <returns>A resolved IP Address</returns>
+        public static IPAddress GetHostFromURL (string url)
+        {
+            return GetHostFromDNS(url.Split(new char[] { '/', ':' })[3]);
+        }
+
+        private static ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress>();
+        /// <summary>
+        /// Returns a IP address from a specified DNS, favouring IPv4 addresses.
+        /// </summary>
+        /// <param name="dnsAddress">DNS Hostname</param>
+        /// <returns>An IP address, or null</returns>
+        public static IPAddress GetHostFromDNS (string dnsAddress)
+        {
+            dnsAddress = dnsAddress.Replace("http://", "").Replace("https://", "");
+            if(dnsAddress.EndsWith("/"))
+                dnsAddress = dnsAddress.Remove(dnsAddress.Length - 1);
+            if(dnsAddress.Contains(":"))
+                dnsAddress = dnsAddress.Split(':')[0];
+            IPAddress ipa;
+            if(m_dnsCache.TryGetValue(dnsAddress, out ipa))
+                return ipa;
+            // Is it already a valid IP? No need to look it up.
+            if(IPAddress.TryParse(dnsAddress, out ipa))
+            {
+                m_dnsCache.Add(dnsAddress, ipa, 30 * 60/*30mins*/);
+                return ipa;
+            }
+            try
+            {
+                if(IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
+                {
+                    m_dnsCache.Add(dnsAddress, ipa, 30 * 60/*30mins*/);
+                    return ipa;
+                }
+            }
+            catch { }
+            IPAddress[] hosts = null;
+
+            // Not an IP, lookup required
+            try
+            {
+                hosts = Dns.GetHostEntry(dnsAddress).AddressList;
+            }
+            catch(Exception e)
+            {
+                m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
+
+                // Still going to throw the exception on for now, since this was what was happening in the first place
+                throw e;
+            }
+
+            foreach(IPAddress host in hosts)
+            {
+                if(host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    m_dnsCache.Add(dnsAddress, host, 30 * 60/*30mins*/);
+                    return host;
+                }
+            }
+
+            if(hosts.Length > 0)
+            {
+                m_dnsCache.Add(dnsAddress, hosts[0], 30 * 60/*30mins*/);
+                return hosts[0];
+            }
+
+            return null;
+        }
+
+        public static Uri GetURI (string protocol, string hostname, int port, string path)
+        {
+            return new UriBuilder(protocol, hostname, port, path).Uri;
+        }
+
+        /// <summary>
+        /// Gets a list of all local system IP addresses
+        /// </summary>
+        /// <returns></returns>
+        public static IPAddress[] GetLocalHosts ()
+        {
+            return Dns.GetHostAddresses(Dns.GetHostName());
+        }
+
+        public static IPAddress GetLocalHost ()
+        {
+            IPAddress[] iplist = GetLocalHosts();
+
+            if(iplist.Length == 0) // No accessible external interfaces
+            {
+                IPAddress[] loopback = Dns.GetHostAddresses("localhost");
+                IPAddress localhost = loopback[0];
+
+                return localhost;
+            }
+
+            foreach(IPAddress host in iplist)
+            {
+                if(!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return host;
+                }
+            }
+
+            if(iplist.Length > 0)
+            {
+                foreach(IPAddress host in iplist)
+                {
+                    if(host.AddressFamily == AddressFamily.InterNetwork)
+                        return host;
+                }
+                // Well all else failed...
+                return iplist[0];
+            }
+
+            return null;
         }
     }
 }

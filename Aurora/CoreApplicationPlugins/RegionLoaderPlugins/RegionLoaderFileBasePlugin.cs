@@ -334,7 +334,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             if (externalName == "SYSTEMIP")
             {
-                region.ExternalHostName = Util.GetLocalHost().ToString();
+                region.ExternalHostName = NetworkUtils.GetLocalHost().ToString();
                 m_log.InfoFormat(
                     "[REGIONINFO]: Resolving SYSTEMIP to {0} for external hostname of region {1}",
                     region.ExternalHostName, name);
@@ -350,7 +350,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
             else
             {
-                region.ExternalHostName = Util.ResolveEndPoint(externalName, port).Address.ToString();
+                region.ExternalHostName = NetworkUtils.ResolveEndPoint(externalName, port).Address.ToString();
                 region.FindExternalAutomatically = false;
             }
 

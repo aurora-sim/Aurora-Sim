@@ -741,7 +741,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             OnInstantMessage(null, msg);
 
             // If a message from a group arrives here, it may need to be forwarded to a local client
-            if (msg.fromGroup == true)
+            if (msg.fromGroup)
             {
                 switch (msg.dialog)
                 {

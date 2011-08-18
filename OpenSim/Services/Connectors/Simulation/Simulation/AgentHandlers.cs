@@ -222,19 +222,19 @@ namespace OpenSim.Services
         private string GetCallerIP(Hashtable request)
         {
             if (!m_Proxy)
-                return Util.GetCallerIP(request);
+                return NetworkUtils.GetCallerIP(request);
 
             // We're behind a proxy
             Hashtable headers = (Hashtable)request["headers"];
             if (headers.ContainsKey("X-Forwarded-For") && headers["X-Forwarded-For"] != null)
             {
-                IPEndPoint ep = Util.GetClientIPFromXFF((string)headers["X-Forwarded-For"]);
+                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string)headers["X-Forwarded-For"]);
                 if (ep != null)
                     return ep.Address.ToString();
             }
 
             // Oops
-            return Util.GetCallerIP(request);
+            return NetworkUtils.GetCallerIP(request);
         }
 
         // subclasses can override this

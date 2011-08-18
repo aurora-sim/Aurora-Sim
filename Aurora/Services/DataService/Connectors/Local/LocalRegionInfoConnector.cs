@@ -97,10 +97,18 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < RetVal.Count; i++)
             {
                 replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[i]));
-                if (replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+                if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
                     replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
                 else
-                    replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
+                {
+                    try
+                    {
+                        replyData.ExternalHostName = NetworkUtils.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
+                    }
+                    catch
+                    {
+                    }
+                }
                 Infos.Add(replyData);
                 replyData = new RegionInfo();
             }
@@ -126,7 +134,7 @@ namespace Aurora.Services.DataService
                 if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
                     replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
                 else
-                    replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
+                    replyData.ExternalHostName = NetworkUtils.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             }
             return replyData;
         }
@@ -143,7 +151,7 @@ namespace Aurora.Services.DataService
                 if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
                     replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
                 else
-                    replyData.ExternalHostName = Util.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
+                    replyData.ExternalHostName = NetworkUtils.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
             }
             return replyData;
         }
