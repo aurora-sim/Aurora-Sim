@@ -1650,6 +1650,8 @@ namespace OpenSim.Framework
     public class NetworkUtils
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static bool m_noInternetConnection = false;
+        private static int m_nextInternetConnectionCheck = 0;
 
         public static IPEndPoint ResolveEndPoint (string hostName, int port)
         {
@@ -1678,15 +1680,22 @@ namespace OpenSim.Framework
             ia = null;
             try
             {
-                foreach(IPAddress Adr in Dns.GetHostAddresses(hostName))
+                if(CheckInternetConnection())
                 {
-                    if(ia == null)
-                        ia = Adr;
-
-                    if(Adr.AddressFamily == AddressFamily.InterNetwork)
+                    foreach(IPAddress Adr in Dns.GetHostAddresses(hostName))
                     {
-                        ia = Adr;
-                        break;
+                        if(ia == null)
+                            ia = Adr;
+
+                        if(Adr.AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            ia = Adr;
+                            break;
+                        }
+                        if(ia != null)
+                            InternetSuccess();
+                        else
+                            InternetFailure();
                     }
                 }
             }
@@ -1696,8 +1705,32 @@ namespace OpenSim.Framework
                     "Unable to resolve local hostname " + hostName + " innerException of type '" +
                     e + "' attached to this exception", e);
             }
-            endpoint = new IPEndPoint(ia, port);
+            if(ia != null)
+                endpoint = new IPEndPoint(ia, port);
             return endpoint;
+        }
+
+        private static bool CheckInternetConnection ()
+        {
+            if(!m_noInternetConnection)
+            {
+                if(Util.EnvironmentTickCountSubtract(m_nextInternetConnectionCheck) > 5 * 60 /*5mins*/)
+                    return true;//Try again
+
+                return false;
+            }
+            return true;//No issues
+        }
+
+        private static void InternetSuccess ()
+        {
+            m_noInternetConnection = true;
+        }
+
+        private static void InternetFailure ()
+        {
+            m_nextInternetConnectionCheck = Util.EnvironmentTickCount();
+            m_noInternetConnection = false;
         }
 
         /// <summary>
@@ -1759,13 +1792,27 @@ namespace OpenSim.Framework
                     return IPAddress.Loopback;
                 if (iPAddress == IPAddress.Loopback)
                     return iPAddress;//Don't send something else if it is already on loopback
+                if(CheckInternetConnection())
+                {
 #pragma warning disable 618
-                //The 'bad' way, only works for things on the same machine...
-                string hostName = System.Net.Dns.GetHostName();
-                IPHostEntry ipEntry = System.Net.Dns.GetHostByName (hostName);
+                    //The 'bad' way, only works for things on the same machine...
+                    try
+                    {
+                        string hostName = System.Net.Dns.GetHostName();
+                        if(hostName == "")
+                            InternetFailure();
+                        else
+                            InternetSuccess();
+                        IPHostEntry ipEntry = System.Net.Dns.GetHostByName(hostName);
 #pragma warning restore 618
-                IPAddress[] addr = ipEntry.AddressList;
-                return addr[0];//Loopback around! They are on the same connection
+                        IPAddress[] addr = ipEntry.AddressList;
+                        return addr[0];//Loopback around! They are on the same connection
+                    }
+                    catch
+                    {
+                        InternetFailure();//Something went wrong
+                    }
+                }
             }
             return iPAddress;
         }
@@ -1848,12 +1895,20 @@ namespace OpenSim.Framework
             // Not an IP, lookup required
             try
             {
-                hosts = Dns.GetHostEntry(dnsAddress).AddressList;
+                if(CheckInternetConnection())
+                {
+                    hosts = Dns.GetHostEntry(dnsAddress).AddressList;
+                    if(hosts != null)
+                        InternetSuccess();
+                    else
+                        InternetFailure();
+                }
             }
             catch(Exception e)
             {
                 m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
+                InternetFailure();
                 // Still going to throw the exception on for now, since this was what was happening in the first place
                 throw e;
             }
@@ -1896,10 +1951,21 @@ namespace OpenSim.Framework
 
             if(iplist.Length == 0) // No accessible external interfaces
             {
-                IPAddress[] loopback = Dns.GetHostAddresses("localhost");
-                IPAddress localhost = loopback[0];
+                if(CheckInternetConnection())
+                {
+                    try
+                    {
+                        IPAddress[] loopback = Dns.GetHostAddresses("localhost");
+                        IPAddress localhost = loopback[0];
 
-                return localhost;
+                        InternetSuccess();
+                        return localhost;
+                    }
+                    catch
+                    {
+                        InternetFailure();
+                    }
+                }
             }
 
             foreach(IPAddress host in iplist)
