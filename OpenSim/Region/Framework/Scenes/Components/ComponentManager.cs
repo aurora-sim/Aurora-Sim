@@ -481,6 +481,11 @@ namespace OpenSim.Region.Framework.Scenes.Components
             get { return m_name; }
         }
 
+        public virtual OSD GetState (UUID obj)
+        {
+            return GetState(obj, false);
+        }
+
         public virtual OSD GetState(UUID obj, bool copy)
         {
             OSD o = null;
