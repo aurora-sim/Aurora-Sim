@@ -133,6 +133,7 @@ namespace OpenSim.Services.MessagingService
                 eventQueue.DisableSimulator (regionCaps.AgentID, regionCaps.RegionHandle);
                 //regionCaps.Close();
                 //clientCaps.RemoveCAPS(requestingRegion);
+                regionCaps.Disabled = true;
             }
             else if (message["Method"] == "ArrivedAtDestination")
             {
