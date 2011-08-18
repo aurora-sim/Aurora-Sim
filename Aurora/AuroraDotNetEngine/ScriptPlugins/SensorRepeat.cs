@@ -597,7 +597,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
 
-                SenseRepeaters.Add(ts);
+                lock(SenseRepeatListLock)
+                    SenseRepeaters.Add(ts);
             }
 
             //Make sure that the cmd handler thread is running
