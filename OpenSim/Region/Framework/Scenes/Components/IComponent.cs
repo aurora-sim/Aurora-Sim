@@ -48,7 +48,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         /// </summary>
         /// <param name="obj">The object to get the value from</param>
         /// <returns></returns>
-        OSD GetState (UUID obj, bool copyComponent = false);
+        OSD GetState (UUID obj, bool copyComponent);
 
         /// <summary>
         /// A representation of the current state of the Component
