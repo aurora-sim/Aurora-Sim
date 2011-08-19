@@ -187,7 +187,7 @@ namespace OpenSim.Services.MessagingService
                 if (regionCaps == null || clientCaps == null)
                     return null;
                 IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService ();
-                if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle)
+                if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle)//Has to be root
                 {
                     OSDMap body = ((OSDMap)message["Message"]);
 
@@ -1060,6 +1060,8 @@ namespace OpenSim.Services.MessagingService
 
                     //Also update the service itself
                     regionCaps.LastPosition = agentpos.Position;
+                    if(agentpos.UserGoingOffline)
+                        return;//It just needed a last pos update
 
                     //Tell all neighbor regions about the new position as well
                     List<GridRegion> ourNeighbors = GetRegions(regionCaps.ClientCaps);

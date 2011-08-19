@@ -452,7 +452,7 @@ namespace OpenSim.Services.CapsService
             return null;
         }
 
-        public delegate void UploadedBakedTexture(UUID assetID, byte[] data, out UUID newAssetID);
+        public delegate void UploadedBakedTexture(byte[] data, out UUID newAssetID);
         public class BakedTextureUploader
         {
             public event UploadedBakedTexture OnUpLoad;
@@ -460,12 +460,10 @@ namespace OpenSim.Services.CapsService
 
             private string uploaderPath = String.Empty;
             private string uploadMethod = "";
-            private UUID newAssetID;
             private IRegionClientCapsService clientCaps;
 
             public BakedTextureUploader(string path, string method, IRegionClientCapsService caps)
             {
-                newAssetID = UUID.Random();
                 uploaderPath = path;
                 uploadMethod = method;
                 clientCaps = caps;
@@ -481,12 +479,8 @@ namespace OpenSim.Services.CapsService
             public string uploaderCaps(byte[] data, string path, string param)
             {
                 handlerUpLoad = OnUpLoad;
-                if (handlerUpLoad != null)
-                {
-                    UUID newNewAssetID;
-                    handlerUpLoad(newAssetID, data, out newNewAssetID);
-                    newAssetID = newNewAssetID;
-                }
+                UUID newAssetID;
+                handlerUpLoad(data, out newAssetID);
 
                 string res = String.Empty;
                 OSDMap map = new OSDMap();
@@ -500,15 +494,15 @@ namespace OpenSim.Services.CapsService
             }
         }
 
-        public void BakedTextureUploaded(UUID assetID, byte[] data, out UUID newAssetID)
+        public void BakedTextureUploaded(byte[] data, out UUID newAssetID)
         {
             //m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset;
-            asset = new AssetBase(assetID, "Baked Texture", AssetType.Texture, m_service.AgentID);
+            asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID);
             asset.Data = data;
             asset.Flags = AssetFlags.Deletable | AssetFlags.Temperary;
             newAssetID = m_assetService.Store(asset);
-            //m_log.InfoFormat("[AssetCAPS]: Baked texture new id {0}", assetID.ToString());
+            m_log.InfoFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
             asset.ID = newAssetID;
         }
 

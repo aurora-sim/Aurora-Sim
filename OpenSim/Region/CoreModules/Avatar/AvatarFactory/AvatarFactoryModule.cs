@@ -349,7 +349,12 @@ textures 1
 
                 // If something changed in the appearance then queue an appearance save
                 if(texturesChanged || visualParamsChanged)
-                    QueueAppearanceSave(client.AgentId);
+                {
+                    if(texturesChanged)
+                        QueueTexturesAppearanceSave(client.AgentId);
+                    else
+                        QueueAppearanceSave(client.AgentId);
+                }
                 else
                     appearance.Appearance.Serial++;
             }
@@ -592,7 +597,7 @@ textures 1
 
             // This agent just became root. We are going to tell everyone about it.
             appearance.SendAvatarDataToAllAgents (true);
-
+            appearance.Appearance.Serial+=10;
             if (ValidateBakedTextureCache(sp.ControllingClient))
                 appearance.SendAppearanceToAgent (sp);
             else

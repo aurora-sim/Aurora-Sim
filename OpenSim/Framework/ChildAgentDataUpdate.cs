@@ -65,7 +65,7 @@ namespace OpenSim.Framework
         public Vector3 AtAxis;
         public Vector3 LeftAxis;
         public Vector3 UpAxis;
-
+        public bool UserGoingOffline;
 
         public OSDMap Pack()
         {
@@ -82,6 +82,7 @@ namespace OpenSim.Framework
             args["at_axis"] = OSD.FromString(AtAxis.ToString());
             args["left_axis"] = OSD.FromString(LeftAxis.ToString());
             args["up_axis"] = OSD.FromString(UpAxis.ToString());
+            args["user_going_offline"] = UserGoingOffline;
 
             args["far"] = OSD.FromReal(Far);
 
@@ -119,6 +120,9 @@ namespace OpenSim.Framework
 
             if (args["far"] != null)
                 Far = (float)(args["far"].AsReal());
+
+            if(args["user_going_offline"] != null)
+                UserGoingOffline = args["user_going_offline"];
         }
     }
 

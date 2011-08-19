@@ -167,6 +167,7 @@ namespace OpenSim.Region.CoreModules
                 agentpos.Size = sp.PhysicsActor != null ? sp.PhysicsActor.Size : new Vector3(0, 0, 1.8f);
                 agentpos.UpAxis = Vector3.Zero;
                 agentpos.Velocity = sp.Velocity;
+                agentpos.UserGoingOffline = true;//Don't attempt to add us into other regions
 
                 //Send the child agent data update
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
