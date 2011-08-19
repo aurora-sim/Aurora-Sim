@@ -563,7 +563,7 @@ textures 1
                 AvatarAppearance appearance = sp != null ? sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance :
                     m_saveQueueData[agentid];
 
-                if(!texture)
+                //if(!texture)
                     //If it is only a visual params, it will have a texture coming after it,
                     //which will null this increment out (in theory), but this is needed so
                     //that if something goes wrong and it doesn't send the texture serial, such
