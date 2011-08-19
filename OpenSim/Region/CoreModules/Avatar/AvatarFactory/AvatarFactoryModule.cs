@@ -348,8 +348,10 @@ textures 1
                 }
 
                 // If something changed in the appearance then queue an appearance save
-                if (texturesChanged || visualParamsChanged)
+                if(texturesChanged || visualParamsChanged)
                     QueueAppearanceSave(client.AgentId);
+                else
+                    appearance.Appearance.Serial++;
             }
             // And always queue up an appearance update to send out
             QueueAppearanceSend(client.AgentId);
