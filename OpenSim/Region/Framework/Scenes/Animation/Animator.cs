@@ -139,8 +139,13 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 return false;
 
             UUID animID = m_scenePresence.ControllingClient.GetDefaultAnimation(name);
-            if (animID == UUID.Zero)
-                return false;
+            if(animID == UUID.Zero)
+            {
+                if(DefaultAnimations.AnimsUUID.ContainsKey(name.ToUpper()))
+                    animID = DefaultAnimations.AnimsUUID[name];
+                else
+                    return false;
+            }
 
             RemoveAnimation(animID);
             return true;
