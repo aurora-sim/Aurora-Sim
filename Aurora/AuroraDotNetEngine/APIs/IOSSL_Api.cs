@@ -90,7 +90,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osSetFontName(string drawList, string fontName);
         string osSetFontSize(string drawList, int fontSize);
         string osSetPenSize(string drawList, int penSize);
-        string osSetPenColour(string drawList, string colour);
+        string osSetPenColor(string drawList, string colour);
         string osSetPenCap(string drawList, string direction, string type);
         string osDrawImage(string drawList, int width, int height, string imageUrl);
         vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize);
@@ -112,7 +112,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         // Parcel commands
         void osParcelJoin(vector pos1, vector pos2);
         void osParcelSubdivide(vector pos1, vector pos2);
-        void osParcelSetDetails(vector pos, LSL_List rules);
+        void osSetParcelDetails(vector pos, LSL_List rules);
 
         string osGetScriptEngineName();
         string osGetSimulatorVersion();

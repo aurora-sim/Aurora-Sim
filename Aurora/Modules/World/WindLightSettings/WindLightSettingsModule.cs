@@ -147,9 +147,8 @@ namespace Aurora.Modules
             wl.UUID = oldUUID;
             IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (RegionInfoConnector != null)
-            {
                 RegionInfoConnector.StoreRegionWindlightSettings(wl.regionID, oldUUID, wl);
-            }
+
             m_scene.ForEachScenePresence (OnMakeRootAgent);
         }
 

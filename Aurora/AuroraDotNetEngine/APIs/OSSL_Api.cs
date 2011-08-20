@@ -988,9 +988,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return new LSL_String(drawList);
         }
 
-        public string osSetPenColour(string drawList, string colour)
+        public string osSetPenColor(string drawList, string colour)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL", m_itemID)) return "";
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColor", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "PenColour " + colour + "; ";
@@ -999,7 +999,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public string osSetPenCap(string drawList, string direction, string type)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColour", m_host, "OSSL", m_itemID)) return "";
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetPenColor", m_host, "OSSL", m_itemID)) return "";
 
 
             drawList += "PenCap " + direction + "," + type + "; ";
@@ -1237,9 +1237,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public void osParcelSetDetails(LSL_Vector pos, LSL_List rules)
+        public void osSetParcelDetails(LSL_Vector pos, LSL_List rules)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelSetDetails", m_host, "OSSL", m_itemID)) return;
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetParcelDetails", m_host, "OSSL", m_itemID)) return;
 
 
             // Get a reference to the land data and make sure the owner of the script
@@ -1281,13 +1281,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             break;
 
                         case 2:
-                            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL", m_itemID)) return;
+                            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetParcelDetails", m_host, "OSSL", m_itemID)) return;
                             if (UUID.TryParse(arg, out uuid))
                                 newLand.OwnerID = uuid;
                             break;
 
                         case 3:
-                            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osParcelSetDetails", m_host, "OSSL", m_itemID)) return;
+                            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetParcelDetails", m_host, "OSSL", m_itemID)) return;
                             if (UUID.TryParse(arg, out uuid))
                                 newLand.GroupID = uuid;
                             break;

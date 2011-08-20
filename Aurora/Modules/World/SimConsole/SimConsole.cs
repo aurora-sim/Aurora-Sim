@@ -84,6 +84,7 @@ namespace Aurora.Modules.World.SimConsole
                     return;
                 string User = config.GetString("Users", "");
                 string[] Users = User.Split(new string[1] { "|" }, StringSplitOptions.RemoveEmptyEntries);
+                MainConsole.OnIncomingLogWrite += IncomingLogWrite;//Get this hooked up
                 for (int i = 0; i < Users.Length; i += 2)
                 {
                     if (!m_userKeys.ContainsKey(Users[i]) && (i + 1) < Users.Length)
@@ -105,8 +106,8 @@ namespace Aurora.Modules.World.SimConsole
             if (!m_enabled)
                 return;
 
-            MainConsole.OnIncomingLogWrite += IncomingLogWrite;
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
             m_scenes.Add(scene);
         }
 
@@ -116,7 +117,9 @@ namespace Aurora.Modules.World.SimConsole
 
         public void RemoveRegion (IScene scene)
         {
-            m_scenes.Remove (scene);
+            m_scenes.Remove(scene);
+            scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
+            scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
         }
 
         public void Close()
@@ -140,52 +143,14 @@ namespace Aurora.Modules.World.SimConsole
         public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap ();
-            retVal["SimConsole"] = CapsUtil.CreateCAPS ("SimConsole", "");
             retVal["SimConsoleAsync"] = CapsUtil.CreateCAPS ("SimConsoleAsync", "");
             
-            //This message is depriated, but we still have it around for now, feel free to remove sometime in the future
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsole"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return SimConsoleResponder(m_dhttpMethod, agentID);
-                                                      }));
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsoleAsync"],
                                                       delegate(Hashtable m_dhttpMethod)
                                                       {
                                                           return SimConsoleAsyncResponder(m_dhttpMethod, agentID);
                                                       }));
             return retVal;
-        }
-
-        private Hashtable SimConsoleResponder(Hashtable m_dhttpMethod, UUID agentID)
-        {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
-            IScenePresence SP = findScene (agentID).GetScenePresence (agentID);
-            if (SP == null)
-                return responsedata; //They don't exist
-
-            OSD rm = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
-
-            string message = rm.AsString();
-            string response = "Finished.";
-
-            //Is a god, or they authenticated to the server and have write access
-            if (AuthenticateUser(SP, message) && CanWrite(SP.UUID))
-            {
-                MainConsole.Instance.RunCommand(message);
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(OSD.FromString(response));
-            }
-            else
-            {
-                response = "You have failed to log into the console.";
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(OSD.FromString(response));
-            }
-            return responsedata;
         }
 
         private Hashtable SimConsoleAsyncResponder (Hashtable m_dhttpMethod, UUID agentID)
@@ -253,14 +218,18 @@ namespace Aurora.Modules.World.SimConsole
         {
             if (m_authorizedParticipants.ContainsKey(sp.UUID))
             {
+                if(message == "")
+                    return true;//Just checking whether it exists then
                 return ParseMessage (sp, message, false);
             }
             else
             {
                 if (m_userKeys.ContainsKey (sp.Name))
                 {
-                    m_userLogLevel.Add (sp.UUID, Level.Info);
-                    m_authorizedParticipants.Add (sp.UUID, m_userKeys[sp.Name]);
+                    m_userLogLevel.Add(sp.UUID, Level.Info);
+                    m_authorizedParticipants.Add(sp.UUID, m_userKeys[sp.Name]);
+                    if(message == "")
+                        return true;//Just checking whether it exists then
                     return ParseMessage (sp, message, true);
                 }
             }
@@ -303,13 +272,21 @@ namespace Aurora.Modules.World.SimConsole
 
         #endregion
 
+        private void EventManager_OnMakeRootAgent (IScenePresence presence)
+        {
+            //See whether they are authenticated so that we can start sending them messages
+            AuthenticateUser(presence, "");
+        }
+
         public void IncomingLogWrite(Level level, string text)
         {
+            if(text == "")
+                return;
             foreach (KeyValuePair<UUID, Access> kvp in m_authorizedParticipants)
             {
                 if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
                 {
-                    if (m_userLogLevel[kvp.Key] >= level)
+                    if (m_userLogLevel[kvp.Key] <= level)
                     {
                         //Send the EQM with the message to all people who have read access
                         SendConsoleEventEQM (kvp.Key, text);

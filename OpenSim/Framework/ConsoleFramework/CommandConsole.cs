@@ -639,12 +639,13 @@ namespace OpenSim.Framework
 
         public virtual void Output(string text, Level level)
         {
-            Output(text);
+            MainConsole.TriggerLog(level, text);
+            System.Console.WriteLine(text);
         }
 
         public virtual void Output(string text)
         {
-            System.Console.WriteLine(text);
+            Output(text, Level.Debug);
         }
 
         public virtual void LockOutput()
