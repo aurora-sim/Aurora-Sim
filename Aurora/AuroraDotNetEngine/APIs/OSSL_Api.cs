@@ -285,7 +285,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osReturnObjects(LSL_Float Parameter)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osShutDown", m_host, "OSSL", m_itemID)) return;
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osReturnObjects", m_host, "OSSL", m_itemID)) return;
 
             Dictionary<UUID, List<ISceneEntity>> returns =
                     new Dictionary<UUID, List<ISceneEntity>>();
@@ -354,6 +354,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osReturnObject(LSL_Key userID)
         {
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osReturnObjects", m_host, "OSSL", m_itemID)) return;
+
             Dictionary<UUID, List<ISceneEntity>> returns =
                     new Dictionary<UUID, List<ISceneEntity>>();
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
