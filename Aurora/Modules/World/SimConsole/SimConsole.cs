@@ -299,7 +299,8 @@ namespace Aurora.Modules.World.SimConsole
             {
                 if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
                 {
-                    if (m_userLogLevel[kvp.Key] <= level)
+                    if(m_userLogLevel.ContainsKey(kvp.Key) &&
+                        m_userLogLevel[kvp.Key] <= level)
                     {
                         //Send the EQM with the message to all people who have read access
                         SendConsoleEventEQM (kvp.Key, text);
