@@ -607,7 +607,14 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     string xmlData = Utils.BytesToString(rezAsset.Data);
                     doc = new System.Xml.XmlDocument();
-                    doc.LoadXml(xmlData);
+                    try
+                    {
+                        doc.LoadXml(xmlData);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
 
                     if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
                         (doc.FirstChild.NextSibling != null &&
@@ -741,7 +748,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     return Groups[0];
                 else
                 {
-                    remoteClient.SendAlertMessage ("Failed to find the item you requested.");
+                    remoteClient.SendAlertMessage ("Failed to rez the item you requested.");
                     return null;
                 }
             }

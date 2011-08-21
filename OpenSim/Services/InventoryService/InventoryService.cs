@@ -306,10 +306,13 @@ namespace OpenSim.Services.InventoryService
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.Sound, "Sounds");
             if (!Array.Exists (sysFolders, delegate (InventoryFolderBase f) { if (f.Type == (short)AssetType.Texture) return true; return false; }))
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.Texture, "Textures");
-            if (!Array.Exists (sysFolders, delegate (InventoryFolderBase f) { if (f.Type == (short)AssetType.TrashFolder) return true; return false; }))
+            if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f) { if(f.Type == (short)AssetType.TrashFolder) return true; return false; }))
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.TrashFolder, "Trash");
 
-            if (createDefaultItems && m_LibraryService != null)
+            if(!Array.Exists(sysFolders, delegate(InventoryFolderBase f) { if(f.Type == (short)AssetType.Mesh) return true; return false; }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Mesh, "Mesh");
+
+            if(createDefaultItems && m_LibraryService != null)
             {
                 InventoryFolderBase bodypartFolder = GetFolderForType (principalID, InventoryType.Unknown, AssetType.Bodypart);
                 InventoryFolderBase clothingFolder = GetFolderForType (principalID, InventoryType.Unknown, AssetType.Clothing);

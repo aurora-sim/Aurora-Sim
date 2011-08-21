@@ -555,6 +555,7 @@ namespace OpenSim.Services.CapsService
                     textureAsset.ID = m_assetService.Store(textureAsset);
                     textures.Add(textureAsset.ID);
                 }
+                InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh, AssetType.Mesh);
                 for (int i = 0; i < mesh_list.Count; i++)
                 {
                     PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
@@ -601,6 +602,24 @@ namespace OpenSim.Services.CapsService
                     meshAsset.Data = mesh_list[i].AsBinary();
                     meshAsset.ID = m_assetService.Store(meshAsset);
 
+                    if(meshFolder == null)
+                    {
+                        m_inventoryService.CreateUserInventory(m_service.AgentID, false);
+                        meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh, AssetType.Mesh);
+                    }
+
+                    InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID);
+                    itemBase.AssetType = (sbyte)AssetType.Mesh;
+                    itemBase.AssetID = meshAsset.ID;
+                    itemBase.CreatorId = m_service.AgentID.ToString();
+                    itemBase.Folder = meshFolder.ID;
+                    itemBase.InvType = (int)InventoryType.Mesh;
+                    itemBase.Name = assetName;
+                    itemBase.CurrentPermissions = (uint)PermissionMask.All;
+                    itemBase.EveryOnePermissions = everyone_mask;
+                    itemBase.GroupPermissions = group_mask;
+                    m_inventoryService.AddItem(itemBase);
+
                     pbs.SculptEntry = true;
                     pbs.SculptTexture = meshAsset.ID;
                     pbs.SculptType = (byte)SculptType.Mesh;
@@ -637,9 +656,9 @@ namespace OpenSim.Services.CapsService
                     prim.PhysicsType = (byte)physicsShapeType;
 
                     prim.BaseMask = (uint)PermissionMask.All;
-                    prim.EveryoneMask = (uint)PermissionMask.All;
-                    prim.GroupMask = (uint)PermissionMask.All;
-                    prim.NextOwnerMask = (uint)PermissionMask.All;
+                    prim.EveryoneMask = everyone_mask;
+                    prim.NextOwnerMask = next_owner_mask;
+                    prim.GroupMask = group_mask;
                     prim.OwnerMask = (uint)PermissionMask.All;
 
                     if (grp == null)
