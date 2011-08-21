@@ -108,6 +108,7 @@ namespace Aurora.Modules.World.SimConsole
 
             scene.EventManager.OnRegisterCaps += OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
+            scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
             m_scenes.Add(scene);
         }
 
@@ -120,6 +121,7 @@ namespace Aurora.Modules.World.SimConsole
             m_scenes.Remove(scene);
             scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
             scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
+            scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
         }
 
         public void Close()
@@ -220,13 +222,18 @@ namespace Aurora.Modules.World.SimConsole
             {
                 if(message == "")
                     return true;//Just checking whether it exists then
-                return ParseMessage (sp, message, false);
+                bool firstLogin = false;
+                if(!m_userLogLevel.ContainsKey(sp.UUID))
+                {
+                    m_userLogLevel.Add(sp.UUID, Level.Info);
+                    firstLogin = true;
+                }
+                return ParseMessage(sp, message, firstLogin);
             }
             else
             {
                 if (m_userKeys.ContainsKey (sp.Name))
                 {
-                    m_userLogLevel.Add(sp.UUID, Level.Info);
                     m_authorizedParticipants.Add(sp.UUID, m_userKeys[sp.Name]);
                     if(message == "")
                         return true;//Just checking whether it exists then
@@ -278,6 +285,12 @@ namespace Aurora.Modules.World.SimConsole
             AuthenticateUser(presence, "");
         }
 
+        void EventManager_OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        {
+            m_authorizedParticipants.Remove(presence.UUID);
+            m_userLogLevel.Remove(presence.UUID);
+        }
+
         public void IncomingLogWrite(Level level, string text)
         {
             if(text == "")
@@ -306,8 +319,9 @@ namespace Aurora.Modules.World.SimConsole
             item.Add ("body", text);
             item.Add ("message", OSD.FromString ("SimConsoleResponse"));
             IEventQueueService eq = m_scenes[0].RequestModuleInterface<IEventQueueService> ();
-            if (eq != null)
-                eq.Enqueue (item, AgentID, findScene(AgentID).RegionInfo.RegionHandle);
+            IScene scene = findScene(AgentID);
+            if (eq != null && scene != null)
+                eq.Enqueue(item, AgentID, scene.RegionInfo.RegionHandle);
         }
 
         private IScene findScene(UUID agentID)
