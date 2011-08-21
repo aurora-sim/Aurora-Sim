@@ -357,16 +357,19 @@ namespace Aurora.Framework
                     //Ask what is my ip for it
                     externalIp = utf8.GetString (webClient.DownloadData ("http://checkip.dyndns.org/"));
                     //Remove the HTML stuff
-                    externalIp = externalIp.Remove (0, 76).Split(new string[1]{"</body>"}, StringSplitOptions.RemoveEmptyEntries)[0];
+                    externalIp = externalIp.Remove(0, 76).Split(new string[1] { "</body>" }, StringSplitOptions.RemoveEmptyEntries)[0];
+                    NetworkUtils.InternetSuccess();
                 }
                 catch (Exception)
                 {
                     try
                     {
-                        externalIp = utf8.GetString (webClient.DownloadData ("http://automation.whatismyip.com/n09230945.asp"));
+                        externalIp = utf8.GetString(webClient.DownloadData("http://automation.whatismyip.com/n09230945.asp"));
+                        NetworkUtils.InternetSuccess();
                     }
                     catch (Exception iex)
                     {
+                        NetworkUtils.InternetFailure();
                         m_log.Error ("[Utilities]: Failed to get external IP, " + iex.ToString () + ", please check your internet connection (if this applies), setting to internal...");
                         externalIp = "127.0.0.1";
                     }
@@ -512,16 +515,21 @@ namespace Aurora.Framework
             UTF8Encoding utf8 = new UTF8Encoding ();
 
             WebClient webClient = new WebClient ();
-            try
+            if(NetworkUtils.CheckInternetConnection())
             {
-                byte[] bytes = webClient.DownloadData (URL);
-                if (webClient.ResponseHeaders["Content-Encoding"] == "gzip")
-                    website = utf8.GetString (UnGzip (bytes, 0));
-                else
-                    website = utf8.GetString (bytes);
-            }
-            catch (Exception)
-            {
+                try
+                {
+                    byte[] bytes = webClient.DownloadData(URL);
+                    if(webClient.ResponseHeaders["Content-Encoding"] == "gzip")
+                        website = utf8.GetString(UnGzip(bytes, 0));
+                    else
+                        website = utf8.GetString(bytes);
+                    NetworkUtils.InternetSuccess();
+                }
+                catch(Exception)
+                {
+                    NetworkUtils.InternetFailure();
+                }
             }
             return website;
         }

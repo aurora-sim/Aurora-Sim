@@ -1710,11 +1710,11 @@ namespace OpenSim.Framework
             return endpoint;
         }
 
-        private static bool CheckInternetConnection ()
+        public static bool CheckInternetConnection ()
         {
             if(m_noInternetConnection)
             {
-                if(Util.EnvironmentTickCountSubtract(m_nextInternetConnectionCheck) > 5 * 60 /*5mins*/)
+                if(Util.EnvironmentTickCount() > m_nextInternetConnectionCheck)
                     return true;//Try again
 
                 return false;
@@ -1722,14 +1722,14 @@ namespace OpenSim.Framework
             return true;//No issues
         }
 
-        private static void InternetSuccess ()
+        public static void InternetSuccess ()
         {
             m_noInternetConnection = false;
         }
 
-        private static void InternetFailure ()
+        public static void InternetFailure ()
         {
-            m_nextInternetConnectionCheck = Util.EnvironmentTickCount();
+            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5 * 60 * 1000);/*5 mins*/
             m_noInternetConnection = true;
         }
 
@@ -1799,10 +1799,6 @@ namespace OpenSim.Framework
                     try
                     {
                         string hostName = System.Net.Dns.GetHostName();
-                        if(hostName == "")
-                            InternetFailure();
-                        else
-                            InternetSuccess();
                         IPHostEntry ipEntry = System.Net.Dns.GetHostByName(hostName);
 #pragma warning restore 618
                         IPAddress[] addr = ipEntry.AddressList;
