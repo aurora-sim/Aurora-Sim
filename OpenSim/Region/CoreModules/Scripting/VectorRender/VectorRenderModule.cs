@@ -269,6 +269,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
                           }
                           break;
                      case "bgcolour":
+                     case "bgcolor":
                          int hex = 0;
                          if (Int32.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out hex))
                          {
@@ -369,6 +370,9 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
         
         private int parseIntParam(string strInt)
         {
+            bool retVal;
+            if(bool.TryParse(strInt, out retVal))
+                return -1;
             int parsed;
             try
             {
@@ -463,6 +467,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
                 {
                     nextLine = nextLine.Remove(0, 4);
                     nextLine = nextLine.Trim();
+                    myFont = new Font(myFont, FontStyle.Bold);
                     graph.DrawString(nextLine, myFont, myBrush, startPoint);
                 }
                 else if (nextLine.StartsWith("Image"))
