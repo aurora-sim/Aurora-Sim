@@ -1703,7 +1703,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             newBlock.Name = Util.StringToBytes256(item.Name);
             newBlock.NextOwnerMask = item.NextPermissions;
             newBlock.OwnerID = item.Owner;
-            newBlock.Type = (sbyte)item.AssetType;
+            newBlock.Type = Util.CheckMeshType((sbyte)item.AssetType);
 
             newBlock.GroupID = item.GroupID;
             newBlock.GroupOwned = item.GroupOwned;
@@ -1812,7 +1812,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             inventoryReply.InventoryData[0].NextOwnerMask = item.NextPermissions;
             inventoryReply.InventoryData[0].OwnerID = item.Owner;
             inventoryReply.InventoryData[0].OwnerMask = item.CurrentPermissions;
-            inventoryReply.InventoryData[0].Type = (sbyte)item.AssetType;
+            inventoryReply.InventoryData[0].Type = Util.CheckMeshType((sbyte)item.AssetType);
 
             inventoryReply.InventoryData[0].GroupID = item.GroupID;
             inventoryReply.InventoryData[0].GroupOwned = item.GroupOwned;
@@ -1959,7 +1959,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             itemBlock.NextOwnerMask = item.NextPermissions;
             itemBlock.OwnerID = item.Owner;
             itemBlock.OwnerMask = item.CurrentPermissions;
-            itemBlock.Type = (sbyte)item.AssetType;
+            itemBlock.Type = Util.CheckMeshType((sbyte)item.AssetType);
             itemBlock.GroupID = item.GroupID;
             itemBlock.GroupOwned = item.GroupOwned;
             itemBlock.GroupMask = item.GroupPermissions;
@@ -2023,7 +2023,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             bulkUpdate.ItemData[0].NextOwnerMask = item.NextPermissions;
             bulkUpdate.ItemData[0].OwnerID = item.Owner;
             bulkUpdate.ItemData[0].OwnerMask = item.CurrentPermissions;
-            bulkUpdate.ItemData[0].Type = (sbyte)item.AssetType;
+            bulkUpdate.ItemData[0].Type = Util.CheckMeshType((sbyte)item.AssetType);
 
             bulkUpdate.ItemData[0].GroupID = item.GroupID;
             bulkUpdate.ItemData[0].GroupOwned = item.GroupOwned;
@@ -2070,7 +2070,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             InventoryReply.InventoryData[0].NextOwnerMask = Item.NextPermissions;
             InventoryReply.InventoryData[0].OwnerID = Item.Owner;
             InventoryReply.InventoryData[0].OwnerMask = Item.CurrentPermissions;
-            InventoryReply.InventoryData[0].Type = (sbyte)Item.AssetType;
+            InventoryReply.InventoryData[0].Type = Util.CheckMeshType((sbyte)Item.AssetType);
             InventoryReply.InventoryData[0].CallbackID = callbackId;
 
             InventoryReply.InventoryData[0].GroupID = Item.GroupID;
@@ -3743,6 +3743,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         canUseImproved = false;
                         canUseCompressed = false;
                     }
+
                     if (canUseCached && !isTerse)
                     {
                         cachedUpdates.Add (update);

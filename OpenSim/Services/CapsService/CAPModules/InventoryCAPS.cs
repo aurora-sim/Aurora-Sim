@@ -609,15 +609,16 @@ namespace OpenSim.Services.CapsService
                     }
 
                     InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID);
-                    itemBase.AssetType = (sbyte)AssetType.Mesh;
+                    itemBase.AssetType = (sbyte)AssetType.Mesh;//Bad... but whatever
                     itemBase.AssetID = meshAsset.ID;
                     itemBase.CreatorId = m_service.AgentID.ToString();
                     itemBase.Folder = meshFolder.ID;
-                    itemBase.InvType = (int)InventoryType.Mesh;
-                    itemBase.Name = assetName;
+                    itemBase.InvType = (int)InventoryType.Texture;
+                    itemBase.Name = "(Mesh) - " + assetName;
                     itemBase.CurrentPermissions = (uint)PermissionMask.All;
                     itemBase.EveryOnePermissions = everyone_mask;
                     itemBase.GroupPermissions = group_mask;
+                    itemBase.NextPermissions = next_owner_mask;
                     m_inventoryService.AddItem(itemBase);
 
                     pbs.SculptEntry = true;

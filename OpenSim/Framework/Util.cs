@@ -1645,6 +1645,13 @@ namespace OpenSim.Framework
         {
             l.ExitWriteLock ();
         }
+
+        public static sbyte CheckMeshType (sbyte p)
+        {
+            if(p == (sbyte)AssetType.Mesh)
+                return (sbyte)AssetType.Texture;
+            return p;
+        }
     }
 
     public class NetworkUtils

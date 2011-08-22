@@ -2783,6 +2783,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (asset != null)
                 this.Shape.SculptData = asset.Data;//Set the asset data
+
+            bool isMesh = (asset.Type == (int)AssetType.Mesh);
+            if(isMesh)
+                this.Shape.SculptType = (byte)SculptType.Mesh;
             if((bool)sender && this.PhysActor != null)//Update physics
             {
                 //Get physics to update in a hackish way

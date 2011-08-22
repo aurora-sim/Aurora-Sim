@@ -327,7 +327,7 @@ namespace Aurora.Services.DataService
                             AssetType assetType = (AssetType)int.Parse (retVal["assetType"].ToString ());
                             if(assetType == AssetType.Link)
                                 moreLinkedItems.Add(assetID);
-                            contents["type"] = Utils.AssetTypeToString (assetType);
+                            contents["type"] = Utils.AssetTypeToString ((AssetType)Util.CheckMeshType((sbyte)assetType));
                             InventoryType invType = (InventoryType)int.Parse (retVal["invType"].ToString ());
                             contents["inv_type"] = Utils.InventoryTypeToString (invType);
 
