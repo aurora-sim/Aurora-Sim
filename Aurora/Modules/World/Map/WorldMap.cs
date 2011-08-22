@@ -898,16 +898,12 @@ namespace Aurora.Modules
                 m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random ();
                 changed = true;
             }
-            else
-                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainImageID);
 
             if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
             {
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID = UUID.Random ();
                 changed = true;
             }
-            else
-                m_scene.AssetService.Delete (m_scene.RegionInfo.RegionSettings.TerrainMapImageID);
 
             AssetBase Mapasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainImageID,
