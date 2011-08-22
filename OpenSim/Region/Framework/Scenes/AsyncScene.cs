@@ -540,39 +540,22 @@ namespace OpenSim.Region.Framework.Scenes
                 try
                 {
                     int OtherFrameTime = Util.EnvironmentTickCount();
-                    bool running = true;
                     if(m_frame % m_update_coarse_locations == 0)
                     {
-                        ThreadMonitor.CallAndWait(5, delegate()
+                        List<Vector3> coarseLocations;
+                        List<UUID> avatarUUIDs;
+                        if(SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
                         {
-                            List<Vector3> coarseLocations;
-                            List<UUID> avatarUUIDs;
-                            if(SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
+                            // Send coarse locations to clients 
+                            foreach(IScenePresence presence in GetScenePresences())
                             {
-                                // Send coarse locations to clients 
-                                foreach(IScenePresence presence in GetScenePresences())
-                                {
-                                    presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                                }
+                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
                             }
-                            return true;
-                        },
-                        out running);
-                        if(!running)
-                            m_log.Error("[AsyncProcessor]: SendCoarseLocations took too long");
+                        }
                     }
                     
                     if(m_frame % m_update_entities == 0)
-                    {
-                        ThreadMonitor.CallAndWait(50, delegate()
-                        {
-                            m_sceneGraph.UpdateEntities();
-                            return true;
-                        },
-                        out running);
-                        if(!running)
-                            m_log.Error("[AsyncProcessor]: UpdateEntities took too long");
-                    }
+                        m_sceneGraph.UpdateEntities();
 
                     BlankHandler[] events;
                     lock(m_events)
@@ -597,16 +580,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     if (m_frame % m_update_events == 0)
-                    {
-                        ThreadMonitor.CallAndWait(25, delegate()
-                        {
-                            m_eventManager.TriggerOnFrame();
-                            return true;
-                        },
-                        out running);
-                        if(!running)
-                            m_log.Error("[AsyncProcessor]: TriggerOnFrame took too long");
-                    }
+                        m_eventManager.TriggerOnFrame();
 
                     //Now fix the sim stats
                     int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);

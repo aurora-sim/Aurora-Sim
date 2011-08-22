@@ -55,7 +55,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private LLClientView m_client; //Client we're assigned to
         private IAssetService m_assetCache; //Asset Cache
         private IJ2KDecoder m_j2kDecodeModule; //Our J2K module
-        private C5.IntervalHeap<J2KImage> m_priorityQueue = new C5.IntervalHeap<J2KImage>(10, new J2KImageComparer());
+        private Mischel.Collections.PriorityQueue<J2KImage, float> m_queue = new Mischel.Collections.PriorityQueue<J2KImage, float>();
         private object m_syncRoot = new object();
 
         public LLClientView Client { get { return m_client; } }
@@ -98,7 +98,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         try 
                         {
                             lock (m_syncRoot)
-                                m_priorityQueue.Delete(imgrequest.PriorityQueueHandle); 
+                                m_queue.Remove(imgrequest); 
                         }
                         catch (Exception) { }
                     }
@@ -122,7 +122,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                             //Update the requested priority
                             imgrequest.Priority = newRequest.Priority;
-                            UpdateImageInQueue(imgrequest);
+                            m_queue.Remove(imgrequest);
+                            AddImageToQueue(imgrequest);
 
                             //Run an update
                             imgrequest.RunUpdate();
@@ -168,15 +169,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if(newRequest == null)
                 return null;
 
-            J2KImage imgrequest;
             lock (m_syncRoot)
-                m_priorityQueue.Find(delegate(J2KImage img)
-                {
-                    if(img == null)
-                        return false;
-                    return img.TextureID == newRequest.RequestedAssetID;
-                }, out imgrequest);
-            return imgrequest;
+                return m_queue.Find(new J2KImage(this) { TextureID = newRequest.RequestedAssetID }, 
+                    new Comparer());
+        }
+
+        private class Comparer : IComparer<J2KImage>
+        {
+            public int Compare (J2KImage x, J2KImage y)
+            {
+                if(x == null || y == null)
+                    return -1;
+                if(x.TextureID == y.TextureID)
+                    return 2;
+                return 0;
+            }
         }
 
         public bool ProcessImageQueue(int packetsToSend)
@@ -199,7 +206,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         //We don't have it, tell the client that it doesn't exist
                         m_client.SendAssetUploadCompleteMessage((sbyte)AssetType.Texture, false, image.TextureID);
-                        RemoveImageFromQueue(image);
                         packetsSent++;
                     }
                     else
@@ -209,15 +215,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         packetsSent += sent;
 
                         // If the send is complete, destroy any knowledge of this transfer
-                        if (imageDone)
-                            RemoveImageFromQueue(image);
+                        if(!imageDone)
+                            AddImageToQueue(image);
                     }
                 }
                 else
                 {
                     //Add it to the other queue and delete it from the top
                     imagesToReAdd.Add(image);
-                    m_priorityQueue.DeleteMax();
+                    m_queue.Remove(image);
                     packetsSent++; //We tried to send one
                     // UNTODO: This was a limitation of how LLImageManager is currently
                     // written. Undecoded textures should not be going into the priority
@@ -232,7 +238,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 foreach(J2KImage image in imagesToReAdd)
                 {
-                    this.AddImageToQueue(image);
+                    AddImageToQueue(image);
                 }
             }
 
@@ -244,7 +250,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 monitor.AddImageTime(EndTime);
             }
 
-            return m_priorityQueue.Count > 0;
+            return m_queue.Count > 0;
         }
 
         /// <summary>
@@ -263,9 +269,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             lock (m_syncRoot)
             {
-                if (m_priorityQueue.Count > 0)
+                if (m_queue.Count > 0)
                 {
-                    try { image = m_priorityQueue.FindMax(); }
+                    try { image = m_queue.Dequeue().Value; }
                     catch (Exception) { }
                 }
             }
@@ -277,37 +283,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             image.PriorityQueueHandle = null;
 
             lock (m_syncRoot)
-                try { m_priorityQueue.Add(ref image.PriorityQueueHandle, image); }
+                try { m_queue.Enqueue(image, image.Priority); }
                 catch (Exception) { }
-        }
-
-        void RemoveImageFromQueue(J2KImage image)
-        {
-            lock (m_syncRoot)
-                try
-                { 
-                    if(image.PriorityQueueHandle != null)
-                        m_priorityQueue.Delete(image.PriorityQueueHandle);
-                }
-                catch (Exception) { }
-            image.Dispose ();
-        }
-
-        void UpdateImageInQueue(J2KImage image)
-        {
-            lock (m_syncRoot)
-            {
-                try 
-                {
-                    if(image.PriorityQueueHandle != null)
-                        m_priorityQueue.Replace(image.PriorityQueueHandle, image); 
-                }
-                catch (Exception)
-                {
-                    image.PriorityQueueHandle = null;
-                    m_priorityQueue.Add(ref image.PriorityQueueHandle, image);
-                }
-            }
         }
 
         #endregion Priority Queue Helpers
