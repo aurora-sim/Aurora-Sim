@@ -325,7 +325,6 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             }
 
             Graphics graph = Graphics.FromImage(bitmap);
-
             // this is really just to save people filling the 
             // background color in their scripts, only do when fully opaque
             if (alpha >= 255)
@@ -333,24 +332,31 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
                 graph.FillRectangle(new SolidBrush(bgColour), 0, 0, width, height); 
             }
 
+            BitmapProcessing.FastBitmap fastBitmap = new BitmapProcessing.FastBitmap(bitmap);
+            fastBitmap.LockBitmap();
             for (int w = 0; w < bitmap.Width; w++)
             {
                 if (alpha <= 255) 
                 {
                     for (int h = 0; h < bitmap.Height; h++)
                     {
-                        bitmap.SetPixel(w, h, Color.FromArgb(alpha, bitmap.GetPixel(w, h)));
+                        fastBitmap.SetPixel(w, h, Color.FromArgb(alpha, fastBitmap.GetPixel(w, h)));
                     }
                 }
             }
+            fastBitmap.UnlockBitmap();
+            bitmap = fastBitmap.Bitmap();
 
+            graph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            graph.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+            graph.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             GDIDraw(data, graph, altDataDelim);
 
             byte[] imageJ2000 = new byte[0];
 
             try
             {
-                imageJ2000 = OpenJPEG.EncodeFromImage(bitmap, true);
+                imageJ2000 = OpenJPEG.EncodeFromImage(bitmap, false);
             }
             catch (Exception)
             {
