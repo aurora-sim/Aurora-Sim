@@ -616,6 +616,7 @@ namespace OpenSim.Services.CapsService
                     itemBase.InvType = (int)InventoryType.Texture;
                     itemBase.Name = "(Mesh) - " + assetName;
                     itemBase.CurrentPermissions = (uint)PermissionMask.All;
+                    itemBase.BasePermissions = (uint)PermissionMask.All;
                     itemBase.EveryOnePermissions = everyone_mask;
                     itemBase.GroupPermissions = group_mask;
                     itemBase.NextPermissions = next_owner_mask;
