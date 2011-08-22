@@ -223,7 +223,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     //Add it to the other queue and delete it from the top
                     imagesToReAdd.Add(image);
-                    m_queue.Remove(image);
                     packetsSent++; //We tried to send one
                     // UNTODO: This was a limitation of how LLImageManager is currently
                     // written. Undecoded textures should not be going into the priority
