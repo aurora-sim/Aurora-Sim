@@ -373,7 +373,7 @@ namespace Aurora.Modules
                         ISceneEntity[] entities = m_scene.Entities.GetEntities();
                         foreach (ISceneEntity entity in entities)
                         {
-                            if (entity.IsAttachment)
+                            if (!entity.IsAttachment)
                                 groups.Add(entity);
                         }
                     }
