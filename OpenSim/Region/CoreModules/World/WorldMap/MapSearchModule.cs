@@ -154,6 +154,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     data.WaterHeight = 0; // not used
                     data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
                     data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
+                    data.SizeX = (ushort)(info.RegionSizeX);
+                    data.SizeY = (ushort)(info.RegionSizeY);
                     blocks.Add(data);
                 }
             }

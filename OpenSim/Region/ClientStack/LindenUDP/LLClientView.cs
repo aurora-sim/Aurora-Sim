@@ -1300,9 +1300,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 mapReply.Data[i] = new MapBlockReplyPacket.DataBlock();
                 mapReply.Data[i].MapImageID = mapBlocks2[i].MapImageID;
-                //m_log.Warn(mapBlocks2[i].MapImageId.ToString());
                 mapReply.Data[i].X = mapBlocks2[i].X;
                 mapReply.Data[i].Y = mapBlocks2[i].Y;
+                mapReply.Data[i].SizeX = mapBlocks2[i].SizeX;
+                mapReply.Data[i].SizeY = mapBlocks2[i].SizeY;
                 mapReply.Data[i].WaterHeight = mapBlocks2[i].WaterHeight;
                 mapReply.Data[i].Name = Utils.StringToBytes(mapBlocks2[i].Name);
                 mapReply.Data[i].RegionFlags = mapBlocks2[i].RegionFlags;

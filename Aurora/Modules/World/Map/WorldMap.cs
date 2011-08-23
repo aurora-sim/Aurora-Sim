@@ -519,6 +519,9 @@ namespace Aurora.Modules
                 block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            block.SizeX = (ushort)r.RegionSizeX;
+            block.SizeY = (ushort)r.RegionSizeY;
+
             return block;
         }
 
@@ -541,6 +544,8 @@ namespace Aurora.Modules
                 block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            block.SizeX = (ushort)r.RegionSizeX;
+            block.SizeY = (ushort)r.RegionSizeY;
             blocks.Add(block);
             if (r.RegionSizeX > Constants.RegionSize || r.RegionSizeY > Constants.RegionSize)
             {
@@ -556,6 +561,8 @@ namespace Aurora.Modules
                         block.Name = r.RegionName; //Child piece, so ignore it
                         block.X = (ushort)((r.RegionLocX / Constants.RegionSize) + x);
                         block.Y = (ushort)((r.RegionLocY / Constants.RegionSize) + y);
+                        block.SizeX = (ushort)r.RegionSizeX;
+                        block.SizeY = (ushort)r.RegionSizeY;
                         blocks.Add (block);
                     }
                 }
@@ -658,6 +665,8 @@ namespace Aurora.Modules
             block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            block.SizeX = (ushort)r.RegionSizeX;
+            block.SizeY = (ushort)r.RegionSizeY;
             return block;
         }
 
