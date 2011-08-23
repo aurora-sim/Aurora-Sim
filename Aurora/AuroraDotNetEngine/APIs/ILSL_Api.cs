@@ -317,7 +317,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSensor(string name, string id, int type, double range, double arc);
               void llSensorRemove();
               void llSensorRepeat(string name, string id, int type, double range, double arc, double rate);
-              void llSetAlpha(double alpha, int face);
+              void llSetAlpha (double alpha, int face);
+              void llSetAngularVelocity (LSL_Vector force, LSL_Integer local);
               void llSetBuoyancy(double buoyancy);
               void llSetCameraAtOffset(LSL_Vector offset);
               void llSetCameraEyeOffset(LSL_Vector offset);
@@ -338,6 +339,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
               void llSetLinkTextureAnim(int linknum, int mode, int face, int sizex, int sizey, double start, double length, double rate);
           DateTime llSetLocalRot(LSL_Rotation rot);
        LSL_Integer llSetMemoryLimit (LSL_Integer limit);
+       LSL_Integer llGetMemoryLimit ();
               void llSetObjectDesc(string desc);
               void llSetObjectName(string name);
               void llSetObjectPermMask(int mask, int value);
@@ -350,7 +352,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
           DateTime llSetPrimURL(string url);
               void llSetRemoteScriptAccessPin(int pin);
           DateTime llSetRot(LSL_Rotation rot);
-              void llSetRotationalVelocity (LSL_Vector force, LSL_Integer local);
               void llSetScale(LSL_Vector scale);
               void llSetScriptState(string name, int run);
               void llSetSitText(string text);

@@ -147,10 +147,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void OpenTimeSlice(EnumeratorInfo Start)
         {
-            if(Start==null)
-                TimeSliceEnd = Util.EnvironmentTickCountAdd (MaxTimeSlice);
+            if(Start == null)
+                TimeSliceEnd = Util.EnvironmentTickCountAdd(MaxTimeSlice);
             else
-                TimeSliceEnd = Util.EnvironmentTickCountAdd (MaxTimeSlice/2);
+                TimeSliceEnd = Util.EnvironmentTickCountAdd(MaxTimeSlice / 2);
             InTimeSlice = true;
         }
 
@@ -161,7 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public bool CheckSlice()
         {
-            return Util.EnvironmentTickCountSubtract(TimeSliceEnd) > 0;
+            return TimeSliceEnd < Util.EnvironmentTickCount();
         }
 
         public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)

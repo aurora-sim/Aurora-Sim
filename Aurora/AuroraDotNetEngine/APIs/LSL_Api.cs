@@ -2609,7 +2609,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.ParentEntity.RootChild.PhysActor.Velocity = velocity;
         }
 
-        public void llSetRotationalVelocity (LSL_Vector force, LSL_Integer local)
+        public void llSetAngularVelocity (LSL_Vector force, LSL_Integer local)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             Vector3 rotvelocity = new Vector3((float)force.x, (float)force.y, (float)force.z);
@@ -7004,7 +7004,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer llSetMemoryLimit (LSL_Integer limit)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Integer();
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
+                return new LSL_Integer();
+
+            // Make scripts designed for LSO happy
+            return 16384;
+        }
+
+        public LSL_Integer llGetMemoryLimit ()
+        {
+            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
+                return new LSL_Integer();
 
             // Make scripts designed for LSO happy
             return 16384;
