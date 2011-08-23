@@ -351,6 +351,9 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
 
         public void MakeChildAgent (IScenePresence sp, GridRegion finalDestination)
         {
+            if(sp == null)
+                return;
+
             sp.Scene.AuroraEventManager.FireGenericEventHandler("SendingAttachments", new object[2] { finalDestination, sp });
 
             //Kill the groups here, otherwise they will become ghost attachments 
@@ -1200,7 +1203,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return false;
         }
 
-        public virtual bool IncomingRetrieveRootAgent (IScene scene, UUID id, out IAgentData agent)
+        public virtual bool IncomingRetrieveRootAgent (IScene scene, UUID id, out AgentData agent)
         {
             agent = null;
             IScenePresence sp = scene.GetScenePresence (id);

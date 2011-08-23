@@ -220,7 +220,29 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool RetrieveAgent(GridRegion destination, UUID id, out IAgentData agent)
+        public bool MakeChildAgent (UUID AgentID, GridRegion destination)
+        {
+            if(m_localBackend.MakeChildAgent(AgentID, destination))
+                return true;
+
+            // Eventually, we want to use a caps url instead of the agentID
+            string uri = MakeUri(destination, true) + AgentID + "/" + destination.RegionID.ToString() + "/";
+
+            OSDMap data = new OSDMap();
+            data["Method"] = "MakeChildAgent";
+            try
+            {
+                WebUtils.PostToService(uri, data, false, false, false);
+                return true;
+            }
+            catch(Exception e)
+            {
+                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: MakeChildAgent failed with exception: " + e.ToString());
+            }
+            return false;
+        }
+
+        public bool RetrieveAgent(GridRegion destination, UUID id, out AgentData agent)
         {
             agent = null;
             // Try local first

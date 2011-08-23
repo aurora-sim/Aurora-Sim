@@ -174,7 +174,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <returns>
         /// True if the user was found, false if not
         /// </returns>
-        bool IncomingRetrieveRootAgent (IScene scene, UUID id, out IAgentData agent);
+        bool IncomingRetrieveRootAgent (IScene scene, UUID id, out AgentData agent);
 
         /// <summary>
         /// Close the given agent in the given scene
@@ -185,5 +185,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// True if the user was closed, false if not
         /// </returns>
         bool IncomingCloseAgent (IScene scene, UUID agentID);
+
+        /// <summary>
+        /// Turn a former root child into a child agent (for when the agent leaves)
+        /// </summary>
+        /// <param name="sp"></param>
+        /// <param name="finalDestination"></param>
+        void MakeChildAgent (IScenePresence sp, GridRegion finalDestination);
     }
 }

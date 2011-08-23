@@ -678,7 +678,7 @@ namespace OpenSim.Services.MessagingService
                     if (!result)
                     {
                         //It says it failed, lets call the sim and check
-                        IAgentData data = null;
+                        AgentData data = null;
                         result = SimulationService.RetrieveAgent(destination, AgentID, out data);
                     }
                     if (!result)

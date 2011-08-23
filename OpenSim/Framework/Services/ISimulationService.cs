@@ -106,7 +106,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="id"></param>
         /// <param name="agent"></param>
         /// <returns></returns>
-        bool RetrieveAgent(GridRegion destination, UUID id, out IAgentData agent);
+        bool RetrieveAgent(GridRegion destination, UUID id, out AgentData agent);
 
         /// <summary>
         /// Close agent.
@@ -115,7 +115,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionHandle"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        bool CloseAgent(GridRegion destination, UUID id);
+        bool CloseAgent (GridRegion destination, UUID id);
+
+        /// <summary>
+        /// Makes a root agent into a child agent in the given region
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="Region"></param>
+        bool MakeChildAgent (UUID AgentID, GridRegion Region);
 
         #endregion Agents
 
@@ -140,5 +147,6 @@ namespace OpenSim.Services.Interfaces
         bool CreateObject(GridRegion destination, UUID userID, UUID itemID);
 
         #endregion Objects
+
     }
 }

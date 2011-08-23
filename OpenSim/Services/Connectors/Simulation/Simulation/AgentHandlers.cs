@@ -102,7 +102,20 @@ namespace OpenSim.Services
             }
             else if (method.Equals("POST"))
             {
-                DoAgentPost(request, responsedata, agentID);
+                string data = request["str_response_string"].ToString();
+                OSDMap map = new OSDMap();
+                try
+                {
+                    map = (OSDMap)OSDParser.DeserializeJson(data);
+                }
+                catch
+                {
+                    map = null;
+                }
+                if(map != null && map["Method"] == "MakeChildAgent")
+                    DoMakeChildAgent(agentID, regionID);
+                else
+                    DoAgentPost(request, responsedata, agentID);
                 return responsedata;
             }
             else if (method.Equals("GET"))
@@ -135,6 +148,11 @@ namespace OpenSim.Services
 
                 return responsedata;
             }
+        }
+
+        private void DoMakeChildAgent (UUID agentID, UUID regionID)
+        {
+            m_SimulationService.MakeChildAgent(agentID, new GridRegion() { RegionID = regionID });
         }
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
@@ -346,7 +364,7 @@ namespace OpenSim.Services
             GridRegion destination = new GridRegion();
             destination.RegionID = regionID;
 
-            IAgentData agent = null;
+            AgentData agent = null;
             bool result = m_SimulationService.RetrieveAgent(destination, id, out agent);
             OSDMap map = null;
             string strBuffer = "";

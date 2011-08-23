@@ -77,6 +77,7 @@ namespace OpenSim.Services.CapsService
     {
         private IRegionClientCapsService m_service;
         private IAgentInfoService m_agentInfoService;
+        private IAgentProcessing m_agentProcessing;
 
         #region ICapsServiceConnector Members
 
@@ -84,6 +85,7 @@ namespace OpenSim.Services.CapsService
         {
             m_service = service;
             m_agentInfoService = service.Registry.RequestModuleInterface<IAgentInfoService>();
+            m_agentProcessing = service.Registry.RequestModuleInterface<IAgentProcessing>();
             
             GenericHTTPMethod method = delegate(Hashtable httpMethod)
             {
@@ -107,6 +109,12 @@ namespace OpenSim.Services.CapsService
             };
             service.AddStreamHandler("HomeLocation", new RestHTTPHandler("POST", service.CreateCAPS("HomeLocation", ""),
                                                       method));
+            method = delegate(Hashtable httpMethod)
+            {
+                return TeleportLocation(httpMethod, m_service.AgentID);
+            };
+            service.AddStreamHandler("TeleportLocation", new RestHTTPHandler("POST", service.CreateCAPS("TeleportLocation", ""),
+                                                      method));
         }
 
         public void EnteringRegion()
@@ -119,6 +127,7 @@ namespace OpenSim.Services.CapsService
             m_service.RemoveStreamHandler ("UpdateAgentInformation", "POST");
             m_service.RemoveStreamHandler ("AvatarPickerSearch", "GET");
             m_service.RemoveStreamHandler ("HomeLocation", "POST");
+            m_service.RemoveStreamHandler ("TeleportLocation", "POST");
         }
 
         #region Other CAPS
@@ -230,6 +239,55 @@ namespace OpenSim.Services.CapsService
             cancelresponsedata["keepalive"] = false;
             cancelresponsedata["str_response_string"] = "";
             return cancelresponsedata;
+        }
+
+        private Hashtable TeleportLocation (Hashtable mDhttpMethod, UUID agentID)
+        {
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap pos = rm["LocationPos"] as OSDMap;
+            Vector3 position = new Vector3((float)pos["X"].AsReal(),
+                (float)pos["Y"].AsReal(),
+                (float)pos["Z"].AsReal());
+            OSDMap lookat = rm["LocationLookAt"] as OSDMap;
+            Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
+                (float)lookat["Y"].AsReal(),
+                (float)lookat["Z"].AsReal());
+            ulong RegionHandle = rm["RegionHandle"].AsULong();
+            uint tpFlags = rm["TeleportFlags"].AsUInteger();
+
+            OSDMap retVal = new OSDMap();
+            string reason = "";
+            int x, y;
+            Util.UlongToInts(RegionHandle, out x, out y);
+            GridRegion destination = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
+                x, y);
+            AgentData ad = new AgentData();
+
+            ISimulationService simService = m_service.Registry.RequestModuleInterface<ISimulationService>();
+            simService.RetrieveAgent(destination, m_service.AgentID, out ad);
+            ad.Position = position;
+            if(destination != null && m_agentProcessing.TeleportAgent(ref destination, tpFlags, (int)ad.Far, m_service.CircuitData, ad,
+                m_service.AgentID, m_service.RegionHandle, out reason))
+            {
+                retVal.Add("success", OSD.FromBoolean(true));
+                simService.MakeChildAgent(m_service.AgentID, destination);
+            }
+            else
+            {
+                if(destination == null)
+                    retVal.Add("reason", "Could not find the destination region.");
+                else
+                    retVal.Add("reason", reason);
+                retVal.Add("success", OSD.FromBoolean(false));
+            }
+
+            //Send back data
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
+            return responsedata;
         }
 
         #endregion
