@@ -46,15 +46,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             try
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets", "id, name, description, assetType, local, temporary, asset_flags, creatorID, data");
-                /*if (dr == null)
-                {
-                    m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
-                    return null;
-                }*/
                 while(dr != null && dr.Read())
                 {
                     return LoadAssetFromDataRead(dr);
                 }
+                m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
@@ -74,15 +70,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             try
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, creatorID");
-                if (dr == null)
-                {
-                    m_Log.Warn("[LocalAssetDatabase] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
-                    return null;
-                }
                 while (dr.Read())
                 {
                     return LoadAssetFromDataRead(dr);
                 }
+                m_Log.Warn("[LocalAssetDatabase] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
