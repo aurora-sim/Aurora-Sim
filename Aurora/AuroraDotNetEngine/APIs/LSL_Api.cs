@@ -7554,7 +7554,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
 
             if(m_host.ParentEntity.RootChild.GetAvatarOnSitTarget().Count != 0)
-                return m_host.ParentEntity.RootChild.GetAvatarOnSitTarget()[0].ToString();
+                return new LSL_String(m_host.ParentEntity.RootChild.GetAvatarOnSitTarget()[0].ToString());
             else
                 return ScriptBaseClass.NULL_KEY;
         }
@@ -7564,7 +7564,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Key();
 
             if(m_host.GetAvatarOnSitTarget().Count != 0)
-                return m_host.GetAvatarOnSitTarget()[0].ToString();
+                return new LSL_String(m_host.GetAvatarOnSitTarget()[0].ToString());
             else
                 return ScriptBaseClass.NULL_KEY;
         }
