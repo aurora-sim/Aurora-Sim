@@ -180,18 +180,7 @@ namespace OpenSim.Services.AssetService
         public virtual bool Delete (UUID id)
         {
             m_Log.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
-            AssetBase asset = m_database.GetAsset(id);
-            if (asset == null)
-                return false;
-
-            if ((int)(asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
-                (int)(asset.Flags & AssetFlags.Deletable) != 0)
-            {
-                return m_database.Delete(id);
-            }
-            m_Log.DebugFormat("[ASSET SERVICE]: Request to delete asset {0}, but flags are not Maptile", id);
-
-            return false;
+            return m_database.Delete(id);
         }
 
         void HandleShowDigest(string[] args)

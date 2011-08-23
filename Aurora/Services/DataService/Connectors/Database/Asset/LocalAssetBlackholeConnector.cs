@@ -349,7 +349,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
 
                 // Delete and save the asset
-                Delete(asset.ID, false);
+                Delete(asset.ID, false, true, asset);
                 m_Gd.Insert(database,
                             new[]
                                 {
@@ -450,32 +450,46 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         /// <returns></returns>
         public bool Delete(UUID id)
         {
-            return Delete(id, true);
+            return Delete(id, true, false);
         }
 
-        private bool Delete(UUID id, bool assignHashCodeCheckTask)
+        private bool Delete(UUID id, bool assignHashCodeCheckTask, bool ignoreFlags)
+        {
+            AssetBase asset = GetAsset(id, true, false);
+            if (asset == null) return false;
+            return Delete(id, assignHashCodeCheckTask, ignoreFlags, asset);
+        }
+
+        private bool Delete(UUID id, bool assignHashCodeCheckTask, bool ignoreFlags, AssetBase asset)
         {
             ResetTimer(15000);
             string tableName = "auroraassets_" + id.ToString().Substring(0, 1);
             try
             {
+                
                 // assign a task to see if the hash code is being used anywhere else
                 if (assignHashCodeCheckTask)
                 {
-                    List<string> results = m_Gd.Query("id", id, tableName, "hash_code");
-                    if (results.Count == 0) results = m_Gd.Query("id", id, "auroraassets_old", "hash_code");
-                    if (results.Count == 1)
-                    {
-                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
-                                    new object[] { UUID.Random(), "HASHCHECK", results[0] });
-                    }
+                    m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
+                                new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
                 }
 
-                // delete the asset
-                m_Gd.Delete(tableName, "id = '" + id + "'");
-                // just for safe measure check here as well
-                m_Gd.Delete("auroraassets_old", "id = '" + id + "'");
-                return true;
+                // check deleteability of this asset.. if needed
+                if (!ignoreFlags)
+                {
+                    if ((int)(asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
+                        (int)(asset.Flags & AssetFlags.Deletable) != 0)
+                        ignoreFlags = true;
+                }
+
+                if (ignoreFlags)
+                {
+                    // delete the asset
+                    m_Gd.Delete(tableName, "id = '" + id + "'");
+                    // just for safe measure check here as well
+                    m_Gd.Delete("auroraassets_old", "id = '" + id + "'");
+                }
+                return ignoreFlags;
             }
             catch (Exception e)
             {
@@ -673,7 +687,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
         }
 
-        private Dictionary<UUID, AssetBase> m_convertingAssets = new Dictionary<UUID, AssetBase>();
+        private readonly Dictionary<UUID, AssetBase> m_convertingAssets = new Dictionary<UUID, AssetBase>();
         private AssetBase Convert2BH(UUID uuid)
         {
             AssetBase asset = null;
