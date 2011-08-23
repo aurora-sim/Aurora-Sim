@@ -1502,7 +1502,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else if (s is BinaryExpression)
             {
-                fullretstr += GenerateBinaryExpression((BinaryExpression)s);
+                fullretstr += GenerateBinaryExpression((BinaryExpression)s, false, "");
             }
             else if (s is ParenthesisExpression)
             {
@@ -2558,7 +2558,7 @@ default
         /// </summary>
         /// <param name="be">The BinaryExpression node.</param>
         /// <returns>String containing C# code for BinaryExpression be.</returns>
-        private string GenerateBinaryExpression(BinaryExpression be)
+        private string GenerateBinaryExpression(BinaryExpression be, bool isUnaryExpression, string addition)
         {
             string retstr = "";
 
@@ -2567,14 +2567,16 @@ default
             if (be.ExpressionSymbol.Equals("&&") || be.ExpressionSymbol.Equals("||"))
             {
                 // special case handling for logical and/or, see Mantis 3174
-                retstr += "((LSL_Types.LSLInteger)((bool)(";
+                retstr += "((LSL_Types.LSLInteger)( " + 
+                    (isUnaryExpression ? addition : "") + 
+                    "(bool)(";
                 retstr += GenerateNode((SYMBOL)be.kids.Pop());
                 retstr += "))";
                 retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
-                retstr += "((bool)(";
+                retstr += "((LSL_Types.LSLInteger)((bool)(";
                 foreach (SYMBOL kid in be.kids)
                     retstr += GenerateNode(kid);
-                retstr += ")))";
+                retstr += "))))";
             }
             else if (be.ExpressionSymbol.Equals ("!=") || be.ExpressionSymbol.Equals ("=="))
             {
@@ -2623,7 +2625,15 @@ default
             string retstr = "";
 
             retstr += Generate(ue.UnarySymbol, ue);
-            retstr += GenerateNode((SYMBOL)ue.kids.Pop());
+            SYMBOL kid = (SYMBOL)ue.kids.Pop();
+            if(kid is BinaryExpression)
+            {
+                string tempretstr = retstr;
+                retstr = "";
+                retstr += GenerateBinaryExpression((BinaryExpression)kid, true, tempretstr);
+            }
+            else
+                retstr += GenerateNode(kid);
 
             return retstr.ToString();
         }
