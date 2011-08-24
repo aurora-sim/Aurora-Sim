@@ -100,7 +100,7 @@ namespace Aurora.BotManager
                 {
                     position = m_listOfPositions[CurrentPos];
                     state = m_listOfStates[CurrentPos];
-                    if (state != TravelMode.Wait && position.ApproxEquals (currentPos, closeToRange))
+                    if(state != TravelMode.Wait && state != TravelMode.TriggerHereEvent && position.ApproxEquals(currentPos, closeToRange))
                     {
                         //Its close to a position, go look for the next pos
                         //m_listOfPositions.RemoveAt (0);
@@ -111,7 +111,12 @@ namespace Aurora.BotManager
                     }
                     else
                     {
-                        if (state == TravelMode.Wait)
+                        if(state == TravelMode.TriggerHereEvent)
+                        {
+                            CurrentPos++;//Clear for next time, as we only fire this one time
+                            m_lastChangedPosition = DateTime.MinValue;
+                        }
+                        else if (state == TravelMode.Wait)
                         {
                             if (m_waitingSince == DateTime.MinValue)
                                 m_waitingSince = DateTime.Now;

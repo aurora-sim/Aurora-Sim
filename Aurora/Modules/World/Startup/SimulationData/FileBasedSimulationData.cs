@@ -189,13 +189,12 @@ namespace Aurora.Modules.FileBasedSimulationData
         {
             if (m_requiresSave)
             {
+                m_requiresSave = false;
                 m_saveTimer.Stop ();
                 try
                 {
-                    if(!m_saveChanges || !m_saveBackups)
-                        return;
-                    SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
-                    m_requiresSave = false;
+                    if(m_saveChanges && m_saveBackups)
+                        SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
                 }
                 catch(Exception ex)
                 {
@@ -324,19 +323,19 @@ namespace Aurora.Modules.FileBasedSimulationData
                 
                 ISceneEntity[] saveentities = m_scene.Entities.GetEntities();
                 List<UUID> entitiesToSave = new List<UUID>();
-                try
+                foreach(ISceneEntity entity in saveentities)
                 {
-                    foreach (ISceneEntity entity in saveentities)
+                    try
                     {
-                        if (entity.IsAttachment || ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
-                         || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
+                        if(entity.IsAttachment || ((entity.RootChild.Flags & PrimFlags.Temporary) == PrimFlags.Temporary)
+                             || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                             continue;
-                        if (entity.HasGroupChanged)
+                        if(entity.HasGroupChanged)
                         {
                             entity.HasGroupChanged = false;
                             //Write all entities
-                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2 ();
-                            writer.WriteFile ("entities/" + entity.UUID.ToString (), xml);
+                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2();
+                            writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
                             xml = null;
                         }
                         else
@@ -344,10 +343,11 @@ namespace Aurora.Modules.FileBasedSimulationData
                         if(saveAssets)
                             assetGatherer.GatherAssetUuids(entity, assets, m_scene);
                     }
-                }
-                catch (Exception ex)
-                {
-                    m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                    catch(Exception ex)
+                    {
+                        m_log.WarnFormat("[Backup]: Exception caught: {0}", ex.ToString());
+                        entitiesToSave.Add(entity.UUID);
+                    }
                 }
 
 

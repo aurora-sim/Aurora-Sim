@@ -50,9 +50,11 @@ namespace Aurora.BotManager
     public enum TravelMode
     {
         Walk,
+        Run,
         Fly,
         Teleport,
         Wait,
+        TriggerHereEvent,
         None
     };
 
@@ -89,6 +91,8 @@ namespace Aurora.BotManager
         /// Move - called every 10ms, allows for subtle changes and fast callbacks before the avatar moves toward its next location
         /// ToAvatar - a following event, called when the bot is within range of the avatar (range = m_followCloseToPoint)
         /// LostAvatar - a following event, called when the bot is out of the maximum range to look for its avatar (range = m_followLoseAvatarDistance)
+        /// HereEvent - Triggered when a script passes TRIGGER_HERE_EVENT via botSetMap
+        /// ChangedState = Triggered when the state of a bot changes
         /// </summary>
         public AuroraEventManager EventManager = new AuroraEventManager ();
 
@@ -98,9 +102,13 @@ namespace Aurora.BotManager
         {
             get { return m_currentState; }
             set 
-            { 
-                m_previousState = m_currentState;  
-                m_currentState = value;
+            {
+                if(m_currentState != value)
+                {
+                    m_previousState = m_currentState;
+                    m_currentState = value;
+                    EventManager.FireGenericEventHandler("ChangedState", null);
+                }
             }
         }
         private bool lastFlying = false;
@@ -550,13 +558,25 @@ namespace Aurora.BotManager
             if (m_nodeGraph.GetNextPosition (m_scenePresence.AbsolutePosition, m_closeToPoint, 60, out pos, out state, out teleport))
             {
                 if (state == TravelMode.Fly)
-                    FlyTo (pos);
-                else if (state == TravelMode.Walk)
-                    WalkTo (pos);
-                else if (state == TravelMode.Teleport)
+                    FlyTo(pos);
+                else if(state == TravelMode.Run)
                 {
-                    m_scenePresence.Teleport (pos);
+                    m_scenePresence.SetAlwaysRun = true;
+                    WalkTo(pos);
+                }
+                else if(state == TravelMode.Walk)
+                {
+                    m_scenePresence.SetAlwaysRun = false;
+                    WalkTo(pos);
+                }
+                else if(state == TravelMode.Teleport)
+                {
+                    m_scenePresence.Teleport(pos);
                     m_nodeGraph.CurrentPos++;
+                }
+                else if(state == TravelMode.TriggerHereEvent)
+                {
+                    EventManager.FireGenericEventHandler("HereEvent", null);
                 }
             }
             else

@@ -50,5 +50,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLString STOP_TIME_REVERSAL_SAVING = "stop_time_reversal_saving";
         public static readonly LSLString START_TIME_REVERSAL = "start_time_reversal";
         public static readonly LSLString STOP_TIME_REVERSAL = "stop_time_reversal";
+
+        public static readonly LSLInteger BOT_FOLLOW_FLAG_NONE = 0;
+        public static readonly LSLInteger BOT_FOLLOW_FLAG_INDEFINITELY = 1;
+
+        public static readonly LSLInteger BOT_FOLLOW_WALK = 0;
+        public static readonly LSLInteger BOT_FOLLOW_RUN = 1;
+        public static readonly LSLInteger BOT_FOLLOW_FLY = 2;
+        public static readonly LSLInteger BOT_FOLLOW_TELEPORT = 3;
+        public static readonly LSLInteger BOT_FOLLOW_WAIT = 4;
+        public static readonly LSLInteger BOT_FOLLOW_TRIGGER_HERE_EVENT = 1;
     }
 }
