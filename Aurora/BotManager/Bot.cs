@@ -1373,6 +1373,8 @@ namespace Aurora.BotManager
 
         public void SendChatMessage (int sayType, string message, int channel)
         {
+            if(m_scenePresence == null || m_scene == null)
+                return;
             OSChatMessage args = new OSChatMessage ();
             args.Message = message;
             args.Channel = channel;
