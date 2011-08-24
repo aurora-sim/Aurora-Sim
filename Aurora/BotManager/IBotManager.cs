@@ -37,45 +37,38 @@ namespace Aurora.BotManager
         #region Create/Remove bot
 
         UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID, Vector3 startPos);
-        void RemoveAvatar (UUID Bot, IScene iScene);
+        void RemoveAvatar (UUID Bot, IScene iScene, UUID userAttempting);
 
         #endregion
 
         #region Tag/Remove bots
 
-        void AddTagToBot (UUID Bot, string tag);
+        void AddTagToBot (UUID Bot, string tag, UUID userAttempting);
         List<UUID> GetBotsWithTag (string tag);
-        void RemoveBots (string tag);
+        void RemoveBots (string tag, UUID userAttempting);
 
         #endregion
 
         #region Basic Movement
 
-        void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags);
-        void SetMovementSpeedMod (UUID Bot, float modifier);
-        void SetBotShouldFly (UUID botID, bool shouldFly);
-        void PauseMovement (UUID botID);
-        void ResumeMovement (UUID botID);
-
-        #endregion
-
-        #region Path following
-
-        void ReadMap (UUID botID, string map, int X, int Y, int CornerStoneX, int CornerStoneY);
-        void FindPath (UUID botID, Vector3 currentPos, Vector3 finishVector);
+        void SetBotMap (UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting);
+        void SetMovementSpeedMod (UUID Bot, float modifier, UUID userAttempting);
+        void SetBotShouldFly (UUID botID, bool shouldFly, UUID userAttempting);
+        void PauseMovement (UUID botID, UUID userAttempting);
+        void ResumeMovement (UUID botID, UUID userAttempting);
 
         #endregion
 
         #region FollowAvatar
 
-        void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance);
-        void StopFollowAvatar (UUID botID);
+        void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance, UUID userAttempting);
+        void StopFollowAvatar (UUID botID, UUID userAttempting);
 
         #endregion
 
         #region Chat
 
-        void SendChatMessage (UUID botID, string message, int sayType, int channel);
+        void SendChatMessage (UUID botID, string message, int sayType, int channel, UUID userAttempting);
 
         #endregion
 

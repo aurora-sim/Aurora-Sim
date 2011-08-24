@@ -148,10 +148,16 @@ namespace Aurora.BotManager
         #region IClientAPI properties
 
         private UUID m_avatarCreatorID = UUID.Zero;
+        public UUID AvatarCreatorID
+        {
+            get { return m_avatarCreatorID; }
+        }
         private static UInt32 UniqueId = 1;
 
         private string m_firstName = "";
         private string m_lastName = "";
+        public bool ShouldFly = false;
+        private float m_closeToPoint = 1;
 
         private NodeGraph m_nodeGraph = new NodeGraph ();
 
@@ -607,39 +613,10 @@ namespace Aurora.BotManager
 
         #endregion
 
-
-        #region A* Path Following Code
-
-        #region Path declares
-
-        public int cornerStoneX = 128;
-        public int cornerStoneY = 128;
-        int[,] currentMap = new int[5, 5];
-        public bool ShouldFly = false;
-
-        public bool IsOnAPath = false;
-        public List<Vector3> WayPoints = new List<Vector3> ();
-        public int CurrentWayPoint = 0;
-        private float m_closeToPoint = 1;
-
-        #endregion
-
-        #region AStarBot memebers
-
-        public void ReadMap (string map, int X, int Y, int CornerStoneX, int CornerStoneY)
-        {
-            cornerStoneX = CornerStoneX;
-            cornerStoneY = CornerStoneY;
-            currentMap = Games.Pathfinding.AStar2DTest.StartPath.ReadMap (map, X, Y);
-            if (currentMap[0, 0] == -99)
-            {
-                m_log.Warn ("The map was found but failed to load. Check the map.");
-            }
-        }
+        #region FindPath
 
         public List<Vector3> InnerFindPath (int[,] map, int startX, int startY, int finishX, int finishY)
         {
-            CurrentWayPoint = 0; //Reset to the beginning of the list
             Games.Pathfinding.AStar2DTest.StartPath.Map = map;
             Games.Pathfinding.AStar2DTest.StartPath.xLimit = (int)Math.Sqrt (map.Length);
             Games.Pathfinding.AStar2DTest.StartPath.yLimit = (int)Math.Sqrt (map.Length);
@@ -666,73 +643,6 @@ namespace Aurora.BotManager
             }
             return waypoints;
         }
-
-        #endregion
-
-        #region Follow Path
-
-        public void FindPath (Vector3 currentPos, Vector3 finishVector)
-        {
-            // Bot position converted to map coordinates -maybe here we can check if on Map
-            int startX = (int)currentPos.X - cornerStoneX;
-            int startY = (int)currentPos.Y - cornerStoneY;
-
-            m_log.Debug ("My Pos " + currentPos.ToString () + " , End Pos " + finishVector.ToString ());
-
-            // Goal position converted to map coordinates
-            int finishX = (int)finishVector.X - cornerStoneX;
-            int finishY = (int)finishVector.Y - cornerStoneY;
-            int finishZ = 25;
-
-            m_scenePresence.StandUp (); //Can't follow a path if sitting
-
-            CurrentWayPoint = 0; //Reset to the beginning of the list
-            List<string> points = Games.Pathfinding.AStar2DTest.StartPath.Path (startX, startY, finishX, finishY, finishZ, cornerStoneX, cornerStoneY);
-
-            if (points.Contains ("no_path"))
-            {
-                m_log.Debug ("I'm sorry I could not find a solution to that path. Teleporting instead");
-                m_scenePresence.Teleport (finishVector);
-                return;
-            }
-            else
-            {
-                if (!IsOnAPath)
-                    EventManager.RegisterEventHandler ("Update", FollowUpdate);
-                IsOnAPath = true;
-            }
-
-            m_nodeGraph.Clear ();
-
-            lock (WayPoints)
-            {
-                foreach (string s in points)
-                {
-                    string[] Vector = s.Split (',');
-
-                    if (Vector.Length != 3)
-                        continue;
-
-                    m_nodeGraph.Add (new Vector3 (float.Parse (Vector[0]),
-                        float.Parse (Vector[1]),
-                        float.Parse (Vector[2])), ShouldFly ? TravelMode.Fly : TravelMode.Walk);
-                }
-            }
-        }
-
-        #endregion
-
-        #region Follow Update Method
-
-        /// <summary>
-        /// This is called to make the bot walk nicely around every 100 milliseconds by m_frames timer
-        /// </summary>
-        private object FollowUpdate (string functionName, object param)
-        {
-            return null;
-        }
-
-        #endregion
 
         #endregion
 
@@ -766,11 +676,6 @@ namespace Aurora.BotManager
             get { return m_followLoseAvatarDistance; }
             set { m_followLoseAvatarDistance = value; }
         }
-
-        /// <summary>
-        /// So that other bots can follow us
-        /// </summary>
-        public List<Bot> ChildFollowers = new List<Bot> ();
 
         #endregion
 
@@ -918,9 +823,6 @@ namespace Aurora.BotManager
                         SignificantPositionFollowing ();
             }
             ClearOutInSignificantPositions (false);
-            //Tell any child followers about us
-            foreach (Bot bot in ChildFollowers)
-                bot.ParentMoved (m_nodeGraph);
         }
 
         #endregion
@@ -1147,11 +1049,6 @@ namespace Aurora.BotManager
                 nextPos = ConvertPathToPos (raycastEntities.ToArray (), entities, currentPos, path, ref i);
             }
             return true;
-        }
-
-        public void ParentMoved (NodeGraph graph)
-        {
-            m_nodeGraph.CopyFrom (graph);
         }
 
         private Vector3 ConvertPathToPos (ISceneChildEntity[] raycastEntities, ISceneEntity[] entites, Vector3 originalPos, List<Vector3> path, ref int i)

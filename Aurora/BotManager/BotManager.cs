@@ -175,38 +175,67 @@ namespace Aurora.BotManager
 
             //Save them in the bots list
             m_bots.Add(m_character.AgentId, m_character);
+            AddTagToBot(m_character.AgentId, "AllBots", m_character.AvatarCreatorID);
 
             m_log.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
             //Return their UUID
             return m_character.AgentId;
         }
 
-        public void RemoveAvatar (UUID avatarID, IScene scene)
+        public void RemoveAvatar (UUID avatarID, IScene scene, UUID userAttempting)
         {
-            if (!m_bots.Remove (avatarID))
-                return;
             IScenePresence sp = scene.GetScenePresence (avatarID);
             if (sp == null)
+                return;
+            if(!CheckPermission(sp, userAttempting))
+                return;
+
+            RemoveTagFromBot(avatarID, "AllBots", userAttempting);
+            if (!m_bots.Remove (avatarID))
                 return;
             //Kill the agent
             IEntityTransferModule module = scene.RequestModuleInterface<IEntityTransferModule> ();
             module.IncomingCloseAgent (scene, avatarID);
         }
-
-        public void PauseMovement (UUID botID)
+        
+        private bool CheckPermission (IScenePresence sp, UUID userAttempting)
         {
-            Bot bot;
-            //Find the bot
-            if (m_bots.TryGetValue (botID, out bot))
-                bot.PauseMovement ();
+            if(sp.ControllingClient is Bot)
+                return ((Bot)sp.ControllingClient).AvatarCreatorID == userAttempting;
+            return false;
         }
 
-        public void ResumeMovement (UUID botID)
+        private bool CheckPermission (Bot bot, UUID userAttempting)
+        {
+            if(userAttempting == UUID.Zero)
+                return true;//Forced override
+            if(bot != null)
+                return bot.AvatarCreatorID == userAttempting;
+            return false;
+        }
+
+        public void PauseMovement (UUID botID, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if (m_bots.TryGetValue (botID, out bot))
-                bot.ResumeMovement ();
+            if(m_bots.TryGetValue(botID, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+                bot.PauseMovement();
+            }
+        }
+
+        public void ResumeMovement (UUID botID, UUID userAttempting)
+        {
+            Bot bot;
+            //Find the bot
+            if(m_bots.TryGetValue(botID, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+                bot.ResumeMovement();
+            }
         }
 
         /// <summary>
@@ -215,12 +244,16 @@ namespace Aurora.BotManager
         /// <param name="Bot">ID of the bot</param>
         /// <param name="Positions">List of positions the bot will move to</param>
         /// <param name="mode">List of what the bot should be doing inbetween the positions</param>
-        public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags)
+        public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if (m_bots.TryGetValue(Bot, out bot))
-                bot.SetPath (Positions, mode, flags);
+            if(m_bots.TryGetValue(Bot, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+                bot.SetPath(Positions, mode, flags);
+            }
         }
 
         /// <summary>
@@ -228,35 +261,55 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void SetMovementSpeedMod(UUID Bot, float modifier)
+        public void SetMovementSpeedMod (UUID Bot, float modifier, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue(Bot, out bot))
+            if(m_bots.TryGetValue(Bot, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
                 bot.SetMovementSpeedMod(modifier);
+            }
         }
 
-        public void SetBotShouldFly (UUID botID, bool shouldFly)
+        public void SetBotShouldFly (UUID botID, bool shouldFly, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
-                if (shouldFly)
-                    bot.DisableWalk ();
+            if(m_bots.TryGetValue(botID, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+                if(shouldFly)
+                    bot.DisableWalk();
                 else
-                    bot.EnableWalk ();
+                    bot.EnableWalk();
+            }
         }
 
         #region Tag/Remove bots
 
         private Dictionary<string, List<UUID>> m_botTags = new Dictionary<string, List<UUID>> ();
-        public void AddTagToBot (UUID Bot, string tag)
+        public void AddTagToBot (UUID Bot, string tag, UUID userAttempting)
         {
+            Bot bot;
+            if (m_bots.TryGetValue (Bot, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+            }
             if (!m_botTags.ContainsKey (tag))
                 m_botTags.Add (tag, new List<UUID> ());
             m_botTags[tag].Add (Bot);
         }
 
-        public void RemoveTagFromBot (UUID Bot, string tag)
+        public void RemoveTagFromBot (UUID Bot, string tag, UUID userAttempting)
         {
+            Bot bot;
+            if (m_bots.TryGetValue (Bot, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+            }
             if (m_botTags.ContainsKey (tag))
                 m_botTags[tag].Remove (Bot);
         }
@@ -268,16 +321,19 @@ namespace Aurora.BotManager
             return new List<UUID> (m_botTags[tag]);
         }
 
-        public void RemoveBots (string tag)
+        public void RemoveBots (string tag, UUID userAttempting)
         {
             List<UUID> bots = GetBotsWithTag(tag);
             foreach(UUID bot in bots)
             {
-                if (m_bots.ContainsKey (bot))
+                Bot Bot;
+                if (m_bots.TryGetValue (bot, out Bot))
                 {
-                    RemoveTagFromBot (bot, tag);
+                    if(!CheckPermission(Bot, userAttempting))
+                        continue;
+                    RemoveTagFromBot (bot, tag, userAttempting);
                     IScene s = m_bots[bot].Scene;
-                    RemoveAvatar (bot, s);
+                    RemoveAvatar (bot, s, userAttempting);
                 }
             }
         }
@@ -286,83 +342,21 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region IAStarBotManager
-
-        /// <summary>
-        /// Reads the map file for the bot
-        /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void ReadMap(UUID botID, string map, int X, int Y, int CornerStoneX, int CornerStoneY)
-        {
-            Bot bot;
-            if (m_bots.TryGetValue(botID, out bot))
-            {
-                bot.ReadMap (map, X, Y, CornerStoneX, CornerStoneY);
-            }
-        }
-
-        /// <summary>
-        /// Starts to find the path for the bot
-        /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void FindPath(UUID botID, Vector3 currentPos, Vector3 finishVector)
-        {
-            Bot bot;
-            if (m_bots.TryGetValue(botID, out bot))
-            {
-                bot.FindPath(currentPos, finishVector);
-            }
-        }
+        #region IBotManager
 
         /// <summary>
         /// Begins to follow the given user
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance)
+        public void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance, UUID userAttempting)
         {
             Bot bot;
             if (m_bots.TryGetValue (botID, out bot))
             {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
                 bot.FollowAvatar (avatarName, startFollowDistance, endFollowDistance);
-            }
-        }
-
-        /// <summary>
-        /// SecondBotID begins to follow BotID
-        /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void FollowBot (UUID botID, UUID secondBotID, float followDistance)
-        {
-            Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
-            {
-                Bot secondBot;
-                if (m_bots.TryGetValue (secondBotID, out secondBot))
-                {
-                    bot.ChildFollowers.Add (secondBot);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Stops following the given bot
-        /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void StopFollowBot (UUID botID, UUID secondBotID)
-        {
-            Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
-            {
-                Bot secondBot;
-                if (m_bots.TryGetValue (secondBotID, out secondBot))
-                {
-                    bot.ChildFollowers.Remove (secondBot);
-                }
             }
         }
 
@@ -371,11 +365,15 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void StopFollowAvatar (UUID botID)
+        public void StopFollowAvatar (UUID botID, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
-                bot.StopFollowAvatar ();
+            if(m_bots.TryGetValue(botID, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+                bot.StopFollowAvatar();
+            }
         }
 
         /// <summary>
@@ -383,11 +381,15 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name="Bot"></param>
         /// <param name="modifier"></param>
-        public void SendChatMessage (UUID botID, string message, int sayType, int channel)
+        public void SendChatMessage (UUID botID, string message, int sayType, int channel, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
-                bot.SendChatMessage (sayType, message, channel);
+            if(m_bots.TryGetValue(botID, out bot))
+            {
+                if(!CheckPermission(bot, userAttempting))
+                    return;
+                bot.SendChatMessage(sayType, message, channel);
+            }
         }
 
         #endregion

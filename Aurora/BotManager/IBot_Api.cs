@@ -42,14 +42,12 @@ namespace Aurora.BotManager
     {
         LSL_Vector botGetWaitingTime (LSL_Integer waitTime);
         void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType, LSL_Integer flags);
-        string botCreateBot (string FirstName, string LastName, string appearanceToClone, LSL_Vector startPos);
+        LSL_String botCreateBot (string FirstName, string LastName, string appearanceToClone, LSL_Vector startPos);
         void botRemoveBot (string bot);
         void botPauseMovement (string bot);
         void botResumeMovement (string bot);
         void botFollowAvatar (string bot, string avatarName, LSL_Float startFollowDistance, LSL_Float endFollowDistance);
         void botStopFollowAvatar (string bot);
-        void botSetPathMap (string bot, string pathMap, int x, int y, int cornerstoneX, int cornerstoneY);
-        void botFindPath (string bot, LSL_Vector startPos, LSL_Vector endPos);
         void botSendChatMessage (string bot, string message, int sayType, int channel);
         void botSetShouldFly (string keyOfBot, int ShouldFly);
         void botSitObject (string bot, string objectID, LSL_Vector offset);
