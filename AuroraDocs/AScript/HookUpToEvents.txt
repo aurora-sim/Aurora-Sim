@@ -6,9 +6,9 @@ public void state_entry()
     Scene.EventManager.OnSignificantClientMovement += SignificantClientMovement;
 }
 
-public void state_exit()
+public void exit()
 {
-    //REMOVE THE EVENT (VERY IMPORTANT, ALWAYS REMOVE ANY EVENTS YOU ADD)
+    //REMOVE THE EVENT (VERY IMPORTANT, ALWAYS REMOVE ANY EVENTS YOU ADD, OTHERWISE THEY KEEP GOING EVEN WHEN THE SCRIPT IS DELETED)
     Scene.EventManager.OnSignificantClientMovement -= SignificantClientMovement;
 }
 
