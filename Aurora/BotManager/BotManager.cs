@@ -332,8 +332,7 @@ namespace Aurora.BotManager
                     if(!CheckPermission(Bot, userAttempting))
                         continue;
                     RemoveTagFromBot (bot, tag, userAttempting);
-                    IScene s = m_bots[bot].Scene;
-                    RemoveAvatar (bot, s, userAttempting);
+                    RemoveAvatar(bot, Bot.Scene, userAttempting);
                 }
             }
         }

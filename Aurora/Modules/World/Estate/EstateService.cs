@@ -353,14 +353,19 @@ namespace Aurora.Modules
             UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
 
             IScenePresence Sp = scene.GetScenePresence(userID);
-            if (account == null)
+            if(account == null)
             {
                 IUserAgentService uas = scene.RequestModuleInterface<IUserAgentService> ();
-                AgentCircuitData circuit = scene.AuthenticateHandler.AgentCircuitsByUUID[userID];
-                if (uas == null || !uas.VerifyAgent (circuit))
+                AgentCircuitData circuit;
+                if (uas == null ||
+                    !scene.AuthenticateHandler.AgentCircuitsByUUID.TryGetValue(userID, out circuit) ||
+                    !uas.VerifyAgent (circuit))
                 {
-                    reason = "Failed authentication.";
-                    return false; //NO!
+                    if(scene.AuthenticateHandler.AgentCircuitsByUUID.ContainsKey(userID))//Bots go around this check
+                    {
+                        reason = "Failed authentication.";
+                        return false; //NO!
+                    }
                 }
             }
 
