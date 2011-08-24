@@ -55,8 +55,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (source.Configs["MapModule"] != null)
             {
                 if (source.Configs["MapModule"].GetString(
-                        "MapModule", "MapModule") !=
-                        "MapModule")
+                        "WorldMapModule", "AuroraWorldMapModule") !=
+                        "WorldMapModule")
                 {
                     Enabled = false;
                 }
@@ -170,6 +170,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             data.WaterHeight = 0; // not used
             data.X = 0;
             data.Y = 0;
+            data.SizeX = 256;
+            data.SizeY = 256;
             blocks.Add(data);
 
             remoteClient.SendMapBlock(blocks, 2);

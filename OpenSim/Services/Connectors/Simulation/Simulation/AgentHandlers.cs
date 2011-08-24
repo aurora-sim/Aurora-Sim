@@ -105,7 +105,7 @@ namespace OpenSim.Services
                 OSDMap map = null;
                 try
                 {
-                    string data = request["str_response_string"].ToString();
+                    string data = request["body"].ToString();
                     map = (OSDMap)OSDParser.DeserializeJson(data);
                 }
                 catch

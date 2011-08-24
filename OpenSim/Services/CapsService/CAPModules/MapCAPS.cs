@@ -73,6 +73,8 @@ namespace OpenSim.Services.CapsService
             };
             m_service.AddStreamHandler("MapLayer", new RestStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
                                                       method));
+            m_service.AddStreamHandler("MapLayerGod", new RestStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", m_mapLayerPath),
+                                                      method));
         }
 
         public void EnteringRegion()
