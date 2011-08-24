@@ -253,7 +253,7 @@ namespace OpenSim.Services.CapsService
                 (float)lookat["Y"].AsReal(),
                 (float)lookat["Z"].AsReal());
             ulong RegionHandle = rm["RegionHandle"].AsULong();
-            uint tpFlags = rm["TeleportFlags"].AsUInteger();
+            uint tpFlags = 16;
 
             OSDMap retVal = new OSDMap();
             string reason = "";
@@ -261,16 +261,23 @@ namespace OpenSim.Services.CapsService
             Util.UlongToInts(RegionHandle, out x, out y);
             GridRegion destination = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
                 x, y);
-            AgentData ad = new AgentData();
-
             ISimulationService simService = m_service.Registry.RequestModuleInterface<ISimulationService>();
-            simService.RetrieveAgent(destination, m_service.AgentID, out ad);
-            ad.Position = position;
-            if(destination != null && m_agentProcessing.TeleportAgent(ref destination, tpFlags, (int)ad.Far, m_service.CircuitData, ad,
+            AgentData ad = new AgentData();
+            if(destination != null)
+            {
+                simService.RetrieveAgent(m_service.Region, m_service.AgentID, out ad);
+                if(ad != null)
+                    ad.Position = position;
+            }
+            AgentCircuitData circuitData = m_service.CircuitData.Copy();
+            circuitData.reallyischild = false;
+            circuitData.child = false;
+            if(destination != null && m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
                 m_service.AgentID, m_service.RegionHandle, out reason))
             {
                 retVal.Add("success", OSD.FromBoolean(true));
-                simService.MakeChildAgent(m_service.AgentID, destination);
+                if(m_service.RegionHandle != destination.RegionHandle)
+                    simService.MakeChildAgent(m_service.AgentID, m_service.Region);
             }
             else
             {
