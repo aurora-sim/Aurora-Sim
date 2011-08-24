@@ -226,7 +226,7 @@ namespace OpenSim.Services.UserAccountService
 //                "[USER ACCOUNT SERVICE]: Storing user account for {0} {1} {2}, scope {3}",
 //                data.FirstName, data.LastName, data.PrincipalID, data.ScopeID);
 
-            if (data.UserTitle != null)
+            if (data.UserTitle == null)
                 data.UserTitle = "";
 
             return m_Database.Store(data);

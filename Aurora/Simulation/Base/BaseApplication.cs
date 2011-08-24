@@ -235,7 +235,7 @@ namespace Aurora.Simulation.Base
                     IRegionLoader[] regionLoaders = simBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader> ();
                     foreach (IRegionLoader loader in regionLoaders)
                     {
-                        if (loader.Default)
+                        if(loader != null && loader.Default)
                         {
                             loader.FailedToStartRegions (ex.Message);
                         }

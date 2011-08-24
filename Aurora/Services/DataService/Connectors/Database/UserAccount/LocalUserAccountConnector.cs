@@ -167,13 +167,17 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            if (words.Length == 0)
-                return new UserAccount[0];
+            List<string> retVal;
+            if(words.Length == 0)
+            {
+                retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') LIMIT 10", m_realm, " PrincipalID, ScopeID, FirstName, LastName, Email, ServiceURLs, Created, UserLevel, UserFlags, UserTitle, " + GD.IsNull("Name", GD.ConCat(new string[] { "FirstName", "' '", "LastName" })) + " as Name ");
 
-            if (words.Length > 2)
-                return new UserAccount[0];
+                ParseQuery(retVal, ref data);
 
-            List<string> retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') " +
+                return data.ToArray();
+            }
+
+            retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') " +
                 "and (Name like '%" + query + "%' or " + 
                 "FirstName like '%" + words[0] + "%' " + 
                 ((words.Length == 1) ? 
