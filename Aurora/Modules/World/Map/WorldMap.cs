@@ -519,8 +519,8 @@ namespace Aurora.Modules
                 block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)r.RegionSizeX;
-            block.SizeY = (ushort)r.RegionSizeY;
+            block.SizeX = (ushort)(int)r.RegionSizeX;
+            block.SizeY = (ushort)(int)r.RegionSizeY;
 
             return block;
         }
@@ -626,7 +626,6 @@ namespace Aurora.Modules
                         {
                             allRegions.Add (region);
                             blocks.Add (SearchMapBlockFromGridRegion (r));
-
                         }
                     }
                 }
@@ -642,6 +641,8 @@ namespace Aurora.Modules
             data.WaterHeight = 0; // not used
             data.X = 0;
             data.Y = 0;
+            data.SizeX = 256;
+            data.SizeY = 256;
             blocks.Add(data);
 
             remoteClient.SendMapBlock (blocks, flags);
@@ -665,8 +666,8 @@ namespace Aurora.Modules
             block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)r.RegionSizeX;
-            block.SizeY = (ushort)r.RegionSizeY;
+            block.SizeX = (ushort)(int)r.RegionSizeX;
+            block.SizeY = (ushort)(int)r.RegionSizeY;
             return block;
         }
 
@@ -687,6 +688,8 @@ namespace Aurora.Modules
                 block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            block.SizeX = (ushort)(int)r.RegionSizeX;
+            block.SizeY = (ushort)(int)r.RegionSizeY;
             return block;
         }
 
