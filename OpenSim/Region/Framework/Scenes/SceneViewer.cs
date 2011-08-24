@@ -342,10 +342,6 @@ namespace OpenSim.Region.Framework.Scenes
                     o.Flags = o.Flags | update.Flags;
                     m_objectUpdatesToSend.Remove(update.Entity.UUID);
                 }
-                if(o.Entity.UUID == UUID.Zero ||
-                    o.Entity.LocalId == 0)
-                {
-                }
                 m_objectUpdatesToSend.Insert(m_objectUpdatesToSend.Count, o.Entity.UUID, o);
             }
         }

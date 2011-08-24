@@ -193,6 +193,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     m_ScriptEngine.StateSave.SaveStateTo (this);
                 }
             }
+            if(Script != null)
+            {
+                //Fire the exit event for scripts that support it
+                Exception ex;
+                EnumeratorInfo info = null;
+                while((info = Script.ExecuteEvent(State, "exit", new object[0], info, out ex))
+                    != null)
+                {
+                }
+            }
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false);
 
             //Give the user back any controls we took

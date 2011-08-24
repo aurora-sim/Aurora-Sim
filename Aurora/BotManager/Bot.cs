@@ -554,7 +554,7 @@ namespace Aurora.BotManager
                 StopMoving (lastFlying, false);
                 return;
             }
-            if(m_scenePresence.PhysicsActor == null)
+            if(m_scenePresence == null || m_scenePresence.PhysicsActor == null)
                 return;
 
             Vector3 pos;
@@ -831,6 +831,8 @@ namespace Aurora.BotManager
 
         private void DirectFollowing ()
         {
+            if(m_scenePresence == null)
+                return;
             Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
             Vector3 targetPos = FollowSP.AbsolutePosition;
             Vector3 ourPos = m_scenePresence.AbsolutePosition;
