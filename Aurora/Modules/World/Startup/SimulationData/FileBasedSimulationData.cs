@@ -192,6 +192,8 @@ namespace Aurora.Modules.FileBasedSimulationData
                 m_saveTimer.Stop ();
                 try
                 {
+                    if(!m_saveChanges || !m_saveBackups)
+                        return;
                     SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
                     m_requiresSave = false;
                 }
@@ -228,8 +230,6 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// <param name="appendedFilePath">The file path where the backup will be saved</param>
         protected virtual void SaveBackup (string appendedFilePath, bool saveAssets)
         {
-            if (!m_saveChanges || !m_saveBackups)
-                return;
             if (appendedFilePath == "/")
                 appendedFilePath = "";
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule> ();
@@ -764,6 +764,8 @@ More configuration options and info can be found in the Configuration/Data/FileB
             //The sim is shutting down, we need to save one last backup
             try
             {
+                if(!m_saveChanges || !m_saveBackups)
+                    return;
                 SaveBackup(m_saveDirectory + "/", false);
             }
             catch(Exception ex)

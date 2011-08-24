@@ -131,11 +131,20 @@ namespace Aurora.Services.DataService
             replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
             if(convertDNSNames)
             {
-                if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
-                    replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
-                else
-                    replyData.ExternalHostName = NetworkUtils.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
+                try
+                {
+                    if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+                        replyData.ExternalHostName = Aurora.Framework.Utilities.GetExternalIp();
+                    else
+                        replyData.ExternalHostName = NetworkUtils.ResolveEndPoint(replyData.ExternalHostName, replyData.InternalEndPoint.Port).Address.ToString();
+                }
+                catch
+                {
+                    if(replyData.ExternalHostName == "DEFAULT" || replyData.FindExternalAutomatically)
+                        replyData.ExternalHostName = "127.0.0.1";//Bad fallback, but we need something
+                }
             }
+
             return replyData;
         }
 

@@ -185,18 +185,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (value)
                 {
-                    if (!m_hasGroupChanged)
+                    if(m_scene != null)
                     {
-                        if (m_scene != null)
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if(backup != null)
                         {
-                            IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule> ();
-                            if (backup != null)
-                            {
-                                if (m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
-                                {
-                                    backup.AddPrimBackupTaint (this);
-                                }
-                            }
+                            if(m_isLoaded && !backup.LoadingPrims) //Do NOT add to backup while still loading prims
+                                backup.AddPrimBackupTaint(this);
                         }
                     }
                 }

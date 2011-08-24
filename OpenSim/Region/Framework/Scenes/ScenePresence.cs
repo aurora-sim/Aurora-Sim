@@ -2433,6 +2433,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_avHeight = cAgentData.Size.Z;
 
+            OnSignificantClientMovement();
             m_scene.EventManager.TriggerSignificantClientMovement(this);
 
             m_savedVelocity = cAgentData.Velocity;
@@ -2517,6 +2518,11 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_callbackURI = cAgent.CallbackURI;
                 m_pos = cAgent.Position;
+                if(PhysicsActor != null)
+                {
+                    AbsolutePosition = cAgent.Position;
+                    PhysicsActor.ForceSetPosition(cAgent.Position);
+                }
                 Velocity = cAgent.Velocity;
                 m_CameraCenter = cAgent.Center;
                 SetHeight (cAgent.Size.Z);
