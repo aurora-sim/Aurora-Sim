@@ -40,7 +40,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region Implementation of IAssetDataPlugin
 
-        public AssetBase GetAsset(UUID uuid)
+        private AssetBase GetAsset(UUID uuid, bool displaywarning)
         {
             IDataReader dr = null;
             try
@@ -50,7 +50,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     return LoadAssetFromDataRead(dr);
                 }
-                m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
+                if (displaywarning) 
+                    m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
@@ -62,6 +63,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     dr.Close();
             }
             return null;
+        }
+
+        public AssetBase GetAsset(UUID uuid)
+        {
+            return GetAsset(uuid, true);
         }
 
         public AssetBase GetMeta(UUID uuid)
@@ -126,7 +132,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if(ExistsAsset(asset.ID))
                 {
                     m_Log.Warn("[LocalAssetDatabase]: Asset already exists in the db - " + asset.ID);
-                    Delete(asset.ID);
+                    Delete(asset.ID, true);
                     m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
                         new object[] { asset.ID, asset.Name, asset.Description, (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
                 }
@@ -172,9 +178,24 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public bool Delete(UUID id)
         {
+            return Delete(id, false);
+        }
+
+        private bool Delete(UUID id, bool ignoreFlags)
+        {
             try
             {
-                m_Gd.Delete("assets", "id = '" + id + "'");
+                if (!ignoreFlags)
+                {
+                    AssetBase asset = GetAsset(id, false);
+                    if (asset == null)
+                        return false;
+                    if ((int)(asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
+                    (int)(asset.Flags & AssetFlags.Deletable) != 0)
+                        ignoreFlags = true;
+                }
+                if (ignoreFlags)
+                    m_Gd.Delete("assets", "id = '" + id + "'");
             }
             catch (Exception e)
             {
