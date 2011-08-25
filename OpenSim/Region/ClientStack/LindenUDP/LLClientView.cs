@@ -1303,6 +1303,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 mapReply.Data[i].MapImageID = mapBlocks2[i].MapImageID;
                 mapReply.Data[i].X = mapBlocks2[i].X;
                 mapReply.Data[i].Y = mapBlocks2[i].Y;
+                mapReply.Size[i] = new MapBlockReplyPacket.SizeBlock();
                 mapReply.Size[i].SizeX = mapBlocks2[i].SizeX;
                 mapReply.Size[i].SizeY = mapBlocks2[i].SizeY;
                 mapReply.Data[i].WaterHeight = mapBlocks2[i].WaterHeight;
