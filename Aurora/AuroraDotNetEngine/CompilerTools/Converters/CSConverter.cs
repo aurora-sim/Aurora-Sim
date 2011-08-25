@@ -197,6 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             bool newLine = true;
             bool reading = true;
             string lastLine = "";
+            int startLinePos = 0;
             for (int i = 0; i < compileScript.Length; i++)
             {
                 if (compileScript[i] == '\n')
@@ -204,6 +205,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     if (lastLine != "")
                         ReadLine(lastLine);
                     reading = false;
+                    startLinePos = i;
                     lastLine = "";
                     newLine = true;
                 }
@@ -225,13 +227,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 compileScript = compileScript.Remove(i, 1);
                 i--;//Removed a letter, remove a char here as well
             }
-
-            if (m_addLSLAPI)
+            if(m_addLSLAPI)
             {
-                foreach (KeyValuePair<string, IScriptApi> functionName in m_compiler.ScriptEngine.GetAllFunctionNamesAPIs ())
+                string[] lines = compileScript.Split('\n');
+                for(int i = 0; i < lines.Length; i++)
                 {
-                    compileScript = compileScript.Replace (functionName.Key, "((" + functionName.Value.InterfaceName + ")m_apis[\"" + functionName.Value.Name + "\"])." + functionName.Key);
+                    LSLReadLine(ref lines[i]);
                 }
+                compileScript = string.Join("\n", lines);
             }
 
             string compiledScript = "";
@@ -294,6 +297,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             else if (line.StartsWith("#allowUnsafe"))
             {
                 m_allowUnsafe = true;
+            }
+        }
+        private void LSLReadLine(ref string line)
+        {
+            foreach(KeyValuePair<string, IScriptApi> functionName in m_compiler.ScriptEngine.GetAllFunctionNamesAPIs())
+            {
+                string newline = line.Replace(functionName.Key, "((" + functionName.Value.InterfaceName + ")m_apis[\"" + functionName.Value.Name + "\"])." + functionName.Key);
+                if(newline != line)
+                {
+                    line = newline;
+                    return;
+                }
             }
         }
 
