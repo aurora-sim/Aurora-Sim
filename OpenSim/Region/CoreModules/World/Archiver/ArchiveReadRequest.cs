@@ -218,19 +218,19 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         {
                             if (part.CreatorData == null || part.CreatorData == string.Empty)
                             {
-                                if (!ResolveUserUuid (part.CreatorID))
+                                if (!ResolveUserUuid (part.CreatorID, part.CreatorID, part.CreatorData))
                                     part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                             }
                             if (UserManager != null)
                                 UserManager.AddUser (part.CreatorID, part.CreatorData);
 
-                            if (!ResolveUserUuid (part.CreatorID))
+                            if(!ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData))
                                 part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-                            if (!ResolveUserUuid(part.OwnerID))
+                            if(!ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData))
                                 part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-                            if (!ResolveUserUuid(part.LastOwnerID))
+                            if(!ResolveUserUuid(part.LastOwnerID, part.CreatorID, part.CreatorData))
                                 part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
                             // And zap any troublesome sit target information
@@ -245,13 +245,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                 TaskInventoryDictionary inv = part.TaskInventory;
                                 foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
                                 {
-                                    if (!ResolveUserUuid(kvp.Value.OwnerID))
+                                    if(!ResolveUserUuid(kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData))
                                     {
                                         kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                     }
                                     if (kvp.Value.CreatorData == null || kvp.Value.CreatorData == string.Empty)
                                     {
-                                        if (!ResolveUserUuid (kvp.Value.CreatorID))
+                                        if(!ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData))
                                             kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                                     }
                                     if (UserManager != null)
@@ -377,7 +377,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 foreach (string serialisedParcel in serialisedParcels)
                 {
                     LandData parcel = LandDataSerializer.Deserialize (serialisedParcel);
-                    if (!ResolveUserUuid (parcel.OwnerID))
+                    if (!ResolveUserUuid (parcel.OwnerID, UUID.Zero, ""))
                         parcel.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
                     landData.Add (parcel);
                 }
@@ -417,7 +417,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// </summary>
         /// <param name="uuid"></param>
         /// <returns></returns>
-        private bool ResolveUserUuid(UUID uuid)
+        private bool ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData)
         {
             bool v;
             if (!m_validUserUuids.TryGetValue(uuid, out v))
@@ -430,6 +430,30 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 }
                 else
                 {
+                    if(uuid == creatorID)
+                    {
+                        UUID id;
+                        string first, last, url, secret;
+                        if(HGUtil.ParseUniversalUserIdentifier(creatorData, out id, out url, out first, out last, out secret))
+                        {
+                            account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
+                            if(account != null)
+                            {
+                                m_validUserUuids.Add(uuid, true);
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
+                        if(account != null)
+                        {
+                            m_validUserUuids.Add(uuid, true);
+                            m_validUserUuids.Add(creatorID, true);
+                            return true;
+                        }
+                    }
                     IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement> ();
                     if (uf != null)
                         if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
