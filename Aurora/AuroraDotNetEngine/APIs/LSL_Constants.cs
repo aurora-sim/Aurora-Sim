@@ -334,8 +334,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PRIM_DESC = 28;
         public static readonly LSLInteger PRIM_ROT_LOCAL = 29;
         public static readonly LSLInteger PRIM_OMEGA = 32;
-        public static readonly LSLInteger PRIM_LINK_TARGET = 40;//UNKNOWN #
-        public static readonly LSLInteger PRIM_POS_LOCAL = 41;//UNKNOWN #
+        public static readonly LSLInteger PRIM_POS_LOCAL = 33;
+        public static readonly LSLInteger PRIM_LINK_TARGET = 34;
         public static readonly LSLInteger PRIM_TEXGEN_DEFAULT = 0;
         public static readonly LSLInteger PRIM_TEXGEN_PLANAR = 1;
 
