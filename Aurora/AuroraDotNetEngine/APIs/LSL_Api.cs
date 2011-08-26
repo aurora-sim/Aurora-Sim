@@ -11725,9 +11725,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             }
                             ret.Add(totalScripts);
                         }
-                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
+                        else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
-                            ret.Add (0);
+                            ret.Add(0);
+                        }
+                        else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_TIME)
+                        {
+                            IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+                            int scriptTime = 0;
+                            foreach(IScriptModule module in modules)
+                            {
+                                scriptTime += module.GetScriptTime(m_itemID);
+                            }
+                            ret.Add(scriptTime);
                         }
                         else
                         {

@@ -167,5 +167,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Save states for all scripts that require it
         /// </summary>
         void SaveStateSaves ();
+
+        /// <summary>
+        /// Get the script time for the given script
+        /// </summary>
+        /// <param name="m_itemID"></param>
+        /// <returns></returns>
+        int GetScriptTime (UUID itemID);
     }
 }

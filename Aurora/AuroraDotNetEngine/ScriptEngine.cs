@@ -787,6 +787,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return totalScripts;
         }
 
+        public int GetScriptTime (UUID itemID)
+        {
+            return ScriptProtection.GetScript(itemID).ScriptScore;
+        }
+
         #endregion
 
         #region Reset
