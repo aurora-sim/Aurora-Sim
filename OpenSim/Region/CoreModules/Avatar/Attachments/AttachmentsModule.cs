@@ -591,6 +591,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 attachPos = Vector3.Zero;
                 changedPositionPoint = true;
+                AttachmentPt = (AttachmentPt & 0x7f);
             }
             else
             {
@@ -739,13 +740,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             if (appearance.Appearance.SetAttachment ((int)AttachmentPt, itemID, item.AssetID))
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
-            //Now recreate it so that it is selected
-            group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
             // In case it is later dropped again, don't let
             // it get cleaned up
             group.RootChild.RemFlag(PrimFlags.TemporaryOnRez);
             group.HasGroupChanged = false;
+            //Now recreate it so that it is selected
+            group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             m_scene.EventManager.TriggerOnAttach(localID, group.RootChild.FromUserInventoryItemID, remoteClient.AgentId);
         }
