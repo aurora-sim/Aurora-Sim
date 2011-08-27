@@ -36,7 +36,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private SYMBOL m_astRoot = null;
         private static Dictionary<string, string> m_datatypeLSL2OpenSim = null;
         private Dictionary<string, string> m_globalVariableValues = new Dictionary<string, string>();
-        private Dictionary<string, string> m_allVariableValues = new Dictionary<string, string>();
+        private List<string> m_allVariableValues = new List<string>();
 
         /// <summary>
         /// Pass the new CodeTranformer an abstract syntax tree.
@@ -110,7 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
                 //Reset the variables, we changed events
-                m_allVariableValues = Copy(m_globalVariableValues);
+                m_allVariableValues = new List<string>();
                 foreach(SYMBOL child in s.kids)
                 {
                     if(child is ArgumentDeclarationList)
@@ -120,7 +120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             if(assignmentChild is Declaration)
                             {
                                 Declaration d = (Declaration)assignmentChild;
-                                m_allVariableValues[d.Id] = "";
+                                m_allVariableValues.Add(d.Id);
                             }
                         }
                     }
@@ -148,12 +148,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 IdentExpression identEx = (IdentExpression)assignmentChild;
                                 if(isDeclaration)
                                     m_globalVariableValues[decID] = identEx.Name;
-                            }
-                            else if(assignmentChild is Constant)
-                            {
-                                Constant identEx = (Constant)assignmentChild;
-                                if(isDeclaration)
-                                    m_allVariableValues[decID] = identEx.Value;
                             }
                             else if(assignmentChild is ListConstant)
                             {
@@ -193,6 +187,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     }
                                 }
                             }
+                            else if(assignmentChild is Constant)
+                            {
+                                Constant identEx = (Constant)assignmentChild;
+                                if(isDeclaration)
+                                    m_globalVariableValues[decID] = identEx.Value;
+                            }
                         }
                     }
                 }
@@ -200,15 +200,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if(s is StateEvent)
             {
                 //Reset the variables, we changed events
-                m_allVariableValues = Copy(m_globalVariableValues);
+                m_allVariableValues = new List<string>();
             }
             if(s is Statement)
             {
                 if(s.kids.Count == 1 && s.kids[0] is Assignment)
                 {
                     Assignment assignment = (Assignment)s.kids[0];
-                    bool isDeclaration = false;
-                    string decID = "";
                     object[] p = new object[assignment.kids.Count];
                     int i = 0;
                     int toRemove = -1;
@@ -218,26 +216,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         if(assignmentChild is Declaration)
                         {
                             Declaration d = (Declaration)assignmentChild;
-                            decID = d.Id;
-                            isDeclaration = true;
-                        }
-                        else if(assignmentChild is Constant)
-                        {
-                            Constant identEx = (Constant)assignmentChild;
-                            if(isDeclaration)
-                                if(m_allVariableValues.ContainsKey(decID))
-                                    toRemove = i-1;
-                                else
-                                    m_allVariableValues[decID] = identEx.Value;
-                        }
-                        else if(assignmentChild is IdentExpression)
-                        {
-                            IdentExpression identEx = (IdentExpression)assignmentChild;
-                            if(isDeclaration)
-                                if(m_allVariableValues.ContainsKey(decID))
-                                    toRemove = i-1;
-                                else
-                                    m_allVariableValues[decID] = identEx.Name;
+                            if(m_allVariableValues.Contains(d.Id))
+                                toRemove = i;
+                            else
+                                m_allVariableValues.Add(d.Id);
                         }
                         i++;
                     }
@@ -286,16 +268,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     TransformNode((SYMBOL)s.kids[i], null, null);
                 }
             }
-        }
-
-        private Dictionary<string, string> Copy (Dictionary<string, string> m_globalVariableValues)
-        {
-            Dictionary<string, string> s = new Dictionary<string, string>();
-            foreach(KeyValuePair<string, string> kvp in m_globalVariableValues)
-            {
-                s.Add(kvp.Key, kvp.Value);
-            }
-            return s;
         }
 
         /// <summary>
