@@ -181,7 +181,7 @@ namespace OpenSim.Services
 
         }
 
-        public OSD HandleLLSDLogin(OSD request, IPEndPoint remoteClient)
+        public OSD HandleLLSDLogin(string path, OSD request, IPEndPoint remoteClient)
         {
             if (request.Type == OSDType.Map)
             {

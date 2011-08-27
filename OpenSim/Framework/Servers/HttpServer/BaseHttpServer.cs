@@ -57,7 +57,6 @@ namespace OpenSim.Framework.Servers.HttpServer
         protected HttpListener m_httpListener;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
-        protected DefaultLLSDMethod m_defaultLlsdHandler = null; // <--   Moving away from the monolithic..  and going to /registered/
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
         protected Dictionary<string, IRequestHandler> m_streamHandlers = new Dictionary<string, IRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
@@ -203,12 +202,6 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
             }
             return false;
-        }
-
-        public bool SetDefaultLLSDHandler(DefaultLLSDMethod handler)
-        {
-            m_defaultLlsdHandler = handler;
-            return true;
         }
 
         private void OnRequest(object source, RequestEventArgs args)
@@ -873,23 +866,13 @@ namespace OpenSim.Framework.Servers.HttpServer
                 if (TryGetLLSDHandler(request.RawUrl, out llsdhandler) && !LegacyLLSDLoginLibOMV)
                 {
                     // we found a registered llsd handler to service this request
-                    llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint.ToString());
+                    llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
                 }
                 else
                 {
                     // we didn't find a registered llsd handler to service this request
-                    // check if we have a default llsd handler
-
-                    if (m_defaultLlsdHandler != null)
-                    {
-                        // LibOMV path
-                        llsdResponse = m_defaultLlsdHandler(llsdRequest, request.RemoteIPEndPoint);
-                    }
-                    else
-                    {
-                        // Oops, no handler for this..   give em the failed message
-                        llsdResponse = GenerateNoLLSDHandlerResponse();
-                    }
+                    // .. give em the failed message
+                    llsdResponse = GenerateNoLLSDHandlerResponse();
                 }
 
             }

@@ -30,6 +30,5 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
-    public delegate OSD LLSDMethod(string path, OSD request, string endpoint);
-    public delegate OSD DefaultLLSDMethod(OSD request, IPEndPoint client);
+    public delegate OSD LLSDMethod (string path, OSD request, IPEndPoint client);
 }

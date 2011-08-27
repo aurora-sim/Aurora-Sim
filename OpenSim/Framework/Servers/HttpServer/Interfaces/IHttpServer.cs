@@ -96,8 +96,6 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <param name="method">Name of the method</param>
         /// <returns>Returns null if not found</returns>
         XmlRpcMethod GetXmlRPCHandler(string method);
-
-        bool SetDefaultLLSDHandler(DefaultLLSDMethod handler);
         
         /// <summary>
         /// Remove an HTTP handler

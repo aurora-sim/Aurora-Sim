@@ -87,7 +87,7 @@ namespace OpenSim.Services
             LLLoginHandlers loginHandlers = new LLLoginHandlers(m_LoginService, m_Config, m_Proxy);
             server.AddXmlRPCHandler("login_to_simulator", loginHandlers.HandleXMLRPCLogin, false);
             server.AddXmlRPCHandler("set_login_level", loginHandlers.HandleXMLRPCSetLoginLevel, false);
-            server.SetDefaultLLSDHandler(loginHandlers.HandleLLSDLogin);
+            server.AddLLSDHandler("/", loginHandlers.HandleLLSDLogin);
         }
     }
 }
