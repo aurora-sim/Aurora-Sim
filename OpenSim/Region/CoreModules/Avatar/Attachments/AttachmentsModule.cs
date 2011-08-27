@@ -577,8 +577,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 return;
             }
             Vector3 attachPos = group.GetAttachmentPos();
+            bool hasMultipleAttachmentsSet = (AttachmentPt & 0x7f) != 0;
             if(!m_allowMultipleAttachments)
-                AttachmentPt &= 0x7f; //Disable it!
+                hasMultipleAttachmentsSet = false;
+            AttachmentPt &= 0x7f; //Disable it! Its evil!
 
             //Did the attachment change position or attachment point?
             bool changedPositionPoint = false;
@@ -587,16 +589,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // set it's offset position = 0 so that it appears on the attachment point
             // and not in a weird location somewhere unknown.
             //Simplier terms: the attachment point changed, set it to the default 0,0,0 location
-            if ((AttachmentPt & 0x7f) != 0 && (AttachmentPt & 0x7f) != (int)group.GetAttachmentPoint())
+            if (AttachmentPt != (int)group.GetAttachmentPoint())
             {
                 attachPos = Vector3.Zero;
                 changedPositionPoint = true;
-                AttachmentPt = (AttachmentPt & 0x7f);
             }
             else
             {
                 // AttachmentPt 0 means the client chose to 'wear' the attachment.
-                if ((AttachmentPt & 0x7f) == 0)
+                if (AttachmentPt == 0)
                 {
                     // Check object for stored attachment point
                     AttachmentPt = (int)group.GetSavedAttachmentPoint();
@@ -604,7 +605,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
 
                 //Check state afterwards... use the newer GetSavedAttachmentPoint and Pos above first
-                if ((AttachmentPt & 0x7f) == 0)
+                if (AttachmentPt == 0)
                 {
                     // Check object for older stored attachment point
                     AttachmentPt = group.RootChild.Shape.State;
@@ -613,7 +614,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                 // if we still didn't find a suitable attachment point, force it to the default
                 //This happens on the first time an avatar 'wears' an object
-                if ((AttachmentPt & 0x7f) == 0)
+                if (AttachmentPt == 0)
                 {
                     // Stick it on right hand with Zero Offset from the attachment point.
                     AttachmentPt = (int)AttachmentPoint.RightHand;
@@ -635,9 +636,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             if (presence == null)
                 return;
             UUID itemID = UUID.Zero;
-            //Check for multiple attachment bits
-            //If the numbers are the same, it wants to have the old attachment taken off
-            if ((AttachmentPt & 0x7f) == AttachmentPt) 
+            //Check for multiple attachment bits and whether we should remove the old
+            if(!hasMultipleAttachmentsSet) 
             {
                 foreach (ISceneEntity grp in attachments)
                 {
