@@ -1697,17 +1697,15 @@ namespace OpenSim.Framework
                         if(Adr.AddressFamily == AddressFamily.InterNetwork)
                         {
                             ia = Adr;
+                            InternetSuccess();
                             break;
                         }
-                        if(ia != null)
-                            InternetSuccess();
-                        else
-                            InternetFailure();
                     }
                 }
             }
             catch(SocketException e)
             {
+                InternetFailure();
                 throw new Exception(
                     "Unable to resolve local hostname " + hostName + " innerException of type '" +
                     e + "' attached to this exception", e);
