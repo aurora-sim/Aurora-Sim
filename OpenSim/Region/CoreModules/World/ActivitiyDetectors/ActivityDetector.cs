@@ -102,7 +102,7 @@ namespace OpenSim.Region.CoreModules
                 foreach (IScenePresence sp in scene.GetScenePresences ())
                 {
                     //This causes the last pos to be updated in the database, along with the last seen time
-                    sp.AddChildAgentUpdateTaint ();
+                    sp.AddChildAgentUpdateTaint (1);
                 }
             }
         }

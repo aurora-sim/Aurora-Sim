@@ -1516,7 +1516,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 presence = scene.GetScenePresence(AgentID);
                 if (presence != null)
                 {
-                    if (!m_cachedGroupTitles.ContainsKey(presence.UUID) || m_cachedGroupTitles[presence.UUID] != Title)
+                    string oldTitle;
+                    if(!m_cachedGroupTitles.TryGetValue(presence.UUID, out oldTitle) || oldTitle != Title)
                     {
                         m_cachedGroupTitles[presence.UUID] = Title;
                         if (!presence.IsChildAgent)

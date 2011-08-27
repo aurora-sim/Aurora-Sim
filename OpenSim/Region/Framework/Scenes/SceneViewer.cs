@@ -82,7 +82,6 @@ namespace OpenSim.Region.Framework.Scenes
         private List<UUID> m_AnimationsInPacketQueue = new List<UUID>();
         private List<UUID> m_PropertiesInPacketQueue = new List<UUID>();*/
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
-        private HashSet<IScenePresence> lastPresencesInView = new HashSet<IScenePresence> ();
         private Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence> ();
         private Vector3 m_lastUpdatePos;
         private int m_numberOfLoops = 0;
@@ -124,7 +123,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (lastPresencesDInView.ContainsKey (client.AgentId))
             {
-                lastPresencesInView.Remove (lastPresencesDInView[client.AgentId]);
                 lastPresencesDInView.Remove (client.AgentId);
             }
         }
@@ -191,7 +189,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastPresencesInView.Remove (presence);
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
@@ -207,14 +204,12 @@ namespace OpenSim.Region.Framework.Scenes
             if(!forced && m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastPresencesInView.Remove (presence);
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
             if (!lastPresencesDInView.ContainsKey (presence.UUID))
             {
-                lastPresencesInView.Add (presence);
-                lastPresencesDInView.Add (presence.UUID, presence);
+                lastPresencesDInView.Add(presence.UUID, presence);
             }
             else if(!forced)//Only send one full update please!
                 return;
@@ -267,7 +262,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastPresencesInView.Remove (presence);
                 lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
@@ -368,7 +362,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RemoveAvatarFromView (IScenePresence sp)
         {
-            lastPresencesInView.Remove (sp);
             lastPresencesDInView.Remove (sp.UUID);
         }
 
@@ -390,7 +383,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             if (!m_forceCullCheck && m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)
+                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY && !m_presence.IsChildAgent)
             {
                 m_forceCullCheck = false; //Make sure to reset it
                 return;
@@ -472,8 +465,6 @@ namespace OpenSim.Region.Framework.Scenes
             // send them 
             SendQueued (m_entsqueue);
 
-            HashSet<IScenePresence> NewPresencesInView = new HashSet<IScenePresence>();
-
             //Check for scenepresences as well
             List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences ());
             foreach (IScenePresence presence in presences)
@@ -484,8 +475,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_culler.ShowEntityToClient (m_presence, presence, m_scene))
                         continue; // if 2 far ignore
 
-                    NewPresencesInView.Add (presence);
-
                     if (lastPresencesDInView.ContainsKey (presence.UUID))
                         continue; //Don't resend the update
 
@@ -494,8 +483,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
             presences = null;
-            lastPresencesInView.UnionWith(NewPresencesInView);
-            NewPresencesInView.Clear();
         }
 
         public void SendPresenceFullUpdate (IScenePresence presence)
@@ -504,7 +491,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_presence.ControllingClient.SendAvatarDataImmediate (presence);
             if(!lastPresencesDInView.ContainsKey(presence.UUID))
             {
-                lastPresencesInView.Add(presence);
                 lastPresencesDInView.Add(presence.UUID, presence);
             }
         }
@@ -893,7 +879,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Reset the culler so that it doesn't cache too much
             m_culler.Reset ();
             //Gotta remove this so that if the client comes back, we don't have any issues with sending them another update
-            lastPresencesInView.Remove (m_presence);
             lastPresencesDInView.Remove (m_presence.UUID);
         }
 

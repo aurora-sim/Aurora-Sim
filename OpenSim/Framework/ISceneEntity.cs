@@ -405,7 +405,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// Adds a child agent update taint to the agent
         /// </summary>
-        void AddChildAgentUpdateTaint ();
+        void AddChildAgentUpdateTaint (int seconds);
 
         /// <summary>
         /// Adds an attachment to the agent (internal use only)

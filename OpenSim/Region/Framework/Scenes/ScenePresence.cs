@@ -402,9 +402,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!IsChildAgent && !m_enqueueSendChildAgentUpdate)
                     {
                         //Send an update to all child agents if we are a root agent
-                        m_enqueueSendChildAgentUpdate = true;
-                        m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(5);
-                        Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
+                        AddChildAgentUpdateTaint(5);
                     }
                 }
             }
@@ -2152,7 +2150,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
                 m_lastChildAgentUpdateCamPosition = CameraPosition;
 
-                AddChildAgentUpdateTaint ();
+                AddChildAgentUpdateTaint (5);
             }
 
             // Disabled for now until we can make sure that we only send one of these per simulation loop,
@@ -2169,11 +2167,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public virtual void AddChildAgentUpdateTaint ()
+        public virtual void AddChildAgentUpdateTaint (int seconds)
         {
             Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Other);
             m_enqueueSendChildAgentUpdate = true;
-            m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(1);
+            m_enqueueSendChildAgentUpdateTime = DateTime.Now.AddSeconds(seconds);
         }
 
         public virtual void SendPhysicsTerseUpdateToAllClients ()
