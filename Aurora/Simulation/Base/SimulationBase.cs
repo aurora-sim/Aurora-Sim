@@ -320,19 +320,6 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
-            return GetHttpServer(port, false, 0, "");
-        }
-
-        /// <summary>
-        /// Get an HTTPServer on the given port. It will create one if one does not exist
-        /// </summary>
-        /// <param name="port">Port to find the HTTPServer for</param>
-        /// <param name="UsesSSL">Does this HttpServer support SSL</param>
-        /// <param name="sslPort">The SSL Port</param>
-        /// <param name="sslCN">the SSL CN</param>
-        /// <returns></returns>
-        public IHttpServer GetHttpServer(uint port, bool UsesSSL, uint sslPort, string sslCN)
-        {
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
@@ -347,7 +334,7 @@ namespace Aurora.Simulation.Base
             if (hostName.EndsWith ("/"))
                 hostName = hostName.Remove (hostName.Length - 1, 1);
 
-            m_Servers[port] = new BaseHttpServer(port, UsesSSL, sslPort, sslCN, hostName);
+            m_Servers[port] = new BaseHttpServer(port, hostName);
 
             try
             {
@@ -369,24 +356,8 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void SetUpHTTPServer()
         {
-            m_Port =
-                (uint)m_config.Configs["Network"].GetInt("http_listener_port", (int)9000);
-            uint httpSSLPort = 9001;
-            bool HttpUsesSSL = false;
-            string HttpSSLCN = "localhost";
-            if (m_config.Configs["SSLConfig"] != null)
-            {
-                httpSSLPort = m_config.Configs["SSLConfig"].GetUInt("http_listener_sslport", (int)9001);
-                HttpUsesSSL = m_config.Configs["SSLConfig"].GetBoolean("http_listener_ssl", false);
-                HttpSSLCN = m_config.Configs["SSLConfig"].GetString("http_listener_cn", "localhost");
-            }
-            m_BaseHTTPServer = GetHttpServer(m_Port, HttpUsesSSL, httpSSLPort, HttpSSLCN);
-
-            if (HttpUsesSSL && (m_Port == httpSSLPort))
-            {
-                m_log.Error("[HTTPSERVER]: HTTP Server config failed.   HTTP Server and HTTPS server must be on different ports");
-            }
-
+            m_Port = m_config.Configs["Network"].GetUInt("http_listener_port", 9000);
+            m_BaseHTTPServer = GetHttpServer(m_Port);
             MainServer.Instance = m_BaseHTTPServer;
         }
 

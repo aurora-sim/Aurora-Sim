@@ -35,12 +35,9 @@ namespace OpenSim.Framework.Servers.HttpServer
     /// </summary>
     public interface IHttpServer
     {
-        uint SSLPort { get; }
-        string SSLCommonName { get; }
-
         uint Port { get; }
+        bool Secure { get; }
         string HostName { get; set;  }
-        bool UseSSL { get; }
         
         /// <summary>
         /// Add a handler for an HTTP request.

@@ -194,7 +194,7 @@ namespace OpenSim.Framework
             get
             {
                 string protocol = "http://";
-                if(MainServer.Instance.UseSSL)
+                if(MainServer.Instance.Secure)
                     protocol = "https://";
                 return protocol + ExternalHostName + ":" + HttpPort;
             }

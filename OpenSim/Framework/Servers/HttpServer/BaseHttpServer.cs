@@ -65,35 +65,22 @@ namespace OpenSim.Framework.Servers.HttpServer
         protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
             new Dictionary<string, PollServiceEventArgs>();
 
+        protected bool m_isSecure;
         protected uint m_port;
-        protected uint m_sslport;
-        protected bool m_ssl;
-        protected bool m_firstcaps = true;
-        protected string m_SSLCommonName = "";
         protected string m_hostName;
 
         protected IPAddress m_listenIPAddress = IPAddress.Any;
 
         private PollServiceRequestManager m_PollServiceManager;
 
-        public uint SSLPort
-        {
-            get { return m_sslport; }
-        }
-
-        public string SSLCommonName
-        {
-            get { return m_SSLCommonName; }
-        }
-
         public uint Port
         {
             get { return m_port; }
         }
 
-        public bool UseSSL
+        public bool Secure
         {
-            get { return m_ssl; }
+            get { return m_isSecure; }
         }
 
         public IPAddress ListenIPAddress
@@ -108,25 +95,10 @@ namespace OpenSim.Framework.Servers.HttpServer
             set { m_hostName = value; }
         }
 
-        public BaseHttpServer(uint port)
+        public BaseHttpServer(uint port, string hostName)
         {
-            m_port = port;
-        }
-
-        public BaseHttpServer(uint port, bool ssl)
-            : this(port)
-        {
-            m_ssl = ssl;
-        }
-
-        public BaseHttpServer(uint port, bool ssl, uint sslport, string CN, string hostName)
-            : this(port, ssl)
-        {
-            if (m_ssl)
-            {
-                m_sslport = sslport;
-            }
             m_hostName = hostName;
+            m_port = port;
         }
 
         /// <summary>
@@ -1569,7 +1541,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 //m_httpListener = new HttpListener();
                 NotSocketErrors = 0;
-                if (!m_ssl)
+                if (!m_isSecure)
                 {
                     //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
                     //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
