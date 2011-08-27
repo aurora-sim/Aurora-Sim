@@ -175,8 +175,8 @@ namespace Aurora.Modules
                 if (MainConsole.Instance != null)
                 {
                     MainConsole.Instance.Commands.AddCommand ("delete object owner",
-                    "delete object owner <UUID>",
-                    "Delete object by owner", HandleDeleteObject);
+                        "delete object owner <UUID>",
+                        "Delete object by owner", HandleDeleteObject);
                     MainConsole.Instance.Commands.AddCommand ("delete object creator",
                         "delete object creator <UUID>",
                         "Delete object by creator", HandleDeleteObject);

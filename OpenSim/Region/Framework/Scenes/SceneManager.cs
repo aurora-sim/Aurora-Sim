@@ -729,8 +729,6 @@ namespace OpenSim.Region.Framework.Scenes
             MainConsole.Instance.Commands.AddCommand ("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
 
             MainConsole.Instance.Commands.AddCommand ("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
-
-            MainConsole.Instance.Commands.AddCommand ("kill uuid", "kill uuid [UUID]", "Kill an object by UUID", KillUUID);
         }
 
         /// <summary>
@@ -1208,59 +1206,6 @@ namespace OpenSim.Region.Framework.Scenes
             IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
             if (archiver != null)
                 archiver.HandleSaveOarConsoleCommand(string.Empty, cmdparams);
-        }
-
-        /// <summary>
-        /// Kill an object given its UUID.
-        /// </summary>
-        /// <param name="cmdparams"></param>
-        protected void KillUUID(string[] cmdparams)
-        {
-            if (cmdparams.Length > 2)
-            {
-                UUID id = UUID.Zero;
-                ISceneEntity grp = null;
-                IScene sc = null;
-
-                if (!UUID.TryParse(cmdparams[2], out id))
-                {
-                    m_log.Info ("[KillUUID]: Error bad UUID format!");
-                    return;
-                }
-
-                ForEachScene(delegate(IScene scene)
-                {
-                    ISceneChildEntity part = scene.GetSceneObjectPart (id);
-                    if (part == null)
-                        return;
-
-                    grp = part.ParentEntity;
-                    sc = scene;
-                });
-
-                if (grp == null)
-                {
-                    m_log.Info (String.Format ("[KillUUID]: Given UUID {0} not found!", id));
-                }
-                else
-                {
-                    m_log.Info (String.Format ("[KillUUID]: Found UUID {0} in scene {1}", id, sc.RegionInfo.RegionName));
-                    try
-                    {
-                        IBackupModule backup = sc.RequestModuleInterface<IBackupModule>();
-                        if (backup != null)
-                            backup.DeleteSceneObjects (new ISceneEntity[1] { grp }, true, true);
-                    }
-                    catch (Exception e)
-                    {
-                        m_log.ErrorFormat("[KillUUID]: Error while removing objects from scene: " + e);
-                    }
-                }
-            }
-            else
-            {
-                m_log.Info ("[KillUUID]: Usage: kill uuid <UUID>");
-            }
         }
 
         #endregion
