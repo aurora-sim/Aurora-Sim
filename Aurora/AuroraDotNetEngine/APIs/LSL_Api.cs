@@ -10653,7 +10653,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
                 return new LSL_List();
             else
-                return GetPrimMediaParams(entities[0], face, rules);
+            {
+                LSL_List res = new LSL_List();
+
+                foreach(ISceneChildEntity part in entities)
+                {
+                    LSL_List partRes = GetPrimMediaParams(part, face, rules);
+                    res += partRes;
+                }
+
+                return res;
+            }
         }
 
         private LSL_List GetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
@@ -10768,7 +10778,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
                 return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
 
-            ClearPrimMedia(m_host, face);
+            foreach(ISceneChildEntity child in entities)
+                ClearPrimMedia(child, face);
 
             return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
         }
@@ -10811,7 +10822,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<ISceneChildEntity> entities = GetLinkParts(link);
             if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
                 return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
-            return (LSL_Integer)SetPrimMediaParams(entities[0], face, rules);
+            foreach(ISceneChildEntity child in entities)
+                SetPrimMediaParams(child, face, rules);
+            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
         }
 
         public LSL_Integer SetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)

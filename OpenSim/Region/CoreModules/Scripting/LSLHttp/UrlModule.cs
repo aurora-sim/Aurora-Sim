@@ -81,8 +81,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
         private IHttpServer m_HttpServer = null;
 
-        private string m_ExternalHostNameForLSL = "";
-
         public Type ReplaceableInterface 
         {
             get { return null; }
@@ -100,9 +98,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
         public void Initialise(IConfigSource config)
         {
-            m_ExternalHostNameForLSL = System.Environment.MachineName;
-            if(config.Configs["LSLRemoting"] != null)
-                m_ExternalHostNameForLSL = config.Configs["LSLRemoting"].GetString("ExternalHostNameForLSL", System.Environment.MachineName);
         }
 
         public void PostInitialise()
@@ -143,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                     engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
                     return urlcode;
                 }
-                string url = "http://" + m_ExternalHostNameForLSL + ":" + m_HttpServer.Port.ToString() + "/lslhttp/" + urlcode.ToString() + "/";
+                string url = m_HttpServer.HostName + ":" + m_HttpServer.Port.ToString() + "/lslhttp/" + urlcode.ToString() + "/";
 
                 UrlData urlData = new UrlData();
                 urlData.hostID = host.UUID;
@@ -419,7 +414,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
                     pathInfo = uri.Substring(pos3);
 
-                    UrlData url = m_UrlMap["http://" + m_ExternalHostNameForLSL + ":" + m_HttpServer.Port.ToString() + uri_tmp];
+                    UrlData url = m_UrlMap[m_HttpServer.HostName + ":" + m_HttpServer.Port.ToString() + uri_tmp];
 
                     //for llGetHttpHeader support we need to store original URI here
                     //to make x-path-info / x-query-string / x-script-url / x-remote-ip headers 

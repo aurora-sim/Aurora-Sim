@@ -3,7 +3,7 @@
     ;; If you want to run AuroraDotNetEngine as your default engine, uncomment this
     Include-ADNE = Configuration/Scripting/AuroraDotNetEngine.ini
     ;;
-    ;; If you would like to use MRM, uncomment this
+    ;; If you would like to use MRM, uncomment this and edit its config file
     Include-MRM = Configuration/Scripting/MRM.ini
 
 [VectorRender]
@@ -11,15 +11,10 @@
     ;; font_name = Arial
 
 [LSLRemoting]
-    ;; Hostname to use in llRequestURL/llRequestSecureURL
-    ;; if not defined - default machine name is being used
-    ;; (on Windows this mean NETBIOS name - useably only inside local network)
-    ;; you can use http://MyDomainName.com  OR  http://MyDomain-dyndns.org
-    ;ExternalHostNameForLSL=127.0.0.1
 
     ;; What is reported as the X-Secondlife-Shard for llHTTPRequest.
-    ;; Defaults to the OpenSim
-    shard = OpenSim
+    ;; Defaults to the Aurora
+    shard = Aurora
 
     ;; What is reported as the User-Agent when using llHTTPRequest
     ;; Defaults to not sent if not set here. See the notes section in the wiki at http://wiki.secondlife.com/wiki/LlHTTPRequest for comments on adding
