@@ -806,9 +806,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.WarnFormat ("[SceneViewer]: Exception while running object loop: {0}", ex.ToString ());
                     }
+                    m_presence.ControllingClient.SendPrimUpdate(updates);
                 }
             }
-            m_presence.ControllingClient.SendPrimUpdate (updates);
+
 
             //Add the time to the stats tracker
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);

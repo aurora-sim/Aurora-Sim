@@ -1376,6 +1376,15 @@ namespace OpenSim.Framework.Servers.HttpServer
         internal void DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
         {
             //m_log.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
+            byte[] buffer;
+            if(responsedata.Count == 0)
+            {
+                response.StatusCode = 404;
+                buffer = Encoding.UTF8.GetBytes("404");
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.OutputStream.Close();
+                return;
+            }
             int responsecode = (int)responsedata["int_response_code"];
             string responseString = (string)responsedata["str_response_string"];
             string contentType = (string)responsedata["content_type"];
@@ -1420,7 +1429,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             response.AddHeader("Content-Type", contentType);
 
-            byte[] buffer;
 
             if (!(contentType.Contains("image")
                 || contentType.Contains("x-shockwave-flash")

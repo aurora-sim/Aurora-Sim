@@ -204,12 +204,16 @@ namespace OpenSim.Region.CoreModules.Media.Moap
 
             if (null == part.Shape.Media)
             {
-                if (me == null)
+                if(me == null)
                     return;
                 else
+                {
                     part.Shape.Media = new PrimitiveBaseShape.MediaList(new MediaEntry[part.GetNumberOfSides()]);
+                }
             }
 
+            if(part.Shape.Media[face] == null)//If it doesn't exist, set the default parameters for it
+                me.InteractPermissions = MediaPermission.All;
             lock (part.Shape.Media)
                 part.Shape.Media[face] = me;
 
