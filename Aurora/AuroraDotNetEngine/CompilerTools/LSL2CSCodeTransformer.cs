@@ -110,7 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
                 //Reset the variables, we changed events
-                m_allVariableValues = new List<string>();
+                /*m_allVariableValues = new List<string>();
                 foreach(SYMBOL child in s.kids)
                 {
                     if(child is ArgumentDeclarationList)
@@ -124,7 +124,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                         }
                     }
-                }
+                }*/
             }
             else if(s is GlobalVariableDeclaration)
             {
@@ -197,7 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     }
                 }
             }
-            if(s is StateEvent)
+            /*if(s is StateEvent)
             {
                 //Reset the variables, we changed events
                 m_allVariableValues = new List<string>();
@@ -246,7 +246,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 ((SYMBOL)s.kids[0]).kids.Add(obj);
                     }
                 }
-            }
+            }*/
 
             for (int i = 0; i < s.kids.Count; i++)
             {
