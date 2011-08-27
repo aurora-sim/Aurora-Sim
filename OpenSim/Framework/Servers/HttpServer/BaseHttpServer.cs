@@ -94,10 +94,11 @@ namespace OpenSim.Framework.Servers.HttpServer
             set { m_hostName = value; }
         }
 
-        public BaseHttpServer(uint port, string hostName)
+        public BaseHttpServer(uint port, string hostName, bool isSecure)
         {
             m_hostName = hostName;
             m_port = port;
+            m_isSecure = isSecure;
         }
 
         /// <summary>

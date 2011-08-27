@@ -320,25 +320,31 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
+            return GetHttpServer(port, false);
+        }
+
+        public IHttpServer GetHttpServer (uint port, bool secure)
+        {
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
-            if (m_Servers.ContainsKey(port))
-                return m_Servers[port];
+            BaseHttpServer server;
+            if(m_Servers.TryGetValue(port, out server) && server.Secure == secure)
+                return server;
 
             string hostName =
-                m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
+                m_config.Configs["Network"].GetString("HostName", "http" + (secure ? "s" : "") + "://127.0.0.1");
             //Clean it up a bit
             if (!hostName.StartsWith ("http://") && !hostName.StartsWith ("https://"))
-                hostName = "http://" + hostName;
+                hostName = (secure ? "https://" : "http://") + hostName;
             if (hostName.EndsWith ("/"))
                 hostName = hostName.Remove (hostName.Length - 1, 1);
 
-            m_Servers[port] = new BaseHttpServer(port, hostName);
+            server = new BaseHttpServer(port, hostName, secure);
 
             try
             {
-                m_Servers[port].Start ();
+                server.Start();
             }
             catch(Exception ex)
             {
@@ -348,7 +354,7 @@ namespace Aurora.Simulation.Base
                 throw ex;
             }
 
-            return m_Servers[port];
+            return (m_Servers[port] = server);
         }
 
         /// <summary>
@@ -357,7 +363,8 @@ namespace Aurora.Simulation.Base
         public virtual void SetUpHTTPServer()
         {
             m_Port = m_config.Configs["Network"].GetUInt("http_listener_port", 9000);
-            m_BaseHTTPServer = GetHttpServer(m_Port);
+            bool useHTTPS = m_config.Configs["Network"].GetBoolean("use_https", false);
+            m_BaseHTTPServer = GetHttpServer(m_Port, useHTTPS);
             MainServer.Instance = m_BaseHTTPServer;
         }
 
@@ -576,13 +583,13 @@ namespace Aurora.Simulation.Base
             string hostName =
                 m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
             //Clean it up a bit
-            if(!hostName.StartsWith("http://") && !hostName.StartsWith("https://"))
-                hostName = "http://" + hostName;
+            hostName.Replace("http://", "");
+            hostName.Replace("https://", "");
             if(hostName.EndsWith("/"))
                 hostName = hostName.Remove(hostName.Length - 1, 1);
             foreach(IHttpServer server in m_Servers.Values)
             {
-                server.HostName = hostName;
+                server.HostName = (server.Secure ? "https://" : "http://") + hostName;
             }
             m_log.Info ("Finished reloading configuration.");
         }

@@ -401,8 +401,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 {
                     Hashtable headers = (Hashtable)request["headers"];
                     
-//                    string uri_full = "http://" + m_ExternalHostNameForLSL + ":" + m_HttpServer.Port.ToString() + uri;// "/lslhttp/" + urlcode.ToString() + "/";
-
                     int pos1 = uri.IndexOf("/");// /lslhttp
                     int pos2 = uri.IndexOf("/", pos1 + 1);// /lslhttp/
                     int pos3 = uri.IndexOf("/", pos2 + 1);// /lslhttp/<UUID>/

@@ -513,10 +513,12 @@ namespace OpenSim.Services.GridService
                 for (int i = 0; i < urls.Length; i++)
                 {
                     if (urls[i].StartsWith (" "))
-                        urls[i] = urls[i].Remove (0, 1);
-                    urls[i] = urls[i].Replace ("http://", "");
+                        urls[i] = urls[i].Remove(0, 1);
+                    bool isSecure = urls[i].StartsWith("https://");
+                    urls[i] = urls[i].Replace("http://", "");
+                    urls[i] = urls[i].Replace("https://", "");
                     //Readd the http://
-                    urls[i] = "http://" + urls[i];
+                    urls[i] = "http" + (isSecure ? "s" : "") + "://" + urls[i];
                 }
                 m_remoteLoadBalancingInstances = new List<string> (urls);
             }
@@ -528,10 +530,12 @@ namespace OpenSim.Services.GridService
                     if (urls[i].StartsWith (" "))
                         urls[i] = urls[i].Remove (0, 1);
                     //Remove any ports people may have added
-                    urls[i] = urls[i].Replace ("http://", "");
+                    bool isSecure = urls[i].StartsWith("https://");
+                    urls[i] = urls[i].Replace("http://", "");
+                    urls[i] = urls[i].Replace("https://", "");
                     urls[i] = urls[i].Split (':')[0];
                     //Readd the http://
-                    urls[i] = "http://" + urls[i];
+                    urls[i] = "http" + (isSecure ? "s" : "") + "://" + urls[i];
                 }
                 m_urls[name] = new List<string> (urls);
             }

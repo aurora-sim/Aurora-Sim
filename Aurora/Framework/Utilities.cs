@@ -57,7 +57,8 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static string GetServerReleaseNotesURL()
         {
-            return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion() + ".html";
+            return (MainServer.Instance.Secure ? "https://" : "http://") + GetExternalIp() +
+                ":" + MainServer.Instance.Port.ToString() + "/AuroraServerRelease" + AuroraServerVersion() + ".html";
         }
 
         /// <summary>
@@ -66,7 +67,8 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static string GetAddress()
         {
-            return "http://" + GetExternalIp() + ":" + OpenSim.Framework.MainServer.Instance.Port.ToString();
+            return (MainServer.Instance.Secure ? "https://" : "http://") + GetExternalIp() + ":" + 
+                MainServer.Instance.Port.ToString();
         }
 
         /// <summary>

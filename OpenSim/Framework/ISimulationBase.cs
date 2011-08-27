@@ -48,7 +48,15 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
-        IHttpServer GetHttpServer(uint port);
+        IHttpServer GetHttpServer (uint port);
+
+        /// <summary>
+        /// Get an instance of the HTTP server on the given port with the given protocol
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="httpsSecure">https:// server</param>
+        /// <returns></returns>
+        IHttpServer GetHttpServer (uint port, bool httpsSecure);
 
         /// <summary>
         /// Get the configuration settings

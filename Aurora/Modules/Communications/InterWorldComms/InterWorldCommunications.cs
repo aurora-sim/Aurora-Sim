@@ -216,11 +216,6 @@ namespace Aurora.Modules
             }
         }
 
-        public string GetOurIP ()
-        {
-            return "http://" + Utilities.GetExternalIp () + ":" + Registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (0).Port;
-        }
-
         public GridRegion GetRegionForGrid (string regionName, string url)
         {
             bool found = Connections.Contains (url);
@@ -315,7 +310,7 @@ namespace Aurora.Modules
                 IWC.IsGettingUrlsForIWCConnection = true;
                 OSDMap callThem = module.GetUrlForRegisteringClient (host);
                 IWC.IsGettingUrlsForIWCConnection = false;
-                callThem["OurIdentifier"] = IWC.GetOurIP();
+                callThem["OurIdentifier"] = Utilities.GetAddress();
 
                 callThem["Method"] = "ConnectionRequest";
                 OSDMap result = WebUtils.PostToService (host, callThem, true, false, true);
@@ -332,7 +327,7 @@ namespace Aurora.Modules
 
         public bool InformOfURLs (string url, OSDMap urls, UUID userID, ulong regionHandle)
         {
-            urls["OurIdentifier"] = IWC.GetOurIP ();
+            urls["OurIdentifier"] = Utilities.GetAddress();
             urls["UserID"] = userID;
             urls["RegionHandle"] = regionHandle;
 
@@ -420,7 +415,7 @@ namespace Aurora.Modules
                     IWC.IsGettingUrlsForIWCConnection = true;
                     result = module.GetUrlForRegisteringClient (theirIdent);
                     IWC.IsGettingUrlsForIWCConnection = false;
-                    result["OurIdentifier"] = IWC.GetOurIP ();
+                    result["OurIdentifier"] = Utilities.GetAddress();
                     m_log.Warn (theirIdent + " successfully connected to us");
                     IWC.AddNewConnectionFromRequest (theirIdent, args);
                     result["Success"] = true;

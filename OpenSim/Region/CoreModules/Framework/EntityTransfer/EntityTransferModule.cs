@@ -336,11 +336,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                         {
                             finalDestination = new GridRegion();
                             finalDestination.FromOSD((OSDMap)map["Destination"]);
-                            if(string.IsNullOrEmpty(finalDestination.ServerURI))//Fix the serverURL
-                                finalDestination.ServerURI = (finalDestination.ExternalHostName.StartsWith("http://") ?
-                                    finalDestination.ExternalHostName :
-                                    ("http://" + finalDestination.ExternalHostName)) +
-                                    ":" + finalDestination.HttpPort;
                         }
                     }
                 }

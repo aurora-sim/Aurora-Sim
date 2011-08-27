@@ -547,7 +547,7 @@ namespace OpenSim.Services.MessagingService
                         #region OpenSim teleport compatibility!
 
                         useCallbacks = false;//OpenSim can't send us back a message, don't try it!
-                        otherRegionsCapsURL = "http://" + otherRegionService.Region.ExternalEndPoint.ToString() + 
+                        otherRegionsCapsURL = otherRegionService.Region.ServerURI + 
                             CapsUtil.GetCapsSeedPath(circuitData.CapsPath);
                         otherRegionService.CapsUrl = otherRegionsCapsURL;
 
