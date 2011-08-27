@@ -43,6 +43,8 @@ using Nwc.XmlRpc;
 using OpenMetaverse.StructuredData;
 using HttpListener = HttpServer.HttpListener;
 using LogPrio = HttpServer.LogPrio;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Authentication;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
@@ -60,6 +62,8 @@ namespace OpenSim.Framework.Servers.HttpServer
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
         protected Dictionary<string, IRequestHandler> m_streamHandlers = new Dictionary<string, IRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
+        protected X509Certificate2 m_cert;
+        protected SslProtocols m_sslProtocol = SslProtocols.None;
         
         protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
             new Dictionary<string, PollServiceEventArgs>();
@@ -99,6 +103,13 @@ namespace OpenSim.Framework.Servers.HttpServer
             m_hostName = hostName;
             m_port = port;
             m_isSecure = isSecure;
+        }
+
+        public void SetSecureParams (string path, string password, SslProtocols protocol)
+        {
+            m_isSecure = true;
+            m_cert = new X509Certificate2(path, password);
+            m_sslProtocol = protocol;
         }
 
         /// <summary>
@@ -1541,11 +1552,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 else
                 {
-                    //m_httpListener.Prefixes.Add("https://+:" + (m_sslport) + "/");
-                    //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
-                    System.Security.Cryptography.X509Certificates.X509Certificate2 cert =
-                        new System.Security.Cryptography.X509Certificates.X509Certificate2("SineWaveCert.pfx", "123");
-                    m_httpListener = HttpListener.Create (IPAddress.Any, (int)m_port, cert/*, httpserverlog*/);
+                    m_httpListener = HttpListener.Create (IPAddress.Any, (int)m_port, m_cert, m_sslProtocol);
                     m_httpListener.ExceptionThrown += httpServerException;
                     m_httpListener.LogWriter = httpserverlog;
                 }

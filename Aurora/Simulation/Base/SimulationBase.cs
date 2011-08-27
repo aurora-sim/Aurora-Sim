@@ -46,6 +46,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
+using System.Security.Authentication;
 
 namespace Aurora.Simulation.Base
 {
@@ -320,10 +321,10 @@ namespace Aurora.Simulation.Base
         /// <returns></returns>
         public IHttpServer GetHttpServer(uint port)
         {
-            return GetHttpServer(port, false);
+            return GetHttpServer(port, false, "", "", SslProtocols.None);
         }
 
-        public IHttpServer GetHttpServer (uint port, bool secure)
+        public IHttpServer GetHttpServer (uint port, bool secure, string certPath, string certPass, SslProtocols sslProtocol)
         {
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
@@ -344,6 +345,8 @@ namespace Aurora.Simulation.Base
 
             try
             {
+                if(secure)//Set these params now
+                    server.SetSecureParams(certPath, certPass, sslProtocol);
                 server.Start();
             }
             catch(Exception ex)
@@ -364,7 +367,20 @@ namespace Aurora.Simulation.Base
         {
             m_Port = m_config.Configs["Network"].GetUInt("http_listener_port", 9000);
             bool useHTTPS = m_config.Configs["Network"].GetBoolean("use_https", false);
-            m_BaseHTTPServer = GetHttpServer(m_Port, useHTTPS);
+            string certPath = m_config.Configs["Network"].GetString("https_cert_path", "");
+            string certPass = m_config.Configs["Network"].GetString("https_cert_pass", "");
+            string sslProtocol = m_config.Configs["Network"].GetString("https_ssl_protocol", "Default");
+
+            SslProtocols protocols = SslProtocols.Default;
+            try
+            {
+                protocols = (SslProtocols)Enum.Parse(typeof(SslProtocols), sslProtocol);
+            }
+            catch
+            {
+                protocols = SslProtocols.Tls;
+            }
+            m_BaseHTTPServer = GetHttpServer(m_Port, useHTTPS, certPath, certPass, protocols);
             MainServer.Instance = m_BaseHTTPServer;
         }
 
@@ -577,9 +593,8 @@ namespace Aurora.Simulation.Base
             //Rebuild the configs
             m_config = m_configurationLoader.LoadConfigSettings (m_original_config);
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
-            {
                 plugin.ReloadConfiguration(m_config);
-            }
+
             string hostName =
                 m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
             //Clean it up a bit

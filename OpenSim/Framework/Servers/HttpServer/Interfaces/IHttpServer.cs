@@ -26,6 +26,7 @@
  */
 
 using Nwc.XmlRpc;
+using System.Security.Authentication;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
@@ -38,6 +39,14 @@ namespace OpenSim.Framework.Servers.HttpServer
         uint Port { get; }
         bool Secure { get; }
         string HostName { get; set;  }
+
+        /// <summary>
+        /// Set the settings needed to run with HTTPS enabled
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="password"></param>
+        /// <param name="protocol"></param>
+        void SetSecureParams (string path, string password, SslProtocols protocol);
         
         /// <summary>
         /// Add a handler for an HTTP request.
