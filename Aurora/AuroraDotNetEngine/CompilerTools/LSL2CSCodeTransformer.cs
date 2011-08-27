@@ -35,6 +35,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     {
         private SYMBOL m_astRoot = null;
         private static Dictionary<string, string> m_datatypeLSL2OpenSim = null;
+        private Dictionary<string, string> m_globalVariableValues = new Dictionary<string, string>();
+        private Dictionary<string, string> m_allVariableValues = new Dictionary<string, string>();
 
         /// <summary>
         /// Pass the new CodeTranformer an abstract syntax tree.
@@ -62,18 +64,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// Transform the code in the AST we have.
         /// </summary>
         /// <returns>The root node of the transformed AST</returns>
-        public SYMBOL Transform()
-            {
+        public SYMBOL Transform ()
+        {
             return Transform(null, null);
-            }
+        }
 
-        public SYMBOL Transform(Dictionary<string, string> GlobalMethods, Dictionary<string, ObjectList> MethodArguements)
-            {
-            foreach (SYMBOL s in m_astRoot.kids)
+        public SYMBOL Transform (Dictionary<string, string> GlobalMethods, Dictionary<string, ObjectList> MethodArguements)
+        {
+            foreach(SYMBOL s in m_astRoot.kids)
                 TransformNode(s, GlobalMethods, MethodArguements);
 
             return m_astRoot;
-            }
+        }
 
         /// <summary>
         /// Recursively called to transform each type of node. Will transform this
@@ -107,6 +109,161 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         MethodArguements.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).kids);
                     }
                 }
+                //Reset the variables, we changed events
+                m_allVariableValues = Copy(m_globalVariableValues);
+                foreach(SYMBOL child in s.kids)
+                {
+                    if(child is ArgumentDeclarationList)
+                    {
+                        foreach(SYMBOL assignmentChild in child.kids)
+                        {
+                            if(assignmentChild is Declaration)
+                            {
+                                Declaration d = (Declaration)assignmentChild;
+                                m_allVariableValues[d.Id] = "";
+                            }
+                        }
+                    }
+                }
+            }
+            else if(s is GlobalVariableDeclaration)
+            {
+                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration)s;
+                foreach(SYMBOL child in gvd.kids)
+                {
+                    if(child is Assignment)
+                    {
+                        bool isDeclaration = false;
+                        string decID = "";
+                        foreach(SYMBOL assignmentChild in child.kids)
+                        {
+                            if(assignmentChild is Declaration)
+                            {
+                                Declaration d = (Declaration)assignmentChild;
+                                decID = d.Id;
+                                isDeclaration = true;
+                            }
+                            else if(assignmentChild is IdentExpression)
+                            {
+                                IdentExpression identEx = (IdentExpression)assignmentChild;
+                                if(isDeclaration)
+                                    m_globalVariableValues[decID] = identEx.Name;
+                            }
+                            else if(assignmentChild is Constant)
+                            {
+                                Constant identEx = (Constant)assignmentChild;
+                                if(isDeclaration)
+                                    m_allVariableValues[decID] = identEx.Value;
+                            }
+                            else if(assignmentChild is ListConstant)
+                            {
+                                ListConstant listConst = (ListConstant)assignmentChild;
+                                foreach(SYMBOL listChild in listConst.kids)
+                                {
+                                    if(listChild is ArgumentList)
+                                    {
+                                        ArgumentList argList = (ArgumentList)listChild;
+                                        int i = 0;
+                                        bool changed = false;
+                                        object[] p = new object[argList.kids.Count];
+                                        foreach(SYMBOL objChild in argList.kids)
+                                        {
+                                            p[i] = objChild;
+                                            if(objChild is IdentExpression)
+                                            {
+                                                IdentExpression identEx = (IdentExpression)objChild;
+                                                if(m_globalVariableValues.ContainsKey(identEx.Name))
+                                                {
+                                                    changed = true;
+                                                    p[i] = new IdentExpression(identEx.yyps, m_globalVariableValues[identEx.Name])
+                                                    {
+                                                        pos = objChild.pos,
+                                                        m_dollar = objChild.m_dollar
+                                                    };
+                                                }
+                                            }
+                                            i++;
+                                        }
+                                        if(changed)
+                                        {
+                                            argList.kids = new ObjectList();
+                                            foreach(object o in p)
+                                                argList.kids.Add(o);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(s is StateEvent)
+            {
+                //Reset the variables, we changed events
+                m_allVariableValues = Copy(m_globalVariableValues);
+            }
+            if(s is Statement)
+            {
+                if(s.kids.Count == 1 && s.kids[0] is Assignment)
+                {
+                    Assignment assignment = (Assignment)s.kids[0];
+                    bool isDeclaration = false;
+                    string decID = "";
+                    object[] p = new object[assignment.kids.Count];
+                    int i = 0;
+                    int toRemove = -1;
+                    foreach(SYMBOL assignmentChild in assignment.kids)
+                    {
+                        p[i] = assignmentChild;
+                        if(assignmentChild is Declaration)
+                        {
+                            Declaration d = (Declaration)assignmentChild;
+                            decID = d.Id;
+                            isDeclaration = true;
+                        }
+                        else if(assignmentChild is Constant)
+                        {
+                            Constant identEx = (Constant)assignmentChild;
+                            if(isDeclaration)
+                                if(m_allVariableValues.ContainsKey(decID))
+                                    toRemove = i-1;
+                                else
+                                    m_allVariableValues[decID] = identEx.Value;
+                        }
+                        else if(assignmentChild is IdentExpression)
+                        {
+                            IdentExpression identEx = (IdentExpression)assignmentChild;
+                            if(isDeclaration)
+                                if(m_allVariableValues.ContainsKey(decID))
+                                    toRemove = i-1;
+                                else
+                                    m_allVariableValues[decID] = identEx.Name;
+                        }
+                        i++;
+                    }
+                    if(toRemove != -1)
+                    {
+                        List<object> ps = new List<object>();
+                        foreach(object obj in p)
+                            ps.Add(obj);
+                        ps[toRemove] = new IDENT(null)
+                        {
+                            kids = new ObjectList(),
+                            pos = ((SYMBOL)ps[toRemove]).pos,
+                            m_dollar = ((SYMBOL)ps[toRemove]).m_dollar,
+                            yylval = ((SYMBOL)ps[toRemove]).yylval,
+                            yylx = ((SYMBOL)ps[toRemove]).yylx,
+                            yyps = ((SYMBOL)ps[toRemove]).yyps,
+                            yytext = ps[toRemove] is Declaration ?
+                            ((Declaration)ps[toRemove]).Id
+                            : ((SYMBOL)ps[toRemove]).yyname,
+                        };
+                        ((SYMBOL)s.kids[0]).kids = new ObjectList();
+                        foreach(object obj in ps)
+                            if(obj != null)
+                                ((SYMBOL)s.kids[0]).kids.Add(obj);
+                    }
+                }
             }
 
             for (int i = 0; i < s.kids.Count; i++)
@@ -129,6 +286,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     TransformNode((SYMBOL)s.kids[i], null, null);
                 }
             }
+        }
+
+        private Dictionary<string, string> Copy (Dictionary<string, string> m_globalVariableValues)
+        {
+            Dictionary<string, string> s = new Dictionary<string, string>();
+            foreach(KeyValuePair<string, string> kvp in m_globalVariableValues)
+            {
+                s.Add(kvp.Key, kvp.Value);
+            }
+            return s;
         }
 
         /// <summary>

@@ -3058,7 +3058,7 @@ default
         /// <returns>String s.</returns>
         private string Generate(string s, SYMBOL sym)
         {
-            if (null != sym)
+            if(null != sym)
                 m_positionMap.Add(new KeyValuePair<int, int>(m_CSharpLine, m_CSharpCol), new KeyValuePair<int, int>(sym.Line, sym.Position));
 
             m_CSharpCol += s.Length;

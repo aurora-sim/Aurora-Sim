@@ -42,8 +42,8 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                     {
                         IScenePresence presence = (IScenePresence)entity;
-                        m_presenceEntitiesList.Add(presence);
                         m_presenceEntities.Add(presence.UUID, presence);
+                        m_presenceEntitiesList.Add(presence);
                     }
                 }
                 catch(Exception e)
