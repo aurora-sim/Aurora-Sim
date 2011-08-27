@@ -83,6 +83,7 @@ namespace OpenSim.Region.Framework.Scenes
         private List<UUID> m_PropertiesInPacketQueue = new List<UUID>();*/
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence> ();
+        private object m_lastPresencesInViewLock = new object();
         private Vector3 m_lastUpdatePos;
         private int m_numberOfLoops = 0;
         private Timer m_drawDistanceChangedTimer;
@@ -121,10 +122,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         void EventManager_OnClosingClient (IClientAPI client)
         {
-            if (lastPresencesDInView.ContainsKey (client.AgentId))
-            {
-                lastPresencesDInView.Remove (client.AgentId);
-            }
+            lock(m_lastPresencesInViewLock)
+                if (lastPresencesDInView.ContainsKey (client.AgentId))
+                    lastPresencesDInView.Remove (client.AgentId);
         }
 
         void EventManager_OnMakeChildAgent (IScenePresence presence, Services.Interfaces.GridRegion destination)
@@ -189,13 +189,15 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastPresencesDInView.Remove (presence.UUID);
+                lock(m_lastPresencesInViewLock)
+                    lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
             //Is this really necessary? -7/21
             //Very much so... the client cannot get a terse update before a full update -7/25
-            if (!lastPresencesDInView.ContainsKey (presence.UUID))
-                return;//Only send updates if they are in view
+            lock(m_lastPresencesInViewLock)
+                if (!lastPresencesDInView.ContainsKey (presence.UUID))
+                    return;//Only send updates if they are in view
             AddPresenceUpdate(presence, flags);
         }
 
@@ -204,15 +206,17 @@ namespace OpenSim.Region.Framework.Scenes
             if(!forced && m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastPresencesDInView.Remove (presence.UUID);
+                lock(m_lastPresencesInViewLock)
+                    lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
-            if (!lastPresencesDInView.ContainsKey (presence.UUID))
+            lock(m_lastPresencesInViewLock)
             {
-                lastPresencesDInView.Add(presence.UUID, presence);
+                if(!lastPresencesDInView.ContainsKey(presence.UUID))
+                    lastPresencesDInView.Add(presence.UUID, presence);
+                else if(!forced)//Only send one full update please!
+                    return;
             }
-            else if(!forced)//Only send one full update please!
-                return;
 
             SendFullUpdateForPresence (presence);
             AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
@@ -262,7 +266,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastPresencesDInView.Remove (presence.UUID);
+                lock(m_lastPresencesInViewLock)
+                    lastPresencesDInView.Remove (presence.UUID);
                 return; // if 2 far ignore
             }
 
@@ -272,8 +277,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //Is this really necessary? -7/21
                 //Very much so... the client cannot get a terse update before a full update -7/25
-                if(lastPresencesDInView.ContainsKey(presence.UUID))
-                    AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);//Only send updates if they are in view
+                lock(m_lastPresencesInViewLock)
+                    if(lastPresencesDInView.ContainsKey(presence.UUID))
+                        AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);//Only send updates if they are in view
             }
             else
                 AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
@@ -362,7 +368,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void RemoveAvatarFromView (IScenePresence sp)
         {
-            lastPresencesDInView.Remove (sp.UUID);
+            lock(m_lastPresencesInViewLock)
+                lastPresencesDInView.Remove (sp.UUID);
         }
 
         #endregion
@@ -471,14 +478,17 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (presence != null && presence.UUID != m_presence.UUID)
                 {
+                    lock(m_lastPresencesInViewLock)
+                        if(lastPresencesDInView.ContainsKey(presence.UUID))
+                            continue; //Don't resend the update
+
                     //Check for culling here!
                     if (!m_culler.ShowEntityToClient (m_presence, presence, m_scene))
                         continue; // if 2 far ignore
 
-                    if (lastPresencesDInView.ContainsKey (presence.UUID))
-                        continue; //Don't resend the update
+                    lock(m_lastPresencesInViewLock)
+                        lastPresencesDInView.Add(presence.UUID, presence);
 
-                    lastPresencesDInView.Add (presence.UUID, presence);
                     SendFullUpdateForPresence (presence);
                 }
             }
@@ -488,11 +498,10 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendPresenceFullUpdate (IScenePresence presence)
         {
             if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
-                m_presence.ControllingClient.SendAvatarDataImmediate (presence);
-            if(!lastPresencesDInView.ContainsKey(presence.UUID))
-            {
-                lastPresencesDInView.Add(presence.UUID, presence);
-            }
+                m_presence.ControllingClient.SendAvatarDataImmediate(presence);
+            lock(m_lastPresencesInViewLock)
+                if(!lastPresencesDInView.ContainsKey(presence.UUID))
+                    lastPresencesDInView.Add(presence.UUID, presence);
         }
 
         protected void SendFullUpdateForPresence (IScenePresence presence)
@@ -879,7 +888,8 @@ namespace OpenSim.Region.Framework.Scenes
             //Reset the culler so that it doesn't cache too much
             m_culler.Reset ();
             //Gotta remove this so that if the client comes back, we don't have any issues with sending them another update
-            lastPresencesDInView.Remove (m_presence.UUID);
+            lock(m_lastPresencesInViewLock)
+                lastPresencesDInView.Remove (m_presence.UUID);
         }
 
         /// <summary>

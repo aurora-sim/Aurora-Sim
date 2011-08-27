@@ -1517,17 +1517,22 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 if (presence != null)
                 {
                     string oldTitle;
-                    if(!m_cachedGroupTitles.TryGetValue(presence.UUID, out oldTitle) || oldTitle != Title)
+                    bool changed = false;
+                    lock(m_cachedGroupTitles)
                     {
-                        m_cachedGroupTitles[presence.UUID] = Title;
-                        if (!presence.IsChildAgent)
+                        if(!m_cachedGroupTitles.TryGetValue(presence.UUID, out oldTitle) || oldTitle != Title)
                         {
-                            //Force send a full update
-                            foreach (IScenePresence sp in scene.GetScenePresences ())
-                            {
-                                if (sp.SceneViewer.Culler.ShowEntityToClient (sp, presence, scene))
-                                    sp.ControllingClient.SendAvatarDataImmediate (presence);
-                            }
+                            changed = true;
+                            m_cachedGroupTitles[presence.UUID] = Title;
+                        }
+                    }
+                    if(!presence.IsChildAgent && changed)
+                    {
+                        //Force send a full update
+                        foreach(IScenePresence sp in scene.GetScenePresences())
+                        {
+                            if(sp.SceneViewer.Culler.ShowEntityToClient(sp, presence, scene))
+                                sp.ControllingClient.SendAvatarDataImmediate(presence);
                         }
                     }
                     return;
