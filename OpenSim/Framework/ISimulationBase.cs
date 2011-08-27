@@ -38,6 +38,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
+using System.Security.Authentication;
 
 namespace OpenSim.Framework
 {
@@ -56,7 +57,7 @@ namespace OpenSim.Framework
         /// <param name="port"></param>
         /// <param name="httpsSecure">https:// server</param>
         /// <returns></returns>
-        IHttpServer GetHttpServer (uint port, bool httpsSecure);
+        IHttpServer GetHttpServer (uint port, bool httpsSecure, string certPath, string certPass, SslProtocols sslProtocol);
 
         /// <summary>
         /// Get the configuration settings

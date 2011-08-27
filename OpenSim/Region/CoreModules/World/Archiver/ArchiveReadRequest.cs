@@ -78,21 +78,26 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// <summary>
         /// Used to cache lookups for valid uuids.
         /// </summary>
-        private IDictionary<UUID, bool> m_validUserUuids = new Dictionary<UUID, bool>();
+        private IDictionary<UUID, UUID> m_validUserUuids = new Dictionary<UUID, UUID>();
 
         private int m_offsetX = 0;
         private int m_offsetY = 0;
         private int m_offsetZ = 0;
         private bool m_flipX = false;
         private bool m_flipY = false;
+        private bool m_useParcelOwnership = false;
+        private bool m_checkOwnership = false;
 
-        public ArchiveReadRequest (IScene scene, string loadPath, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY)
+        public ArchiveReadRequest (IScene scene, string loadPath, bool merge, bool skipAssets,
+            int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
             m_offsetX = offsetX;
             m_offsetY = offsetY;
             m_offsetZ = offsetZ;
             m_flipX = flipX;
             m_flipY = flipY;
+            m_useParcelOwnership = useParcelOwnership;
+            m_checkOwnership = checkOwnership;
             m_scene = scene;
 
             try
@@ -217,21 +222,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         foreach (SceneObjectPart part in sceneObject.ChildrenList)
                         {
                             if (part.CreatorData == null || part.CreatorData == string.Empty)
-                            {
-                                if (!ResolveUserUuid (ref part.CreatorID, part.CreatorID, part.CreatorData))
-                                    part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                            }
+                                part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition);
+
                             if (UserManager != null)
                                 UserManager.AddUser (part.CreatorID, part.CreatorData);
 
-                            if(!ResolveUserUuid(ref part.CreatorID, part.CreatorID, part.CreatorData))
-                                part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                            part.OwnerID = ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition);
 
-                            if(!ResolveUserUuid(ref part.OwnerID, part.CreatorID, part.CreatorData))
-                                part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                            if(!ResolveUserUuid(ref part.LastOwnerID, part.CreatorID, part.CreatorData))
-                                part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                            part.LastOwnerID = ResolveUserUuid(part.LastOwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition);
 
                             // And zap any troublesome sit target information
                             part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
@@ -245,15 +243,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                 TaskInventoryDictionary inv = part.TaskInventory;
                                 foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
                                 {
-                                    if(!ResolveUserUuid(ref kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData))
-                                    {
-                                        kvp.Value.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                                    }
+                                    kvp.Value.OwnerID = ResolveUserUuid(kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition);
                                     if (kvp.Value.CreatorData == null || kvp.Value.CreatorData == string.Empty)
-                                    {
-                                        if(!ResolveUserUuid(ref kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData))
-                                            kvp.Value.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                                    }
+                                        kvp.Value.CreatorID = ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition);
                                     if (UserManager != null)
                                         UserManager.AddUser (kvp.Value.CreatorID, kvp.Value.CreatorData);
                                 }
@@ -377,8 +369,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 foreach (string serialisedParcel in serialisedParcels)
                 {
                     LandData parcel = LandDataSerializer.Deserialize (serialisedParcel);
-                    if (!ResolveUserUuid (ref parcel.OwnerID, UUID.Zero, ""))
-                        parcel.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                    parcel.OwnerID = ResolveUserUuid(parcel.OwnerID, UUID.Zero, "", Vector3.Zero);
                     landData.Add (parcel);
                 }
                 IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule> ();
@@ -417,31 +408,30 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// </summary>
         /// <param name="uuid"></param>
         /// <returns></returns>
-        private bool ResolveUserUuid(ref UUID uuid, UUID creatorID, string creatorData)
+        private UUID ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData, Vector3 location)
         {
-            bool v;
-            if (!m_validUserUuids.TryGetValue(uuid, out v))
+            UUID u;
+            if (!m_validUserUuids.TryGetValue(uuid, out u))
             {
                 UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
                 if (account != null)
                 {
-                    m_validUserUuids.Add(uuid, true);
-                    return true;
+                    m_validUserUuids.Add(uuid, uuid);
+                    return uuid;
                 }
                 else
                 {
                     if(uuid == creatorID)
                     {
-                        UUID id;
+                        UUID hid;
                         string first, last, url, secret;
-                        if(HGUtil.ParseUniversalUserIdentifier(creatorData, out id, out url, out first, out last, out secret))
+                        if(HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
                         {
                             account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
                             if(account != null)
                             {
-                                m_validUserUuids.Add(uuid, true);
-                                uuid = account.PrincipalID;//Fix the UUID
-                                return true;
+                                m_validUserUuids.Add(uuid, account.PrincipalID);
+                                return account.PrincipalID;//Fix the UUID
                             }
                         }
                     }
@@ -449,15 +439,37 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     if (uf != null)
                         if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
                         {
-                            m_validUserUuids.Add (uuid, true);
-                            return true;
+                            m_validUserUuids.Add(uuid, uuid);
+                            return uuid;
                         }
-                    m_validUserUuids.Add(uuid, false);
-                    return false;
+                    UUID id = UUID.Zero;
+                    if(m_checkOwnership)
+                    {
+                    tryAgain:
+                        string ownerName = MainConsole.Instance.CmdPrompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
+                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
+                        if(account != null)
+                            id = account.PrincipalID;
+                        else if(ownerName != "")
+                            if((ownerName = MainConsole.Instance.CmdPrompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
+                                goto tryAgain;
+                    }
+                    if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero)
+                    {
+                        ILandObject landObject = m_scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(location.X, location.Y);
+                        if(landObject != null)
+                            if(uuid != landObject.LandData.OwnerID)
+                                id = landObject.LandData.OwnerID;
+                    }
+                    if(id == UUID.Zero)
+                        id = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                    m_validUserUuids.Add(uuid, id);
+
+                    return m_validUserUuids[uuid];
                 }
             }
 
-            return v;
+            return u;
         }
 
         /// <summary>
