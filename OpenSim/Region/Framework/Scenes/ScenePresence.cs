@@ -394,12 +394,13 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_DrawDistance; }
             set
             {
-                if (m_DrawDistance != value)
+                if (m_DrawDistance != value && value != 0)
                 {
+                    float oldDD = m_DrawDistance;
                     m_DrawDistance = value;
                     //Fire the event
                     Scene.AuroraEventManager.FireGenericEventHandler("DrawDistanceChanged", this);
-                    if (!IsChildAgent && !m_enqueueSendChildAgentUpdate)
+                    if (!IsChildAgent)
                     {
                         //Send an update to all child agents if we are a root agent
                         AddChildAgentUpdateTaint(5);
@@ -2009,9 +2010,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Taints &= ~PresenceTaint.SignificantMovement;
                 //Trigger the movement now
-                if(OnSignificantClientMovement != null)
-                    OnSignificantClientMovement ();
-                m_scene.EventManager.TriggerSignificantClientMovement(this);
+                TriggerSignificantClientMovement();
             }
             if ((Taints & PresenceTaint.TerseUpdate) == PresenceTaint.TerseUpdate)
             {
@@ -2431,10 +2430,16 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_avHeight = cAgentData.Size.Z;
 
-            OnSignificantClientMovement();
-            m_scene.EventManager.TriggerSignificantClientMovement(this);
+            TriggerSignificantClientMovement();
 
             m_savedVelocity = cAgentData.Velocity;
+        }
+
+        public void TriggerSignificantClientMovement ()
+        {
+            if(OnSignificantClientMovement != null)
+                OnSignificantClientMovement();
+            m_scene.EventManager.TriggerSignificantClientMovement(this);
         }
 
         public virtual void CopyTo (AgentData cAgent)

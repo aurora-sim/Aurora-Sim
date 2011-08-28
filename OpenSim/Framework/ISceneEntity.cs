@@ -418,6 +418,8 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="group"></param>
         void RemoveAttachment (ISceneEntity group);
+
+        void TriggerSignificantClientMovement ();
     }
 
     public interface IAvatarAppearanceModule

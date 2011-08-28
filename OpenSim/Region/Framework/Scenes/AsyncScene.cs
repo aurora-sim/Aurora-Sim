@@ -723,6 +723,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //Create the scenepresence
                         IScenePresence sp = CreateAndAddChildScenePresence(client);
                         sp.IsChildAgent = aCircuit.child;
+                        sp.DrawDistance = aCircuit.DrawDistance;
 
                         //Trigger events
                         m_eventManager.TriggerOnNewPresence(sp);
@@ -750,7 +751,7 @@ namespace OpenSim.Region.Framework.Scenes
                             monitor.AddSuccessfulLogin();
 
                         if(sp.IsChildAgent)//If we're a child, trigger this so that we get updated in the modules
-                            EventManager.TriggerSignificantClientMovement(sp);
+                            sp.TriggerSignificantClientMovement();
                         completed();
                     }
                     catch(Exception ex)

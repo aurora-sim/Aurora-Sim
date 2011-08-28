@@ -386,6 +386,7 @@ namespace OpenSim.Services.MessagingService
 
                 ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
                 IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
+                clientCaps.GetRootCapsService().CircuitData.DrawDistance = DrawDistance;//Fix the root agents dd
                 foreach(GridRegion neighbor in neighbors)
                 {
                     if(neighbor.RegionHandle != requestingRegion && clientCaps.GetCapsService(neighbor.RegionHandle) == null)
@@ -395,6 +396,7 @@ namespace OpenSim.Services.MessagingService
                         GridRegion nCopy = neighbor;
                         regionCircuitData.child = true; //Fix child agent status
                         regionCircuitData.reallyischild = true;
+                        regionCircuitData.DrawDistance = DrawDistance;
                         bool useCallbacks = false;
                         InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData, ref nCopy,
                             (uint)TeleportFlags.Default, null, out reason, out useCallbacks);

@@ -138,6 +138,11 @@ namespace OpenSim.Framework
         /// </summary>
         public int RegionUDPPort;
 
+        /// <summary>
+        /// Draw Distance (set by the root agent)
+        /// </summary>
+        public float DrawDistance;
+
         public AgentCircuitData()
         {
         }
@@ -162,8 +167,9 @@ namespace OpenSim.Framework
             args["client_ip"] = OSD.FromString(IPAddress);
             args["otherInfo"] = OSDParser.SerializeLLSDXmlString(OtherInformation);
             args["teleport_flags"] = OSD.FromUInteger (teleportFlags);
-            args["first_name"] = OSD.FromString (firstname);
-            args["last_name"] = OSD.FromString (lastname);
+            args["first_name"] = OSD.FromString(firstname);
+            args["last_name"] = OSD.FromString(lastname);
+            args["draw_distance"] = DrawDistance;
             
             if (Appearance != null)
             {
@@ -206,6 +212,7 @@ namespace OpenSim.Framework
             Copy.ServiceURLs = ServiceURLs;
             Copy.firstname = firstname;
             Copy.lastname = lastname;
+            Copy.DrawDistance = DrawDistance;
 
             return Copy;
         }
@@ -244,6 +251,8 @@ namespace OpenSim.Framework
 
             if (args["teleport_flags"] != null)
                 teleportFlags = args["teleport_flags"].AsUInteger();
+            if(args["draw_distance"] != null)
+                DrawDistance = args["draw_distance"];
 
             // DEBUG ON
             //m_log.WarnFormat("[AGENTCIRCUITDATA] agentid={0}, child={1}, startpos={2}", AgentID, child, startpos.ToString());
