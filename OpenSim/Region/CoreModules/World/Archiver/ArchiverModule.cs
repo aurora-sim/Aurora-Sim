@@ -106,42 +106,42 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             int i = 0;
             foreach(string param in cmdparams)
             {
-                if(param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
                 {
                     skipAssets = true;
                 }
-                if(param.StartsWith("--merge", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--merge", StringComparison.CurrentCultureIgnoreCase))
                 {
                     mergeOar = true;
                 }
                 if (param.StartsWith("--OffsetX", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    string retVal = param.Remove(0, 8);
+                    string retVal = param.Remove(0, 10);
                     int.TryParse(retVal, out offsetX);
                 }
                 if (param.StartsWith("--OffsetY", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    string retVal = param.Remove(0, 8);
+                    string retVal = param.Remove(0, 10);
                     int.TryParse(retVal, out offsetY);
                 }
                 if (param.StartsWith("--OffsetZ", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    string retVal = param.Remove(0, 8);
+                    string retVal = param.Remove(0, 10);
                     int.TryParse(retVal, out offsetZ);
                 }
                 if (param.StartsWith("--FlipX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipX = true;
                 }
-                if(param.StartsWith("--FlipY", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--FlipY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipY = true;
                 }
-                if(param.StartsWith("--UseParcelOwnership", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--UseParcelOwnership", StringComparison.CurrentCultureIgnoreCase))
                 {
                     useParcelOwnership = true;
                 }
-                if(param.StartsWith("--CheckOwnership", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--CheckOwnership", StringComparison.CurrentCultureIgnoreCase))
                 {
                     checkOwnership = true;
                 }
