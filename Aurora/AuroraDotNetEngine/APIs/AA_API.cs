@@ -359,13 +359,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
-        public LSL_String aaGetText ()
+        public LSL_String aaGetText()
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetText", m_host, "AA", m_itemID)) return new LSL_String();
             return m_host.Text;
         }
 
-        public LSL_Rotation aaGetTextColor ()
+        public LSL_Rotation aaGetTextColor()
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetText", m_host, "AA", m_itemID)) return new LSL_Rotation();
             LSL_Rotation v = new LSL_Rotation (m_host.Color.R, m_host.Color.G, m_host.Color.B, m_host.Color.A);
