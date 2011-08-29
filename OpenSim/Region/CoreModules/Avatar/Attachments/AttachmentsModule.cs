@@ -589,7 +589,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // set it's offset position = 0 so that it appears on the attachment point
             // and not in a weird location somewhere unknown.
             //Simplier terms: the attachment point changed, set it to the default 0,0,0 location
-            if (AttachmentPt != (int)group.GetAttachmentPoint())
+            if (AttachmentPt != (int)(group.GetAttachmentPoint() & 0x7f))
             {
                 attachPos = Vector3.Zero;
                 changedPositionPoint = true;
@@ -600,7 +600,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (AttachmentPt == 0)
                 {
                     // Check object for stored attachment point
-                    AttachmentPt = (int)group.GetSavedAttachmentPoint();
+                    AttachmentPt = (int)group.GetSavedAttachmentPoint() & 0x7f;
                     attachPos = group.GetAttachmentPos();
                 }
 
@@ -608,7 +608,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (AttachmentPt == 0)
                 {
                     // Check object for older stored attachment point
-                    AttachmentPt = group.RootChild.Shape.State;
+                    AttachmentPt = group.RootChild.Shape.State & 0x7f;
                     //attachPos = group.AbsolutePosition;
                 }
 
