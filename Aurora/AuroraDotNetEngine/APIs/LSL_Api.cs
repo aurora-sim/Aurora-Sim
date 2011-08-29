@@ -9709,7 +9709,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             
            if (m_UrlModule != null)
-               return m_UrlModule.GetHttpHeader(new UUID(request_id), header);
+               return m_UrlModule.GetHttpHeader(request_id, header);
            return String.Empty;
         }
 
@@ -11443,7 +11443,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 content_type = "text/html";
 
             if(m_UrlModule != null)
-                m_UrlModule.SetContentType(new UUID(id), content_type);
+                m_UrlModule.SetContentType(id, content_type);
         }
 
         public void llHTTPResponse(LSL_Key id, int status, string body)
@@ -11455,7 +11455,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             
             if (m_UrlModule != null)
-                m_UrlModule.HttpResponse(new UUID(id), status,body);
+                m_UrlModule.HttpResponse(id, status,body);
         }
 
         public DateTime llResetLandBanList()
@@ -12235,7 +12235,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetPrimitiveParams", m_host, "OSSL", m_itemID)) return;
-            ISceneChildEntity obj = World.GetSceneObjectPart (new UUID (prim));
+            ISceneChildEntity obj = World.GetSceneObjectPart (prim);
             if (obj == null)
                 return;
 
@@ -12247,7 +12247,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List GetLinkPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
         {
-            ISceneChildEntity obj = World.GetSceneObjectPart (new UUID (prim));
+            ISceneChildEntity obj = World.GetSceneObjectPart (prim);
             if (obj == null)
                 return new LSL_List();
 

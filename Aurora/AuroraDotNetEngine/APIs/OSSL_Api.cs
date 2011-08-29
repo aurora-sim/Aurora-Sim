@@ -1630,7 +1630,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             object[] resobj = new object[] { new LSL_Types.LSLString(m_host.UUID.ToString()), new LSL_Types.LSLString(message) };
 
-            ISceneChildEntity sceneOP = World.GetSceneObjectPart(new UUID(objectUUID));
+            ISceneChildEntity sceneOP = World.GetSceneObjectPart(objectUUID);
 
             m_ScriptEngine.PostObjectEvent(sceneOP.UUID, "dataserver", resobj);
         }
@@ -2104,7 +2104,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "osSetSpeed", m_host, "OSSL", m_itemID)) return;
 
-            IScenePresence avatar = World.GetScenePresence(new UUID(UUID));
+            IScenePresence avatar = World.GetScenePresence(UUID);
             if (avatar != null)
             {
                 if (avatar.UUID != m_host.OwnerID)
@@ -2177,13 +2177,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
-                obj = World.GetSceneObjectPart(new UUID(prim));
+                obj = World.GetSceneObjectPart(prim);
                 if (obj == null)
                     return;
             }
 
             obj.Shape.ProjectionEntry = projection;
-            obj.Shape.ProjectionTextureUUID = new UUID(texture);
+            obj.Shape.ProjectionTextureUUID = texture;
             obj.Shape.ProjectionFOV = (float)fov;
             obj.Shape.ProjectionFocus = (float)focus;
             obj.Shape.ProjectionAmbiance = (float)amb;
