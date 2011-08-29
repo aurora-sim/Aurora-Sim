@@ -1454,6 +1454,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return true;
                 }
             }
+            static public implicit operator OpenMetaverse.UUID(LSLString s)
+            {
+                return OpenMetaverse.UUID.Parse(s.m_string);
+            }
 
             static public implicit operator String(LSLString s)
             {
