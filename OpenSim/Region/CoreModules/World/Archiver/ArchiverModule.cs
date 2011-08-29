@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using log4net;
-using NDesk.Options;
 using Nini.Config;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -96,12 +95,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             bool mergeOar = false;
             bool skipAssets = false;
-            
-            OptionSet options = new OptionSet().Add("m|merge", delegate (string v) { mergeOar = v != null; });
-            options.Add("s|skip-assets", delegate(string v) { skipAssets = v != null; });
-            
-            List<string> mainParams = options.Parse(cmdparams);
-
             int offsetX = 0;
             int offsetY = 0;
             int offsetZ = 0;
@@ -111,50 +104,53 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             bool checkOwnership = false;
 
             int i = 0;
-            foreach (string param in mainParams)
+            foreach(string param in cmdparams)
             {
-                if (param.StartsWith("OffsetX", StringComparison.CurrentCultureIgnoreCase))
+                if(param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    skipAssets = true;
+                }
+                if(param.StartsWith("--merge", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    mergeOar = true;
+                }
+                if (param.StartsWith("--OffsetX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetX);
                 }
-                if (param.StartsWith("OffsetY", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--OffsetY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetY);
                 }
-                if (param.StartsWith("OffsetZ", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--OffsetZ", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 8);
                     int.TryParse(retVal, out offsetZ);
                 }
-                if (param.StartsWith("FlipX", StringComparison.CurrentCultureIgnoreCase))
+                if (param.StartsWith("--FlipX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipX = true;
                 }
-                if(param.StartsWith("FlipY", StringComparison.CurrentCultureIgnoreCase))
+                if(param.StartsWith("--FlipY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipY = true;
                 }
-                if(param.StartsWith("UseParcelOwnership", StringComparison.CurrentCultureIgnoreCase))
+                if(param.StartsWith("--UseParcelOwnership", StringComparison.CurrentCultureIgnoreCase))
                 {
                     useParcelOwnership = true;
                 }
-                if(param.StartsWith("CheckOwnership", StringComparison.CurrentCultureIgnoreCase))
+                if(param.StartsWith("--CheckOwnership", StringComparison.CurrentCultureIgnoreCase))
                 {
                     checkOwnership = true;
                 }
                 i++;
             }
-          
-//            m_log.DebugFormat("MERGE OAR IS [{0}]", mergeOar);
-//
-//            foreach (string param in mainParams)
-//                m_log.DebugFormat("GOT PARAM [{0}]", param);
-            
-            if (mainParams.Count > 2)
+
+            if(cmdparams.Length > 2)
             {
-                DearchiveRegion(mainParams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
+                DearchiveRegion(cmdparams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
             }
             else
             {

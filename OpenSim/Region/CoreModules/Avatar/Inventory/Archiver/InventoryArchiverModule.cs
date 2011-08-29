@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using log4net;
-using NDesk.Options;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -238,22 +237,30 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 m_log.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
                 
                 Dictionary<string, object> options = new Dictionary<string, object>();
-                OptionSet optionSet = new OptionSet().Add("m|merge", delegate (string v) { options["merge"] = v != null; });
-                
-                List<string> mainParams = optionSet.Parse(cmdparams);
-                
-                if (mainParams.Count < 6)
+                foreach(string param in cmdparams)
+                {
+                    if(param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        options["skip-assets"] = true;
+                    }
+                    if(param.StartsWith("--merge", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        options["merge"] = true;
+                    }
+                }
+
+                if(cmdparams.Length < 6)
                 {
                     m_log.Error(
                         "[INVENTORY ARCHIVER]: usage is load iar [--merge] <first name> <last name> <inventory path> <user password> [<load file path>]");
                     return;
                 }
-    
-                string firstName = mainParams[2];
-                string lastName = mainParams[3];
-                string invPath = mainParams[4];
-                string pass = mainParams[5];
-                string loadPath = (mainParams.Count > 6 ? mainParams[6] : DEFAULT_INV_BACKUP_FILENAME);
+
+                string firstName = cmdparams[2];
+                string lastName = cmdparams[3];
+                string invPath = cmdparams[4];
+                string pass = cmdparams[5];
+                string loadPath = (cmdparams.Length > 6 ? cmdparams[6] : DEFAULT_INV_BACKUP_FILENAME);
     
                 m_log.InfoFormat(
                     "[INVENTORY ARCHIVER]: Loading archive {0} to inventory path {1} for {2} {3}",
