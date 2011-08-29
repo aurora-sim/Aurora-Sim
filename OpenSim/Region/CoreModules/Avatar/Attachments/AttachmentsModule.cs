@@ -364,8 +364,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             if (m_scene.TryGetScenePresence (remoteClient.AgentId, out presence))
             {
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (!appearance.Appearance.DetachAttachment (itemID))
-                    return; //Its not attached! What are we doing!
+                if (!appearance.Appearance.DetachAttachment(itemID))
+                {
+                    bool found = false;
+                    foreach (ISceneEntity grp in attachments)
+                    {
+                        if (grp.RootChild.FromUserInventoryItemID == itemID)
+                        {
+                            found = true;
+                        }
+                    }
+                    if (!found)
+                        return; //Its not attached! What are we doing!
+                }
 
                 m_log.Debug ("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)
@@ -577,7 +588,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 return;
             }
             Vector3 attachPos = group.GetAttachmentPos();
-            bool hasMultipleAttachmentsSet = (AttachmentPt & 0x7f) != 0;
+            bool hasMultipleAttachmentsSet = (AttachmentPt & 0x7f) != 0 || AttachmentPt == 0;
             if(!m_allowMultipleAttachments)
                 hasMultipleAttachmentsSet = false;
             AttachmentPt &= 0x7f; //Disable it! Its evil!
@@ -589,7 +600,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             // set it's offset position = 0 so that it appears on the attachment point
             // and not in a weird location somewhere unknown.
             //Simplier terms: the attachment point changed, set it to the default 0,0,0 location
-            if (AttachmentPt != (int)(group.GetAttachmentPoint() & 0x7f))
+            if (AttachmentPt != 0 && AttachmentPt != (int)(group.GetAttachmentPoint() & 0x7f))
             {
                 attachPos = Vector3.Zero;
                 changedPositionPoint = true;
