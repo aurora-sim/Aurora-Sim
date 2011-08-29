@@ -56,7 +56,7 @@ namespace OpenSim.Framework
         public int m_lastSetPromptOption = 0;
         public List<string> m_promptOptions = new List<string>();
 
-        public virtual void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
+        public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
             if (source.Configs["Console"] != null)
             {
@@ -287,7 +287,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// The default prompt text.
         /// </summary>
-        public string DefaultPrompt
+        public virtual string DefaultPrompt
         {
             set { m_defaultPrompt = value; }
             get { return m_defaultPrompt; }

@@ -71,7 +71,7 @@ namespace OpenSim.Framework
             ConsoleColor.Cyan
         };
 
-        public override void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim)
+        public override void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
             if (source.Configs["Console"] != null)
             {

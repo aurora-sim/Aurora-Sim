@@ -52,7 +52,7 @@ namespace Aurora.Simulation.Base
 {
     public class SimulationBase : ISimulationBase
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected string m_startupCommandsFile;
         protected string m_shutdownCommandsFile;
@@ -257,10 +257,11 @@ namespace Aurora.Simulation.Base
             List<ICommandConsole> Plugins = AuroraModuleLoader.PickupModules<ICommandConsole>();
             foreach (ICommandConsole plugin in Plugins)
             {
-                plugin.Initialize("Region", ConfigSource, this);
+                plugin.Initialize(ConfigSource, this);
             }
 
             m_console = m_applicationRegistry.RequestModuleInterface<ICommandConsole>();
+            MainConsole.Instance = m_console;
             if (m_console == null)
                 m_log.Info("[Console]: No Console located");
             ILoggerRepository repository = LogManager.GetRepository();
@@ -293,7 +294,6 @@ namespace Aurora.Simulation.Base
                 {
                     log.Level = m_consoleAppender.Threshold;
                 }
-                m_log.Fatal (String.Format ("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
             }
 
             IConfig startupConfig = m_config.Configs["Startup"];
@@ -311,7 +311,7 @@ namespace Aurora.Simulation.Base
                 }
             }
 
-            MainConsole.Instance = m_console;
+            m_log.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
         }
 
         /// <summary>

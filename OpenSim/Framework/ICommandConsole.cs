@@ -57,10 +57,9 @@ namespace OpenSim.Framework
         /// <summary>
         /// Set up this console
         /// </summary>
-        /// <param name="defaultPrompt"></param>
         /// <param name="source"></param>
         /// <param name="baseOpenSim"></param>
-        void Initialize(string defaultPrompt, IConfigSource source, ISimulationBase baseOpenSim);
+        void Initialize(IConfigSource source, ISimulationBase baseOpenSim);
 
         /// <summary>
         /// The text behind the blinking cursor on the console

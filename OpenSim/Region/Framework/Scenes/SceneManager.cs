@@ -422,7 +422,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public IScene StartNewRegion (RegionInfo regionInfo)
         {
-            m_log.InfoFormat("[SceneManager]: Starting region {0} on {1}:{2} @ {3},{4}", regionInfo.RegionName,
+            m_log.InfoFormat("[SceneManager]: Starting region \"{0}\" on {1}:{2} @ {3},{4}", regionInfo.RegionName,
                 regionInfo.ExternalHostName, regionInfo.HttpPort, regionInfo.RegionLocX / 256, regionInfo.RegionLocY / 256);
             ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader> ();
             if (sceneLoader == null)

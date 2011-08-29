@@ -224,7 +224,7 @@ namespace OpenSim.Framework
             IConfigSource m_config = new IniConfigSource ();
             IConfigSource m_fakeconfig = new IniConfigSource ();
             
-            m_log.Info("[Config]: Reading configuration settings");
+            //m_log.Info("[Config]: Reading configuration settings");
 
             if (sources.Count == 0)
             {

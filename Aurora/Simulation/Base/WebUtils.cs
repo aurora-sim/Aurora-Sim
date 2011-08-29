@@ -178,7 +178,8 @@ namespace Aurora.Simulation.Base
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
                     "", "");
-
+            // Set the encoding declaration.
+            ((XmlDeclaration)xmlnode).Encoding = "UTF-8";
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",

@@ -1407,10 +1407,13 @@ namespace OpenSim.Services
             List<EstateSettings> EstateIDs = EstateConnector.GetEstates(search);
             Dictionary<string, object> estateresult = new Dictionary<string, object>();
             int i = 0;
-            foreach (EstateSettings estateID in EstateIDs)
+            if (EstateIDs != null)
             {
-                estateresult.Add(ConvertDecString(i), estateID.ToKeyValuePairs(false));
-                i++;
+                foreach (EstateSettings estateID in EstateIDs)
+                {
+                    estateresult.Add(ConvertDecString(i), estateID.ToKeyValuePairs(false));
+                    i++;
+                }
             }
             result["result"] = estateresult;
 

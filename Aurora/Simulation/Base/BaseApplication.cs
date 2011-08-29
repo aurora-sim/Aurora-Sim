@@ -144,7 +144,7 @@ namespace Aurora.Simulation.Base
 
             // Check if the system is compatible with OpenSimulator.
             // Ensures that the minimum system requirements are met
-            m_log.Info("[Setup]: Performing compatibility checks... \n");
+            //m_log.Info("[Setup]: Performing compatibility checks... \n");
             string supported = String.Empty;
             if (Util.IsEnvironmentSupported(ref supported))
             {
@@ -152,7 +152,7 @@ namespace Aurora.Simulation.Base
                 // Get the current settings.
                 System.Threading.ThreadPool.GetMinThreads(out minWorker, out minIOC);
                 
-                m_log.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
+                //m_log.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
             }
             else
             {
