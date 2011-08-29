@@ -141,8 +141,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             int successfulAssetRestores = 0;
             int failedAssetRestores = 0;
-            //List<string> serialisedSceneObjects = new List<string>();
-            List<string> serialisedParcels = new List<string>();
             string filePath = "NONE";
             DateTime start = DateTime.Now;
 
@@ -182,7 +180,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             //We save the groups so that we can back them up later
             List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
-
+            List<LandData> landData = new List<LandData>();
             IUserManagement UserManager = m_scene.RequestModuleInterface<IUserManagement> ();
             try
             {
@@ -222,14 +220,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         foreach (SceneObjectPart part in sceneObject.ChildrenList)
                         {
                             if (part.CreatorData == null || part.CreatorData == string.Empty)
-                                part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition);
+                                part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
 
                             if (UserManager != null)
                                 UserManager.AddUser (part.CreatorID, part.CreatorData);
 
-                            part.OwnerID = ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition);
+                            part.OwnerID = ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
 
-                            part.LastOwnerID = ResolveUserUuid(part.LastOwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition);
+                            part.LastOwnerID = ResolveUserUuid(part.LastOwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
 
                             // And zap any troublesome sit target information
                             part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
@@ -243,9 +241,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                 TaskInventoryDictionary inv = part.TaskInventory;
                                 foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
                                 {
-                                    kvp.Value.OwnerID = ResolveUserUuid(kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition);
+                                    kvp.Value.OwnerID = ResolveUserUuid(kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
                                     if (kvp.Value.CreatorData == null || kvp.Value.CreatorData == string.Empty)
-                                        kvp.Value.CreatorID = ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition);
+                                        kvp.Value.CreatorID = ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
                                     if (UserManager != null)
                                         UserManager.AddUser (kvp.Value.CreatorID, kvp.Value.CreatorData);
                                 }
@@ -294,7 +292,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     }
                     else if (!m_merge && filePath.StartsWith (ArchiveConstants.LANDDATA_PATH))
                     {
-                        serialisedParcels.Add (m_utf8Encoding.GetString (data));
+                        LandData parcel = LandDataSerializer.Deserialize(m_utf8Encoding.GetString(data));
+                        parcel.OwnerID = ResolveUserUuid(parcel.OwnerID, UUID.Zero, "", Vector3.Zero, null);
+                        landData.Add(parcel);
                     }
                     else if (filePath == ArchiveConstants.CONTROL_FILE_PATH)
                     {
@@ -364,14 +364,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // Reload serialized parcels
             if (!m_merge)
             {
-                m_log.InfoFormat ("[ARCHIVER]: Loading {0} parcels.  Please wait.", serialisedParcels.Count);
-                List<LandData> landData = new List<LandData> ();
-                foreach (string serialisedParcel in serialisedParcels)
-                {
-                    LandData parcel = LandDataSerializer.Deserialize (serialisedParcel);
-                    parcel.OwnerID = ResolveUserUuid(parcel.OwnerID, UUID.Zero, "", Vector3.Zero);
-                    landData.Add (parcel);
-                }
+                m_log.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
+                
                 IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule> ();
                 if (parcelManagementModule != null)
                     parcelManagementModule.ClearAllParcels ();
@@ -394,7 +388,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 //Clean it out
                 landData.Clear ();
-                serialisedParcels.Clear ();
             }
 
             m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
@@ -408,7 +401,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// </summary>
         /// <param name="uuid"></param>
         /// <returns></returns>
-        private UUID ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData, Vector3 location)
+        private UUID ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData, Vector3 location, List<LandData> parcels)
         {
             UUID u;
             if (!m_validUserUuids.TryGetValue(uuid, out u))
@@ -443,7 +436,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             return uuid;
                         }
                     UUID id = UUID.Zero;
-                    if(m_checkOwnership)
+                    if(m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
                     {
                     tryAgain:
                         string ownerName = MainConsole.Instance.CmdPrompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
@@ -456,10 +449,15 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     }
                     if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero)
                     {
-                        ILandObject landObject = m_scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(location.X, location.Y);
-                        if(landObject != null)
-                            if(uuid != landObject.LandData.OwnerID)
-                                id = landObject.LandData.OwnerID;
+                        foreach(LandData data in parcels)
+                        {
+                            OpenSim.Region.CoreModules.World.Land.LandObject lo = new Land.LandObject(data.OwnerID, false, m_scene);
+                            lo.LandData = data;
+                            if(lo.SetLandBitmapFromByteArray())
+                                if(lo.ContainsPoint((int)location.X, (int)location.Y))
+                                    if(uuid != data.OwnerID)
+                                        id = data.OwnerID;
+                        }
                     }
                     if(id == UUID.Zero)
                         id = m_scene.RegionInfo.EstateSettings.EstateOwner;
