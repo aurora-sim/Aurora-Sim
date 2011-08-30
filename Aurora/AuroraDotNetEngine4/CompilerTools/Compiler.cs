@@ -465,6 +465,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                     "OpenSim.Framework.dll"));
+			parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                    "OpenMetaverseTypes.dll"));
 
             if (converter.Name == "yp")
             {
