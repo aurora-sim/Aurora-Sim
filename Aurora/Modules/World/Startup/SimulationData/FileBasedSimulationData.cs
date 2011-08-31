@@ -494,7 +494,8 @@ namespace Aurora.Modules.FileBasedSimulationData
 
         protected virtual string SerializeDateTime ()
         {
-            return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
+            return String.Format("--{0:yyyy-MM-dd-HH-mm}", DateTime.Now); 
+            //return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
         }
 
         protected virtual void ReadBackup (IScene scene)
