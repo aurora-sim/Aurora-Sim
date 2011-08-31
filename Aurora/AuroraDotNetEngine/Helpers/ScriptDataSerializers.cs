@@ -106,6 +106,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (script.Script != null)
                 script.Script.NeedsStateSaved = false;
+            script.Part.ParentEntity.HasGroupChanged = true;
             StateSave stateSave = new StateSave ();
             stateSave.State = script.State;
             stateSave.ItemID = script.ItemID;
@@ -200,6 +201,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         m_manager.RemoveComponentState(script.Part.UUID, m_componentName);
                     else
                         m_manager.SetComponentState (script.Part, m_componentName, component);
+                    script.Part.ParentEntity.HasGroupChanged = true;
+                }
+            }
+        }
+
+        public void DeleteFrom (ISceneChildEntity Part, UUID ItemID)
+        {
+            OSDMap component = m_manager.GetComponentState(Part, m_componentName) as OSDMap;
+            //Attempt to find the state saves we have
+            if (component != null)
+            {
+                //if we did remove something, resave it
+                if (component.Remove(ItemID.ToString()))
+                {
+                    if (component.Count == 0)
+                        m_manager.RemoveComponentState(Part.UUID, m_componentName);
+                    else
+                        m_manager.SetComponentState(Part, m_componentName, component);
+                    Part.ParentEntity.HasGroupChanged = true;
                 }
             }
         }
