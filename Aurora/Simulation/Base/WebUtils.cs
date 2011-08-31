@@ -363,7 +363,7 @@ namespace Aurora.Simulation.Base
                     {
                         // capture how much time was spent writing, this may seem silly
                         // but with the number concurrent requests, this often blocks
-                        tickserialize = Util.EnvironmentTickCountSubtract (tickstart);
+                        tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
                         if (careAboutResponse)
                         {
                             string responseStr = null;
