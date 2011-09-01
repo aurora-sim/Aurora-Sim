@@ -104,53 +104,63 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             bool checkOwnership = false;
 
             int i = 0;
+            List<string> newParams = new List<string>(cmdparams);
             foreach(string param in cmdparams)
             {
                 if (param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
                 {
                     skipAssets = true;
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--merge", StringComparison.CurrentCultureIgnoreCase))
                 {
                     mergeOar = true;
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--OffsetX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 10);
                     int.TryParse(retVal, out offsetX);
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--OffsetY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 10);
                     int.TryParse(retVal, out offsetY);
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--OffsetZ", StringComparison.CurrentCultureIgnoreCase))
                 {
                     string retVal = param.Remove(0, 10);
                     int.TryParse(retVal, out offsetZ);
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--FlipX", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipX = true;
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--FlipY", StringComparison.CurrentCultureIgnoreCase))
                 {
                     flipY = true;
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--UseParcelOwnership", StringComparison.CurrentCultureIgnoreCase))
                 {
                     useParcelOwnership = true;
+                    newParams.Remove(param);
                 }
                 if (param.StartsWith("--CheckOwnership", StringComparison.CurrentCultureIgnoreCase))
                 {
                     checkOwnership = true;
+                    newParams.Remove(param);
                 }
                 i++;
             }
 
-            if(cmdparams.Length > 2)
+            if (newParams.Count > 2)
             {
-                DearchiveRegion(cmdparams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
+                DearchiveRegion(newParams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
             }
             else
             {
