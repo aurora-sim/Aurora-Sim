@@ -168,7 +168,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 m_saveTimer.Stop ();
                 try
                 {
-                    SaveBackup (m_saveDirectory + "/", false);
+                    SaveBackup (m_saveDirectory, false);
                     m_requiresSave = false;
                 }
                 catch(Exception ex)
@@ -194,7 +194,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 try
                 {
                     if(m_saveChanges && m_saveBackups)
-                        SaveBackup(m_saveDirectory + "/", m_keepOldSave && !m_oldSaveHasBeenSaved);
+                        SaveBackup(m_saveDirectory, m_keepOldSave && !m_oldSaveHasBeenSaved);
                 }
                 catch(Exception ex)
                 {
@@ -215,7 +215,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         {
             try
             {
-                SaveBackup (m_oldSaveDirectory + "/", true);
+                SaveBackup (m_oldSaveDirectory, true);
             }
             catch(Exception ex)
             {
@@ -425,7 +425,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     m_oldSaveHasBeenSaved = true;
                     if (!Directory.Exists (m_oldSaveDirectory))
                         Directory.CreateDirectory (m_oldSaveDirectory);
-                    File.Copy(fileName + ".tmp", m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
+                    File.Copy(fileName + ".tmp", m_oldSaveDirectory + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
                 }
                 //Just remove the file
                 File.Delete (fileName);
@@ -452,7 +452,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                         m_oldSaveHasBeenSaved = true;
                         if(!Directory.Exists(m_oldSaveDirectory))
                             Directory.CreateDirectory(m_oldSaveDirectory);
-                        File.Copy(fileName + ".tmp", m_oldSaveDirectory + "/" + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
+                        File.Copy(fileName + ".tmp", Path.Combine(m_oldSaveDirectory, m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup"));
                     }
                     //Just remove the file
                     File.Delete(fileName);
@@ -577,25 +577,25 @@ namespace Aurora.Modules.FileBasedSimulationData
             GC.Collect ();
         }
 
-        protected virtual void CheckForOldDataBase ()
+        protected virtual void CheckForOldDataBase()
         {
             string connString = "";
             string name = "";
             // Try reading the [DatabaseService] section, if it exists
             IConfig dbConfig = m_scene.Config.Configs["DatabaseService"];
             if (dbConfig != null)
-                connString = dbConfig.GetString ("ConnectionString", String.Empty);
+                connString = dbConfig.GetString("ConnectionString", String.Empty);
 
             // Try reading the [SimulationDataStore] section
             IConfig simConfig = m_scene.Config.Configs["SimulationDataStore"];
             if (simConfig != null)
             {
-                name = simConfig.GetString ("LegacyDatabaseLoaderName", "FileBasedDatabase");
-                connString = simConfig.GetString ("ConnectionString", connString);
+                name = simConfig.GetString("LegacyDatabaseLoaderName", "FileBasedDatabase");
+                connString = simConfig.GetString("ConnectionString", connString);
             }
 
             ILegacySimulationDataStore simStore = null;
-            ILegacySimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ILegacySimulationDataStore> ().ToArray ();
+            ILegacySimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ILegacySimulationDataStore>().ToArray();
             foreach (ILegacySimulationDataStore store in stores)
             {
                 if (store.Name == name)
@@ -612,7 +612,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 if (!m_hasShownFileBasedWarning)
                 {
                     m_hasShownFileBasedWarning = true;
-                    System.Windows.Forms.MessageBox.Show (@"Your sim has been updated to use the FileBased Simulation Service.
+                    System.Windows.Forms.MessageBox.Show(@"Your sim has been updated to use the FileBased Simulation Service.
 Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.
 More configuration options and info can be found in the Configuration/Data/FileBased.ini file.", "WARNING");
                 }
@@ -620,29 +620,32 @@ More configuration options and info can be found in the Configuration/Data/FileB
             catch
             {
                 //Some people don't have winforms, which is fine
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("Your sim has been updated to use the FileBased Simulation Service.");
-                m_log.Error ("Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
-                m_log.Error ("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
-                m_log.Error ("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("Your sim has been updated to use the FileBased Simulation Service.");
+                m_log.Error("Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
+                m_log.Error("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
+                m_log.Error("---------------------");
             }
 
-            simStore.Initialise (connString);
+            simStore.Initialise(connString);
 
-            IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
-            m_parcels = simStore.LoadLandObjects (m_scene.RegionInfo.RegionID);
+            IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+            m_parcels = simStore.LoadLandObjects(m_scene.RegionInfo.RegionID);
             m_parcels.AddRange(conn.LoadLandObjects(m_scene.RegionInfo.RegionID));
-            m_groups = simStore.LoadObjects (m_scene.RegionInfo.RegionID, m_scene);
-            m_shortterrain = simStore.LoadTerrain (m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
-            m_shortrevertTerrain = simStore.LoadTerrain (m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+            m_groups = simStore.LoadObjects(m_scene.RegionInfo.RegionID, m_scene);
+            if (m_groups.Count != 0 || m_parcels.Count != 0)
+            {
+                m_shortterrain = simStore.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                m_shortrevertTerrain = simStore.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+            }
         }
 
         public virtual List<ISceneEntity> LoadObjects (IScene scene)
@@ -766,7 +769,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
             {
                 if(!m_saveChanges || !m_saveBackups)
                     return;
-                SaveBackup(m_saveDirectory + "/", false);
+                SaveBackup(m_saveDirectory, false);
             }
             catch(Exception ex)
             {
@@ -801,8 +804,6 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 m_saveBackupChanges = config.GetBoolean("SaveTimedPreviousBackup", m_keepOldSave);
                 m_timeBetweenBackupSaves = config.GetInt("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
             }
-            if(m_saveDirectory != "")
-                m_saveDirectory += "/";
             if(File.Exists(m_saveDirectory + oldRegionName + m_saveAppenedFileName + ".abackup"))
                 File.Move(m_saveDirectory + oldRegionName + m_saveAppenedFileName + ".abackup",
                     m_saveDirectory + newRegionName + m_saveAppenedFileName + ".abackup");
