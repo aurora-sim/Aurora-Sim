@@ -983,8 +983,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                                 {
                                                     findOld[0], findOld[1], findOld[2], findOld[3], findOld[4],
                                                     findOld[5],
-                                                    findOld[6], findOld[7], findOld[8], findOld[9], findOld[10],
-                                                    findOld[11]
+                                                    findOld[6], findOld[7], findOld[8], findOld[9],
+                                                    findOld[10]
                                                 });
                             if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count > 0)
                                 m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] { "id" }, new object[] { ass });
