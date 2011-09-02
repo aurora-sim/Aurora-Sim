@@ -993,7 +993,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 StateSave.SaveStateTo (id, false);
 
-                id.Part.ParentEntity.HasGroupChanged = true;
             }
         }
 

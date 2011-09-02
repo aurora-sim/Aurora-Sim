@@ -609,9 +609,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Compiled = false;
                 //if (!reupload && Loading && LastStateSave != null && !LastStateSave.Compiled)
                 //    return false;//If we're trying to start up and we failed before, just give up
-                LastStateSave = null;
                 if (reupload)
                 {
+                    LastStateSave = null;
                     //Close the previous script
                     CloseAndDispose (false); //We don't want to back it up
                     Interlocked.Increment (ref VersionID);
@@ -728,7 +728,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Now do the full state save finding now that we have an app domain.
             if (LastStateSave != null)
             {
+                string assy = AssemblyName; // don't restore the assembly name, the one we have is right (if re-compiled or not)
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
+                AssemblyName = assy;
                 if (this.State == "" && DefaultState != this.State)//Sometimes, "" is a valid state
                 {
                     m_log.Warn ("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
@@ -737,7 +739,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change
                 // event
-               StartedFromSavedState = true;
+                StartedFromSavedState = true;
+                
+                // ItemID changes sometimes (not sure why, but observed it)
+                // If so we want to clear out the old save state,
+                // which would otherwise have hung around in the object forever
+                if (LastStateSave.ItemID != ItemID)
+                {
+                    m_ScriptEngine.StateSave.DeleteFrom(Part, LastStateSave.ItemID);
+                    m_ScriptEngine.StateSave.SaveStateTo(this, true);
+                }
             }
             else
             {

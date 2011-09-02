@@ -700,7 +700,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
 
-            MainConsole.Instance.Commands.AddCommand("load oar", "load oar [--merge] [--skip-assets] [oar name] [OffsetX=#] [OffsetY=#] [OffsetZ=#] [FlipX] [FlipY] [UseParcelOwnership] [CheckOwnership]",
+            MainConsole.Instance.Commands.AddCommand("load oar", "load oar [oar name] [--merge] [--skip-assets] [OffsetX=#] [OffsetY=#] [OffsetZ=#] [FlipX] [FlipY] [UseParcelOwnership] [CheckOwnership]",
                 "Load a region's data from OAR archive.  \n" +
                 "--merge will merge the oar with the existing scene.  \n" +
                 "--skip-assets will load the oar but ignore the assets it contains. \n" +
