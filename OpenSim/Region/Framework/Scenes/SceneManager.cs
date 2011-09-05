@@ -430,6 +430,10 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Get the new scene from the interface
             IScene scene = sceneLoader.CreateScene (regionInfo);
+            foreach (IScene loadedScene in m_localScenes)
+                if (loadedScene.RegionInfo.RegionName == regionInfo.RegionName &&
+                    loadedScene.RegionInfo.RegionHandle == regionInfo.RegionHandle)
+                    throw new Exception("Duplicate region!");
             StartNewRegion (scene);
             return scene;
         }
