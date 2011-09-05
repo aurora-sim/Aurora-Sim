@@ -57,7 +57,7 @@ namespace Aurora.DataManager.SQLite
         {
             string[] s1 = connectionString.Split(new[] { "URI=file:", "," }, StringSplitOptions.RemoveEmptyEntries);
             if(Path.GetFileName(s1[0]) == s1[0])//Only add this if we arn't an absolute path already
-                connectionString = connectionString.Replace("URI=file:", "URI=file:" + Util.BasePathCombine("") + "/");
+                connectionString = connectionString.Replace("URI=file:", "URI=file:" + Util.BasePathCombine("") + "\\");
             m_Connection = new SqliteConnection(connectionString);
             m_Connection.Open();
             var migrationManager = new MigrationManager(this, migratorName, validateTables);

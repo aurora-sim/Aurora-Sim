@@ -504,7 +504,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             GZipStream m_loadStream;
             try
             {
-                m_loadStream = new GZipStream (ArchiveHelpers.GetStream ((m_loadDirectory == "" ? m_fileName : Path.Combine(m_loadDirectory, m_fileName))), CompressionMode.Decompress);
+                m_loadStream = new GZipStream (ArchiveHelpers.GetStream (((m_loadDirectory == "" || m_loadDirectory == "/") ? m_fileName : Path.Combine(m_loadDirectory, m_fileName))), CompressionMode.Decompress);
             }
             catch
             {
