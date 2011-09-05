@@ -97,12 +97,14 @@ namespace Aurora.Modules.RegionLoader
             List < RegionInfo >  infos = new List<RegionInfo> (regionInfos);
             infos.Sort (delegate (RegionInfo a, RegionInfo b)
             {
+                if (!a.Disabled || !b.Disabled)
+                    return a.Disabled.CompareTo(b.Disabled);//At the top
                 return a.RegionName.CompareTo (b.RegionName);
             });
             RegionListBox.Items.Clear ();
             foreach(RegionInfo r in infos)
             {
-                RegionListBox.Items.Add(r.RegionName);
+                RegionListBox.Items.Add(!r.Disabled ? "Online - " + r.RegionName : r.RegionName);
             }
         }
 
@@ -370,8 +372,10 @@ namespace Aurora.Modules.RegionLoader
         {
             if(RegionListBox.SelectedIndex < 0)
                 return;
-            object item = RegionListBox.Items[RegionListBox.SelectedIndex];
-            RegionInfo region = m_connector.GetRegionInfo(item.ToString(), false);
+            string item = RegionListBox.Items[RegionListBox.SelectedIndex].ToString();
+            if(item.StartsWith("Online - "))
+                item = item.Remove(0, 9);
+            RegionInfo region = m_connector.GetRegionInfo(item, false);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
