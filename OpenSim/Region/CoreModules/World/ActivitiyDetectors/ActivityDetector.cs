@@ -163,6 +163,18 @@ namespace OpenSim.Region.CoreModules
                 agentpos.Far = sp.DrawDistance;
                 agentpos.LeftAxis = Vector3.Zero;
                 agentpos.Position = sp.AbsolutePosition;
+                if (agentpos.Position.X > sp.Scene.RegionInfo.RegionSizeX)
+                    agentpos.Position.X = sp.Scene.RegionInfo.RegionSizeX;
+                if (agentpos.Position.Y > sp.Scene.RegionInfo.RegionSizeY)
+                    agentpos.Position.Y = sp.Scene.RegionInfo.RegionSizeY;
+                if (agentpos.Position.Z > sp.Scene.RegionInfo.RegionSizeZ)
+                    agentpos.Position.Z = sp.Scene.RegionInfo.RegionSizeZ;
+                if (agentpos.Position.X < 0)
+                    agentpos.Position.X = 0;
+                if (agentpos.Position.Y < 0)
+                    agentpos.Position.Y = 0;
+                if (agentpos.Position.Z < 0)
+                    agentpos.Position.Z = 0;
                 agentpos.RegionHandle = sp.Scene.RegionInfo.RegionHandle;
                 agentpos.Size = sp.PhysicsActor != null ? sp.PhysicsActor.Size : new Vector3(0, 0, 1.8f);
                 agentpos.UpAxis = Vector3.Zero;
