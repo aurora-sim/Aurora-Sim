@@ -212,9 +212,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool IsFinite (Vector3 pos)
         {
-            return !(pos.X == float.PositiveInfinity || pos.X == float.NegativeInfinity || pos.X == float.NaN ||
-                pos.Y == float.PositiveInfinity || pos.Y == float.NegativeInfinity || pos.Y == float.NaN ||
-                pos.Z == float.PositiveInfinity || pos.Z == float.NegativeInfinity || pos.Z == float.NaN);
+            return pos.IsFinite();
         }
 
         #endregion
@@ -1294,10 +1292,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             // vec is a ptr into internal ode data better not mess with it
-
+            
             _position.X = (float)vec.X;
             _position.Y = (float)vec.Y;
             _position.Z = (float)vec.Z;
+
+            if (!IsFinite(_position))
+            {
+                _parent_scene.BadCharacter(this);
+                base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
+                return;
+            }
 
             try
             {
@@ -1331,6 +1336,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _velocity.X = vec.X;
             _velocity.Y = vec.Y;
             _velocity.Z = vec.Z;
+            if (!IsFinite(_velocity))
+            {
+                _parent_scene.BadCharacter(this);
+                base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
+                return;
+            }
 
             bool VelIsZero = false;
             int vcntr = 0;
@@ -1584,7 +1595,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public void Destroy()
         {
+            m_isPhysical = true;
             m_tainted_isPhysical = false;
+            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Add, null);
             _parent_scene.AddPhysicsActorTaint(this);
         }
 

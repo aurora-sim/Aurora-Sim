@@ -170,6 +170,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public struct AODEchangeitem
         {
             public AuroraODEPrim prim;
+            public AuroraODECharacter character;
             public changes what;
             public Object arg;
         }
@@ -593,7 +594,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             //  no lock here!  It's invoked from within Simulate(), which is thread-locked
 
-            if (g1 == IntPtr.Zero || g2 == IntPtr.Zero)
+            if (g1 == IntPtr.Zero || g2 == IntPtr.Zero || g1 == g2)
                 return;
 
             // Test if we're colliding a geom with a space.
@@ -648,13 +649,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!actor_name_map.TryGetValue (g2, out p2))
                 p2 = PANull;
             if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
-                if(p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
-                {
-                    (p1 as AuroraODEPrim)._zeroFlag = false;
-                    (p2 as AuroraODEPrim)._zeroFlag = false;
-                }
-                else
-                    (p1 as AuroraODEPrim)._zeroFlag = false;
+                (p1 as AuroraODEPrim)._zeroFlag = false;
+            if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
+                (p2 as AuroraODEPrim)._zeroFlag = false;
             try
             {
                 // Colliding Geom To Geom
@@ -668,7 +665,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 lock (contacts)
                 {
-                    count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
+                    if(b1!=IntPtr.Zero)
+                        count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
                 }
             }
             catch (SEHException)
@@ -730,8 +728,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 // we don't want prim or avatar to explode
 
-                #region InterPenetration Handling - Unintended physics explosions
-                #region disabled code1
+                #region InterPenetration Handling - Unintended physics explosions (Disabled)
 
                 /*
 
@@ -898,7 +895,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 }
 */
-                #endregion
                 #endregion
 
                 // Logic for collision handling
@@ -2031,25 +2027,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// Called to queue a change to a prim
         /// to use in place of old taint mechanism so changes do have a time sequence
         /// </summary>
-        public void AddChange(AuroraODEPrim prim,changes what,Object arg)
-            {
+        public void AddChange(AuroraODEPrim prim, changes what, Object arg)
+        {
             AODEchangeitem item = new AODEchangeitem();
             item.prim = prim;
             item.what = what;
             item.arg = arg;
-//            lock (ChangesQueue)
-                {
-                ChangesQueue.Enqueue(item);
-                }
-            }
+            ChangesQueue.Enqueue(item);
+        }
+
+        /// <summary>
+        /// Called to queue a change to a prim
+        /// to use in place of old taint mechanism so changes do have a time sequence
+        /// </summary>
+        public void AddChange(AuroraODECharacter character, changes what, Object arg)
+        {
+            AODEchangeitem item = new AODEchangeitem();
+            item.character = character;
+            item.what = what;
+            item.arg = arg;
+            ChangesQueue.Enqueue(item);
+        }
 
         private bool GetNextChange(out AODEchangeitem item)
-            {
-//            lock (ChangesQueue)
-                {
-                return ChangesQueue.Dequeue(out item);
-                }
-            }
+        {
+            return ChangesQueue.Dequeue(out item);
+        }
 
         /// <summary>
         /// Called after our prim properties are set Scale, position etc.
@@ -2116,50 +2119,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //m_log.Info(timeStep.ToString());
             step_time += timeElapsed;
 
-            // If We're loaded down by something else,
-            // or debugging with the Visual Studio project on pause
-            // skip a few frames to catch up gracefully.
-            // without shooting the physicsactors all over the place
-
-            // Process 10 frames if the sim is running normal..
-            // process 5 frames if the sim is running slow
-            /*if (m_EnableAutoConfig && TimeDilation < 0.75f && m_physicsiterations > 5)
-            {
-                //m_log.Warn("[ODE]: Sim is lagging, changing to half resolution");
-                // Instead of trying to catch up, it'll do 5 physics frames only
-                step_time = ODE_STEPSIZE;
-                m_physicsiterations = 5;
-                m_timeBetweenRevertingAutoConfigIterations = 50;
-                try
-                {
-                    d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
-                }
-                catch (StackOverflowException)
-                {
-                    m_log.Error("[PHYSICS]: The operating system wasn't able to allocate enough memory for the simulation.  Restarting the sim.");
-                    ode.drelease(world);
-                }
-            }
-            else if (m_EnableAutoConfig && TimeDilation > 0.75f && m_physicsiterations < 10 &&
-                m_timeBetweenRevertingAutoConfigIterations == 0) //Wait for 50 frames before doing the next step down
-            {
-                //m_log.Warn("[ODE]: Sim is not lagging, changing to full resolution");
-                step_time = ODE_STEPSIZE;
-                m_physicsiterations++;
-                m_timeBetweenRevertingAutoConfigIterations = 50;
-                try
-                {
-                    d.WorldSetQuickStepNumIterations(world, m_physicsiterations);
-                }
-                catch (StackOverflowException)
-                {
-                    m_log.Error("[PHYSICS]: The operating system wasn't able to allocate enough memory for the simulation.  Restarting the sim.");
-                    ode.drelease(world);
-                }
-            }
-            if (m_physicsiterations != 10 && TimeDilation > 0.75f)
-                m_timeBetweenRevertingAutoConfigIterations--; //Subtract for the next time*/
-
             IsLocked = true;
             lock (OdeLock)
             {
@@ -2206,6 +2165,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 }
                                 catch { };
                             }
+                            if (item.character != null)
+                            {
+                                try
+                                {
+                                    item.character.ProcessTaints(timeElapsed);
+                                }
+                                catch { };
+                            }
                             if (tlimit-- <= 0)
                             {
                                 continueProcessing = false;
@@ -2246,7 +2213,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                         RemoveCharacter (defect);
                                         AddAvatar (defect.Name, new Vector3 (m_region.RegionSizeX / 2,
                                             m_region.RegionSizeY / 2,
-                                            m_region.RegionSizeZ / 2), defect.Orientation, defect.Size, true, defect.LocalID, defect.UUID);
+                                            m_region.RegionSizeZ / 2), defect.Orientation,
+                                            new Vector3(defect.CAPSULE_RADIUS * 2, defect.CAPSULE_RADIUS * 2, 
+                                             defect.CAPSULE_LENGTH * 2), true, defect.LocalID, defect.UUID);
                                     }
                                 }
                             }
