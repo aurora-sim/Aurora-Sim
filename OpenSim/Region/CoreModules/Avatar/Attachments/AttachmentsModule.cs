@@ -152,16 +152,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments ();
             foreach (AvatarAttachment attach in attachments)
             {
-                int p = attach.AttachPoint;
+                //int attPoint = attach.AttachPoint | 0x7f; old way, doesn't work all the time as it forces it back to the null point 
                 UUID itemID = attach.ItemID;
 
                 try
                 {
-                    RezSingleAttachmentFromInventory(presence.ControllingClient, itemID, p);
+                    RezSingleAttachmentFromInventory(presence.ControllingClient, itemID, 0);
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}{1}", e.Message, e.StackTrace);
+                    m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e.ToString());
                 }
             }
 
