@@ -98,6 +98,23 @@ namespace OpenSim.Framework
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
         private volatile static bool m_threadPoolRunning = false;
 
+        public static string ConvertToString(List<string> list)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (string val in list)
+            {
+                builder.Append(val + ",");
+            }
+            return builder.ToString();
+        }
+
+        public static List<string> ConvertToList(string listAsString)
+        {
+            //Do both , and " " so that it removes any annoying spaces in the string added by users
+            List<string> value = new List<string>(listAsString.Split(new string[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries));
+            return value;
+        }
+
         /// <summary>
         /// Gets the name of the directory where the current running executable
         /// is located
@@ -1660,7 +1677,7 @@ namespace OpenSim.Framework
         private static bool m_noInternetConnection = false;
         private static int m_nextInternetConnectionCheck = 0;
 
-        public static IPEndPoint ResolveEndPoint (string hostName, int port)
+        public static IPEndPoint ResolveEndPoint(string hostName, int port)
         {
             IPEndPoint endpoint = null;
             // Old one defaults to IPv6
@@ -1668,7 +1685,7 @@ namespace OpenSim.Framework
 
             IPAddress ia = null;
             // If it is already an IP, don't resolve it - just return directly
-            if(IPAddress.TryParse(hostName, out ia))
+            if (IPAddress.TryParse(hostName, out ia))
             {
                 endpoint = new IPEndPoint(ia, port);
                 return endpoint;
@@ -1676,7 +1693,7 @@ namespace OpenSim.Framework
 
             try
             {
-                if(IPAddress.TryParse(hostName.Split(':')[0], out ia))
+                if (IPAddress.TryParse(hostName.Split(':')[0], out ia))
                 {
                     endpoint = new IPEndPoint(ia, port);
                     return endpoint;
@@ -1687,14 +1704,14 @@ namespace OpenSim.Framework
             ia = null;
             try
             {
-                if(CheckInternetConnection())
+                if (CheckInternetConnection())
                 {
-                    foreach(IPAddress Adr in Dns.GetHostAddresses(hostName))
+                    foreach (IPAddress Adr in Dns.GetHostAddresses(hostName))
                     {
-                        if(ia == null)
+                        if (ia == null)
                             ia = Adr;
 
-                        if(Adr.AddressFamily == AddressFamily.InterNetwork)
+                        if (Adr.AddressFamily == AddressFamily.InterNetwork)
                         {
                             ia = Adr;
                             InternetSuccess();
@@ -1703,23 +1720,23 @@ namespace OpenSim.Framework
                     }
                 }
             }
-            catch(SocketException e)
+            catch (SocketException e)
             {
                 InternetFailure();
                 throw new Exception(
                     "Unable to resolve local hostname " + hostName + " innerException of type '" +
                     e + "' attached to this exception", e);
             }
-            if(ia != null)
+            if (ia != null)
                 endpoint = new IPEndPoint(ia, port);
             return endpoint;
         }
 
-        public static bool CheckInternetConnection ()
+        public static bool CheckInternetConnection()
         {
-            if(m_noInternetConnection)
+            if (m_noInternetConnection)
             {
-                if(Util.EnvironmentTickCount() > m_nextInternetConnectionCheck)
+                if (Util.EnvironmentTickCount() > m_nextInternetConnectionCheck)
                     return true;//Try again
 
                 return false;
@@ -1727,12 +1744,12 @@ namespace OpenSim.Framework
             return true;//No issues
         }
 
-        public static void InternetSuccess ()
+        public static void InternetSuccess()
         {
             m_noInternetConnection = false;
         }
 
-        public static void InternetFailure ()
+        public static void InternetFailure()
         {
             m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5 * 60 * 1000);/*5 mins*/
             m_noInternetConnection = true;
@@ -1743,19 +1760,19 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="xff"></param>
         /// <returns></returns>
-        public static IPEndPoint GetClientIPFromXFF (string xff)
+        public static IPEndPoint GetClientIPFromXFF(string xff)
         {
-            if(xff == string.Empty)
+            if (xff == string.Empty)
                 return null;
 
             string[] parts = xff.Split(new char[] { ',' });
-            if(parts.Length > 0)
+            if (parts.Length > 0)
             {
                 try
                 {
                     return new IPEndPoint(IPAddress.Parse(parts[0]), 0);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
                 }
@@ -1764,17 +1781,17 @@ namespace OpenSim.Framework
             return null;
         }
 
-        public static string GetCallerIP (Hashtable req)
+        public static string GetCallerIP(Hashtable req)
         {
-            if(req.ContainsKey("headers"))
+            if (req.ContainsKey("headers"))
             {
                 try
                 {
                     Hashtable headers = (Hashtable)req["headers"];
-                    if(headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
+                    if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
                         return headers["remote_addr"].ToString();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
                 }
@@ -1789,15 +1806,15 @@ namespace OpenSim.Framework
         /// <param name="iPAddress"></param>
         /// <param name="clientIP"></param>
         /// <returns></returns>
-        public static System.Net.IPAddress ResolveAddressForClient (System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
+        public static System.Net.IPAddress ResolveAddressForClient(System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
         {
-            if (iPAddress.Equals (clientIP.Address))
+            if (iPAddress.Equals(clientIP.Address))
             {
                 if (useLocalhostLoopback)
                     return IPAddress.Loopback;
                 if (iPAddress == IPAddress.Loopback)
                     return iPAddress;//Don't send something else if it is already on loopback
-                if(CheckInternetConnection())
+                if (CheckInternetConnection())
                 {
 #pragma warning disable 618
                     //The 'bad' way, only works for things on the same machine...
@@ -1818,15 +1835,15 @@ namespace OpenSim.Framework
             return iPAddress;
         }
 
-        public static System.Net.IPEndPoint ResolveAddressForClient (System.Net.IPEndPoint iPAddress, System.Net.IPEndPoint clientIP)
+        public static System.Net.IPEndPoint ResolveAddressForClient(System.Net.IPEndPoint iPAddress, System.Net.IPEndPoint clientIP)
         {
-            iPAddress.Address = ResolveAddressForClient (iPAddress.Address, clientIP);
+            iPAddress.Address = ResolveAddressForClient(iPAddress.Address, clientIP);
             return iPAddress;
         }
 
-        public static string ServerURI (string uri)
+        public static string ServerURI(string uri)
         {
-            if(uri == string.Empty)
+            if (uri == string.Empty)
                 return string.Empty;
 
             // Get rid of eventual slashes at the end
@@ -1855,7 +1872,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="url">URL Standard Format</param>
         /// <returns>A resolved IP Address</returns>
-        public static IPAddress GetHostFromURL (string url)
+        public static IPAddress GetHostFromURL(string url)
         {
             return GetHostFromDNS(url.Split(new char[] { '/', ':' })[3]);
         }
@@ -1866,25 +1883,25 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="dnsAddress">DNS Hostname</param>
         /// <returns>An IP address, or null</returns>
-        public static IPAddress GetHostFromDNS (string dnsAddress)
+        public static IPAddress GetHostFromDNS(string dnsAddress)
         {
             dnsAddress = dnsAddress.Replace("http://", "").Replace("https://", "");
-            if(dnsAddress.EndsWith("/"))
+            if (dnsAddress.EndsWith("/"))
                 dnsAddress = dnsAddress.Remove(dnsAddress.Length - 1);
-            if(dnsAddress.Contains(":"))
+            if (dnsAddress.Contains(":"))
                 dnsAddress = dnsAddress.Split(':')[0];
             IPAddress ipa;
-            if(m_dnsCache.TryGetValue(dnsAddress, out ipa))
+            if (m_dnsCache.TryGetValue(dnsAddress, out ipa))
                 return ipa;
             // Is it already a valid IP? No need to look it up.
-            if(IPAddress.TryParse(dnsAddress, out ipa))
+            if (IPAddress.TryParse(dnsAddress, out ipa))
             {
                 m_dnsCache.Add(dnsAddress, ipa, 30 * 60/*30mins*/);
                 return ipa;
             }
             try
             {
-                if(IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
+                if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
                 {
                     m_dnsCache.Add(dnsAddress, ipa, 30 * 60/*30mins*/);
                     return ipa;
@@ -1896,16 +1913,16 @@ namespace OpenSim.Framework
             // Not an IP, lookup required
             try
             {
-                if(CheckInternetConnection())
+                if (CheckInternetConnection())
                 {
                     hosts = Dns.GetHostEntry(dnsAddress).AddressList;
-                    if(hosts != null)
+                    if (hosts != null)
                         InternetSuccess();
                     else
                         InternetFailure();
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
@@ -1914,16 +1931,16 @@ namespace OpenSim.Framework
                 throw e;
             }
 
-            foreach(IPAddress host in hosts)
+            foreach (IPAddress host in hosts)
             {
-                if(host.AddressFamily == AddressFamily.InterNetwork)
+                if (host.AddressFamily == AddressFamily.InterNetwork)
                 {
                     m_dnsCache.Add(dnsAddress, host, 30 * 60/*30mins*/);
                     return host;
                 }
             }
 
-            if(hosts.Length > 0)
+            if (hosts.Length > 0)
             {
                 m_dnsCache.Add(dnsAddress, hosts[0], 30 * 60/*30mins*/);
                 return hosts[0];
@@ -1932,7 +1949,7 @@ namespace OpenSim.Framework
             return null;
         }
 
-        public static Uri GetURI (string protocol, string hostname, int port, string path)
+        public static Uri GetURI(string protocol, string hostname, int port, string path)
         {
             return new UriBuilder(protocol, hostname, port, path).Uri;
         }
@@ -1941,18 +1958,18 @@ namespace OpenSim.Framework
         /// Gets a list of all local system IP addresses
         /// </summary>
         /// <returns></returns>
-        public static IPAddress[] GetLocalHosts ()
+        public static IPAddress[] GetLocalHosts()
         {
             return Dns.GetHostAddresses(Dns.GetHostName());
         }
 
-        public static IPAddress GetLocalHost ()
+        public static IPAddress GetLocalHost()
         {
             IPAddress[] iplist = GetLocalHosts();
 
-            if(iplist.Length == 0) // No accessible external interfaces
+            if (iplist.Length == 0) // No accessible external interfaces
             {
-                if(CheckInternetConnection())
+                if (CheckInternetConnection())
                 {
                     try
                     {
@@ -1969,19 +1986,19 @@ namespace OpenSim.Framework
                 }
             }
 
-            foreach(IPAddress host in iplist)
+            foreach (IPAddress host in iplist)
             {
-                if(!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
+                if (!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
                 {
                     return host;
                 }
             }
 
-            if(iplist.Length > 0)
+            if (iplist.Length > 0)
             {
-                foreach(IPAddress host in iplist)
+                foreach (IPAddress host in iplist)
                 {
-                    if(host.AddressFamily == AddressFamily.InterNetwork)
+                    if (host.AddressFamily == AddressFamily.InterNetwork)
                         return host;
                 }
                 // Well all else failed...
@@ -1989,6 +2006,50 @@ namespace OpenSim.Framework
             }
 
             return null;
+        }
+
+
+        public class IPAddressRange
+        {
+            private byte[] lowerBytes;
+            private byte[] upperBytes;
+            private AddressFamily addressFamily;
+
+            public IPAddressRange(IPAddress lower, IPAddress upper)
+            {
+                // Assert that lower.AddressFamily == upper.AddressFamily
+
+                this.addressFamily = lower.AddressFamily;
+                this.lowerBytes = lower.GetAddressBytes();
+                this.upperBytes = upper.GetAddressBytes();
+            }
+
+            public bool IsInRange(IPAddress address)
+            {
+                if (address.AddressFamily != addressFamily)
+                {
+                    return false;
+                }
+
+                byte[] addressBytes = address.GetAddressBytes();
+
+                bool lowerBoundary = true, upperBoundary = true;
+
+                for (int i = 0; i < this.lowerBytes.Length &&
+                    (lowerBoundary || upperBoundary); i++)
+                {
+                    if ((lowerBoundary && addressBytes[i] < lowerBytes[i]) ||
+                        (upperBoundary && addressBytes[i] > upperBytes[i]))
+                    {
+                        return false;
+                    }
+
+                    lowerBoundary &= (addressBytes[i] == lowerBytes[i]);
+                    upperBoundary &= (addressBytes[i] == upperBytes[i]);
+                }
+
+                return true;
+            }
         }
     }
 }
