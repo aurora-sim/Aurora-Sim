@@ -500,7 +500,7 @@ namespace OpenSim.Framework
                 }
             }
 
-            if(args["SittingObjects"] != null)
+            if (args["SittingObjects"] != null && args["SittingObjects"].Type == OSDType.Map)
                 SittingObjects = new SittingObjectData((OSDMap)args["SittingObjects"]);
         }
 
