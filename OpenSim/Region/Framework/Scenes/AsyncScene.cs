@@ -326,8 +326,9 @@ namespace OpenSim.Region.Framework.Scenes
             IConfig aurorastartupConfig = m_config.Configs["AuroraStartup"];
             if (aurorastartupConfig != null)
             {
-                //Region specific is still honored here, the RegionInfo checks for it
-                RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
+                //Region specific is still honored here, the RegionInfo checks for it, and if it is 0, it didn't set it
+                if(RegionInfo.ObjectCapacity == 0)
+                    RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
             }
 
             IConfig packetConfig = m_config.Configs["PacketPool"];

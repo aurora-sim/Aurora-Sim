@@ -152,11 +152,7 @@ namespace OpenSim.Framework
         public int ObjectCapacity
         {
             get { return m_objectCapacity; }
-            set
-            {
-                if (m_objectCapacity == 0) 
-                    m_objectCapacity = value;
-            }
+            set { m_objectCapacity = value; }
         }
 
         public byte AccessLevel
