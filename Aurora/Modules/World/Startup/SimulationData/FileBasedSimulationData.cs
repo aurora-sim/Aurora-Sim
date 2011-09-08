@@ -425,7 +425,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     m_oldSaveHasBeenSaved = true;
                     if (!Directory.Exists (m_oldSaveDirectory))
                         Directory.CreateDirectory (m_oldSaveDirectory);
-                    File.Copy(fileName + ".tmp", m_oldSaveDirectory + m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup");
+                    File.Copy(fileName + ".tmp", Path.Combine(m_oldSaveDirectory, m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName + ".abackup"));
                 }
                 //Just remove the file
                 File.Delete (fileName);
