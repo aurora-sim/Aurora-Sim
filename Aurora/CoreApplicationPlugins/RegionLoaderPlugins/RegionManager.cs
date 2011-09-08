@@ -295,6 +295,8 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("Select a valid region from the list.");
                 return;
             }
+            if (item.ToString().StartsWith("Online - "))
+                item = item.ToString().Remove(0, 9);
             RegionInfo region = m_connector.GetRegionInfo(item.ToString(), false);
             if (region == null)
             {
