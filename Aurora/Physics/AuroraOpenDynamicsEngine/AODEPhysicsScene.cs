@@ -665,8 +665,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 lock (contacts)
                 {
-                    if(b1!=IntPtr.Zero)
-                        count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
+                    count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
                 }
             }
             catch (SEHException)
