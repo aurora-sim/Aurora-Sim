@@ -987,17 +987,26 @@ namespace OpenSim.Region.Framework.Scenes
                     maxScale.Z = delta.Z;
             }
 
+            Vector3 tmp;
+            tmp.X = 0.5f * Math.Abs(maxScale.X - minScale.X);
+            tmp.Y = 0.5f * Math.Abs(maxScale.Y - minScale.Y);
+            tmp.Z = 0.5f * Math.Abs(maxScale.Z - minScale.Z);
+            // tmp has half scale
+
             // group rotation
-            maxScale = maxScale * rot;
-            minScale = minScale * rot;
+            tmp = tmp * rot;
+            // scale is positive
+            tmp.X = Math.Abs(tmp.X);
+            tmp.Y = Math.Abs(tmp.Y);
+            tmp.Z = Math.Abs(tmp.Z);
 
             // group position
-            minX = pos.X + minScale.X;
-            minY = pos.Y + minScale.Y;
-            minZ = pos.Z + minScale.Z;
-            maxX = pos.X + maxScale.X;
-            maxY = pos.Y + maxScale.Y;
-            maxZ = pos.Z + maxScale.Z;
+            minX = pos.X - tmp.X;
+            minY = pos.Y - tmp.Y;
+            minZ = pos.Z - tmp.Z;
+            maxX = pos.X + tmp.X;
+            maxY = pos.Y + tmp.Y;
+            maxZ = pos.Z + tmp.Z;
 
 /*
             maxX = -256f;
