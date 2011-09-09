@@ -127,7 +127,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool m_inTransit = false;
 
         [XmlIgnore]
-        private bool m_ValidgrpOOB=false; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
+        private bool m_ValidgrpOOB=false; // control recalcutation
         [XmlIgnore]
         private Vector3 m_grpOOBsize; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
         [XmlIgnore]
@@ -820,7 +820,12 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 partscale = part.Scale * 0.5f;
                 Vector3 partoffset = part.OffsetPosition;
                 if (part.ParentID != 0) // prims are rotated in group
+                    {
                     partscale = partscale * part.RotationOffset;
+                    partscale.X = Math.Abs(partscale.X);
+                    partscale.Y = Math.Abs(partscale.Y);
+                    partscale.Z = Math.Abs(partscale.Z);
+                    }
 
                 Vector3 delta = partoffset - partscale;
                 if (delta.X < minScale.X)
@@ -858,6 +863,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.ParentID != 0) // prims are rotated in group
                 {
                     partscale *= partrot;
+                    partscale.X = Math.Abs(partscale.X);
+                    partscale.Y = Math.Abs(partscale.Y);
+                    partscale.Z = Math.Abs(partscale.Z);
                     partoffset *= partrot;
                 }
                 partoffset += part.OffsetPosition;
@@ -947,15 +955,20 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 pos = m_rootPart.AbsolutePosition;
             Quaternion rot = m_rootPart.RotationOffset;
 //            Vector3 size = GroupScale();
-            Vector3 minScale = new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
-            Vector3 maxScale = new Vector3(int.MinValue, int.MinValue, int.MinValue);
+            Vector3 minScale = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 maxScale = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             //limits in group frame
             foreach (SceneObjectPart part in m_partsList)
             {
                 Vector3 partscale = part.Scale * 0.5f;
                 Vector3 partoffset = part.OffsetPosition;
                 if (part.ParentID != 0) // prims are rotated in group
+                    {
                     partscale = partscale * part.RotationOffset;
+                    partscale.X = Math.Abs(partscale.X);
+                    partscale.Y = Math.Abs(partscale.Y);
+                    partscale.Z = Math.Abs(partscale.Z);
+                    }
 
                 Vector3 delta = partoffset - partscale;
                 if (delta.X < minScale.X)

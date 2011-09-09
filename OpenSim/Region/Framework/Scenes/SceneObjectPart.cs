@@ -525,6 +525,8 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_IsSelected = false;
 
         [XmlIgnore]
+        private bool m_ValidpartOOB = false; // control recalcutation
+        [XmlIgnore]
         private Vector3 m_partOOBsize; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
         [XmlIgnore]
         private Vector3 m_partOOBoffset; // the position center of the bounding box relative to it's Position
@@ -536,7 +538,9 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 OOBsize
             {
             get {
-                return m_partOOBsize;
+            if (!m_ValidpartOOB)
+                UpdateOOBfromOOBs();
+            return m_partOOBsize;
                 }              
             }
 
@@ -547,6 +551,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
             get
                 {
+                if (!m_ValidpartOOB)
+                    UpdateOOBfromOOBs();
                 return m_partOOBoffset;
                 }
             } 
@@ -556,7 +562,9 @@ namespace OpenSim.Region.Framework.Scenes
         public float BSphereRadiusSQ
             {
             get
-                {              
+                {
+                if (!m_ValidpartOOB)
+                    UpdateOOBfromOOBs();
                 return m_partBSphereRadiusSQ;
                 }
             }
@@ -877,20 +885,7 @@ namespace OpenSim.Region.Framework.Scenes
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
 
-// use the basic box for now
-            m_partOOBoffset = Vector3.Zero;
-
-            m_partOOBsize.X = shape.Scale.X * 0.5f;
-            m_partOOBsize.Y = shape.Scale.Y * 0.5f;
-            m_partOOBsize.Z = shape.Scale.Z * 0.5f;
-
-            m_partBSphereRadiusSQ = m_partOOBsize.X;
-            if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                m_partBSphereRadiusSQ = m_partOOBsize.Y;
-            if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-            m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+            m_ValidpartOOB = false;
 
             // Prims currently only contain a single folder (Contents).  From looking at the Second Life protocol,
             // this appears to have the same UUID (!) as the prim.  If this isn't the case, one can't drag items from
@@ -1661,6 +1656,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape; }
             set
             {
+                m_ValidpartOOB = false;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 bool shape_changed = false;
@@ -1683,6 +1679,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape.Scale; }
             set
             {
+                m_ValidpartOOB = false;
                 if (m_shape != null)
                 {
                     // use basic box dimensions for oobb for now  this should be below: hack to make this work on load from databases
@@ -2242,6 +2239,26 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Private Methods
 
+        private void UpdateOOBfromOOBs()
+            {
+            m_partOOBoffset = Vector3.Zero;
+
+            Vector3 ts = Scale;
+
+            m_partOOBsize.X = ts.X * 0.5f;
+            m_partOOBsize.Y = ts.Y * 0.5f;
+            m_partOOBsize.Z = ts.Z * 0.5f;
+
+            m_partBSphereRadiusSQ = m_partOOBsize.X;
+            if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
+                m_partBSphereRadiusSQ = m_partOOBsize.Y;
+            if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
+                m_partBSphereRadiusSQ = m_partOOBsize.Z;
+
+            m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+            m_ValidpartOOB = true;
+            }
+
         private uint ApplyMask(uint val, bool set, uint mask)
         {
             if (set)
@@ -2757,6 +2774,8 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.AngularVelocity = new Vector3(0, 0, 0);
             dupe.Flags = Flags;
             dupe.LinkNum = LinkNum;
+
+            dupe.m_ValidpartOOB = false;
 
             dupe._ownershipCost = _ownershipCost;
             dupe._objectSaleType = _objectSaleType;
@@ -5022,7 +5041,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_shape.SculptEntry && m_shape.SculptTexture != UUID.Zero)
                     m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
             }
-
+            m_ValidpartOOB = false;
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.Shape);
         }
@@ -5278,6 +5297,7 @@ namespace OpenSim.Region.Framework.Scenes
                 (rot.W != RotationOffset.W))
             {
                 RotationOffset = rot;
+                m_ValidpartOOB = false;
                 ScheduleTerseUpdate();
             }
         }
@@ -5338,6 +5358,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup.RootPart != this)
                 ParentGroup.RootPart.Rezzed = DateTime.UtcNow;
 
+            m_ValidpartOOB = false;
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
