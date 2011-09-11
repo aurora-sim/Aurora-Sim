@@ -436,25 +436,39 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Use group position for child prims
             Vector3 entityPos;
-            float oobSQ;
+            float distsq;
             if (entity is SceneObjectGroup)
-            {
-                SceneObjectGroup p = (SceneObjectGroup)entity;
-                entityPos = p.AbsolutePosition + p.OOBoffset * p.GroupRotation;
-                oobSQ = p.BSphereRadiusSQ;
-            }
+                {
+                SceneObjectGroup g = (SceneObjectGroup)entity;
+                entityPos = g.AbsolutePosition + g.OOBoffset * g.GroupRotation;
+                distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
+                }
+
+            else if (entity is SceneObjectPart)
+                {
+                SceneObjectPart p = (SceneObjectPart)entity;
+                if (p.IsRoot)
+                    {
+                    SceneObjectGroup g = p.ParentGroup;
+                    entityPos = g.AbsolutePosition + g.OOBoffset * g.GroupRotation;
+                    distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
+                    }
+                else
+                    {
+                    distsq = p.clampedAABdistanceToSQ(presencePos) + 1.0f;
+                    }
+                }
+
             else
-            {
+                {
                 entityPos = entity.AbsolutePosition;
-                oobSQ = 0;
-            }
+                distsq = - Vector3.DistanceSquared(presencePos, entityPos);
+                }
 
-            float distsq = Vector3.DistanceSquared (presencePos, entityPos);
-            distsq -= oobSQ;
-            if (distsq < 0)
-                distsq = 0;
+            if (distsq > -0.0f)
+                distsq = -0.0f;
 
-            return -distsq;
+            return distsq;
         }
 
         private double GetPriorityByTime()
