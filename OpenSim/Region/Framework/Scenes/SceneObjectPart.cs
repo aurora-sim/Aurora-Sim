@@ -1682,19 +1682,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_ValidpartOOB = false;
                 if (m_shape != null)
                 {
-                    // use basic box dimensions for oobb for now  this should be below: hack to make this work on load from databases
-                    m_partOOBsize.X = value.X * 0.5f;
-                    m_partOOBsize.Y = value.Y * 0.5f;
-                    m_partOOBsize.Z = value.Z * 0.5f;
-
-                    m_partBSphereRadiusSQ = m_partOOBsize.X;
-                    if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                        m_partBSphereRadiusSQ = m_partOOBsize.Y;
-                    if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                        m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-                    m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
-
                     if (m_shape.Scale != value)
                     {
                         StoreUndoState ();
@@ -1702,20 +1689,7 @@ namespace OpenSim.Region.Framework.Scenes
                             ParentGroup.HasGroupChanged = true;
 
                         m_shape.Scale = value;
-                        /*
-                                                // use basic box dimensions for oob for now
-                                                m_partOOBsize.X = value.X * 0.5f;
-                                                m_partOOBsize.Y = value.Y * 0.5f;
-                                                m_partOOBsize.Z = value.Z * 0.5f;
 
-                                                m_partBSphereRadiusSQ = m_partOOBsize.X;
-                                                if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                                                    m_partBSphereRadiusSQ = m_partOOBsize.Y;
-                                                if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                                                    m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-                                                m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
-                        */
                         PhysicsActor actor = PhysActor;
                         if (actor != null && m_parentGroup != null)
                         {
@@ -2249,15 +2223,125 @@ namespace OpenSim.Region.Framework.Scenes
             m_partOOBsize.Y = ts.Y * 0.5f;
             m_partOOBsize.Z = ts.Z * 0.5f;
 
-            m_partBSphereRadiusSQ = m_partOOBsize.X;
-            if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                m_partBSphereRadiusSQ = m_partOOBsize.Y;
-            if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-            m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+            m_partBSphereRadiusSQ = m_partOOBsize.LengthSquared();
             m_ValidpartOOB = true;
             }
+
+        // distance from aabb to point ( untested)
+        public float AABdistanceToSQ(Vector3 target)
+            {
+            // distance to group in world
+            Vector3 vtmp = target - m_groupPosition; // assume this updated
+
+            // rotate into group reference         
+            vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+
+            // move into offseted local ref
+            vtmp -= m_offsetPosition;
+            // rotate into local reference
+            vtmp *= Quaternion.Inverse(m_rotationOffset);
+
+            // now oob pos
+            vtmp -= OOBoffset; // force update
+
+            Vector3 box = OOBsize;
+
+            // hack distance to box: inside == 0
+            if (vtmp.X > 0)
+                {
+                vtmp.X -= box.X;
+                if (vtmp.X < 0.0)
+                    vtmp.X = 0.0f;
+                }
+            else
+                {
+                vtmp.X += box.X;
+                if (vtmp.X > 0.0)
+                    vtmp.X = 0.0f;
+                }
+            if (vtmp.Y > 0)
+                {
+                vtmp.Y -= box.Y;
+                if (vtmp.Y < 0.0)
+                    vtmp.Y = 0.0f;
+                }
+            else
+                {
+                vtmp.Z += box.Z;
+                if (vtmp.Z > 0.0)
+                    vtmp.Z = 0.0f;
+                }
+
+
+            return vtmp.LengthSquared();
+            }
+
+        // distance from aabb to point ( untested)
+        // if smaller than simplied distance to group returns that one
+        // hack to send root prims first
+
+        public float clampedAABdistanceToSQ(Vector3 target)
+            {
+            // distance to group in world
+            Vector3 vtmp = target - m_groupPosition; // assume this updated
+
+            // rotate into group reference         
+            vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+
+            // compute distance to grp oob
+            Vector3 grpv = vtmp - ParentGroup.OOBoffset;
+
+            // move into offseted local ref
+            vtmp -= m_offsetPosition;
+            // rotate into local reference
+            vtmp *= Quaternion.Inverse(m_rotationOffset);
+
+            // now oob pos
+            vtmp -= OOBoffset; // force update
+
+            Vector3 box = OOBsize;
+
+            // hack distance to box: inside == 0
+            if (vtmp.X > 0)
+                {
+                vtmp.X -= box.X;
+                if (vtmp.X < 0.0)
+                    vtmp.X = 0.0f;
+                }
+            else
+                {
+                vtmp.X += box.X;
+                if (vtmp.X > 0.0)
+                    vtmp.X = 0.0f;
+                }
+            if (vtmp.Y > 0)
+                {
+                vtmp.Y -= box.Y;
+                if (vtmp.Y < 0.0)
+                    vtmp.Y = 0.0f;
+                }
+            else
+                {
+                vtmp.Z += box.Z;
+                if (vtmp.Z > 0.0)
+                    vtmp.Z = 0.0f;
+                }
+
+            float distSQ = vtmp.LengthSquared();
+            // lets see group
+            float grpdSQ = grpv.LengthSquared() - ParentGroup.BSphereRadiusSQ;
+
+            if (ParentID == 0)
+                distSQ = vtmp.LengthSquared();
+
+            if (distSQ > grpdSQ)
+                return distSQ;
+            else
+                return grpdSQ;
+            }
+  
+
+
 
         private uint ApplyMask(uint val, bool set, uint mask)
         {
