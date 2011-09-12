@@ -533,6 +533,18 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         private float m_partBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
 
+        [XmlIgnore]
+        public bool ValidpartOOB
+            {
+            set
+                {
+                m_ValidpartOOB = value;
+                // we need to invalidate grp oob
+                if (!m_ValidpartOOB && ParentID != 0)
+                    ParentGroup.ValidgrpOOB = false;
+                }
+            }
+
         // the size of a bounding box oriented as the prim, is future will consider cutted prims, meshs etc
         [XmlIgnore]
         public Vector3 OOBsize
@@ -885,7 +897,7 @@ namespace OpenSim.Region.Framework.Scenes
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
 
-            m_ValidpartOOB = false;
+            ValidpartOOB = false;
 
             // Prims currently only contain a single folder (Contents).  From looking at the Second Life protocol,
             // this appears to have the same UUID (!) as the prim.  If this isn't the case, one can't drag items from
@@ -1395,7 +1407,10 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 OffsetPosition
         {
             get { return m_offsetPosition; }
-            set { m_offsetPosition = value; }
+            set { 
+                m_offsetPosition = value;
+                ValidpartOOB = false;
+                }
         }
 
         public Vector3 RelativePosition
@@ -1656,7 +1671,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape; }
             set
             {
-                m_ValidpartOOB = false;
+                ValidpartOOB = false;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 bool shape_changed = false;
@@ -1679,7 +1694,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape.Scale; }
             set
             {
-                m_ValidpartOOB = false;
+                ValidpartOOB = false;
                 if (m_shape != null)
                 {
                     if (m_shape.Scale != value)
@@ -2224,7 +2239,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_partOOBsize.Z = ts.Z * 0.5f;
 
             m_partBSphereRadiusSQ = m_partOOBsize.LengthSquared();
-            m_ValidpartOOB = true;
+            ValidpartOOB = true;
             }
 
         // distance from aabb to point ( untested)
@@ -2233,12 +2248,15 @@ namespace OpenSim.Region.Framework.Scenes
             // distance to group in world
             Vector3 vtmp = target - m_groupPosition; // assume this updated
 
-            // rotate into group reference         
-            vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+            if (ParentID != 0)
+                {
+                // rotate into group reference         
+                vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+                // move into offseted local ref
+                vtmp -= m_offsetPosition;
+                }
 
-            // move into offseted local ref
-            vtmp -= m_offsetPosition;
-            // rotate into local reference
+            // rotate into local reference ( part or grp )
             vtmp *= Quaternion.Inverse(m_rotationOffset);
 
             // now oob pos
@@ -2259,6 +2277,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (vtmp.X > 0.0)
                     vtmp.X = 0.0f;
                 }
+
             if (vtmp.Y > 0)
                 {
                 vtmp.Y -= box.Y;
@@ -2267,11 +2286,23 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             else
                 {
+                vtmp.Y += box.Y;
+                if (vtmp.Y > 0.0)
+                    vtmp.Y = 0.0f;
+                }
+
+            if (vtmp.Z > 0)
+                {
+                vtmp.Z -= box.Z;
+                if (vtmp.Z < 0.0)
+                    vtmp.Z = 0.0f;
+                }
+            else
+                {
                 vtmp.Z += box.Z;
                 if (vtmp.Z > 0.0)
                     vtmp.Z = 0.0f;
                 }
-
 
             return vtmp.LengthSquared();
             }
@@ -2282,20 +2313,28 @@ namespace OpenSim.Region.Framework.Scenes
 
         public float clampedAABdistanceToSQ(Vector3 target)
             {
+            float grpdSQ = 0;
             // distance to group in world
             Vector3 vtmp = target - m_groupPosition; // assume this updated
 
-            // rotate into group reference         
-            vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
 
-            // compute distance to grp oob
-            Vector3 grpv = vtmp - ParentGroup.OOBoffset;
+            if (ParentID != 0)
+                {
+                // rotate into group reference         
+                vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+                // compute distance to grp oob
+                Vector3 grpv = vtmp - ParentGroup.OOBoffset;
+                grpdSQ = grpv.LengthSquared() - ParentGroup.BSphereRadiusSQ;
+                if (grpdSQ < 0)
+                    grpdSQ = 0;
 
-            // move into offseted local ref
-            vtmp -= m_offsetPosition;
+                // back
+                // move into offseted local ref
+                vtmp -= m_offsetPosition;
+                }
+
             // rotate into local reference
             vtmp *= Quaternion.Inverse(m_rotationOffset);
-
             // now oob pos
             vtmp -= OOBoffset; // force update
 
@@ -2314,11 +2353,25 @@ namespace OpenSim.Region.Framework.Scenes
                 if (vtmp.X > 0.0)
                     vtmp.X = 0.0f;
                 }
+
             if (vtmp.Y > 0)
                 {
                 vtmp.Y -= box.Y;
                 if (vtmp.Y < 0.0)
                     vtmp.Y = 0.0f;
+                }
+            else
+                {
+                vtmp.Y += box.Y;
+                if (vtmp.Y > 0.0)
+                    vtmp.Y = 0.0f;
+                }
+
+            if (vtmp.Z > 0)
+                {
+                vtmp.Z -= box.Z;
+                if (vtmp.Z < 0.0)
+                    vtmp.Z = 0.0f;
                 }
             else
                 {
@@ -2328,16 +2381,11 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
             float distSQ = vtmp.LengthSquared();
-            // lets see group
-            float grpdSQ = grpv.LengthSquared() - ParentGroup.BSphereRadiusSQ;
 
-            if (ParentID == 0)
-                distSQ = vtmp.LengthSquared();
-
-            if (distSQ > grpdSQ)
-                return distSQ;
-            else
+            if (ParentID != 0 && distSQ < grpdSQ)
                 return grpdSQ;
+            else
+                return distSQ;
             }
   
 
@@ -2374,6 +2422,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
             m_rotationOffset = value;
+            ValidpartOOB = false;
 
             if (value.W == 0) //We have an issue here... try to normalize it
                 value.Normalize ();
@@ -2417,6 +2466,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetOffsetPosition (Vector3 value)
         {
             m_offsetPosition = value;
+            ValidpartOOB = false;
         }
 
         public void FixOffsetPosition(Vector3 value, bool single)
@@ -2429,6 +2479,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             StoreUndoState();
             m_offsetPosition = value;
+            ValidpartOOB = false;
 
             if (ParentGroup != null && !ParentGroup.IsDeleted)
                 {
@@ -5125,7 +5176,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_shape.SculptEntry && m_shape.SculptTexture != UUID.Zero)
                     m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
             }
-            m_ValidpartOOB = false;
+            ValidpartOOB = false;
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.Shape);
         }
@@ -5166,7 +5217,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 ParentGroup.RootPart.AbsolutePosition, Name, UUID, false, ParentGroup.Scene);
                     }
                 }
-
+                ValidpartOOB = false;
                 FixOffsetPosition(newPos,true);
                 ScheduleTerseUpdate();
             }
@@ -5381,7 +5432,7 @@ namespace OpenSim.Region.Framework.Scenes
                 (rot.W != RotationOffset.W))
             {
                 RotationOffset = rot;
-                m_ValidpartOOB = false;
+                ValidpartOOB = false;
                 ScheduleTerseUpdate();
             }
         }
@@ -5442,7 +5493,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup.RootPart != this)
                 ParentGroup.RootPart.Rezzed = DateTime.UtcNow;
 
-            m_ValidpartOOB = false;
+            ValidpartOOB = false;
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
