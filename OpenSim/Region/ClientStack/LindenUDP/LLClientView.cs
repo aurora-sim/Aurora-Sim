@@ -4879,7 +4879,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
             {
                 update.NameValue = Utils.EmptyBytes;
-                update.State = data.Shape.State;
+                // The root part state is the canonical state for all parts of the object.  The other part states in the
+                // case for attachments may contain conflicting values that can end up crashing the viewer.
+                update.State = data.ParentGroup.RootPart.Shape.State;
             }
 
             update.ObjectData = objectData;

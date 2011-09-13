@@ -52,6 +52,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         protected IScene m_scene;
         protected Stream m_saveStream;
         protected Guid m_requestId;
+        protected string m_checkPermissions = null;
 
         /// <summary>
         /// Constructor
@@ -62,7 +63,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// <exception cref="System.IO.IOException">
         /// If there was a problem opening a stream for the file specified by the savePath
         /// </exception>
-        public ArchiveWriteRequestPreparation (IScene scene, string savePath, Guid requestId)
+        public ArchiveWriteRequestPreparation(IScene scene, string savePath, Guid requestId, string checkPermissions)
         {
             m_scene = scene;
 
@@ -77,8 +78,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
                 m_log.Error(e);
             }
-            
+
             m_requestId = requestId;
+            m_checkPermissions = checkPermissions;
         }
         
         /// <summary>
@@ -104,16 +106,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             ISceneEntity[] entities = m_scene.Entities.GetEntities ();
             List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
-
-            /*
-                foreach (ILandObject lo in m_scene.LandChannel.AllParcels())
-                {
-                    if (name == lo.LandData.Name)
-                    {
-                        // This is the parcel we want
-                    }
-                }
-                */
+            int numObjectsSkippedPermissions = 0;
      
             // Filter entities so that we only have scene objects.
             // FIXME: Would be nicer to have this as a proper list in SceneGraph, since lots of methods
@@ -125,7 +118,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     SceneObjectGroup sceneObject = (SceneObjectGroup)entity;
                     
                     if (!sceneObject.IsDeleted && !sceneObject.IsAttachment)
-                        sceneObjects.Add((SceneObjectGroup)entity);
+                        if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, sceneObject, m_checkPermissions))
+                                // The user isn't allowed to copy/transfer this object, so it will not be included in the OAR.
+                                ++numObjectsSkippedPermissions;
+                            else
+                                sceneObjects.Add(sceneObject);
                 }
             }
             
@@ -139,6 +136,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_log.DebugFormat(
                 "[ARCHIVER]: {0} scene objects to serialize requiring save of {1} assets",
                 sceneObjects.Count, assetUuids.Count);
+
+            if (numObjectsSkippedPermissions > 0)
+            {
+                m_log.DebugFormat(
+                    "[ARCHIVER]: {0} scene objects skipped due to lack of permissions",
+                    numObjectsSkippedPermissions);
+            }
             
             // Make sure that we also request terrain texture assets
             RegionSettings regionSettings = m_scene.RegionInfo.RegionSettings;
@@ -170,6 +174,83 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             new AssetsRequest(
                 new AssetsArchiver(archiveWriter), assetUuids, 
                 m_scene.AssetService, awre.ReceivedAllAssets).Execute();
+        }
+
+        /// <summary>
+        /// Checks whether the user has permission to export an object group to an OAR.
+        /// </summary>
+        /// <param name="user">The user</param>
+        /// <param name="objGroup">The object group</param>
+        /// <param name="checkPermissions">Which permissions to check: "C" = Copy, "T" = Transfer</param>
+        /// <returns>Whether the user is allowed to export the object to an OAR</returns>
+        private bool CanUserArchiveObject(UUID user, ISceneEntity objGroup, string checkPermissions)
+        {
+            if (checkPermissions == null)
+                return true;
+
+            IPermissionsModule module = m_scene.RequestModuleInterface<IPermissionsModule>();
+            if (module == null)
+                return true;    // this shouldn't happen
+
+            // Check whether the user is permitted to export all of the parts in the SOG. If any
+            // part can't be exported then the entire SOG can't be exported.
+
+            bool permitted = true;
+            //int primNumber = 1;
+
+            foreach (ISceneChildEntity obj in objGroup.ChildrenEntities())
+            {
+                uint perm;
+                PermissionClass permissionClass = module.GetPermissionClass(user, obj);
+                switch (permissionClass)
+                {
+                    case PermissionClass.Owner:
+                        perm = obj.BaseMask;
+                        break;
+                    case PermissionClass.Group:
+                        perm = obj.GroupMask | obj.EveryoneMask;
+                        break;
+                    case PermissionClass.Everyone:
+                    default:
+                        perm = obj.EveryoneMask;
+                        break;
+                }
+
+                bool canCopy = (perm & (uint)PermissionMask.Copy) != 0;
+                bool canTransfer = (perm & (uint)PermissionMask.Transfer) != 0;
+
+                // Special case: if Everyone can copy the object then this implies it can also be
+                // Transferred.
+                // However, if the user is the Owner then we don't check EveryoneMask, because it seems that the mask
+                // always (incorrectly) includes the Copy bit set in this case. But that's a mistake: the viewer
+                // does NOT show that the object has Everyone-Copy permissions, and doesn't allow it to be copied.
+                if (permissionClass != PermissionClass.Owner)
+                {
+                    canTransfer |= (obj.EveryoneMask & (uint)PermissionMask.Copy) != 0;
+                }
+
+
+                bool partPermitted = true;
+                if (checkPermissions.Contains("C") && !canCopy)
+                    partPermitted = false;
+                if (checkPermissions.Contains("T") && !canTransfer)
+                    partPermitted = false;
+
+                //string name = (objGroup.PrimCount == 1) ? objGroup.Name : string.Format("{0} ({1}/{2})", obj.Name, primNumber, objGroup.PrimCount);
+                //m_log.DebugFormat("[ARCHIVER]: Object permissions: {0}: Base={1:X4}, Owner={2:X4}, Everyone={3:X4}, permissionClass={4}, checkPermissions={5}, canCopy={6}, canTransfer={7}, permitted={8}",
+                //    name, obj.BaseMask, obj.OwnerMask, obj.EveryoneMask,
+                //    permissionClass, checkPermissions, canCopy, canTransfer, permitted);
+
+                if (!partPermitted)
+                {
+                    permitted = false;
+                    break;
+                }
+
+                //++primNumber;
+            }
+
+            return permitted;
         }
     }
 }

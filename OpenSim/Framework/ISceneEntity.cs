@@ -528,6 +528,8 @@ namespace OpenSim.Framework
 
         #endregion
 
+        Vector3 GetTorque();
+
         event BlankHandler OnFinishedPhysicalRepresentationBuilding;
 
         List<UUID> SitTargetAvatar { get; }
@@ -767,8 +769,6 @@ namespace OpenSim.Framework
         void startLookAt (Quaternion rotation, float p, float p_2);
 
         Vector3 Acceleration { get; set; }
-
-        Vector3 GetTorque ();
 
         void SetAngularImpulse (Vector3 vector3, bool p);
 

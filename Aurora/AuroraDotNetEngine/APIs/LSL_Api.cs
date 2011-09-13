@@ -2572,8 +2572,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Vector llGetTorque()
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Vector();
-            
-            Vector3 torque = m_host.GetTorque();
+
+            Vector3 torque = m_host.ParentEntity.GetTorque();
             return new LSL_Vector(torque.X,torque.Y,torque.Z);
         }
 
@@ -7872,6 +7872,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected ObjectShapePacket.ObjectDataBlock SetPrimitiveBlockShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist)
         {
+            float tempFloat;// Use in float expressions below to avoid byte cast precision issues.
             ObjectShapePacket.ObjectDataBlock shapeBlock = new ObjectShapePacket.ObjectDataBlock();
 
             if (holeshape != (int)ScriptBaseClass.PRIM_HOLE_DEFAULT &&
@@ -7934,8 +7935,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 twist.y = 1.0f;
             }
-            shapeBlock.PathTwistBegin = (sbyte)(100 * twist.x);
-            shapeBlock.PathTwist = (sbyte)(100 * twist.y);
+            // A fairly large precision error occurs for some calculations,
+            // if a float or double is directly cast to a byte or sbyte
+            // variable, in both .Net and Mono. In .Net, coding
+            // "(sbyte)(float)(some expression)" corrects the precision
+            // errors. But this does not work for Mono. This longer coding
+            // form of creating a tempoary float variable from the
+            // expression first, then casting that variable to a byte or
+            // sbyte, works for both .Net and Mono. These types of
+            // assignments occur in SetPrimtiveBlockShapeParams and
+            // SetPrimitiveShapeParams in support of llSetPrimitiveParams.
+            tempFloat = (float)(100.0d * twist.x);
+            shapeBlock.PathTwistBegin = (sbyte)tempFloat;
+            tempFloat = (float)(100.0d * twist.y);
+            shapeBlock.PathTwist = (sbyte)tempFloat;
 
             shapeBlock.ObjectLocalID = part.LocalId;
 
@@ -7948,6 +7961,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector taper_b, LSL_Vector topshear, byte fudge)
         {
+            float tempFloat; // Use in float expressions below to avoid byte cast precision issues.
             ObjectShapePacket.ObjectDataBlock shapeBlock;
 
             shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
@@ -7970,8 +7984,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 taper_b.y = 2f;
             }
-            shapeBlock.PathScaleX = (byte)(100 * (2.0 - taper_b.x));
-            shapeBlock.PathScaleY = (byte)(100 * (2.0 - taper_b.y));
+            tempFloat = (float)(100.0d * (2.0d - taper_b.x));
+            shapeBlock.PathScaleX = (byte)tempFloat;
+            tempFloat = (float)(100.0d * (2.0d - taper_b.y));
+            shapeBlock.PathScaleY = (byte)tempFloat;
             if (topshear.x < -0.5f)
             {
                 topshear.x = -0.5f;
@@ -7988,8 +8004,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 topshear.y = 0.5f;
             }
-            shapeBlock.PathShearX = (byte)(100 * topshear.x);
-            shapeBlock.PathShearY = (byte)(100 * topshear.y);
+            tempFloat = (float)(100.0d * topshear.x);
+            shapeBlock.PathShearX = (byte)tempFloat;
+            tempFloat = (float)(100.0d * topshear.y);
+            shapeBlock.PathShearY = (byte)tempFloat;
 
             part.Shape.SculptEntry = false;
             part.UpdateShape(shapeBlock);
@@ -8039,6 +8057,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector holesize, LSL_Vector topshear, LSL_Vector profilecut, LSL_Vector taper_a, float revolutions, float radiusoffset, float skew, byte fudge)
         {
+            float tempFloat;// Use in float expressions below to avoid byte cast precision issues.
             ObjectShapePacket.ObjectDataBlock shapeBlock;
 
             shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
@@ -8065,8 +8084,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 holesize.y = 0.5f;
             }
-            shapeBlock.PathScaleX = (byte)(100 * (2 - holesize.x));
-            shapeBlock.PathScaleY = (byte)(100 * (2 - holesize.y));
+            tempFloat = (float)(100.0d * (2.0d - holesize.x));
+            shapeBlock.PathScaleX = (byte)tempFloat;
+            tempFloat = (float)(100.0d * (2.0d - holesize.y));
+            shapeBlock.PathScaleY = (byte)tempFloat;
             if (topshear.x < -0.5f)
             {
                 topshear.x = -0.5f;
@@ -8083,8 +8104,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 topshear.y = 0.5f;
             }
-            shapeBlock.PathShearX = (byte)(100 * topshear.x);
-            shapeBlock.PathShearY = (byte)(100 * topshear.y);
+            tempFloat = (float)(100.0d * topshear.x);
+            shapeBlock.PathShearX = (byte)tempFloat;
+            tempFloat = (float)(100.0d * topshear.y);
+            shapeBlock.PathShearY = (byte)tempFloat;
             if (profilecut.x < 0f)
             {
                 profilecut.x = 0f;
@@ -8128,8 +8151,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 taper_a.y = 1f;
             }
-            shapeBlock.PathTaperX = (sbyte)(100 * taper_a.x);
-            shapeBlock.PathTaperY = (sbyte)(100 * taper_a.y);
+            tempFloat = (float)(100.0d * taper_a.x);
+            shapeBlock.PathTaperX = (sbyte)tempFloat;
+            tempFloat = (float)(100.0d * taper_a.y);
+            shapeBlock.PathTaperY = (sbyte)tempFloat;
             if (revolutions < 1f)
             {
                 revolutions = 1f;
@@ -8138,7 +8163,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 revolutions = 4f;
             }
-            shapeBlock.PathRevolutions = (byte)(66.666667 * (revolutions - 1.0));
+            tempFloat = 66.66667f * (revolutions - 1.0f);
+            shapeBlock.PathRevolutions = (byte)tempFloat;
             // limits on radiusoffset depend on revolutions and hole size (how?) seems like the maximum range is 0 to 1
             if (radiusoffset < 0f)
             {
@@ -8148,7 +8174,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 radiusoffset = 1f;
             }
-            shapeBlock.PathRadiusOffset = (sbyte)(100 * radiusoffset);
+            tempFloat = 100.0f * radiusoffset;
+            shapeBlock.PathRadiusOffset = (sbyte)tempFloat;
             if (skew < -0.95f)
             {
                 skew = -0.95f;
@@ -8157,7 +8184,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 skew = 0.95f;
             }
-            shapeBlock.PathSkew = (sbyte)(100 * skew);
+            tempFloat = 100.0f * skew;
+            shapeBlock.PathSkew = (sbyte)tempFloat;
 
             part.Shape.SculptEntry = false;
             part.UpdateShape(shapeBlock);
@@ -9189,10 +9217,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         res.Add(new LSL_Vector(Shape.PathTaperX / 100.0, Shape.PathTaperY / 100.0, 0));
 
                         // float revolutions
-                        res.Add(new LSL_Float((Shape.PathRevolutions * 0.015) + 1.0)); // Slightly inaccurate, because an unsigned
-                        // byte is being used to represent the entire
-                        // range of floating-point values from 1.0
-                        // through 4.0 (which is how SL does it). 
+                        res.Add(new LSL_Float(Math.Round(Shape.PathRevolutions * 0.015d, 2, MidpointRounding.AwayFromZero)) + 1.0d);
+                        // Slightly inaccurate, because an unsigned byte is being used to represent
+                        // the entire range of floating-point values from 1.0 through 4.0 (which is how
+                        // SL does it).
+                        //
+                        // Using these formulas to store and retrieve PathRevolutions, it is not
+                        // possible to use all values between 1.00 and 4.00. For instance, you can't
+                        // represent 1.10. You can represent 1.09 and 1.11, but not 1.10. So, if you
+                        // use llSetPrimitiveParams to set revolutions to 1.10 and then retreive them
+                        // with llGetPrimitiveParams, you'll retrieve 1.09. You can also see a similar
+                        // behavior in the viewer as you cannot set 1.10. The viewer jumps to 1.11.
+                        // In SL, llSetPrimitveParams and llGetPrimitiveParams can set and get a value
+                        // such as 1.10. So, SL must store and retreive the actual user input rather
+                        // than only storing the encoded value.
 
                         // float radiusoffset
                         res.Add(new LSL_Float(Shape.PathRadiusOffset / 100.0));

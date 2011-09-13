@@ -176,7 +176,17 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             if (cmdparams.Length > 2)
             {
-                ArchiveRegion(cmdparams[2]);
+                string permissions = null;
+                List<string> newParams = new List<string>(cmdparams);
+                foreach (string param in cmdparams)
+                {
+                    if (param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        permissions = param.Remove(0, 7);
+                        newParams.Remove(param);
+                    }
+                }
+                ArchiveRegion(newParams[2], Guid.Empty, permissions);
             }
             else
             {
@@ -186,15 +196,15 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         
         public void ArchiveRegion(string savePath)
         {
-            ArchiveRegion(savePath, Guid.Empty);
+            ArchiveRegion(savePath, Guid.Empty, null);
         }
         
-        public void ArchiveRegion(string savePath, Guid requestId)
+        public void ArchiveRegion(string savePath, Guid requestId, string permissions)
         {
             m_log.InfoFormat(
                 "[ARCHIVER]: Writing archive for region {0} to {1}", m_scene.RegionInfo.RegionName, savePath);
             
-            new ArchiveWriteRequestPreparation(m_scene, savePath, requestId).ArchiveRegion();
+            new ArchiveWriteRequestPreparation(m_scene, savePath, requestId, permissions).ArchiveRegion();
         }
         
         public void ArchiveRegion(Stream saveStream)

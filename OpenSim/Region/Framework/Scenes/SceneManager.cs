@@ -714,9 +714,11 @@ namespace OpenSim.Region.Framework.Scenes
                 "--UseParcelOwnership changes who the default owner of objects whose owner cannot be found from the Estate Owner to the parcel owner on which the object is found.  \n" +
                 "--CheckOwnership asks for each UUID that is not found on the grid what user it should be changed to (useful for changing UUIDs from other grids, but very long with many users).  ", LoadOar);
 
-            MainConsole.Instance.Commands.AddCommand("save oar", "save oar [-v|--version=N] [<OAR path>]", "Save a region's data to an OAR archive -v|--version=N generates scene objects as per older versions of the serialization (e.g. -v=0)" + Environment.NewLine
-                                           + "The OAR path must be a filesystem path."
-                                           + "  If this is not given then the oar is saved to region.oar in the current directory.", SaveOar);
+            MainConsole.Instance.Commands.AddCommand("save oar", "save oar [<OAR path>] [--perm=<permissions>] ", "Save a region's data to an OAR archive" + Environment.NewLine
+                                           + "<OAR path> The OAR path must be a filesystem path."
+                                           + "  If this is not given then the oar is saved to region.oar in the current directory." + Environment.NewLine
+                                           + "--perm stops objects with insufficient permissions from being saved to the OAR." + Environment.NewLine
+                                           + "  <permissions> can contain one or more of these characters: \"C\" = Copy, \"T\" = Transfer" + Environment.NewLine, SaveOar);
 
             MainConsole.Instance.Commands.AddCommand("kick user", "kick user [first] [last] [message]", "Kick a user off the simulator", KickUserCommand);
 

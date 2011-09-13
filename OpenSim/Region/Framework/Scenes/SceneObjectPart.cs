@@ -2726,15 +2726,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public Vector3 GetTorque()
-        {
-            if (m_parentGroup != null)
-            {
-                m_parentGroup.GetTorque();
-            }
-            return Vector3.Zero;
-        }
-
         public delegate void AddPhysics ();
         public event AddPhysics OnAddPhysics;
 
