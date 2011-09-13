@@ -613,27 +613,18 @@ namespace Aurora.Modules.FileBasedSimulationData
                 if (!m_hasShownFileBasedWarning)
                 {
                     m_hasShownFileBasedWarning = true;
-                    System.Windows.Forms.MessageBox.Show(@"Your sim has been updated to use the FileBased Simulation Service.
+                    IConfig startupConfig = m_config.Configs["Startup"];
+                    if(startupConfig == null || !startupConfig.Getboolean("NoGUI", false))
+                        DoNoGUIWarning();
+                    else
+                        System.Windows.Forms.MessageBox.Show(@"Your sim has been updated to use the FileBased Simulation Service.
 Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.
 More configuration options and info can be found in the Configuration/Data/FileBased.ini file.", "WARNING");
                 }
             }
             catch
             {
-                //Some people don't have winforms, which is fine
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("Your sim has been updated to use the FileBased Simulation Service.");
-                m_log.Error("Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
-                m_log.Error("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
-                m_log.Error("---------------------");
+                DoNoGUIWarning();
             }
 
             simStore.Initialise(connString);
@@ -647,6 +638,24 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 m_shortterrain = simStore.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 m_shortrevertTerrain = simStore.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
             }
+        }
+        
+        private void DoNoGUIWarning()
+        {
+            //Some people don't have winforms, which is fine
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("Your sim has been updated to use the FileBased Simulation Service.");
+            m_log.Error("Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
+            m_log.Error("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
+            m_log.Error("---------------------");
         }
 
         public virtual List<ISceneEntity> LoadObjects (IScene scene)
