@@ -87,6 +87,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private static readonly string remoteParcelRequestPath = "0009/";
 
         private IScene m_scene;
+        private bool m_TaintedLandData = false;
 
         /// <value>
         /// Local land ids at specified region co-ordinates (region size / 4)
@@ -106,7 +107,6 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private bool m_UpdateDirectoryOnUpdate = false;
         private bool m_UpdateDirectoryOnTimer = true;
-        private List<LandData> m_TaintedLandData = new List<LandData> ();
         private int m_minutesBeforeTimer = 60;
         private System.Timers.Timer m_UpdateDirectoryTimer = new System.Timers.Timer();
         private int m_update_land = 10; //Check whether we need to rebuild the parcel prim count and other land related functions
@@ -380,17 +380,20 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         private void UpdateDirectoryTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            if (m_TaintedLandData)
+            {
+                DoSearchUpdate();
+                m_TaintedLandData = false;
+            }
+        }
+
+        private void DoSearchUpdate()
+        {
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
-                //lock (m_TaintedLandData)
-                //{
-                foreach (LandData parcel in m_TaintedLandData)
-                {
-                    DSC.AddLandObject (parcel);
-                }
-                m_TaintedLandData.Clear ();
-                //}
+                DSC.ClearRegion(m_scene.RegionInfo.RegionID);
+                DSC.AddRegion(AllParcels().ConvertAll<LandData>(delegate(ILandObject o) { return o.LandData; }));
             }
         }
 
@@ -713,24 +716,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
             {
-                LandData p = parcel.LandData.Copy ();
-                if (p.UserLocation == Vector3.Zero)
-                {
-                    //Set it to a position inside the parcel at the ground if it doesn't have one
-                    p.UserLocation = GetParcelCenterAtGround(parcel);
-                }
                 if (m_UpdateDirectoryOnUpdate)
                     //Update search database
-                    DSC.AddLandObject(p);
+                    DoSearchUpdate();
                 else if (m_UpdateDirectoryOnTimer)
-                {
-                    //lock (m_TaintedLandData)
-                    //{
-                    //Tell the timer about it
-                    if (!m_TaintedLandData.Contains(p))
-                        m_TaintedLandData.Add(p);
-                    //}
-                }
+                    m_TaintedLandData = true;
             }
         }
 
@@ -739,10 +729,11 @@ namespace OpenSim.Region.CoreModules.World.Land
              IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
              if (DSC != null)
              {
-                 if (m_TaintedLandData.Contains (iLandObject.LandData))
-                     m_TaintedLandData.Remove (iLandObject.LandData);
-
-                 DSC.RemoveLandObject (iLandObject.RegionUUID, iLandObject.LandData);
+                 if (m_UpdateDirectoryOnUpdate)
+                     //Update search database
+                     DoSearchUpdate();
+                 else if (m_UpdateDirectoryOnTimer)
+                     m_TaintedLandData = true;
              }
         }
 
@@ -825,14 +816,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             foreach (ILandObject land in parcels)
             {
                 m_scene.EventManager.TriggerLandObjectRemoved (land.LandData.RegionID, land.LandData.GlobalID);
-                RemoveLandObjectFromSearch (land);
             }
             foreach (LandData land in l)
             {
                 if (conn != null)
                     conn.RemoveLandObject (m_scene.RegionInfo.RegionID, land.GlobalID);
                 m_scene.EventManager.TriggerLandObjectRemoved (land.RegionID, land.GlobalID);
-                //RemoveLandObjectFromSearch (land);
             }
             lock (m_landListLock)
             {

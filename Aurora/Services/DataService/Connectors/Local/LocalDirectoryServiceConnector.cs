@@ -88,49 +88,54 @@ namespace Aurora.Services.DataService
         /// <param name="forSale"></param>
         /// <param name="EstateID"></param>
         /// <param name="showInSearch"></param>
-        public void AddLandObject(LandData args)
+        public void AddRegion(List<LandData> parcels)
         {
+            if (parcels.Count == 0)
+                return;
             //Check whether this region is just spamming add to search and stop them if they are
-            if (timeBeforeNextUpdate.ContainsKey(args.InfoUUID) &&
-                Util.UnixTimeSinceEpoch() < timeBeforeNextUpdate[args.InfoUUID])
+            if (timeBeforeNextUpdate.ContainsKey(parcels[0].RegionID) &&
+                Util.UnixTimeSinceEpoch() < timeBeforeNextUpdate[parcels[0].RegionID])
                 return; //Too soon to update
 
             //Update the time with now + the time to wait for the next update
-            timeBeforeNextUpdate[args.InfoUUID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
-            
-            List<object> Values = new List<object>();
-            Values.Add(args.RegionID);
-            Values.Add(args.GlobalID);
-            Values.Add(args.LocalID);
-            Values.Add(args.UserLocation.X);
-            Values.Add(args.UserLocation.Y);
-            Values.Add(args.UserLocation.Z);
-            Values.Add(args.Name.Replace("'", "\'"));
-            Values.Add(args.Description.Replace("'", "\'"));
-            Values.Add(args.Flags);
-            Values.Add(args.Dwell);
-            //InfoUUID is the missing 'real' Gridwide ParcelID
-            Values.Add(args.InfoUUID);
-            Values.Add(((args.Flags & (uint)ParcelFlags.ForSale) == (uint)ParcelFlags.ForSale) ? 1 : 0);
-            Values.Add(args.SalePrice);
-            Values.Add(args.AuctionID);
-            Values.Add(args.Area);
-            Values.Add(0);
-            Values.Add(args.Maturity);
-            Values.Add(args.OwnerID);
-            Values.Add(args.GroupID);
-            Values.Add(((args.Flags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory) ? 1 : 0);
-            Values.Add(args.SnapshotID);
-            Values.Add(OSDParser.SerializeLLSDXmlString(args.Bitmap));
+            timeBeforeNextUpdate[parcels[0].RegionID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
 
-            //Remove the old one
-            GD.Delete ("searchparcel", new string[1] { "ParcelID" }, new object[1] { args.GlobalID });
-            GD.Insert ("searchparcel", Values.ToArray());
+            foreach (LandData args in parcels)
+            {
+                List<object> Values = new List<object>();
+                Values.Add(args.RegionID);
+                Values.Add(args.GlobalID);
+                Values.Add(args.LocalID);
+                Values.Add(args.UserLocation.X);
+                Values.Add(args.UserLocation.Y);
+                Values.Add(args.UserLocation.Z);
+                Values.Add(args.Name.Replace("'", "\'"));
+                Values.Add(args.Description.Replace("'", "\'"));
+                Values.Add(args.Flags);
+                Values.Add(args.Dwell);
+                //InfoUUID is the missing 'real' Gridwide ParcelID
+                Values.Add(args.InfoUUID);
+                Values.Add(((args.Flags & (uint)ParcelFlags.ForSale) == (uint)ParcelFlags.ForSale) ? 1 : 0);
+                Values.Add(args.SalePrice);
+                Values.Add(args.AuctionID);
+                Values.Add(args.Area);
+                Values.Add(0);
+                Values.Add(args.Maturity);
+                Values.Add(args.OwnerID);
+                Values.Add(args.GroupID);
+                Values.Add(((args.Flags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory) ? 1 : 0);
+                Values.Add(args.SnapshotID);
+                Values.Add(OSDParser.SerializeLLSDXmlString(args.Bitmap));
+
+                //Remove the old one
+                GD.Delete("searchparcel", new string[1] { "ParcelID" }, new object[1] { args.GlobalID });
+                GD.Insert("searchparcel", Values.ToArray());
+            }
         }
 
-        public void RemoveLandObject (UUID regionID, LandData args)
+        public void ClearRegion(UUID regionID)
         {
-            GD.Delete ("searchparcel", new string[2] { "RegionID", "ParcelID" }, new object[2] { regionID, args.GlobalID });
+            GD.Delete ("searchparcel", new string[2] { "RegionID" }, new object[2] { regionID });
         }
 
         private bool[,] ConvertBytesToLandBitmap(byte[] Bitmap)

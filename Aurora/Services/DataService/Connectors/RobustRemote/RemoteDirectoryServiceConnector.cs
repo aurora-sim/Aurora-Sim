@@ -71,17 +71,17 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        /// This also updates the parcel, not for just adding a new one
+        /// This adds the entire region into the search database
         /// </summary>
         /// <param name="args"></param>
-        /// <param name="regionID"></param>
-        /// <param name="forSale"></param>
-        /// <param name="EstateID"></param>
-        /// <param name="showInSearch"></param>
-        public void AddLandObject(LandData args)
+        public void AddRegion(List<LandData> parcels)
         {
-            OSDMap mess = args.ToOSD ();
-            mess["Method"] = "addlandobject";
+            OSDMap mess = new OSDMap();
+            OSDArray requests = new OSDArray();
+            foreach (LandData data in parcels)
+                requests.Add(data.ToOSD());
+            mess["Requests"] = requests;
+            mess["Method"] = "addregion";
             List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {
@@ -89,10 +89,11 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public void RemoveLandObject (UUID regionID, LandData args)
+        public void ClearRegion (UUID regionID)
         {
-            OSDMap mess = args.ToOSD ();
-            mess["Method"] = "removelandobject";
+            OSDMap mess = new OSDMap();
+            mess["Method"] = "clearregion";
+            mess["RegionID"] = regionID;
             List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {

@@ -41,14 +41,14 @@ namespace Aurora.Framework
         /// Adds a region into search
         /// </summary>
         /// <param name="args"></param>
-        void AddLandObject (LandData args);
+        void AddRegion (List<LandData> args);
 
         /// <summary>
         /// Removes a region from search
         /// </summary>
         /// <param name="regionID"></param>
         /// <param name="args"></param>
-        void RemoveLandObject (UUID regionID, LandData args);
+        void ClearRegion (UUID regionID);
         
         /// <summary>
         /// Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)

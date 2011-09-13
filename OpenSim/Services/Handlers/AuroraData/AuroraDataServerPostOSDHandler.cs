@@ -146,12 +146,12 @@ namespace OpenSim.Services
                         return OfflineMessagesHandler.GetOfflineMessages (args);
                     #endregion
                     #region Directory Messages
-                    case "addlandobject":
+                    case "addregion":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult ();
-                        return DirectoryHandler.AddLandObject (args);
-                    case "removelandobject":
+                        return DirectoryHandler.AddRegion (args);
+                    case "clearregion":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult ();
@@ -161,7 +161,7 @@ namespace OpenSim.Services
                             int x, y;
                             Util.UlongToInts (handle, out x, out y);
                             UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
-                            return DirectoryHandler.RemoveLandObject (handle, regionID, args);
+                            return DirectoryHandler.ClearRegion (regionID, args);
                         }
                         break;
                     case "getparcelinfo":
@@ -550,23 +550,23 @@ namespace OpenSim.Services
             return encoding.GetBytes (OSDParser.SerializeJsonString (request));
         }
 
-        public byte[] AddLandObject (OSDMap request)
+        public byte[] AddRegion (OSDMap request)
         {
-            LandData land = new LandData ();
-            land.FromOSD (request);
-            DirectoryServiceConnector.AddLandObject (land);
-
+            OSDArray requests = (OSDArray)request["Requests"];
+            List<LandData> parcels = new List<LandData>();
+            foreach (OSD o in requests)
+            {
+                LandData land = new LandData();
+                land.FromOSD((OSDMap)o);
+                parcels.Add(land);
+            }
+            DirectoryServiceConnector.AddRegion(parcels);
             return new byte[1];
         }
 
-        public byte[] RemoveLandObject (ulong regionhandle, UUID regionID, OSDMap request)
+        public byte[] ClearRegion (UUID regionID, OSDMap request)
         {
-            LandData land = new LandData ();
-            land.FromOSD (request);
-            land.RegionHandle = regionhandle;
-            land.RegionID = regionID;
-            DirectoryServiceConnector.RemoveLandObject (regionID, land);
-
+            DirectoryServiceConnector.ClearRegion (regionID);
             return new byte[1];
         }
     }
