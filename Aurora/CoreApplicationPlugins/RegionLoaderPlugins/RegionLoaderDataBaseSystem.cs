@@ -48,6 +48,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         private IConfigSource m_configSource;
         private bool m_enabled = false;
         private bool m_default = false;
+        private bool m_noGUI = false;
 
         public bool Enabled
         {
@@ -79,6 +80,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     if (MainConsole.Instance != null)
                         MainConsole.Instance.Commands.AddCommand ("create region", "create region", "Create a new region.", AddRegion);
             }
+            IConfig startupconfig = configSource.Configs["Startup"];
+            if (startupconfig != null)
+                m_noGUI = startupconfig.GetBoolean("NoGUI", false);
 
             m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
@@ -110,8 +114,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 //Load up the GUI to make a new region
                 try
                 {
-                    RegionManager manager = new RegionManager (true, false, m_openSim);
-                    System.Windows.Forms.Application.Run (manager);
+                    if(m_noGUI)
+                    {
+                        RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
+                        system.Initialise (m_configSource, m_openSim);
+                        system.AddRegion (new string[0]);
+                    }
+                    else
+                    {
+                        RegionManager manager = new RegionManager (true, false, m_openSim);
+                        System.Windows.Forms.Application.Run (manager);
+                    }
                 }
                 catch
                 {
@@ -137,8 +150,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             try
             {
-                RegionManager manager = new RegionManager (false, true, m_openSim);
-                System.Windows.Forms.Application.Run (manager);
+                if(m_noGUI)
+                {
+                    RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
+                    system.Initialise (m_configSource, m_openSim);
+                    system.AddRegion (new string[0]);
+                }
+                else
+                {
+                    RegionManager manager = new RegionManager (false, true, m_openSim);
+                    System.Windows.Forms.Application.Run (manager);
+                }
             }
             catch
             {
