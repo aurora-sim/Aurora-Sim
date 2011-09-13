@@ -7,9 +7,9 @@
     ;; Default is 100
     SleepTime = 100
 	
-	;; The amount of threads to run simultaneously for script events
-	;; Default is 1
-	Threads = 1
+    ;; The amount of threads to run simultaneously for script events
+    ;; Default is 1
+    Threads = 1
 
     ;; Should all script errors be shown on the console
     ;; Default is false.
@@ -152,8 +152,8 @@
 	;; Users to allow to use the given Threat Level
 	;; This bypasses other security functions and allows the avatar or group to run any functions on the given threat level
 	;; This function is set in the following ways
-    ;; = UUID allows that Individual Avatar/Group Access to osFunction
-    ;;   UUID,UUID,UUID would allow the 3 different avatars/groups to access the threat level
+        ;; = UUID allows that Individual Avatar/Group Access to osFunction
+        ;;   UUID,UUID,UUID would allow the 3 different avatars/groups to access the threat level
 	Allow_None = ""
 	Allow_Nuisance = ""
 	Allow_VeryLow = ""
@@ -346,6 +346,47 @@
     ;Allow_osSetRot = false
     ;; *** Threat-Level=Severe    Recomended to use UUID for those set as false
     ;Allow_osKickAvatar = false
+
+    ;;
+    ;; Limits Section
+    ;;
+    
+    ;; Enables function limiting if enabled
+    AllowFunctionLimiting = false
+
+    ;; Examples for how to use the limiting functions
+    ;;  In these configs, you can put a function name, such as 'llRezObject', or an API name, such as 'lsl' or 'aa'
+    ;; You must add this line for each function you wish to limit so that the script engine checks for it
+    ;llRezObject_Limit = true
+    ;lsl_Limit = true
+    ;; There are several ways to limit functions, this setting changes which way we limit it
+    ;;  None - Does no limiting at all for the given function
+    ;;  Script - Limits functions in the given script (limits per script)
+    ;;  Owner - Limits functions by limiting how many times a user can use the function (in all sims in the instance)
+    ;;  Group - Limits functions by limiting how many times an entire linkset can call a function
+    ;;  Prim - Limits how many times one single prim can call a function
+    ;llRezObject_LimitType = Script
+    ;; There are several alerts that can be called when a function is limited
+    ;;  None - Does nothing
+    ;;  Console - Displays an alert on the console about the limitation
+    ;;  Inworld - Displays an alert inworld for the user
+    ;;  ConsoleAndInworld - Does both Console and Inworld
+    ;llRezObject_LimitAlert = ConsoleAndInworld
+    ;; What to do with events when they are going to be limited
+    ;;  None - Does nothing, just fires the alert
+    ;;  Drop - Doesn't allow the function to run, and allows the event to continue executing
+    ;;  TerminateScript - Terminates the script and stops it from Running any scripts (can be reenabled by checking Running in the script editor GUI in the viewer)
+    ;;  TerminateEvent - Terminates (stops) the event that called the function, but still allows for other events to be called
+    ;llRezObject_LimitAction = Drop
+    ;; How many times a given function can be called before it is limited
+    ;; In the example, the function can be called 10 times before it is limited
+    ;llRezObject_LimitMaxNumberOfTimes = 10
+    ;; How long the function has to wait before it can fire again (in milliseconds)
+    ;; In the example, the function can only be called once every 10ms
+    ;llRezObject_LimitTimeScale = 10
+    ;; How many times functions can be called in the time scale set above
+    ;; In our example so far, if we set this setting to 10, the function can be called 10 times every 10 milliseconds
+    ;llRezObject_LimitFunctionsOverTimeScale = 10
 	
     ;; Set the following to true to allow administrator owned scripts to execute console commands from LSL
     ;; Default is false.
