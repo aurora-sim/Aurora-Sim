@@ -151,7 +151,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         
         public ScriptProtectionModule(ScriptEngine engine, IConfig config)
         {
-		}
+	}
 
         public void Initialize (ScriptEngine engine, IConfig config)
         {
@@ -160,6 +160,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             EnabledAPIs = new List<string>(config.GetString("AllowedAPIs", "LSL").ToLower().Split(','));
 
             allowHTMLLinking = config.GetBoolean("AllowHTMLLinking", true);
+            
+            #region Limitation configs
+            
+            m_allowFunctionLimiting = config.GetBoolean("AllowFunctionLimiting", false);
+            
+            foreach(KeyValuePair<string, object> kvp in config)
+            {
+            	if(kvp.Key.EndsWith("_Limit"))
+            	{
+            	    string functionName = kvp.Key.Remove(kvp.Key.Length - 6);
+            	    LimitDef limitDef = new LimitDef();
+            	    string limitType = config.GetString(functionName + "_LimitType", "None");
+            	    string limitAlert = config.GetString(functionName + "_LimitAlert", "None");
+            	    string limitAction = config.GetString(functionName + "_LimitAction", "None");
+            	    int limitTimeScale = config.GetInt(functionName + "_LimitTimeScale", 0);
+            	    int limitMaxNumberOfTimes = config.GetInt(functionName + "_LimitMaxNumberOfTimes", 0);
+            	    int limitFunctionsOverTimeScale = config.GetInt(functionName + "_LimitFunctionsOverTimeScale", 0);
+            	    
+            	    Enum.TryParse(typeof(LimitType), limitType, out limitDef.Type);
+            	    Enum.TryParse(typeof(LimitAlert), limitAlert out limitDef.Alert);
+            	    Enum.TryParse(typeof(LimitAction), limitAcition, out limitDef.Action);
+            	    
+            	    limitDef.TimeScale = limitTimeScale;
+            	    limitDef.MaxNumberOfTimes = limitMaxNumberOfTimes;
+            	    limitDef.FunctionsOverTimeScale = limitFunctionsOverTimeScale;
+            	    m_functionsToLimit[functionName] = limitDef;
+            	}
+            }
+            
+            #endregion
 
             m_threatLevelNone = new ThreatLevelDefinition(ThreatLevel.None, UserSetHelpers.ParseUserSetConfigSetting(config, "NoneUserSet", UserSet.None), this);
             m_threatLevelNuisance = new ThreatLevelDefinition(ThreatLevel.Nuisance, UserSetHelpers.ParseUserSetConfigSetting(config, "NuisanceUserSet", UserSet.None), this);
