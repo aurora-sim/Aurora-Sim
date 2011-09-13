@@ -679,11 +679,11 @@
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Framework"/>
-	  <Reference name="OpenSim.Region.Framework"/>
+      <Reference name="OpenSim.Region.Framework"/>
 
       <Reference name="C5" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
-      <Reference name="Mono.Data.Sqlite" path="../../../bin/"/>
+      <Reference name="Mono.Data.Sqlite"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
