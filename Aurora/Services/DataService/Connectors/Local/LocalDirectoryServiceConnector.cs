@@ -135,7 +135,7 @@ namespace Aurora.Services.DataService
 
         public void ClearRegion(UUID regionID)
         {
-            GD.Delete ("searchparcel", new string[2] { "RegionID" }, new object[2] { regionID });
+            GD.Delete ("searchparcel", new string[1] { "RegionID" }, new object[1] { regionID });
         }
 
         private bool[,] ConvertBytesToLandBitmap(byte[] Bitmap)

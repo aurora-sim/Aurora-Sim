@@ -57,7 +57,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// 
         /// <param name="savePath"></param>
         /// <param name="requestId">If supplied, this request Id is later returned in the saved event</param>
-        void ArchiveRegion(string savePath, Guid requestId);
+        /// <param name="permissions">Permission string, see the 'save oar' help</param>
+        void ArchiveRegion(string savePath, Guid requestId, string permissions);
 
         /// <summary>
         /// Archive the region to a stream.
