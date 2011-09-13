@@ -841,16 +841,22 @@ namespace Aurora.Modules
                     bitImages.Add(image);
             }
 
-            Bitmap mapTexture = new Bitmap(2560, 2560);
+            int size = 2560;
+            int offsetSize = size / 10 / 2;
+            Bitmap mapTexture = new Bitmap(size, size);
             Graphics g = Graphics.FromImage(mapTexture);
             SolidBrush sea = new SolidBrush(Color.DarkBlue);
-            g.FillRectangle(sea, 0, 0, 2560, 2560);
+            g.FillRectangle(sea, 0, 0, size, size);
+
+            int regionXOffset = (m_scene.RegionInfo.RegionSizeX / 2 - 128) * -1;//Neg because the image is upside down
+            int regionYOffset = 0;// (m_scene.RegionInfo.RegionSizeY / 2 - 128) * -1;
 
             for (int i = 0; i < regions.Count; i++)
             {
-                ushort x = (ushort)((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) + 10);
-                ushort y = (ushort)((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) + 10);
-                g.DrawImage(bitImages[i], (x * 128), 2560 - (y * 128), 128, 128); // y origin is top
+                int regionSizeOffset = regions[i].RegionSizeX / 2 - 128;
+                int x = (int)(((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) / Constants.RegionSize) + 10);
+                int y = (int)(((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) / Constants.RegionSize) + 10);
+                g.DrawImage(bitImages[i], (x * offsetSize) + regionXOffset, size - (y * offsetSize + regionSizeOffset) + regionYOffset, regions[i].RegionSizeX / 2, regions[i].RegionSizeY / 2); // y origin is top
             }
 
             mapTexture.Save(exportPath, ImageFormat.Jpeg);
