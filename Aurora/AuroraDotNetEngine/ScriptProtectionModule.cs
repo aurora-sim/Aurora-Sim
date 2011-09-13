@@ -165,11 +165,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             
             m_allowFunctionLimiting = config.GetBoolean("AllowFunctionLimiting", false);
             
-            foreach(KeyValuePair<string, object> kvp in config)
+            foreach(string kvp in config.GetKeys())
             {
-            	if(kvp.Key.EndsWith("_Limit"))
+            	if(kvp.EndsWith("_Limit"))
             	{
-            	    string functionName = kvp.Key.Remove(kvp.Key.Length - 6);
+            	    string functionName = kvp.Remove(kvp.Length - 6);
             	    LimitDef limitDef = new LimitDef();
             	    string limitType = config.GetString(functionName + "_LimitType", "None");
             	    string limitAlert = config.GetString(functionName + "_LimitAlert", "None");
@@ -177,10 +177,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             	    int limitTimeScale = config.GetInt(functionName + "_LimitTimeScale", 0);
             	    int limitMaxNumberOfTimes = config.GetInt(functionName + "_LimitMaxNumberOfTimes", 0);
             	    int limitFunctionsOverTimeScale = config.GetInt(functionName + "_LimitFunctionsOverTimeScale", 0);
-            	    
-            	    Enum.TryParse(typeof(LimitType), limitType, out limitDef.Type);
-            	    Enum.TryParse(typeof(LimitAlert), limitAlert out limitDef.Alert);
-            	    Enum.TryParse(typeof(LimitAction), limitAcition, out limitDef.Action);
+
+                    try { limitDef.Type = (LimitType)Enum.Parse(typeof(LimitType), limitType, true); }
+                    catch { }
+                    try { limitDef.Alert = (LimitAlert)Enum.Parse(typeof(LimitAlert), limitAlert, true); }
+                    catch { }
+                    try { limitDef.Action = (LimitAction)Enum.Parse(typeof(LimitAction), limitAction, true); }
+                    catch { }
             	    
             	    limitDef.TimeScale = limitTimeScale;
             	    limitDef.MaxNumberOfTimes = limitMaxNumberOfTimes;

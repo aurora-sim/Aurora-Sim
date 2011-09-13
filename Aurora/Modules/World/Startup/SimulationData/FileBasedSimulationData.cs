@@ -614,7 +614,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 {
                     m_hasShownFileBasedWarning = true;
                     IConfig startupConfig = m_scene.Config.Configs["Startup"];
-                    if(startupConfig == null || !startupConfig.Getboolean("NoGUI", false))
+                    if(startupConfig == null || !startupConfig.GetBoolean("NoGUI", false))
                         DoNoGUIWarning();
                     else
                         System.Windows.Forms.MessageBox.Show(@"Your sim has been updated to use the FileBased Simulation Service.
