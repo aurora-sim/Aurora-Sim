@@ -613,7 +613,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 if (!m_hasShownFileBasedWarning)
                 {
                     m_hasShownFileBasedWarning = true;
-                    IConfig startupConfig = m_config.Configs["Startup"];
+                    IConfig startupConfig = m_scene.Config.Configs["Startup"];
                     if(startupConfig == null || !startupConfig.Getboolean("NoGUI", false))
                         DoNoGUIWarning();
                     else
