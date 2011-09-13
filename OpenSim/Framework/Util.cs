@@ -1486,7 +1486,7 @@ namespace OpenSim.Framework
         {
             return Environment.TickCount & EnvironmentTickCountMask;
         }
-        const Int32 EnvironmentTickCountMask = 0x3fffffff;
+        public const Int32 EnvironmentTickCountMask = 0x3fffffff;
 
         /// <summary>
         /// Environment.TickCount is an int but it counts all 32 bits so it goes positive
