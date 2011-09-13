@@ -224,6 +224,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private UDPprioQueue m_outbox = new UDPprioQueue(8, 0x01); // 8  priority levels (7 max , 0 lowest), autopromotion on every 2 enqueues
                                                                     // valid values 0x01, 0x03,0x07 0x0f...
         public int[] MapCatsToPriority = new int[(int)ThrottleOutPacketType.Count];
+
+        private OutgoingPacket m_nextOutPacket = null;
+
         /// <summary>A reference to the LLUDPServer that is managing this client</summary>
         private readonly LLUDPServer m_udpServer;
 
@@ -481,58 +484,42 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutgoingPacket packet;
             bool packetSent = false;
 
-            List<OutgoingPacket> waitingPackets = new List<OutgoingPacket> ();
-            int packetsSkipped = 0;
             for (int i = 0; i < MaxNPacks; i++)
-            {
+                {
+                if (m_nextOutPacket != null)
+                    {
+                    packet = m_nextOutPacket;
+                    if (m_throttle.RemoveTokens(packet.Buffer.DataLength))
+                        {
+                        // Send the packet
+                        m_udpServer.SendPacketFinal(packet);
+                        m_nextOutPacket = null;
+                        packetSent = true;
+                        }
+                    }
                 // No dequeued packet waiting to be sent, try to pull one off
                 // this queue
-                if (m_outbox.Dequeue (out packet))
-                {
+                else if (m_outbox.Dequeue (out packet))
+                    {
                     m_log.Format(new log4net.Core.Level(0, "All"), this.AgentID + " - " + packet.Packet.Type, null);
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
                     if (packet.Category == ThrottleOutPacketType.OutBand || m_throttle.RemoveTokens (packet.Buffer.DataLength))
-                    {
+                       {
                         packetSent = true;
                         //Send the packet
                         PacketsCounts[(int)packet.Category] += packet.Packet.Length;
                         m_udpServer.SendPacketFinal (packet);
                         this.PacketsSent++;
+                        }
+                    else
+                        {
+                        m_nextOutPacket = packet;
+                        break;
+                        }
                     }
-                    else if (packetsSkipped < MAX_PACKET_SKIP_RATE)
-                    {
-                        //This does increase the time that we spend in this loop... but its relatively safe
-                        // We won't have an infinite loop since we can only skip so many packets,
-                        // and if we arn't sending anything, it doesn't take too long.
-                        MaxNPacks--;
-                        packetsSkipped++;
-                        waitingPackets.Add (packet);
-                    }
-                }
                 else
                     break;
-            }
-#if Debug
-                if (waitingPackets.Count > 0)
-                    MainConsole.Instance.Output(waitingPackets.Count + " were not sent immediately", log4net.Core.Level.Alert);
-#endif
-            //Requeue any updates that we couldn't send immediately
-            foreach (OutgoingPacket nextPacket in waitingPackets)
-            {
-                int prio = MapCatsToPriority[(int)nextPacket.Category];
-                if (nextPacket.ReSendAttempt == 0)
-                    nextPacket.ReSendAttempt++; //We tried, update it
-                else if (nextPacket.ReSendAttempt < 2)
-                {
-                    //This "isn't" the first time this packets been kicked out of the queue, send its prio down
-                    nextPacket.ReSendAttempt = 0;
-                    prio--;
-                    if (prio < 0)
-                        prio = 0;
-                }
-                //Re-enqueue the packet now
-                m_outbox.Enqueue (prio, nextPacket);
             }
 
             if (packetSent)

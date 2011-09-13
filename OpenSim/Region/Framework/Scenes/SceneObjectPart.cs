@@ -525,18 +525,34 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_IsSelected = false;
 
         [XmlIgnore]
+        private bool m_ValidpartOOB = false; // control recalcutation
+        [XmlIgnore]
         private Vector3 m_partOOBsize; // the size of a bounding box oriented as prim, is future will consider cutted prims, meshs etc
         [XmlIgnore]
         private Vector3 m_partOOBoffset; // the position center of the bounding box relative to it's Position
         [XmlIgnore]
         private float m_partBSphereRadiusSQ; // the square of the radius of a sphere containing the oob
 
+        [XmlIgnore]
+        public bool ValidpartOOB
+            {
+            set
+                {
+                m_ValidpartOOB = value;
+                // we need to invalidate grp oob
+                if (!m_ValidpartOOB && ParentID != 0)
+                    ParentGroup.ValidgrpOOB = false;
+                }
+            }
+
         // the size of a bounding box oriented as the prim, is future will consider cutted prims, meshs etc
         [XmlIgnore]
         public Vector3 OOBsize
             {
             get {
-                return m_partOOBsize;
+            if (!m_ValidpartOOB)
+                UpdateOOBfromOOBs();
+            return m_partOOBsize;
                 }              
             }
 
@@ -547,6 +563,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
             get
                 {
+                if (!m_ValidpartOOB)
+                    UpdateOOBfromOOBs();
                 return m_partOOBoffset;
                 }
             } 
@@ -556,7 +574,9 @@ namespace OpenSim.Region.Framework.Scenes
         public float BSphereRadiusSQ
             {
             get
-                {              
+                {
+                if (!m_ValidpartOOB)
+                    UpdateOOBfromOOBs();
                 return m_partBSphereRadiusSQ;
                 }
             }
@@ -877,20 +897,7 @@ namespace OpenSim.Region.Framework.Scenes
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
 
-// use the basic box for now
-            m_partOOBoffset = Vector3.Zero;
-
-            m_partOOBsize.X = shape.Scale.X * 0.5f;
-            m_partOOBsize.Y = shape.Scale.Y * 0.5f;
-            m_partOOBsize.Z = shape.Scale.Z * 0.5f;
-
-            m_partBSphereRadiusSQ = m_partOOBsize.X;
-            if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                m_partBSphereRadiusSQ = m_partOOBsize.Y;
-            if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-            m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
+            ValidpartOOB = false;
 
             // Prims currently only contain a single folder (Contents).  From looking at the Second Life protocol,
             // this appears to have the same UUID (!) as the prim.  If this isn't the case, one can't drag items from
@@ -1400,7 +1407,10 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 OffsetPosition
         {
             get { return m_offsetPosition; }
-            set { m_offsetPosition = value; }
+            set { 
+                m_offsetPosition = value;
+                ValidpartOOB = false;
+                }
         }
 
         public Vector3 RelativePosition
@@ -1661,6 +1671,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape; }
             set
             {
+                ValidpartOOB = false;
                 if (ParentGroup != null)
                     ParentGroup.HasGroupChanged = true;
                 bool shape_changed = false;
@@ -1683,21 +1694,9 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_shape.Scale; }
             set
             {
+                ValidpartOOB = false;
                 if (m_shape != null)
                 {
-                    // use basic box dimensions for oobb for now  this should be below: hack to make this work on load from databases
-                    m_partOOBsize.X = value.X * 0.5f;
-                    m_partOOBsize.Y = value.Y * 0.5f;
-                    m_partOOBsize.Z = value.Z * 0.5f;
-
-                    m_partBSphereRadiusSQ = m_partOOBsize.X;
-                    if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                        m_partBSphereRadiusSQ = m_partOOBsize.Y;
-                    if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                        m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-                    m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
-
                     if (m_shape.Scale != value)
                     {
                         StoreUndoState ();
@@ -1705,20 +1704,7 @@ namespace OpenSim.Region.Framework.Scenes
                             ParentGroup.HasGroupChanged = true;
 
                         m_shape.Scale = value;
-                        /*
-                                                // use basic box dimensions for oob for now
-                                                m_partOOBsize.X = value.X * 0.5f;
-                                                m_partOOBsize.Y = value.Y * 0.5f;
-                                                m_partOOBsize.Z = value.Z * 0.5f;
 
-                                                m_partBSphereRadiusSQ = m_partOOBsize.X;
-                                                if (m_partBSphereRadiusSQ < m_partOOBsize.Y)
-                                                    m_partBSphereRadiusSQ = m_partOOBsize.Y;
-                                                if (m_partBSphereRadiusSQ < m_partOOBsize.Z)
-                                                    m_partBSphereRadiusSQ = m_partOOBsize.Z;
-
-                                                m_partBSphereRadiusSQ *= m_partBSphereRadiusSQ; // square it for faster compare with squared distances
-                        */
                         PhysicsActor actor = PhysActor;
                         if (actor != null && m_parentGroup != null)
                         {
@@ -2242,6 +2228,169 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Private Methods
 
+        private void UpdateOOBfromOOBs()
+            {
+            m_partOOBoffset = Vector3.Zero;
+
+            Vector3 ts = Scale;
+
+            m_partOOBsize.X = ts.X * 0.5f;
+            m_partOOBsize.Y = ts.Y * 0.5f;
+            m_partOOBsize.Z = ts.Z * 0.5f;
+
+            m_partBSphereRadiusSQ = m_partOOBsize.LengthSquared();
+            ValidpartOOB = true;
+            }
+
+        // distance from aabb to point ( untested)
+        public float AABdistanceToSQ(Vector3 target)
+            {
+            // distance to group in world
+            Vector3 vtmp = target - m_groupPosition; // assume this updated
+
+            if (ParentID != 0)
+                {
+                // rotate into group reference         
+                vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+                // move into offseted local ref
+                vtmp -= m_offsetPosition;
+                }
+
+            // rotate into local reference ( part or grp )
+            vtmp *= Quaternion.Inverse(m_rotationOffset);
+
+            // now oob pos
+            vtmp -= OOBoffset; // force update
+
+            Vector3 box = OOBsize;
+
+            // hack distance to box: inside == 0
+            if (vtmp.X > 0)
+                {
+                vtmp.X -= box.X;
+                if (vtmp.X < 0.0)
+                    vtmp.X = 0.0f;
+                }
+            else
+                {
+                vtmp.X += box.X;
+                if (vtmp.X > 0.0)
+                    vtmp.X = 0.0f;
+                }
+
+            if (vtmp.Y > 0)
+                {
+                vtmp.Y -= box.Y;
+                if (vtmp.Y < 0.0)
+                    vtmp.Y = 0.0f;
+                }
+            else
+                {
+                vtmp.Y += box.Y;
+                if (vtmp.Y > 0.0)
+                    vtmp.Y = 0.0f;
+                }
+
+            if (vtmp.Z > 0)
+                {
+                vtmp.Z -= box.Z;
+                if (vtmp.Z < 0.0)
+                    vtmp.Z = 0.0f;
+                }
+            else
+                {
+                vtmp.Z += box.Z;
+                if (vtmp.Z > 0.0)
+                    vtmp.Z = 0.0f;
+                }
+
+            return vtmp.LengthSquared();
+            }
+
+        // distance from aabb to point ( untested)
+        // if smaller than simplied distance to group returns that one
+        // hack to send root prims first
+
+        public float clampedAABdistanceToSQ(Vector3 target)
+            {
+            float grpdSQ = 0;
+            // distance to group in world
+            Vector3 vtmp = target - m_groupPosition; // assume this updated
+
+
+            if (ParentID != 0)
+                {
+                // rotate into group reference         
+                vtmp *= Quaternion.Inverse(ParentGroup.GroupRotation);
+                // compute distance to grp oob
+                Vector3 grpv = vtmp - ParentGroup.OOBoffset;
+                grpdSQ = grpv.LengthSquared() - ParentGroup.BSphereRadiusSQ;
+                if (grpdSQ < 0)
+                    grpdSQ = 0;
+
+                // back
+                // move into offseted local ref
+                vtmp -= m_offsetPosition;
+                }
+
+            // rotate into local reference
+            vtmp *= Quaternion.Inverse(m_rotationOffset);
+            // now oob pos
+            vtmp -= OOBoffset; // force update
+
+            Vector3 box = OOBsize;
+
+            // hack distance to box: inside == 0
+            if (vtmp.X > 0)
+                {
+                vtmp.X -= box.X;
+                if (vtmp.X < 0.0)
+                    vtmp.X = 0.0f;
+                }
+            else
+                {
+                vtmp.X += box.X;
+                if (vtmp.X > 0.0)
+                    vtmp.X = 0.0f;
+                }
+
+            if (vtmp.Y > 0)
+                {
+                vtmp.Y -= box.Y;
+                if (vtmp.Y < 0.0)
+                    vtmp.Y = 0.0f;
+                }
+            else
+                {
+                vtmp.Y += box.Y;
+                if (vtmp.Y > 0.0)
+                    vtmp.Y = 0.0f;
+                }
+
+            if (vtmp.Z > 0)
+                {
+                vtmp.Z -= box.Z;
+                if (vtmp.Z < 0.0)
+                    vtmp.Z = 0.0f;
+                }
+            else
+                {
+                vtmp.Z += box.Z;
+                if (vtmp.Z > 0.0)
+                    vtmp.Z = 0.0f;
+                }
+
+            float distSQ = vtmp.LengthSquared();
+
+            if (ParentID != 0 && distSQ < grpdSQ)
+                return grpdSQ;
+            else
+                return distSQ;
+            }
+  
+
+
+
         private uint ApplyMask(uint val, bool set, uint mask)
         {
             if (set)
@@ -2273,6 +2422,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup != null)
                 ParentGroup.HasGroupChanged = true;
             m_rotationOffset = value;
+            ValidpartOOB = false;
 
             if (value.W == 0) //We have an issue here... try to normalize it
                 value.Normalize ();
@@ -2316,6 +2466,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetOffsetPosition (Vector3 value)
         {
             m_offsetPosition = value;
+            ValidpartOOB = false;
         }
 
         public void FixOffsetPosition(Vector3 value, bool single)
@@ -2328,6 +2479,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             StoreUndoState();
             m_offsetPosition = value;
+            ValidpartOOB = false;
 
             if (ParentGroup != null && !ParentGroup.IsDeleted)
                 {
@@ -2757,6 +2909,8 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.AngularVelocity = new Vector3(0, 0, 0);
             dupe.Flags = Flags;
             dupe.LinkNum = LinkNum;
+
+            dupe.m_ValidpartOOB = false;
 
             dupe._ownershipCost = _ownershipCost;
             dupe._objectSaleType = _objectSaleType;
@@ -5022,7 +5176,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_shape.SculptEntry && m_shape.SculptTexture != UUID.Zero)
                     m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
             }
-
+            ValidpartOOB = false;
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.Shape);
         }
@@ -5063,7 +5217,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 ParentGroup.RootPart.AbsolutePosition, Name, UUID, false, ParentGroup.Scene);
                     }
                 }
-
+                ValidpartOOB = false;
                 FixOffsetPosition(newPos,true);
                 ScheduleTerseUpdate();
             }
@@ -5278,6 +5432,7 @@ namespace OpenSim.Region.Framework.Scenes
                 (rot.W != RotationOffset.W))
             {
                 RotationOffset = rot;
+                ValidpartOOB = false;
                 ScheduleTerseUpdate();
             }
         }
@@ -5338,6 +5493,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup.RootPart != this)
                 ParentGroup.RootPart.Rezzed = DateTime.UtcNow;
 
+            ValidpartOOB = false;
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
