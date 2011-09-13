@@ -154,7 +154,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         Threads = 1,
                         priority = System.Threading.ThreadPriority.BelowNormal
                     });
-            
+
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
             if (!m_merge)
             {
@@ -181,7 +181,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             //We save the groups so that we can back them up later
             List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
             List<LandData> landData = new List<LandData>();
-            IUserManagement UserManager = m_scene.RequestModuleInterface<IUserManagement> ();
+            IUserManagement UserManager = m_scene.RequestModuleInterface<IUserManagement>();
             try
             {
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
@@ -208,7 +208,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         }
                         */
 
-                        SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2 (data, m_scene);
+                        SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2(data, m_scene);
 
                         if (sceneObject == null)
                         {
@@ -216,14 +216,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             m_log.Error("Error reading SOP XML (Please mantis this!): " + m_asciiEncoding.GetString(data));
                             continue;
                         }
-                        
+
                         foreach (SceneObjectPart part in sceneObject.ChildrenList)
                         {
                             if (part.CreatorData == null || part.CreatorData == string.Empty)
                                 part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
 
                             if (UserManager != null)
-                                UserManager.AddUser (part.CreatorID, part.CreatorData);
+                                UserManager.AddUser(part.CreatorID, part.CreatorData);
 
                             part.OwnerID = ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
 
@@ -245,7 +245,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                     if (kvp.Value.CreatorData == null || kvp.Value.CreatorData == string.Empty)
                                         kvp.Value.CreatorID = ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
                                     if (UserManager != null)
-                                        UserManager.AddUser (kvp.Value.CreatorID, kvp.Value.CreatorData);
+                                        UserManager.AddUser(kvp.Value.CreatorID, kvp.Value.CreatorData);
                                 }
                             }
                         }
@@ -263,7 +263,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
                         {
                             groupsToBackup.Add(sceneObject);
-                            sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                             sceneObjectsLoadedCount++;
                             sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
                             sceneObject.ResumeScripts();
@@ -272,25 +272,25 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         if (sceneObjectsLoadedCount % 250 == 0)
                             m_log.Info("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
                     }
-                    else if (!m_skipAssets && filePath.StartsWith (ArchiveConstants.ASSETS_PATH))
+                    else if (!m_skipAssets && filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
-                        if (LoadAsset (filePath, data))
+                        if (LoadAsset(filePath, data))
                             successfulAssetRestores++;
                         else
                             failedAssetRestores++;
 
                         if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
-                            m_log.Info ("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
+                            m_log.Info("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
                     }
-                    else if (filePath.StartsWith (ArchiveConstants.TERRAINS_PATH))
+                    else if (filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
                     {
-                        LoadTerrain (filePath, data);
+                        LoadTerrain(filePath, data);
                     }
-                    else if (!m_merge && filePath.StartsWith (ArchiveConstants.SETTINGS_PATH))
+                    else if (!m_merge && filePath.StartsWith(ArchiveConstants.SETTINGS_PATH))
                     {
-                        LoadRegionSettings (filePath, data);
+                        LoadRegionSettings(filePath, data);
                     }
-                    else if (!m_merge && filePath.StartsWith (ArchiveConstants.LANDDATA_PATH))
+                    else if (filePath.StartsWith(ArchiveConstants.LANDDATA_PATH))
                     {
                         LandData parcel = LandDataSerializer.Deserialize(m_utf8Encoding.GetString(data));
                         parcel.OwnerID = ResolveUserUuid(parcel.OwnerID, UUID.Zero, "", Vector3.Zero, null);
@@ -298,11 +298,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     }
                     else if (filePath == ArchiveConstants.CONTROL_FILE_PATH)
                     {
-                        LoadControlFile (filePath, data);
+                        LoadControlFile(filePath, data);
                     }
                     else
                     {
-                        m_log.Debug ("[ARCHIVER]:UNKNOWN PATH: " + filePath);
+                        m_log.Debug("[ARCHIVER]:UNKNOWN PATH: " + filePath);
                     }
                 }
 
@@ -320,7 +320,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 archive.Close();
                 m_loadStream.Close();
-                m_loadStream.Dispose ();
+                m_loadStream.Dispose();
 
                 //Reeanble now that we are done
                 foreach (IScriptModule module in modules)
@@ -362,33 +362,30 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // otherwise, use the master avatar uuid instead
 
             // Reload serialized parcels
-            if (!m_merge)
+            m_log.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
+
+            IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (!m_merge && parcelManagementModule != null)
+                parcelManagementModule.ClearAllParcels();
+            if (landData.Count > 0)
             {
-                m_log.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
-                
-                IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule> ();
+                m_scene.EventManager.TriggerIncomingLandDataFromStorage(landData, new Vector2(m_offsetX, m_offsetY));
+                //Update the database as well!
                 if (parcelManagementModule != null)
-                    parcelManagementModule.ClearAllParcels ();
-                if (landData.Count > 0)
                 {
-                    m_scene.EventManager.TriggerIncomingLandDataFromStorage (landData);
-                    //Update the database as well!
-                    if (parcelManagementModule != null)
+                    foreach (LandData parcel in landData)
                     {
-                        foreach (LandData parcel in landData)
-                        {
-                            parcelManagementModule.UpdateLandObject (parcel.LocalID, parcel);
-                        }
+                        parcelManagementModule.UpdateLandObject(parcel.LocalID, parcel);
                     }
                 }
-                else if (parcelManagementModule != null)
-                    parcelManagementModule.ResetSimLandObjects ();
-
-                m_log.InfoFormat ("[ARCHIVER]: Restored {0} parcels.", landData.Count);
-
-                //Clean it out
-                landData.Clear ();
             }
+            else if (parcelManagementModule != null)
+                parcelManagementModule.ResetSimLandObjects();
+
+            m_log.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
+
+            //Clean it out
+            landData.Clear();
 
             m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
@@ -447,14 +444,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             if((ownerName = MainConsole.Instance.CmdPrompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
                                 goto tryAgain;
                     }
-                    if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero)
+                    if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
                     {
                         foreach(LandData data in parcels)
                         {
                             OpenSim.Region.CoreModules.World.Land.LandObject lo = new Land.LandObject(data.OwnerID, false, m_scene);
                             lo.LandData = data;
-                            if(lo.SetLandBitmapFromByteArray())
-                                if(lo.ContainsPoint((int)location.X, (int)location.Y))
+                            if(lo.SetLandBitmapFromByteArray(true, new Vector2(m_offsetX, m_offsetY)))
+                                if (lo.ContainsPoint((int)location.X + m_offsetX, (int)location.Y + m_offsetY))
                                     if(uuid != data.OwnerID)
                                         id = data.OwnerID;
                         }

@@ -650,9 +650,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             UpdateLandBitmapByteArray();
         }
 
-        public bool SetLandBitmapFromByteArray()
+        public bool SetLandBitmapFromByteArray(bool forceSet, Vector2 offsetOfParcel)
         {
-            return ConvertBytesToLandBitmap(out m_landBitmap);
+            return ConvertBytesToLandBitmap(forceSet, offsetOfParcel, out m_landBitmap);
         }
 
         /// <summary>
@@ -868,32 +868,37 @@ namespace OpenSim.Region.CoreModules.World.Land
             return tempConvertArr;
         }
 
-        private bool ConvertBytesToLandBitmap(out bool[,] tempConvertMap)
+        private bool ConvertBytesToLandBitmap(bool forceSet, Vector2 offsetOfParcel, out bool[,] tempConvertMap)
         {
             tempConvertMap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
             tempConvertMap.Initialize();
             //            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2 * 4);
             //            if (LandData.Bitmap.Length != (avg * avg) / 8) //Are the sizes the same
             
-            int avg = (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY / 16 / 8);
-            if (LandData.Bitmap.Length != avg) //Are the sizes the same
+            int avg = (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY / 128);
+            int oldParcelRegionAvg = (int)Math.Sqrt(LandData.Bitmap.Length * 128);
+            if (LandData.Bitmap.Length != avg && !(forceSet && LandData.Bitmap.Length < avg)) //Are the sizes the same
             {
                 //The sim size changed, deal with it
                 return false;
             }
             byte tempByte = 0;
-            int x = 0, y = 0, i = 0, bitNum = 0;
+            int x = (int)offsetOfParcel.X / 4, y = (int)offsetOfParcel.Y / 4, i = 0, bitNum = 0;
             for (i = 0; i < avg; i++)
             {
-                tempByte = LandData.Bitmap[i];
+                if (i < LandData.Bitmap.Length)
+                    tempByte = LandData.Bitmap[i];
+                else
+                    break;//All the rest are false then
                 for (bitNum = 0; bitNum < 8; bitNum++)
                 {
                     bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
                     tempConvertMap[x, y] = bit;
                     x++;
-                    if (x > ((m_scene.RegionInfo.RegionSizeX / 4) - 1))
+                    //Remove the offset so that we get a calc from the beginning of the array, not the offset array
+                    if (x - (int)(offsetOfParcel.X / 4) > (((forceSet ? oldParcelRegionAvg : m_scene.RegionInfo.RegionSizeX) / 4) - 1))
                     {
-                        x = 0;
+                        x = (int)offsetOfParcel.X / 4;//Back to the beginning
                         y++;
                     }
                 }

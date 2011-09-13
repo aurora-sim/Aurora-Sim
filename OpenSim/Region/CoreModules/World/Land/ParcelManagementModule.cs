@@ -844,7 +844,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <summary>
         /// Resets the sim to the default land object (full sim piece of land owned by the default user)
         /// </summary>
-        public void ResetSimLandObjects ()
+        public ILandObject ResetSimLandObjects()
         {
             ClearAllParcels ();
             ILandObject fullSimParcel = new LandObject (UUID.Zero, false, m_scene);
@@ -876,6 +876,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch ();
             fullSimParcel.SetInfoID ();
             AddLandObject (fullSimParcel);
+            return fullSimParcel;
         }
 
         public List<ILandObject> AllParcels()
@@ -1814,28 +1815,69 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region Land Object From Storage Functions
 
-        public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data)
+        public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data, Vector2 parcelOffset)
         {
-            bool result = false;
+            bool result = true;
             for (int i = 0; i < data.Count; i++)
             {
-                if (PreprocessIncomingLandObjectFromStorage(data[i]))
-                    result = true;
+                if (!PreprocessIncomingLandObjectFromStorage(data[i], parcelOffset))
+                    result = false;
             }
-            if (!result)
-                ResetSimLandObjects();
+            List<ILandObject> newSimDefault = new List<ILandObject>();
+            if (!result)//Force a new base first, then force a merge later
+                if (AllParcels().Count > 0)
+                    newSimDefault = AllParcels();
+                else
+                    newSimDefault = new List<ILandObject>(new ILandObject[1]{ResetSimLandObjects()});
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                ILandObject new_land = new LandObject(data[i].OwnerID, data[i].IsGroupOwned, m_scene);
+                new_land.LandData = data[i];
+                if (new_land.SetLandBitmapFromByteArray(!result, parcelOffset))//Merge it into the large parcel if possible
+                {
+                    if(newSimDefault.Count > 0)//If we had to reset, make sure to remove all the new parcels from its
+                        // bitmap, so that it doesn't have any issues with overlaping parcels
+                        CarveOut(newSimDefault, new_land);
+                    new_land.ForceUpdateLandInfo();
+                    new_land.SetInfoID();
+                    AddLandObject(new_land, true);
+                }
+            }
         }
 
-        public bool PreprocessIncomingLandObjectFromStorage(LandData data)
+        /// <summary>
+        /// Carves out the newParcel's area (bitmap) from the original parcels so that they do not overlap
+        /// </summary>
+        /// <param name="originalParcel"></param>
+        /// <param name="newParcel"></param>
+        private void CarveOut(List<ILandObject> originalParcels, ILandObject newParcel)
+        {
+            for (int x = 0; x < newParcel.LandBitmap.GetLength(0); x++)
+            {
+                for (int y = 0; y < newParcel.LandBitmap.GetLength(1); y++)
+                {
+                    if (newParcel.LandBitmap[x, y])
+                    {
+                        //Remove from the old
+                        foreach(ILandObject originalParcel in originalParcels)
+                            originalParcel.LandBitmap[x, y] = false;
+                    }
+                }
+            }
+            //Fix the LandData byte[] array as well
+            foreach (ILandObject originalParcel in originalParcels)
+            {
+                originalParcel.UpdateLandBitmapByteArray();
+                UpdateLandObject(originalParcel.LandData.LocalID, originalParcel.LandData);
+            } 
+        }
+
+        public bool PreprocessIncomingLandObjectFromStorage(LandData data, Vector2 parcelOffset)
         {
             ILandObject new_land = new LandObject(data.OwnerID, data.IsGroupOwned, m_scene);
             new_land.LandData = data;
-            if (!new_land.SetLandBitmapFromByteArray())
-                return false;
-            new_land.ForceUpdateLandInfo ();
-            new_land.SetInfoID ();
-            AddLandObject(new_land, true);
-            return true;
+            return new_land.SetLandBitmapFromByteArray(false, parcelOffset);
         }
 
         public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)

@@ -87,7 +87,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Delete all parcels and create one default parcel that spreads over the entire sim
         /// </summary>
-        void ResetSimLandObjects();
+        ILandObject ResetSimLandObjects();
 
         /// <summary>
         /// Join all parcels within the given range into one large parcel

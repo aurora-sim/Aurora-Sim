@@ -1549,7 +1549,7 @@ namespace OpenSim.Framework
 
         public event ObjectBeingRemovedFromScene OnObjectBeingAddedToScene;
 
-        public delegate void IncomingLandDataFromStorage (List<LandData> data);
+        public delegate void IncomingLandDataFromStorage (List<LandData> data, Vector2 parcelOffset);
         public event IncomingLandDataFromStorage OnIncomingLandDataFromStorage;
 
         /// <summary>
@@ -2640,7 +2640,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerIncomingLandDataFromStorage (List<LandData> landData)
+        public void TriggerIncomingLandDataFromStorage(List<LandData> landData, Vector2 parcelOffset)
         {
             IncomingLandDataFromStorage handlerIncomingLandDataFromStorage = OnIncomingLandDataFromStorage;
             if (handlerIncomingLandDataFromStorage != null)
@@ -2649,7 +2649,7 @@ namespace OpenSim.Framework
                 {
                     try
                     {
-                        d (landData);
+                        d (landData, parcelOffset);
                     }
                     catch (Exception e)
                     {

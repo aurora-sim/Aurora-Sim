@@ -315,7 +315,7 @@ namespace Aurora.Modules
             public void LoadAllLandObjectsFromStorage()
             {
                 m_log.Info ("[BackupModule]: Loading Land Objects from database... ");
-                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID));
+                m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID), Vector2.Zero);
             }
 
             public void FinishStartup()
@@ -755,7 +755,7 @@ namespace Aurora.Modules
                 {
                     if (m_parcels.Count > 0)
                     {
-                        scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels);
+                        scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels, Vector2.Zero);
                         //Update the database as well!
                         if (parcelManagementModule != null)
                         {

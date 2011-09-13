@@ -704,9 +704,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("save xml2", "save xml2", "Save a region's data in XML2 format", SaveXml2);
 
-            MainConsole.Instance.Commands.AddCommand("load oar", "load oar [oar name] [--merge] [--skip-assets] [OffsetX=#] [OffsetY=#] [OffsetZ=#] [FlipX] [FlipY] [UseParcelOwnership] [CheckOwnership]",
+            MainConsole.Instance.Commands.AddCommand("load oar", "load oar [oar name] [--merge] [--skip-assets] [--OffsetX=#] [--OffsetY=#] [--OffsetZ=#] [--FlipX] [--FlipY] [--UseParcelOwnership] [--CheckOwnership]",
                 "Load a region's data from OAR archive.  \n" +
-                "--merge will merge the oar with the existing scene.  \n" +
+                "--merge will merge the oar with the existing scene (including parcels).  \n" +
                 "--skip-assets will load the oar but ignore the assets it contains. \n" +
                 "--OffsetX will change where the X location of the oar is loaded, and the same for Y and Z.  \n" +
                 "--FlipX flips the region on the X axis.  \n" +
