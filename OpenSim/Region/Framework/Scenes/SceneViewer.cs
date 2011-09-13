@@ -904,8 +904,10 @@ namespace OpenSim.Region.Framework.Scenes
             m_culler = null;
             m_inUse = false;
             m_queueing = false;
-            m_objectUpdatesToSend.Clear ();
-            m_presenceUpdatesToSend.Clear ();
+            lock(m_objectUpdatesToSendLock)
+                m_objectUpdatesToSend.Clear ();
+            lock(m_presenceUpdatesToSendLock)
+                m_presenceUpdatesToSend.Clear ();
             m_presence.OnSignificantClientMovement -= SignificantClientMovement;
             m_presence.Scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
             m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
