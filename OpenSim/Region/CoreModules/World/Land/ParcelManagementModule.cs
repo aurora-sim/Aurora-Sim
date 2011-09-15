@@ -1814,7 +1814,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     result = false;
             }
             List<ILandObject> newSimDefault = new List<ILandObject>();
-            if (!result)//Force a new base first, then force a merge later
+            if (!result || data.Count == 0)//Force a new base first, then force a merge later
                 if (AllParcels().Count > 0)
                     newSimDefault = AllParcels();
                 else
@@ -1834,6 +1834,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     AddLandObject(new_land, true);
                 }
             }
+            if (AllParcels().Count == 0)//Serious fallback
+                ResetSimLandObjects();
         }
 
         /// <summary>
