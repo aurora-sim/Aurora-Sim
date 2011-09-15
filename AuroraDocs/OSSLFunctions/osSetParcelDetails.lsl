@@ -1,22 +1,22 @@
 // ----------------------------------------------------------------
 // Example / Sample Script to show function use.
 //
-// Script Title:    osParcelSetDetails.lsl
-// Script Author:
+// Script Title:    osSetParcelDetails.lsl
+// Script Author:   WhiteStar Magic
 // Threat Level:    High
-// Script Source:   SUPPLEMENTAL http://opensimulator.org/wiki/osParcelSetDetails
+// Script Source:   SUPPLEMENTAL http://wiki.aurora-sim.org/index.php?title=OsSetParcelDetails
 //
 // Notes: See Script Source reference for more detailed information
 // This sample is full opensource and available to use as you see fit and desire.
 // Threat Levels only apply to OSSL & AA Functions
-// See http://opensimulator.org/wiki/Threat_level
+// See http://wiki.aurora-sim.org/index.php?title=Threat_Levels
 // ================================================================
-// C# Source Line:      public void osParcelSetDetails(LSL_Vector pos, LSL_List rules)
-// Inworld Script Line:     osParcelSetDetails(vector pos, list rules);
+// C# Source Line:      public void osSetParcelDetails(LSL_Vector pos, LSL_List rules)
+// Inworld Script Line:     osSetParcelDetails(vector pos, list rules);
 //
-// Example of osParcelSetDetails
+// Example of osSetParcelDetails
 // This function allows for setting parcels information programmatically.
-// -- constants for osParcelSetDetails
+// -- constants for osSetParcelDetails
 //    PARCEL_DETAILS_NAME = 0;
 //    PARCEL_DETAILS_DESC = 1;
 //    PARCEL_DETAILS_OWNER = 2;
@@ -26,7 +26,7 @@ default
 {
     state_entry()
     {
-        llSay(0,"Touch to use osParcelSetDetails Parcels");
+        llSay(0,"Touch to use osSetParcelDetails Parcels");
     }
     touch_start(integer total_num)
     {
@@ -41,6 +41,6 @@ default
             PARCEL_DETAILS_DESC, descript,
             PARCEL_DETAILS_OWNER, owner,
             PARCEL_DETAILS_GROUP, group];
-        osParcelSetDetails(position, rules);
+        osSetParcelDetails(position, rules);
     }
 }
