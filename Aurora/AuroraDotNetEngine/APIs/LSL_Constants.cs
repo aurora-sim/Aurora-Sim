@@ -336,8 +336,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSLInteger PRIM_OMEGA = 32;
         public static readonly LSLInteger PRIM_POS_LOCAL = 33;
         public static readonly LSLInteger PRIM_LINK_TARGET = 34;
+        public static readonly LSLInteger PRIM_PHYSICS_SHAPE_TYPE = 35;
+
         public static readonly LSLInteger PRIM_TEXGEN_DEFAULT = 0;
         public static readonly LSLInteger PRIM_TEXGEN_PLANAR = 1;
+
+        public static readonly LSLInteger PRIM_PHYSICS_SHAPE_PRIM = 0;
+        public static readonly LSLInteger PRIM_PHYSICS_SHAPE_CONVEX = 1;
+        public static readonly LSLInteger PRIM_PHYSICS_SHAPE_NONE = 2;
+
+        public static readonly LSLInteger DENSITY = 0;
+        public static readonly LSLInteger FRICTION = 1;
+        public static readonly LSLInteger RESTITUTION = 2;
+        public static readonly LSLInteger GRAVITY_MULTIPLIER = 3;
 
         public static readonly LSLInteger PRIM_TYPE_BOX = 0;
         public static readonly LSLInteger PRIM_TYPE_CYLINDER = 1;

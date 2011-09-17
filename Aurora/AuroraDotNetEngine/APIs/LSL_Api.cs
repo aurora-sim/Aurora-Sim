@@ -3744,12 +3744,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return 0;
         }
 
+        public LSL_Float llGetMassMKS()
+        {
+            return llGetMass();
+        }
+
         public LSL_Float llGetMass()
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             if (m_host.IsAttachment)
             {
-                IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence (m_host.OwnerID);
+                IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence(m_host.OwnerID);
                 if (SP != null)
                     return SP.PhysicsActor.Mass;
                 else
@@ -8747,6 +8752,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (part is ISceneChildEntity)
                         llTargetOmega (direction, spinrate, gain);
                 }
+                else if (code == (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE)
+                {
+                    bool UsePhysics = ((m_host.Flags & PrimFlags.Physics) != 0);
+                    bool IsTemporary = ((m_host.Flags & PrimFlags.TemporaryOnRez) != 0);
+                    bool IsPhantom = ((m_host.Flags & PrimFlags.Phantom) != 0);
+                    bool IsVolumeDetect = m_host.VolumeDetectActive;
+                    ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks = new ObjectFlagUpdatePacket.ExtraPhysicsBlock[1];
+                    blocks[0] = new ObjectFlagUpdatePacket.ExtraPhysicsBlock();
+                    blocks[0].Density = m_host.Density;
+                    blocks[0].Friction = m_host.Friction;
+                    blocks[0].GravityMultiplier = m_host.GravityMultiplier;
+                    LSL_Integer shapeType = rules.GetLSLIntegerItem (idx++);
+                    if(shapeType == ScriptBaseClass.PRIM_PHYSICS_SHAPE_PRIM)
+                        blocks[0].PhysicsShapeType = (byte)shapeType.value;
+                    else if(shapeType == ScriptBaseClass.PRIM_PHYSICS_SHAPE_NONE)
+                        blocks[0].PhysicsShapeType = (byte)shapeType.value;
+                    else //if(shapeType == ScriptBaseClass.PRIM_PHYSICS_SHAPE_CONVEX)
+                        blocks[0].PhysicsShapeType = (byte)shapeType.value;
+                    blocks[0].Restitution = m_host.Restitution;
+                    if (part is ISceneChildEntity)
+                        (part as ISceneChildEntity).UpdatePrimFlags(m_host.LocalId, UsePhysics, 
+                            IsTemporary, IsPhantom, IsVolumeDetect, blocks);
+                }
                 else if(code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
                 {
                     if (remain < 1)
@@ -9469,6 +9497,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     res.Add(spinRate);
                     res.Add(gain);
                 }
+                else if (code == (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE)
+                {
+                    res.Add(new LSL_Integer(part.PhysicsType));
+                }
                 else if(code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
                 {
                     if(remain < 1)
@@ -9480,6 +9512,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
             return res;
+        }
+
+        public LSL_List llGetPhysicsMaterial()
+        {
+            return new LSL_List(m_host.GravityMultiplier, m_host.Restitution, m_host.Friction, m_host.Density);
+        }
+
+        public void llSetPhysicsMaterial(LSL_Integer bits, LSL_Float density, LSL_Float friction, LSL_Float restitution,
+            LSL_Float gravityMultiplier)
+        {
+            ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks = new ObjectFlagUpdatePacket.ExtraPhysicsBlock[1];
+            blocks[0] = new ObjectFlagUpdatePacket.ExtraPhysicsBlock();
+            if ((bits & ScriptBaseClass.DENSITY) == ScriptBaseClass.DENSITY)
+                m_host.Density = (float)density;
+            else
+                blocks[0].Density = m_host.Density;
+
+            if ((bits & ScriptBaseClass.FRICTION) == ScriptBaseClass.FRICTION)
+                m_host.Friction = (float)friction;
+            else
+                blocks[0].Friction = m_host.Friction;
+
+            if ((bits & ScriptBaseClass.RESTITUTION) == ScriptBaseClass.RESTITUTION)
+                m_host.Restitution = (float)restitution;
+            else
+                blocks[0].Restitution = m_host.Restitution;
+
+            if ((bits & ScriptBaseClass.GRAVITY_MULTIPLIER) == ScriptBaseClass.GRAVITY_MULTIPLIER)
+                m_host.GravityMultiplier = (float)gravityMultiplier;
+            else
+                blocks[0].GravityMultiplier = m_host.GravityMultiplier;
+
+            bool UsePhysics = ((m_host.Flags & PrimFlags.Physics) != 0);
+            bool IsTemporary = ((m_host.Flags & PrimFlags.TemporaryOnRez) != 0);
+            bool IsPhantom = ((m_host.Flags & PrimFlags.Phantom) != 0);
+            bool IsVolumeDetect = m_host.VolumeDetectActive;
+            blocks[0].PhysicsShapeType = m_host.PhysicsType;
+            m_host.UpdatePrimFlags(m_host.LocalId, UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
         }
 
         //  <remarks>

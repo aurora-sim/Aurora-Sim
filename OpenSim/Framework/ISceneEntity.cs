@@ -37,6 +37,7 @@ using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse.StructuredData;
+using OpenMetaverse.Packets;
 using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Framework
@@ -877,6 +878,8 @@ namespace OpenSim.Framework
         void UpdateTexture (Primitive.TextureEntry tex);
 
         void SetText (string text, Vector3 av3, double p);
+
+        void UpdatePrimFlags(uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks);
 
         List<UUID> SitTargetAvatar { get; }
         Dictionary<int, string> CollisionFilter { get; }
