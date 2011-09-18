@@ -434,6 +434,16 @@ namespace OpenSim.Region.Framework.Scenes
                 presence.AbsolutePosition :
                 presence.CameraPosition;
 
+
+            // temporary thing must be removed
+            if(presencePos.X < 0 ||
+                presencePos.Y < 0 ||
+                presencePos.Z < -1000 || 
+                presencePos.X > 256 ||
+                presencePos.Y < 256 ||
+                presencePos.Z > 10000)
+                    m_log.DebugFormat("[PRIO]:  presence out normal region bounds{0}", presencePos);
+
             // Use group position for child prims
             Vector3 entityPos;
             float distsq;
@@ -455,7 +465,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 else
                     {
-                    distsq = p.clampedAABdistanceToSQ(presencePos) + 1.0f;
+                    distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
                     }
                 }
 
@@ -465,8 +475,8 @@ namespace OpenSim.Region.Framework.Scenes
                 distsq = - Vector3.DistanceSquared(presencePos, entityPos);
                 }
 
-            if (distsq > -0.0f)
-                distsq = -0.0f;
+            if (distsq > 0.0f)
+                distsq = 0.0f;
 
             return distsq;
         }
