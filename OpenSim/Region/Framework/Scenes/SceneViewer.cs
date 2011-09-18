@@ -457,7 +457,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (m_culler != null)
                     {
-                        if (!m_culler.ShowEntityToClient(m_presence, e, m_scene, time))
+                        if (!m_culler.ShowEntityToClient(m_presence, e, m_scene))
                             continue;
                         NewGrpsInView.Add (e);
                     }
@@ -482,7 +482,7 @@ namespace OpenSim.Region.Framework.Scenes
                             continue; //Don't resend the update
 
                     //Check for culling here!
-                    if (!m_culler.ShowEntityToClient(m_presence, presence, m_scene, time))
+                    if (!m_culler.ShowEntityToClient(m_presence, presence, m_scene))
                         continue; // if 2 far ignore
 
                     lock(m_lastPresencesInViewLock)
@@ -772,7 +772,7 @@ namespace OpenSim.Region.Framework.Scenes
                             //Check for culling here!
                             if (m_culler != null)
                             {
-                                if (!m_culler.ShowEntityToClient(m_presence, e, m_scene, time))
+                                if (!m_culler.ShowEntityToClient(m_presence, e, m_scene))
                                     continue;
                                 NewGrpsInView.Add(e);
                             }

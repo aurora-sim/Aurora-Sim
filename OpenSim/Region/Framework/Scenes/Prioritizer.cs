@@ -96,12 +96,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ICuller Members
 
-        public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene)
-        {
-            return ShowEntityToClient(client, entity, scene, Util.EnvironmentTickCount());
-        }
-
-        public bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene, int currentTickCount)
+        public bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene)
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims
@@ -113,9 +108,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if(m_previousCulled.TryGetValue(entity.LocalId, out cull))
                 {
-                    Int32 diff = currentTickCount - m_lastCached;
-                    Int32 timingDiff = (diff >= 0) ? diff : (diff + Util.EnvironmentTickCountMask + 1);
-                    if (timingDiff > 5 * 1000)//Only recheck every 5 seconds
+                    if(Util.EnvironmentTickCountSubtract(m_lastCached) > 5 * 1000)//Only recheck every 5 seconds
                     {
                         m_lastCached = Util.EnvironmentTickCount();
                         m_previousCulled.Clear();
@@ -310,10 +303,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool HardCullingCheck (ISceneEntity childEntity)
         {
-            Vector3 OOBsize = childEntity.OOBsize;
-            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
+            if (LengthSquared (childEntity.OOBsize.X, childEntity.OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared (childEntity.OOBsize.Y, childEntity.OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared (childEntity.OOBsize.Z, childEntity.OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
                 return true;
             return false;
         }
@@ -442,6 +434,7 @@ namespace OpenSim.Region.Framework.Scenes
                 presence.AbsolutePosition :
                 presence.CameraPosition;
 
+
             // Use group position for child prims
             Vector3 entityPos;
             float distsq;
@@ -463,7 +456,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 else
                     {
-                    distsq = p.clampedAABdistanceToSQ(presencePos) + 1.0f;
+                    distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
                     }
                 }
 
@@ -473,8 +466,8 @@ namespace OpenSim.Region.Framework.Scenes
                 distsq = - Vector3.DistanceSquared(presencePos, entityPos);
                 }
 
-            if (distsq > -0.0f)
-                distsq = -0.0f;
+            if (distsq > 0.0f)
+                distsq = 0.0f;
 
             return distsq;
         }
