@@ -96,7 +96,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ICuller Members
 
-        public bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene)
+        public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene)
+        {
+            return ShowEntityToClient(client, entity, scene, Util.EnvironmentTickCount());
+        }
+
+        public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene, int currentTickCount)
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims
@@ -108,7 +113,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if(m_previousCulled.TryGetValue(entity.LocalId, out cull))
                 {
-                    if(Util.EnvironmentTickCountSubtract(m_lastCached) > 5 * 1000)//Only recheck every 5 seconds
+                    Int32 diff = currentTickCount - m_lastCached;
+                    Int32 timingDiff = (diff >= 0) ? diff : (diff + Util.EnvironmentTickCountMask + 1);
+                    if (timingDiff > 5 * 1000)//Only recheck every 5 seconds
                     {
                         m_lastCached = Util.EnvironmentTickCount();
                         m_previousCulled.Clear();
@@ -303,9 +310,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool HardCullingCheck (ISceneEntity childEntity)
         {
-            if (LengthSquared (childEntity.OOBsize.X, childEntity.OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared (childEntity.OOBsize.Y, childEntity.OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared (childEntity.OOBsize.Z, childEntity.OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
+            Vector3 OOBsize = childEntity.OOBsize;
+            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
                 return true;
             return false;
         }
