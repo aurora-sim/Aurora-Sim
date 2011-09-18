@@ -782,7 +782,7 @@ namespace OpenSim.Region.Framework.Scenes
                     lastGrpsInView.UnionWith(NewGrpsInView);
                     allEntities = null;
                     // send them 
-                    if(entsqueue.Count != 0)
+                    if (NewGrpsInView.Count != 0)
                         SendQueued(NewGrpsInView);
                     NewGrpsInView.Clear();
                 }
@@ -839,7 +839,16 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 for (int i = 0; i < sortableList.Count; i++)
                 {
-                    QueueEntityUpdate(new EntityUpdate(sortableList[i], PrimUpdateFlags.ForcedFullUpdate));
+                    EntityUpdate update = new EntityUpdate(sortableList[i].RootChild, PrimUpdateFlags.ForcedFullUpdate);
+                    QueueEntityUpdate(update);
+                    foreach (ISceneChildEntity child in sortableList[i].ChildrenEntities())
+                    {
+                        if (!child.IsRoot)
+                        {
+                            update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                            QueueEntityUpdate(update);
+                        }
+                    }
                 }
             }
 
@@ -851,8 +860,8 @@ namespace OpenSim.Region.Framework.Scenes
         private int sortPriority(ISceneEntity a, ISceneEntity b)
         {
             int prioA = (int)m_prioritizer.GetUpdatePriority(m_presence, a);
-            int prioB = (int)m_prioritizer.GetUpdatePriority(m_presence, a);
-            return prioA.CompareTo(prioB);
+            int prioB = (int)m_prioritizer.GetUpdatePriority(m_presence, b);
+            return prioB.CompareTo(prioA);
         }
 
         #endregion
