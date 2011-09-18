@@ -96,12 +96,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ICuller Members
 
-        public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene)
-        {
-            return ShowEntityToClient(client, entity, scene, Util.EnvironmentTickCount());
-        }
-
-        public bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene, int currentTickCount)
+        public bool ShowEntityToClient (IScenePresence client, IEntity entity, IScene scene)
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims
@@ -113,9 +108,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if(m_previousCulled.TryGetValue(entity.LocalId, out cull))
                 {
-                    Int32 diff = currentTickCount - m_lastCached;
-                    Int32 timingDiff = (diff >= 0) ? diff : (diff + Util.EnvironmentTickCountMask + 1);
-                    if (timingDiff > 5 * 1000)//Only recheck every 5 seconds
+                    if(Util.EnvironmentTickCountSubtract(m_lastCached) > 5 * 1000)//Only recheck every 5 seconds
                     {
                         m_lastCached = Util.EnvironmentTickCount();
                         m_previousCulled.Clear();
@@ -310,10 +303,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool HardCullingCheck (ISceneEntity childEntity)
         {
-            Vector3 OOBsize = childEntity.OOBsize;
-            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
+            if (LengthSquared (childEntity.OOBsize.X, childEntity.OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared (childEntity.OOBsize.Y, childEntity.OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared (childEntity.OOBsize.Z, childEntity.OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
                 return true;
             return false;
         }
@@ -442,15 +434,6 @@ namespace OpenSim.Region.Framework.Scenes
                 presence.AbsolutePosition :
                 presence.CameraPosition;
 
-
-            // temporary thing must be removed
-            if(presencePos.X < 0 ||
-                presencePos.Y < 0 ||
-                presencePos.Z < -1000 || 
-                presencePos.X > 256 ||
-                presencePos.Y < 256 ||
-                presencePos.Z > 10000)
-                    m_log.DebugFormat("[PRIO]:  presence out normal region bounds{0}", presencePos);
 
             // Use group position for child prims
             Vector3 entityPos;
