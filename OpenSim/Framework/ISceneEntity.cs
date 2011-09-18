@@ -879,7 +879,7 @@ namespace OpenSim.Framework
 
         void SetText (string text, Vector3 av3, double p);
 
-        void UpdatePrimFlags(uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks);
+        bool UpdatePrimFlags(bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks);
 
         List<UUID> SitTargetAvatar { get; }
         Dictionary<int, string> CollisionFilter { get; }

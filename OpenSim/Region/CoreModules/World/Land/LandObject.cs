@@ -736,7 +736,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns></returns>
         public bool[,] GetLandBitmap()
         {
-            return LandBitmap;
+            return m_landBitmap;
         }
 
         /// <summary>

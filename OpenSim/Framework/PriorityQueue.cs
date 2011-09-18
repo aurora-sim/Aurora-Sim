@@ -49,7 +49,7 @@ namespace Mischel.Collections
             set { _value = value; }
         }
 
-        private TPriority _priority;
+        public TPriority _priority;
         public TPriority Priority
         {
             get { return _priority; }

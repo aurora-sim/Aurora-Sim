@@ -1432,27 +1432,27 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         public Quaternion RotationOffset
-            {
+        {
             get
-                {
+            {
                 // We don't want the physics engine mucking up the rotations in a linkset
-                    PhysicsObject actor = PhysActor;
-                if (_parentID == 0 && (Shape.PCode != 9 || Shape.State == 0) && actor != null)
-                    {
+                PhysicsObject actor = m_physActor;
+                if (_parentID == 0 && (m_shape.PCode != 9 || m_shape.State == 0) && actor != null)
+                {
                     if (actor.Orientation.X != 0f || actor.Orientation.Y != 0f
                         || actor.Orientation.Z != 0f || actor.Orientation.W != 0f)
-                        {
+                    {
                         m_rotationOffset = actor.Orientation;
-                        }
                     }
+                }
 
                 return m_rotationOffset;
-                }
-            set
-                {
-                SetRotationOffset(true, value, true);
-                }
             }
+            set
+            {
+                SetRotationOffset(true, value, true);
+            }
+        }
 
         /// <summary></summary>
         public Vector3 Velocity

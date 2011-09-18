@@ -423,7 +423,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             public static int Compare(PriorityQueueItem<EntityUpdate, int> x, PriorityQueueItem<EntityUpdate, int> y)
             {
-                return x.Priority.CompareTo(y.Priority);
+                return x._priority.CompareTo(y._priority);
             }
 
             public int Compare(object x, object y)
@@ -461,34 +461,15 @@ namespace OpenSim.Region.Framework.Scenes
                             continue;
                         NewGrpsInView.Add (e);
                     }
-
-                    //Send the root object first!
-                    EntityUpdate rootupdate = new EntityUpdate (e.RootChild, PrimUpdateFlags.ForcedFullUpdate);
-                    PriorityQueueItem<EntityUpdate, int> rootitem = new PriorityQueueItem<EntityUpdate, int>();
-                    rootitem.Value = rootupdate;
-                    rootitem.Priority = (int)m_prioritizer.GetUpdatePriority (m_presence, e.RootChild) - 10;
-                    entsqueue.Enqueue(rootitem);
-                    foreach (ISceneChildEntity child in e.ChildrenEntities ())
-                    {
-                        if (child == e.RootChild)
-                            continue; //Already sent
-                        EntityUpdate update = new EntityUpdate (child, PrimUpdateFlags.FullUpdate);
-                        PriorityQueueItem<EntityUpdate, int> item = new PriorityQueueItem<EntityUpdate, int>();
-                        item.Value = update;
-                        item.Priority = (int)m_prioritizer.GetUpdatePriority (m_presence, child);
-                        if (item.Priority >= rootitem.Priority + 10)
-                            item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
-                        entsqueue.Enqueue(item);
-                    }
                 }
             }
             entities = null;
-            lastGrpsInView.UnionWith (NewGrpsInView);
+            lastGrpsInView.UnionWith(NewGrpsInView);
+            // send them 
+            if (NewGrpsInView.Count != 0)
+                SendQueued(NewGrpsInView);
             NewGrpsInView.Clear ();
 
-            // send them 
-            if (entsqueue.Count != 0)
-                SendQueued(entsqueue);
 
             //Check for scenepresences as well
             List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences ());
@@ -775,7 +756,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_SentInitialObjects = true;
                     ISceneEntity[] allEntities = m_presence.Scene.Entities.GetEntities();
                     LPriorityQueue entsqueue = new LPriorityQueue(new DoubleComparer());
-                    List<ISceneEntity> NewGrpsInView = new List<ISceneEntity>();
+                    HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
                     // build a prioritized list of things we need to send
                     int time = Util.EnvironmentTickCount();
                     foreach (ISceneEntity e in allEntities)
@@ -795,35 +776,15 @@ namespace OpenSim.Region.Framework.Scenes
                                     continue;
                                 NewGrpsInView.Add(e);
                             }
-
-                            //Send the root object first!
-                            EntityUpdate rootupdate = new EntityUpdate(e.RootChild, PrimUpdateFlags.FullUpdate);
-                            PriorityQueueItem<EntityUpdate, int> rootitem = new PriorityQueueItem<EntityUpdate, int>();
-                            rootitem.Value = rootupdate;
-                            rootitem.Priority = (int)m_prioritizer.GetUpdatePriority(m_presence, e.RootChild) - 10;
-                            entsqueue.Enqueue(rootitem);
-
-                            foreach (ISceneChildEntity child in e.ChildrenEntities())
-                            {
-                                if (child == e.RootChild)
-                                    continue; //Already sent
-                                EntityUpdate update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                                PriorityQueueItem<EntityUpdate, int> item = new PriorityQueueItem<EntityUpdate, int>();
-                                item.Value = update;
-                                item.Priority = (int)m_prioritizer.GetUpdatePriority(m_presence, child);
-                                if (item.Priority >= rootitem.Priority + 10)
-                                    item.Priority = rootitem.Priority - 10;//Don't let it get sent first!
-                                entsqueue.Enqueue(item);
-                            }
                         }
                     }
                     //Merge the last seen lists
                     lastGrpsInView.UnionWith(NewGrpsInView);
-                    NewGrpsInView.Clear();
                     allEntities = null;
                     // send them 
                     if(entsqueue.Count != 0)
-                        SendQueued(entsqueue);
+                        SendQueued(NewGrpsInView);
+                    NewGrpsInView.Clear();
                 }
                 catch (Exception ex)
                 {
@@ -867,22 +828,31 @@ namespace OpenSim.Region.Framework.Scenes
             //m_AnimationsInPacketQueue.Remove(update.AvatarID);
         }
 
-        private void SendQueued (LPriorityQueue entsqueue)
+        private void SendQueued(HashSet<ISceneEntity> entsqueue)
         {
             //NO LOCKING REQUIRED HERE, THE PRIORITYQUEUE IS LOCAL
             int length = entsqueue.Count;
             //Enqueue them all
+            List<ISceneEntity> sortableList = new List<ISceneEntity>(entsqueue);
+            sortableList.Sort(sortPriority);
             lock (m_objectUpdatesToSendLock)
             {
-                for (int i = 0; i < entsqueue.Count; i++)
+                for (int i = 0; i < sortableList.Count; i++)
                 {
-                    QueueEntityUpdate(((PriorityQueueItem<EntityUpdate, int>)entsqueue.Dequeue()).Value);
+                    QueueEntityUpdate(new EntityUpdate(sortableList[i], PrimUpdateFlags.ForcedFullUpdate));
                 }
             }
 
             m_lastUpdatePos = (m_presence.IsChildAgent) ?
                 m_presence.AbsolutePosition :
                 m_presence.CameraPosition;
+        }
+
+        private int sortPriority(ISceneEntity a, ISceneEntity b)
+        {
+            int prioA = (int)m_prioritizer.GetUpdatePriority(m_presence, a);
+            int prioB = (int)m_prioritizer.GetUpdatePriority(m_presence, a);
+            return prioA.CompareTo(prioB);
         }
 
         #endregion

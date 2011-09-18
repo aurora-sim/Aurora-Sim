@@ -8772,8 +8772,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         blocks[0].PhysicsShapeType = (byte)shapeType.value;
                     blocks[0].Restitution = m_host.Restitution;
                     if (part is ISceneChildEntity)
-                        (part as ISceneChildEntity).UpdatePrimFlags(m_host.LocalId, UsePhysics, 
-                            IsTemporary, IsPhantom, IsVolumeDetect, blocks);
+                        if ((part as ISceneChildEntity).UpdatePrimFlags(UsePhysics,
+                            IsTemporary, IsPhantom, IsVolumeDetect, blocks))
+                            (part as ISceneChildEntity).ParentEntity.RebuildPhysicalRepresentation(true);
                 }
                 else if(code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
                 {
@@ -9549,7 +9550,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bool IsPhantom = ((m_host.Flags & PrimFlags.Phantom) != 0);
             bool IsVolumeDetect = m_host.VolumeDetectActive;
             blocks[0].PhysicsShapeType = m_host.PhysicsType;
-            m_host.UpdatePrimFlags(m_host.LocalId, UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks);
+            if(m_host.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, blocks))
+                m_host.ParentEntity.RebuildPhysicalRepresentation(true);
         }
 
         //  <remarks>
