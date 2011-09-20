@@ -672,7 +672,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         }
 
         #endregion
-        private FriendInfo[] GetFriends(UUID agentID)
+        public FriendInfo[] GetFriends(UUID agentID)
         {
             UserFriendData friendsData;
 

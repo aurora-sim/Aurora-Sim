@@ -12,6 +12,8 @@
     AvatarServerURI = "http://avatar.osgrid.org/avatar"
     UserAccountServerURI = "http://users.osgrid.org/accounts"
     FriendsServerURI = "http://friends.osgrid.org/friends"
+	GridUserServerURI = "http://users.osgrid.org/griduser"
+	PresenceServerURI = "http://presence.osgrid.org/presence"
 
 [Groups]
     Enabled = true

@@ -48,5 +48,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="UserID"></param>
         /// <param name="NewStatus">On/Offline</param>
         void SendFriendsStatusMessage(UUID FriendToInformID, UUID UserID, bool NewStatus);
+
+        /// <summary>
+        /// Gets all the given friends of the user (only if the user is in the region)
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <returns></returns>
+        OpenSim.Services.Interfaces.FriendInfo[] GetFriends(UUID agentID);
     }
 }

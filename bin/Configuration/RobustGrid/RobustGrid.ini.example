@@ -71,7 +71,7 @@
     NeighborInHandler = NeighborServiceInConnector
     NeighborInHandlerPort = 0
 
-    AgentInfoHandler = AgentInfoService
+    AgentInfoHandler = RobustPresence
     AsyncMessagePostServiceHandler = LocalAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     CapsHandler = CapsService

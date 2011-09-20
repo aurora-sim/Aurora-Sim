@@ -178,6 +178,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 m_sceneList.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
+            scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             scene.EventManager.OnClientLogin += EventManager_OnClientLogin;
@@ -270,11 +271,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             // Used for Notices and Group Invites/Accept/Reject
             client.OnInstantMessage += OnInstantMessage;
+        }
 
-            IScenePresence SP = client.Scene.GetScenePresence (client.AgentId);
+        protected void OnMakeRootAgent(IScenePresence sp)
+        {
             // Send client their groups information.
-            if (SP != null && !SP.IsChildAgent)
-                SendNewAgentGroupDataUpdate (client);
+            if (sp != null && !sp.IsChildAgent)
+                SendNewAgentGroupDataUpdate(sp.ControllingClient);
         }
 
         private void OnClosingClient(IClientAPI client)

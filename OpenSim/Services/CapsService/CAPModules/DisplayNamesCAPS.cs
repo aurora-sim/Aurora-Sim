@@ -221,7 +221,9 @@ namespace OpenSim.Services.CapsService
                         if (info != null)
                             PackUserInfo (info, account, ref agents);
                         else
-                            bad_ids.Add (id);
+                            PackUserInfo (info, account, ref agents);
+                        //else //Technically is right, but needs to be packed no matter what for OS based grids
+                        //    bad_ids.Add (id);
                     }
                 }
             }
@@ -253,12 +255,12 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap agentMap = new OSDMap ();
             agentMap["username"] = account.Name;
-            agentMap["display_name"] = info.DisplayName == "" ? account.Name : info.DisplayName;
+            agentMap["display_name"] = (info == null || info.DisplayName == "") ? account.Name : info.DisplayName;
             agentMap["display_name_next_update"] = OSD.FromDate (DateTime.ParseExact ("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z", System.Globalization.DateTimeFormatInfo.InvariantInfo).ToUniversalTime ());
             agentMap["legacy_first_name"] = account.FirstName;
             agentMap["legacy_last_name"] = account.LastName;
-            agentMap["id"] = info.PrincipalID;
-            agentMap["is_display_name_default"] = isDefaultDisplayName (account.FirstName, account.LastName, account.Name, info.DisplayName);
+            agentMap["id"] = account.PrincipalID;
+            agentMap["is_display_name_default"] = isDefaultDisplayName (account.FirstName, account.LastName, account.Name, info == null ? account.Name : info.DisplayName);
 
             agents.Add (agentMap);
         }

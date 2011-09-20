@@ -136,6 +136,133 @@ namespace OpenSim.Services.RobustCompat
                 WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
                 presence.CallbackURI = null;
             }
+            Util.FireAndForget(delegate(object o)
+            {
+                DoPresenceUpdate(presence);
+            });
+        }
+
+        private void DoPresenceUpdate(IScenePresence presence)
+        {
+            ReportAgent(presence);
+            IFriendsModule friendsModule = m_scene.RequestModuleInterface<IFriendsModule>();
+            IAgentInfoService aservice = m_scene.RequestModuleInterface<IAgentInfoService>();
+            if (friendsModule != null)
+            {
+                OpenSim.Services.Interfaces.FriendInfo[] friends = friendsModule.GetFriends(presence.UUID);
+                string[] s = new string[friends.Length];
+                for (int i = 0; i < friends.Length; i++)
+                {
+                    s[i] = friends[i].Friend;
+                }
+                UserInfo[] infos = aservice.GetUserInfos(s);
+                foreach (UserInfo u in infos)
+                {
+                    if (u.IsOnline)
+                        friendsModule.SendFriendsStatusMessage(presence.UUID, UUID.Parse(u.UserID), true);
+                }
+                foreach (UserInfo u in infos)
+                {
+                    if (u.IsOnline)
+                    {
+                        if (!IsLocal(u, presence))
+                            DoNonLocalPresenceUpdateCall(u, presence);
+                        else
+                            friendsModule.SendFriendsStatusMessage(UUID.Parse(u.UserID), presence.UUID, true);
+                    }
+                }
+            }
+        }
+
+        private void DoNonLocalPresenceUpdateCall(UserInfo u, IScenePresence presence)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            //sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
+            //sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
+            sendData["METHOD"] = "status";
+
+            sendData["FromID"] = presence.UUID.ToString();
+            sendData["ToID"] = u.UserID;
+            sendData["Online"] = u.IsOnline.ToString();
+            
+            Call(m_scene.GridService.GetRegionByUUID(UUID.Zero, u.CurrentRegionID), sendData);
+        }
+
+        private void Call(OpenSim.Services.Interfaces.GridRegion region, Dictionary<string, object> sendData)
+        {
+            Util.FireAndForget(delegate(object o)
+            {
+                string reqString = WebUtils.BuildQueryString(sendData);
+                //m_log.DebugFormat("[FRIENDS CONNECTOR]: queryString = {0}", reqString);
+                if (region == null)
+                    return;
+
+                try
+                {
+                    string url = "http://" + region.ExternalHostName + ":" + region.HttpPort;
+                    string a = SynchronousRestFormsRequester.MakeRequest("POST",
+                            url + "/friends",
+                            reqString);
+                }
+                catch (Exception)
+                {
+                }
+            });
+        }
+
+        private bool IsLocal(UserInfo u, IScenePresence presence)
+        {
+            foreach (IScene scene in presence.Scene.RequestModuleInterface<SceneManager>().Scenes)
+            {
+                if (scene.GetScenePresence(UUID.Parse(u.UserID)) != null)
+                    return true;
+            }
+            return false;
+        }
+
+        private void ReportAgent(IScenePresence presence)
+        {
+            IAgentInfoService aservice = m_scene.RequestModuleInterface<IAgentInfoService>();
+            if (aservice != null)
+                aservice.SetLoggedIn(presence.UUID.ToString(), true, false, presence.Scene.RegionInfo.RegionID);
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            //sendData["SCOPEID"] = scopeID.ToString();
+            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
+            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
+            sendData["METHOD"] = "login";
+
+            sendData["UserID"] = presence.UUID.ToString();
+            sendData["SessionID"] = presence.ControllingClient.SessionId.ToString();
+            sendData["SecureSessionID"] = presence.ControllingClient.SecureSessionId.ToString();
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+            List<string> urls = m_scene.RequestModuleInterface<IConfigurationService>().FindValueOf("PresenceServerURI");
+            foreach (string url in urls)
+            {
+                SynchronousRestFormsRequester.MakeRequest("POST",
+                           url,
+                           reqString);
+            }
+
+            sendData = new Dictionary<string, object>();
+            //sendData["SCOPEID"] = scopeID.ToString();
+            sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
+            sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
+            sendData["METHOD"] = "report";
+
+            sendData["SessionID"] = presence.ControllingClient.SessionId.ToString();
+            sendData["RegionID"] = presence.Scene.RegionInfo.RegionID.ToString();
+
+            reqString = WebUtils.BuildQueryString(sendData);
+            // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
+            foreach (string url in urls)
+            {
+                string resp = SynchronousRestFormsRequester.MakeRequest("POST",
+                           url,
+                           reqString);
+            }
+            if (aservice != null)
+                aservice.SetLastPosition(presence.UUID.ToString(), presence.Scene.RegionInfo.RegionID, presence.AbsolutePosition, Vector3.Zero);
         }
 
         void OnClosingClient(IClientAPI client)

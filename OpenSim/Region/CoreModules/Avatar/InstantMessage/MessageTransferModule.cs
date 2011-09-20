@@ -361,7 +361,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         gim.toAgentID = toAgentID;
                         gim.message = message;
                         gim.dialog = dialog;
-                        gim.offline = offline;
+                        gim.offline = 0;
                         gim.ParentEstateID = ParentEstateID;
                         gim.Position = Position;
                         gim.binaryBucket = binaryBucket;
