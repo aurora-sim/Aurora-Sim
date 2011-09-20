@@ -95,7 +95,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             SaveStateTo(script, false);
         }
 
-        public void SaveStateTo (ScriptData script, bool forced)
+        public void SaveStateTo(ScriptData script, bool forced)
+        {
+            SaveStateTo(script, forced, true);
+        }
+
+        public void SaveStateTo(ScriptData script, bool forced, bool saveBackup)
         {
             if (!forced)
             {
@@ -106,7 +111,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (script.Script != null)
                 script.Script.NeedsStateSaved = false;
-            script.Part.ParentEntity.HasGroupChanged = true;
+            if(saveBackup)
+                script.Part.ParentEntity.HasGroupChanged = true;
             StateSave stateSave = new StateSave ();
             stateSave.State = script.State;
             stateSave.ItemID = script.ItemID;

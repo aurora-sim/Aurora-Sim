@@ -1010,7 +1010,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (id == null)
                     return;
-                StateSave.SaveStateTo (id, true);
+                StateSave.SaveStateTo (id, true, false);
             }
         }
 
