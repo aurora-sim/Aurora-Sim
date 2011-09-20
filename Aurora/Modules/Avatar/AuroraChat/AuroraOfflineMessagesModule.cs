@@ -94,7 +94,7 @@ namespace Aurora.Modules
             {
                 OfflineMessagesConnector = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
-                if (m_TransferModule == null)
+                if (m_TransferModule == null || OfflineMessagesConnector == null)
                 {
                     scene.EventManager.OnNewClient -= OnNewClient;
                     scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -102,7 +102,7 @@ namespace Aurora.Modules
                     enabled = false;
                     m_SceneList.Clear();
 
-                    m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
+                    m_log.Error("[OFFLINE MESSAGING] No message transfer module or OfflineMessagesConnector is enabled. Diabling offline messages");
                     return;
                 }
                 m_TransferModule.OnUndeliveredMessage += UndeliveredMessage;
@@ -204,19 +204,22 @@ namespace Aurora.Modules
 
         private void UndeliveredMessage(GridInstantMessage im, string reason)
         {
+            if (OfflineMessagesConnector == null || im == null)
+                return;
+            IClientAPI client = FindClient(im.fromAgentID);
+            if (client == null)
+                return;
             if (!OfflineMessagesConnector.AddOfflineMessage (im))
             {
-                IClientAPI client = FindClient (im.fromAgentID);
-                if (client != null && !im.fromGroup)
+                if (!im.fromGroup)
                     client.SendInstantMessage (new GridInstantMessage (
                             null, im.toAgentID,
                             "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User has too many IMs already, please try again later.",
-                            false, new Vector3 ()));
-                return;
+                            false, Vector3.Zero));
             }
-            if ((im.offline != 0)
+            else if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
             {
                 if (im.dialog == 32) //Group notice
@@ -230,7 +233,7 @@ namespace Aurora.Modules
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
                     IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (im.toAgentID);
-                    if (profile.IMViaEmail)
+                    if (profile != null && profile.IMViaEmail)
                     {
                         UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount (UUID.Zero, im.toAgentID.ToString ());
                         if (account != null && account.Email != "" && account.Email != null)
@@ -245,10 +248,6 @@ namespace Aurora.Modules
 
                 if(im.dialog == (byte)InstantMessageDialog.MessageFromAgent && !im.fromGroup)
                 {
-                    IClientAPI client = FindClient(im.fromAgentID);
-                    if (client == null)
-                        return;
-
                     client.SendInstantMessage(new GridInstantMessage(
                             null, im.toAgentID,
                             "System", im.fromAgentID,
@@ -258,22 +257,12 @@ namespace Aurora.Modules
                 }
 
                 if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
-                {
-                    IClientAPI client = FindClient(im.fromAgentID);
-                    if (client == null)
-                        return;
-
                     client.SendAlertMessage("User is not online. Inventory has been saved");
-                }
             }
             else if (im.offline == 0)
             {
                 if(im.dialog == (byte)InstantMessageDialog.MessageFromAgent && !im.fromGroup)
                 {
-                    IClientAPI client = FindClient(im.fromAgentID);
-                    if (client == null)
-                        return;
-
                     client.SendInstantMessage(new GridInstantMessage(
                             null, im.toAgentID,
                             "System", im.fromAgentID,
@@ -283,13 +272,7 @@ namespace Aurora.Modules
                 }
 
                 if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
-                {
-                    IClientAPI client = FindClient(im.fromAgentID);
-                    if (client == null)
-                        return;
-
                     client.SendAlertMessage("User not able to be found. Inventory has been saved");
-                }
             }
         }
     }
