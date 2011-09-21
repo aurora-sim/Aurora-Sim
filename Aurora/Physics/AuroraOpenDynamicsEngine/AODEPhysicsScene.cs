@@ -209,6 +209,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private RegionInfo m_region;
         private IRegistryCore m_registry;
         private IWindModule m_windModule = null;
+        private bool DoPhyWind = false;
 
         public RegionInfo Region
         {
@@ -496,6 +497,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 3f);
                     maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 100000.01f);
+                    DoPhyWind = physicsconfig.GetBoolean("do_physics_wind", false);
                 }
             }
 
@@ -2786,6 +2788,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void AddWindForce (float mass, d.Vector3 AbsolutePosition, ref Vector3 force)
         {
+            if (!DoPhyWind)
+                return;
             if (m_windModule == null)
                 m_windModule = m_registry.RequestModuleInterface<IWindModule> ();
 
