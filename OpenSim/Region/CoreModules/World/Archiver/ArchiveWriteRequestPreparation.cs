@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             Dictionary<UUID, AssetType> assetUuids = new Dictionary<UUID, AssetType>();
 
             ISceneEntity[] entities = m_scene.Entities.GetEntities ();
-            List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
+            List<ISceneEntity> sceneObjects = new List<ISceneEntity>();
             int numObjectsSkippedPermissions = 0;
      
             // Filter entities so that we only have scene objects.
@@ -113,22 +113,17 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // end up having to do this
             foreach (ISceneEntity entity in entities)
             {
-                if (entity is SceneObjectGroup)
-                {
-                    SceneObjectGroup sceneObject = (SceneObjectGroup)entity;
-                    
-                    if (!sceneObject.IsDeleted && !sceneObject.IsAttachment)
-                        if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, sceneObject, m_checkPermissions))
-                                // The user isn't allowed to copy/transfer this object, so it will not be included in the OAR.
-                                ++numObjectsSkippedPermissions;
-                            else
-                                sceneObjects.Add(sceneObject);
-                }
+                if (!entity.IsDeleted && !entity.IsAttachment)
+                    if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, entity, m_checkPermissions))
+                        // The user isn't allowed to copy/transfer this object, so it will not be included in the OAR.
+                        ++numObjectsSkippedPermissions;
+                    else
+                        sceneObjects.Add(entity);
             }
             
             UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
 
-            foreach (SceneObjectGroup sceneObject in sceneObjects)
+            foreach (ISceneEntity sceneObject in sceneObjects)
             {
                 assetGatherer.GatherAssetUuids(sceneObject, assetUuids, m_scene);
             }

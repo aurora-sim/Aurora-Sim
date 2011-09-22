@@ -56,13 +56,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         protected ITerrainModule m_terrainModule;
         protected IRegionSerialiserModule m_serialiser;
-        protected List<SceneObjectGroup> m_sceneObjects;
+        protected List<ISceneEntity> m_sceneObjects;
         protected IScene m_scene;
         protected TarArchiveWriter m_archiveWriter;
         protected Guid m_requestId;
 
         public ArchiveWriteRequestExecution(
-             List<SceneObjectGroup> sceneObjects,
+             List<ISceneEntity> sceneObjects,
              ITerrainModule terrainModule,
              IRegionSerialiserModule serialiser,
              IScene scene,
@@ -145,7 +145,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_log.InfoFormat("[ARCHIVER]: Added terrain information to archive.");
 
             // Write out scene object metadata
-            foreach (SceneObjectGroup sceneObject in m_sceneObjects)
+            foreach (ISceneEntity sceneObject in m_sceneObjects)
             {
                 //m_log.DebugFormat("[ARCHIVER]: Saving {0} {1}, {2}", entity.Name, entity.UUID, entity.GetType());
 
