@@ -456,7 +456,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         quat.X = prm._orientation.X;
                         quat.Y = prm._orientation.Y;
                         quat.Z = prm._orientation.Z;
-                        /*d.RfromQ (out mat, ref quat);
+                        d.RfromQ (out mat, ref quat);
                         d.MassRotate (ref tmpdmass, ref mat);
 
                         Vector3 ppos = prm._position;
@@ -470,13 +470,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             ppos.Y,
                             ppos.Z);
 
-                        d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia*/
-
+                        d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia
+/* Ubit: this makes physics worse than current opensim, do you want that ?
                         d.RfromQ (out mat, ref quat);
                         d.MassRotate (ref tmpdmass, ref mat);
                         d.MassTranslate (ref tmpdmass, Position.X - prm.Position.X, Position.Y - prm.Position.Y, Position.Z - prm.Position.Z);
                         d.MassAdd (ref objdmass, ref tmpdmass);
-
+*/
                         // fix prim colision cats
                         if (prm.prim_geom == IntPtr.Zero)
                         {
@@ -584,7 +584,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             _parent_scene.addActivePrim (this);
 
-            /*            d.Mass mtmp;
+            /* debug only things
+                        d.Mass mtmp;
                         d.BodyGetMass(Body, out mtmp);
                         d.Matrix3 mt = d.GeomGetRotation(prim_geom);
                         d.Matrix3 mt2 = d.BodyGetRotation(Body);
@@ -939,13 +940,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             s.Y = IntAABB.MaxY - IntAABB.MinY;
             s.Z = IntAABB.MaxZ - IntAABB.MinZ;
 
-            OuterRadius = s.X;
-            if (OuterRadius < s.Y)
-                OuterRadius = s.Y;
-            if (OuterRadius < s.Z)
-                OuterRadius = s.Z;
-
+            /*
+            Ubit buggy and not in use
+                        OuterRadius = s.X;
+                        if (OuterRadius < s.Y)
+                            OuterRadius = s.Y;
+                        if (OuterRadius < s.Z)
+                            OuterRadius = s.Z;
             OuterRadius *= 0.5f;
+            */
+            
 
             d.MassSetBoxTotal (out primdMass, primMass, s.X, s.Y, s.Z);
 
@@ -1499,7 +1503,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     AuroraODEPrim parent = (AuroraODEPrim)_parent;
                     parent.DestroyBody ();
+                    // Ubit this was missing here
+                    _orientation = newrot;
+                    _position = newpos;
+                    fakepos = false;
+                    fakeori = false;
+
                     parent.MakeBody ();
+                    if (Body != IntPtr.Zero)
+                        d.BodyEnable(Body);
+                    changeSelectedStatus(m_isSelected);
+
+                    resetCollisionAccounting();
+                    return;
                 }
                 else
                 {
@@ -1636,6 +1652,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     Vector3 gravForce = new Vector3 ();
                     _parent_scene.CalculateGravity (Mass, dcpos, true, gravModifier, ref gravForce);
+
                     Vector3 windForce = new Vector3 ();
                     _parent_scene.AddWindForce (Mass, dcpos, ref windForce);
                     fx += windForce.X;
@@ -2065,12 +2082,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!_zeroFlag &&
                         (((Math.Abs (vel.X) < 0.02)
                         && (Math.Abs (vel.Y) < 0.02)
-                        && (Math.Abs (vel.Z) < 0.02))
-                        /*&& (Math.Abs (rotvel.X) < 0.01)//This makes stacks of prims not stop collding :/
-                        && (Math.Abs (rotvel.Y) < 0.01)
-                        && (Math.Abs (rotvel.Z) < 0.01))*/
-                        && m_previousForceIsSame > previousForceSameMax)
+                        && (Math.Abs (vel.Z) < 0.02)
+                        && (Math.Abs (rotvel.X) < 0.001)   
+                                                            //This makes stacks of prims not stop collding :/
+                                                            // Ubit then fix that elsewhere
+                                                            // without this prims dont rotate if vel is small
+                        && (Math.Abs (rotvel.Y) < 0.001)
+                        && (Math.Abs (rotvel.Z) < 0.001))
+                        && m_previousForceIsSame > previousForceSameMax
                         && m_vehicle.Type == Vehicle.TYPE_NONE)
+                        )
                     {
                         _zeroFlag = true;
                     }
@@ -2155,13 +2176,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_UpdateTimecntr = 0;
 
                     if (!_zeroFlag && !needupdate && (
-                        /* (Math.Abs (m_lastposition.X - _position.X) > 0.01)
-                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.01)
-                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.01)*/
-                        /*(Math.Abs (m_lastorientation.X - _orientation.X) > 0.001)
+                         (Math.Abs (m_lastposition.X - _position.X) > 0.01)
+                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.01) //Ubit: let prims move and rotate
+                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.01)
+                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.001)
                         || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.001)
-                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.001)*/
-                        (Math.Abs (m_lastVelocity.X - _velocity.X) > 0.01)
+                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.001)
+                        || (Math.Abs (m_lastVelocity.X - _velocity.X) > 0.01)
                         || (Math.Abs (m_lastVelocity.Y - _velocity.Y) > 0.01)
                         || (Math.Abs (m_lastVelocity.Z - _velocity.Z) > 0.01)
                         ))
