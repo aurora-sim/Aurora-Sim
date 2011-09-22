@@ -239,7 +239,7 @@ namespace OpenSim.Services.RobustCompat
                     if (reply == null || (reply != null && reply == string.Empty))
                         return null;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
 

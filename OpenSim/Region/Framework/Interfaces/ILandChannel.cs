@@ -39,6 +39,11 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <returns></returns>
         List<ILandObject> AllParcels();
+
+        /// <summary>
+        /// Gets the list of what parcel's own each piece of land
+        /// </summary>
+        int[,] LandIDList { get; }
              
         /// <summary>
         /// Get the parcel at the specified point
@@ -80,9 +85,8 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Update the given land object in the cache
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="data"></param>
-        void UpdateLandObject(int localID, LandData data);
+        /// <param name="parcel"></param>
+        void UpdateLandObject(ILandObject parcel);
 
         /// <summary>
         /// Delete all parcels and create one default parcel that spreads over the entire sim

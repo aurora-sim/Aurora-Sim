@@ -707,7 +707,7 @@ namespace OpenSim.CoreApplicationPlugins
                             {
                                 parcel.LandData.Flags |= (uint)ParcelFlags.AllowVoiceChat;
                                 parcel.LandData.Flags |= (uint)ParcelFlags.UseEstateVoiceChan;
-                                parcelManagement.UpdateLandObject(parcel.LandData.LocalID, parcel.LandData);
+                                parcelManagement.UpdateLandObject(parcel);
                             }
                         }
                     }
@@ -968,7 +968,7 @@ namespace OpenSim.CoreApplicationPlugins
                                     parcel.LandData.Flags &= ~(uint)ParcelFlags.AllowVoiceChat;
                                     parcel.LandData.Flags &= ~(uint)ParcelFlags.UseEstateVoiceChan;
                                 }
-                                parcelManagement.UpdateLandObject(parcel.LandData.LocalID, parcel.LandData);
+                                parcelManagement.UpdateLandObject(parcel);
                             }
                         }
                     }

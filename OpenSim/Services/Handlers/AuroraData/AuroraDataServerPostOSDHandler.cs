@@ -78,7 +78,8 @@ namespace OpenSim.Services
             {
                 IGridRegistrationService urlModule =
                             m_registry.RequestModuleInterface<IGridRegistrationService> ();
-                string method = args["Method"].AsString ();
+                string method = args["Method"].AsString();
+                ulong handle;
                 switch (method)
                 {
                     #region Profile
@@ -150,12 +151,18 @@ namespace OpenSim.Services
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult ();
-                        return DirectoryHandler.AddRegion (args);
+                        if (ulong.TryParse(m_SessionID, out handle))
+                        {
+                            int x, y;
+                            Util.UlongToInts(handle, out x, out y);
+                            UUID regionID = this.m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y).RegionID;
+                            return DirectoryHandler.AddRegion(args, regionID);
+                        }
+                        break;
                     case "clearregion":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult ();
-                        ulong handle;
                         if (ulong.TryParse (m_SessionID, out handle))
                         {
                             int x, y;
@@ -550,7 +557,7 @@ namespace OpenSim.Services
             return encoding.GetBytes (OSDParser.SerializeJsonString (request));
         }
 
-        public byte[] AddRegion (OSDMap request)
+        public byte[] AddRegion (OSDMap request, UUID regionID)
         {
             OSDArray requests = (OSDArray)request["Requests"];
             List<LandData> parcels = new List<LandData>();
@@ -558,6 +565,7 @@ namespace OpenSim.Services
             {
                 LandData land = new LandData();
                 land.FromOSD((OSDMap)o);
+                land.RegionID = regionID;
                 parcels.Add(land);
             }
             DirectoryServiceConnector.AddRegion(parcels);

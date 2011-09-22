@@ -70,10 +70,5 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { throw new System.NotImplementedException(); }
             set { throw new System.NotImplementedException(); }
         }
-
-        public bool[,] Bitmap
-        {
-            get { return GetLO().LandBitmap; }
-        }
     }
 }

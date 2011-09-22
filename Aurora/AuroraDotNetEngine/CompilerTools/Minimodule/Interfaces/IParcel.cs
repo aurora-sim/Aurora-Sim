@@ -38,6 +38,5 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         string Name { get; set; }
         string Description { get; set; }
         ISocialEntity Owner { get; set; }
-        bool[,] Bitmap { get; }
     }
 }

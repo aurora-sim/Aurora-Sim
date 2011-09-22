@@ -33,7 +33,6 @@ namespace OpenSim.Framework
     public interface ILandObject
     {
         LandData LandData { get; set; }
-        bool[,] LandBitmap { get; set; }
         UUID RegionUUID { get; }
         bool ContainsPoint(int x, int y);
         ILandObject Copy();
@@ -50,16 +49,8 @@ namespace OpenSim.Framework
         List<List<UUID>> CreateAccessListArrayByFlag(AccessList flag);
         void SendAccessList(UUID agentID, UUID sessionID, uint flags, int sequenceID, IClientAPI remote_client);
         void UpdateAccessList(uint flags, List<ParcelManager.ParcelAccessEntry> entries, IClientAPI remote_client);
-        void UpdateLandBitmapByteArray();
-        bool SetLandBitmapFromByteArray(bool forceSet, Vector2 offsetOfParcel);
-        bool[,] GetLandBitmap();
         void ForceUpdateLandInfo();
-        void SetLandBitmap(bool[,] bitmap);
 
-        bool[,] BasicFullRegionLandBitmap();
-        bool[,] GetSquareLandBitmap(int start_x, int start_y, int end_x, int end_y);
-        bool[,] ModifyLandBitmapSquare(bool[,] land_bitmap, int start_x, int start_y, int end_x, int end_y, bool set_value);
-        bool[,] MergeLandBitmaps(bool[,] bitmap_base, bool[,] bitmap_add);
         void SendForceObjectSelect(int local_id, int request_type, List<UUID> returnIDs, IClientAPI remote_client);
         void SendLandObjectOwners(IClientAPI remote_client);
         void ReturnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client);

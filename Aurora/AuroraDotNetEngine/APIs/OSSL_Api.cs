@@ -1264,7 +1264,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
 
                 // Create a new land data object we can modify
-                LandData newLand = startLandObject.LandData.Copy();
                 UUID uuid;
 
                 // Process the rules, not sure what the impact would be of changing owner or group
@@ -1275,28 +1274,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     switch (code)
                     {
                         case 0:
-                            newLand.Name = arg;
+                            startLandObject.LandData.Name = arg;
                             break;
 
                         case 1:
-                            newLand.Description = arg;
+                            startLandObject.LandData.Description = arg;
                             break;
 
                         case 2:
                             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetParcelDetails", m_host, "OSSL", m_itemID)) return;
                             if (UUID.TryParse(arg, out uuid))
-                                newLand.OwnerID = uuid;
+                                startLandObject.LandData.OwnerID = uuid;
                             break;
 
                         case 3:
                             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osSetParcelDetails", m_host, "OSSL", m_itemID)) return;
                             if (UUID.TryParse(arg, out uuid))
-                                newLand.GroupID = uuid;
+                                startLandObject.LandData.GroupID = uuid;
                             break;
                     }
                 }
 
-                parcelManagement.UpdateLandObject(newLand.LocalID, newLand);
+                parcelManagement.UpdateLandObject(startLandObject);
             }
         }
 

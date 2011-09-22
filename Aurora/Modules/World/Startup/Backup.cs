@@ -761,7 +761,7 @@ namespace Aurora.Modules
                         {
                             foreach (LandData parcel in m_parcels)
                             {
-                                parcelManagementModule.UpdateLandObject (parcel.LocalID, parcel);
+                                parcelManagementModule.UpdateLandObject(parcelManagementModule.GetLandObject(parcel.LocalID));
                             }
                         }
                     }

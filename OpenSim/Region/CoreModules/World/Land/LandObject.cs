@@ -45,19 +45,12 @@ namespace OpenSim.Region.CoreModules.World.Land
         #region Member Variables
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private bool[,] m_landBitmap;
 
         private int m_lastSeqId = 0;
 
         protected LandData m_landData = new LandData();
         protected IScene m_scene;
         protected IParcelManagementModule m_parcelManagementModule;
-
-        public bool[,] LandBitmap
-        {
-            get { return m_landBitmap; }
-            set { m_landBitmap = value; }
-        }
 
         #endregion
 
@@ -86,8 +79,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         public LandObject (UUID owner_id, bool is_group_owned, IScene scene)
         {
             m_scene = scene;
-
-            m_landBitmap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
 
             LandData.Maturity = m_scene.RegionInfo.RegionSettings.Maturity;
             LandData.OwnerID = owner_id;
@@ -163,9 +154,12 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// <returns>Returns true if the piece of land contains the specified point</returns>
         public bool ContainsPoint(int x, int y)
         {
+            IParcelManagementModule parcelManModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManModule == null)
+                return false;
             if (x >= 0 && y >= 0 && x < m_scene.RegionInfo.RegionSizeX && y < m_scene.RegionInfo.RegionSizeY)
             {
-                return (LandBitmap[x / 4, y / 4] == true);
+                return (parcelManModule.LandIDList[x / 4, y / 4] == LandData.LocalID);
             }
             else
             {
@@ -178,7 +172,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject newLand = new LandObject(LandData.OwnerID, LandData.IsGroupOwned, m_scene);
 
             //Place all new variables here!
-            newLand.LandBitmap = (bool[,]) (LandBitmap.Clone());
             newLand.LandData = LandData.Copy();
 
             return newLand;
@@ -226,15 +219,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                 try
                 {
                     bool snap_selection = false;
-                    LandData newData = LandData.Copy();
 
-                    if (args.AuthBuyerID != newData.AuthBuyerID || args.SalePrice != newData.SalePrice)
+                    if (args.AuthBuyerID != LandData.AuthBuyerID || args.SalePrice != LandData.SalePrice)
                     {
                         if (m_scene.Permissions.CanSellParcel (remote_client.AgentId, this) &&
                             m_scene.RegionInfo.RegionSettings.AllowLandResell)
                         {
-                            newData.AuthBuyerID = args.AuthBuyerID;
-                            newData.SalePrice = args.SalePrice;
+                            LandData.AuthBuyerID = args.AuthBuyerID;
+                            LandData.SalePrice = args.SalePrice;
                             snap_selection = true;
                         }
                         else
@@ -250,28 +242,28 @@ namespace OpenSim.Region.CoreModules.World.Land
                     {
                         if (!LandData.IsGroupOwned)
                         {
-                            newData.GroupID = args.GroupID;
+                            LandData.GroupID = args.GroupID;
                         }
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.FindPlaces))
                     {
-                        newData.Category = args.Category;
+                        LandData.Category = args.Category;
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.ChangeMedia))
                     {
-                        newData.MediaAutoScale = args.MediaAutoScale;
-                        newData.MediaID = args.MediaID;
-                        newData.MediaURL = args.MediaURL;
-                        newData.MusicURL = args.MusicURL;
-                        newData.MediaType = args.MediaType;
-                        newData.MediaDescription = args.MediaDescription;
-                        newData.MediaWidth = args.MediaWidth;
-                        newData.MediaHeight = args.MediaHeight;
-                        newData.MediaLoop = args.MediaLoop;
-                        newData.ObscureMusic = args.ObscureMusic;
-                        newData.ObscureMedia = args.ObscureMedia;
+                        LandData.MediaAutoScale = args.MediaAutoScale;
+                        LandData.MediaID = args.MediaID;
+                        LandData.MediaURL = args.MediaURL;
+                        LandData.MusicURL = args.MusicURL;
+                        LandData.MediaType = args.MediaType;
+                        LandData.MediaDescription = args.MediaDescription;
+                        LandData.MediaWidth = args.MediaWidth;
+                        LandData.MediaHeight = args.MediaHeight;
+                        LandData.MediaLoop = args.MediaLoop;
+                        LandData.ObscureMusic = args.ObscureMusic;
+                        LandData.ObscureMedia = args.ObscureMedia;
                     }
 
                     if (m_scene.RegionInfo.RegionSettings.BlockFly &&
@@ -296,27 +288,27 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.SetLandingPoint))
                     {
-                        newData.LandingType = args.LandingType;
-                        newData.UserLocation = args.UserLocation;
-                        newData.UserLookAt = args.UserLookAt;
+                        LandData.LandingType = args.LandingType;
+                        LandData.UserLocation = args.UserLocation;
+                        LandData.UserLookAt = args.UserLookAt;
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandChangeIdentity))
                     {
-                        newData.Description = args.Desc;
-                        newData.Name = args.Name;
-                        newData.SnapshotID = args.SnapshotID;
-                        newData.Private = args.Privacy;
+                        LandData.Description = args.Desc;
+                        LandData.Name = args.Name;
+                        LandData.SnapshotID = args.SnapshotID;
+                        LandData.Private = args.Privacy;
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.LandManagePasses))
                     {
-                        newData.PassHours = args.PassHours;
-                        newData.PassPrice = args.PassPrice;
+                        LandData.PassHours = args.PassHours;
+                        LandData.PassPrice = args.PassPrice;
                     }
 
                     if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory &&
-                        (newData.Flags & (uint)ParcelFlags.ShowDirectory) != (uint)ParcelFlags.ShowDirectory)
+                        (LandData.Flags & (uint)ParcelFlags.ShowDirectory) != (uint)ParcelFlags.ShowDirectory)
                     {
                         //If the flags have changed, we need to charge them.. maybe
                         // We really need to check per month or whatever
@@ -327,9 +319,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                         //        args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
                         //}
                     }
-                    newData.Flags = args.ParcelFlags;
+                    LandData.Flags = args.ParcelFlags;
 
-                    m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
+                    m_parcelManagementModule.UpdateLandObject(this);
 
                     SendLandUpdateToAvatarsOverMe(snap_selection);
                 }
@@ -342,7 +334,6 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice, int area)
         {
-            LandData newData = LandData.Copy();
             if((LandData.Flags & (uint)ParcelFlags.SellParcelObjects) == (uint)ParcelFlags.SellParcelObjects)
             {
                 //Sell all objects on the parcel too
@@ -360,17 +351,17 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
 
-            newData.OwnerID = avatarID;
-            newData.GroupID = groupID;
-            newData.IsGroupOwned = groupOwned;
-            //newData.auctionID = AuctionID;
-            newData.ClaimDate = Util.UnixTimeSinceEpoch();
-            newData.ClaimPrice = claimprice;
-            newData.SalePrice = 0;
-            newData.AuthBuyerID = UUID.Zero;
-            newData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
-            this.LandData = newData;
-            m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
+            LandData.OwnerID = avatarID;
+            LandData.GroupID = groupID;
+            LandData.IsGroupOwned = groupOwned;
+            //LandData.auctionID = AuctionID;
+            LandData.ClaimDate = Util.UnixTimeSinceEpoch();
+            LandData.ClaimPrice = claimprice;
+            LandData.SalePrice = 0;
+            LandData.AuthBuyerID = UUID.Zero;
+            LandData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
+            
+            m_parcelManagementModule.UpdateLandObject(this);
 
             SendLandUpdateToAvatarsOverMe(true);
             //Send a full update to the client as well
@@ -380,15 +371,14 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void DeedToGroup(UUID groupID)
         {
-            LandData newData = LandData.Copy();
-            newData.OwnerID = groupID;
-            newData.GroupID = groupID;
-            newData.IsGroupOwned = true;
+            LandData.OwnerID = groupID;
+            LandData.GroupID = groupID;
+            LandData.IsGroupOwned = true;
 
             // Reset show in directory flag on deed
-            newData.Flags &= ~(uint) (ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
+            LandData.Flags &= ~(uint)(ParcelFlags.ForSale | ParcelFlags.ForSaleObjects | ParcelFlags.SellParcelObjects | ParcelFlags.ShowDirectory);
 
-            m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
+            m_parcelManagementModule.UpdateLandObject(this);
         }
 
         public bool IsEitherBannedOrRestricted(UUID avatar)
@@ -596,50 +586,37 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void UpdateAccessList(uint flags, List<ParcelManager.ParcelAccessEntry> entries, IClientAPI remote_client)
         {
-            LandData newData = LandData.Copy();
-
             if (entries.Count == 1 && entries[0].AgentID == UUID.Zero)
-            {
                 entries.Clear();
-            }
 
             List<ParcelManager.ParcelAccessEntry> toRemove = new List<ParcelManager.ParcelAccessEntry>();
-            foreach (ParcelManager.ParcelAccessEntry entry in newData.ParcelAccessList)
+            foreach (ParcelManager.ParcelAccessEntry entry in LandData.ParcelAccessList)
             {
                 if (entry.Flags == (AccessList)flags)
-                {
                     toRemove.Add(entry);
-                }
             }
 
             foreach (ParcelManager.ParcelAccessEntry entry in toRemove)
             {
-                newData.ParcelAccessList.Remove(entry);
+                LandData.ParcelAccessList.Remove(entry);
             }
             foreach (ParcelManager.ParcelAccessEntry entry in entries)
             {
                 ParcelManager.ParcelAccessEntry temp = new ParcelManager.ParcelAccessEntry();
                 temp.AgentID = entry.AgentID;
-                temp.Time = DateTime.MaxValue; //Pointless? NO.
+                temp.Time = DateTime.MaxValue; //Pointless? NO. Otherwise it will expire..
                 temp.Flags = (AccessList)flags;
 
-                if (!newData.ParcelAccessList.Contains(temp))
-                {
-                    newData.ParcelAccessList.Add(temp);
-                }
+                if (!LandData.ParcelAccessList.Contains(temp))
+                    LandData.ParcelAccessList.Add(temp);
             }
 
-            m_parcelManagementModule.UpdateLandObject(LandData.LocalID, newData);
+            m_parcelManagementModule.UpdateLandObject(this);
         }
 
         #endregion
 
         #region Update Functions
-
-        public void UpdateLandBitmapByteArray()
-        {
-            LandData.Bitmap = ConvertLandBitmapToBytes();
-        }
 
         /// <summary>
         /// Update all settings in land such as area, bitmap byte array, etc
@@ -647,12 +624,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void ForceUpdateLandInfo()
         {
             UpdateAABBAndAreaValues();
-            UpdateLandBitmapByteArray();
-        }
-
-        public bool SetLandBitmapFromByteArray(bool forceSet, Vector2 offsetOfParcel)
-        {
-            return ConvertBytesToLandBitmap(forceSet, offsetOfParcel, out m_landBitmap);
         }
 
         /// <summary>
@@ -661,6 +632,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private void UpdateAABBAndAreaValues()
         {
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
+            IParcelManagementModule parcelManModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
             int min_x = m_scene.RegionInfo.RegionSizeX / 4;
             int min_y = m_scene.RegionInfo.RegionSizeY / 4;
             int max_x = 0;
@@ -671,7 +643,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                 {
-                    if (LandBitmap[x, y] == true)
+                    if (parcelManModule.LandIDList[x, y] == LandData.LocalID)
                     {
                         if (min_x > x) min_x = x;
                         if (min_y > y) min_y = y;
@@ -703,207 +675,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 new Vector3((float) (max_x * 4), (float) (max_y * 4),
                               min);
             LandData.Area = tempArea;
-        }
-
-        #endregion
-
-        #region Land Bitmap Functions
-
-        /// <summary>
-        /// Sets the land's bitmap manually
-        /// </summary>
-        /// <param name="bitmap">64x64 block representing where this land is on a map</param>
-        public void SetLandBitmap(bool[,] bitmap)
-        {
-            if (bitmap.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 || 
-                bitmap.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 || 
-                bitmap.Rank != 2)
-            {
-                //Throw an exception - The bitmap is not 64x64
-                //throw new Exception("Error: Invalid Parcel Bitmap");
-            }
-            else
-            {
-                //Valid: Lets set it
-                LandBitmap = bitmap;
-                ForceUpdateLandInfo();
-            }
-        }
-
-        /// <summary>
-        /// Gets the land's bitmap manually
-        /// </summary>
-        /// <returns></returns>
-        public bool[,] GetLandBitmap()
-        {
-            return m_landBitmap;
-        }
-
-        /// <summary>
-        /// Full sim land object creation
-        /// </summary>
-        /// <returns></returns>
-        public bool[,] BasicFullRegionLandBitmap()
-        {
-            return GetSquareLandBitmap(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
-        }
-
-        /// <summary>
-        /// Used to modify the bitmap between the x and y points. Points use 64 scale
-        /// </summary>
-        /// <param name="start_x"></param>
-        /// <param name="start_y"></param>
-        /// <param name="end_x"></param>
-        /// <param name="end_y"></param>
-        /// <returns></returns>
-        public bool[,] GetSquareLandBitmap(int start_x, int start_y, int end_x, int end_y)
-        {
-            bool[,] tempBitmap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
-            tempBitmap.Initialize();
-
-            tempBitmap = ModifyLandBitmapSquare(tempBitmap, start_x, start_y, end_x, end_y, true);
-            return tempBitmap;
-        }
-
-        /// <summary>
-        /// Change a land bitmap at within a square and set those points to a specific value
-        /// </summary>
-        /// <param name="land_bitmap"></param>
-        /// <param name="start_x"></param>
-        /// <param name="start_y"></param>
-        /// <param name="end_x"></param>
-        /// <param name="end_y"></param>
-        /// <param name="set_value"></param>
-        /// <returns></returns>
-        public bool[,] ModifyLandBitmapSquare(bool[,] land_bitmap, int start_x, int start_y, int end_x, int end_y,
-                                              bool set_value)
-        {
-            if (land_bitmap.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 || 
-                land_bitmap.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 ||
-                land_bitmap.Rank != 2)
-            {
-                //Throw an exception - The bitmap is not 64x64
-                //throw new Exception("Error: Invalid Parcel Bitmap in modifyLandBitmapSquare()");
-            }
-
-            int x, y;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
-            {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
-                {
-                    if (x >= start_x / 4 && x < end_x / 4
-                        && y >= start_y / 4 && y < end_y / 4)
-                    {
-                        land_bitmap[x, y] = set_value;
-                    }
-                }
-            }
-            return land_bitmap;
-        }
-
-        /// <summary>
-        /// Join the true values of 2 bitmaps together
-        /// </summary>
-        /// <param name="bitmap_base"></param>
-        /// <param name="bitmap_add"></param>
-        /// <returns></returns>
-        public bool[,] MergeLandBitmaps(bool[,] bitmap_base, bool[,] bitmap_add)
-        {
-            if (bitmap_base.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 ||
-                bitmap_base.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 ||
-                bitmap_base.Rank != 2)
-            {
-                //Throw an exception - The bitmap is not 64x64
-                throw new Exception("Error: Invalid Parcel Bitmap - Bitmap_base in mergeLandBitmaps");
-            }
-            if (bitmap_add.GetLength(0) != m_scene.RegionInfo.RegionSizeX / 4 ||
-                bitmap_add.GetLength(1) != m_scene.RegionInfo.RegionSizeY / 4 || 
-                bitmap_add.Rank != 2)
-            {
-                //Throw an exception - The bitmap is not 64x64
-                throw new Exception("Error: Invalid Parcel Bitmap - Bitmap_add in mergeLandBitmaps");
-            }
-
-            int x, y;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
-            {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
-                {
-                    if (bitmap_add[x, y])
-                    {
-                        bitmap_base[x, y] = true;
-                    }
-                }
-            }
-            return bitmap_base;
-        }
-
-        /// <summary>
-        /// Converts the land bitmap to a packet friendly byte array
-        /// </summary>
-        /// <returns></returns>
-        private byte[] ConvertLandBitmapToBytes()
-        {
-//            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2*4);
-//            byte[] tempConvertArr = new byte[(avg * avg) / 8];
-        byte[] tempConvertArr = new byte[(m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY) / 8 / 16];
-
-            byte tempByte = 0;
-            int x, y, i, byteNum = 0;
-            i = 0;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
-            {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
-                {
-                    tempByte = Convert.ToByte(tempByte | Convert.ToByte(LandBitmap[x, y]) << (i++ % 8));
-                    if (i % 8 == 0)
-                    {
-                        tempConvertArr[byteNum] = tempByte;
-                        tempByte = (byte)0;
-                        i = 0;
-                        byteNum++;
-                    }
-                }
-            }
-            return tempConvertArr;
-        }
-
-        private bool ConvertBytesToLandBitmap(bool forceSet, Vector2 offsetOfParcel, out bool[,] tempConvertMap)
-        {
-            tempConvertMap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
-            tempConvertMap.Initialize();
-            //            int avg = (m_scene.RegionInfo.RegionSizeX + m_scene.RegionInfo.RegionSizeY) / (2 * 4);
-            //            if (LandData.Bitmap.Length != (avg * avg) / 8) //Are the sizes the same
-            
-            int avg = (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY / 128);
-            int oldParcelRegionAvg = (int)Math.Sqrt(LandData.Bitmap.Length * 128);
-            if (LandData.Bitmap.Length != avg && !(forceSet && LandData.Bitmap.Length < avg)) //Are the sizes the same
-            {
-                //The sim size changed, deal with it
-                return false;
-            }
-            byte tempByte = 0;
-            int x = (int)offsetOfParcel.X / 4, y = (int)offsetOfParcel.Y / 4, i = 0, bitNum = 0;
-            for (i = 0; i < avg; i++)
-            {
-                if (i < LandData.Bitmap.Length)
-                    tempByte = LandData.Bitmap[i];
-                else
-                    break;//All the rest are false then
-                for (bitNum = 0; bitNum < 8; bitNum++)
-                {
-                    bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
-                    tempConvertMap[x, y] = bit;
-                    x++;
-                    //Remove the offset so that we get a calc from the beginning of the array, not the offset array
-                    if (x - (int)(offsetOfParcel.X / 4) > (((forceSet ? oldParcelRegionAvg : m_scene.RegionInfo.RegionSizeX) / 4) - 1))
-                    {
-                        x = (int)offsetOfParcel.X / 4;//Back to the beginning
-                        y++;
-                    }
-                }
-            }
-            return true;
         }
 
         #endregion

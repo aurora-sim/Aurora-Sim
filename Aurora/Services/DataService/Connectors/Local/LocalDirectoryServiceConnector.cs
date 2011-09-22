@@ -100,6 +100,7 @@ namespace Aurora.Services.DataService
             //Update the time with now + the time to wait for the next update
             timeBeforeNextUpdate[parcels[0].RegionID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
 
+            ClearRegion(parcels[0].RegionID);
             foreach (LandData args in parcels)
             {
                 List<object> Values = new List<object>();
@@ -138,15 +139,14 @@ namespace Aurora.Services.DataService
             GD.Delete ("searchparcel", new string[1] { "RegionID" }, new object[1] { regionID });
         }
 
-        private bool[,] ConvertBytesToLandBitmap(byte[] Bitmap)
+        private void ConvertBytesToLandBitmap(ref bool[,] tempConvertMap, byte[] Bitmap, int sizeX)
         {
-            bool[,] tempConvertMap = new bool[64, 64];
-            tempConvertMap.Initialize();
             try
             {
                 byte tempByte = 0;
                 int x = 0, y = 0, i = 0, bitNum = 0;
-                for (i = 0; i < 512; i++)
+                int avg = (sizeX * sizeX / 128);
+                for (i = 0; i < avg; i++)
                 {
                     tempByte = Bitmap[i];
                     for (bitNum = 0; bitNum < 8; bitNum++)
@@ -154,7 +154,7 @@ namespace Aurora.Services.DataService
                         bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
                         tempConvertMap[x, y] = bit;
                         x++;
-                        if (x > 63)
+                        if (x > (sizeX / 4) - 1)
                         {
                             x = 0;
                             y++;
@@ -165,7 +165,6 @@ namespace Aurora.Services.DataService
             catch
             {
             }
-            return tempConvertMap;
         }
 
         /// <summary>
@@ -186,7 +185,7 @@ namespace Aurora.Services.DataService
             OpenSim.Services.Interfaces.GridRegion r = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, (int)RegionX, (int)RegionY);
             if (r == null)
             {
-                m_log.Warn("[DirectoryService]: Could not find parcel for ParcelID: " + InfoUUID);
+                m_log.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
                 return null;
             }
             //Get info about a specific parcel somewhere in the metaverse
@@ -228,12 +227,15 @@ namespace Aurora.Services.DataService
                 LandData = new LandData();
             }
             LandData = null;
+            
+            bool[,] tempConvertMap = new bool[r.RegionSizeX / 4, r.RegionSizeX / 4];
+            tempConvertMap.Initialize();
             foreach (LandData land in Lands)
             {
                 if (land.Bitmap == null)
                     continue;
-                bool[,] bitmap = ConvertBytesToLandBitmap(land.Bitmap);
-                if (bitmap[X / 64, Y / 64])
+                ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
+                if (tempConvertMap[X / 64, Y / 64])
                 {
                     LandData = land;
                     break;

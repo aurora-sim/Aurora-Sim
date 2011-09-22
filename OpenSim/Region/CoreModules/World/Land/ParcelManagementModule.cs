@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly string remoteParcelRequestPath = "0009/";
-
+        
         private IScene m_scene;
         private bool m_TaintedLandData = false;
 
@@ -93,6 +93,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         /// Local land ids at specified region co-ordinates (region size / 4)
         /// </value>
         private int[,] m_landIDList;
+        public int[,] LandIDList
+        {
+            get { return m_landIDList; }
+        }
         private bool UseDwell = true;
         private bool m_usePrivateParcelAsBan = true;
         private List<UUID> m_hasSentParcelOverLay = new List<UUID>();
@@ -352,7 +356,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             List<ILandObject> parcels = AllParcels ();
             foreach (ILandObject land in parcels)
             {
-                UpdateLandObject(land.LandData.LocalID, land.LandData);
+                UpdateLandObject(land);
             }
 
             if (m_UpdateDirectoryOnTimer)
@@ -391,10 +395,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
-            {
-                DSC.ClearRegion(m_scene.RegionInfo.RegionID);
                 DSC.AddRegion(AllParcels().ConvertAll<LandData>(delegate(ILandObject o) { return o.LandData; }));
-            }
         }
 
         // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center
@@ -737,21 +738,13 @@ namespace OpenSim.Region.CoreModules.World.Land
              }
         }
 
-        public void UpdateLandObject(int local_id, LandData data)
+        public void UpdateLandObject(ILandObject lo)
         {
-            LandData newData = data.Copy();
-            newData.LocalID = local_id;
-
-            if (m_landList.ContainsKey (local_id))
-            {
-                lock(m_landListLock)
-                    m_landList[local_id].LandData = newData;
-                AddLandObjectToSearch (GetLandObject(local_id));
-                IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector> ();
-                if (conn != null)
-                    conn.StoreLandObject (data);
-                m_scene.EventManager.TriggerLandObjectAdded (data);
-            }
+            AddLandObjectToSearch(lo);
+            IParcelServiceConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+            if (conn != null)
+                conn.StoreLandObject(lo.LandData);
+            m_scene.EventManager.TriggerLandObjectAdded(lo.LandData);
         }
 
         /// <summary>
@@ -774,18 +767,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 int newLandLocalID = ++m_lastLandLocalID;
                 new_land.LandData.LocalID = newLandLocalID;
 
-                //Add this parcels area to the region wide area tracker
-                bool[,] landBitmap = new_land.GetLandBitmap ();
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
-                {
-                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
-                    {
-                        if (landBitmap[x, y])
-                        {
-                            m_landIDList[x, y] = newLandLocalID;
-                        }
-                    }
-                }
                 //Add it to the list of land in this region
                 m_landList.Add (newLandLocalID, new_land);
             }
@@ -839,8 +820,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             ClearAllParcels ();
             ILandObject fullSimParcel = new LandObject (UUID.Zero, false, m_scene);
 
-            fullSimParcel.SetLandBitmap (fullSimParcel.GetSquareLandBitmap (0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY));
-
             if (fullSimParcel.LandData.OwnerID == UUID.Zero)
                 fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
@@ -865,7 +844,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ", setting owner to " + fullSimParcel.LandData.OwnerID);
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch ();
             fullSimParcel.SetInfoID ();
-            AddLandObject (fullSimParcel);
+            fullSimParcel = AddLandObject(fullSimParcel);
+            ModifyLandBitmapSquare(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, fullSimParcel.LandData.LocalID);
             return fullSimParcel;
         }
 
@@ -1207,27 +1187,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.SendAgentAlertMessage("You have been added to the parcel access list.", false);
         }
 
-        private void performFinalLandJoin(ILandObject master, ILandObject slave)
-        {
-            bool[,] landBitmapSlave = slave.GetLandBitmap();
-            lock (m_landListLock)
-            {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
-                {
-                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
-                    {
-                        if (landBitmapSlave[x, y])
-                        {
-                            m_landIDList[x, y] = master.LandData.LocalID;
-                        }
-                    }
-                }
-            }
-
-            removeLandObject(slave.LandData.LocalID);
-            UpdateLandObject(master.LandData.LocalID, master.LandData);
-        }
-
         public ILandObject GetLandObject (int parcelLocalID)
         {
             lock (m_landListLock)
@@ -1342,22 +1301,9 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             //Lets create a new land object with bitmap activated at that point (keeping the old land objects info)
             ILandObject newLand = startLandObject.Copy();
-            newLand.LandData.Name = newLand.LandData.Name;
             newLand.LandData.GlobalID = UUID.Random();
 
-            newLand.SetLandBitmap(newLand.GetSquareLandBitmap(start_x, start_y, end_x, end_y));
-            newLand.SetInfoID();
-
-            //Now, lets set the subdivision area of the original to false
-            int startLandObjectIndex = startLandObject.LandData.LocalID;
-            ILandObject startLandObjectParcel;
-            lock (m_landListLock)
-            {
-                startLandObjectParcel = m_landList[startLandObjectIndex];
-            }
-            startLandObjectParcel.SetLandBitmap (
-                newLand.ModifyLandBitmapSquare(startLandObject.GetLandBitmap(), start_x, start_y, end_x, end_y, false));
-            startLandObjectParcel.ForceUpdateLandInfo();
+            startLandObject.ForceUpdateLandInfo();
 
             IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             //Taint both land objects
@@ -1369,12 +1315,82 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             //Now add the new land object
             ILandObject result = AddLandObject(newLand);
+            ModifyLandBitmapSquare(start_x, start_y, end_x, end_y, result.LandData.LocalID);
+            result.SetInfoID();
             //Fix the old land object as well
-            UpdateLandObject(startLandObject.LandData.LocalID, startLandObject.LandData);
+            UpdateLandObject(startLandObject);
             result.SendLandUpdateToAvatarsOverMe();
             //Update the parcel overlay for ALL clients
             m_hasSentParcelOverLay.Clear(); //Clear everyone out
             m_scene.ForEachClient(SendParcelOverlay);
+        }
+
+        /// <summary>
+        /// Change a land bitmap at within a square and set those points to a specific value
+        /// </summary>
+        /// <param name="land_bitmap"></param>
+        /// <param name="start_x"></param>
+        /// <param name="start_y"></param>
+        /// <param name="end_x"></param>
+        /// <param name="end_y"></param>
+        /// <param name="set_value"></param>
+        /// <returns></returns>
+        public void ModifyLandBitmapSquare(int start_x, int start_y, int end_x, int end_y, int localIDToSet)
+        {
+            int x, y;
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
+            {
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
+                {
+                    if (x >= start_x / 4 && x < end_x / 4
+                        && y >= start_y / 4 && y < end_y / 4)
+                    {
+                        m_landIDList[x, y] = localIDToSet;
+                    }
+                }
+            }
+            UpdateAllParcelBitmaps();
+        }
+
+        /// <summary>
+        /// Rebuilds all of the parcel's bitmaps so that they are correct for saving and sending to clients
+        /// </summary>
+        private void UpdateAllParcelBitmaps()
+        {
+            foreach (ILandObject lo in AllParcels())
+            {
+                int y, x, i = 0, byteNum = 0;
+                byte tempByte = 0;
+                for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
+                {
+                    for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
+                    {
+                        tempByte = Convert.ToByte(tempByte |
+                            Convert.ToByte(m_landIDList[x, y] == lo.LandData.LocalID) << (i++ % 8));
+                        if (i % 8 == 0)
+                        {
+                            lo.LandData.Bitmap[byteNum] = tempByte;
+                            tempByte = (byte)0;
+                            i = 0;
+                            byteNum++;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void MergeLandBitmaps(int masterLocalID, int slaveLocalID)
+        {
+            int x, y;
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
+            {
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
+                {
+                    if (m_landIDList[x, y] == slaveLocalID)
+                        m_landIDList[x, y] = masterLocalID;
+                }
+            }
+            UpdateAllParcelBitmaps();
         }
 
         /// <summary>
@@ -1436,9 +1452,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             foreach (ILandObject slaveLandObject in selectedLandObjects)
             {
-                masterLandObject.SetLandBitmap (
-                    slaveLandObject.MergeLandBitmaps (masterLandObject.GetLandBitmap (), slaveLandObject.GetLandBitmap ()));
-                performFinalLandJoin (masterLandObject, slaveLandObject);
+                MergeLandBitmaps(masterLandObject.LandData.LocalID, slaveLandObject.LandData.LocalID);
+                removeLandObject(slaveLandObject.LandData.LocalID);
             }
             masterLandObject.LandData.OwnerID = attempting_user_id;
             IPrimCountModule primCountsModule = m_scene.RequestModuleInterface<IPrimCountModule>();
@@ -1446,13 +1461,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (primCountsModule != null)
             {
                 foreach (ILandObject slaveLandObject in selectedLandObjects)
-                {
                     primCountsModule.TaintPrimCount(slaveLandObject);
-                }
+
                 primCountsModule.TaintPrimCount(masterLandObject);
             }
 
             masterLandObject.SendLandUpdateToAvatarsOverMe();
+            UpdateLandObject(masterLandObject);
         }
 
         public void Join(int start_x, int start_y, int end_x, int end_y, UUID attempting_user_id)
@@ -1680,7 +1695,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
-                    UpdateLandObject(land.LandData.LocalID, land.LandData);
+                    UpdateLandObject(land);
                 }
             }
         }
@@ -1703,7 +1718,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
                     land.SendLandUpdateToClient(true, remote_client);
-                    UpdateLandObject(land.LandData.LocalID, land.LandData);
+                    UpdateLandObject(land);
                 }
             }
         }
@@ -1728,7 +1743,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     land.SendLandUpdateToClient(true, remote_client);
                     m_hasSentParcelOverLay.Clear(); //Clear everyone out
                     m_scene.ForEachClient(SendParcelOverlay);
-                    UpdateLandObject(land.LandData.LocalID, land.LandData);
+                    UpdateLandObject(land);
                 }
             }
         }
@@ -1799,7 +1814,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 land.SendLandUpdateToClient(true, remote_client);
                 m_hasSentParcelOverLay.Clear(); //Clear everyone out
                 m_scene.ForEachClient(SendParcelOverlay);
-                UpdateLandObject(land.LandData.LocalID, land.LandData);
+                UpdateLandObject(land);
             }
         }
 
@@ -1824,11 +1839,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 ILandObject new_land = new LandObject(data[i].OwnerID, data[i].IsGroupOwned, m_scene);
                 new_land.LandData = data[i];
-                if (new_land.SetLandBitmapFromByteArray(!result, parcelOffset))//Merge it into the large parcel if possible
+                if (SetLandBitmapFromByteArray(new_land, !result, parcelOffset))//Merge it into the large parcel if possible
                 {
-                    if(newSimDefault.Count > 0)//If we had to reset, make sure to remove all the new parcels from its
-                        // bitmap, so that it doesn't have any issues with overlaping parcels
-                        CarveOut(newSimDefault, new_land);
                     new_land.ForceUpdateLandInfo();
                     new_land.SetInfoID();
                     AddLandObject(new_land, true);
@@ -1838,38 +1850,45 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ResetSimLandObjects();
         }
 
-        /// <summary>
-        /// Carves out the newParcel's area (bitmap) from the original parcels so that they do not overlap
-        /// </summary>
-        /// <param name="originalParcel"></param>
-        /// <param name="newParcel"></param>
-        private void CarveOut(List<ILandObject> originalParcels, ILandObject newParcel)
+        private bool SetLandBitmapFromByteArray(ILandObject parcel, bool forceSet, Vector2 offsetOfParcel)
         {
-            for (int x = 0; x < newParcel.LandBitmap.GetLength(0); x++)
+            int avg = (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY / 128);
+            int oldParcelRegionAvg = (int)Math.Sqrt(parcel.LandData.Bitmap.Length * 128);
+            if (parcel.LandData.Bitmap.Length != avg && !(forceSet && parcel.LandData.Bitmap.Length < avg)) //Are the sizes the same
             {
-                for (int y = 0; y < newParcel.LandBitmap.GetLength(1); y++)
+                //The sim size changed, deal with it
+                return false;
+            }
+            byte tempByte = 0;
+            int x = (int)offsetOfParcel.X / 4, y = (int)offsetOfParcel.Y / 4, i = 0, bitNum = 0;
+            for (i = 0; i < avg; i++)
+            {
+                if (i < parcel.LandData.Bitmap.Length)
+                    tempByte = parcel.LandData.Bitmap[i];
+                else
+                    break;//All the rest are false then
+                for (bitNum = 0; bitNum < 8; bitNum++)
                 {
-                    if (newParcel.LandBitmap[x, y])
+                    bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
+                    if(bit)
+                        m_landIDList[x, y] = parcel.LandData.LocalID;
+                    x++;
+                    //Remove the offset so that we get a calc from the beginning of the array, not the offset array
+                    if (x - (int)(offsetOfParcel.X / 4) > (((forceSet ? oldParcelRegionAvg : m_scene.RegionInfo.RegionSizeX) / 4) - 1))
                     {
-                        //Remove from the old
-                        foreach(ILandObject originalParcel in originalParcels)
-                            originalParcel.LandBitmap[x, y] = false;
+                        x = (int)offsetOfParcel.X / 4;//Back to the beginning
+                        y++;
                     }
                 }
             }
-            //Fix the LandData byte[] array as well
-            foreach (ILandObject originalParcel in originalParcels)
-            {
-                originalParcel.UpdateLandBitmapByteArray();
-                UpdateLandObject(originalParcel.LandData.LocalID, originalParcel.LandData);
-            } 
+            return true;
         }
 
         public bool PreprocessIncomingLandObjectFromStorage(LandData data, Vector2 parcelOffset)
         {
             ILandObject new_land = new LandObject(data.OwnerID, data.IsGroupOwned, m_scene);
             new_land.LandData = data;
-            return new_land.SetLandBitmapFromByteArray(false, parcelOffset);
+            return SetLandBitmapFromByteArray(new_land, false, parcelOffset);
         }
 
         public void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient)
@@ -2155,7 +2174,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ResetRezzedObjectTime (land);
             land.LandData.OtherCleanTime = otherCleanTime;
 
-            UpdateLandObject(localID, land.LandData);
+            UpdateLandObject(land);
         }
         
         private void ResetRezzedObjectTime(ILandObject land)

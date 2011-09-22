@@ -375,7 +375,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 {
                     foreach (LandData parcel in landData)
                     {
-                        parcelManagementModule.UpdateLandObject(parcel.LocalID, parcel);
+                        parcelManagementModule.UpdateLandObject(parcelManagementModule.GetLandObject(parcel.LocalID));
                     }
                 }
             }
@@ -446,14 +446,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     }
                     if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
                     {
-                        foreach(LandData data in parcels)
+                        foreach (LandData data in parcels)
                         {
-                            OpenSim.Region.CoreModules.World.Land.LandObject lo = new Land.LandObject(data.OwnerID, false, m_scene);
-                            lo.LandData = data;
-                            if(lo.SetLandBitmapFromByteArray(true, new Vector2(m_offsetX, m_offsetY)))
-                                if (lo.ContainsPoint((int)location.X + m_offsetX, (int)location.Y + m_offsetY))
-                                    if(uuid != data.OwnerID)
-                                        id = data.OwnerID;
+                            if (ContainsPoint(data, (int)location.X + m_offsetX, (int)location.Y + m_offsetY))
+                                if (uuid != data.OwnerID)
+                                    id = data.OwnerID;
                         }
                     }
                     if(id == UUID.Zero)
@@ -465,6 +462,32 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
 
             return u;
+        }
+
+        private bool ContainsPoint(LandData data, int checkx, int checky)
+        {
+            byte tempByte = 0;
+            int x = 0, y = 0, i = 0, bitNum = 0;
+            for (i = 0; i < data.Bitmap.Length; i++)
+            {
+                if (i < data.Bitmap.Length)
+                    tempByte = data.Bitmap[i];
+                else
+                    break;//All the rest are false then
+                for (bitNum = 0; bitNum < 8; bitNum++)
+                {
+                    if (x == checkx / 4 && y == checky / 4)
+                        return Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
+                    x++;
+                    //Remove the offset so that we get a calc from the beginning of the array, not the offset array
+                    if (x > ((m_scene.RegionInfo.RegionSizeX / 4) - 1))
+                    {
+                        x = 0;//Back to the beginning
+                        y++;
+                    }
+                }
+            }
+            return false;
         }
 
         /// <summary>
