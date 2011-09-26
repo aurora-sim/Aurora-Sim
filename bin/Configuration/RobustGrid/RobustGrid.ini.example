@@ -54,7 +54,7 @@
     SecureSimulation = false
     RobustCompatibility = true;
 
-    AssetHandler = AssetServicesConnector
+    AssetHandler = RobustAssetServicesConnector
     AvatarHandler = AvatarServicesConnector
     EventQueueHandler = EventQueueMasterService
     FreeSwitchHandler = RemoteFreeswitchConnector

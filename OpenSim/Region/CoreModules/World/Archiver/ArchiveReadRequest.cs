@@ -300,10 +300,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     {
                         LoadControlFile(filePath, data);
                     }
-                    else
-                    {
-                        m_log.Debug("[ARCHIVER]:UNKNOWN PATH: " + filePath);
-                    }
                 }
 
                 //m_log.Debug("[ARCHIVER]: Reached end of archive");
@@ -339,13 +335,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 grp.HasGroupChanged = true;
             }
 
-            if (!m_skipAssets)
-            {
-                if (m_useAsync && !AssetSaverIsRunning)
+            if (!m_skipAssets && m_useAsync && !AssetSaverIsRunning)
                     m_threadpool.QueueEvent(SaveAssets, 0);
-                else if (!AssetSaverIsRunning)
-                    SaveAssets();
-            }
 
             if (!m_skipAssets)
             {
@@ -528,10 +519,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 // We're relying on the asset service to do the sensible thing and not store the asset if it already
                 // exists.
                 if (m_useAsync)
-                {
                     lock (AssetsToAdd)
                         AssetsToAdd.Add(asset);
-                }
                 else
                     asset.ID = m_scene.AssetService.Store(asset);
 

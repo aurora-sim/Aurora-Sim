@@ -42,13 +42,13 @@ namespace OpenSim.Services.Connectors
 {
     public class AssetServicesConnector : IAssetServiceConnector, IService
     {
-        private static readonly ILog m_log =
+        protected static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IRegistryCore m_registry;
+        protected IRegistryCore m_registry;
         protected IImprovedAssetCache m_Cache = null;
-        private string m_serverURL = "";
+        protected string m_serverURL = "";
 
         public AssetServicesConnector()
         {

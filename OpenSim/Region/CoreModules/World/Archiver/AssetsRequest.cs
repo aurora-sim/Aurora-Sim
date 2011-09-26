@@ -253,7 +253,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     {
                         m_requestState = RequestState.Completed;
                         
-                        m_log.DebugFormat(
+                        m_log.InfoFormat(
                             "[ARCHIVER]: Successfully added {0} assets ({1} assets notified missing)", 
                             m_foundAssetUuids.Count, m_notFoundAssetUuids.Count);
                         
@@ -262,9 +262,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         Util.FireAndForget(PerformAssetsRequestCallback);
                     }
                     else
-                    {
                         m_requestCallbackTimer.Start();
-                    }
                 }
             }
             catch (Exception e)

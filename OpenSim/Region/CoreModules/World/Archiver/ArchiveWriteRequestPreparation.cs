@@ -128,7 +128,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 assetGatherer.GatherAssetUuids(sceneObject, assetUuids, m_scene);
             }
 
-            m_log.DebugFormat(
+            m_log.InfoFormat(
                 "[ARCHIVER]: {0} scene objects to serialize requiring save of {1} assets",
                 sceneObjects.Count, assetUuids.Count);
 
