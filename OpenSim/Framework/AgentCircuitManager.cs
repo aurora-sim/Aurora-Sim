@@ -37,7 +37,6 @@ namespace OpenSim.Framework
     public class AgentCircuitManager
     {
         public Dictionary<uint, AgentCircuitData> AgentCircuits = new Dictionary<uint, AgentCircuitData>();
-        public Dictionary<UUID, AgentCircuitData> AgentCircuitsByUUID = new Dictionary<UUID, AgentCircuitData>();
 
         public virtual AgentCircuitData AuthenticateSession(UUID sessionID, UUID agentID, uint circuitcode, IPEndPoint IP)
         {
@@ -71,16 +70,7 @@ namespace OpenSim.Framework
         {
             lock (AgentCircuits)
             {
-                if (AgentCircuits.ContainsKey(circuitCode))
-                {
-                    AgentCircuits[circuitCode] = agentData;
-                    AgentCircuitsByUUID[agentData.AgentID] = agentData;
-                }
-                else
-                {
-                    AgentCircuits.Add(circuitCode, agentData);
-                    AgentCircuitsByUUID[agentData.AgentID] = agentData;
-                }
+                AgentCircuits[circuitCode] = agentData;
             }
         }
 
@@ -88,12 +78,7 @@ namespace OpenSim.Framework
         {
             lock (AgentCircuits)
             {
-                if (AgentCircuits.ContainsKey(circuitCode))
-                {
-                    UUID agentID = AgentCircuits[circuitCode].AgentID;
-                    AgentCircuits.Remove(circuitCode);
-                    AgentCircuitsByUUID.Remove(agentID);
-                }
+                AgentCircuits.Remove(circuitCode);
             }
         }
 
@@ -101,11 +86,10 @@ namespace OpenSim.Framework
         {
             lock (AgentCircuits)
             {
-                if (AgentCircuitsByUUID.ContainsKey(agentID))
+                foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
                 {
-                    uint circuitCode = AgentCircuitsByUUID[agentID].circuitcode;
-                    AgentCircuits.Remove(circuitCode);
-                    AgentCircuitsByUUID.Remove(agentID);
+                    if(circuitData.AgentID == agentID)
+                        AgentCircuits.Remove(circuitData.circuitcode);
                 }
             }
         }
@@ -118,9 +102,12 @@ namespace OpenSim.Framework
 
         public AgentCircuitData GetAgentCircuitData(UUID agentID)
         {
-            AgentCircuitData agentCircuit = null;
-            AgentCircuitsByUUID.TryGetValue(agentID, out agentCircuit);
-            return agentCircuit;
+            foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
+            {
+                if (circuitData.AgentID == agentID)
+                    return circuitData;
+            }
+            return null;
         }
 
         public void UpdateAgentData(AgentCircuitData agentData)
