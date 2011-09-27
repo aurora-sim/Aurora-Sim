@@ -69,6 +69,83 @@ namespace Aurora.Addon.Hypergrid
 
         #region IInventoryData Members
 
+        public override OSDArray GetLLSDItems(string[] fields, string[] vals)
+        {
+            string query = "";
+            for (int i = 0; i < fields.Length; i++)
+            {
+                query += String.Format("where {0} = '{1}' and ", fields[i], vals[i]);
+                i++;
+            }
+            query = query.Remove(query.Length - 5);
+            if (fields[0] == "inventoryID")
+            {
+                IInventoryService invService = m_registry.RequestModuleInterface<IInventoryService>();
+                if (invService != null)
+                {
+                    InventoryItemBase baseItem = new InventoryItemBase(UUID.Parse(vals[0]));
+                    return BuildLLSDInventoryItems(invService.GetItem(baseItem));
+                }
+            }
+            
+            return null;
+        }
+
+        private OSDArray BuildLLSDInventoryItems(InventoryItemBase retVal)
+        {
+            OSDArray array = new OSDArray();
+
+            if (retVal != null)
+            {
+                OSDMap item = new OSDMap();
+                OSDMap permissions = new OSDMap();
+                item["asset_id"] = retVal.AssetID;
+                item["name"] = retVal.Name;
+                item["desc"] = retVal.Description;
+                permissions["next_owner_mask"] = retVal.NextPermissions;
+                permissions["owner_mask"] = retVal.CurrentPermissions;
+                permissions["creator_id"] = retVal.CreatorIdAsUuid;
+                permissions["base_mask"] = retVal.BasePermissions;
+                permissions["everyone_mask"] = retVal.EveryOnePermissions;
+                OSDMap sale_info = new OSDMap();
+                sale_info["sale_price"] = retVal.SalePrice;
+                switch (retVal.SaleType)
+                {
+                    default:
+                        sale_info["sale_type"] = "not";
+                        break;
+                    case 1:
+                        sale_info["sale_type"] = "original";
+                        break;
+                    case 2:
+                        sale_info["sale_type"] = "copy";
+                        break;
+                    case 3:
+                        sale_info["sale_type"] = "contents";
+                        break;
+                }
+                item["sale_info"] = sale_info;
+                item["created_at"] = retVal.CreationDate;
+                permissions["group_id"] = retVal.GroupID;
+                permissions["is_owner_group"] = retVal.GroupOwned;
+                item["flags"] = retVal.Flags;
+                item["item_id"] = retVal.ID;
+                item["parent_id"] = retVal.Folder;
+                permissions["group_mask"] = retVal.GroupPermissions;
+                item["agent_id"] = retVal.Owner;
+                permissions["owner_id"] = item["agent_id"];
+                permissions["last_owner_id"] = item["agent_id"];
+
+                item["type"] = Utils.AssetTypeToString((AssetType)retVal.AssetType);
+                item["inv_type"] = Utils.InventoryTypeToString((InventoryType)retVal.InvType);
+
+                item["permissions"] = permissions;
+                array.Add(item);
+            }
+
+            return array;
+        }
+
         public override byte[] FetchInventoryReply (OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
@@ -204,6 +281,24 @@ namespace Aurora.Addon.Hypergrid
                         query += String.Format("{0} = '{1}' or ", "inventoryID", moreLinkedItems[i]);
                     query = query.Remove (query.Length - 4, 4);
                     query += ")";
+                    if (isForeign)
+                    {
+                        fretVal = new FakeDataReader();
+                        IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                        if (invServer == "" && configService != null)
+                        {
+                            List<string> urls = configService.FindValueOf("InventoryServerURI");
+                            if (urls.Count > 0)
+                                invServer = urls[0];
+                            else
+                                return null;
+                        }
+                        XInventoryServicesConnector xinv = new XInventoryServicesConnector(invServer + "xinventory");
+                        for (int i = 0; i < moreLinkedItems.Count; i++)
+                        {
+                            ((FakeDataReader)fretVal).items.Add(xinv.GetItem(new InventoryItemBase(moreLinkedItems[i])));
+                        }
+                    }
                     moreLinkedItems.Clear ();
                     goto redoQuery;
                 }

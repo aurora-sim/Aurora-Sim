@@ -475,7 +475,10 @@ namespace OpenSim.Services.Connectors
 
         public OSDArray GetItem(UUID ItemID)
         {
-            return null;
+            IInventoryData database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
+            return database.GetLLSDItems(
+                    new string[1] { "inventoryID" },
+                    new string[1] { ItemID.ToString() });
         }
 
         public OSDArray GetLLSDFolderItems(UUID folderID, UUID parentID)

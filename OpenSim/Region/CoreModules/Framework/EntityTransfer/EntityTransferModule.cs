@@ -304,7 +304,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.AgentCircuitsByUUID[sp.UUID];
+                    AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID);
                     agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
                     agentCircuit.firstname = oldCircuit.firstname;
                     agentCircuit.lastname = oldCircuit.lastname;
@@ -524,7 +524,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 {
                     Vector3 position = Vector3.Zero, lookAt = Vector3.Zero;
                     if (uas != null)
-                        regionInfo = uas.GetHomeRegion (client.Scene.AuthenticateHandler.AgentCircuitsByUUID[client.AgentId], out position, out lookAt);
+                        regionInfo = uas.GetHomeRegion(client.Scene.AuthenticateHandler.GetAgentCircuitData(client.AgentId), out position, out lookAt);
                     if (regionInfo == null)
                     {
                         //can't find the Home region: Tell viewer and abort

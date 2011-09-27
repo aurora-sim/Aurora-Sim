@@ -1017,14 +1017,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 List<GroupInviteInfo> GroupInvites = new List<GroupInviteInfo> ();
                 Hashtable results = (Hashtable)respData["results"];
-                foreach (Hashtable invite in results.Values)
+                if (results != null)
                 {
-                    GroupInviteInfo data = new GroupInviteInfo ();
-                    data.AgentID = new UUID ((string)invite["AgentID"]);
-                    data.GroupID = new UUID ((string)invite["GroupID"]);
-                    data.InviteID = new UUID ((string)invite["InviteID"]);
-                    data.RoleID = new UUID ((string)invite["RoleID"]);
-                    GroupInvites.Add (data);
+                    foreach (Hashtable invite in results.Values)
+                    {
+                        GroupInviteInfo data = new GroupInviteInfo();
+                        data.AgentID = new UUID((string)invite["AgentID"]);
+                        data.GroupID = new UUID((string)invite["GroupID"]);
+                        data.InviteID = new UUID((string)invite["InviteID"]);
+                        data.RoleID = new UUID((string)invite["RoleID"]);
+                        GroupInvites.Add(data);
+                    }
                 }
                 return GroupInvites;
             }
