@@ -70,7 +70,7 @@ namespace OpenSim.Services.RobustCompat
         /// Asset class.   All Assets are reference by this class or a class derived from this class
         /// </summary>
         [Serializable]
-        public class RobustAssetBase
+        public class AssetBase
         {
             private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -86,7 +86,7 @@ namespace OpenSim.Services.RobustCompat
 
             // This is needed for .NET serialization!!!
             // Do NOT "Optimize" away!
-            public RobustAssetBase()
+            public AssetBase()
             {
                 m_metadata = new AssetMetadata();
                 m_metadata.FullID = UUID.Zero;
@@ -95,7 +95,7 @@ namespace OpenSim.Services.RobustCompat
                 m_metadata.CreatorID = String.Empty;
             }
 
-            public RobustAssetBase(UUID assetID, string name, sbyte assetType, string creatorID)
+            public AssetBase(UUID assetID, string name, sbyte assetType, string creatorID)
             {
                 if (assetType == (sbyte)AssetType.Unknown)
                 {
@@ -111,7 +111,7 @@ namespace OpenSim.Services.RobustCompat
                 m_metadata.CreatorID = creatorID;
             }
 
-            public RobustAssetBase(string assetID, string name, sbyte assetType, string creatorID)
+            public AssetBase(string assetID, string name, sbyte assetType, string creatorID)
             {
                 if (assetType == (sbyte)AssetType.Unknown)
                 {
@@ -386,10 +386,10 @@ namespace OpenSim.Services.RobustCompat
             }
         }
 
-        public override AssetBase Get(string id)
+        public override Framework.AssetBase Get(string id)
         {
-            AssetBase asset = null;
-            RobustAssetBase rasset = null;
+            Framework.AssetBase asset = null;
+            AssetBase rasset = null;
 
             if (m_Cache != null)
             {
@@ -405,7 +405,7 @@ namespace OpenSim.Services.RobustCompat
                 foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
                 {
                     rasset = SynchronousRestObjectRequester.
-                        MakeRequest<int, RobustAssetBase>("GET", uri, 0);
+                        MakeRequest<int, AssetBase>("GET", uri, 0);
                     asset = TearDown(rasset);
                     if (m_Cache != null && asset != null)
                         m_Cache.Cache(asset);
@@ -424,7 +424,7 @@ namespace OpenSim.Services.RobustCompat
             {
                 string uri = m_ServerURI + "/" + id;
 
-                AssetBase asset = null;
+                Framework.AssetBase asset = null;
                 if (m_Cache != null)
                     asset = m_Cache.Get(id);
 
@@ -433,10 +433,10 @@ namespace OpenSim.Services.RobustCompat
                     bool result = false;
 
                     AsynchronousRestObjectRequester.
-                            MakeRequest<int, RobustAssetBase>("GET", uri, 0,
-                            delegate(RobustAssetBase aa)
+                            MakeRequest<int, AssetBase>("GET", uri, 0,
+                            delegate(AssetBase aa)
                             {
-                                AssetBase a = TearDown(aa);
+                                Framework.AssetBase a = TearDown(aa);
                                 if (m_Cache != null)
                                     m_Cache.Cache(a);
                                 handler(id, sender, a);
@@ -456,9 +456,9 @@ namespace OpenSim.Services.RobustCompat
             return false;
         }
 
-        public override UUID Store(AssetBase asset)
+        public override UUID Store(Framework.AssetBase asset)
         {
-            RobustAssetBase rasset = Build(asset);
+            AssetBase rasset = Build(asset);
             if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
             {
                 if (m_Cache != null)
@@ -478,7 +478,8 @@ namespace OpenSim.Services.RobustCompat
                 try
                 {
                     string request = SynchronousRestObjectRequester.
-                            MakeRequest<RobustAssetBase, string>("POST", uri, rasset);
+                            MakeRequest<AssetBase, string>("POST", uri, rasset);
+
                     UUID.TryParse(request, out newID);
                 }
                 catch (Exception e)
@@ -495,13 +496,15 @@ namespace OpenSim.Services.RobustCompat
                     if (m_Cache != null)
                         m_Cache.Cache(asset);
                 }
+                else
+                    return asset.ID;//OPENSIM
             }
             return newID;
         }
 
-        public RobustAssetBase Build(AssetBase asset)
+        public AssetBase Build(Framework.AssetBase asset)
         {
-            RobustAssetBase r = new RobustAssetBase();
+            AssetBase r = new AssetBase();
             r.CreatorID = asset.CreatorID.ToString();
             r.Data = asset.Data;
             r.Description = asset.Description;
@@ -512,11 +515,11 @@ namespace OpenSim.Services.RobustCompat
             return r;
         }
 
-        public AssetBase TearDown(RobustAssetBase asset)
+        public Framework.AssetBase TearDown(AssetBase asset)
         {
             if (asset == null)
                 return null;
-            AssetBase r = new AssetBase();
+            Framework.AssetBase r = new Framework.AssetBase();
             r.CreatorID = UUID.Parse(asset.CreatorID);
             r.Data = asset.Data;
             r.Description = asset.Description;

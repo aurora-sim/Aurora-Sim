@@ -105,7 +105,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (System.InvalidOperationException)
             {
-                // This is what happens when there is invalid XML
+                // This is what happens when there is invalid XML or a 404
             }
             return deserial;
         }
