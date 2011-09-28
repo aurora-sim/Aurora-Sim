@@ -44,15 +44,15 @@ namespace OpenSim.Services.Connectors
 {
     public class AvatarServicesConnector : IAvatarService, IService
     {
-        private static readonly ILog m_log =
+        protected static readonly ILog m_log =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IRegistryCore m_registry;
+        protected IRegistryCore m_registry;
 
         #region IAvatarService
 
-        public AvatarAppearance GetAppearance(UUID userID)
+        public virtual AvatarAppearance GetAppearance(UUID userID)
         {
             AvatarData avatar = GetAvatar(userID);
             if (avatar == null)
@@ -60,13 +60,13 @@ namespace OpenSim.Services.Connectors
             return avatar.ToAvatarAppearance(userID);
         }
 
-        public bool SetAppearance(UUID userID, AvatarAppearance appearance)
+        public virtual bool SetAppearance(UUID userID, AvatarAppearance appearance)
         {
             AvatarData avatar = new AvatarData(appearance);
             return SetAvatar(userID, avatar);
         }
 
-        public AvatarData GetAvatar(UUID userID)
+        public virtual AvatarData GetAvatar(UUID userID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -114,7 +114,7 @@ namespace OpenSim.Services.Connectors
 
         }
 
-        public bool SetAvatar(UUID userID, AvatarData avatar)
+        public virtual bool SetAvatar(UUID userID, AvatarData avatar)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -164,7 +164,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool ResetAvatar(UUID userID)
+        public virtual bool ResetAvatar(UUID userID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -209,7 +209,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool SetItems(UUID userID, string[] names, string[] values)
+        public virtual bool SetItems(UUID userID, string[] names, string[] values)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();
@@ -255,7 +255,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool RemoveItems(UUID userID, string[] names)
+        public virtual bool RemoveItems(UUID userID, string[] names)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -301,7 +301,7 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
+        public virtual void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -333,17 +333,17 @@ namespace OpenSim.Services.Connectors
 
         #region IService Members
 
-        public string Name
+        public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public IAvatarService InnerService
+        public virtual IAvatarService InnerService
         {
             get { return this; }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
@@ -353,11 +353,11 @@ namespace OpenSim.Services.Connectors
             registry.RegisterModuleInterface<IAvatarService>(this);
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup()
+        public virtual void FinishedStartup()
         {
         }
 

@@ -55,7 +55,7 @@
     RobustCompatibility = true;
 
     AssetHandler = RobustAssetServicesConnector
-    AvatarHandler = AvatarServicesConnector
+    AvatarHandler = RobustAvatarServicesConnector
     EventQueueHandler = EventQueueMasterService
     FreeSwitchHandler = RemoteFreeswitchConnector
     FriendsHandler = FriendsServicesConnector

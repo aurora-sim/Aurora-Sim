@@ -140,7 +140,10 @@ namespace OpenSim.Services.Interfaces
                     if (_kvp.Key.StartsWith ("Wearable"))
                     {
                         key = _kvp.Key.Replace ("Wearable", "");
-                        key = key.Insert (1, ":"); //Add the : back
+                        if(key.Length == 2)
+                            key = key.Insert (1, ":"); //Add the : back
+                        else
+                            key = key.Insert(2, ":"); //Add the : back
                         key = "Wearable " + key; //Add the space back
                     }
                     Data[key] = _kvp.Value.ToString ();

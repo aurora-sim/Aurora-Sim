@@ -158,12 +158,12 @@ namespace OpenSim.Services.RobustCompat
                 UserInfo[] infos = aservice.GetUserInfos(s);
                 foreach (UserInfo u in infos)
                 {
-                    if (u.IsOnline)
+                    if (u != null && u.IsOnline)
                         friendsModule.SendFriendsStatusMessage(presence.UUID, UUID.Parse(u.UserID), true);
                 }
                 foreach (UserInfo u in infos)
                 {
-                    if (u.IsOnline)
+                    if (u != null && u.IsOnline)
                     {
                         if (!IsLocal(u, presence))
                             DoNonLocalPresenceUpdateCall(u, presence);
@@ -300,16 +300,16 @@ namespace OpenSim.Services.RobustCompat
                     AgentCircuitData circuit = (AgentCircuitData)obj[1];
                     if (circuit.reallyischild)//If Aurora is sending this, it'll show that it really is a child agent
                         return null;
+                    AvatarAppearance appearance = m_scene.AvatarService.GetAppearance(circuit.AgentID);
+                    if (appearance != null)
+                        circuit.Appearance = appearance;
+                    else
+                        m_scene.AvatarService.SetAppearance(circuit.AgentID, circuit.Appearance);
+                    //circuit.Appearance.Texture = new Primitive.TextureEntry(UUID.Zero);
                     circuit.child = false;//ONLY USE ROOT AGENTS, SINCE OPENSIM SENDS CHILD == TRUE ALL THE TIME
                     if (circuit.ServiceURLs != null && circuit.ServiceURLs.ContainsKey ("IncomingCAPSHandler"))
                     {
-                        //Used by incoming (home) agents from HG
-                        MainServer.Instance.AddStreamHandler (new RestStreamHandler ("POST", CapsUtil.GetCapsSeedPath (circuit.CapsPath),
-                            delegate (string request, string path, string param2,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                            {
-                                return CapsRequest (request, path, param2, httpRequest, httpResponse, circuit.ServiceURLs["IncomingCAPSHandler"].ToString ());
-                            }));
+                        AddCapsHandler(circuit);
                     }
                     else
                     {
@@ -343,6 +343,17 @@ namespace OpenSim.Services.RobustCompat
                 }
             }
             return null;
+        }
+
+        private void AddCapsHandler(AgentCircuitData circuit)
+        {
+            //Used by incoming (home) agents from HG
+            MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
+                delegate(string request, string path, string param2,
+                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                {
+                    return CapsRequest(request, path, param2, httpRequest, httpResponse, circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
+                }));
         }
 
         public void RegionLoaded (IScene scene)
