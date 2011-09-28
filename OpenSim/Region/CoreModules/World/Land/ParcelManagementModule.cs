@@ -395,42 +395,12 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             IDirectoryServiceConnector DSC = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
-                DSC.AddRegion(AllParcels().ConvertAll<LandData>(delegate(ILandObject o) { return o.LandData; }));
-        }
-
-        // this is needed for non-convex parcels (example: rectangular parcel, and in the exact center
-        // another, smaller rectangular parcel). Both will have the same initial coordinates.
-        private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
-        {
-            // the point we started with already is in the parcel
-            if (land.ContainsPoint((int)refX, (int)refY)) return;
-
-            // ... otherwise, we have to search for a point within the parcel
-            uint startX = (uint)land.LandData.AABBMin.X;
-            uint startY = (uint)land.LandData.AABBMin.Y;
-            uint endX = (uint)land.LandData.AABBMax.X;
-            uint endY = (uint)land.LandData.AABBMax.Y;
-
-            // default: center of the parcel
-            refX = (startX + endX) / 2;
-            refY = (startY + endY) / 2;
-            // If the center point is within the parcel, take that one
-            if (land.ContainsPoint((int)refX, (int)refY)) return;
-
-            // otherwise, go the long way.
-            for (uint y = startY; y <= endY; ++y)
-            {
-                for (uint x = startX; x <= endX; ++x)
+                DSC.AddRegion(AllParcels().ConvertAll<LandData>(delegate(ILandObject o) 
                 {
-                    if (land.ContainsPoint((int)x, (int)y))
-                    {
-                        // found a point
-                        refX = x;
-                        refY = y;
-                        return;
-                    }
-                }
-            }
+                    LandData d = o.LandData.Copy();
+                    d.UserLocation = GetParcelCenterAtGround(o);
+                    return d; 
+                }));
         }
 
         void EventManagerOnNewClient(IClientAPI client)

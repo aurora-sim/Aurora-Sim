@@ -47,8 +47,6 @@ namespace Aurora.Services.DataService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGenericData GD = null;
-        private int minTimeBeforeNextParcelUpdate = 60;
-        private Dictionary<UUID, int> timeBeforeNextUpdate = new Dictionary<UUID, int>();
         private IRegistryCore m_registry;
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
@@ -57,10 +55,8 @@ namespace Aurora.Services.DataService
             m_registry = simBase;
 
             if (source.Configs[Name] != null)
-            {
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-                minTimeBeforeNextParcelUpdate = source.Configs[Name].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
-            }
+
             GD.ConnectToDatabase(defaultConnectionString, "Directory", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name+"Local", this);
@@ -92,14 +88,7 @@ namespace Aurora.Services.DataService
         {
             if (parcels.Count == 0)
                 return;
-            //Check whether this region is just spamming add to search and stop them if they are
-            if (timeBeforeNextUpdate.ContainsKey(parcels[0].RegionID) &&
-                Util.UnixTimeSinceEpoch() < timeBeforeNextUpdate[parcels[0].RegionID])
-                return; //Too soon to update
-
-            //Update the time with now + the time to wait for the next update
-            timeBeforeNextUpdate[parcels[0].RegionID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
-
+            
             ClearRegion(parcels[0].RegionID);
             foreach (LandData args in parcels)
             {
@@ -128,8 +117,6 @@ namespace Aurora.Services.DataService
                 Values.Add(args.SnapshotID);
                 Values.Add(OSDParser.SerializeLLSDXmlString(args.Bitmap));
 
-                //Remove the old one
-                GD.Delete("searchparcel", new string[1] { "ParcelID" }, new object[1] { args.GlobalID });
                 GD.Insert("searchparcel", Values.ToArray());
             }
         }

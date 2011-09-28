@@ -53,7 +53,7 @@ namespace OpenSim.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler ();
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler ();
-        private DirectoryInfoOSDHandler DirectoryHandler = new DirectoryInfoOSDHandler ();
+        private DirectoryInfoOSDHandler DirectoryHandler = null;
         
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -61,6 +61,7 @@ namespace OpenSim.Services
         public AuroraDataServerPostOSDHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
+            DirectoryHandler = new DirectoryInfoOSDHandler (registry.RequestModuleInterface<ISimulationBase>().ConfigSource);
             m_SessionID = SessionID;
             m_registry = registry;
         }
@@ -527,8 +528,12 @@ namespace OpenSim.Services
     public class DirectoryInfoOSDHandler
     {
         IDirectoryServiceConnector DirectoryServiceConnector;
-        public DirectoryInfoOSDHandler ()
+        private int minTimeBeforeNextParcelUpdate = 60;
+        private Dictionary<UUID, int> timeBeforeNextUpdate = new Dictionary<UUID, int>();
+
+        public DirectoryInfoOSDHandler (IConfigSource source)
         {
+            minTimeBeforeNextParcelUpdate = source.Configs["IDirectoryServiceConnector"].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
             DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector> ("IDirectoryServiceConnectorLocal");
         }
 
@@ -568,6 +573,16 @@ namespace OpenSim.Services
                 land.RegionID = regionID;
                 parcels.Add(land);
             }
+            if (parcels.Count == 0)
+                return new byte[1];
+            //Check whether this region is just spamming add to search and stop them if they are
+            if (timeBeforeNextUpdate.ContainsKey(parcels[0].RegionID) &&
+                Util.UnixTimeSinceEpoch() < timeBeforeNextUpdate[parcels[0].RegionID])
+                return new byte[1]; //Too soon to update
+
+            //Update the time with now + the time to wait for the next update
+            timeBeforeNextUpdate[parcels[0].RegionID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
+
             DirectoryServiceConnector.AddRegion(parcels);
             return new byte[1];
         }
