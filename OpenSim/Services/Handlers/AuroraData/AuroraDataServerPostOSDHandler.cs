@@ -533,7 +533,8 @@ namespace OpenSim.Services
 
         public DirectoryInfoOSDHandler (IConfigSource source)
         {
-            minTimeBeforeNextParcelUpdate = source.Configs["IDirectoryServiceConnector"].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
+            if(source.Configs["IDirectoryServiceConnector"] != null)
+                minTimeBeforeNextParcelUpdate = source.Configs["IDirectoryServiceConnector"].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
             DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector> ("IDirectoryServiceConnectorLocal");
         }
 

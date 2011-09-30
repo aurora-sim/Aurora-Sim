@@ -79,9 +79,6 @@ namespace OpenSim.Region.Framework.Scenes
         private Queue<AnimationGroup> m_presenceAnimationsToSend = new Queue<AnimationGroup>/*<UUID, AnimationGroup>*/ ();
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
         private OrderedDictionary/*<UUID, ISceneChildEntity>*/ m_objectPropertiesToSend = new OrderedDictionary/*<UUID, ISceneChildEntity>*/ ();
-        /*private List<UUID> m_EntitiesInPacketQueue = new List<UUID>();
-        private List<UUID> m_AnimationsInPacketQueue = new List<UUID>();
-        private List<UUID> m_PropertiesInPacketQueue = new List<UUID>();*/
         private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
         private Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence> ();
         private object m_lastPresencesInViewLock = new object();
@@ -374,6 +371,44 @@ namespace OpenSim.Region.Framework.Scenes
                 lastPresencesDInView.Remove (sp.UUID);
         }
 
+        public void SendPresenceFullUpdate(IScenePresence presence)
+        {
+            if (m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
+                m_presence.ControllingClient.SendAvatarDataImmediate(presence);
+            lock (m_lastPresencesInViewLock)
+                if (!lastPresencesDInView.ContainsKey(presence.UUID))
+                    lastPresencesDInView.Add(presence.UUID, presence);
+        }
+
+        protected void SendFullUpdateForPresence(IScenePresence presence)
+        {
+            Util.FireAndForget(delegate(object o)
+            {
+                m_presence.ControllingClient.SendAvatarDataImmediate(presence);
+                //Send the animations too
+                presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
+                //Send the presence of this agent to us
+                IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                if (module != null)
+                    module.SendAppearanceToAgent(m_presence);
+                //We need to send all attachments of this avatar as well
+                IAttachmentsModule attmodule = m_presence.Scene.RequestModuleInterface<IAttachmentsModule>();
+                if (attmodule != null)
+                {
+                    ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar(m_presence.UUID);
+                    foreach (ISceneEntity entity in entities)
+                    {
+                        QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
+                        foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                        {
+                            if (!child.IsRoot)
+                                QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                        }
+                    }
+                }
+            });
+        }
+
         #endregion
 
         #region Object Culling by draw distance
@@ -430,8 +465,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 return Compare((PriorityQueueItem<EntityUpdate, int>)x, (PriorityQueueItem<EntityUpdate, int>)y);
             }
-
-            #endregion
         }
 
         private void DoSignificantClientMovement (object o)
@@ -494,43 +527,7 @@ namespace OpenSim.Region.Framework.Scenes
             presences = null;
         }
 
-        public void SendPresenceFullUpdate (IScenePresence presence)
-        {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
-                m_presence.ControllingClient.SendAvatarDataImmediate(presence);
-            lock(m_lastPresencesInViewLock)
-                if(!lastPresencesDInView.ContainsKey(presence.UUID))
-                    lastPresencesDInView.Add(presence.UUID, presence);
-        }
-
-        protected void SendFullUpdateForPresence (IScenePresence presence)
-        {
-            Util.FireAndForget (delegate (object o)
-            {
-                m_presence.ControllingClient.SendAvatarDataImmediate (presence);
-                //Send the animations too
-                presence.Animator.SendAnimPackToClient (m_presence.ControllingClient);
-                //Send the presence of this agent to us
-                IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (module != null)
-                    module.SendAppearanceToAgent (m_presence);
-                //We need to send all attachments of this avatar as well
-                IAttachmentsModule attmodule = m_presence.Scene.RequestModuleInterface<IAttachmentsModule> ();
-                if (attmodule != null)
-                {
-                    ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar (m_presence.UUID);
-                    foreach (ISceneEntity entity in entities)
-                    {
-                        QueuePartForUpdate (entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
-                        foreach (ISceneChildEntity child in entity.ChildrenEntities ())
-                        {
-                            if(!child.IsRoot)
-                                QueuePartForUpdate (child, PrimUpdateFlags.ForcedFullUpdate);
-                        }
-                    }
-                }
-            });
-        }
+        #endregion
 
         #region SendPrimUpdates
 
