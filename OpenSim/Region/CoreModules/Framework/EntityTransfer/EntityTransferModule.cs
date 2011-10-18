@@ -290,8 +290,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             agentCircuit.child = false;
             //Make sure the appearnace is right
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
-            if(appearance != null)
+            if (appearance != null && appearance.Appearance != null)
                 agentCircuit.Appearance = appearance.Appearance;
+            else
+                m_log.Error("[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " + appearance == null);
 
             AgentData agent = new AgentData();
             sp.CopyTo(agent);
@@ -636,8 +638,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     agentCircuit.child = false;
                     agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
                     IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule>();
-                    if (appearance != null)
+                    if (appearance != null && appearance.Appearance != null)
                         agentCircuit.Appearance = appearance.Appearance;
+                    else
+                        m_log.Error("[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " + appearance == null);
 
                     IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                     if (eq != null)

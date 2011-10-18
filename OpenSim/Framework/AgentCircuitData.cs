@@ -178,6 +178,8 @@ namespace OpenSim.Framework
                 OSDMap appmap = Appearance.Pack();
                 args["packed_appearance"] = appmap;
             }
+            else
+                m_log.Error("[AgentCircuitData]: NOT PACKING APPEARANCE FOR " + firstname + " " + lastname + ", user may be messed up");
 
             if (ServiceURLs != null && ServiceURLs.Count > 0)
             {
@@ -277,7 +279,7 @@ namespace OpenSim.Framework
                 }
                 // DEBUG ON
                 else
-                    m_log.Warn("[AGENTCIRCUITDATA] failed to find a valid packed_appearance");
+                    m_log.Warn("[AGENTCIRCUITDATA] failed to find a valid packed_appearance, dne ? " + !args.ContainsKey("packed_appearance"));
                 // DEBUG OFF
             }
             catch (Exception e)

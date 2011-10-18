@@ -898,7 +898,8 @@ namespace OpenSim.Region.Framework.Scenes
                         sp.SceneViewer.QueuePresenceForFullUpdate(this, true);
                     }
                 }
-                agent.Appearance = appearance.Appearance;
+                if(appearance.Appearance != null)
+                    agent.Appearance = appearance.Appearance;
             }
 
             ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService> ();

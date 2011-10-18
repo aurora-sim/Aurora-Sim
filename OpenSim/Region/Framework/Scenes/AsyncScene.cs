@@ -730,13 +730,18 @@ namespace OpenSim.Region.Framework.Scenes
                         m_eventManager.TriggerOnNewPresence(sp);
 
                         //Make sure the appearanace is updated
-                        if(aCircuit != null && aCircuit.Appearance != null)
+                        IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+                        if (appearance != null)
                         {
-                            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-                            if(appearance != null)
+                            if (aCircuit != null && aCircuit.Appearance != null)
                                 appearance.Appearance = aCircuit.Appearance;
                             else
                                 appearance.Appearance = sp.Scene.AvatarService.GetAppearance(sp.UUID);
+                            if (appearance.Appearance == null)
+                            {
+                                m_log.Error("[AsyncScene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
+                                appearance.Appearance = new AvatarAppearance(sp.UUID);
+                            }
                         }
 
                         if(GetScenePresence(client.AgentId) != null)

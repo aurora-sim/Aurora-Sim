@@ -69,6 +69,8 @@ namespace OpenSim.Services.AvatarService
                 return;
 
             registry.RegisterModuleInterface<IAvatarService>(this);
+
+            MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]", "Resets the given avatar's appearance to the default", ResetAvatarAppearance);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -78,6 +80,22 @@ namespace OpenSim.Services.AvatarService
 
         public void FinishedStartup()
         {
+        }
+
+        public void ResetAvatarAppearance(string[] cmd)
+        {
+            string name = "";
+            if (cmd.Length == 3)
+                name = MainConsole.Instance.CmdPrompt("Avatar Name");
+            else
+                name = Util.CombineParams(cmd, 3);
+            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
+            if(acc == null)
+            {
+                MainConsole.Instance.Output("No known avatar with that name.", log4net.Core.Level.Emergency);
+                return;
+            }
+            ResetAvatar(acc.PrincipalID);
         }
 
         public AvatarAppearance GetAppearance(UUID principalID)
