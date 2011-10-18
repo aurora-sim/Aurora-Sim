@@ -119,8 +119,8 @@
     ;; ##
 
     ;; World Step size. (warning these are dangerous.  Changing these will probably cause your scene to explode dramatically)
-    ;; reference: fps = (0.09375/ODE_STEPSIZE) * 1000;
-    world_stepsize = 0.020
+    ;; reference: fps = (0.089/ODE_STEPSIZE) * 1000;
+    world_stepsize = 0.0178
     ;; Smaller means less iterations through the simulation between frames
     ;; Default is 10
     world_internal_steps_without_collisions = 5
