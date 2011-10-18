@@ -1831,6 +1831,12 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             byte tempByte = 0;
             int x = (int)offsetOfParcel.X / 4, y = (int)offsetOfParcel.Y / 4, i = 0, bitNum = 0;
+            if (parcel.LandData.Bitmap.Length < avg)
+            {
+                byte[] newArray = new byte[avg];
+                Array.Copy(parcel.LandData.Bitmap, newArray, parcel.LandData.Bitmap.Length);
+                parcel.LandData.Bitmap = newArray;
+            }
             for (i = 0; i < avg; i++)
             {
                 if (i < parcel.LandData.Bitmap.Length)
