@@ -5,7 +5,7 @@
     ;; Log into your sim,
     ;; Bring up the stats popup box in your viewer (cntr shift 1)
     ;; Look at the Physics FPS stat and find the average value of it (can be rough) and place it here
-    ;;Normally, this value is around 45
+    ;;Normally, this value is around 22.5
     BasePhysicsFPS = 22.5
 
 [AuroraODEPhysicsSettings]
