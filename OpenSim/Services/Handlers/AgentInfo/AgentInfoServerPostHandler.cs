@@ -145,7 +145,10 @@ namespace OpenSim.Services
             OSDArray resultArray = new OSDArray();
             foreach (UserInfo info in result)
             {
-                resultArray.Add(info.ToOSD());
+                if(info != null)
+                    resultArray.Add(info.ToOSD());
+                else
+                    resultArray.Add(new OSD());
             }
 
             OSDMap resultMap = new OSDMap();
