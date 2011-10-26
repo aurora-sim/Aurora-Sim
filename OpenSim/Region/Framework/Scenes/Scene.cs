@@ -512,7 +512,6 @@ namespace OpenSim.Region.Framework.Scenes
                         if (!RegionInfo.RegionSettings.DisablePhysics && SinceLastFrame.TotalMilliseconds > m_updatetimespan)
                         {
                             m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);
-                            m_sceneGraph.PhysicsScene.UpdatesLoop();
                             m_lastphysupdate = DateTime.UtcNow;
                             int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract (PhysicsUpdateTime) + MonitorPhysicsSyncTime;
 
