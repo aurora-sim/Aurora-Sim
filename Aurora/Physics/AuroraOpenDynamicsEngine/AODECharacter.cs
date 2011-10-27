@@ -59,8 +59,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool _wasZeroFlagFlying = false;
         private int m_ZeroUpdateSent = 0;
 
-        float m_UpdateTimecntr = 0;
-        float m_UpdateFPScntr = 0.05f;
+//        float m_UpdateTimecntr = 0;
+//        float m_UpdateFPScntr = 0.05f;
         private bool m_isJumping = false;
         public override bool IsJumping
         {
@@ -202,11 +202,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_tainted_isPhysical = true; // new tainted status: need to create ODE information
 
             _parent_scene.AddPhysicsActorTaint(this);
-
+/*
             m_UpdateTimecntr = 0;
             m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
             if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
                 m_UpdateTimecntr = .1f;
+ */
             m_name = avName;
         }
 
@@ -572,7 +573,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetCategoryBits(Shell, (int)m_collisionCategories);
             d.GeomSetCollideBits(Shell, (int)m_collisionFlags);
 
-            d.MassSetCapsule(out ShellMass, 30f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH); // density 200
+            d.MassSetCapsule(out ShellMass, 80f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH);
 
             m_mass=ShellMass.mass;
 
@@ -1271,6 +1272,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     qtmp.Y = 0;
                     qtmp.Z = 0;
                     d.BodySetQuaternion(Body, ref qtmp);
+                    d.BodySetAngularVel(Body, 0, 0, 0);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
@@ -1386,6 +1388,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _velocity.X = vec.X;
             _velocity.Y = vec.Y;
             _velocity.Z = vec.Z;
+
             if (!IsFinite(_velocity))
             {
                 _parent_scene.BadCharacter(this);
@@ -1413,30 +1416,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if(vcntr == 3)
                 VelIsZero = true;
 
-            // slow down updates
+            // slow down updates, changed y mind: updates should go at physics fps, acording to movement conditions
+/*
             m_UpdateTimecntr += timestep;
-            m_UpdateFPScntr = 2.5f * _parent_scene.StepTime * 10 * (6 - (_parent_scene.TimeDilation * 5));
+            m_UpdateFPScntr = 2.5f * _parent_scene.StepTime;
             if(m_UpdateTimecntr < m_UpdateFPScntr)
                 return;
 
             m_UpdateTimecntr = 0;
-
-            const float VELOCITY_TOLERANCE = 0.025f;
+*/
+            const float VELOCITY_TOLERANCE = 0.025f * 0.025f;
             //const float ANG_VELOCITY_TOLERANCE = 0.05f;
             const float POSITION_TOLERANCE = 5f;
             bool needSendUpdate = false;
 
-            //Check to see whether we need to trigger the significant movement method in the presence
-            // avas don't rotate for now                if (!RotationalVelocity.ApproxEquals(m_lastRotationalVelocity, VELOCITY_TOLERANCE) ||
-            // but simulator does not process rotation changes
-            float length = (Velocity - m_lastVelocity).LengthSquared();
-            //The rotational velocity check... is odd and doesn't work right, so ignore it here
-            // Velocity (when turning) will change enough to trigger the updates
-            //float anglength = (m_rotationalVelocity - m_lastAngVelocity).LengthSquared();
+            float vlength = (Velocity - m_lastVelocity).LengthSquared();
             if(//!VelIsZero &&
-                //                   (!Velocity.ApproxEquals(m_lastVelocity, VELOCITY_TOLERANCE) ||
                 (
-                (length > VELOCITY_TOLERANCE)// ||
+                (vlength > VELOCITY_TOLERANCE)// ||
                 //(anglength > ANG_VELOCITY_TOLERANCE) ||
                 //true
                 //                    (Math.Abs(_lastorientation.X - _orientation.X) > 0.001) ||
@@ -1445,10 +1442,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //                    (Math.Abs(_lastorientation.W - _orientation.W) > 0.001)
                 ))
             {
-                //m_log.Warn("Vel change - " + length);
-                // Update the "last" values
                 needSendUpdate = true;
-                m_ZeroUpdateSent = 10;
+                m_ZeroUpdateSent = 3;
                 m_lastPosition = _position;
                 //                        m_lastRotationalVelocity = RotationalVelocity;
                 m_lastVelocity = Velocity;
@@ -1465,9 +1460,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_ZeroUpdateSent--;
                 }
             }
-            if((Math.Abs(_position.X - m_lastPosition.X) > POSITION_TOLERANCE) ||
-                (Math.Abs(_position.Y - m_lastPosition.Y) > POSITION_TOLERANCE) ||
-                (Math.Abs(_position.Z - m_lastPosition.Z) > POSITION_TOLERANCE))
+            float plength = (_position - m_lastPosition).LengthSquared();
+            if(plength > POSITION_TOLERANCE)
             {
                 m_lastPosition = _position;
                 needSendUpdate = true;
