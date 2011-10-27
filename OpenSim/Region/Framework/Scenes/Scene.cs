@@ -477,25 +477,6 @@ namespace OpenSim.Region.Framework.Scenes
                             PhysicsReturns.Clear();
                         }
                     }
-                    if (m_frame % m_update_coarse_locations == 0)
-                    {
-                        List<Vector3> coarseLocations;
-                        List<UUID> avatarUUIDs;
-                        if (SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
-                        {
-                            // Send coarse locations to clients 
-                            foreach (IScenePresence presence in GetScenePresences())
-                            {
-                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
-                            }
-                        }
-                    }
-
-                    if (m_frame % m_update_entities == 0)
-                        m_sceneGraph.UpdateEntities();
-
-                    if (m_frame % m_update_events == 0)
-                        m_eventManager.TriggerOnFrame();
 
                     int PhysicsSyncTime = Util.EnvironmentTickCount();
 
@@ -528,6 +509,24 @@ namespace OpenSim.Region.Framework.Scenes
                             StopPhysicsScene ();
                         m_lastPhysicsChange = RegionInfo.RegionSettings.DisablePhysics;
                     }
+                    if (m_frame % m_update_coarse_locations == 0)
+                    {
+                        List<Vector3> coarseLocations;
+                        List<UUID> avatarUUIDs;
+                        if (SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
+                        {
+                            // Send coarse locations to clients 
+                            foreach (IScenePresence presence in GetScenePresences())
+                            {
+                                presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
+                            }
+                        }
+                    }
+                    if (m_frame % m_update_entities == 0)
+                        m_sceneGraph.UpdateEntities();
+
+                    if (m_frame % m_update_events == 0)
+                        m_eventManager.TriggerOnFrame();
 
                     //Now fix the sim stats
                     int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
@@ -544,17 +543,21 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 //Get the time between beginning and end
-                maintc = Util.EnvironmentTickCountSubtract (BeginningFrameTime);
+                maintc = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
                 //Beginning + (time between beginning and end) = end
-                int MonitorEndFrameTime = BeginningFrameTime + maintc;
+//                int MonitorEndFrameTime = BeginningFrameTime + maintc;
 
-                int getSleepTime = GetHeartbeatSleepTime (maintc);
+                //                int getSleepTime = GetHeartbeatSleepTime (maintc);
+                int getSleepTime = (int)(m_updatetimespan) - maintc;
                 if (getSleepTime > 0)
-                    Thread.Sleep (getSleepTime);
+                    Thread.Sleep(getSleepTime);
 
-                sleepFrameMonitor.AddTime(maintc);
+                //                sleepFrameMonitor.AddTime(maintc);
+                sleepFrameMonitor.AddTime(getSleepTime);
 
-                totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
+                //                totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
+                maintc = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
+                totalFrameMonitor.AddFrameTime(maintc);
             }
         }
 
@@ -591,7 +594,7 @@ namespace OpenSim.Region.Framework.Scenes
                 sp.SendTerseUpdateToAllClients ();
             }
         }
-
+/* Ubit not in use
         private AveragingClass m_heartbeatList = new AveragingClass (50);
         private int GetHeartbeatSleepTime (int timeBeatTook)
         {
@@ -608,7 +611,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Console.WriteLine (newAvgSleepTime);
             return newAvgSleepTime - (int)(m_physicstimespan / m_updatetimespan);//Fudge a bit
         }
-
+*/
         #endregion
 
         #region Add/Remove Avatar Methods
