@@ -1304,7 +1304,8 @@ namespace OpenSim.Region.Framework.Scenes
                                 {
                                     if (DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
                                     {
-                                        m_movementflag |= (byte)nudgehack;
+                                        //                                        m_movementflag |= (byte)nudgehack;
+                                        m_movementflag |= nudgehack;
                                     }
                                     m_movementflag += (uint)DCF;
                                     update_movementflag = true;
@@ -1452,9 +1453,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         // nesting this check because LengthSquared() is expensive and we don't 
                         // want to do it every step when flying.
+                        // then call it in the if...
                         //The == Zero and Z > 0.1 are to stop people from flying and then falling down because the physics engine hasn't calculted the push yet
-                        float lengthSquared = Velocity.LengthSquared();
-                        if (Velocity != Vector3.Zero && Math.Abs (Velocity.Z) > 0.05 && (lengthSquared <= LAND_VELOCITYMAG_MAX))
+                        if (Velocity != Vector3.Zero && Math.Abs(Velocity.Z) > 0.05 && (Velocity.LengthSquared() <= LAND_VELOCITYMAG_MAX))
                         {
                             StopFlying ();
                             SendTerseUpdateToAllClients ();
@@ -1954,6 +1955,9 @@ namespace OpenSim.Region.Framework.Scenes
             Animator.RemoveAnimation(animID);
         }
 
+
+        public Vector3 PreJumpForce = Vector3.Zero;
+
         /// <summary>
         /// Rotate the avatar to the given rotation and apply a movement in the given relative vector
         /// </summary>
@@ -1974,11 +1978,15 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
-                direc.Normalize();
-                actor.SetMovementForce(direc * 1.2f);
+                if (direc == Vector3.Zero)
+                    PhysicsActor.Velocity = Vector3.Zero;
+                else
+                {
+                    direc.Normalize();
+                    PhysicsActor.SetMovementForce(direc * 1.5f);
+                }
             }
         }
-
         #endregion
 
         #region Overridden Methods

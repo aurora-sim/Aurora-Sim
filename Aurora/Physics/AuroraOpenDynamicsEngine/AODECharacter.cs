@@ -481,13 +481,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="force"></param>
         public override void SetMovementForce(Vector3 force)
         {
-            if (!Flying)
+            if (_parent_scene.m_allowJump && !Flying && m_iscolliding && force.Z >= 0.5f)
             {
-                if (force.Z >= 0.5f)
+                if (_parent_scene.m_usepreJump)
                 {
-                    if (!_parent_scene.m_allowJump)
-                        return;
-                    if (_parent_scene.m_usepreJump)
+                    if (!m_ispreJumping)
                     {
                         m_ispreJumping = true;
                         m_preJumpForce = force;
@@ -495,7 +493,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         TriggerMovementUpdate();
                         return;
                     }
-                    else
+                }
+                else
+                {
+                    if (!m_isJumping)
                     {
                         m_isJumping = true;
                         m_preJumpCounter = _parent_scene.m_preJumpTime;
@@ -504,7 +505,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
             }
-            if (m_ispreJumping)
+            if (m_ispreJumping || m_isJumping)
             {
                 TriggerMovementUpdate();
                 return;
@@ -607,14 +608,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_taintPosition.Z = _position.Z;
 
             d.BodySetMass(Body, ref ShellMass);
-/*
-            d.Matrix3 m_caprot;
-            // 90 Stand up on the cap of the capped cyllinder
-            m_taintRotation = new Quaternion(0,0,1,(float)(Math.PI / 2));
-            d.RFromAxisAndAngle(out m_caprot, m_taintRotation.X, m_taintRotation.Y, m_taintRotation.Z, m_taintRotation.W);
-
-            d.GeomSetRotation (Shell, ref m_caprot);
- */
             d.GeomSetBody(Shell, Body);
 
             Amotor = d.JointCreateAMotor(_parent_scene.world, IntPtr.Zero);
@@ -653,148 +646,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax, 5e6f);
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax2, 5e6f);
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax3, 5e6f);
- 
-            // The purpose of the AMotor here is to keep the avatar's physical
-            // surrogate from rotating while moving
-/*
-            Amotor = d.JointCreateAMotor (_parent_scene.world, IntPtr.Zero);
-            d.JointAttach (Amotor, Body, IntPtr.Zero);
-            int dAMotorEuler = 1;
-            d.JointSetAMotorMode (Amotor, dAMotorEuler);
-            d.JointSetAMotorNumAxes (Amotor, 3);
-            d.JointSetAMotorAxis (Amotor, 0, 0, 1, 0, 0);
-            d.JointSetAMotorAxis (Amotor, 1, 0, 0, 1, 0);
-            d.JointSetAMotorAxis (Amotor, 2, 0, 0, 0, 1);
-            d.JointSetAMotorAngle (Amotor, 0, 0);
-            d.JointSetAMotorAngle (Amotor, 1, 0);
-            d.JointSetAMotorAngle (Amotor, 2, 0);
-*/
-            // These lowstops and high stops are effectively (no wiggle room)
-            //if (_parent_scene.IsAvCapsuleTilted)
-            /*{
-                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.000000000001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.000000000001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.000000000001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.000000000001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.000000000001f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.000000000001f);
-            }
-            else*/
-/*            {
-                #region Documentation of capsule motor LowStop and HighStop parameters
-                // Intentionally introduce some tilt into the capsule by setting
-                // the motor stops to small epsilon values. This small tilt prevents
-                // the capsule from falling into the terrain; a straight-up capsule
-                // (with -0..0 motor stops) falls into the terrain for reasons yet
-                // to be comprehended in their entirety.
-                #endregion
-                AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3.Zero, new Vector3(0,0,-1));
-                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, 0.08f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, 0.08f);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.08f); // must be same as lowstop, else a different, spurious tilt is introduced
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0f); // same as lowstop
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.08f); // same as lowstop
-            }
-
-            // Fudge factor is 1f by default, we're setting it to 0.  We don't want it to Fudge or the
-            // capped cyllinder will fall over
-            d.JointSetAMotorParam (Amotor, (int)dParam.FudgeFactor, 0f);
-            d.JointSetAMotorParam (Amotor, (int)dParam.FMax, 3800000f);
- */
         }
 
         #endregion
 
         #region Move
-
-        /*
-        private Vector3 m_lastAvatarTilt = Vector3.Zero;//Makes it so that we don't set the motion to the same place > 1 time
-        private void AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3 movementVector, Vector3 gravity)
-        {
-            movementVector.Z = 0f;
-            float magnitude = (float)Math.Sqrt ((double)(movementVector.X * movementVector.X + movementVector.Y * movementVector.Y));
-            if (magnitude < 0.1f)
-                return;
-
-            Quaternion rot = Quaternion.Identity;
-            if (gravity == Vector3.Zero)
-                gravity = new Vector3 (0, 0, -1f);
-            else if (gravity != _parent_scene.gravityVectorNormalized)
-            {
-                gravity.Normalize ();
-                rot = Vector3.RotationBetween (new Vector3 (0, 0, -1), gravity);
-            }
-            // normalize the velocity vector
-            float invMagnitude = 1.0f / magnitude;
-            movementVector.X *= invMagnitude;
-            movementVector.Y *= invMagnitude;
-
-            movementVector *= rot;
-
-            // if we change the capsule heading too often, the capsule can fall down
-            // therefore we snap movement vector to just 1 of 4 predefined directions (ne, nw, se, sw),
-            // meaning only 4 possible capsule tilt orientations
-            if (movementVector.X > 0)
-            {
-                // east
-                if (movementVector.Y > 0)
-                {
-                    // northeast
-                    movementVector.X = (float)Math.Sqrt (2.0);
-                    movementVector.Y = (float)Math.Sqrt (2.0);
-                }
-                else
-                {
-                    // southeast
-                    movementVector.X = (float)Math.Sqrt (2.0);
-                    movementVector.Y = -(float)Math.Sqrt (2.0);
-                }
-            }
-            else
-            {
-                // west
-                if (movementVector.Y > 0)
-                {
-                    // northwest
-                    movementVector.X = -(float)Math.Sqrt (2.0);
-                    movementVector.Y = (float)Math.Sqrt (2.0);
-                }
-                else
-                {
-                    // southwest
-                    movementVector.X = -(float)Math.Sqrt (2.0);
-                    movementVector.Y = -(float)Math.Sqrt (2.0);
-                }
-            }
-
-
-            // movementVector.Z is zero
-
-            // calculate tilt components based on desired amount of tilt and current (snapped) heading.
-            // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
-            float xTiltComponent = -movementVector.X * 0.1131371f;
-            float yTiltComponent = -movementVector.Y * 0.1131371f;
-            float zTiltComponent = -movementVector.Z * 0.1131371f;
-
-            if (m_lastAvatarTilt.X != xTiltComponent ||
-                m_lastAvatarTilt.Y != yTiltComponent ||
-                m_lastAvatarTilt.Z != zTiltComponent)//Only do it if it has changed
-            {
-                m_lastAvatarTilt = new Vector3 (xTiltComponent, yTiltComponent, zTiltComponent);
-                //m_log.Debug("[PHYSICS] changing avatar tilt");
-                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, xTiltComponent);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, xTiltComponent); // must be same as lowstop, else a different, spurious tilt is introduced
-                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, yTiltComponent);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, yTiltComponent); // same as lowstop
-                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, zTiltComponent);
-                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
-            }
-        }
-        */
-
-        private int m_lastForceApplied = 0;
-      
+   
         /// <summary>
         /// Called from Simulate
         /// This is the avatar's movement control + PID Controller
@@ -948,7 +805,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if(vel.Z < -10f)
                         vel.Z = -10f;
-                    vec.Z = -vel.Z * PID_D *1.5f + depth * PID_P * 50.0f;
+                    vec.Z = -vel.Z * PID_D * 1.5f + depth * PID_P * 50.0f;
                 }
                 else
                 {
@@ -989,38 +846,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Jump code
 
-            if (IsJumping && (IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
-            {
-                m_isJumping = false;
-                m_preJumpCounter = 0;
-            }
             if (IsJumping)
-                m_preJumpCounter++;
-
-            if (m_ispreJumping && m_preJumpCounter == _parent_scene.m_preJumpTime)
             {
-                m_ispreJumping = false;
-                //if (!m_iscolliding)
-                //    vel.Z = -0.6f;
-                if (!m_iscolliding)//not Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
+//                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
+                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 20)
                 {
-                    _target_velocity.X += m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplier * 5;
-                    _target_velocity.Y += m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplier * 5;
+                    m_isJumping = false;
+                    m_preJumpCounter = 0;
+                    _target_velocity.Z = 0;
                 }
-                _target_velocity.Z += m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
-                
-                m_preJumpCounter = 0;
-                m_isJumping = true;
+                else
+                    m_preJumpCounter++;
             }
-            if (m_ispreJumping)
+
+            else if (m_ispreJumping)
             {
-                m_preJumpCounter++;
-                TriggerMovementUpdate();
-                return;
+                if (m_preJumpCounter == _parent_scene.m_preJumpTime)
+                {
+                    m_ispreJumping = false;
+                    if (!m_iscolliding)//not Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
+                    {
+                        _target_velocity.X = m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplier * 5;
+                        _target_velocity.Y = m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplier * 5;
+                    }
+                    _target_velocity.Z = m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
+
+                    m_preJumpCounter = 0;
+                    m_isJumping = true;
+                }
+                else
+                {
+                    m_preJumpCounter++;
+                    TriggerMovementUpdate();
+                    return;
+                }
             }
+
+
             //This is for jumping on prims, since otherwise, you don't get off the ground sometimes
-            if (m_iscolliding && m_isJumping && _target_velocity.Z < 1 && !Flying)
-                _target_velocity.Z += m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
+//            if (m_iscolliding && m_isJumping && _target_velocity.Z < 1 && !Flying)
+//                _target_velocity.Z += m_preJumpForce.Z * _parent_scene.m_preJumpForceMultiplier;
 
             #endregion
 
