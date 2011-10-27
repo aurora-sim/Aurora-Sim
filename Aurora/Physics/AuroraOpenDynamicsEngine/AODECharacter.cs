@@ -606,18 +606,56 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_taintPosition.Z = _position.Z;
 
             d.BodySetMass(Body, ref ShellMass);
-
+/*
             d.Matrix3 m_caprot;
             // 90 Stand up on the cap of the capped cyllinder
             m_taintRotation = new Quaternion(0,0,1,(float)(Math.PI / 2));
             d.RFromAxisAndAngle(out m_caprot, m_taintRotation.X, m_taintRotation.Y, m_taintRotation.Z, m_taintRotation.W);
 
-            d.GeomSetRotation (Shell, ref m_caprot);     
+            d.GeomSetRotation (Shell, ref m_caprot);
+ */
             d.GeomSetBody(Shell, Body);
 
+            Amotor = d.JointCreateAMotor(_parent_scene.world, IntPtr.Zero);
+            d.JointAttach(Amotor, Body, IntPtr.Zero);
 
+            d.JointSetAMotorMode(Amotor, 0);
+            d.JointSetAMotorNumAxes(Amotor, 3);
+            d.JointSetAMotorAxis(Amotor, 0, 0, 1, 0, 0);
+            d.JointSetAMotorAxis(Amotor, 1, 0, 0, 1, 0);
+            d.JointSetAMotorAxis(Amotor, 2, 0, 0, 0, 1);
+
+            d.JointSetAMotorAngle(Amotor, 0, 0);
+            d.JointSetAMotorAngle(Amotor, 1, 0);
+            d.JointSetAMotorAngle(Amotor, 2, 0);
+
+
+            d.JointSetAMotorParam(Amotor, (int)dParam.StopCFM, 0f); // make it HARD
+            d.JointSetAMotorParam(Amotor, (int)dParam.StopCFM2, 0f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.StopCFM3, 0f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.StopERP, 0.8f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.StopERP2, 0.8f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.StopERP3, 0.8f);
+
+            // These lowstops and high stops are effectively (no wiggle room)
+            d.JointSetAMotorParam(Amotor, (int)dParam.LowStop, -1e-5f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop, 1e-5f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop2, -1e-5f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop2, 1e-5f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.LoStop3, -1e-5f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.HiStop3, 1e-5f);
+
+            d.JointSetAMotorParam(Amotor, (int)d.JointParam.Vel, 0);
+            d.JointSetAMotorParam(Amotor, (int)d.JointParam.Vel2, 0);
+            d.JointSetAMotorParam(Amotor, (int)d.JointParam.Vel3, 0);
+
+            d.JointSetAMotorParam(Amotor, (int)dParam.FMax, 5e6f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.FMax2, 5e6f);
+            d.JointSetAMotorParam(Amotor, (int)dParam.FMax3, 5e6f);
+ 
             // The purpose of the AMotor here is to keep the avatar's physical
             // surrogate from rotating while moving
+/*
             Amotor = d.JointCreateAMotor (_parent_scene.world, IntPtr.Zero);
             d.JointAttach (Amotor, Body, IntPtr.Zero);
             int dAMotorEuler = 1;
@@ -629,7 +667,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorAngle (Amotor, 0, 0);
             d.JointSetAMotorAngle (Amotor, 1, 0);
             d.JointSetAMotorAngle (Amotor, 2, 0);
-
+*/
             // These lowstops and high stops are effectively (no wiggle room)
             //if (_parent_scene.IsAvCapsuleTilted)
             /*{
@@ -641,7 +679,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.000000000001f);
             }
             else*/
-            {
+/*            {
                 #region Documentation of capsule motor LowStop and HighStop parameters
                 // Intentionally introduce some tilt into the capsule by setting
                 // the motor stops to small epsilon values. This small tilt prevents
@@ -662,13 +700,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // capped cyllinder will fall over
             d.JointSetAMotorParam (Amotor, (int)dParam.FudgeFactor, 0f);
             d.JointSetAMotorParam (Amotor, (int)dParam.FMax, 3800000f);
- 
+ */
         }
 
         #endregion
 
         #region Move
 
+        /*
         private Vector3 m_lastAvatarTilt = Vector3.Zero;//Makes it so that we don't set the motion to the same place > 1 time
         private void AlignAvatarTiltWithCurrentDirectionOfMovement (Vector3 movementVector, Vector3 gravity)
         {
@@ -751,6 +790,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, zTiltComponent); // same as lowstop
             }
         }
+        */
 
         private int m_lastForceApplied = 0;
       
@@ -1219,8 +1259,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastForceApplied++;
                     }
                      
-                    if (!_zeroFlag && (!flying || m_iscolliding))
-                        AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
+//                    if (!_zeroFlag && (!flying || m_iscolliding))
+//                        AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
+
+                    // the Amotor still lets avatar rotation to drift during colisions
+                    // so force it back to identity
+
+                    d.Quaternion qtmp;
+                    qtmp.W = 1;
+                    qtmp.X = 0;
+                    qtmp.Y = 0;
+                    qtmp.Z = 0;
+                    d.BodySetQuaternion(Body, ref qtmp);
 
                     //When falling, we keep going faster and faster, and eventually, the client blue screens (blue is all you see).
                     // The speed that does this is slightly higher than -30, so we cap it here so we never do that during falling.
