@@ -89,6 +89,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool flying = false;
         private bool realFlying = false;
         private bool m_iscolliding = false;
+        private bool m_iscollidingGround = false;
 
         int m_colliderfilter = 0;
 
@@ -190,10 +191,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             CAPSULE_LENGTH = (size.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
 
-            if ((m_collisionFlags & CollisionCategories.Land) == 0)
+//            if ((m_collisionFlags & CollisionCategories.Land) == 0)
                 AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
-            else
-                AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
+//            else
+//                AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
 
             //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
@@ -288,7 +289,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public override bool IsColliding
         {
-            get { return m_iscolliding; }
+            get { return m_iscolliding || m_iscollidingGround; }
             set
             {
                 if (value)
@@ -386,10 +387,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_pidControllerActive = true;
 
                     m_tainted_CAPSULE_LENGTH = (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
-                    if ((m_collisionFlags & CollisionCategories.Land) == 0)
+//                    if ((m_collisionFlags & CollisionCategories.Land) == 0)
                         AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
-                    else
-                        AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
+//                    else
+//                        AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
                     //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
@@ -920,48 +921,71 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Check for underground
 
-            bool notMoving = false;
-            float groundHeight = _parent_scene.GetTerrainHeightAtXY (
-                           tempPos.X + (tempPos.X == 0 ? tempPos.X : timeStep * 0.75f * vel.X),
-                           tempPos.Y + (tempPos.Y == 0 ? tempPos.Y : timeStep * 0.75f * vel.Y));
-            if((tempPos.Z - AvatarHalfsize) < groundHeight)
+            d.AABB aabb;
+            d.GeomGetAABB(Shell, out aabb);
+            float chrminZ = aabb.MinZ;
+
+            Vector3 posch = localPos;
+
+            float ftmp;
+
+            if (flying)
             {
-                if(_target_velocity == Vector3.Zero &&
-                    Math.Abs(vel.Z) < 0.1)
-                    notMoving = true;
+                ftmp = timeStep;
+                posch.X += vel.X * ftmp;
+                posch.Y += vel.Y * ftmp;
+            }
+
+            float groundHeight = _parent_scene.GetTerrainHeightAtXY(posch.X, posch.Y);
+
+            bool notMoving = false;
+
+            if(chrminZ < groundHeight)
+            {
+                float depth = groundHeight - chrminZ;
+
+//                if(_target_velocity == Vector3.Zero &&
+//                    Math.Abs(vel.Z) < 0.1)
+//                    notMoving = true;
+
+                if (_target_velocity.Z < 0)
+                    _target_velocity.Z = 0;
+
                 if(!flying)
                 {
-                    //if (_target_velocity.Z < 0)
-                    _target_velocity.Z = 0;
                     if(vel.Z < -10f)
                         vel.Z = -10f;
-                    vec.Z = -vel.Z * PID_D * 1.5f + ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P * 100.0f);
+                    vec.Z = -vel.Z * PID_D * 1.5f + depth * PID_P * 100.0f;
                 }
                 else
                 {
-                    vec.Z = ((groundHeight - (tempPos.Z - AvatarHalfsize)) * PID_P);
+                    vec.Z = depth * PID_P * 50;
                 }
-            }
-            if(tempPos.Z - AvatarHalfsize - groundHeight < 0.12f)
-            {
-                m_iscolliding = true;
-                flying = false; // ground the avatar
-                ContactPoint point = new ContactPoint();
-                point.Type = ActorTypes.Ground;
-                point.PenetrationDepth = Math.Abs(vel.Z);
-                point.Position = Position;
-                point.SurfaceNormal = new Vector3(0, 0, -1f);
+
+                if(depth < 0.12f)
+                {
+                    m_iscolliding = true;
+                    m_colliderfilter = 2;
+                    m_iscollidingGround = true;
+
+                    ContactPoint point = new ContactPoint();
+                    point.Type = ActorTypes.Ground;
+                    point.PenetrationDepth = depth;
+                    point.Position.X = localPos.X;
+                    point.Position.Y = localPos.Y;
+                    point.Position.Z = chrminZ;
+                    point.SurfaceNormal = new Vector3(0, 0, -1f);
 
                 //0 is the ground localID
-                AddCollisionEvent(0, point);
-
-                if(_target_velocity == Vector3.Zero && vec.X == 0 && vec.Y == 0)
-                {
-                    vec.X = vel.X * timeStep * -1 * PID_D * 5;
-                    vec.Y = vel.Y * timeStep * -1 * PID_D * 5;
-                    vec.Z += 100;
+                    AddCollisionEvent(0, point);
+//                    vec.Z *= 0.5f;
                 }
+                else
+                    m_iscollidingGround = false;
             }
+            else
+                m_iscollidingGround = false;
+
             if(Flying && _target_velocity == Vector3.Zero &&
                 Math.Abs(vel.Z) < 0.1)
                 notMoving = true;
@@ -1091,7 +1115,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 #region Gravity
 
                 if (!flying)
-                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 0.75f, ref gravForce);
+                    _parent_scene.CalculateGravity (m_mass, tempPos, true, 1.0f, ref gravForce);
                 else
                     _parent_scene.CalculateGravity (m_mass, tempPos, false, 0.65f, ref gravForce);//Allow point gravity and repulsors affect us a bit
 
