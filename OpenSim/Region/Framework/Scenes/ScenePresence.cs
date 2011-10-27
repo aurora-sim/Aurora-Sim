@@ -1475,8 +1475,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            //if (update_movementflag && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) == 0) && (m_parentID == UUID.Zero) && !SitGround)
-            //    Animator.UpdateMovementAnimations();
+            if (update_movementflag && ((flags & AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) == 0) && (m_parentID == UUID.Zero) && !SitGround)
+                Animator.UpdateMovementAnimations(true);
+            
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
@@ -1956,8 +1957,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        public Vector3 PreJumpForce = Vector3.Zero;
-
+        
         /// <summary>
         /// Rotate the avatar to the given rotation and apply a movement in the given relative vector
         /// </summary>
@@ -2141,7 +2141,7 @@ namespace OpenSim.Region.Framework.Scenes
             tmpsq *= tmpsq;
             float vel = Velocity.LengthSquared();
             if (Vector3.DistanceSquared(AbsolutePosition, m_lastChildAgentUpdatePosition) >= tmpsq ||
-                Vector3.DistanceSquared (CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq * tmpsq) 
+                Vector3.DistanceSquared (CameraPosition, m_lastChildAgentUpdateCamPosition) >= tmpsq) 
                  
             {
                 m_lastChildAgentUpdatePosition = AbsolutePosition;
