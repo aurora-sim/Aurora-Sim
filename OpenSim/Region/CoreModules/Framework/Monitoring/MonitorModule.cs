@@ -492,7 +492,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[5].StatValue = 0;//TODO: Implement this
 
                     sb[6].StatID = (uint)Stats.SimOtherMS;
-                    sb[6].StatValue = (float)(otherFrameMonitor.GetValue() / realsimfps);
+                    float otherMS = (float)(otherFrameMonitor.GetValue() / realsimfps);
+                    sb[6].StatValue = otherMS;
 
                     sb[7].StatID = (uint)Stats.SimPhysicsMS;
                     float PhysicsMS = (float)(physicsTimeFrameMonitor.GetValue() / realsimfps);
@@ -502,7 +503,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     sb[8].StatValue = (agentUpdateFrameMonitor.AgentFrameTime / realsimfps);
 
                     sb[9].StatID = (uint)Stats.ImagesMS;
-                    sb[9].StatValue = (float)(imagesMonitor.GetValue() / realsimfps);
+                    float imageMS = (float)(imagesMonitor.GetValue() / realsimfps);
+                    sb[9].StatValue = imageMS;
 
                     sb[10].StatID = (uint)Stats.ScriptMS;
                     float ScriptMS = (float)(scriptMonitor.GetValue() / realsimfps);
@@ -581,9 +583,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     //Spare time is the total time minus the stats that are in the same category in the client
                     // It is the sleep time, physics step, update physics shape, physics other, and pumpI0.
                     // Note: take out agent Update and script time for now, as they are not a part of the heartbeat right now and will mess this calc up
-                    float SpareTime = (float)(TotalFrames - (/*NetMS + */ PhysicsMS + 
-                        otherFrameMonitor.GetValue() + /*(agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor) +*/
-                        (imagesMonitor.GetValue() / statsUpdateFactor) /* + ScriptMS*/));
+                    float SpareTime = TotalFrames - (
+                        /*NetMS + */ PhysicsMS + otherMS + imageMS);
+//                         + /*(agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor) +*/
+//                        (imagesMonitor.GetValue() / statsUpdateFactor) /* + ScriptMS*/));
                     
                     sb[32].StatValue = SpareTime;
 
