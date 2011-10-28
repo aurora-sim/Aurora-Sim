@@ -1237,8 +1237,6 @@ namespace OpenSim.Framework
         public virtual bool BuildingRepresentation { get; set; }
         public virtual bool BlockPhysicalReconstruction { get; set; }
 
-        public virtual void MakeBody () { }
-
         public virtual bool VolumeDetect
         {
             get { return false; }

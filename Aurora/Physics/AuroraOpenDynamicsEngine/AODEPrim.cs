@@ -390,7 +390,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public override void MakeBody()
+        private void MakeBody()
         {
             //            d.Vector3 dvtmp;
             //            d.Vector3 dbtmp;
@@ -407,6 +407,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.Quaternion quat = new d.Quaternion ();
             d.Quaternion myrot = new d.Quaternion ();
             Vector3 rcm;
+
+            if (BlockPhysicalReconstruction) // building is blocked
+                return;
 
             if (childPrim)  // child prims don't get own bodies;
                 return;
@@ -471,16 +474,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             ppos.Z);
 
                         d.MassAdd (ref objdmass, ref tmpdmass); // add to total object inertia
-/* Ubit: this makes physics worse than current opensim, do you want that ?
-                        d.RfromQ (out mat, ref quat);
-                        d.MassRotate (ref tmpdmass, ref mat);
-                        d.MassTranslate (ref tmpdmass, Position.X - prm.Position.X, Position.Y - prm.Position.Y, Position.Z - prm.Position.Z);
-                        d.MassAdd (ref objdmass, ref tmpdmass);
-*/
+
                         // fix prim colision cats
                         if (prm.prim_geom == IntPtr.Zero)
                         {
-                            m_log.Warn ("[PHYSICS]: Unable to link one of the linkset elements.  No geom yet");
+                            m_log.Warn ("[PHYSICS]: Unable to link one of the linkset elements.  No child prim geom yet");
                             continue;
                         }
 
@@ -493,7 +491,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (prim_geom == IntPtr.Zero)
             {
-                m_log.Warn ("[PHYSICS]: Unable to link the linkset.  No geom yet");
+                m_log.Warn ("[PHYSICS]: Unable to link the linkset.  No root prim geom yet");
                 return;
             }
             d.GeomClearOffset (prim_geom); // make sure we don't have a hidden offset
@@ -1109,10 +1107,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     prim.Body = IntPtr.Zero;
                 }
                 if(m_isphysical)
-                {
-                    if(!BlockPhysicalReconstruction)
                         MakeBody(); // full nasty reconstruction
-                }
             }
         }
 
@@ -1578,15 +1573,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         internal int m_previousForceIsSame = 0;
         public void Move (float timestep, ref List<AuroraODEPrim> defects)
         {
-            AuroraODEPrim parentPrim = (_parent != null ? (AuroraODEPrim)_parent : this);
-            if (m_frozen || AChangeLoading > 0 || 
-                BuildingRepresentation || (_parent != null && _parent.BuildingRepresentation) ||
-                (_parent != null && ((AuroraODEPrim)_parent).AChangeLoading > 0))
-                return;
-            foreach(AuroraODEPrim child in parentPrim.childrenPrim)
-                if(child.AChangeLoading > 0 || child.BuildingRepresentation)
-                    return;
-
             float fx = 0;
             float fy = 0;
             float fz = 0;
@@ -3152,11 +3138,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
         }
 
-        private int AChangeLoading = 0;
         public bool DoAChange (changes what, object arg)
         {
-            AChangeLoading--;
-
             if (m_frozen && what != changes.Add && what != changes.Remove)
                 return false;
 
@@ -3175,13 +3158,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 case changes.Remove:
                     //If its being removed, we don't want to rebuild the physical rep at all, so ignore this stuff...
                     //When we return true, it destroys all of the prims in the linkset anyway
-                    /*if (_parent != null)
+                    if (_parent != null)
                     {
                         AuroraODEPrim parent = (AuroraODEPrim)_parent;
                         parent.ChildRemove (this);
                     }
                     else
-                        ChildRemove (this);*/
+                        ChildRemove (this);
                     return true;
 
                 case changes.Link:
@@ -3288,8 +3271,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void AddChange (changes what, object arg)
         {
-            AChangeLoading++;
-
             _parent_scene.AddChange (this, what, arg);
         }
 

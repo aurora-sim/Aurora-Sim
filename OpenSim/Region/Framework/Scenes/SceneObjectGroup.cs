@@ -1690,9 +1690,9 @@ namespace OpenSim.Region.Framework.Scenes
                     
                     //Now readd the physics actor to the physics scene
                     part.PhysActor = m_scene.PhysicsScene.AddPrimShape (part);
-                    part.PhysActor.BuildingRepresentation = true;
-                    if(part.IsRoot)
-                        part.PhysActor.BlockPhysicalReconstruction = true;//Don't let it rebuild it until we have all the links done
+//                    part.PhysActor.BuildingRepresentation = true;
+//                    if(part.IsRoot)
+//                        part.PhysActor.BlockPhysicalReconstruction = true;//Don't let it rebuild it until we have all the links done
 
                     //Fix the localID!
                     part.PhysActor.LocalID = part.LocalId;
@@ -1729,14 +1729,14 @@ namespace OpenSim.Region.Framework.Scenes
                     if (part.PhysActor != null)
                     {
                         FixVehicleParams(part);
+/*
                         if(part.IsRoot)
                         {
                             //All done linking, build the body
                             part.PhysActor.BlockPhysicalReconstruction = false;
-                            if(part.PhysActor.IsPhysical)
-                                part.PhysActor.MakeBody();
                         }
                         part.PhysActor.BuildingRepresentation = false;
+ */
                     }
                 }
                 if(OnFinishedPhysicalRepresentationBuilding != null)
