@@ -485,7 +485,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (_parent_scene.m_usepreJump)
                 {
-                    if (!m_ispreJumping)
+                    if (!m_ispreJumping && !m_isJumping)
                     {
                         m_ispreJumping = true;
                         m_preJumpForce = force;
@@ -853,7 +853,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_isJumping = false;
                     m_preJumpCounter = 0;
-                    _target_velocity.Z = 0;
+                    _target_velocity.Z = 0;                   
                 }
                 else
                     m_preJumpCounter++;
