@@ -1421,7 +1421,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return true;
         }
 
-        private bool CanRezObject (int objectCount, UUID owner, Vector3 objectPosition, IScene scene, out string reason)
+        private bool CanRezObject (int objectCount, UUID attemptedRezzer, Vector3 objectPosition, IScene scene, out string reason)
         {
             reason = "";
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
@@ -1442,11 +1442,17 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 (int)ParcelFlags.CreateObjects)
                 permission = true;
 
-            if (IsAdministrator(owner))
+            if ((land.LandData.Flags & ((int)ParcelFlags.CreateGroupObjects)) ==
+                (int)ParcelFlags.CreateGroupObjects && 
+                land.LandData.GroupID != UUID.Zero && 
+                IsGroupMember(land.LandData.GroupID, attemptedRezzer, (ulong)GroupPowers.AllowRez))
+                permission = true;
+
+            if (IsAdministrator(attemptedRezzer))
                 return true;
 
             // Powers are zero, because GroupPowers.AllowRez is not a precondition for rezzing objects
-            if (GenericParcelPermission(owner, objectPosition, 0))
+            if (GenericParcelPermission(attemptedRezzer, land, 0))
                 permission = true;
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
