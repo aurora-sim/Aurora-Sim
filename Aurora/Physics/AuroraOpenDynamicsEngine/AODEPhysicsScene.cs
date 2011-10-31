@@ -2121,10 +2121,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             step_time += timeElapsed;
 
             IsLocked = true;
+
+            int nodesteps = 0;
+
             lock (OdeLock)
             {
-                int nodesteps = 0;
-
                 if (step_time > 0.5f)
                     step_time = 0.5f; //Don't get ODE stuck in an eternal processing loop with huge step times
 
@@ -2343,10 +2344,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             m_StatUnlockedArea = Util.EnvironmentTickCountSubtract(UnlockedArea);
-        }
-
-        public override void UpdatesLoop ()
-        {
+ 
             int SendCollisionsTime = Util.EnvironmentTickCount();
             if(!DisableCollisions)
             {
@@ -2386,7 +2384,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if(actor.bad)
                                 m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
                             else
-                                actor.UpdatePositionAndVelocity(10 * ODE_STEPSIZE);
+                                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                         }
                     }
                 }
@@ -2415,7 +2413,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if(actor.IsPhysical)
                         {
-                            actor.UpdatePositionAndVelocity(10 * ODE_STEPSIZE);
+                            actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                         }
                     }
                 }
