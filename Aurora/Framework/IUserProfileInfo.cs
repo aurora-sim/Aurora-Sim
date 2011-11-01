@@ -104,7 +104,7 @@ namespace Aurora.Framework
             map.Add("Flags", OSD.FromInteger((int)Flags));
             map.Add("MaxMaturity", OSD.FromInteger(MaxMaturity));
             map.Add("MaturityRating", OSD.FromInteger(MaturityRating));
-            map.Add("Language", OSD.FromString(Language.MySqlEscape()));
+            map.Add("Language", OSD.FromString(Language));
             map.Add("AcceptTOS", OSD.FromBoolean(AcceptTOS));
             map.Add("LanguageIsPublic", OSD.FromBoolean(LanguageIsPublic));
             map.Add("OtherAgentInformation", OSD.FromString(OSDParser.SerializeLLSDXmlString(OtherAgentInformation)));
@@ -269,30 +269,29 @@ namespace Aurora.Framework
             map.Add("AllowPublish", OSD.FromBoolean(AllowPublish));
             map.Add("MaturePublish", OSD.FromBoolean(MaturePublish));
             map.Add("WantToMask", OSD.FromUInteger(Interests.WantToMask));
-            map.Add("WantToText", OSD.FromString(Interests.WantToText.MySqlEscape()));
+            map.Add("WantToText", OSD.FromString(Interests.WantToText));
             map.Add("CanDoMask", OSD.FromUInteger(Interests.CanDoMask));
-            map.Add("CanDoText", OSD.FromString(Interests.CanDoText.MySqlEscape()));
-            map.Add("Languages", OSD.FromString(Interests.Languages.MySqlEscape()));
-            map.Add("AboutText", OSD.FromString(AboutText.MySqlEscape()));
+            map.Add("CanDoText", OSD.FromString(Interests.CanDoText));
+            map.Add("Languages", OSD.FromString(Interests.Languages));
+            map.Add("AboutText", OSD.FromString(AboutText));
             map.Add("FirstLifeImage", OSD.FromUUID(FirstLifeImage));
-            map.Add("FirstLifeAboutText", OSD.FromString(FirstLifeAboutText.MySqlEscape()));
+            map.Add("FirstLifeAboutText", OSD.FromString(FirstLifeAboutText));
             map.Add("Image", OSD.FromUUID(Image));
-            map.Add("WebURL", OSD.FromString(WebURL.MySqlEscape()));
+            map.Add("WebURL", OSD.FromString(WebURL));
             map.Add("Created", OSD.FromInteger(Created));
-            map.Add("DisplayName", OSD.FromString(DisplayName.MySqlEscape()));
+            map.Add("DisplayName", OSD.FromString(DisplayName));
             map.Add("Partner", OSD.FromUUID(Partner));
             map.Add("Visible", OSD.FromBoolean(Visible));
-            map.Add("CustomType", OSD.FromString(CustomType.MySqlEscape()));
+            map.Add("CustomType", OSD.FromString(CustomType));
             if (trusted)
             {
-                map.Add("AArchiveName", OSD.FromString(AArchiveName.MySqlEscape()));
+                map.Add("AArchiveName", OSD.FromString(AArchiveName));
                 map.Add("IMViaEmail", OSD.FromBoolean(IMViaEmail));
                 map.Add("IsNewUser", OSD.FromBoolean(IsNewUser));
-                map.Add("MembershipGroup", OSD.FromString(MembershipGroup.MySqlEscape()));
+                map.Add("MembershipGroup", OSD.FromString(MembershipGroup));
             }
 
             map.Add("Notes", OSD.FromString(OSDParser.SerializeJsonString(Notes)));
-            
             return map;
         }
 
@@ -384,14 +383,14 @@ namespace Aurora.Framework
             Classified.Add("CreationDate", OSD.FromUInteger(CreationDate));
             Classified.Add("ExpirationDate", OSD.FromUInteger(ExpirationDate));
             Classified.Add("Category", OSD.FromUInteger(Category));
-            Classified.Add("Name", OSD.FromString(Name.MySqlEscape()));
-            Classified.Add("Description", OSD.FromString(Description.MySqlEscape()));
+            Classified.Add("Name", OSD.FromString(Name));
+            Classified.Add("Description", OSD.FromString(Description));
             Classified.Add("ParcelUUID", OSD.FromUUID(ParcelUUID));
             Classified.Add("ParentEstate", OSD.FromUInteger(ParentEstate));
             Classified.Add("SnapshotUUID", OSD.FromUUID(SnapshotUUID));
-            Classified.Add("SimName", OSD.FromString(SimName.MySqlEscape()));
+            Classified.Add("SimName", OSD.FromString(SimName));
             Classified.Add("GlobalPos", OSD.FromVector3(GlobalPos));
-            Classified.Add("ParcelName", OSD.FromString(ParcelName.MySqlEscape()));
+            Classified.Add("ParcelName", OSD.FromString(ParcelName));
             Classified.Add("ClassifiedFlags", OSD.FromInteger(ClassifiedFlags));
             Classified.Add("PriceForListing", OSD.FromInteger(PriceForListing));
             return Classified;
@@ -450,12 +449,12 @@ namespace Aurora.Framework
             Pick.Add("CreatorUUID", OSD.FromUUID(CreatorUUID));
             Pick.Add("TopPick", OSD.FromInteger(TopPick));
             Pick.Add("ParcelUUID", OSD.FromUUID(ParcelUUID));
-            Pick.Add("Name", OSD.FromString(Name.MySqlEscape()));
-            Pick.Add("Description", OSD.FromString(Description.MySqlEscape()));
+            Pick.Add("Name", OSD.FromString(Name));
+            Pick.Add("Description", OSD.FromString(Description));
             Pick.Add("SnapshotUUID", OSD.FromUUID(SnapshotUUID));
-            Pick.Add("User", OSD.FromString(User.MySqlEscape()));
-            Pick.Add("OriginalName", OSD.FromString(OriginalName.MySqlEscape()));
-            Pick.Add("SimName", OSD.FromString(SimName.MySqlEscape()));
+            Pick.Add("User", OSD.FromString(User));
+            Pick.Add("OriginalName", OSD.FromString(OriginalName));
+            Pick.Add("SimName", OSD.FromString(SimName));
             Pick.Add("GlobalPos", OSD.FromVector3(GlobalPos));
             Pick.Add("SortOrder", OSD.FromInteger(SortOrder));
             Pick.Add("Enabled", OSD.FromInteger(Enabled));

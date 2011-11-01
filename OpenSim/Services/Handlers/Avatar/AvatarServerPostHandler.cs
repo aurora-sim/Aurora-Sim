@@ -100,16 +100,6 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return ResetAvatar(request);
-                    case "setitems":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
-                                return FailureResult();
-                        return SetItems(request);
-                    case "removeitems":
-                        if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
-                                return FailureResult();
-                        return RemoveItems(request);
                     case "cachewearabledata":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))

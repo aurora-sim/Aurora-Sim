@@ -129,7 +129,7 @@ namespace Aurora.Framework
             map.Add("TelehubLocZ", OSD.FromReal(TelehubLocZ));
             map.Add("Spawns", OSD.FromString(BuildFromList(SpawnPos)));
             map.Add("ObjectUUID", OSD.FromUUID(ObjectUUID));
-            map.Add("Name", OSD.FromString(Name.MySqlEscape()));
+            map.Add("Name", OSD.FromString(Name));
             return map;
         }
 

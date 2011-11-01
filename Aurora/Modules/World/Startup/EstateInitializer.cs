@@ -325,7 +325,7 @@ namespace OpenSim.Region.CoreModules
             public override OSDMap ToOSD()
             {
                 OSDMap map = new OSDMap();
-                map.Add("Password", Password.MySqlEscape());
+                map.Add("Password", Password);
                 return map;
             }
 
