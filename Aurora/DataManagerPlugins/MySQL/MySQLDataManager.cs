@@ -325,8 +325,8 @@ namespace Aurora.DataManager.MySQL
             int i = 0;
             foreach (object value in keyValue)
             {
-                ps["?" + keyRow[i]] = value;
-                query += String.Format("{0} = ?{1} and ", keyRow[i], keyRow[i]);
+                ps["?" + keyRow[i].Replace("`", "")] = value;
+                query += String.Format("{0} = ?{1} and ", keyRow[i], keyRow[i].Replace("`", ""));
                 i++;
             }
             query = query.Remove (query.Length - 5);
