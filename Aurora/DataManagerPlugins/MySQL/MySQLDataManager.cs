@@ -657,8 +657,8 @@ namespace Aurora.DataManager.MySQL
             int i = 0;
             foreach (object value in values)
             {
-                param["?" + keys[i]] = value;
-                query += keys[i] + " = ?" + keys[i] + " AND ";
+                param["?" + keys[i].Replace("`", "")] = value;
+                query += keys[i] + " = ?" + keys[i].Replace("`", "") + " AND ";
                 i++;
             }
             if(keys.Length > 0)
