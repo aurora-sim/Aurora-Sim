@@ -75,9 +75,9 @@ namespace Aurora.Services.DataService
         {
             List<string> query;
             if (scopeID != UUID.Zero)
-                query = GD.Query("RegionName like '" + regionName +"' and ScopeID = '" + scopeID + "'", m_realm, "*");
+                query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "' and ScopeID = '" + scopeID + "'", m_realm, "*");
             else
-                query = GD.Query("RegionName like '" + regionName +"'", m_realm, "*");
+                query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "'", m_realm, "*");
 
             if (query.Count == 0)
                 return null;
@@ -197,7 +197,7 @@ namespace Aurora.Services.DataService
 
             values.Add(region.ScopeID);
             values.Add(region.RegionID);
-            values.Add(region.RegionName);
+            values.Add(region.RegionName.MySqlEscape());
             values.Add(region.RegionLocX);
             values.Add(region.RegionLocY);
             values.Add(region.RegionLocZ);

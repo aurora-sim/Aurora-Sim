@@ -703,7 +703,7 @@ namespace Aurora.Services.DataService
         {
             GD.Delete(m_foldersrealm, new string[1] { "folderID" }, new object[1] { folder.ID });
             return GD.Insert(m_foldersrealm, new string[6]{"folderName","type","version","folderID","agentID","parentFolderID"},
-                new object[6]{folder.Name, folder.Type, folder.Version, folder.ID, folder.Owner, folder.ParentID});
+                new object[6] { folder.Name.MySqlEscape(), folder.Type, folder.Version, folder.ID, folder.Owner, folder.ParentID });
         }
 
         public virtual bool StoreItem (InventoryItemBase item)
@@ -713,7 +713,7 @@ namespace Aurora.Services.DataService
                 "inventoryNextPermissions","inventoryCurrentPermissions","invType","creatorID","inventoryBasePermissions",
                 "inventoryEveryOnePermissions","salePrice","saleType","creationDate","groupID","groupOwned",
                 "flags","inventoryID","avatarID","parentFolderID","inventoryGroupPermissions"}, new object[20]{
-                    item.AssetID, item.AssetType, item.Name, item.Description, item.NextPermissions, item.CurrentPermissions,
+                    item.AssetID, item.AssetType, item.Name.MySqlEscape(), item.Description.MySqlEscape(), item.NextPermissions, item.CurrentPermissions,
                     item.InvType, item.CreatorIdentification, item.BasePermissions, item.EveryOnePermissions, item.SalePrice, item.SaleType,
                     item.CreationDate, item.GroupID, item.GroupOwned ? "1" : "0", item.Flags, item.ID, item.Owner,
                     item.Folder, item.GroupPermissions});

@@ -73,7 +73,7 @@ namespace Aurora.Services.DataService
         {
             List<object> Values = new List<object>();
             Values.Add(region.RegionID);
-            Values.Add(region.RegionName);
+            Values.Add(region.RegionName.MySqlEscape());
             Values.Add(OSDParser.SerializeJsonString(region.PackRegionInfoData(true)));
             Values.Add(region.Disabled ? 1 : 0);
             GD.Replace("simulator", new string[]{"RegionID","RegionName",
@@ -150,7 +150,7 @@ namespace Aurora.Services.DataService
 
         public RegionInfo GetRegionInfo (string regionName, bool convertDNSNames)
         {
-            List<string> RetVal = GD.Query("RegionName", regionName, "simulator", "RegionInfo");
+            List<string> RetVal = GD.Query("RegionName", regionName.MySqlEscape(), "simulator", "RegionInfo");
             RegionInfo replyData = new RegionInfo();
             if (RetVal.Count == 0)
                 return null;

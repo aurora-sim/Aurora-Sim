@@ -134,12 +134,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     m_Log.Warn("[LocalAssetDatabase]: Asset already exists in the db - " + asset.ID);
                     Delete(asset.ID, true);
                     m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
-                        new object[] { asset.ID, asset.Name, asset.Description, (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                        new object[] { asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(), (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
                 }
                 else
                 {
                     m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
-                        new object[] { asset.ID, asset.Name, asset.Description, (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                        new object[] { asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(), (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
                 }
             }
             catch(Exception e)

@@ -155,17 +155,17 @@ namespace Aurora.Services.DataService
         public void AddAbuseReport(AbuseReport report)
         {
             List<object> InsertValues = new List<object>();
-            InsertValues.Add(report.Category);
-            InsertValues.Add(report.ReporterName);
-            InsertValues.Add(report.ObjectName);
+            InsertValues.Add(report.Category.ToString().MySqlEscape());
+            InsertValues.Add(report.ReporterName.MySqlEscape());
+            InsertValues.Add(report.ObjectName.MySqlEscape());
             InsertValues.Add(report.ObjectUUID);
-            InsertValues.Add(report.AbuserName);
-            InsertValues.Add(report.AbuseLocation);
-            InsertValues.Add(report.AbuseDetails);
-            InsertValues.Add(report.ObjectPosition);
-            InsertValues.Add(report.RegionName);
+            InsertValues.Add(report.AbuserName.MySqlEscape());
+            InsertValues.Add(report.AbuseLocation.MySqlEscape());
+            InsertValues.Add(report.AbuseDetails.MySqlEscape());
+            InsertValues.Add(report.ObjectPosition.MySqlEscape());
+            InsertValues.Add(report.RegionName.MySqlEscape());
             InsertValues.Add(report.ScreenshotID);
-            InsertValues.Add(report.AbuseSummary);
+            InsertValues.Add(report.AbuseSummary.MySqlEscape());
 
             //We do not trust the number sent by the region. Always find it ourselves
             List<string> values = GD.Query("", "", "abusereports", "Number", " ORDER BY Number DESC");
@@ -178,10 +178,10 @@ namespace Aurora.Services.DataService
 
             InsertValues.Add(report.Number);
 
-            InsertValues.Add(report.AssignedTo);
+            InsertValues.Add(report.AssignedTo.MySqlEscape());
             InsertValues.Add(report.Active ? 1 : 0);
             InsertValues.Add(report.Checked ? 1 : 0);
-            InsertValues.Add(report.Notes);
+            InsertValues.Add(report.Notes.MySqlEscape());
 
             GD.Insert("abusereports", InsertValues.ToArray());
         }
@@ -197,23 +197,23 @@ namespace Aurora.Services.DataService
                 return;
             //This is update, so we trust the number as it should know the number it's updating now.
             List<object> InsertValues = new List<object>();
-            InsertValues.Add(report.Category);
-            InsertValues.Add(report.ReporterName);
-            InsertValues.Add(report.ObjectName);
+            InsertValues.Add(report.Category.ToString().MySqlEscape());
+            InsertValues.Add(report.ReporterName.MySqlEscape());
+            InsertValues.Add(report.ObjectName.MySqlEscape());
             InsertValues.Add(report.ObjectUUID);
-            InsertValues.Add(report.AbuserName);
-            InsertValues.Add(report.AbuseLocation);
-            InsertValues.Add(report.AbuseDetails);
-            InsertValues.Add(report.ObjectPosition);
-            InsertValues.Add(report.RegionName);
+            InsertValues.Add(report.AbuserName.MySqlEscape());
+            InsertValues.Add(report.AbuseLocation.MySqlEscape());
+            InsertValues.Add(report.AbuseDetails.MySqlEscape());
+            InsertValues.Add(report.ObjectPosition.MySqlEscape());
+            InsertValues.Add(report.RegionName.MySqlEscape());
             InsertValues.Add(report.ScreenshotID);
-            InsertValues.Add(report.AbuseSummary);
+            InsertValues.Add(report.AbuseSummary.MySqlEscape());
             InsertValues.Add(report.Number);
 
-            InsertValues.Add(report.AssignedTo);
+            InsertValues.Add(report.AssignedTo.MySqlEscape());
             InsertValues.Add(report.Active ? 1 : 0);
             InsertValues.Add(report.Checked ? 1 : 0);
-            InsertValues.Add(report.Notes);
+            InsertValues.Add(report.Notes.MySqlEscape());
 
             List<string> InsertKeys = new List<string>();
             InsertKeys.Add("Category");

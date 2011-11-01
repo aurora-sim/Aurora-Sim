@@ -77,13 +77,13 @@ namespace Aurora.Services.DataService
         {
             GD.Delete (m_realm, new string[2] { "PrincipalID", "Friend" }, new object[2] { PrincipalID, Friend });
             return GD.Insert(m_realm, new string[] { "PrincipalID", "Friend", "Flags", "Offered" },
-                new object[] { PrincipalID, Friend, Flags, Offered });
+                new object[] { PrincipalID, Friend.MySqlEscape(), Flags, Offered });
         }
 
         public bool Delete(UUID ownerID, string friend)
         {
-            return GD.Delete(m_realm, new string[] { "PrincipalID", "Friend" }, 
-                new object[] { ownerID, friend });
+            return GD.Delete(m_realm, new string[] { "PrincipalID", "Friend" },
+                new object[] { ownerID, friend.MySqlEscape() });
         }
 
         public FriendInfo[] GetFriends(UUID principalID)

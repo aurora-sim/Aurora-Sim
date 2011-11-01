@@ -110,15 +110,15 @@ namespace Aurora.Services.DataService
 			if (Check.Count == 0)
             {
                 GD.Insert("avatararchives", new object[] {
-					archive.Name,
+					archive.Name.MySqlEscape(),
 					archive.ArchiveXML,
-                    archive.Snapshot,
+                    archive.Snapshot.MySqlEscape(),
                     archive.IsPublic
 				});
 			}
             else
             {
-				GD.Update("avatararchives", new object[] { archive.ArchiveXML }, new string[] { "Archive" }, new string[] { "Name" }, new object[] { archive.Name });
+                GD.Update("avatararchives", new object[] { archive.ArchiveXML }, new string[] { "Archive" }, new string[] { "Name" }, new object[] { archive.Name.MySqlEscape() });
 			}
 		}
 	}

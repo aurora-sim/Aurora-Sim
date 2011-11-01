@@ -185,54 +185,6 @@ namespace OpenSim.Services
 
             return FailureResult();
         }
-        
-        byte[] SetItems(Dictionary<string, object> request)
-        {
-            UUID user = UUID.Zero;
-            string[] names, values;
-
-            if (!request.ContainsKey("UserID") || !request.ContainsKey("Names") || !request.ContainsKey("Values"))
-                return FailureResult();
-
-            if (!UUID.TryParse(request["UserID"].ToString(), out user))
-                return FailureResult();
-
-            if (!(request["Names"] is List<string> || request["Values"] is List<string>))
-                return FailureResult();
-
-            List<string> _names = (List<string>)request["Names"];
-            names = _names.ToArray();
-            List<string> _values = (List<string>)request["Values"];
-            values = _values.ToArray();
-            
-            if (m_AvatarService.SetItems(user, names, values))
-                return SuccessResult();
-
-            return FailureResult();
-        }
-
-        byte[] RemoveItems(Dictionary<string, object> request)
-        {
-            UUID user = UUID.Zero;
-            string[] names;
-
-            if (!request.ContainsKey("UserID") || !request.ContainsKey("Names"))
-                return FailureResult();
-
-            if (!UUID.TryParse(request["UserID"].ToString(), out user))
-                return FailureResult();
-
-            if (!(request["Names"] is List<string>))
-                return FailureResult();
-
-            List<string> _names = (List<string>)request["Names"];
-            names = _names.ToArray();
-
-            if (m_AvatarService.RemoveItems(user, names))
-                return SuccessResult();
-
-            return FailureResult();
-        }
 
         byte[] CacheWearableData(Dictionary<string, object> request)
         {

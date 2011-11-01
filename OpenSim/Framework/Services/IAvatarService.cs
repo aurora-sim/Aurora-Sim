@@ -77,16 +77,6 @@ namespace OpenSim.Services.Interfaces
         bool ResetAvatar(UUID userID);
 
         /// <summary>
-        /// These methods raison d'etre: 
-        /// No need to send the entire avatar data (SetAvatar) for changing attachments
-        /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="attach"></param>
-        /// <returns></returns>
-        bool SetItems(UUID userID, string[] names, string[] values);
-        bool RemoveItems(UUID userID, string[] names);
-
-        /// <summary>
         /// Cache the given avatarWearable for the client
         /// </summary>
         /// <param name="principalID"></param>
@@ -384,8 +374,6 @@ namespace OpenSim.Services.Interfaces
     {
         AvatarData Get (string field, string val);
         bool Store (UUID PrincipalID, AvatarData data);
-        bool Delete (UUID principalID, string name);
         bool Delete (string field, string val);
-        bool SetItems (UUID principalID, string[] names, string[] values);
     }
 }

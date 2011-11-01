@@ -128,20 +128,6 @@ namespace OpenSim.Services.AvatarService
             return m_Database.Delete("PrincipalID", principalID.ToString());
         }
 
-        public bool SetItems(UUID principalID, string[] names, string[] values)
-        {
-            return m_Database.SetItems (principalID, names, values);
-        }
-
-        public bool RemoveItems(UUID principalID, string[] names)
-        {
-            foreach (string name in names)
-            {
-                m_Database.Delete(principalID, name);
-            }
-            return true;
-        }
-
         public void CacheWearableData(UUID principalID, AvatarWearable wearable)
         {
             if (!m_enableCacheBakedTextures)

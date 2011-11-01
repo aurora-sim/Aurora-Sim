@@ -135,22 +135,6 @@ namespace Aurora.Modules
             return success;
         }
 
-        public bool SetItems (UUID userID, string[] names, string[] values)
-        {
-            bool success = m_localService.SetItems (userID, names, values);
-            if (!success)
-                success = m_remoteService.SetItems (userID, names, values);
-            return success;
-        }
-
-        public bool RemoveItems (UUID userID, string[] names)
-        {
-            bool success = m_localService.RemoveItems (userID, names);
-            if (!success)
-                success = m_remoteService.RemoveItems (userID, names);
-            return success;
-        }
-
         public void CacheWearableData (UUID principalID, AvatarWearable cachedWearable)
         {
             //NOT DONE

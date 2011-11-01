@@ -60,9 +60,9 @@ namespace Aurora.Framework
         public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
-            map.Add("MuteName", MuteName);
+            map.Add("MuteName", MuteName.MySqlEscape());
             map.Add("MuteID", MuteID);
-            map.Add("MuteType", MuteType);
+            map.Add("MuteType", MuteType.MySqlEscape());
             return map;
         }
 

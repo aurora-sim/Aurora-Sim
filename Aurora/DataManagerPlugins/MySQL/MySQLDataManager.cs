@@ -116,6 +116,7 @@ namespace Aurora.DataManager.MySQL
         {
             IDataReader reader = null;
             List<string> retVal = new List<string> ();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             string query;
             if (keyRow == "")
             {
@@ -124,12 +125,13 @@ namespace Aurora.DataManager.MySQL
             }
             else
             {
-                query = String.Format ("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue.ToString ());
+                ps["?" + keyRow] = keyValue;
+                query = String.Format ("select {0} from {1} where {2} = ?{3}",
+                                      wantedValue, table, keyRow, keyRow);
             }
             try
             {
-                using (reader = Query (query, new Dictionary<string, object> ()))
+                using (reader = Query(query, ps))
                 {
                     while (reader.Read ())
                     {
@@ -262,7 +264,8 @@ namespace Aurora.DataManager.MySQL
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
         {
             IDataReader reader = null;
-            List<string> retVal = new List<string> ();
+            List<string> retVal = new List<string>();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = "";
             if (keyRow == "")
             {
@@ -271,12 +274,13 @@ namespace Aurora.DataManager.MySQL
             }
             else
             {
-                query = String.Format ("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue);
+                ps["?" + keyRow] = keyValue;
+                query = String.Format("select {0} from {1} where {2} = ?{3}",
+                                      wantedValue, table, keyRow, keyRow);
             }
             try
             {
-                using (reader = Query (query + order, new Dictionary<string, object> ()))
+                using (reader = Query (query + order, ps))
                 {
                     while (reader.Read ())
                     {
@@ -314,20 +318,22 @@ namespace Aurora.DataManager.MySQL
         public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             IDataReader reader = null;
-            List<string> retVal = new List<string> ();
+            List<string> retVal = new List<string>();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = String.Format ("select {0} from {1} where ",
                                       wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
-                query += String.Format ("{0} = '{1}' and ", keyRow[i], value);
+                ps["?" + keyRow[i]] = value;
+                query += String.Format("{0} = ?{1} and ", keyRow[i], keyRow[i]);
                 i++;
             }
             query = query.Remove (query.Length - 5);
 
             try
             {
-                using (reader = Query (query, new Dictionary<string, object> ()))
+                using (reader = Query (query, ps))
                 {
                     while (reader.Read ())
                     {
@@ -365,20 +371,22 @@ namespace Aurora.DataManager.MySQL
         public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             IDataReader reader = null;
-            Dictionary<string, List<string>> retVal = new Dictionary<string, List<string>> ();
+            Dictionary<string, List<string>> retVal = new Dictionary<string, List<string>>();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = String.Format ("select {0} from {1} where ",
                                       wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
-                query += String.Format ("{0} = '{1}' and ", keyRow[i], value);
+                query += String.Format ("{0} = ?{1} and ", keyRow[i], keyRow[i]);
+                ps["?" + keyRow[i]] = value;
                 i++;
             }
             query = query.Remove (query.Length - 5);
 
             try
             {
-                using (reader = Query (query, new Dictionary<string, object> ()))
+                using (reader = Query (query, ps))
                 {
                     while (reader.Read ())
                     {
@@ -441,7 +449,8 @@ namespace Aurora.DataManager.MySQL
             query += " where ";
             foreach (object value in keyValues)
             {
-                query += String.Format("{0}  = '{1}' and ", keyRows[i], value);
+                parameters["?" + keyRows[i]] = value;
+                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i]);
                 i++;
             }
             query = query.Remove(query.Length - 5);
@@ -472,7 +481,8 @@ namespace Aurora.DataManager.MySQL
             query += " where ";
             foreach(object value in keyValues)
             {
-                query += String.Format("{0}  = '{1}' and ", keyRows[i], value);
+                parameters["?" + keyRows[i]] = value;
+                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i]);
                 i++;
             }
             query = query.Remove(query.Length - 5);
@@ -490,13 +500,20 @@ namespace Aurora.DataManager.MySQL
         public override bool Insert(string table, object[] values)
         {
             string query = String.Format("insert into {0} values (", table);
-            query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", value));
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            string a = "a";
+            foreach (object o in values)
+            {
+                parameters[a] = o;
+                query += "?" + a + ",";
+                a += "a";//...Lazy, should be numeric
+            }
             query = query.Remove(query.Length - 1);
             query += ")";
 
             try
             {
-                ExecuteNonQuery (query, new Dictionary<string, object> ());
+                ExecuteNonQuery(query, parameters);
             }
             catch(Exception e)
             {
@@ -611,12 +628,19 @@ namespace Aurora.DataManager.MySQL
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             string query = String.Format("insert into {0} VALUES('", table);
-            query = values.Aggregate(query, (current, value) => current + (value + "','"));
-            query = query.Remove(query.Length - 2);
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            string a = "a";
+            foreach (object o in values)
+            {
+                param["?" + a] = o;
+                query += "?" + a + ",";
+                a += "a";
+            }
+            query = query.Remove(query.Length - 1);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
             try
             {
-                ExecuteNonQuery (query, new Dictionary<string, object> ());
+                ExecuteNonQuery(query, param);
             }
             catch(Exception e)
             {
@@ -628,18 +652,20 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string[] keys, object[] values)
         {
+            Dictionary<string, object> param = new Dictionary<string, object>();
             string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
             int i = 0;
             foreach (object value in values)
             {
-                query += keys[i] + " = '" + value + "' AND ";
+                param["?" + keys[i]] = value;
+                query += keys[i] + " = ?" + keys[i] + "' AND ";
                 i++;
             }
             if(keys.Length > 0)
                 query = query.Remove(query.Length - 5);
             try
             {
-                ExecuteNonQuery (query, new Dictionary<string, object> ());
+                ExecuteNonQuery(query, param);
             }
             catch(Exception e)
             {

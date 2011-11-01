@@ -323,18 +323,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return false;
         }
 
-        public bool SetItems(UUID userID, string[] names, string[] values)
-        {
-            m_log.Error("[SIMIAN AVATAR CONNECTOR]: SetItems called for " + userID + " with " + names.Length + " names and " + values.Length + " values, implement this");
-            return false;
-        }
-
-        public bool RemoveItems(UUID userID, string[] names)
-        {
-            m_log.Error("[SIMIAN AVATAR CONNECTOR]: RemoveItems called for " + userID + " with " + names.Length + " names, implement this");
-            return false;
-        }
-
         public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
         {
         }

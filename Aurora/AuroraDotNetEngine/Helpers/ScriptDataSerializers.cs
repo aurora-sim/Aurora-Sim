@@ -140,7 +140,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Dictionary<string, Object> vars = new Dictionary<string, object> ();
             if (script.Script != null)
                 vars = script.Script.GetStoreVars ();
-            stateSave.Variables = WebUtils.BuildXmlResponse (vars);
+            try
+            {
+                stateSave.Variables = WebUtils.BuildXmlResponse(vars);
+            }
+            catch
+            {
+            }
 
             //Plugins
             stateSave.Plugins = m_module.GetSerializationData (script.ItemID, script.Part.UUID);
@@ -164,9 +170,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             instance.InventoryItem.PermsMask = save.PermsMask;
             instance.TargetOmegaWasSet = save.TargetOmegaWasSet;
 
-            Dictionary<string, object> vars = WebUtils.ParseXmlResponse (save.Variables);
-            if (vars != null && vars.Count != 0 || instance.Script != null)
-                instance.Script.SetStoreVars (vars);
+            try
+            {
+                Dictionary<string, object> vars = WebUtils.ParseXmlResponse(save.Variables);
+                if (vars != null && vars.Count != 0 || instance.Script != null)
+                    instance.Script.SetStoreVars(vars);
+            }
+            catch
+            {
+            }
         }
 
         public StateSave FindScriptStateSave (ScriptData script)

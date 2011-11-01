@@ -155,7 +155,7 @@ namespace Aurora.Services.DataService
         {
             List<UserAccount> data = new List<UserAccount>();
 
-            string[] words = query.Split(new char[] { ' ' });
+            string[] words = query.MySqlEscape().Split(new char[] { ' ' });
 
             for (int i = 0; i < words.Length; i++)
             {

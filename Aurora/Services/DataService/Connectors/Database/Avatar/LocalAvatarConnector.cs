@@ -97,19 +97,9 @@ namespace Aurora.Services.DataService
             GD.Delete (m_realm, new string[1] { "PrincipalID" }, new object[1] { PrincipalID });
             for (int i = 0; i < data.Data.Count; i++)
             {
-                GD.Insert (m_realm, new object[3] { PrincipalID, data.Data.ElementAt (i).Key, data.Data.ElementAt (i).Value });
+                GD.Insert(m_realm, new object[3] { PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(), data.Data.ElementAt(i).Value.MySqlEscape() });
             }
             return true;
-        }
-
-        public bool SetItems (UUID principalID, string[] names, string[] values)
-        {
-            return GD.Update (m_realm, names, values, new string[1] { "PrincipalID" }, new object[1] { principalID });
-        }
-
-        public bool Delete (UUID principalID, string name)
-        {
-            return GD.Delete (m_realm, new string[2] { "PrincipalID", "Name" }, new object[2] { principalID, name });
         }
 
         public bool Delete (string field, string val)

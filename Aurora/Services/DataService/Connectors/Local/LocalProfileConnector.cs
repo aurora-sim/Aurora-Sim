@@ -163,9 +163,9 @@ namespace Aurora.Services.DataService
             //It might be updating, delete the old
             GD.Delete ("userclassifieds", new string[1] { "ClassifiedUUID" }, new object[1] { classified.ClassifiedUUID });
             List<object> values = new List<object>();
-            values.Add(classified.Name);
+            values.Add(classified.Name.MySqlEscape());
             values.Add(classified.Category);
-            values.Add(classified.SimName);
+            values.Add(classified.SimName.MySqlEscape());
             values.Add(classified.CreatorUUID);
             values.Add(classified.ClassifiedUUID);
             values.Add(OSDParser.SerializeJsonString(classified.ToOSD()));
@@ -208,8 +208,8 @@ namespace Aurora.Services.DataService
             //It might be updating, delete the old
             GD.Delete ("userpicks", new string[1] { "PickUUID" }, new object[1] { pick.PickUUID });
             List<object> values = new List<object> ();
-            values.Add (pick.Name);
-            values.Add (pick.SimName);
+            values.Add (pick.Name.MySqlEscape());
+            values.Add (pick.SimName.MySqlEscape());
             values.Add (pick.CreatorUUID);
             values.Add (pick.PickUUID);
             values.Add (OSDParser.SerializeJsonString (pick.ToOSD ()));

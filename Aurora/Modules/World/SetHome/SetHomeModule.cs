@@ -120,6 +120,14 @@ namespace Aurora.Modules.World.Auction
                                                       {
                                                           return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
                                                       }));
+
+            retVal["ExportObject"] = CapsUtil.CreateCAPS("ExportObject", "");
+
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ExportObject"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
+                                                      }));
             return retVal;
         }
 
