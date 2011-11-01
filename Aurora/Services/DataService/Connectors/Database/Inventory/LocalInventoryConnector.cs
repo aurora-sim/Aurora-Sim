@@ -719,9 +719,11 @@ namespace Aurora.Services.DataService
                     item.Folder, item.GroupPermissions});
         }
 
-        public virtual bool DeleteFolders (string field, string val)
+        public virtual bool DeleteFolders (string field, string val, bool safe)
         {
-            return GD.Delete (m_foldersrealm, new string[1] { field }, new object[1] { val });
+            if (safe)
+                return GD.Delete(m_foldersrealm, new string[2] { field, "type" }, new object[2] { val, "-1" });
+            return GD.Delete(m_foldersrealm, new string[1] { field }, new object[1] { val });
         }
 
         public virtual bool DeleteItems (string field, string val)

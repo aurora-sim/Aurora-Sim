@@ -238,7 +238,7 @@ namespace OpenSim.Services.Interfaces
         bool StoreFolder (InventoryFolderBase folder);
         bool StoreItem (InventoryItemBase item);
 
-        bool DeleteFolders (string field, string val);
+        bool DeleteFolders (string field, string val, bool safe);
         bool DeleteItems (string field, string val);
 
         bool MoveItem (string id, string newParent);

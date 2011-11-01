@@ -226,7 +226,7 @@ namespace OpenSim.Services.InventoryService
             }
             foreach (UUID id in badFolders)
             {
-                m_Database.DeleteFolders ("folderID", id.ToString ());
+                m_Database.DeleteFolders ("folderID", id.ToString (), false);
             }
             //Make sure that all default folders exist
             CreateUserInventory (account.PrincipalID, false);
@@ -681,7 +681,7 @@ namespace OpenSim.Services.InventoryService
                     InventoryFolderBase f = new InventoryFolderBase ();
                     f.ID = id;
                     PurgeFolder (f);
-                    m_Database.DeleteFolders ("folderID", id.ToString ());
+                    m_Database.DeleteFolders ("folderID", id.ToString (), true);
                 }
                 return true;
             }
@@ -695,7 +695,7 @@ namespace OpenSim.Services.InventoryService
                 InventoryFolderBase f = new InventoryFolderBase();
                 f.ID = id;
                 PurgeFolder(f);
-                m_Database.DeleteFolders("folderID", id.ToString());
+                m_Database.DeleteFolders("folderID", id.ToString(), true);
             }
 
             return true;
@@ -716,7 +716,7 @@ namespace OpenSim.Services.InventoryService
             foreach (InventoryFolderBase x in subFolders)
             {
                 PurgeFolder(x);
-                m_Database.DeleteFolders("folderID", x.ID.ToString());
+                m_Database.DeleteFolders("folderID", x.ID.ToString(), true);
             }
 
             m_Database.DeleteItems("parentFolderID", folder.ID.ToString());
@@ -733,11 +733,11 @@ namespace OpenSim.Services.InventoryService
             foreach (InventoryFolderBase x in subFolders)
             {
                 ForcePurgeFolder (x);
-                m_Database.DeleteFolders ("folderID", x.ID.ToString ());
+                m_Database.DeleteFolders ("folderID", x.ID.ToString (), false);
             }
 
             m_Database.DeleteItems ("parentFolderID", folder.ID.ToString ());
-            m_Database.DeleteFolders ("folderID", folder.ID.ToString ());
+            m_Database.DeleteFolders("folderID", folder.ID.ToString(), false);
 
             return true;
         }
