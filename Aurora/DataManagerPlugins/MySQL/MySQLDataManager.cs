@@ -437,11 +437,11 @@ namespace Aurora.DataManager.MySQL
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             foreach (object value in setValues)
             {
-                query += string.Format("{0} = ?{1},", setRows[i], setRows[i]);
+                query += string.Format("{0} = ?{1},", setRows[i], setRows[i].Replace("`",""));
                 string valueSTR = value.ToString();
                 if(valueSTR == "")
                     valueSTR = " ";
-                parameters["?" + setRows[i]] = valueSTR;
+                parameters["?" + setRows[i].Replace("`", "")] = valueSTR;
                 i++;
             }
             i = 0;
@@ -449,8 +449,8 @@ namespace Aurora.DataManager.MySQL
             query += " where ";
             foreach (object value in keyValues)
             {
-                parameters["?" + keyRows[i]] = value;
-                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i]);
+                parameters["?" + keyRows[i].Replace("`", "")] = value;
+                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
                 i++;
             }
             query = query.Remove(query.Length - 5);
@@ -481,8 +481,8 @@ namespace Aurora.DataManager.MySQL
             query += " where ";
             foreach(object value in keyValues)
             {
-                parameters["?" + keyRows[i]] = value;
-                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i]);
+                parameters["?" + keyRows[i].Replace("`", "")] = value;
+                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
                 i++;
             }
             query = query.Remove(query.Length - 5);
