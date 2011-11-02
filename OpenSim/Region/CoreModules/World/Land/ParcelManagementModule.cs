@@ -814,6 +814,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ", setting owner to " + fullSimParcel.LandData.OwnerID);
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch ();
             fullSimParcel.SetInfoID ();
+            fullSimParcel.LandData.Bitmap = new byte[(m_scene.RegionInfo.RegionSizeX / 4) * (m_scene.RegionInfo.RegionSizeY / 4) / 8];
             fullSimParcel = AddLandObject(fullSimParcel);
             ModifyLandBitmapSquare(0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, fullSimParcel.LandData.LocalID);
             return fullSimParcel;
