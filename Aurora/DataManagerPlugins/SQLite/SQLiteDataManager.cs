@@ -212,9 +212,9 @@ namespace Aurora.DataManager.SQLite
             }
             else
             {
-                ps[":" + keyRow] = keyValue;
+                ps[":" + keyRow.Replace("`", "")] = keyValue;
                 query = String.Format("select {0} from {1} where {2} = :{3}",
-                                      wantedValue, table, keyRow, keyRow);
+                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
             }
             SqliteCommand cmd = PrepReader (query);
             AddParams(ref cmd, ps);
@@ -315,9 +315,9 @@ namespace Aurora.DataManager.SQLite
             }
             else
             {
-                ps[":" + keyRow] = keyValue;
+                ps[":" + keyRow.Replace("`", "")] = keyValue;
                 query = String.Format("select {0} from {1} where {2} = :{3}",
-                                      wantedValue, table, keyRow, keyRow);
+                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
             }
             var cmd = PrepReader(query);
             AddParams(ref cmd, ps);
@@ -390,8 +390,8 @@ namespace Aurora.DataManager.SQLite
             int i = 0;
             foreach (object value in keyValue)
             {
-                ps[":" + keyRow[i]] = value;
-                query += String.Format("{0} = :{1} and ", keyRow[i], keyRow[i]);
+                ps[":" + keyRow[i].Replace("`", "")] = value;
+                query += String.Format("{0} = :{1} and ", keyRow[i], keyRow[i].Replace("`", ""));
                 i++;
             }
             query = query.Remove (query.Length - 5);
@@ -461,7 +461,7 @@ namespace Aurora.DataManager.SQLite
             int i = 0;
             foreach (object key in keys)
             {
-                cmd.Parameters.AddWithValue(":" + key, values[i]);
+                cmd.Parameters.AddWithValue(":" + key.ToString().Replace("`", ""), values[i]);
                 query += key + ",";
                 i++;
             }
@@ -471,7 +471,7 @@ namespace Aurora.DataManager.SQLite
 
             foreach (object key in keys)
             {
-                query += String.Format(":{0},", key);
+                query += String.Format(":{0},", key.ToString().Replace("`", ""));
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -542,8 +542,8 @@ namespace Aurora.DataManager.SQLite
             int i = 0;
             foreach (object value in values)
             {
-                ps[":" + keys[i]] = value;
-                query += keys[i] + " = :" + keys[i] + " and ";
+                ps[":" + keys[i].Replace("`", "")] = value;
+                query += keys[i] + " = :" + keys[i].Replace("`", "") + " and ";
                 i++;
             }
             if(keys.Length > 0)
