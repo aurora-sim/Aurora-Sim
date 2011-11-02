@@ -94,6 +94,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
         private int RemoteReplyScriptTimeout = 9000;
         private int RemoteReplyScriptWait = 300;
         private object XMLRPCListLock = new object();
+        private bool m_httpServerStarted = false;
 
         #region IRegionModule Members
 
@@ -131,8 +132,9 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         public void RegionLoaded (IScene scene)
         {
-            if (IsEnabled())
+            if (IsEnabled() && !m_httpServerStarted)
             {
+                m_httpServerStarted = true;
                 // Start http server
                 // Attach xmlrpc handlers
                 m_log.Info("[XMLRPC MODULE]: " +
