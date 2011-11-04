@@ -255,7 +255,7 @@ namespace Aurora.Services.DataService
             List<object> Values = new List<object>();
             Values.Add(es.EstateID);
             Values.Add("EstateSettings");
-            OSDMap map = es.ToOSD(true);
+            OSD map = es.ToOSD(true);
             Values.Add(OSDParser.SerializeLLSDXmlString(map));
             GD.Insert("estates", Values.ToArray());
 
@@ -308,7 +308,7 @@ namespace Aurora.Services.DataService
         public List<int> GetEstates(string search)
         {
             List<int> result = new List<int>();
-            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" + search.MySQLEscape() + "</string>%'");
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" + search.MySqlEscape() + "</string>%'");
             if (RetVal.Count == 0)
                 return null;
             foreach (string val in RetVal)
