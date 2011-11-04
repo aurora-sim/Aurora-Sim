@@ -27,7 +27,6 @@
 
 using OpenMetaverse;
 using System.Collections.Generic;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework

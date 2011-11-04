@@ -368,6 +368,15 @@ namespace Aurora.Modules.RegionLoader
             if(listNeedsUpdated)
                 RefreshCurrentRegions();
             RegionListBox.SelectedItem = region.RegionName;
+
+            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            if (orsc != null)
+            {
+                OpenSim.Region.Framework.Interfaces.OpenRegionSettings ors = orsc.GetSettings(region.RegionID);
+                ors.MaximumPhysPrimScale = float.Parse(eMaxPhysPrim.Text);
+                ors.MaximumPrimScale = float.Parse(eMaxPrimSize.Text);
+                orsc.SetSettings(region.RegionID, ors);
+            }
         }
 
         private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)

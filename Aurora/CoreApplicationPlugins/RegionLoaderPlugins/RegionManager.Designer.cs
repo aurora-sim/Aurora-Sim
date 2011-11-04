@@ -171,11 +171,11 @@ namespace Aurora.Modules.RegionLoader
             this.textBox7 = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
             this.label27 = new System.Windows.Forms.Label();
-            this.textBox8 = new System.Windows.Forms.TextBox();
+            this.eMaxPhysPrim = new System.Windows.Forms.TextBox();
             this.textBox9 = new System.Windows.Forms.TextBox();
             this.label28 = new System.Windows.Forms.Label();
             this.label29 = new System.Windows.Forms.Label();
-            this.textBox10 = new System.Windows.Forms.TextBox();
+            this.eMaxPrimSize = new System.Windows.Forms.TextBox();
             this.textBox11 = new System.Windows.Forms.TextBox();
             this.label30 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -973,11 +973,11 @@ namespace Aurora.Modules.RegionLoader
             this.groupBox3.Controls.Add(this.textBox7);
             this.groupBox3.Controls.Add(this.label26);
             this.groupBox3.Controls.Add(this.label27);
-            this.groupBox3.Controls.Add(this.textBox8);
+            this.groupBox3.Controls.Add(this.eMaxPhysPrim);
             this.groupBox3.Controls.Add(this.textBox9);
             this.groupBox3.Controls.Add(this.label28);
             this.groupBox3.Controls.Add(this.label29);
-            this.groupBox3.Controls.Add(this.textBox10);
+            this.groupBox3.Controls.Add(this.eMaxPrimSize);
             this.groupBox3.Controls.Add(this.textBox11);
             this.groupBox3.Controls.Add(this.label30);
             this.groupBox3.Location = new System.Drawing.Point(9, 6);
@@ -1395,16 +1395,15 @@ namespace Aurora.Modules.RegionLoader
             this.label27.TabIndex = 9;
             this.label27.Text = "Region Ports";
             // 
-            // textBox8
+            // eMaxPhysPrim
             // 
-            this.textBox8.Enabled = false;
-            this.textBox8.Location = new System.Drawing.Point(247, 247);
-            this.textBox8.Name = "textBox8";
-            this.textBox8.Size = new System.Drawing.Size(157, 20);
-            this.textBox8.TabIndex = 17;
-            this.textBox8.Text = "50";
-            this.textBox8.TextChanged += new System.EventHandler(this.startupType_TextChanged);
-            this.textBox8.Leave += new System.EventHandler(this.startupType_Leave);
+            this.eMaxPhysPrim.Location = new System.Drawing.Point(247, 247);
+            this.eMaxPhysPrim.Name = "eMaxPhysPrim";
+            this.eMaxPhysPrim.Size = new System.Drawing.Size(157, 20);
+            this.eMaxPhysPrim.TabIndex = 17;
+            this.eMaxPhysPrim.Text = "50";
+            this.eMaxPhysPrim.TextChanged += new System.EventHandler(this.startupType_TextChanged);
+            this.eMaxPhysPrim.Leave += new System.EventHandler(this.startupType_Leave);
             // 
             // textBox9
             // 
@@ -1434,16 +1433,15 @@ namespace Aurora.Modules.RegionLoader
             this.label29.Size = new System.Drawing.Size(0, 12);
             this.label29.TabIndex = 12;
             // 
-            // textBox10
+            // eMaxPrimSize
             // 
-            this.textBox10.Enabled = false;
-            this.textBox10.Location = new System.Drawing.Point(247, 221);
-            this.textBox10.Name = "textBox10";
-            this.textBox10.Size = new System.Drawing.Size(157, 20);
-            this.textBox10.TabIndex = 15;
-            this.textBox10.Text = "256";
-            this.textBox10.TextChanged += new System.EventHandler(this.startupType_TextChanged);
-            this.textBox10.Leave += new System.EventHandler(this.startupType_Leave);
+            this.eMaxPrimSize.Location = new System.Drawing.Point(247, 221);
+            this.eMaxPrimSize.Name = "eMaxPrimSize";
+            this.eMaxPrimSize.Size = new System.Drawing.Size(157, 20);
+            this.eMaxPrimSize.TabIndex = 15;
+            this.eMaxPrimSize.Text = "256";
+            this.eMaxPrimSize.TextChanged += new System.EventHandler(this.startupType_TextChanged);
+            this.eMaxPrimSize.Leave += new System.EventHandler(this.startupType_Leave);
             // 
             // textBox11
             // 
@@ -1558,11 +1556,11 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.TextBox textBox7;
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.Label label27;
-        private System.Windows.Forms.TextBox textBox8;
+        private System.Windows.Forms.TextBox eMaxPhysPrim;
         private System.Windows.Forms.TextBox textBox9;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.Label label29;
-        private System.Windows.Forms.TextBox textBox10;
+        private System.Windows.Forms.TextBox eMaxPrimSize;
         private System.Windows.Forms.TextBox textBox11;
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.ListBox RegionListBox;
