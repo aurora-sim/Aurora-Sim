@@ -118,6 +118,21 @@ namespace OpenSim.Framework
             BannedUserID = new UUID(values["BannedUserID"].ToString());
         }
 
+        public void FromOSD(OSD o)
+        {
+            OSDMap values = (OSDMap)o;
+            EstateID = (uint)values["EstateID"].AsInteger();
+            BannedUserID = values["BannedUserID"].AsUUID();
+        }
+
+        public OSD ToOSD()
+        {
+            OSDMap kvp = new OSDMap();
+            kvp["EstateID"] = (int)EstateID;
+            kvp["BannedUserID"] = BannedUserID;
+            return kvp;
+        }
+
         public Dictionary<string, object> ToKeyValuePairs()
         {
             Dictionary<string, object> kvp = new Dictionary<string, object>();
