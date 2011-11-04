@@ -373,6 +373,147 @@ namespace OpenSim.Framework
             EstateGroups = NewGroups.ToArray();
         }
 
+        public void FromOSD(OSD v)
+        {
+            OSDMap values = (OSDMap)v;
+            EstateID = (uint)values["EstateID"].AsInteger();
+            EstateName = values["EstateName"].AsString();
+            AbuseEmailToEstateOwner = values["AbuseEmailToEstateOwner"].AsInteger() == 1;
+            DenyAnonymous = values["DenyAnonymous"].AsInteger() == 1;
+            ResetHomeOnTeleport = values["ResetHomeOnTeleport"].AsInteger() == 1;
+            FixedSun = values["FixedSun"].AsInteger() == 1;
+            DenyTransacted = values["DenyTransacted"].AsInteger() == 1;
+            BlockDwell = values["BlockDwell"].AsInteger() == 1;
+            DenyIdentified = values["DenyIdentified"].AsInteger() == 1;
+            AllowVoice = values["AllowVoice"].AsInteger() == 1;
+            UseGlobalTime = values["UseGlobalTime"].AsInteger() == 1;
+            PricePerMeter = values["PricePerMeter"].AsInteger();
+            TaxFree = values["TaxFree"].AsInteger() == 1;
+            AllowDirectTeleport = values["AllowDirectTeleport"].AsInteger() == 1;
+            RedirectGridX = values["RedirectGridX"].AsInteger();
+            RedirectGridY = values["RedirectGridY"].AsInteger();
+            ParentEstateID = (uint)values["ParentEstateID"].AsInteger();
+            SunPosition = values["SunPosition"].AsReal();
+            EstateSkipScripts = values["EstateSkipScripts"].AsInteger() == 1;
+            BillableFactor = (float)values["BillableFactor"].AsReal();
+            PublicAccess = values["PublicAccess"].AsInteger() == 1;
+            AbuseEmail = values["AbuseEmail"].AsString();
+            EstateOwner = values["EstateOwner"].AsUUID();
+            AllowLandmark = int.Parse(values["AllowLandmark"].AsInteger() == 1;
+            AllowParcelChanges = values["AllowParcelChanges"].AsInteger() == 1;
+            AllowSetHome = values["AllowSetHome"].AsInteger() == 1;
+            DenyMinors = values["DenyMinors"].AsInteger() == 1;
+            //We always try to pull this in if it exists
+            if (values.ContainsKey("EstatePass"))
+                EstatePass = values["EstatePass"].AsString();
+
+            OSDMap Managers = values["EstateManagers"] as OSDMap;
+            List<UUID> NewManagers = new List<UUID>();
+            foreach (OSD ID in Managers.Values)
+            {
+                NewManagers.Add(ID.AsUUID());
+            }
+            EstateManagers = NewManagers.ToArray();
+
+            OSDMap Ban = values["EstateBans"] as OSDMap;
+            List<EstateBan> NewBan = new List<EstateBan>();
+            foreach (OSD BannedUser in Ban.Values)
+            {
+                EstateBan ban = new EstateBan();
+                ban.FromOSD(BannedUser);
+                NewBan.Add(ban);
+            }
+            EstateBans = NewBan.ToArray();
+
+            OSDMap Access = values["EstateAccess"] as OSDMap;
+            List<UUID> NewAccess = new List<UUID>();
+            foreach (OSD UUID in Access.Values)
+            {
+                NewAccess.Add(UUID.AsUUID());
+            }
+            EstateAccess = NewAccess.ToArray();
+
+            OSDMap Groups = values["EstateGroups"] as OSDMap;
+            List<UUID> NewGroups = new List<UUID>();
+            foreach (OSD UUID in Groups.Values)
+            {
+                NewGroups.Add(UUID.AsUUID());
+            }
+            EstateGroups = NewGroups.ToArray();
+        }
+
+        public OSD ToOSD(bool local)
+        {
+            OSDMap values = new OSDMap();
+            values["EstateID"] = (int)EstateID;
+            values["EstateName"] = EstateName;
+            values["AbuseEmailToEstateOwner"] = (int)(AbuseEmailToEstateOwner ? 1 : 0);
+            values["DenyAnonymous"] = DenyAnonymous ? 1 : 0;
+            values["ResetHomeOnTeleport"] = ResetHomeOnTeleport ? 1 : 0;
+            values["FixedSun"] = FixedSun ? 1 : 0;
+            values["DenyTransacted"] = DenyTransacted ? 1 : 0;
+            values["BlockDwell"] = BlockDwell ? 1 : 0;
+            values["DenyIdentified"] = DenyIdentified ? 1 : 0;
+            values["AllowVoice"] = AllowVoice ? 1 : 0;
+            values["UseGlobalTime"] = UseGlobalTime ? 1 : 0;
+            values["PricePerMeter"] = PricePerMeter;
+            values["TaxFree"] = TaxFree ? 1 : 0;
+            values["AllowDirectTeleport"] = AllowDirectTeleport ? 1 : 0;
+            values["RedirectGridX"] = RedirectGridX;
+            values["RedirectGridY"] = RedirectGridY;
+            values["ParentEstateID"] = (int)ParentEstateID;
+            values["SunPosition"] = SunPosition;
+            values["EstateSkipScripts"] = EstateSkipScripts ? 1 : 0;
+            values["BillableFactor"] = BillableFactor;
+            values["PublicAccess"] = PublicAccess ? 1 : 0;
+            values["AbuseEmail"] = AbuseEmail;
+            values["EstateOwner"] = EstateOwner;
+            values["DenyMinors"] = DenyMinors ? 1 : 0;
+            values["AllowLandmark"] = AllowLandmark ? 1 : 0;
+            values["AllowParcelChanges"] = AllowParcelChanges ? 1 : 0;
+            values["AllowSetHome"] = AllowSetHome ? 1 : 0;
+            if(Local)
+                values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
+
+            OSDMap Ban = OSDMap;
+            int i = 0;
+            foreach (EstateBan ban in EstateBans)
+            {
+                Ban[ConvertDecString(i)] = ban.ToOSD();
+                i++;
+            }
+            values["EstateBans"] = Ban;
+            i *= 0;
+
+            OSDMap Managers = new OSDMap();
+            foreach (UUID ID in EstateManagers)
+            {
+                Managers[ConvertDecString(i)] = ID;
+                i++;
+            }
+            values["EstateManagers"] = Managers;
+            i *= 0;
+
+            OSDMap Groups = new OSDMap();
+            foreach (UUID ID in EstateGroups)
+            {
+                Groups[ConvertDecString(i)] = ID;
+                i++;
+            }
+            values["EstateGroups"] = Groups;
+            i *= 0;
+
+            OSDMap Access = new OSDMap();
+            foreach (UUID ID in EstateAccess)
+            {
+                Access[ConvertDecString(i)] = ID;
+                i++;
+            }
+            values["EstateAccess"] = Access;
+            i *= 0;
+            return values;
+        }
+
         public Dictionary<string,object> ToKeyValuePairs(bool Local)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
