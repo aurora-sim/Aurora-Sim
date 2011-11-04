@@ -1397,6 +1397,7 @@ namespace Aurora.Modules.RegionLoader
             // 
             // textBox8
             // 
+            this.textBox8.Enabled = false;
             this.textBox8.Location = new System.Drawing.Point(247, 247);
             this.textBox8.Name = "textBox8";
             this.textBox8.Size = new System.Drawing.Size(157, 20);
@@ -1435,6 +1436,7 @@ namespace Aurora.Modules.RegionLoader
             // 
             // textBox10
             // 
+            this.textBox10.Enabled = false;
             this.textBox10.Location = new System.Drawing.Point(247, 221);
             this.textBox10.Name = "textBox10";
             this.textBox10.Size = new System.Drawing.Size(157, 20);
