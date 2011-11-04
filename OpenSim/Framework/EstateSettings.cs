@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
@@ -399,7 +400,7 @@ namespace OpenSim.Framework
             PublicAccess = values["PublicAccess"].AsInteger() == 1;
             AbuseEmail = values["AbuseEmail"].AsString();
             EstateOwner = values["EstateOwner"].AsUUID();
-            AllowLandmark = int.Parse(values["AllowLandmark"].AsInteger() == 1;
+            AllowLandmark = values["AllowLandmark"].AsInteger() == 1;
             AllowParcelChanges = values["AllowParcelChanges"].AsInteger() == 1;
             AllowSetHome = values["AllowSetHome"].AsInteger() == 1;
             DenyMinors = values["DenyMinors"].AsInteger() == 1;
@@ -442,7 +443,7 @@ namespace OpenSim.Framework
             EstateGroups = NewGroups.ToArray();
         }
 
-        public OSD ToOSD(bool local)
+        public OSD ToOSD(bool Local)
         {
             OSDMap values = new OSDMap();
             values["EstateID"] = (int)EstateID;
@@ -475,7 +476,7 @@ namespace OpenSim.Framework
             if(Local)
                 values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
 
-            OSDMap Ban = OSDMap;
+            OSDMap Ban = new OSDMap();
             int i = 0;
             foreach (EstateBan ban in EstateBans)
             {
