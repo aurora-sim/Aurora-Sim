@@ -17,7 +17,7 @@ namespace Aurora.Modules
 
         public string Name
         {
-            get { return "OpenRegionSettingsConnector"; }
+            get { return "IOpenRegionSettingsConnector"; }
         }
 
         public void Initialize(IGenericData GenericData, Nini.Config.IConfigSource source, IRegistryCore simBase, string DefaultConnectionString)

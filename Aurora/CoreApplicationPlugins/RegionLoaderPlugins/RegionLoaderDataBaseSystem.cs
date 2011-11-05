@@ -122,8 +122,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     }
                     else
                     {
-                        RegionManager manager = new RegionManager (true, false, m_openSim);
-                        System.Windows.Forms.Application.Run (manager);
+                        bool done = false;
+                        Thread t = new Thread(delegate()
+                            {
+                                RegionManager manager = new RegionManager(true, false, m_openSim);
+                                System.Windows.Forms.Application.Run(manager);
+                                done = true;
+                            });
+                        t.SetApartmentState(ApartmentState.STA);
+                        t.Start();
+                        while (!done)
+                            Thread.Sleep(100);
                     }
                 }
                 catch
@@ -158,8 +167,17 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    RegionManager manager = new RegionManager (false, true, m_openSim);
-                    System.Windows.Forms.Application.Run (manager);
+                    bool done = false;
+                    Thread t = new Thread(delegate()
+                    {
+                        RegionManager manager = new RegionManager(false, true, m_openSim);
+                        System.Windows.Forms.Application.Run(manager);
+                        done = true;
+                    });
+                    t.SetApartmentState(ApartmentState.STA);
+                    t.Start();
+                    while (!done)
+                        Thread.Sleep(100);
                 }
             }
             catch
@@ -173,7 +191,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void OpenRegionManager(string[] cmdparams)
         {
-            Thread t = new Thread (StartRegionManagerThread);
+            Thread t = new Thread(StartRegionManagerThread);
+            t.SetApartmentState(ApartmentState.STA);
             t.Start ();
         }
 
