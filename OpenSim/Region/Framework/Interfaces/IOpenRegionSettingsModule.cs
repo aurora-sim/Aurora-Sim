@@ -69,15 +69,31 @@ namespace OpenSim.Region.Framework.Interfaces
 
     public interface IOpenRegionSettingsConnector : IAuroraDataPlugin
     {
+        /// <summary>
+        /// Get the OpenRegionSettings info from the database for the given region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
         OpenRegionSettings GetSettings(UUID regionID);
+
+        /// <summary>
+        /// Set the OpenRegionSettings info for the given region in the database
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="settings"></param>
         void SetSettings(UUID regionID, OpenRegionSettings settings);
+
+        /// <summary>
+        /// Create a webpage that allows for the editing of the OpenRegionSettings for the given region
+        /// </summary>
+        /// <param name="CurrentRegionID"></param>
+        /// <returns>The URL to the webpage</returns>
+        string AddOpenRegionSettingsHTMLPage(UUID regionID);
     }
 
     /// <summary>
     /// This module sends Aurora-specific settings to the viewer to tell it about different settings for the region
     /// </summary>
-    #region Settings
-
     public class OpenRegionSettings : IDataTransferable
     {
         #region Declares
@@ -416,6 +432,4 @@ namespace OpenSim.Region.Framework.Interfaces
 
         #endregion
     }
-
-    #endregion
 }

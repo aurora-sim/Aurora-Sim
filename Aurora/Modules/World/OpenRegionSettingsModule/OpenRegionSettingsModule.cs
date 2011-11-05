@@ -471,17 +471,25 @@ namespace Aurora.Modules
 
         public void OpenRegionInfo (IScenePresence presence)
         {
-            OSD item = OpenRegionInfo();
+            OSD item = BuildOpenRegionInfo(presence);
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
             if (eq != null)
                 eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
         }
 
-        public OSD OpenRegionInfo()
+        public OSD BuildOpenRegionInfo(IScenePresence sp)
         {
             OSDMap map = new OSDMap();
 
             OSDMap body = new OSDMap();
+
+
+            IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
+            if (orsc != null)
+            {
+                if (sp.Scene.Permissions.CanIssueEstateCommand(sp.UUID, false))
+                    body.Add("EditURL", OSD.FromString(orsc.AddOpenRegionSettingsHTMLPage(sp.Scene.RegionInfo.RegionID)));
+            }
 
             if (m_settings.MaxDragDistance != -1)
                 body.Add("MaxDragDistance", OSD.FromReal(m_settings.MaxDragDistance));
