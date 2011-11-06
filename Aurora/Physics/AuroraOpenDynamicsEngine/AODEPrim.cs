@@ -1742,10 +1742,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // gravityz multiplier = 1 - m_buoyancy
                     float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     Vector3 gravForce = new Vector3 ();
-                    _parent_scene.CalculateGravity (Mass, dcpos, true, gravModifier, ref gravForce);
+                    _parent_scene.CalculateGravity(m_mass, dcpos, true, gravModifier, ref gravForce);
 
                     Vector3 windForce = new Vector3 ();
-                    _parent_scene.AddWindForce (Mass, dcpos, ref windForce);
+                    _parent_scene.AddWindForce(m_mass, dcpos, ref windForce);
                     fx += windForce.X;
                     fy += windForce.Y;
                     fz += windForce.Z;
@@ -2766,19 +2766,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get
             {
-
                 d.Vector3 dtmp;
-
-                if (!childPrim)
+                if (IsPhysical && !childPrim && Body != IntPtr.Zero)
                 {
-                    if (Body != IntPtr.Zero)
-                    {
-                        dtmp = d.BodyGetPosition (Body);
-                        return new Vector3 (dtmp.X, dtmp.Y, dtmp.Z);
-                    }
+                    dtmp = d.BodyGetPosition(Body);
+                    return new Vector3(dtmp.X, dtmp.Y, dtmp.Z);
                 }
+                else if (prim_geom != IntPtr.Zero)
+                {
+                    d.Quaternion dq;
+                    d.GeomCopyQuaternion(prim_geom, out dq);
+                    Quaternion q;
+                    q.X = dq.X;
+                    q.Y = dq.Y;
+                    q.Z = dq.Z;
+                    q.W = dq.W;
 
-                return Vector3.Zero;
+                    Vector3 vtmp = primOOBoffset * q;
+                    dtmp = d.GeomGetPosition(prim_geom);
+                    return new Vector3(dtmp.X + vtmp.X, dtmp.Y + vtmp.Y, dtmp.Z + vtmp.Z);
+                }
+                else
+                    return Vector3.Zero;
             }
         }
 
