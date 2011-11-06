@@ -33,7 +33,8 @@ using System.Text;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
-using Ode.NET;
+//using Ode.NET;
+using OdeAPI;
 using log4net;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine

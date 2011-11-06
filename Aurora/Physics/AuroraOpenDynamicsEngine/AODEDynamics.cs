@@ -44,7 +44,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using log4net;
 using OpenMetaverse;
-using Ode.NET;
+//using Ode.NET;
+using OdeAPI;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 
