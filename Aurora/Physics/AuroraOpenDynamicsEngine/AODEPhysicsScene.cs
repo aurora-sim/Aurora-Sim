@@ -505,7 +505,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             lock (OdeLock)
             {
                 contacts = new d.ContactGeom[contactsPerCollision];
-
                 // Centeral contact friction and bounce
                 // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
                 // an avatar falls through in Z but not in X or Y when walking on a prim.
@@ -614,9 +613,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.SpaceCollide2(g1, g2, IntPtr.Zero, nearCallback);
                 }
-                catch (AccessViolationException)
+                catch (Exception e)
                 {
-                    m_log.Warn("[PHYSICS]: Unable to collide test a space");
+                    m_log.WarnFormat("[PHYSICS]: SpaceCollide2 failed: {0} ", e);
                     return;
                 }
                 //Colliding a space or a geom with a space or a geom. so drill down
@@ -643,18 +642,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // Figure out how many contact points we have
             int count = 0;
-            PhysicsActor p1;
-            PhysicsActor p2;
-
-            if (!actor_name_map.TryGetValue (g1, out p1))
-                p1 = PANull;
-
-            if (!actor_name_map.TryGetValue (g2, out p2))
-                p2 = PANull;
-            if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
-                (p1 as AuroraODEPrim)._zeroFlag = false;
-            if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
-                (p2 as AuroraODEPrim)._zeroFlag = false;
             try
             {
                 // Colliding Geom To Geom
@@ -671,22 +658,31 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
                 }
             }
-            catch (SEHException)
-            {
-                m_log.Error("[PHYSICS]: The Operating system shut down ODE because of corrupt memory.  This could be a result of really irregular terrain.  If this repeats continuously, restart using Basic Physics and terrain fill your terrain.  Restarting the sim.");
-            }
             catch (Exception e)
             {
-                m_log.WarnFormat("[PHYSICS]: Unable to collide test an object: {0}", e.ToString());
+                m_log.WarnFormat("[PHYSICS]:  ode Collide failed: {0} ", e);
                 return;
             }
 
             if (count == 0)
                 return;
 
+            PhysicsActor p1;
+            PhysicsActor p2;
+
+            if (!actor_name_map.TryGetValue(g1, out p1))
+                p1 = PANull;
+
+            if (!actor_name_map.TryGetValue(g2, out p2))
+                p2 = PANull;
+
+            if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
+                (p1 as AuroraODEPrim)._zeroFlag = false;
+            if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
+                (p2 as AuroraODEPrim)._zeroFlag = false;
+
             m_StatFindContactsTime = Util.EnvironmentTickCountSubtract(FindContactsTime);
 
-            ContactPoint maxDepthContact = new ContactPoint();
             if (!DisableCollisions)
             {
                 if (p1.CollisionScore + count >= float.MaxValue)
@@ -699,6 +695,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             int ContactLoopTime = Util.EnvironmentTickCount();
+
+            ContactPoint maxDepthContact = new ContactPoint();
 
             #region Contact Loop
 
@@ -717,187 +715,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     maxDepthContact.SurfaceNormal.X = curContact.normal.X;
                     maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
                     maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
-                    //                    maxDepthContact = new ContactPoint(
-                    //                        new Vector3((float)curContact.pos.X, (float)curContact.pos.Y, (float)curContact.pos.Z),
-                    //                        new Vector3((float)curContact.normal.X, (float)curContact.normal.Y, (float)curContact.normal.Z),
-                    //                        (float)curContact.depth
-                    //                    );
                 }
-
-                //m_log.Warn("[CCOUNT]: " + count);
-                // If we're colliding with terrain, use 'TerrainContact' instead of contact.
-                // allows us to have different settings
-
-                // we don't want prim or avatar to explode
-
-                #region InterPenetration Handling - Unintended physics explosions (Disabled)
-
-                /*
-
-                if (curContact.depth >= 0.08f)
-                    {
-                    //This is disabled at the moment only because it needs more tweaking
-                    //It will eventually be uncommented
-                    if (contact.depth >= 1.00f)
-                    {
-                        //m_log.Debug("[PHYSICS]: " + contact.depth.ToString());
-                    }
-
-                    //If you interpenetrate a prim with an agent
-                    if ((p2.PhysicsActorType == (int) ActorTypes.Agent &&
-                         p1.PhysicsActorType == (int) ActorTypes.Prim) ||
-                        (p1.PhysicsActorType == (int) ActorTypes.Agent &&
-                         p2.PhysicsActorType == (int) ActorTypes.Prim))
-                    {
-                        
-                        //contact.depth = contact.depth * 4.15f;
-                        if (p2.PhysicsActorType == (int) ActorTypes.Agent)
-                        {
-                            p2.CollidingObj = true;
-                            contact.depth = 0.003f;
-                            p2.Velocity = p2.Velocity + new PhysicsVector(0, 0, 2.5f);
-                            OdeCharacter character = (OdeCharacter) p2;
-                            character.SetPidStatus(true);
-                            contact.pos = new d.Vector3(contact.pos.X + (p1.Size.X / 2), contact.pos.Y + (p1.Size.Y / 2), contact.pos.Z + (p1.Size.Z / 2));
-
-                        }
-                        else
-                        {
-
-                            //contact.depth = 0.0000000f;
-                        }
-                        if (p1.PhysicsActorType == (int) ActorTypes.Agent)
-                        {
-
-                            p1.CollidingObj = true;
-                            contact.depth = 0.003f;
-                            p1.Velocity = p1.Velocity + new PhysicsVector(0, 0, 2.5f);
-                            contact.pos = new d.Vector3(contact.pos.X + (p2.Size.X / 2), contact.pos.Y + (p2.Size.Y / 2), contact.pos.Z + (p2.Size.Z / 2));
-                            OdeCharacter character = (OdeCharacter)p1;
-                            character.SetPidStatus(true);
-                        }
-                        else
-                        {
-
-                            //contact.depth = 0.0000000f;
-                        }
-                          
-                        
-                     
-                    }
-*/
-                // If you interpenetrate a prim with another prim
-                /*
-                    if (p1.PhysicsActorType == (int) ActorTypes.Prim && p2.PhysicsActorType == (int) ActorTypes.Prim)
-                    {
-                        #region disabledcode2
-                        //OdePrim op1 = (OdePrim)p1;
-                        //OdePrim op2 = (OdePrim)p2;
-                        //op1.m_collisionscore++;
-                        //op2.m_collisionscore++;
-
-                        //if (op1.m_collisionscore > 8000 || op2.m_collisionscore > 8000)
-                        //{
-                            //op1.m_taintdisable = true;
-                            //AddPhysicsActorTaint(p1);
-                            //op2.m_taintdisable = true;
-                            //AddPhysicsActorTaint(p2);
-                        //}
-
-                        //if (contact.depth >= 0.25f)
-                        //{
-                            // Don't collide, one or both prim will expld.
-
-                            //op1.m_interpenetrationcount++;
-                            //op2.m_interpenetrationcount++;
-                            //interpenetrations_before_disable = 200;
-                            //if (op1.m_interpenetrationcount >= interpenetrations_before_disable)
-                            //{
-                                //op1.m_taintdisable = true;
-                                //AddPhysicsActorTaint(p1);
-                            //}
-                            //if (op2.m_interpenetrationcount >= interpenetrations_before_disable)
-                            //{
-                               // op2.m_taintdisable = true;
-                                //AddPhysicsActorTaint(p2);
-                            //}
-
-                            //contact.depth = contact.depth / 8f;
-                            //contact.normal = new d.Vector3(0, 0, 1);
-                        //}
-                        //if (op1.m_disabled || op2.m_disabled)
-                        //{
-                            //Manually disabled objects stay disabled
-                            //contact.depth = 0f;
-                        //}
-                        #endregion
-                    }
-                        
-//                    if (curContact.depth >= 1.0f)
-                    {
-                    //m_log.Info("[P]: " + contact.depth.ToString());
-                    if ((p2.PhysicsActorType == (int)ActorTypes.Agent &&
-                         p1.PhysicsActorType == (int)ActorTypes.Ground) ||
-                        (p1.PhysicsActorType == (int)ActorTypes.Agent &&
-                         p2.PhysicsActorType == (int)ActorTypes.Ground))
-                        {
-                        if (p2.PhysicsActorType == (int)ActorTypes.Agent)
-                            {
-                            if (p2 is AuroraODECharacter)
-                                {
-                                AuroraODECharacter character = (AuroraODECharacter)p2;
-
-                                //p2.CollidingObj = true;
-                                if (p2.Position.Z < curContact.pos.Z) // don't colide from underside
-                                    {
-                                    p2.CollidingGround = false;
-                                    p2.CollidingGround = false;
-                                    continue;
-                                    }
-
-                                curContact.depth = 0.00000003f;
- 
-                                p2.Velocity = p2.Velocity + new Vector3(0f, 0f, 1.5f);
-                                curContact.pos =
-                                              new d.Vector3(curContact.pos.X + (p2.Size.X / 2),
-                                                              curContact.pos.Y + (p2.Size.Y / 2),
-                                                              curContact.pos.Z + (p2.Size.Z / 2));
-                                character.SetPidStatus(true);
-
-                                }
-                            }
-
-                        if (p1.PhysicsActorType == (int)ActorTypes.Agent)
-                            {
-                            if (p1 is AuroraODECharacter)
-                                {
-                                AuroraODECharacter character = (AuroraODECharacter)p1;
-
-                                //p2.CollidingObj = true;
-                                if (p1.Position.Z < curContact.pos.Z)
-                                    {
-                                    p1.CollidingGround = false;
-                                    p1.CollidingGround = false;
-                                    continue;
-                                    }
-
-                                curContact.depth = 0.00000003f;
-                                p1.Velocity = p1.Velocity + new Vector3(0f, 0f, 0.5f);
-                                curContact.pos =
-                                                new d.Vector3(curContact.pos.X + (p1.Size.X / 2),
-                                                              curContact.pos.Y + (p1.Size.Y / 2),
-                                                              curContact.pos.Z + (p1.Size.Z / 2));
-                                character.SetPidStatus(true);
-
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-*/
-                #endregion
 
                 // Logic for collision handling
                 // Note, that if *all* contacts are skipped (VolumeDetect)
@@ -997,8 +815,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_global_contactcount++;
                     }
                 }
-                //m_log.Debug(count.ToString());
-                //m_log.Debug("near: A collision was detected between {1} and {2}", 0, name1, name2);
             }
 
             #endregion
@@ -1158,7 +974,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (m_filterCollisions)
                 _perloopContact.Clear();
-
+/*
             if (m_EnableAutoConfig)
             {
                 if (Math.Abs ((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
@@ -1174,7 +990,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     contacts = new d.ContactGeom[contactsPerCollision];
                 }
             }
-
+*/
             lock (_characters)
             {
                 foreach (AuroraODECharacter chr in _characters)
@@ -2153,12 +1969,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                         }
 
-                        int tlimit = 50;
+                        int tlimit = 500;
                         AODEchangeitem item;
-                        bool continueProcessing = false;
+
                         while (GetNextChange(out item))
                         {
-                            continueProcessing = true;
                             if (item.prim != null)
                             {
                                 try
@@ -2178,7 +1993,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                             if (tlimit-- <= 0)
                             {
-                                continueProcessing = false;
                                 break;
                             }
                         }
@@ -2197,7 +2011,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         int PhysicsMoveTime = Util.EnvironmentTickCount();
 
-                        if (!continueProcessing && !DisableCollisions)
+                        if (!DisableCollisions)
                         {
                             // Move characters
                             lock (_characters)
@@ -2258,17 +2072,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
-                        if(!continueProcessing)
-                            collision_optimized(timeElapsed);
+                        collision_optimized(timeElapsed);
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
-                        if(!continueProcessing)
-                        {
-                            d.WorldQuickStep(world, ODE_STEPSIZE);
-                            m_global_contactcount = 0;
-                            d.JointGroupEmpty(contactgroup);
-                            //ode.dunlock(world);
-                        }
+                        d.WorldQuickStep(world, ODE_STEPSIZE);
+                        m_global_contactcount = 0;
+                        d.JointGroupEmpty(contactgroup);
                     }
                     catch (Exception e)
                     {
