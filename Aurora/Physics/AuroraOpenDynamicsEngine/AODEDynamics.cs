@@ -564,6 +564,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (frcount > 100)
                 frcount = 0;
 
+            // scale time so parameters work as before
+            // until we scale then acording to ode step time
+
+            pTimestep *= 0.09375f / pParentScene.ODE_STEPSIZE;
+
             MoveLinear (pTimestep, pParentScene, parent);
             MoveAngular (pTimestep, pParentScene, parent);
             LimitRotation(pTimestep);
