@@ -162,12 +162,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private int m_lastUpdateSent = 0;
 
         public IntPtr Body = IntPtr.Zero;
-        public d.Mass primdMass;
+
+        public Vector3 primOOBsize; // prim real dimensions from mesh 
+        public Vector3 primOOBoffset; // is centroid out of mesh or rest aabb
+        public float primOOBradiusSQ;
+        public d.Mass primdMass; // prim inertia information on it's own referencial
         float primMass; // prim own mass
         float _mass; // prim or object mass
-        public d.AABB IntAABB;
-        public float OuterRadius;
-        public Vector3 IntCMOffset;
+        private bool hasOOBoffsetFromMesh = false; // if true we did compute it form mesh centroid, else from aabb
 
         public bool m_eventsubscription;
         public bool m_primIsRemoved = false;
@@ -229,7 +231,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _parent_entity = entity;
 
             _parent_scene = parent_scene;
-            m_targetSpace = (IntPtr)0;
+            m_targetSpace = IntPtr.Zero;
 
             /*
                         m_isphysical = pisPhysical;
@@ -240,6 +242,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_forceacc = Vector3.Zero;
             m_angularforceacc = Vector3.Zero;
+
+            hasOOBoffsetFromMesh = false;
+            _triMeshData = IntPtr.Zero;
+
+            CalcPrimBodyData();
 
             m_UpdateTimecntr = 0;
             m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
@@ -346,7 +353,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 d.GeomSetCategoryBits (prim_geom, (int)m_collisionCategories);
                 d.GeomSetCollideBits (prim_geom, (int)m_collisionFlags);
-                d.GeomGetAABB (prim_geom, out IntAABB);
+
+                CalcPrimBodyData();
 
                 _parent_scene.actor_name_map[prim_geom] = this;
              }
@@ -423,7 +431,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             Body = d.BodyCreate (_parent_scene.world);
 
-            calcdMass (); // compute inertia on local frame
             DMassDup (ref primdMass, out objdmass);
 
             // rotate inertia
@@ -460,7 +467,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             continue;
                         }
 
-                        prm.calcdMass (); // recompute inertia on local frame
                         DMassCopy (ref prm.primdMass, ref tmpdmass);
 
                         // apply prim current rotation to inertia
@@ -941,6 +947,48 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return returnMass;
         }// end CalculateMass
 
+
+        public void CalcPrimBodyData()
+        {
+            if (prim_geom == IntPtr.Zero)
+            {
+                // Ubit let's have a initial basic OOB
+                primOOBsize.X = _size.X;
+                primOOBsize.Y = _size.Y;
+                primOOBsize.Z = _size.Z;
+                primOOBoffset = Vector3.Zero;
+            }
+            else
+            {
+                d.AABB AABB;
+                d.GeomGetAABB(prim_geom, out AABB); // get the AABB from engine geom
+
+                primOOBsize.X = (AABB.MaxX - AABB.MinX);
+                primOOBsize.Y = (AABB.MaxY - AABB.MinY);
+                primOOBsize.Z = (AABB.MaxZ - AABB.MinZ);
+                if (!hasOOBoffsetFromMesh)
+                {
+                    primOOBoffset.X = (AABB.MaxX + AABB.MinX) * 0.5f;
+                    primOOBoffset.Y = (AABB.MaxY + AABB.MinY) * 0.5f;
+                    primOOBoffset.Z = (AABB.MaxZ + AABB.MinZ) * 0.5f;
+                }
+            }
+
+            // also its own inertia and mass
+            // keep using basic shape mass for now
+            CalculatePrimMass();
+            d.MassSetBoxTotal(out primdMass, primMass, primOOBsize.X, primOOBsize.Y, primOOBsize.Z);
+
+            d.MassTranslate(ref primdMass,
+                                primOOBoffset.X,
+                                primOOBoffset.Y,
+                                primOOBoffset.Z);
+
+            primOOBsize *= 0.5f; // let obb size be a corner coords
+            primOOBradiusSQ = primOOBsize.LengthSquared();
+        }
+
+/*
         public void calcdMass ()
         {
             // very aproximated handling of tortured prims
@@ -949,18 +997,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             s.X = IntAABB.MaxX - IntAABB.MinX;
             s.Y = IntAABB.MaxY - IntAABB.MinY;
             s.Z = IntAABB.MaxZ - IntAABB.MinZ;
-
-            /*
-            Ubit buggy and not in use
-                        OuterRadius = s.X;
-                        if (OuterRadius < s.Y)
-                            OuterRadius = s.Y;
-                        if (OuterRadius < s.Z)
-                            OuterRadius = s.Z;
-            OuterRadius *= 0.5f;
-            */
-            
-
+          
             d.MassSetBoxTotal (out primdMass, primMass, s.X, s.Y, s.Z);
 
             IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
@@ -972,7 +1009,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 IntCMOffset.Y,
                                 IntCMOffset.Z);
         }
-
+*/
         #endregion
 
         private static Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr> ();
@@ -1006,6 +1043,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             int vertexStride, triStride;
             mesh.getVertexListAsPtrToFloatArray (out vertices, out vertexStride, out vertexCount); // Note, that vertices are fixed in unmanaged heap
             mesh.getIndexListAsPtrToIntArray (out indices, out triStride, out indexCount); // Also fixed, needs release after usage
+
+            primOOBoffset = mesh.GetCentroid();
+            hasOOBoffsetFromMesh = true;
 
             mesh.releaseSourceMeshData (); // free up the original mesh data to save memory
             if (m_MeshToTriMeshMap.ContainsKey (mesh))
@@ -1345,6 +1385,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void CreateGeom (IntPtr m_targetSpace, IMesh _mesh)
         {
+            hasOOBoffsetFromMesh = false;
+
             //Console.WriteLine("CreateGeom:");
             if (_mesh != null)
             {
@@ -1411,8 +1453,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.ErrorFormat("[PHYSICS]: PrimGeom destruction BAD");
             }
             Body = IntPtr.Zero;
-//            hasOOBoffsetFromMesh = false;
-//            CalcPrimBodyData();
+            hasOOBoffsetFromMesh = false;
+            CalcPrimBodyData();
         }
 
         public void changeadd ()
