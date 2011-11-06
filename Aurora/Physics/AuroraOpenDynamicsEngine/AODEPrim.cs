@@ -517,7 +517,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.BodySetAutoDisableFlag (Body, true);
             d.BodySetAutoDisableSteps (Body, body_autodisable_frames);
-            d.BodySetDamping (Body, .001f, .0002f);
+//            d.BodySetDamping (Body, .001f, .0002f);
             m_disabled = false;
 
             d.GeomSetCategoryBits (prim_geom, (int)m_collisionCategories);
@@ -3397,25 +3397,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             d.Contact contact = new d.Contact ();
             //Defaults
-            contact.surface.mode |= d.ContactFlags.SoftERP | d.ContactFlags.SoftCFM;
-            contact.surface.soft_cfm = 0.001f;
-            contact.surface.soft_erp = 0.010f;
+            contact.surface.mode |= d.ContactFlags.SoftERP | d.ContactFlags.SoftCFM | d.ContactFlags.Bounce;
+            contact.surface.soft_cfm = 0.0001f;
+            contact.surface.soft_erp = 0.5f;
+            /*
+                        float restSquared = _parent_entity.Restitution * _parent_entity.Restitution;
+                        contact.surface.bounce = _parent_entity.Restitution * (Velocity.Z * -(restSquared));//Its about 1:1 surprisingly, even though this constant was for havok
+                        if (contact.surface.bounce > 1.5f)
+                            contact.surface.bounce = 0.75f; //Limit the bouncing please...
+                        contact.surface.bounce_vel = 0.05f * _parent_entity.Restitution * (-Velocity.Z * restSquared); //give it a good amount of bounce and have it depend on how much velocity is there too
+                        contact.surface.mode |= d.ContactFlags.Bounce; //Add bounce
+                        contact.surface.mu = 800;
+                        if(actorType == ActorTypes.Prim)
+                            contact.surface.mu *= _parent_entity.Friction;
+                        else if(actorType == ActorTypes.Ground)
+                            contact.surface.mu *= 2;
+                        if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
+                            contact.surface.mu *= 0.05f;
+                        contact.surface.mu2 = contact.surface.mu;
+            */
 
-            float restSquared = _parent_entity.Restitution * _parent_entity.Restitution;
-            contact.surface.bounce = _parent_entity.Restitution * (Velocity.Z * -(restSquared));//Its about 1:1 surprisingly, even though this constant was for havok
-            if (contact.surface.bounce > 1.5f)
-                contact.surface.bounce = 0.75f; //Limit the bouncing please...
-            contact.surface.bounce_vel = 0.05f * _parent_entity.Restitution * (-Velocity.Z * restSquared); //give it a good amount of bounce and have it depend on how much velocity is there too
-            contact.surface.mode |= d.ContactFlags.Bounce; //Add bounce
-            contact.surface.mu = 800;
-            if(actorType == ActorTypes.Prim)
-                contact.surface.mu *= _parent_entity.Friction;
-            else if(actorType == ActorTypes.Ground)
-                contact.surface.mu *= 2;
-            if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
-                contact.surface.mu *= 0.05f;
-            contact.surface.mu2 = contact.surface.mu;
-
+            contact.surface.bounce = _parent_entity.Restitution;
+            contact.surface.mu = _parent_entity.Friction * 10 * _mass;
             return contact;
         }
 

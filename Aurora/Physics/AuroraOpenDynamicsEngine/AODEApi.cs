@@ -194,8 +194,6 @@ namespace OdeAPI
 		[StructLayout(LayoutKind.Sequential)]
 		public struct ContactGeom
 		{
-			public static readonly int SizeOf = Marshal.SizeOf(typeof(ContactGeom));
-
 			public Vector3 pos;
 			public Vector3 normal;
 			public dReal depth;
@@ -203,6 +201,7 @@ namespace OdeAPI
 			public IntPtr g2;
 			public int side1;
 			public int side2;
+            public static readonly int SizeOf = Marshal.SizeOf(typeof(ContactGeom));
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

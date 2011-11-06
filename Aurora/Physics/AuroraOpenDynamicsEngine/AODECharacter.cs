@@ -580,7 +580,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.MassSetCapsule(out ShellMass, 80f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH);
 
-            m_mass=ShellMass.mass;
+            m_mass = ShellMass.mass;
 
             // rescale PID parameters 
             PID_D = _parent_scene.PID_D;
@@ -1592,8 +1592,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         d.GeomDestroy(Shell);
                         Shell = IntPtr.Zero;
-                    }
-
+                    }                  
                 }
 
                 m_isPhysical = m_tainted_isPhysical;
@@ -1615,7 +1614,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     CAPSULE_LENGTH = m_tainted_CAPSULE_LENGTH;
                     //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
                     d.BodyDestroy(Body);
+                    Body = IntPtr.Zero;
                     d.GeomDestroy(Shell);
+                    Shell = IntPtr.Zero;
                     AvatarGeomAndBodyCreation(_position.X, _position.Y,
                                       _position.Z + (CAPSULE_LENGTH - prevCapsule));//, _parent_scene.avStandupTensor);
                     Velocity = Vector3.Zero;
