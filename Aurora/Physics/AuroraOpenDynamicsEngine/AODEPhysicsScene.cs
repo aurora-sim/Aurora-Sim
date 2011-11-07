@@ -117,7 +117,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public int geomUpdatesPerThrottledUpdate = 15;
 
         private int contactsPerCollision = 80;
-        private d.ContactGeom[] contactgeoms;
         private IntPtr ContactgeomsArray = IntPtr.Zero;
 
         private const int maxContactsbeforedeath = 2000;
@@ -510,17 +509,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             lock (OdeLock)
             {
-                contactgeoms = new d.ContactGeom[contactsPerCollision];
-
                 // alloc unmanaged memory to receive information from colision contact joints              
                 ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision * d.ContactGeom.unmanagedSizeOf);
 
-
                 // alloc unmanaged memory to pass information to colision contact joints              
                 GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath * d.Contact.unmanagedSizeOf);
-
-
-
 
                 // Centeral contact friction and bounce
                 // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
@@ -606,6 +599,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Collision Detection
 
+        private bool GetCurContactGeom(int index, ref d.ContactGeom newcontactgeom)
+        {
+            if (ContactgeomsArray == IntPtr.Zero || index >= contactsPerCollision)
+                return false;         
+
+            IntPtr contactptr = new IntPtr(ContactgeomsArray.ToInt64() + (Int64)(index * d.ContactGeom.unmanagedSizeOf));
+            newcontactgeom = (d.ContactGeom) Marshal.PtrToStructure(contactptr, typeof(d.ContactGeom));
+            return true;
+        }
+
         private IntPtr CreateContacJoint(ref d.Contact newcontact)
         {
             if (GlobalContactsArray == IntPtr.Zero || m_global_contactcount >= m_currentmaxContactsbeforedeath)
@@ -668,10 +671,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (b1 != IntPtr.Zero && b2 != IntPtr.Zero && d.AreConnectedExcluding(b1, b2, d.JointType.Contact))
                     return;
 
-                lock (contactgeoms)
-                {
-                    count = d.Collide(g1, g2, (contactgeoms.Length & 0xffff), contactgeoms, d.ContactGeom.unmanagedSizeOf);
-                }
+                count = d.CollidePtr(g1, g2, (contactsPerCollision & 0xffff), ContactgeomsArray, d.ContactGeom.unmanagedSizeOf);
             }
             catch (Exception e)
             {
@@ -712,26 +712,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             int ContactLoopTime = Util.EnvironmentTickCount();
 
             ContactPoint maxDepthContact = new ContactPoint();
+            d.ContactGeom curContact = new d.ContactGeom();
+
+            int NotSkipedCount = 0;
 
             #region Contact Loop
 
             IntPtr joint = IntPtr.Zero;
             for (int i = 0; i < count; i++)
             {
-                d.ContactGeom curContact = contactgeoms[i];
-
-                if (curContact.depth > maxDepthContact.PenetrationDepth)
-                {
-                    maxDepthContact.PenetrationDepth = curContact.depth;
-                    maxDepthContact.Position.X = curContact.pos.X;
-                    maxDepthContact.Position.Y = curContact.pos.Y;
-                    maxDepthContact.Position.Z = curContact.pos.Z;
-                    maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
-                    maxDepthContact.SurfaceNormal.X = curContact.normal.X;
-                    maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
-                    maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
-                }
-
                 // Logic for collision handling
                 // Note, that if *all* contacts are skipped (VolumeDetect)
                 // The prim still detects (and forwards) collision events but 
@@ -744,8 +733,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (p2 is PhysicsObject && ((PhysicsObject)p2).VolumeDetect)
                     skipThisContact = true;   // No collision on volume detect prims
 
+                if (!GetCurContactGeom(i, ref curContact))
+                    break;
+
                 if (curContact.depth < 0f)
                     skipThisContact = true;
+
 
                 if (!skipThisContact && 
                     m_filterCollisions && 
@@ -754,6 +747,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (!skipThisContact)
                 {
+
+                    NotSkipedCount++;
+
+                    if (curContact.depth > maxDepthContact.PenetrationDepth)
+                    {
+                        maxDepthContact.PenetrationDepth = curContact.depth;
+                        maxDepthContact.Position.X = curContact.pos.X;
+                        maxDepthContact.Position.Y = curContact.pos.Y;
+                        maxDepthContact.Position.Z = curContact.pos.Z;
+                        maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
+                        maxDepthContact.SurfaceNormal.X = curContact.normal.X;
+                        maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
+                        maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
+                    }
+
                     // If we're colliding against terrain
                     if (p1.PhysicsActorType == (int)ActorTypes.Ground)
                     {
@@ -860,49 +868,34 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 bool p2col = false;
 
-                // We only need to test p2 for 'jump crouch purposes'
-                if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
+                if (NotSkipedCount > 0)
                 {
-                    // Testing if the collision is at the feet of the avatar
-                    if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
+                    // We only need to test p2 for 'jump crouch purposes'
+                    if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
+                    {
+                        // Testing if the collision is at the feet of the avatar
+                        if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
+                            p2col = true;
+                    }
+                    else
                         p2col = true;
-                }
-                else
-                    p2col = true;
 
-                p2.IsColliding = p2col;
+                    p2.IsColliding = p2col;
 
-                if (count > geomContactPointsStartthrottle)
-                {
-                    // If there are more then 3 contact points, it's likely
-                    // that we've got a pile of objects, so ...
-                    // We don't want to send out hundreds of terse updates over and over again
-                    // so lets throttle them and send them again after it's somewhat sorted out.
-                    p2.ThrottleUpdates = true;
+                    if (count > geomContactPointsStartthrottle)
+                    {
+                        // If there are more then 3 contact points, it's likely
+                        // that we've got a pile of objects, so ...
+                        // We don't want to send out hundreds of terse updates over and over again
+                        // so lets throttle them and send them again after it's somewhat sorted out.
+                        p2.ThrottleUpdates = true;
+                    }
+                    collision_accounting_events(p1, p2, maxDepthContact);
                 }
-                collision_accounting_events(p1, p2, maxDepthContact);
             }
             m_StatCollisionAccountingTime = Util.EnvironmentTickCountSubtract(CollisionAccountingTime);
         }
-
-        private d.SurfaceParameters CopyContact (d.SurfaceParameters surfaceParameters)
-        {
-            d.SurfaceParameters p = new d.SurfaceParameters ();
-            p.bounce = surfaceParameters.bounce;
-            p.bounce_vel = surfaceParameters.bounce_vel;
-            p.mode = surfaceParameters.mode;
-            p.motion1 = surfaceParameters.motion1;
-            p.motion2 = surfaceParameters.motion2;
-            p.motionN = surfaceParameters.motionN;
-            p.mu = surfaceParameters.mu;
-            p.mu2 = surfaceParameters.mu2;
-            p.slip1 = surfaceParameters.slip1;
-            p.slip2 = surfaceParameters.slip2;
-            p.soft_cfm = surfaceParameters.soft_cfm;
-            p.soft_erp = surfaceParameters.soft_erp;
-            return p;
-        }
-
+  
         private bool checkDupe(d.ContactGeom contactGeom, int atype)
         {
             bool result = false;

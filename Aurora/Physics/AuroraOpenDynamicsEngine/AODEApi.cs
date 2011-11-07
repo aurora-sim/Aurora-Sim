@@ -616,20 +616,22 @@ namespace OdeAPI
 		[DllImport("ode", EntryPoint = "dCloseODE"), SuppressUnmanagedCodeSecurity]
 		public static extern void CloseODE();
 
-		[DllImport("ode", EntryPoint = "dCollide"), SuppressUnmanagedCodeSecurity]
-		public static extern int Collide(IntPtr o1, IntPtr o2, int flags, [In, Out] ContactGeom[] contact, int skip);
+        [DllImport("ode", EntryPoint = "dCollide"), SuppressUnmanagedCodeSecurity]
+        public static extern int Collide(IntPtr o1, IntPtr o2, int flags, [In, Out] ContactGeom[] contactcontactgeomarray, int skip);
+        [DllImport("ode", EntryPoint = "dCollide"), SuppressUnmanagedCodeSecurity]
+        public static extern int CollidePtr([In] IntPtr o1, [In] IntPtr o2, [In] int flags, [In] IntPtr contactgeomarray, [In] int skip);
 
 		[DllImport("ode", EntryPoint = "dConnectingJoint"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr ConnectingJoint(IntPtr j1, IntPtr j2);
+        public static extern IntPtr ConnectingJoint([In] IntPtr j1, [In]  IntPtr j2);
 
 		[DllImport("ode", EntryPoint = "dCreateBox"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr CreateBox(IntPtr space, dReal lx, dReal ly, dReal lz);
+        public static extern IntPtr CreateBox([In] IntPtr space, [In]  dReal lx, [In]  dReal ly, [In]  dReal lz);
 
 		[DllImport("ode", EntryPoint = "dCreateCapsule"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr CreateCapsule(IntPtr space, dReal radius, dReal length);
+        public static extern IntPtr CreateCapsule([In] IntPtr space, [In]  dReal radius, [In]  dReal length);
 
 		[DllImport("ode", EntryPoint = "dCreateConvex"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr CreateConvex(IntPtr space, dReal[] planes, int planeCount, dReal[] points, int pointCount, int[] polygons);
+        public static extern IntPtr CreateConvex([In] IntPtr space, [In]  dReal[] planes, [In]  int planeCount, [In]  dReal[] points, [In]  int pointCount, [In]  int[] polygons);
 
 		[DllImport("ode", EntryPoint = "dCreateCylinder"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr CreateCylinder(IntPtr space, dReal radius, dReal length);
