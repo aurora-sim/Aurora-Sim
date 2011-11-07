@@ -100,30 +100,42 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float ODE_STEPSIZE = 0.020f;
         private float m_timeDilation = 1.0f;
 
+        private int framecount = 0;
+
         public float gravityx = 0f;
         public float gravityy = 0f;
         public float gravityz = -9.8f;
         public Vector3 gravityVector = new Vector3 ();
         public Vector3 gravityVectorNormalized = new Vector3 ();
         public bool m_hasSetUpPrims = false;
+
+        private readonly IntPtr contactgroup;
+
+        private float contactsurfacelayer = 0.001f;
+
+        public int geomContactPointsStartthrottle = 3;
+        public int geomUpdatesPerThrottledUpdate = 15;
+
+        private int contactsPerCollision = 80;
+        private d.ContactGeom[] contactgeoms;
+        private IntPtr ContactgeomsArray = IntPtr.Zero;
+
         private const int maxContactsbeforedeath = 2000;
         private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
-        private float contactsurfacelayer = 0.001f;
+        private IntPtr GlobalContactsArray = IntPtr.Zero;
+
+        private d.Contact AvatarMovementprimContact;
+
+        private float AvatarContactFriction = 0.9f;
+        private float AvatarContactBounce = 0.3f;
+        private float FrictionMovementMultiplier = 0.1f; // should lower than one
 
         private int HashspaceLow = -3;  // current ODE limits
         private int HashspaceHigh = 8;
         private int GridSpaceScaleBits = 5; // used to do shifts to find space from position. Value decided from region size in init
         private int nspacesPerSideX = 8;
         private int nspacesPerSideY = 8;
-
-        private int framecount = 0;
-
-        private readonly IntPtr contactgroup;
-
-        private float AvatarContactFriction = 0.9f;
-        private float AvatarContactBounce = 0.3f;
-        private float FrictionMovementMultiplier = 0.1f; // should lower than one
 
         public float PID_D = 2200f;
         public float PID_P = 900f;
@@ -143,8 +155,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public float geomDefaultDensity = 10.000006836f;
 
-        public int geomContactPointsStartthrottle = 3;
-        public int geomUpdatesPerThrottledUpdate = 15;
 
         public float bodyPIDD = 35f;
         public float bodyPIDG = 25;
@@ -182,7 +192,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
-        private d.ContactGeom[] contacts;
+
+
         public IntPtr RegionTerrain;
         private short[] TerrainHeightFieldHeights = null;
         private short[] ODETerrainHeightFieldHeights = null;
@@ -197,8 +208,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float m_preJumpForceMultiplier = 4;
         public float m_AvFlySpeed = 4.0f;
 
-//        private d.Contact contact;
-        private d.Contact AvatarMovementprimContact;
 
         private int m_physicsiterations = 10;
         //private int m_timeBetweenRevertingAutoConfigIterations = 50;
@@ -239,8 +248,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private volatile int m_global_contactcount = 0;
 
+
         public Vector2 WorldExtents;
-        private int contactsPerCollision = 80;
 
         public bool AllowUnderwaterPhysics = false;
         public bool AllowAvGravity = true;
@@ -501,7 +510,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             lock (OdeLock)
             {
-                contacts = new d.ContactGeom[contactsPerCollision];
+                contactgeoms = new d.ContactGeom[contactsPerCollision];
+
+                // alloc unmanaged memory to receive information from colision contact joints              
+                ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision * d.ContactGeom.unmanagedSizeOf);
+
+
+                // alloc unmanaged memory to pass information to colision contact joints              
+                GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath * d.Contact.unmanagedSizeOf);
+
+
+
+
                 // Centeral contact friction and bounce
                 // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
                 // an avatar falls through in Z but not in X or Y when walking on a prim.
@@ -586,6 +606,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Collision Detection
 
+        private IntPtr CreateContacJoint(ref d.Contact newcontact)
+        {
+            if (GlobalContactsArray == IntPtr.Zero || m_global_contactcount >= m_currentmaxContactsbeforedeath)
+                return IntPtr.Zero;
+
+            IntPtr contact = new IntPtr(GlobalContactsArray.ToInt64() + (Int64)(m_global_contactcount * d.Contact.unmanagedSizeOf));
+            Marshal.StructureToPtr(newcontact, contact, false);
+            return d.JointCreateContactPtr(world, contactgroup, contact);
+        }
+
         /// <summary>
         /// This is our near callback.  A geometry is near a body
         /// </summary>
@@ -638,9 +668,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (b1 != IntPtr.Zero && b2 != IntPtr.Zero && d.AreConnectedExcluding(b1, b2, d.JointType.Contact))
                     return;
 
-                lock (contacts)
+                lock (contactgeoms)
                 {
-                    count = d.Collide(g1, g2, (contacts.Length & 0xffff), contacts, d.ContactGeom.SizeOf);
+                    count = d.Collide(g1, g2, (contactgeoms.Length & 0xffff), contactgeoms, d.ContactGeom.unmanagedSizeOf);
                 }
             }
             catch (Exception e)
@@ -688,7 +718,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             IntPtr joint = IntPtr.Zero;
             for (int i = 0; i < count; i++)
             {
-                d.ContactGeom curContact = contacts[i];
+                d.ContactGeom curContact = contactgeoms[i];
 
                 if (curContact.depth > maxDepthContact.PenetrationDepth)
                 {
@@ -741,11 +771,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             contact.geom = curContact;
 
-                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                            {
-                                joint = d.JointCreateContact (world, contactgroup, ref contact);
-                                m_global_contactcount++;
-                            }
+                            joint = CreateContacJoint(ref contact);
                         }
                         //Can't collide against anything else, agents do their own ground checks
                     }
@@ -765,11 +791,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (m_filterCollisions)
                             _perloopContact.Add(curContact);
 
-                        if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                        {
-                            joint = d.JointCreateContact(world, contactgroup, ref contact);
-                            m_global_contactcount++;
-                        }
+                        joint = CreateContacJoint(ref contact);
                     }
 
                     else if (p1.PhysicsActorType == (int)ActorTypes.Prim)
@@ -794,11 +816,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                            {
-                                joint = d.JointCreateContact(world, contactgroup, ref contact);
-                                m_global_contactcount++;
-                            }
+                            joint = CreateContacJoint(ref contact);
                         }
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
@@ -819,12 +837,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 contact.surface.mu *= FrictionMovementMultiplier;
 
                             contact.geom = curContact;
-
-                            if (m_global_contactcount < m_currentmaxContactsbeforedeath)
-                            {
-                                joint = d.JointCreateContact(world, contactgroup, ref contact);
-                                m_global_contactcount++;
-                            }
+                            joint = CreateContacJoint(ref contact);
                         }
                     }
  
@@ -2093,11 +2106,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
 
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
+
+                        m_global_contactcount = 0;
+                        
                         collision_optimized(timeElapsed);
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
                         d.WorldQuickStep(world, ODE_STEPSIZE);
-                        m_global_contactcount = 0;
+                        
                         d.JointGroupEmpty(contactgroup);
                     }
                     catch (Exception e)
@@ -2409,6 +2425,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //{
                 //RemoveAvatar(act);
                 //}
+
+                if (ContactgeomsArray != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ContactgeomsArray);
+                if (GlobalContactsArray != IntPtr.Zero)
+                    Marshal.FreeHGlobal(GlobalContactsArray);              
+
                 d.WorldDestroy(world);
                 //d.CloseODE();
             }

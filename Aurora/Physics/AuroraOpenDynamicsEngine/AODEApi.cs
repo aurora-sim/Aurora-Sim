@@ -188,6 +188,7 @@ namespace OdeAPI
 			public SurfaceParameters surface;
 			public ContactGeom geom;
 			public Vector3 fdir1;
+            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof(ContactGeom));
 		}
 
 
@@ -201,7 +202,7 @@ namespace OdeAPI
 			public IntPtr g2;
 			public int side1;
 			public int side2;
-            public static readonly int SizeOf = Marshal.SizeOf(typeof(ContactGeom));
+            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof(ContactGeom));
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -1193,8 +1194,11 @@ namespace OdeAPI
 		[DllImport("ode", EntryPoint = "dJointCreateBall"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr JointCreateBall(IntPtr world, IntPtr group);
 
-		[DllImport("ode", EntryPoint = "dJointCreateContact"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr JointCreateContact(IntPtr world, IntPtr group, ref Contact contact);
+        [DllImport("ode", EntryPoint = "dJointCreateContact"), SuppressUnmanagedCodeSecurity]
+        public static extern IntPtr JointCreateContact(IntPtr world, IntPtr group, ref Contact contact);
+
+        [DllImport("ode", EntryPoint = "dJointCreateContact"), SuppressUnmanagedCodeSecurity]
+        public static extern IntPtr JointCreateContactPtr(IntPtr world, IntPtr group, IntPtr contact);
 
 		[DllImport("ode", EntryPoint = "dJointCreateFixed"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr JointCreateFixed(IntPtr world, IntPtr group);
@@ -1820,7 +1824,5 @@ namespace OdeAPI
 
 		[DllImport("ode", EntryPoint = "dWorldExportDIF"), SuppressUnmanagedCodeSecurity]
 		public static extern void WorldExportDIF(IntPtr world, string filename, bool append, string prefix);
-
-
 	}
 }
