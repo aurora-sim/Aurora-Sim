@@ -1247,7 +1247,7 @@
       
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
-      <Reference name="Ode.NET" path="../../../bin/"/>
+<!--      <Reference name="Ode.NET" path="../../../bin/"/>  -->
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>

@@ -29,7 +29,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
-using Ode.NET;
+//using Ode.NET;
+using OdeAPI;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 using log4net;
@@ -106,7 +107,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool WasUnderWater = false;
         private bool ShouldBeWalking = true;
         private bool StartingUnderWater = true;
-                    
+
+
+        private Vector3 m_taintForce;
+        private bool m_hasTaintForce;            
         private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
         private float AvatarHalfsize;
 
@@ -576,7 +580,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             d.MassSetCapsule(out ShellMass, 80f, 3, CAPSULE_RADIUS, CAPSULE_LENGTH);
 
-            m_mass=ShellMass.mass;
+            m_mass = ShellMass.mass;
 
             // rescale PID parameters 
             PID_D = _parent_scene.PID_D;
@@ -1453,14 +1457,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (pushforce)
                 {
                     m_pidControllerActive = false;
-                    force *= 100f;
-                    doForce(force);
-                    // If uncommented, things get pushed off world
-                    //
-                    // m_log.Debug("Push!");
-                    // _target_velocity.X += force.X;
-                    // _target_velocity.Y += force.Y;
-                    // _target_velocity.Z += force.Z;
+                    m_taintForce = force * 100f;
+                    m_hasTaintForce = true;
+                    _parent_scene.AddPhysicsActorTaint(this);
                 }
                 else
                 {
@@ -1593,8 +1592,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         d.GeomDestroy(Shell);
                         Shell = IntPtr.Zero;
-                    }
-
+                    }                  
                 }
 
                 m_isPhysical = m_tainted_isPhysical;
@@ -1616,7 +1614,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     CAPSULE_LENGTH = m_tainted_CAPSULE_LENGTH;
                     //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
                     d.BodyDestroy(Body);
+                    Body = IntPtr.Zero;
                     d.GeomDestroy(Shell);
+                    Shell = IntPtr.Zero;
                     AvatarGeomAndBodyCreation(_position.X, _position.Y,
                                       _position.Z + (CAPSULE_LENGTH - prevCapsule));//, _parent_scene.avStandupTensor);
                     Velocity = Vector3.Zero;
@@ -1651,6 +1651,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 q.Y = m_taintRotation.Y;
                 q.Z = m_taintRotation.Z;
                 d.BodySetQuaternion (Body, ref q); // just keep in sync with rest of simutator
+            }
+
+            if (m_hasTaintForce)
+            {
+                if (Body != IntPtr.Zero)
+                {
+                    if (m_taintForce.X != 0f || m_taintForce.Y != 0f || m_taintForce.Z != 0)
+                        d.BodyAddForce(Body, m_taintForce.X, m_taintForce.Y, m_taintForce.Z);
+                    m_hasTaintForce = false;
+                }
             }
         }
 

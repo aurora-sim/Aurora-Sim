@@ -44,7 +44,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using log4net;
 using OpenMetaverse;
-using Ode.NET;
+//using Ode.NET;
+using OdeAPI;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 
@@ -562,6 +563,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             frcount++;  // used to limit debug comment output
             if (frcount > 100)
                 frcount = 0;
+
+            // scale time so parameters work as before
+            // until we scale then acording to ode step time
+
+            pTimestep *= 0.09375f / pParentScene.ODE_STEPSIZE;
 
             MoveLinear (pTimestep, pParentScene, parent);
             MoveAngular (pTimestep, pParentScene, parent);
