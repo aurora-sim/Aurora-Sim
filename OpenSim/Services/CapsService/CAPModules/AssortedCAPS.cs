@@ -271,6 +271,7 @@ namespace OpenSim.Services.CapsService
             }
             AgentCircuitData circuitData = m_service.CircuitData.Copy();
             circuitData.reallyischild = false;
+            circuitData.Appearance = m_service.Registry.RequestModuleInterface<IAvatarService>().GetAppearance(m_service.AgentID);
             circuitData.child = false;
             if(destination != null && m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
                 m_service.AgentID, m_service.RegionHandle, out reason))

@@ -425,6 +425,8 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
+        /// DEPRECATED: USE SetAttachments now
+        /// 
         /// Add an attachment, if the attachpoint has the
         /// 0x80 bit set then we assume this is an append
         /// operation otherwise we replace whatever is
@@ -454,6 +456,40 @@ namespace OpenSim.Framework
             else
             {
                 return ReplaceAttachment(new AvatarAttachment(attachpoint, item, asset));
+            }
+        }
+
+        /// <summary>
+        /// Returns whether an attachment will require a save to the avatar service
+        /// </summary>
+        /// <param name="attPnt"></param>
+        /// <param name="item"></param>
+        /// <param name="assetID"></param>
+        /// <returns></returns>
+        public bool CheckWhetherAttachmentChanged(int attPnt, UUID item, UUID assetID)
+        {
+            if ((attPnt & 0x80) > 0)
+                return true;
+            if (m_attachments.ContainsKey(attPnt))
+            {
+                foreach (AvatarAttachment a in m_attachments[attPnt])
+                {
+                    if (a.ItemID == item)
+                        return !(a.AssetID == assetID);
+                }
+            }
+            return true;
+        }
+
+        public void SetAttachments(ISceneEntity[] attachments)
+        {
+            ClearAttachments();
+            foreach (ISceneEntity e in attachments)
+            {
+                AvatarAttachment a = new AvatarAttachment(e.GetAttachmentPoint(), e.RootChild.FromUserInventoryItemID, e.RootChild.FromUserInventoryAssetID);
+                if (!m_attachments.ContainsKey(e.GetAttachmentPoint()))
+                    m_attachments.Add(e.GetAttachmentPoint(), new List<AvatarAttachment>());
+                m_attachments[e.GetAttachmentPoint()].Add(a);
             }
         }
 

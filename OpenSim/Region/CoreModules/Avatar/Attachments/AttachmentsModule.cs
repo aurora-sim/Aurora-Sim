@@ -273,10 +273,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
                     InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                     item = m_scene.InventoryService.GetItem(item);
+                    if (item == null)
+                        return null;
 
                     objatt.RootPart.Flags |= PrimFlags.Phantom;
                     objatt.RootPart.IsAttachment = true;
-                    objatt.SetFromItemID(itemID);
+                    objatt.SetFromItemID(itemID, item.AssetID);
 
                     // Since renaming the item in the inventory does not affect the name stored
                     // in the serialization, transfer the correct name from the inventory to the
@@ -325,6 +327,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     objatt.RootPart.IsAttachment = true;
                     objatt.IsDeleted = false;
 
+                    //Update the ItemID with the new item
+                    objatt.SetFromItemID(itemID, item.AssetID);
+
                     //NOTE: we MUST do this manually, otherwise it will never be added!
                     //We also have to reset the IDs!
                     //Note: root first, as we have to set the parentID right!
@@ -332,13 +337,28 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     m_scene.SceneGraph.PrepPrimForAdditionToScene(objatt);
                     m_scene.Entities.Add(objatt);
 
+                    //If we updated the attachment, we need to save the change
+                    IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
+                    if (presence != null)
+                    {
+                        IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                        AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
+                        bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, item.ID, item.AssetID);
+                        attPlugin.AddAttachment(objatt);
+                        appearance.Appearance.SetAttachments(attPlugin.Get());
+                        if (save)
+                            AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+
+
+                        m_log.InfoFormat(
+                            "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
+                            objatt.Name, remoteClient.Name, AttachmentPt, objatt.LocalId);
+
+                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, item);
+                    }
+                    else
+                        objatt = null;//Presence left, kill the attachment
                     #endregion
-
-                    //                m_log.DebugFormat(
-                    //                    "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2}", 
-                    //                    objatt.Name, remoteClient.Name, AttachmentPt);
-
-                    FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, item);
                 }
                 else
                 {
@@ -741,15 +761,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 item = new InventoryItemBase(itemID, remoteClient.AgentId);
                 item = m_scene.InventoryService.GetItem(item);
+
+                //Update the ItemID with the new item
+                group.SetFromItemID(itemID, item.AssetID);
+
+                //If we updated the attachment, we need to save the change
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                if (appearance.Appearance.SetAttachment((int)AttachmentPt, itemID, item.AssetID))
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
-
-            //Update the ItemID with the new item
-            group.SetFromItemID (itemID);
-
-            //If we updated the attachment, we need to save the change
-            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-            if (appearance.Appearance.SetAttachment ((int)AttachmentPt, itemID, item.AssetID))
-                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
 
             // In case it is later dropped again, don't let
@@ -758,6 +778,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             group.HasGroupChanged = false;
             //Now recreate it so that it is selected
             group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+
+
 
             m_scene.EventManager.TriggerOnAttach(localID, group.RootChild.FromUserInventoryItemID, remoteClient.AgentId);
         }

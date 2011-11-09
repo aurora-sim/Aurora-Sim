@@ -575,7 +575,7 @@ namespace OpenSim.Framework
 
         void ResumeScripts ();
 
-        void SetFromItemID (OpenMetaverse.UUID uUID);
+        void SetFromItemID(OpenMetaverse.UUID itemID, OpenMetaverse.UUID assetID);
 
         void FireAttachmentCollisionEvents (EventArgs e);
 
@@ -724,6 +724,8 @@ namespace OpenSim.Framework
         void SetScriptEvents (UUID ItemID, long events);
 
         UUID FromUserInventoryItemID { get; set; }
+
+        UUID FromUserInventoryAssetID { get; set; }
 
         Vector3 AngularVelocity { get; set; }
 
