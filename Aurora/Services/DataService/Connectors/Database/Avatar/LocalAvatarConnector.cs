@@ -94,9 +94,10 @@ namespace Aurora.Services.DataService
 
         public bool Store (UUID PrincipalID, AvatarData data)
         {
-            GD.Delete (m_realm, new string[1] { "PrincipalID" }, new object[1] { PrincipalID });
+            GD.Delete(m_realm, new string[1] { "PrincipalID" }, new object[1] { PrincipalID });
             for (int i = 0; i < data.Data.Count; i++)
             {
+                GD.Delete(m_realm, new string[2] { "PrincipalID", "Name" }, new object[2] { PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape() });
                 GD.Insert(m_realm, new object[3] { PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(), data.Data.ElementAt(i).Value.MySqlEscape() });
             }
             return true;
