@@ -122,16 +122,25 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     }
                     else
                     {
-                        bool done = false;
+                        bool done = false, errored = false;
                         Thread t = new Thread(delegate()
                             {
-                                RegionManager manager = new RegionManager(true, false, m_openSim);
-                                System.Windows.Forms.Application.Run(manager);
-                                done = true;
+                                try
+                                {
+                                    RegionManager manager = new RegionManager(true, false, m_openSim);
+                                    System.Windows.Forms.Application.Run(manager);
+                                    done = true;
+                                }
+                                catch
+                                {
+                                    errored = true;
+                                }
                             });
                         t.SetApartmentState(ApartmentState.STA);
                         t.Start();
                         while (!done)
+                            if (errored)
+                                throw new Exception();
                             Thread.Sleep(100);
                     }
                 }
@@ -167,16 +176,25 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    bool done = false;
+                    bool done = false, errored = false;
                     Thread t = new Thread(delegate()
                     {
-                        RegionManager manager = new RegionManager(false, true, m_openSim);
-                        System.Windows.Forms.Application.Run(manager);
-                        done = true;
+                        try
+                        {
+                            RegionManager manager = new RegionManager(false, true, m_openSim);
+                            System.Windows.Forms.Application.Run(manager);
+                            done = true;
+                        }
+                        catch
+                        {
+                            errored = true;
+                        }
                     });
                     t.SetApartmentState(ApartmentState.STA);
                     t.Start();
                     while (!done)
+                        if (errored)
+                            throw new Exception();
                         Thread.Sleep(100);
                 }
             }
@@ -198,8 +216,15 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void StartRegionManagerThread()
         {
-            RegionManager manager = new RegionManager(false, false, m_openSim);
-            System.Windows.Forms.Application.Run(manager);
+            try
+            {
+                RegionManager manager = new RegionManager(false, false, m_openSim);
+                System.Windows.Forms.Application.Run(manager);
+            }
+            catch(Exception ex)
+            {
+                MainConsole.Instance.Output("Failed to start the region manager: " + ex.ToString());
+            }
         }
 
         private void FindOldRegionFiles()
