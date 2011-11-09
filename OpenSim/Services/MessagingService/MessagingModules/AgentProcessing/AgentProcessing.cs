@@ -392,7 +392,7 @@ namespace OpenSim.Services.MessagingService
                     if(neighbor.RegionHandle != requestingRegion && clientCaps.GetCapsService(neighbor.RegionHandle) == null)
                     {
                         string reason;
-                        AgentCircuitData regionCircuitData = circuit.Copy();
+                        AgentCircuitData regionCircuitData = clientCaps.GetRootCapsService().CircuitData.Copy();
                         GridRegion nCopy = neighbor;
                         regionCircuitData.child = true; //Fix child agent status
                         regionCircuitData.reallyischild = true;
