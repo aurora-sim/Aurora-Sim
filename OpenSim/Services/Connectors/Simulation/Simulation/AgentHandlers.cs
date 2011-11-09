@@ -76,6 +76,8 @@ namespace OpenSim.Services
             Hashtable responsedata = new Hashtable();
             responsedata["content_type"] = "text/html";
             responsedata["keepalive"] = false;
+            responsedata["int_response_code"] = HttpStatusCode.OK;
+            responsedata["str_response_string"] = "";
 
 
             UUID agentID;
