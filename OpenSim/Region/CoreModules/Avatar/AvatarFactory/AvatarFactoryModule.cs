@@ -355,8 +355,7 @@ textures 1
                     else
                         QueueAppearanceSave(client.AgentId);
                 }
-                else
-                    appearance.Appearance.Serial++;
+                appearance.Appearance.Serial++;
             }
             // And always queue up an appearance update to send out
             QueueAppearanceSend(client.AgentId);
