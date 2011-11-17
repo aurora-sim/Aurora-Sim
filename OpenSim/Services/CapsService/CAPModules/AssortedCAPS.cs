@@ -269,17 +269,22 @@ namespace OpenSim.Services.CapsService
             ISimulationService simService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             AgentData ad = new AgentData();
             AgentCircuitData circuitData;
-            if(destination != null)
+            if (destination != null)
             {
                 simService.RetrieveAgent(m_service.Region, m_service.AgentID, true, out ad, out circuitData);
-                if(ad != null)
+                if (ad != null)
                     ad.Position = position;
             }
             else
+            {
+                retVal.Add("reason", "Could not find the destination region.");
+                retVal.Add("success", OSD.FromBoolean(false));
+                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
                 return responsedata;
+            }
             circuitData.reallyischild = false;
             circuitData.child = false;
-            if(destination != null && m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
+            if(m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
                 m_service.AgentID, m_service.RegionHandle, out reason))
             {
                 retVal.Add("success", OSD.FromBoolean(true));
@@ -288,11 +293,8 @@ namespace OpenSim.Services.CapsService
             }
             else
             {
-                //TODO: NEED TO DO A FAILED TO MOVE USER COMMAND TO THE SIM SO THAT THEY RESUME THE AVATAR!
-                if(destination == null)
-                    retVal.Add("reason", "Could not find the destination region.");
-                else
-                    retVal.Add("reason", reason);
+                simService.FailedToMoveAgentIntoNewRegion(m_service.AgentID, destination.RegionID);
+                retVal.Add("reason", reason);
                 retVal.Add("success", OSD.FromBoolean(false));
             }
 

@@ -49,6 +49,8 @@ namespace OpenSim.Services.Connectors.Simulation
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected LocalSimulationServiceConnector m_localBackend;
+        protected IRegistryCore m_registry;
+
         /// <summary>
         /// These are regions that have timed out and we are not sending updates to until the (int) time passes
         /// </summary>
@@ -217,6 +219,29 @@ namespace OpenSim.Services.Connectors.Simulation
                 return false;
             }
 
+            return false;
+        }
+
+        public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
+        {
+            if (m_localBackend.FailedToMoveAgentIntoNewRegion(AgentID, RegionID))
+                return true;
+
+            // Eventually, we want to use a caps url instead of the agentID
+            string uri = MakeUri(m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, RegionID),
+                true) + AgentID + "/" + RegionID.ToString() + "/";
+
+            OSDMap data = new OSDMap();
+            data["Method"] = "FailedToMoveAgentIntoNewRegion";
+            try
+            {
+                WebUtils.PostToService(uri, data, false, false, false);
+                return true;
+            }
+            catch (Exception e)
+            {
+                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e.ToString());
+            }
             return false;
         }
 
@@ -425,6 +450,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 registry.RegisterModuleInterface<ISimulationService>(this);
                 m_localBackend = new LocalSimulationServiceConnector();
             }
+            m_registry = registry;
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)

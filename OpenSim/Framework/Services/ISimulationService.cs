@@ -116,14 +116,21 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionHandle"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        bool CloseAgent (GridRegion destination, UUID id);
+        bool CloseAgent(GridRegion destination, UUID id);
 
         /// <summary>
         /// Makes a root agent into a child agent in the given region
         /// </summary>
         /// <param name="AgentID"></param>
         /// <param name="Region"></param>
-        bool MakeChildAgent (UUID AgentID, GridRegion Region);
+        bool MakeChildAgent(UUID AgentID, GridRegion Region);
+
+        /// <summary>
+        /// Tells the region that the agent was not able to leave the region and needs to be resumed
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="RegionID"></param>
+        bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID);
 
         #endregion Agents
 

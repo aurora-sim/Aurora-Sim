@@ -195,6 +195,20 @@ namespace OpenSim.Services.Connectors.Simulation
             return retVal;
         }
 
+        public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
+        {
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionID == RegionID)
+                {
+                    IScenePresence sp = s.GetScenePresence(AgentID);
+                    if(sp != null)
+                        sp.AgentFailedToLeave();
+                }
+            }
+            return false;
+        }
+
         public bool MakeChildAgent (UUID AgentID, GridRegion destination)
         {
             foreach(IScene s in m_sceneList)

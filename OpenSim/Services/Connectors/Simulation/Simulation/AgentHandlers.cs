@@ -115,10 +115,15 @@ namespace OpenSim.Services
                 {
                     map = null;
                 }
-                if(map != null && map["Method"] == "MakeChildAgent")
-                    DoMakeChildAgent(agentID, regionID);
-                else
-                    DoAgentPost(request, responsedata, agentID);
+                if(map != null)
+                {
+                    if (map["Method"] == "MakeChildAgent")
+                        DoMakeChildAgent(agentID, regionID);
+                    else if (map["Method"] == "FailedToMoveAgentIntoNewRegion")
+                        FailedToMoveAgentIntoNewRegion(agentID, regionID);
+                    else
+                        DoAgentPost(request, responsedata, agentID);
+                }
                 return responsedata;
             }
             else if (method.Equals("GET"))
@@ -156,6 +161,11 @@ namespace OpenSim.Services
         private void DoMakeChildAgent (UUID agentID, UUID regionID)
         {
             m_SimulationService.MakeChildAgent(agentID, new GridRegion() { RegionID = regionID });
+        }
+
+        public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
+        {
+            return m_SimulationService.FailedToMoveAgentIntoNewRegion(AgentID, RegionID);
         }
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
