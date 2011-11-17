@@ -159,7 +159,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        #region Close Script
+        #region Close/Suspend Script
+
+        public void Suspend()
+        {
+        }
 
         /// <summary>
         /// This closes the scrpit, removes it from any known spots, and disposes of itself.

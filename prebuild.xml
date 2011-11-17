@@ -1068,6 +1068,7 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
+      <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
@@ -1129,6 +1130,7 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Windows.Forms"/>
       <Reference name="System.Xml"/>
+      <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
@@ -1245,7 +1247,7 @@
       
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
-      <Reference name="Ode.NET" path="../../../bin/"/>
+<!--      <Reference name="Ode.NET" path="../../../bin/"/>  -->
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>

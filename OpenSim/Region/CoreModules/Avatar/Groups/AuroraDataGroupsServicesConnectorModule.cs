@@ -100,13 +100,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 //m_log.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
 
                 m_connectorEnabled = true;
-                GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
-                if (GroupsConnector == null)
-                {
-                    m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
-                    m_connectorEnabled = false;
-                    m_notConnectedBecauseOfMissing = true;
-                }
             }
         }
 
@@ -117,14 +110,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void AddRegion(IScene scene)
         {
-
-            if ((!m_connectorEnabled) && (m_notConnectedBecauseOfMissing))
+            GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            if (GroupsConnector == null)
             {
-                if (GroupsConnector == null)
-                    GroupsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
-                if ((!m_connectorEnabled) && (GroupsConnector != null))
-                    m_connectorEnabled = true;
-
+                m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
+                m_connectorEnabled = false;
+                m_notConnectedBecauseOfMissing = true;
             }
             if (m_connectorEnabled)
             {

@@ -438,6 +438,19 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_fromUserInventoryItemID = value; }
         }
 
+        /// <value>
+        /// The UUID of the user asset item from which this object was rezzed if this is a root part.
+        /// If UUID.Zero then either this is not a root part or there is no connection with a user inventory item.
+        /// </value>
+        private UUID m_fromUserInventoryAssetID;
+
+        [XmlIgnore]
+        public UUID FromUserInventoryAssetID
+        {
+            get { return m_fromUserInventoryAssetID; }
+            set { m_fromUserInventoryAssetID = value; }
+        }
+
         [XmlIgnore]
         private bool m_IsAttachment;
 

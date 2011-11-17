@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -35,13 +36,14 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Aurora.Framework;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using OpenMetaverse;
-using OpenSim;
 using log4net;
 using Nini.Config;
 using Nini.Ini;
+using OpenMetaverse;
+using OpenSim;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace Aurora.Modules.RegionLoader
 {
@@ -368,6 +370,15 @@ namespace Aurora.Modules.RegionLoader
             if(listNeedsUpdated)
                 RefreshCurrentRegions();
             RegionListBox.SelectedItem = region.RegionName;
+
+            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            if (orsc != null)
+            {
+                OpenSim.Region.Framework.Interfaces.OpenRegionSettings ors = orsc.GetSettings(region.RegionID);
+                ors.MaximumPhysPrimScale = float.Parse(eMaxPhysPrim.Text);
+                ors.MaximumPrimScale = float.Parse(eMaxPrimSize.Text);
+                orsc.SetSettings(region.RegionID, ors);
+            }
         }
 
         private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -666,5 +677,21 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         }
 
         #endregion
+
+        private void RegionManager_Load(object sender, EventArgs e)
+        {
+            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            if (orsc != null)
+            {
+                string navUrl = orsc.AddOpenRegionSettingsHTMLPage(CurrentRegionID);
+                webBrowser1.Navigate(navUrl);
+            }
+        }
+
+        private void button20_Click(object sender, EventArgs e)
+        {
+            groupBox3.Visible = !groupBox3.Visible;
+            webBrowser1.Visible = !webBrowser1.Visible;
+        }
     }
 }

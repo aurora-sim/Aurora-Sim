@@ -255,7 +255,7 @@ namespace Aurora.Services.DataService
             List<object> Values = new List<object>();
             Values.Add(es.EstateID);
             Values.Add("EstateSettings");
-            OSDMap map = Util.DictionaryToOSD(es.ToKeyValuePairs(true));
+            OSD map = es.ToOSD(true);
             Values.Add(OSDParser.SerializeLLSDXmlString(map));
             GD.Insert("estates", Values.ToArray());
 
@@ -293,7 +293,7 @@ namespace Aurora.Services.DataService
             List<string> Keys = new List<string>();
             Keys.Add("Value");
             List<object> Values = new List<object>();
-            Values.Add(OSDParser.SerializeLLSDXmlString(Util.DictionaryToOSD(es.ToKeyValuePairs(true))));
+            Values.Add(OSDParser.SerializeLLSDXmlString(es.ToOSD(true)));
 
             GD.Update("estates", Values.ToArray(), Keys.ToArray(), new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateSettings" });
 
@@ -308,7 +308,7 @@ namespace Aurora.Services.DataService
         public List<int> GetEstates(string search)
         {
             List<int> result = new List<int>();
-            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" + search + "</string>%'");
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" + search.MySqlEscape() + "</string>%'");
             if (RetVal.Count == 0)
                 return null;
             foreach (string val in RetVal)

@@ -165,43 +165,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             for (int i = 0; i < 5; i++)
             {
                 if (LUQueue.GetNext (out oitems))
-                {
-                    LUStruct[] items = oitems as LUStruct[];
-                    List<LUStruct> NeedsFired = new List<LUStruct> ();
-                    foreach (LUStruct item in items)
-                    {
-                        if (item.Action == LUType.Unload)
-                        {
-                            //Close
-                            item.ID.CloseAndDispose (true);
-                        }
-                        else if (item.Action == LUType.Load)
-                        {
-                            try
-                            {
-                                //Start
-                                if (item.ID.Start (false))
-                                    NeedsFired.Add (item);
-                            }
-                            catch (Exception ex) { m_log.Error ("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                        }
-                        else if (item.Action == LUType.Reupload)
-                        {
-                            try
-                            {
-                                //Start, but don't add to the queue's again
-                                if (item.ID.Start (true))
-                                    NeedsFired.Add (item);
-                            }
-                            catch (Exception ex) { m_log.Error ("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                        }
-                    }
-                    foreach (LUStruct item in NeedsFired)
-                    {
-                        //Fire the events afterward so that they all start at the same time
-                        item.ID.FireEvents ();
-                    }
-                }
+                    StartScripts(oitems as LUStruct[]);
                 else
                 {
                     //None left, stop looping
@@ -242,6 +206,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if(scriptMonitor != null)
                         scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
+            }
+        }
+
+        private void StartScripts(LUStruct[] items)
+        {
+            List<LUStruct> NeedsFired = new List<LUStruct>();
+            foreach (LUStruct item in items)
+            {
+                if (item.Action == LUType.Unload)
+                {
+                    //Close
+                    item.ID.CloseAndDispose(true);
+                }
+                else if (item.Action == LUType.Load)
+                {
+                    try
+                    {
+                        //Start
+                        if (item.ID.Start(false))
+                            NeedsFired.Add(item);
+                    }
+                    catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                }
+                else if (item.Action == LUType.Reupload)
+                {
+                    try
+                    {
+                        //Start, but don't add to the queue's again
+                        if (item.ID.Start(true))
+                            NeedsFired.Add(item);
+                    }
+                    catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
+                }
+            }
+            foreach (LUStruct item in NeedsFired)
+            {
+                //Fire the events afterward so that they all start at the same time
+                item.ID.FireEvents();
             }
         }
 
@@ -296,38 +298,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void AddScriptChange(LUStruct[] items, LoadPriority priority)
         {
             if (RunInMainProcessingThread)
-            {
-                List<LUStruct> NeedsFired = new List<LUStruct>();
-                foreach (LUStruct item in items)
-                {
-                    if (item.Action == LUType.Unload)
-                    {
-                        item.ID.CloseAndDispose (true);
-                    }
-                    else if (item.Action == LUType.Load)
-                    {
-                        try
-                        {
-                            if(item.ID.Start(false))
-                                NeedsFired.Add(item);
-                        }
-                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                    }
-                    else if (item.Action == LUType.Reupload)
-                    {
-                        try
-                        {
-                            if(item.ID.Start(true))
-                                NeedsFired.Add(item);
-                        }
-                        catch (Exception ex) { m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex); }
-                    }
-                }
-                foreach (LUStruct item in NeedsFired)
-                {
-                    item.ID.FireEvents();
-                }
-            }
+                StartScripts(items);
             else
             {
                 LUQueue.Add(items, priority);

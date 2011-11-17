@@ -670,9 +670,9 @@ namespace OpenSim.Services.LLLoginService
                             if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
                             {
                                 m_log.Warn("Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
-                                avappearance.Texture.FaceTextures[BakedTextureIndex] = avappearance.Texture.CreateFace(BakedTextureIndex);
-                                avappearance.Texture.FaceTextures[BakedTextureIndex].TextureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
-                                m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
+                                avappearance = new AvatarAppearance(account.PrincipalID);
+                                m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
+                                break;
                             }
                         }
                     }

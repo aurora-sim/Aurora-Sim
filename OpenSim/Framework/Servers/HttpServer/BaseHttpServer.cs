@@ -491,6 +491,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 {
                     case null:
                     case "text/html":
+                    case "application/x-www-form-urlencoded":
                         //                        m_log.DebugFormat(
                         //                            "[BASE HTTP SERVER]: Found a text/html content type for request {0}", request.RawUrl);
                         HandleHTTPRequest(request, response);

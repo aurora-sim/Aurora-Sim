@@ -1400,7 +1400,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     foreach (ISceneChildEntity part in group.ChildrenEntities ())
                     {
                         IOpenRegionSettingsModule WSModule = group.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
-                        if (WSModule != null)
+                        if (WSModule != null && WSModule.MaximumPhysPrimScale != -1)
                         {
                             Vector3 tmp = part.Scale;
                             if (tmp.X > WSModule.MaximumPhysPrimScale ||
