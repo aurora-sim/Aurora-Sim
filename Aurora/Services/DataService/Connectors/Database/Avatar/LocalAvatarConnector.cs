@@ -97,7 +97,10 @@ namespace Aurora.Services.DataService
             GD.Delete (m_realm, new string[1] { "PrincipalID" }, new object[1] { PrincipalID });
             for (int i = 0; i < data.Data.Count; i++)
             {
-                GD.Insert(m_realm, new object[3] { PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(), data.Data.ElementAt(i).Value.MySqlEscape() });
+                if (data.Data.ElementAt(i).Key == "Textures")
+                    GD.Insert(m_realm, new object[3] { PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(), data.Data.ElementAt(i).Value });
+                else
+                    GD.Insert(m_realm, new object[3] { PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(), data.Data.ElementAt(i).Value.MySqlEscape() });
             }
             return true;
         }
