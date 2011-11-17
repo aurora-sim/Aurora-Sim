@@ -47,7 +47,7 @@
 [Network]
 	
     ;; 127.0.0.1 should be your IP address or DNS
-	Define-<HostName> = http://127.0.0.1
+	Define-<HostName> = 127.0.0.1
 	
 	;; Advanced configs
     http_listener_port = 9000

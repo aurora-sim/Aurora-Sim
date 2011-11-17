@@ -43,6 +43,7 @@
     FriendsHandler = FriendsServicesConnector
     GridHandler = GridServicesConnector
     InventoryHandler = XInventoryServicesConnector
+	MessagingServiceInHandler = MessagingServiceInHandler
     SyncMessagePosterServiceHandler = RemoteSyncMessagePosterService
     UserAccountHandler = UserAccountServicesConnector
 
