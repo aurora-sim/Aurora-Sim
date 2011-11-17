@@ -356,8 +356,10 @@ namespace OpenSim.Region.CoreModules
         {
             m_log.Info("[Archive]: Writing estates to archive");
 
-            writer.WriteDir("estate");
             EstateSettings settings = scene.RegionInfo.EstateSettings;
+            if (settings == null)
+                return;
+            writer.WriteDir("estate");
             string xmlData = WebUtils.BuildXmlResponse(settings.ToKeyValuePairs(true));
             writer.WriteFile("estate/" + scene.RegionInfo.RegionName, xmlData);
 

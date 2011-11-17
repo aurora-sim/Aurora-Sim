@@ -274,9 +274,9 @@ namespace Aurora.DataManager.MySQL
             }
             else
             {
-                ps["?" + keyRow] = keyValue;
+                ps["?" + keyRow.Replace("`", "")] = keyValue;
                 query = String.Format("select {0} from {1} where {2} = ?{3}",
-                                      wantedValue, table, keyRow, keyRow);
+                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
             }
             try
             {

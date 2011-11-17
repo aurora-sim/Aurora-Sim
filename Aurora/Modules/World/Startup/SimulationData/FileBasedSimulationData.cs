@@ -508,7 +508,8 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             catch
             {
-                CheckForOldDataBase ();
+                if(CheckForOldDataBase ())
+                    SaveBackup(m_saveDirectory, false);
                 return;
             }
             TarArchiveReader reader = new TarArchiveReader (m_loadStream);
@@ -578,7 +579,11 @@ namespace Aurora.Modules.FileBasedSimulationData
             GC.Collect ();
         }
 
-        protected virtual void CheckForOldDataBase()
+        /// <summary>
+        /// Checks whether an older style database exists
+        /// </summary>
+        /// <returns>Whether an older style database exists</returns>
+        protected virtual bool CheckForOldDataBase()
         {
             string connString = "";
             string name = "";
@@ -606,7 +611,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 }
             }
             if (simStore == null)
-                return;
+                return false;
 
             try
             {
@@ -614,7 +619,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 {
                     m_hasShownFileBasedWarning = true;
                     IConfig startupConfig = m_scene.Config.Configs["Startup"];
-                    if(startupConfig == null || !startupConfig.GetBoolean("NoGUI", false))
+                    if(startupConfig == null || startupConfig.GetBoolean("NoGUI", false))
                         DoNoGUIWarning();
                     else
                         System.Windows.Forms.MessageBox.Show(@"Your sim has been updated to use the FileBased Simulation Service.
@@ -637,7 +642,12 @@ More configuration options and info can be found in the Configuration/Data/FileB
             {
                 m_shortterrain = simStore.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
                 m_shortrevertTerrain = simStore.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                //Remove these so that we don't get stuck loading them later
+                conn.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
+                simStore.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
+                return true;
             }
+            return false;
         }
         
         private void DoNoGUIWarning()

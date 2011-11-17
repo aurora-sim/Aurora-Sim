@@ -335,6 +335,10 @@ namespace OpenSim.Data.MSSQL
             return LandDataForRegion;
         }
 
+        public void RemoveAllLandObjects(UUID regionUUID)
+        {
+        }
+
         public void Shutdown()
         {
             //Not used??

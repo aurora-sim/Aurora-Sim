@@ -148,6 +148,12 @@ namespace OpenSim.Framework
         List<LandData> LoadLandObjects (UUID regionUUID);
 
         /// <summary>
+        /// Removes all parcels assocated with the given region
+        /// </summary>
+        /// <param name="regionUUID"></param>
+        void RemoveAllLandObjects(UUID regionUUID);
+
+        /// <summary>
         /// The name of the plugin
         /// </summary>
         string Name { get; }

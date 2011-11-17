@@ -432,6 +432,24 @@ namespace OpenSim.Data.MySQL
 
         #region Land (legacy)
 
+        public void RemoveAllLandObjects(UUID regionUUID)
+        {
+            lock (m_dbLock)
+            {
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                {
+                    dbcon.Open();
+
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
+                    {
+                        cmd.CommandText = "delete from land where RegionUUID = ?RegionUUID";
+                        cmd.Parameters.AddWithValue("RegionUUID", regionUUID.ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
+
         public List<LandData> LoadLandObjects (UUID regionUUID)
         {
             List<LandData> landData = new List<LandData> ();

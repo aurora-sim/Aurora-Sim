@@ -640,6 +640,35 @@ namespace OpenSim.Data.SQLite
             }
         }
 
+        public void RemoveAllLandObjects(UUID regionUUID)
+        {
+            lock (ds)
+            {
+                DataTable land = ds.Tables["land"];
+                DataTable landaccesslist = ds.Tables["landaccesslist"];
+                DataRow landRow = land.Rows.Find(regionUUID.ToString());
+                if (landRow != null)
+                {
+                    landRow.Delete();
+                    land.Rows.Remove(landRow);
+                }
+                List<DataRow> rowsToDelete = new List<DataRow>();
+                foreach (DataRow rowToCheck in landaccesslist.Rows)
+                {
+                    if (rowToCheck["RegionUUID"].ToString() == regionUUID.ToString())
+                        rowsToDelete.Add(rowToCheck);
+                }
+                for (int iter = 0; iter < rowsToDelete.Count; iter++)
+                {
+                    rowsToDelete[iter].Delete();
+                    landaccesslist.Rows.Remove(rowsToDelete[iter]);
+                }
+
+
+            }
+            Commit();
+        }
+
         /// <summary>
         ///
         /// </summary>
