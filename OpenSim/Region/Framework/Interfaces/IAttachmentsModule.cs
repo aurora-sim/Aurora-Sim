@@ -99,26 +99,5 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="eventName"></param>
         /// <param name="args"></param>
         void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args);
-
-        /// <summary>
-        /// Make sure that all attachments are ready to be transfered to a new region
-        /// Note: this will remove broken attachments
-        /// Note: this does NOT send kill packets to the viewer, the caller will need to do that on their own
-        /// </summary>
-        /// <param name="avatarID">The avatar who's attachments will be checked</param>
-        void ValidateAttachments(UUID uUID);
-
-        /// <summary>
-        /// Attaches all attachments that the avatar has (is called when the user enters the region)
-        /// and if a tp fails into another region
-        /// </summary>
-        /// <param name="presence"></param>
-        void RezAttachments (IScenePresence presence);
-
-        /// <summary>
-        /// Removes all attachments for the given client, this is called whenever the agent is about to leave the region
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        void DetachAndSaveAllAttachments (IClientAPI remoteClient);
     }
 }

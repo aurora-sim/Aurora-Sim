@@ -170,11 +170,13 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="scene">The region to get the agent information from</param>
         /// <param name="id">The id of the agent</param>
+        /// <param name="agentIsLeaving">Whether the agent will be leaving the sim or not</param>
         /// <param name="agent">The information about the agent</param>
+        /// <param name="circuitData">The information about the agent</param>
         /// <returns>
         /// True if the user was found, false if not
         /// </returns>
-        bool IncomingRetrieveRootAgent (IScene scene, UUID id, out AgentData agent);
+        bool IncomingRetrieveRootAgent(IScene scene, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData);
 
         /// <summary>
         /// Close the given agent in the given scene

@@ -213,9 +213,10 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool RetrieveAgent(GridRegion destination, UUID id, out AgentData agent)
+        public bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData)
         {
             agent = null;
+            circuitData = null;
 
             if (destination == null)
                 return false;
@@ -227,7 +228,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     //m_log.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
                     IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule> ();
                     if (transferModule != null)
-                        return transferModule.IncomingRetrieveRootAgent (s, id, out agent);
+                        return transferModule.IncomingRetrieveRootAgent(s, id, agentIsLeaving, out agent, out circuitData);
                 }
             }
             //m_log.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");

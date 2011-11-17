@@ -147,6 +147,7 @@ namespace OpenSim.Region.CoreModules
             client.Scene.TryGetScenePresence(client.AgentId, out sp);
             if (client.IsLoggingOut && sp != null & !sp.IsChildAgent)
             {
+                sp.SetAgentLeaving(null);
                 m_log.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}", client.Name, client.Scene.RegionInfo.RegionName);
             
                 //Inform the grid service about it

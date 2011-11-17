@@ -242,18 +242,18 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool RetrieveAgent(GridRegion destination, UUID id, out AgentData agent)
+        public bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData)
         {
             agent = null;
             // Try local first
-            if (m_localBackend.RetrieveAgent(destination, id, out agent))
+            if (m_localBackend.RetrieveAgent(destination, id, agentIsLeaving, out agent, out circuitData))
                 return true;
 
             // else do the remote thing
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 // Eventually, we want to use a caps url instead of the agentID
-                string uri = MakeUri(destination, true) + id + "/" + destination.RegionID.ToString() + "/";
+                string uri = MakeUri(destination, true) + id + "/" + destination.RegionID.ToString() + "/" + agentIsLeaving.ToString() + "/";
 
                 try
                 {
@@ -264,7 +264,13 @@ namespace OpenSim.Services.Connectors.Simulation
                         if (r["Result"] == "Not Found")
                             return false;
                         agent = new AgentData();
-                        agent.Unpack(r);
+
+                        if (!r.ContainsKey("AgentData"))
+                            return false;//Disable old simulators
+
+                        agent.Unpack((OSDMap)r["AgentData"]);
+                        circuitData = new AgentCircuitData();
+                        circuitData.UnpackAgentCircuitData((OSDMap)r["CircuitData"]);
                         return true;
                     }
                 }

@@ -83,10 +83,11 @@ namespace OpenSim.Services
             UUID agentID;
             UUID regionID;
             string action;
+            string other;
             string uri = ((string)request["uri"]);
             if(m_secure)
                 uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
-            if (!WebUtils.GetParams(uri, out agentID, out regionID, out action))
+            if (!WebUtils.GetParams(uri, out agentID, out regionID, out action, out other))
             {
                 m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
@@ -122,7 +123,7 @@ namespace OpenSim.Services
             }
             else if (method.Equals("GET"))
             {
-                DoAgentGet(request, responsedata, agentID, regionID);
+                DoAgentGet(request, responsedata, agentID, regionID, bool.Parse(action));
                 return responsedata;
             }
             else if (method.Equals("DELETE"))
@@ -351,7 +352,7 @@ namespace OpenSim.Services
             return m_SimulationService.UpdateAgent(destination, agent);
         }
 
-        protected virtual void DoAgentGet(Hashtable request, Hashtable responsedata, UUID id, UUID regionID)
+        protected virtual void DoAgentGet(Hashtable request, Hashtable responsedata, UUID id, UUID regionID, bool agentIsLeaving)
         {
             if (m_SimulationService == null)
             {
@@ -367,14 +368,16 @@ namespace OpenSim.Services
             destination.RegionID = regionID;
 
             AgentData agent = null;
-            bool result = m_SimulationService.RetrieveAgent(destination, id, out agent);
-            OSDMap map = null;
+            AgentCircuitData circuitData;
+            bool result = m_SimulationService.RetrieveAgent(destination, id, agentIsLeaving, out agent, out circuitData);
+            OSDMap map = new OSDMap();
             string strBuffer = "";
             if (result)
             {
                 if (agent != null) // just to make sure
                 {
-                    map = agent.Pack();
+                    map["AgentData"] = agent.Pack();
+                    map["CircuitData"] = circuitData.PackAgentCircuitData();
                     try
                     {
                         strBuffer = OSDParser.SerializeJsonString(map);

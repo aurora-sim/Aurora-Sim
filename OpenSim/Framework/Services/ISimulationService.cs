@@ -105,8 +105,9 @@ namespace OpenSim.Services.Interfaces
         /// <param name="destination"></param>
         /// <param name="id"></param>
         /// <param name="agent"></param>
+        /// <param name="circuitData"></param>
         /// <returns></returns>
-        bool RetrieveAgent(GridRegion destination, UUID id, out AgentData agent);
+        bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData);
 
         /// <summary>
         /// Close agent.

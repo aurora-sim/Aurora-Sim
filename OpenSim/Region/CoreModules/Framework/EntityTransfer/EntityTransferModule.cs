@@ -279,21 +279,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             if (sp.ParentID != UUID.Zero)
                 sp.StandUp();
 
-            //Make sure that all attachments are ready for the teleport
-            IAttachmentsModule attModule = sp.Scene.RequestModuleInterface<IAttachmentsModule>();
-            if (attModule != null)
-                attModule.ValidateAttachments(sp.UUID);
-
-            AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
-            agentCircuit.startpos = position;
-            //The agent will be a root agent
-            agentCircuit.child = false;
-            //Make sure the appearnace is right
-            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
-            if (appearance != null && appearance.Appearance != null)
-                agentCircuit.Appearance = appearance.Appearance;
-            else
-                m_log.Error("[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " + appearance == null);
+            AgentCircuitData agentCircuit = BuildCircuitDataForPresence(sp, position);
 
             AgentData agent = new AgentData();
             sp.CopyTo(agent);
@@ -306,11 +292,7 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID);
-                    agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
-                    agentCircuit.firstname = oldCircuit.firstname;
-                    agentCircuit.lastname = oldCircuit.lastname;
-                    agentCircuit.ServiceSessionID = oldCircuit.ServiceSessionID;
+                    sp.SetAgentLeaving(finalDestination);
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
@@ -323,8 +305,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     {
                         // Fix the agent status
                         sp.IsChildAgent = false;
-                        //Fix user's attachments
-                        attModule.RezAttachments (sp);
+                        //Tell modules about it
+                        sp.AgentFailedToLeave();
                         if (map != null)
                             sp.ControllingClient.SendTeleportFailed (map["Reason"].AsString ());
                         else
@@ -344,6 +326,26 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             }
 
             MakeChildAgent(sp, finalDestination);
+        }
+
+        private AgentCircuitData BuildCircuitDataForPresence(IScenePresence sp, Vector3 position)
+        {
+            AgentCircuitData agentCircuit = sp.ControllingClient.RequestClientInfo();
+            agentCircuit.startpos = position;
+            //The agent will be a root agent
+            agentCircuit.child = false;
+            //Make sure the appearnace is right
+            IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+            if (appearance != null && appearance.Appearance != null)
+                agentCircuit.Appearance = appearance.Appearance;
+            else
+                m_log.Error("[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " + appearance == null);
+            AgentCircuitData oldCircuit = sp.Scene.AuthenticateHandler.GetAgentCircuitData(sp.UUID);
+            agentCircuit.ServiceURLs = oldCircuit.ServiceURLs;
+            agentCircuit.firstname = oldCircuit.firstname;
+            agentCircuit.lastname = oldCircuit.lastname;
+            agentCircuit.ServiceSessionID = oldCircuit.ServiceSessionID;
+            return agentCircuit;
         }
 
         public void MakeChildAgent (IScenePresence sp, GridRegion finalDestination)
@@ -595,11 +597,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             {
                 if (crossingRegion != null)
                 {
-                    //Make sure that all attachments are ready for the teleport
-                    IAttachmentsModule attModule = agent.Scene.RequestModuleInterface<IAttachmentsModule>();
-                    if (attModule != null)
-                        attModule.ValidateAttachments(agent.UUID);
-
                     if(!positionIsAlreadyFixed)
                     {
                         int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
@@ -633,15 +630,10 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                     if (isFlying)
                         cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
-                    AgentCircuitData agentCircuit = agent.ControllingClient.RequestClientInfo();
-                    agentCircuit.startpos = pos;
-                    agentCircuit.child = false;
+                    AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, pos);
                     agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
-                    IAvatarAppearanceModule appearance = agent.RequestModuleInterface<IAvatarAppearanceModule>();
-                    if (appearance != null && appearance.Appearance != null)
-                        agentCircuit.Appearance = appearance.Appearance;
-                    else
-                        m_log.Error("[EntityTransferModule]: No appearance is being packed as we could not find the appearance ? " + appearance == null);
+
+                    agent.SetAgentLeaving(crossingRegion);
 
                     IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                     if (eq != null)
@@ -659,8 +651,8 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
                                 result = map["Success"].AsBoolean();
                             if (!result)
                             {
-                                //Fix user's attachments
-                                attModule.RezAttachments (agent);
+                                //Tell modules that we have failed
+                                agent.AgentFailedToLeave();
                                 if (map != null)
                                 {
                                     if (map.ContainsKey("Note") && !map["Note"].AsBoolean ())
@@ -1202,15 +1194,19 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
             return false;
         }
 
-        public virtual bool IncomingRetrieveRootAgent (IScene scene, UUID id, out AgentData agent)
+        public virtual bool IncomingRetrieveRootAgent(IScene scene, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData)
         {
             agent = null;
+            circuitData = null;
             IScenePresence sp = scene.GetScenePresence (id);
             if ((sp != null) && (!sp.IsChildAgent))
             {
                 AgentData data = new AgentData ();
                 sp.CopyTo (data);
                 agent = data;
+                circuitData = BuildCircuitDataForPresence(sp, sp.AbsolutePosition);
+                if (agentIsLeaving)
+                    sp.SetAgentLeaving(null);//We arn't sure where they are going
                 return true;
             }
 

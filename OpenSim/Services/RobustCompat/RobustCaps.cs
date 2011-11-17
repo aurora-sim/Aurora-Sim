@@ -64,30 +64,20 @@ namespace OpenSim.Services.RobustCompat
             m_scene = scene;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
-            scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
+            scene.EventManager.OnSetAgentLeaving += OnSetAgentLeaving;
             scene.AuroraEventManager.RegisterEventHandler ("NewUserConnection", OnGenericEvent);
             scene.AuroraEventManager.RegisterEventHandler ("UserStatusChange", OnGenericEvent);
-
-            scene.AuroraEventManager.RegisterEventHandler ("DetachingAllAttachments", DetachingAllAttachments);
             scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
         }
 
-        void EventManager_OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        void OnSetAgentLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
-            //IAgentProcessing agentProcessing = presence.Scene.RequestModuleInterface<IAgentProcessing> ();
-            //if(agentProcessing != null)
-            //    if(agentProcessing.is
+            IAttachmentsModule attModule = presence.Scene.RequestModuleInterface<IAttachmentsModule>();
+            if(attModule != null)
+                m_userAttachments[presence.UUID] = attModule.GetAttachmentsForAvatar(presence.UUID);
         }
 
-        private Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]> ();
-        public object DetachingAllAttachments (string funct, object param)
-        {
-            ISceneEntity[] attachments = (ISceneEntity[])param;
-            if(attachments.Length > 0)
-                m_userAttachments[attachments[0].OwnerID] = attachments; 
-            return null;
-        }
-
+        private Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]>();
         public object SendAttachments (string funct, object param)
         {
             object[] parameters = (object[])param;

@@ -243,6 +243,11 @@ namespace OpenSim.Services.CapsService
 
         private Hashtable TeleportLocation (Hashtable mDhttpMethod, UUID agentID)
         {
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             OSDMap pos = rm["LocationPos"] as OSDMap;
             Vector3 position = new Vector3((float)pos["X"].AsReal(),
@@ -263,15 +268,16 @@ namespace OpenSim.Services.CapsService
                 x, y);
             ISimulationService simService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             AgentData ad = new AgentData();
+            AgentCircuitData circuitData;
             if(destination != null)
             {
-                simService.RetrieveAgent(m_service.Region, m_service.AgentID, out ad);
+                simService.RetrieveAgent(m_service.Region, m_service.AgentID, true, out ad, out circuitData);
                 if(ad != null)
                     ad.Position = position;
             }
-            AgentCircuitData circuitData = m_service.CircuitData.Copy();
+            else
+                return responsedata;
             circuitData.reallyischild = false;
-            circuitData.Appearance = m_service.Registry.RequestModuleInterface<IAvatarService>().GetAppearance(m_service.AgentID);
             circuitData.child = false;
             if(destination != null && m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
                 m_service.AgentID, m_service.RegionHandle, out reason))
@@ -282,6 +288,7 @@ namespace OpenSim.Services.CapsService
             }
             else
             {
+                //TODO: NEED TO DO A FAILED TO MOVE USER COMMAND TO THE SIM SO THAT THEY RESUME THE AVATAR!
                 if(destination == null)
                     retVal.Add("reason", "Could not find the destination region.");
                 else
@@ -290,10 +297,6 @@ namespace OpenSim.Services.CapsService
             }
 
             //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
             return responsedata;
         }

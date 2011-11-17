@@ -409,18 +409,26 @@ namespace OpenSim.Framework
         void AddChildAgentUpdateTaint (int seconds);
 
         /// <summary>
-        /// Adds an attachment to the agent (internal use only)
+        /// Sets what attachments are on the agent (internal use only)
         /// </summary>
         /// <param name="group"></param>
-        void AddAttachment (ISceneEntity group);
+        void SetAttachments (ISceneEntity[] groups);
 
         /// <summary>
-        /// Removes an attachment from the agent (internal use only)
+        /// The user has moved a significant (by physics engine standards) amount
         /// </summary>
-        /// <param name="group"></param>
-        void RemoveAttachment (ISceneEntity group);
-
         void TriggerSignificantClientMovement ();
+
+        /// <summary>
+        /// The agent is attempting to leave the region for another region
+        /// </summary>
+        /// <param name="destindation">Where they are going (if null, they are logging out)</param>
+        void SetAgentLeaving(GridRegion destindation);
+
+        /// <summary>
+        /// The agent failed to make it to the region they were attempting to go (resets SetAgentLeaving)
+        /// </summary>
+        void AgentFailedToLeave();
     }
 
     public interface IAvatarAppearanceModule
@@ -1527,9 +1535,11 @@ namespace OpenSim.Framework
 
         public delegate void OnMakeChildAgentDelegate (IScenePresence presence, GridRegion destination);
         public event OnMakeChildAgentDelegate OnMakeChildAgent;
+        public event OnMakeChildAgentDelegate OnSetAgentLeaving;
 
         public delegate void OnMakeRootAgentDelegate (IScenePresence presence);
         public event OnMakeRootAgentDelegate OnMakeRootAgent;
+        public event OnMakeRootAgentDelegate OnAgentFailedToLeave;
 
         public delegate void RequestChangeWaterHeight (float height);
 
@@ -2296,22 +2306,64 @@ namespace OpenSim.Framework
             }
         }
 
-        public void TriggerOnMakeChildAgent (IScenePresence presence, GridRegion destination)
+        public void TriggerOnMakeChildAgent(IScenePresence presence, GridRegion destination)
         {
             OnMakeChildAgentDelegate handlerMakeChildAgent = OnMakeChildAgent;
             if (handlerMakeChildAgent != null)
             {
-                foreach (OnMakeChildAgentDelegate d in handlerMakeChildAgent.GetInvocationList ())
+                foreach (OnMakeChildAgentDelegate d in handlerMakeChildAgent.GetInvocationList())
                 {
                     try
                     {
-                        d (presence, destination);
+                        d(presence, destination);
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat (
+                        m_log.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerOnMakeChildAgent failed - continuing.  {0} {1}",
-                            e.ToString (), e.StackTrace);
+                            e.ToString(), e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerOnAgentFailedToLeave(IScenePresence presence)
+        {
+            OnMakeRootAgentDelegate handlerMakeChildAgent = OnAgentFailedToLeave;
+            if (handlerMakeChildAgent != null)
+            {
+                foreach (OnMakeRootAgentDelegate d in handlerMakeChildAgent.GetInvocationList())
+                {
+                    try
+                    {
+                        d(presence);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerOnAgentFailedToLeave failed - continuing.  {0} {1}",
+                            e.ToString(), e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerOnSetAgentLeaving(IScenePresence presence, GridRegion destination)
+        {
+            OnMakeChildAgentDelegate handlerMakeChildAgent = OnSetAgentLeaving;
+            if (handlerMakeChildAgent != null)
+            {
+                foreach (OnMakeChildAgentDelegate d in handlerMakeChildAgent.GetInvocationList())
+                {
+                    try
+                    {
+                        d(presence, destination);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerOnSetAgentLeaving failed - continuing.  {0} {1}",
+                            e.ToString(), e.StackTrace);
                     }
                 }
             }

@@ -681,7 +681,8 @@ namespace OpenSim.Services.MessagingService
                     {
                         //It says it failed, lets call the sim and check
                         AgentData data = null;
-                        result = SimulationService.RetrieveAgent(destination, AgentID, out data);
+                        AgentCircuitData circuitData;
+                        result = SimulationService.RetrieveAgent(destination, AgentID, false, out data, out circuitData);
                     }
                     if (!result)
                     {
@@ -712,7 +713,7 @@ namespace OpenSim.Services.MessagingService
                         // Next, let's close the child agent connections that are too far away.
                         //if (useCallbacks || oldRegion != destination)//Only close it if we are using callbacks (Aurora region)
                         //Why? OpenSim regions need closed too, even if the protocol is kinda stupid
-                            CloseNeighborAgents (regionCaps.Region, destination, AgentID);
+                        CloseNeighborAgents (regionCaps.Region, destination, AgentID);
                         reason = "";
                     }
                 }

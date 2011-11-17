@@ -822,11 +822,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #endregion
 
-        public virtual uint GenerateClientFlags (ISceneChildEntity part)
-        {
-            return m_scene.Permissions.GenerateClientFlags(m_uuid, part);
-        }
-
         #region Status Methods
 
         /// <summary>
@@ -877,9 +872,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             IsChildAgent = false;
 
-            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
-            if (attMod != null)
-                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
+            SendScriptEventToAllAttachments(Changed.TELEPORT);
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
 
@@ -932,12 +925,20 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene ();
             m_sceneViewer.Reset ();
 
-            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
-            if (attMod != null)
-                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
+            SendScriptEventToAllAttachments(Changed.TELEPORT);
             m_scene.EventManager.TriggerOnMakeChildAgent(this, destindation);
 
             Reset();
+        }
+
+        public virtual void SetAgentLeaving(GridRegion destindation)
+        {
+            m_scene.EventManager.TriggerOnSetAgentLeaving(this, destindation);
+        }
+
+        public virtual void AgentFailedToLeave()
+        {
+            m_scene.EventManager.TriggerOnAgentFailedToLeave(this);
         }
 
         /// <summary>
@@ -986,10 +987,15 @@ namespace OpenSim.Region.Framework.Scenes
             AbsolutePosition = pos;
             AddToPhysicalScene(isFlying, true);
 
+            SendScriptEventToAllAttachments(Changed.TELEPORT);
+            SendTerseUpdateToAllClients();
+        }
+
+        private void SendScriptEventToAllAttachments(Changed c)
+        {
             IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attMod != null)
-                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
-            SendTerseUpdateToAllClients();
+                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { c });
         }
 
         public virtual void TeleportWithMomentum (Vector3 pos)
@@ -1002,9 +1008,7 @@ namespace OpenSim.Region.Framework.Scenes
             AbsolutePosition = pos;
             AddToPhysicalScene(isFlying, true);
 
-            IAttachmentsModule attMod = Scene.RequestModuleInterface<IAttachmentsModule>();
-            if (attMod != null)
-                attMod.SendScriptEventToAttachments(UUID, "changed", new Object[] { Changed.TELEPORT });
+            SendScriptEventToAllAttachments(Changed.TELEPORT);
             SendTerseUpdateToAllClients();
         }
 
@@ -1991,6 +1995,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Overridden Methods
 
+        public virtual void Close()
+        {
+            m_sceneViewer.Close();
+
+            RemoveFromPhysicalScene();
+            if (m_animator == null)
+                return;
+            m_animator.Close();
+            m_animator = null;
+        }
+
         public virtual void Update ()
         {
             if (!IsChildAgent && m_parentID != UUID.Zero)
@@ -2057,6 +2072,21 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region Update Client(s)
+
+        public virtual uint GenerateClientFlags(ISceneChildEntity part)
+        {
+            return m_scene.Permissions.GenerateClientFlags(m_uuid, part);
+        }
+
+        /// <summary>
+        /// Tell the SceneViewer for the given client about the update
+        /// </summary>
+        /// <param name="presence"></param>
+        /// <param name="flags"></param>
+        public virtual void AddUpdateToAvatar(ISceneChildEntity part, PrimUpdateFlags flags)
+        {
+            m_sceneViewer.QueuePartForUpdate(part, flags);
+        }
 
         /// <summary>
         /// Sends a location update to the client connected to this scenePresence
@@ -2732,17 +2762,12 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.UpdateMovementAnimations (true);
         }
 
-        #region Cached Attachments
+        #region Cached Attachments (Internal Use Only!)
 
-        private List<ISceneEntity> m_cachedAttachments = new List<ISceneEntity> ();
-        public void RemoveAttachment (ISceneEntity group)
+        private ISceneEntity[] m_cachedAttachments = new ISceneEntity[0];
+        public void SetAttachments(ISceneEntity[] groups)
         {
-            m_cachedAttachments.Remove (group);
-        }
-
-        public void AddAttachment (ISceneEntity group)
-        {
-            m_cachedAttachments.Add (group);
+            m_cachedAttachments = groups;
         }
 
         #endregion
@@ -2834,26 +2859,5 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        public virtual void Close ()
-        {
-            m_sceneViewer.Close();
-
-            RemoveFromPhysicalScene();
-            if (m_animator == null)
-                return;
-            m_animator.Close();
-            m_animator = null;
-        }
-
-        /// <summary>
-        /// Tell the SceneViewer for the given client about the update
-        /// </summary>
-        /// <param name="presence"></param>
-        /// <param name="flags"></param>
-        public virtual void AddUpdateToAvatar (ISceneChildEntity part, PrimUpdateFlags flags)
-        {
-            m_sceneViewer.QueuePartForUpdate(part, flags);
-        }
     }
 }

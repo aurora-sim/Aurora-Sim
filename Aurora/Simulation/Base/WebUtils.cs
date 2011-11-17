@@ -658,6 +658,42 @@ namespace Aurora.Simulation.Base
         /// <summary>
         /// Extract the param from an uri.
         /// </summary>
+        /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release/other</param>
+        /// <param name="uri">uuid on uuid field</param>
+        /// <param name="action">optional action</param>
+        /// <param name="other">Any other data</param>
+        public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action, out string other)
+        {
+            uuid = UUID.Zero;
+            regionID = UUID.Zero;
+            action = "";
+            other = "";
+
+            uri = uri.Trim(new char[] { '/' });
+            string[] parts = uri.Split('/');
+            if (parts.Length <= 1)
+            {
+                return false;
+            }
+            else
+            {
+                if (!UUID.TryParse(parts[1], out uuid))
+                    return false;
+
+                if (parts.Length >= 3)
+                    UUID.TryParse(parts[2], out regionID);
+                if (parts.Length >= 4)
+                    action = parts[3];
+                if (parts.Length >= 5)
+                    other = parts[4];
+
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Extract the param from an uri.
+        /// </summary>
         /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release</param>
         /// <param name="uri">uuid on uuid field</param>
         /// <param name="action">optional action</param>
