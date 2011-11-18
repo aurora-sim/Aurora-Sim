@@ -79,6 +79,7 @@ namespace OpenSim.Services.MessagingService
             //We need to check and see if this is an GroupSessionAgentUpdate
             if(message.ContainsKey("Method") && message["Method"] == "GroupSessionAgentUpdate")
             {
+                //COMES IN ON AURORA.SERVER SIDE
                 //Send it on to whomever it concerns
                 OSDMap innerMessage = (OSDMap)message["Message"];
                 if(innerMessage["message"] == "ChatterBoxSessionAgentListUpdates")//ONLY forward on this type of message
@@ -93,6 +94,84 @@ namespace OpenSim.Services.MessagingService
                             eqs.Enqueue(innerMessage, agentID, clientCaps.GetRootCapsService().RegionHandle);
                     }
                 }
+            }
+            else if (message.ContainsKey("Method") && message["Method"] == "FixGroupRoleTitles")
+            {
+                //COMES IN ON AURORA.SERVER SIDE FROM REGION
+                UUID groupID = message["GroupID"].AsUUID();
+                UUID agentID = message["AgentID"].AsUUID();
+                UUID roleID = message["RoleID"].AsUUID();
+                byte type = (byte)message["Type"].AsInteger();
+                IGroupsServiceConnector con = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+                List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
+                List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
+                GroupRolesData everyone = null;
+                foreach(GroupRolesData role in roles)
+                    if(role.Name == "Everyone") 
+                        everyone = role;
+
+                List<ulong> regionsToBeUpdated = new List<ulong>();
+                foreach (GroupRoleMembersData data in members)
+                {
+                    if (data.RoleID == roleID)
+                    {
+                        //They were affected by the change
+                        switch ((OpenMetaverse.GroupRoleUpdate)type)
+                        {
+                            case OpenMetaverse.GroupRoleUpdate.Create:
+                            case OpenMetaverse.GroupRoleUpdate.NoUpdate:
+                                //No changes...
+                                break;
+
+                            case OpenMetaverse.GroupRoleUpdate.Delete:
+                                //Need to update their title inworld
+                                break;
+
+                            case OpenMetaverse.GroupRoleUpdate.UpdatePowers://Possible we don't need to send this?
+                            case OpenMetaverse.GroupRoleUpdate.UpdateAll:
+                            case OpenMetaverse.GroupRoleUpdate.UpdateData:
+                            case OpenMetaverse.GroupRoleUpdate.Delete:
+                                if(type == (byte)OpenMetaverse.GroupRoleUpdate.Delete)
+                                    //Set them to the most limited role since their role is gone
+                                    con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
+                                //Need to update their title inworld
+                                ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
+                                if (caps != null)
+                                {
+                                    IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
+                                    if (clientCaps != null && clientCaps.GetRootCapsService() != null)
+                                        regionsToBeUpdated.Add(clientCaps.GetRootCapsService().RegionHandle);
+                                }
+                                break;
+                        }
+                    }
+                }
+                if (regionsToBeUpdated.Count != 0)
+                {
+                    IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+                    if (messagePost != null)
+                    {
+                        foreach (ulong regionhandle in regionsToBeUpdated)
+                        {
+                            OSDMap outgoingMessage = new OSDMap();
+                            outgoingMessage["Method"] = "ForceUpdateGroupTitles";
+                            outgoingMessage["GroupID"] = groupID;
+                            outgoingMessage["RoleID"] = roleID;
+                            outgoingMessage["RegionID"] = regionhandle;
+                            messagePost.Post(regionhandle, outgoingMessage);
+                        }
+                    }
+                }
+            }
+            else if (message.ContainsKey("Method") && message["Method"] == "ForceUpdateGroupTitles")
+            {
+                //COMES IN ON REGION SIDE FROM AURORA.SERVER
+                UUID groupID = message["GroupID"].AsUUID();
+                UUID roleID = message["RoleID"].AsUUID();
+                ulong regionID = message["RegionID"].AsULong();
+                IGroupsModule gm = m_registry.RequestModuleInterface<IGroupsModule>();
+                if (gm != null)
+                    gm.UpdateUsersForExternalRoleUpdate(groupID, roleID, regionID);
             }
             return null;
         }

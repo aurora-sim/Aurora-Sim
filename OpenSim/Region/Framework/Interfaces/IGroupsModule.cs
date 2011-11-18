@@ -97,5 +97,6 @@ namespace OpenSim.Region.Framework.Interfaces
         void NotifyChange(UUID GroupID);
         bool GroupPermissionCheck(UUID AgentID, UUID GroupID, GroupPowers permissions);
         GridInstantMessage BuildOfflineGroupNotice(GridInstantMessage msg);
+        void UpdateUsersForExternalRoleUpdate(UUID groupID, UUID roleID, ulong regionID);
     }
 }

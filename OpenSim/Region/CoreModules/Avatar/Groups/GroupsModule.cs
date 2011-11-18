@@ -1026,6 +1026,26 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             UpdateAllClientsWithGroupInfo(GetRequestingAgentID(remoteClient), title);
         }
 
+        public void UpdateUsersForExternalRoleUpdate(UUID groupID, UUID roleID, ulong regionID)
+        {
+            lock (m_sceneList)
+            {
+                foreach (IScene scene in m_sceneList)
+                {
+                    if (scene.RegionInfo.RegionHandle == regionID)
+                    {
+                        foreach (IScenePresence sp in scene.GetScenePresences())
+                        {
+                            if (sp.ControllingClient.ActiveGroupId == groupID)
+                            {
+                                m_cachedGroupTitles.Remove(sp.UUID);//Remove the old title
+                                UpdateAllClientsWithGroupInfo(sp.UUID, GetGroupTitle(sp.UUID));
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         public void GroupRoleUpdate(IClientAPI remoteClient, UUID groupID, UUID roleID, string name, string description, string title, ulong powers, byte updateType)
         {
@@ -1061,7 +1081,18 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             }
 
-            // TODO: This update really should send out updates for everyone in the role that just got changed.
+            ISyncMessagePosterService amps = m_sceneList[0].RequestModuleInterface<ISyncMessagePosterService>();
+            if (amps != null)
+            {
+                OSDMap message = new OSDMap();
+                message["Method"] = "FixGroupRoleTitles";
+                message["GroupID"] = groupID;
+                message["RoleID"] = roleID;
+                message["AgentID"] = remoteClient.AgentId;
+                message["Type"] = updateType;
+                amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
+            }
+
             foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences())
             {
                 if (SP.ControllingClient.ActiveGroupId == groupID)
