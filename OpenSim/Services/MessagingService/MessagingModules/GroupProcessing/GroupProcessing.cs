@@ -123,10 +123,6 @@ namespace OpenSim.Services.MessagingService
                                 //No changes...
                                 break;
 
-                            case OpenMetaverse.GroupRoleUpdate.Delete:
-                                //Need to update their title inworld
-                                break;
-
                             case OpenMetaverse.GroupRoleUpdate.UpdatePowers://Possible we don't need to send this?
                             case OpenMetaverse.GroupRoleUpdate.UpdateAll:
                             case OpenMetaverse.GroupRoleUpdate.UpdateData:

@@ -720,20 +720,6 @@ namespace Aurora.Services.DataService
             return Members;
         }
 
-        public UUID GetGroupMembers(UUID requestingAgentID, UUID GroupID)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
-                return new List<UUID>();
-
-            List<GroupMembersData> Members = new List<GroupMembersData>();
-            List<string> Agents = data.Query("GroupID", GroupID, "osgroupmembership", "AgentID");
-            foreach (string Agent in Agents)
-            {
-                Members.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent)));
-            }
-            return Members;
-        }
-
 		public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
 		{
             //Permissions
