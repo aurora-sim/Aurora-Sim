@@ -62,7 +62,8 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         {
             m_registry = registry;
             registry.RegisterModuleInterface<IGridWideMessageModule> (this);
-            if (MainConsole.Instance != null)
+            IConfig handlersConfig = config.Configs["Handlers"];
+            if (MainConsole.Instance != null && handlersConfig != null && handlersConfig.GetString("GridWideMessage", "") == "GridWideMessageModule")
             {
                 MainConsole.Instance.Commands.AddCommand ("grid send alert",
                     "grid send alert <message>", "Sends a message to all users in the grid", SendGridAlert);
