@@ -929,7 +929,7 @@ namespace Aurora.Modules
                 AssetType.Simstate,
                 m_scene.RegionInfo.RegionID);
             Mapasset.Description = m_scene.RegionInfo.RegionName;
-            Mapasset.Flags = AssetFlags.Deletable;
+            Mapasset.Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile;
 
             AssetBase Terrainasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID,
@@ -937,7 +937,7 @@ namespace Aurora.Modules
                 AssetType.Simstate,
                 m_scene.RegionInfo.RegionID);
             Terrainasset.Description = m_scene.RegionInfo.RegionName;
-            Terrainasset.Flags = AssetFlags.Deletable;
+            Terrainasset.Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile;
 
             if(changed)
                 m_scene.RegionInfo.RegionSettings.Save();

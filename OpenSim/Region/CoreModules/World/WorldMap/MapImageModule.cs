@@ -73,50 +73,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         
         #region IMapImageGenerator Members
 
-        public Bitmap CreateMapTile()
-        {
-            bool drawPrimVolume = true;
-            string tileRenderer = "WarpTileRenderer";
-
-            if (m_config.Configs["MapModule"] != null)
-            {
-                drawPrimVolume = m_config.Configs["MapModule"].GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
-                tileRenderer = m_config.Configs["MapModule"].GetString("TerrainTileRenderer", tileRenderer);
-            }
-
-            if (tileRenderer == "TexturedMapTileRenderer")
-            {
-                terrainRenderer = new TexturedMapTileRenderer();
-            }
-            else if (tileRenderer == "ShadedMapTileRenderer")
-            {
-                terrainRenderer = new ShadedMapTileRenderer();
-            }
-            else
-            {
-                terrainRenderer = new WarpTileRenderer();
-                //It does this automatically
-                drawPrimVolume = false;
-            }
-
-            terrainRenderer.Initialise(m_scene, m_config);
-
-            Bitmap mapbmp = new Bitmap(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            terrainRenderer.TerrainToBitmap(mapbmp);
-            
-            if (drawPrimVolume)
-            {
-                if(mapbmp != null) //If something goes seriously wrong, this DOES happen
-                    DrawObjectVolume(m_scene, mapbmp);
-            }
-            if (m_mapping != null)
-            {
-                SaveCache ();
-                m_mapping.Clear ();
-            }
-            return mapbmp;
-        }
-
         public void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP)
         {
             bool drawPrimVolume = true;
