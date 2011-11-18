@@ -976,24 +976,20 @@ namespace Aurora.Modules
             if (terrain == null)
                 return;
 
-            //Delete the old assets
-            if (Terrainasset.ID != UUID.Zero)
-                m_scene.AssetService.Delete(Terrainasset.ID);
-            if (Mapasset.ID != UUID.Zero)
-                m_scene.AssetService.Delete(Mapasset.ID);
-
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);
             if (terraindata != null)
             {
                 Terrainasset.Data = terraindata;
                 Terrainasset.ID = m_scene.AssetService.Store(Terrainasset);
+                m_scene.RegionInfo.RegionSettings.TerrainMapImageID = Terrainasset.ID;
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
                 Mapasset.ID = m_scene.AssetService.Store(Mapasset);
+                m_scene.RegionInfo.RegionSettings.TerrainImageID = Mapasset.ID;
             }
 
             //Update the grid map
