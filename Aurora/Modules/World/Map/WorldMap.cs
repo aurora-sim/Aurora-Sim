@@ -982,14 +982,22 @@ namespace Aurora.Modules
             {
                 Terrainasset.Data = terraindata;
                 Terrainasset.ID = m_scene.AssetService.Store(Terrainasset);
-                m_scene.RegionInfo.RegionSettings.TerrainMapImageID = Terrainasset.ID;
+                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != Terrainasset.ID)
+                {
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = Terrainasset.ID;
+                    m_scene.RegionInfo.RegionSettings.Save();
+                }
             }
 
             if (mapdata != null)
             {
                 Mapasset.Data = mapdata;
                 Mapasset.ID = m_scene.AssetService.Store(Mapasset);
-                m_scene.RegionInfo.RegionSettings.TerrainImageID = Mapasset.ID;
+                if (m_scene.RegionInfo.RegionSettings.TerrainImageID != Mapasset.ID)
+                {
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = Mapasset.ID;
+                    m_scene.RegionInfo.RegionSettings.Save();
+                }
             }
 
             //Update the grid map

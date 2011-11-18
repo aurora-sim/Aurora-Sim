@@ -387,7 +387,7 @@ namespace OpenSim.Services.GridService
                 //Remove it first just to make sure it is replaced
                 m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString ());
                 m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID.ToString (), urls.ToOSD ());
-                m_log.WarnFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
+                m_log.DebugFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }
             else
                 m_log.ErrorFormat ("[GridRegistrationService]: Failed to find URLs to update for {0}", urls.SessionID);
