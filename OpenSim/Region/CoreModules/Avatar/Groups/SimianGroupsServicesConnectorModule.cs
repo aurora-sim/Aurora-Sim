@@ -515,16 +515,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return MemberGroupProfile;
         }
 
-        public void SetAgentActiveGroup(UUID requestingAgentID, UUID agentID, UUID groupID)
+        public string SetAgentActiveGroup(UUID requestingAgentID, UUID agentID, UUID groupID)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             OSDMap ActiveGroup = new OSDMap();
             ActiveGroup.Add("GroupID", OSD.FromUUID(groupID));
             SimianAddGeneric(agentID, "Group", "ActiveGroup", ActiveGroup);
+            return GetAgentGroupMembership(requestingAgentID, agentID, groupID).GroupTitle;
         }
 
-        public void SetAgentActiveGroupRole(UUID requestingAgentID, UUID agentID, UUID groupID, UUID roleID)
+        public string SetAgentActiveGroupRole(UUID requestingAgentID, UUID agentID, UUID groupID, UUID roleID)
         {
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
@@ -536,6 +537,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             GroupMemberInfo["SelectedRoleID"] = OSD.FromUUID(roleID);
             SimianAddGeneric(agentID, "GroupMember", groupID.ToString(), GroupMemberInfo);
+            return GetAgentGroupMembership(requestingAgentID, agentID, groupID).GroupTitle;
         }
 
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID agentID, UUID groupID, bool acceptNotices, bool listInProfile)

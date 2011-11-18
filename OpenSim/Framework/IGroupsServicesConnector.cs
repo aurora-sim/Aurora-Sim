@@ -57,10 +57,10 @@ namespace OpenSim.Framework
         void RemoveAgentFromGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
         List<GroupRolesData> GetAgentGroupRoles(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
 
-        void SetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
+        string SetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
         GroupMembershipData GetAgentActiveMembership(UUID RequestingAgentID, UUID AgentID);
 
-        void SetAgentActiveGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
+        string SetAgentActiveGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
         void SetAgentGroupInfo(UUID RequestingAgentID, UUID AgentID, UUID GroupID, bool AcceptNotices, bool ListInProfile);
 
         GroupMembershipData GetAgentGroupMembership(UUID RequestingAgentID, UUID AgentID, UUID GroupID);

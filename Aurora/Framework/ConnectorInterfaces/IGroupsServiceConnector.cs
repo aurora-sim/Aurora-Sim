@@ -43,8 +43,8 @@ namespace Aurora.Framework
 		void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID,
             ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers);
         void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName);
-        void SetAgentActiveGroup(UUID AgentID, UUID GroupID);
-		void SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID);
+        string SetAgentActiveGroup(UUID AgentID, UUID GroupID);
+		string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID);
         void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
         void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers);
 		void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish);

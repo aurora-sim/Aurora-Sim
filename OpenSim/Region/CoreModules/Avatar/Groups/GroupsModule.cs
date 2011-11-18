@@ -561,7 +561,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                             //WTH??? noone but the invitee needs to know
                             //The other client wants to know too...
-                            UpdateAllClientsWithGroupInfo(inviteInfo.AgentID);
+                            UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, GetGroupTitle(inviteInfo.AgentID));
                             SendAgentGroupDataUpdate(remoteClient);
                             // XTODO: If the inviter is still online, they need an agent dataupdate 
                             // and maybe group membership updates for the invitee
@@ -781,13 +781,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
-            m_groupData.SetAgentActiveGroup(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID);
-
+            string title = m_groupData.SetAgentActiveGroup(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID);
+            m_cachedGroupTitles[remoteClient.AgentId] = title;
             // Changing active group changes title, active powers, all kinds of things
             // anyone who is in any region that can see this client, should probably be 
             // updated with new group info.  At a minimum, they should get ScenePresence
             // updated with new title.
-            UpdateAllClientsWithGroupInfo(GetRequestingAgentID(remoteClient));
+            UpdateAllClientsWithGroupInfo(GetRequestingAgentID(remoteClient), title);
         }
 
         /// <summary>
@@ -974,7 +974,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             UUID groupID = m_groupData.CreateGroup(GetRequestingAgentID(remoteClient), name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, GetRequestingAgentID(remoteClient));
 
             remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
-
+            m_cachedGroupTitles[remoteClient.AgentId] = m_groupData.GetAgentActiveMembership(remoteClient.AgentId, remoteClient.AgentId).GroupTitle;
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 
@@ -1017,12 +1017,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             m_cachedGroupTitles.Remove(remoteClient.AgentId);
-            m_groupData.SetAgentActiveGroupRole(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID, titleRoleID);
-
+            string title = m_groupData.SetAgentActiveGroupRole(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID, titleRoleID);
+            m_cachedGroupTitles[remoteClient.AgentId] = title;
             // TODO: Not sure what all is needed here, but if the active group role change is for the group
             // the client currently has set active, then we need to do a scene presence update too
                 
-            UpdateAllClientsWithGroupInfo(GetRequestingAgentID(remoteClient));
+            UpdateAllClientsWithGroupInfo(GetRequestingAgentID(remoteClient), title);
         }
 
 
@@ -1267,6 +1267,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 im.timestamp = (uint)Util.UnixTimeSinceEpoch();
                 im.toAgentID = UUID.Zero;
 
+                m_groupsMessagingModule.EnsureGroupChatIsStarted(groupID);
                 m_groupsMessagingModule.SendMessageToGroup(im, groupID);
             }
         }
@@ -1340,7 +1341,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.binaryBucket = new byte[0];
             OutgoingInstantMessage(msg, GetRequestingAgentID(remoteClient));
 
-            UpdateAllClientsWithGroupInfo(ejecteeID);
+            UpdateAllClientsWithGroupInfo(ejecteeID, "");
 
             if (m_groupsMessagingModule != null)
             {
@@ -1358,6 +1359,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 im.timestamp = (uint)Util.UnixTimeSinceEpoch();
                 im.toAgentID = UUID.Zero;
 
+                m_groupsMessagingModule.EnsureGroupChatIsStarted(groupID);
                 m_groupsMessagingModule.SendMessageToGroup(im, groupID);
             }
         }
@@ -1514,31 +1516,23 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             IScenePresence presence = null;
 
-            foreach (IScene scene in m_sceneList)
+            lock (m_sceneList)
             {
-                presence = scene.GetScenePresence(AgentID);
-                if (presence != null)
+                foreach (IScene scene in m_sceneList)
                 {
-                    string oldTitle;
-                    bool changed = false;
-                    lock(m_cachedGroupTitles)
+                    presence = scene.GetScenePresence(AgentID);
+                    if (presence != null)
                     {
-                        if(!m_cachedGroupTitles.TryGetValue(presence.UUID, out oldTitle) || oldTitle != Title)
+                        if (!presence.IsChildAgent)
                         {
-                            changed = true;
-                            m_cachedGroupTitles[presence.UUID] = Title;
+                            //Force send a full update
+                            foreach (IScenePresence sp in scene.GetScenePresences())
+                            {
+                                if (sp.SceneViewer.Culler.ShowEntityToClient(sp, presence, scene))
+                                    sp.ControllingClient.SendAvatarDataImmediate(presence);
+                            }
                         }
                     }
-                    if(!presence.IsChildAgent && changed)
-                    {
-                        //Force send a full update
-                        foreach(IScenePresence sp in scene.GetScenePresences())
-                        {
-                            if(sp.SceneViewer.Culler.ShowEntityToClient(sp, presence, scene))
-                                sp.ControllingClient.SendAvatarDataImmediate(presence);
-                        }
-                    }
-                    return;
                 }
             }
         }
@@ -1546,19 +1540,43 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         /// <summary>
         /// Send updates to all clients who might be interested in groups data for dataForClientID
         /// </summary>
-        private void UpdateAllClientsWithGroupInfo(UUID dataForClientID)
+        private void UpdateAllClientsWithGroupInfo(UUID dataForAgentID, string activeGroupTitle)
         {
             if (m_debugEnabled) m_log.InfoFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             // TODO: Probably isn't nessesary to update every client in every scene.
             // Need to examine client updates and do only what's nessesary.
-
+            
+            List<GroupMembershipData> membershipData = m_groupData.GetAgentGroupMemberships(dataForAgentID, dataForAgentID);
+            
             lock (m_sceneList)
             {
                 foreach (IScene scene in m_sceneList)
                 {
-                    scene.ForEachClient(delegate(IClientAPI client) { SendAgentGroupDataUpdate(client, dataForClientID); });
+                    scene.ForEachClient(delegate(IClientAPI client)
+                    {
+                        if (m_debugEnabled)
+                            m_log.InfoFormat("[GROUPS]: SendAgentGroupDataUpdate called for {0}", client.Name);
+
+                        // TODO: All the client update functions need to be reexamined because most do too much and send too much stuff
+                        OnAgentDataUpdateRequest(client, dataForAgentID, UUID.Zero, false);
+
+                        GroupMembershipData[] membershipArray;
+                        if (client.AgentId != dataForAgentID)
+                        {
+                            Predicate<GroupMembershipData> showInProfile = delegate(GroupMembershipData membership)
+                            {
+                                return membership.ListInProfile;
+                            };
+                            membershipArray = membershipData.FindAll(showInProfile).ToArray();
+                        }
+                        else
+                            membershipArray = membershipData.ToArray();
+
+                        SendGroupMembershipInfoViaCaps(client, dataForAgentID, membershipArray);
+                    });
                 }
+                SendScenePresenceUpdate(dataForAgentID, activeGroupTitle);
             }
         }
 

@@ -621,9 +621,15 @@ namespace OpenSim.Services
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
 
-            GroupsServiceConnector.SetAgentActiveGroup(AgentID, GroupID);
+            string title = GroupsServiceConnector.SetAgentActiveGroup(AgentID, GroupID);
 
-            return SuccessResult();
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["groupTitle"] = title;
+
+            string xmlString = WebUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         public byte[] SetAgentGroupSelectedRole(Dictionary<string, object> request)
@@ -632,9 +638,15 @@ namespace OpenSim.Services
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             UUID RoleID = UUID.Parse(request["RoleID"].ToString());
 
-            GroupsServiceConnector.SetAgentGroupSelectedRole(AgentID, GroupID, RoleID);
+            string title = GroupsServiceConnector.SetAgentGroupSelectedRole(AgentID, GroupID, RoleID);
 
-            return SuccessResult();
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["groupTitle"] = title;
+
+            string xmlString = WebUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         public byte[] AddAgentToGroup(Dictionary<string, object> request)
@@ -1009,6 +1021,8 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupMembersData r in rs)
             {
+                if (r == null)
+                    continue;
                 result.Add(ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }

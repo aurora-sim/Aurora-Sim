@@ -388,16 +388,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return MemberGroupProfile;
         }
 
-        public void SetAgentActiveGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
+        public string SetAgentActiveGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             Hashtable param = new Hashtable();
             param["AgentID"] = AgentID.ToString();
             param["GroupID"] = GroupID.ToString();
 
             XmlRpcCall(requestingAgentID, "groups.setAgentActiveGroup", param);
+            return GetAgentGroupMembership(requestingAgentID, AgentID, GroupID).GroupTitle;
         }
 
-        public void SetAgentActiveGroupRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
+        public string SetAgentActiveGroupRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             Hashtable param = new Hashtable();
             param["AgentID"] = AgentID.ToString();
@@ -405,6 +406,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             param["SelectedRoleID"] = RoleID.ToString();
 
             XmlRpcCall(requestingAgentID, "groups.setAgentGroupInfo", param);
+            return GetAgentGroupMembership(requestingAgentID, AgentID, GroupID).GroupTitle;
         }
 
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, bool AcceptNotices, bool ListInProfile)

@@ -259,14 +259,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return MemberGroupProfile;
         }
 
-        public void SetAgentActiveGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
+        public string SetAgentActiveGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
-            GroupsConnector.SetAgentActiveGroup(AgentID, GroupID);
+            return GroupsConnector.SetAgentActiveGroup(AgentID, GroupID);
         }
 
-        public void SetAgentActiveGroupRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
+        public string SetAgentActiveGroupRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
-            GroupsConnector.SetAgentGroupSelectedRole(AgentID, GroupID, RoleID);
+            return GroupsConnector.SetAgentGroupSelectedRole(AgentID, GroupID, RoleID);
         }
 
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, bool AcceptNotices, bool ListInProfile)

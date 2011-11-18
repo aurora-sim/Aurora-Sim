@@ -122,7 +122,7 @@ namespace Aurora.Services.DataService
 			SetAgentActiveGroup(founderID, groupID);
 		}
 
-		public void SetAgentActiveGroup(UUID AgentID, UUID GroupID)
+		public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
 		{
 			if (data.Query("AgentID", AgentID, "osagent", "*").Count != 0)
 				data.Update("osagent", new object[] { GroupID }, new string[] { "ActiveGroupID" }, new string[] { "AgentID" }, new object[] { AgentID });
@@ -134,9 +134,11 @@ namespace Aurora.Services.DataService
 					AgentID,
 					GroupID
 				});
+            GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
+            return gdata == null ? "" : gdata.Title;
 		}
 
-		public void SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
+		public string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
 		{
 			data.Update("osgroupmembership", new object[] { RoleID }, new string[] { "SelectedRoleID" }, new string[] {
 				"AgentID",
@@ -145,6 +147,8 @@ namespace Aurora.Services.DataService
 				AgentID,
 				GroupID
 			});
+            GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
+            return gdata == null ? "" : gdata.Title;
 		}
 
         public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
