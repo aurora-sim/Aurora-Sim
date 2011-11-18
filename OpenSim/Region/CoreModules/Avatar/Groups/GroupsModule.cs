@@ -561,7 +561,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                             //WTH??? noone but the invitee needs to know
                             //The other client wants to know too...
-                            UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, GetGroupTitle(inviteInfo.AgentID));
+                            string title = m_groupData.GetAgentActiveMembership(inviteInfo.AgentID, inviteInfo.AgentID).GroupTitle;
+                            m_cachedGroupTitles[inviteInfo.AgentID] = title;
+                            UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, title);
                             SendAgentGroupDataUpdate(remoteClient);
                             // XTODO: If the inviter is still online, they need an agent dataupdate 
                             // and maybe group membership updates for the invitee
@@ -1016,7 +1018,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
-            m_cachedGroupTitles.Remove(remoteClient.AgentId);
             string title = m_groupData.SetAgentActiveGroupRole(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID, titleRoleID);
             m_cachedGroupTitles[remoteClient.AgentId] = title;
             // TODO: Not sure what all is needed here, but if the active group role change is for the group
@@ -1064,7 +1065,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences())
             {
                 if (SP.ControllingClient.ActiveGroupId == groupID)
+                {
+                    m_cachedGroupTitles.Remove(SP.UUID);
                     SendAgentGroupDataUpdate(SP.ControllingClient, GetRequestingAgentID(SP.ControllingClient));
+                }
             }
         }
 
@@ -1322,8 +1326,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             msg = new GridInstantMessage();
             msg.imSessionID = UUID.Zero;
-            msg.fromAgentID = GetRequestingAgentID(remoteClient);
-            msg.toAgentID = GetRequestingAgentID(remoteClient);
+            msg.fromAgentID = UUID.Zero;
+            msg.toAgentID = remoteClient.AgentId;
             msg.timestamp = 0;
             msg.fromAgentName = remoteClient.Name;
             if (account != null)
@@ -1341,6 +1345,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             msg.binaryBucket = new byte[0];
             OutgoingInstantMessage(msg, GetRequestingAgentID(remoteClient));
 
+            m_cachedGroupTitles[ejecteeID] = "";
             UpdateAllClientsWithGroupInfo(ejecteeID, "");
 
             if (m_groupsMessagingModule != null)
