@@ -433,22 +433,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ID.CloseAndDispose (false); //We don't want to backup
                     //Remove the state save
                     StateSave.DeleteFrom (ID);
-                    //Reset this every time so that we don't reuse any compiled scripts
-                    ScriptProtection.Reset (false);
                 }
 
                 ScriptProtection.Reset (true);
                 //Delete all assemblies
                 Compiler.RecreateDirectory ();
+                List<LUStruct> scriptsToStart = new List<LUStruct>();
                 foreach (ScriptData ID in scripts)
                 {
-                    try
-                    {
-                        if(ID.Start (false))
-                            ID.FireEvents ();
-                    }
-                    catch (Exception) { }
+                    scriptsToStart.Add(new LUStruct() { Action = LUType.Load, ID = ID });
                 }
+                MaintenanceThread.StartScripts(scriptsToStart.ToArray());
                 m_log.Warn ("[ADNE]: All scripts have been restarted.");
             }
             else

@@ -4,11 +4,11 @@ using System.Security;
 
 namespace OdeAPI
 {
-//#if dDOUBLE
-//	using dReal = System.Double;
-//#else
+#if dDOUBLE
+	using dReal = System.Double;
+#else
 	using dReal = System.Single;
-//#endif
+#endif
 
 	public static class d
 	{
@@ -630,7 +630,7 @@ namespace OdeAPI
 		[DllImport("ode", EntryPoint = "dCreateCapsule"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr CreateCapsule([In] IntPtr space, [In]  dReal radius, [In]  dReal length);
 
-		[DllImport("ode", EntryPoint = "dCreateConvex"), SuppressUnmanagedCodeSecurity]
+        [DllImport("ode", EntryPoint = "dCreateConvex"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr CreateConvex([In] IntPtr space, [In]  dReal[] planes, [In]  int planeCount, [In]  dReal[] points, [In]  int pointCount, [In]  int[] polygons);
 
 		[DllImport("ode", EntryPoint = "dCreateCylinder"), SuppressUnmanagedCodeSecurity]

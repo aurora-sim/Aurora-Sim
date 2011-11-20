@@ -209,7 +209,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        private void StartScripts(LUStruct[] items)
+        public void StartScripts(LUStruct[] items)
         {
             List<LUStruct> NeedsFired = new List<LUStruct>();
             foreach (LUStruct item in items)

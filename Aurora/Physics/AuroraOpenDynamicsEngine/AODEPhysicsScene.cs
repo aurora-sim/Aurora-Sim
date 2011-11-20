@@ -1027,10 +1027,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     // For some reason this can happen. Don't ask...
                     //
-                    if (chr == null)
-                        continue;
-
-                    if (chr.Shell == IntPtr.Zero || chr.Body == IntPtr.Zero)
+                    if (chr == null || chr.Shell == IntPtr.Zero || chr.Body == IntPtr.Zero)
                         continue;
 
                     chr.IsColliding = false;

@@ -500,6 +500,7 @@ namespace Aurora.Modules.FileBasedSimulationData
 
         protected virtual void ReadBackup (IScene scene)
         {
+            m_log.Info("[FileBasedSimulationData]: Reading file for " + scene.RegionInfo.RegionName);
             List<uint> foundLocalIDs = new List<uint> ();
             GZipStream m_loadStream;
             try

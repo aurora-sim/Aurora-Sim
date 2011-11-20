@@ -257,7 +257,6 @@ namespace Aurora.Modules
             public void LoadPrimsFromStorage()
             {
                 LoadingPrims = true;
-                m_log.Info("[BackupModule]: Loading objects from datastore");
 
                 List<ISceneEntity> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene);
                 foreach (ISceneEntity group in PrimsFromDB)
@@ -314,7 +313,7 @@ namespace Aurora.Modules
             /// </summary>
             public void LoadAllLandObjectsFromStorage()
             {
-                m_log.Info ("[BackupModule]: Loading Land Objects from database... ");
+                m_log.Debug ("[BackupModule]: Loading Land Objects from database... ");
                 m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID), Vector2.Zero);
             }
 

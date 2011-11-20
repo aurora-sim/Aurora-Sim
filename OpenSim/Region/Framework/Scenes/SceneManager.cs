@@ -228,6 +228,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void HandleStartupComplete(IScene scene, List<string> data)
         {
+            m_log.Info("[SceneManager]: Startup Complete in region " + scene.RegionInfo.RegionName);
             RegionsFinishedStarting++;
             if (RegionsFinishedStarting >= AllRegions)
             {
@@ -255,7 +256,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
-            m_log.InfoFormat ("[SceneManager]: Startup is complete and took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
+            m_log.InfoFormat ("[SceneManager]: All regions are started. This took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
             AuroraModuleLoader.ClearCache ();
             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
             // this is a rare case where we know we have just went through a long cycle of heap
@@ -634,7 +635,7 @@ namespace OpenSim.Region.Framework.Scenes
                 module.Initialise(scene, m_config, m_OpenSimBase);
             }
             //Then do the ISharedRegionModule and INonSharedRegionModules
-            m_log.Info ("[Modules]: Loading region modules");
+            m_log.Debug ("[Modules]: Loading region modules");
             IRegionModulesController controller;
             if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface (out controller))
             {

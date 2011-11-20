@@ -75,7 +75,7 @@ namespace OpenSim.Region.Physics.Manager
             IMesher meshEngine = null;
             if (_MeshPlugins.ContainsKey(meshEngineName))
             {
-                m_log.Info("[Physics]: Loading meshing engine: " + meshEngineName);
+                m_log.Debug("[Physics]: Loading meshing engine: " + meshEngineName);
                 meshEngine = _MeshPlugins[meshEngineName].GetMesher(config);
             }
             else
@@ -86,7 +86,7 @@ namespace OpenSim.Region.Physics.Manager
 
             if (_PhysPlugins.ContainsKey(physEngineName))
             {
-                m_log.Info("[Physics]: Loading physics engine: " + physEngineName);
+                m_log.Debug("[Physics]: Loading physics engine: " + physEngineName);
                 PhysicsScene result = _PhysPlugins[physEngineName].GetScene(region.RegionName);
                 result.Initialise(meshEngine, region, registry);
                 result.PostInitialise(config);

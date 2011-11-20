@@ -1019,8 +1019,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="data"></param>
         public void StartupComplete(IScene scene, List<string> data)
         {
-            m_log.Info("[Region]: Startup Complete in region " + RegionInfo.RegionName);
-            
             //Tell the SceneManager about it
             m_sceneManager.HandleStartupComplete(this, data);
         }

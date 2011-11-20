@@ -735,7 +735,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string assy = AssemblyName; // don't restore the assembly name, the one we have is right (if re-compiled or not)
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
                 AssemblyName = assy;
-                if (this.State == "" && DefaultState != this.State)//Sometimes, "" is a valid state
+                if (this.State == "" && DefaultState != this.State)//Sometimes, "" is a valid state for other script languages
                 {
                     m_log.Warn ("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
                     this.State = DefaultState;
@@ -769,14 +769,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //All done, compiled successfully
             Loading = false;
 
-            TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
+            if (m_log.IsDebugEnabled)
+            {
+                TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
 
-            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
-                    "]: Started Script " + InventoryItem.Name +
-                    " in object " + Part.Name + "@" + Part.ParentEntity.RootChild.AbsolutePosition +
-                    (presence != null ? " by " + presence.Name : "") + 
-                    " in region " + Part.ParentEntity.Scene.RegionInfo.RegionName +
-                    " in " + time.TotalSeconds + " seconds.");
+                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
+                        "]: Started Script " + InventoryItem.Name +
+                        " in object " + Part.Name + "@" + Part.ParentEntity.RootChild.AbsolutePosition +
+                        (presence != null ? " by " + presence.Name : "") +
+                        " in region " + Part.ParentEntity.Scene.RegionInfo.RegionName +
+                        " in " + time.TotalSeconds + " seconds.");
+            }
             return true;
         }
 
