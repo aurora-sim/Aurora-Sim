@@ -341,6 +341,51 @@ namespace Aurora.Framework
         }
 
         /// <summary>
+        /// Load all plugins from the given .dll file with the interface 'type'
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dllName"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static List<T> LoadPlugins<T>(string dllName)
+        {
+            List<T> plugins = new List<T>();
+            string type = typeof(T).ToString();
+            try
+            {
+                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+
+                foreach (Type pluginType in pluginAssembly.GetTypes())
+                {
+                    if (pluginType.IsPublic)
+                    {
+                        try
+                        {
+                            Type typeInterface = pluginType.GetInterface(type, true);
+
+                            if (typeInterface != null)
+                            {
+                                plugins.Add((T)Activator.CreateInstance(pluginType));
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                foreach (Exception e2 in e.LoaderExceptions)
+                {
+                    m_log.Error(e2.ToString());
+                }
+                throw e;
+            }
+            return plugins;
+        }
+
+        /// <summary>
         /// Load a plugin from a dll with the given class or interface
         /// </summary>
         /// <param name="dllName"></param>

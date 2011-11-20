@@ -1,0 +1,302 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Aurora.Simulation.Base;
+using Aurora.Framework;
+using OpenSim.Framework;
+using Nini.Config;
+using Microsoft.CSharp;
+using System.Windows.Forms;
+using RunTimeCompiler;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
+
+namespace Aurora.Modules.Installer
+{
+    public class ModuleInstaller : IService
+    {
+        #region IService Members
+
+        public IConfigSource m_config;
+        public IRegistryCore m_registry;
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_config = config;
+            m_registry = registry;
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            MainConsole.Instance.Commands.AddCommand("compile module", 
+                "compile module <gui>", 
+                "Compiles and adds a given addon-module to Aurora, adding the gui parameter opens a file picker in Windows", consoleCommand);
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        private void consoleCommand(string[] commands)
+        {
+            if (commands[2] == "gui")
+            {
+                OpenFileDialog dialog = new OpenFileDialog();
+                dialog.Filter = "Xml Files (*.xml)|*.xml|Dll Files (*.dll)|*.dll";
+                System.Threading.Thread t = new System.Threading.Thread(delegate()
+                {
+                    if (dialog.ShowDialog() == DialogResult.OK)
+                    {
+                        CompileModule(dialog.FileName);
+                    }
+                });
+                t.SetApartmentState(System.Threading.ApartmentState.STA);
+                t.Start();
+            }
+            else
+                CompileModule(commands[2]);
+        }
+
+        public void CompileModule(string fileName)
+        {
+            if (Path.GetExtension(fileName) == ".dll")
+                CopyAndInstallDllFile(fileName, Path.GetFileNameWithoutExtension(fileName) + ".dll");//Install .dll files
+            else
+            {
+                string tmpFile = ReadFileAndCreatePrebuildFile(fileName);
+                BuildCSProj(tmpFile);
+                CreateAndCompileCSProj(fileName);
+            }
+        }
+
+        private static void BuildCSProj(string tmpFile)
+        {
+            Process p = new Process();
+            p.StartInfo = new ProcessStartInfo("Prebuild.exe", "/target vs2008 /targetframework v3_5 /file " + tmpFile);
+            p.Start();
+            p.WaitForExit();
+        }
+
+        private void CreateAndCompileCSProj(string fileName)
+        {
+            string projFile = FindProjFile(Path.GetDirectoryName(fileName));
+            BasicProject project = ProjectReader.Instance.ReadProject(projFile);
+            CsprojCompiler compiler = new CsprojCompiler();
+            compiler.Compile(project);
+            if (project.BuildOutput == "Project built successfully!")
+            {
+                string dllFile = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(projFile) + ".dll");
+                string copiedDllFile = Path.GetFileNameWithoutExtension(projFile) + ".dll";
+                CopyAndInstallDllFile(dllFile, copiedDllFile);
+            }
+            else
+                MainConsole.Instance.Output("Failed to compile the module, exiting! (" + project.BuildOutput + ")", log4net.Core.Level.Warn);
+        }
+
+        private void CopyAndInstallDllFile(string dllFile, string copiedDllFile)
+        {
+            try
+            {
+                File.Copy(dllFile, copiedDllFile);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Output("Failed to copy the module! (" + ex + ")", log4net.Core.Level.Warn);
+                if (MainConsole.Instance.CmdPrompt("Continue?", "yes", new List<string>(new string[2] { "yes", "no" })) == "no")
+                    return;
+            }
+            string basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
+            basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
+            LoadModulesFromDllFile(basePath);
+            MainConsole.Instance.Output("Installed the module successfully!", log4net.Core.Level.Warn);
+        }
+
+        private string ReadFileAndCreatePrebuildFile(string fileName)
+        {
+            string file = System.IO.File.ReadAllText(fileName);
+            file = file.Replace("<?xml version=\"1.0\" ?>", "<?xml version=\"1.0\" ?>" + Environment.NewLine +
+                "<Prebuild version=\"1.7\" xmlns=\"http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd\">" + Environment.NewLine +
+                "  <Solution activeConfig=\"Debug\" name=\"Aurora\" path=\"\" version=\"0.5.0-$Rev$\">" + Environment.NewLine +
+                "<Configuration name=\"Debug\" platform=\"x86\">" + Environment.NewLine +
+                  @"<Options>
+                    <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+                    <OptimizeCode>false</OptimizeCode>
+                    <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+                    <AllowUnsafe>true</AllowUnsafe>
+                    <WarningLevel>4</WarningLevel>
+                    <WarningsAsErrors>false</WarningsAsErrors>
+                    <OutputPath>bin</OutputPath>
+                    <DebugInformation>true</DebugInformation>
+                    <IncrementalBuild>true</IncrementalBuild>
+                    <NoStdLib>false</NoStdLib>
+                  </Options>
+                </Configuration>" + Environment.NewLine +
+                "<Configuration name=\"Debug\" platform=\"AnyCPU\">" + Environment.NewLine +
+      "<Options>" + Environment.NewLine +
+        "<target name=\"net-1.1\" description=\"Sets framework to .NET 1.1\">" + Environment.NewLine +
+            "<property name=\"nant.settings.currentframework\" value=\"net-1.1\" />" + Environment.NewLine +
+        @"</target>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>false</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>true</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>" + Environment.NewLine +
+    "<Configuration name=\"Debug\" platform=\"x64\">" + Environment.NewLine +
+      @"<Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>false</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>true</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>" + Environment.NewLine +
+    "<Configuration name=\"Release\" platform=\"x86\">" + Environment.NewLine +
+      @"<Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>true</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>false</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>" + Environment.NewLine +
+    "<Configuration name=\"Release\" platform=\"AnyCPU\">" + Environment.NewLine +
+      @"<Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>true</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>false</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>" + Environment.NewLine +
+    "<Configuration name=\"Release\" platform=\"x64\">" + Environment.NewLine +
+      @"<Options>
+        <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+        <OptimizeCode>true</OptimizeCode>
+        <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
+        <AllowUnsafe>true</AllowUnsafe>
+        <WarningLevel>4</WarningLevel>
+        <WarningsAsErrors>false</WarningsAsErrors>
+        <SuppressWarnings/>
+        <OutputPath>bin</OutputPath>
+        <DebugInformation>false</DebugInformation>
+        <IncrementalBuild>true</IncrementalBuild>
+        <NoStdLib>false</NoStdLib>
+      </Options>
+    </Configuration>");
+            file = file + "</Solution>" + Environment.NewLine + "</Prebuild>";
+
+            file = FixPath(file);
+            file = file.Replace("../../../bin/", "../bin");
+            file = file.Replace("../../..", "../bin");
+            string tmpFile = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + ".tmp.xml");
+            System.IO.File.WriteAllText(tmpFile, file);
+            return tmpFile;
+        }
+
+        private void LoadModulesFromDllFile(string copiedDllFile)
+        {
+            List<IService> services = AuroraModuleLoader.LoadPlugins<IService>(copiedDllFile);
+            List<IApplicationPlugin> appPlugins = AuroraModuleLoader.LoadPlugins<IApplicationPlugin>(copiedDllFile);
+            List<ISharedRegionModule> sregionModule = AuroraModuleLoader.LoadPlugins<ISharedRegionModule>(copiedDllFile);
+            List<INonSharedRegionModule> nsregionModule = AuroraModuleLoader.LoadPlugins<INonSharedRegionModule>(copiedDllFile);
+            foreach (IService service in services)
+            {
+                service.Initialize(m_config, m_registry);
+                service.Start(m_config, m_registry);
+                service.FinishedStartup();
+            }
+            foreach (IApplicationPlugin plugin in appPlugins)
+            {
+                plugin.Initialize(m_registry.RequestModuleInterface<ISimulationBase>());
+                plugin.PostInitialise();
+                plugin.Start();
+                plugin.PostStart();
+            }
+            IRegionModulesController rmc = m_registry.RequestModuleInterface<IRegionModulesController>();
+            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (ISharedRegionModule srm in sregionModule)
+                {
+                    srm.Initialise(m_config);
+                    srm.PostInitialise();
+                    foreach (IScene scene in manager.Scenes)
+                    {
+                        srm.AddRegion(scene);
+                        srm.RegionLoaded(scene);
+                    }
+                    rmc.AllModules.Add(srm);
+                }
+                foreach (INonSharedRegionModule nsrm in nsregionModule)
+                {
+                    nsrm.Initialise(m_config);
+                    foreach (IScene scene in manager.Scenes)
+                    {
+                        nsrm.AddRegion(scene);
+                        nsrm.RegionLoaded(scene);
+                    }
+                    rmc.AllModules.Add(nsrm);
+                }
+            }
+        }
+
+        private string FindProjFile(string p)
+        {
+            string[] files = Directory.GetFiles(p, "*.csproj");
+            return files[0];
+        }
+
+        private string FixPath(string file)
+        {
+            string f = "";
+            foreach (string line in file.Split('\n'))
+            {
+                string l = line;
+                if (line.StartsWith("<Project frameworkVersion="))
+                {
+                    string[] lines = line.Split(new string[1] { "path=\"" }, StringSplitOptions.RemoveEmptyEntries);
+                    string li = "";
+                    int i = 0;
+                    foreach(string ll in lines[1].Split('"'))
+                    {
+                        if (i > 0)
+                            li += ll + "\"";
+                        i++;
+                    }
+                    l = lines[0] + "path=\"./\" " + li.Remove(li.Length-1);
+                }
+                f += l;
+            }
+            return f;
+        }
+    }
+}
