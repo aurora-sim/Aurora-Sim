@@ -40,12 +40,10 @@ namespace RunTimeCompiler
             codeProvider = new Microsoft.CSharp.CSharpCodeProvider(providerOptions);
             parameters.GenerateExecutable = IsExe(project);
             parameters.OutputAssembly = GetOutputFilename(project);
-            try
-            {
+            if(project.Settings.WarningLevel == "")
+                parameters.WarningLevel = 0;
+            else
                 parameters.WarningLevel = int.Parse(project.Settings.WarningLevel);
-            }
-            catch
-            { parameters.WarningLevel = 0; }
             parameters.TreatWarningsAsErrors = false;
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions = GetCompilerOptions(project);

@@ -2,23 +2,26 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using Aurora.Simulation.Base;
-using Aurora.Framework;
-using OpenSim.Framework;
-using Nini.Config;
-using Microsoft.CSharp;
+using System.Reflection;
 using System.Windows.Forms;
-using RunTimeCompiler;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
+using log4net;
+using Nini.Config;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using RunTimeCompiler;
 
 namespace Aurora.Modules.Installer
 {
     public class ModuleInstaller : IService
     {
         #region IService Members
+
+        private static readonly ILog m_log =
+            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public IConfigSource m_config;
         public IRegistryCore m_registry;
@@ -46,17 +49,21 @@ namespace Aurora.Modules.Installer
         {
             if (commands[2] == "gui")
             {
+                bool finished = false;
                 OpenFileDialog dialog = new OpenFileDialog();
-                dialog.Filter = "Xml Files (*.xml)|*.xml|Dll Files (*.dll)|*.dll";
+                dialog.Filter = "Build Files (*.am)|*.am|Xml Files (*.xml)|*.xml|Dll Files (*.dll)|*.dll";
                 System.Threading.Thread t = new System.Threading.Thread(delegate()
                 {
                     if (dialog.ShowDialog() == DialogResult.OK)
                     {
-                        CompileModule(dialog.FileName);
+                        finished = true;
                     }
                 });
                 t.SetApartmentState(System.Threading.ApartmentState.STA);
                 t.Start();
+                while (!finished)
+                    System.Threading.Thread.Sleep(10);
+                CompileModule(dialog.FileName);
             }
             else
                 CompileModule(commands[2]);
@@ -64,14 +71,48 @@ namespace Aurora.Modules.Installer
 
         public void CompileModule(string fileName)
         {
-            if (Path.GetExtension(fileName) == ".dll")
-                CopyAndInstallDllFile(fileName, Path.GetFileNameWithoutExtension(fileName) + ".dll");//Install .dll files
+            if (Path.GetExtension(fileName) == ".am")
+                ReadAMBuildFile(fileName);
+            else if (Path.GetExtension(fileName) == ".dll")
+                CopyAndInstallDllFile(fileName, Path.GetFileNameWithoutExtension(fileName) + ".dll", null);//Install .dll files
             else
             {
-                string tmpFile = ReadFileAndCreatePrebuildFile(fileName);
+                string tmpFile = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + ".tmp.xml");
+                ReadFileAndCreatePrebuildFile(tmpFile, fileName);
                 BuildCSProj(tmpFile);
-                CreateAndCompileCSProj(fileName);
+                CreateAndCompileCSProj(tmpFile, fileName, null);
             }
+        }
+
+        private void ReadAMBuildFile(string fileName)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeJson(File.ReadAllText(fileName));
+            string prebuildFile = Path.Combine(Path.GetDirectoryName(fileName), map["PrebuildFile"]);
+            string tmpFile = Path.Combine(Path.GetDirectoryName(fileName), map["TmpFile"]);
+
+            ReadFileAndCreatePrebuildFile(tmpFile, prebuildFile);
+            BuildCSProj(tmpFile);
+            CreateAndCompileCSProj(tmpFile, prebuildFile, map);
+            ConfigureModule(Path.GetDirectoryName(fileName), map);
+        }
+
+        private void ConfigureModule(string installationPath, OSDMap map)
+        {
+            string configDir = map["ConfigDirectory"];
+            string configurationFinished = map["ConfigurationFinished"];
+            string configPath = Path.Combine(Environment.CurrentDirectory, configDir);
+            OSDArray config = (OSDArray)map["Configs"];
+            foreach (OSD c in config)
+            {
+                try
+                {
+                    File.Copy(Path.Combine(installationPath, c.AsString()), Path.Combine(configPath, c.AsString()));
+                }
+                catch
+                {
+                }
+            }
+            m_log.Warn(configurationFinished);
         }
 
         private static void BuildCSProj(string tmpFile)
@@ -82,41 +123,51 @@ namespace Aurora.Modules.Installer
             p.WaitForExit();
         }
 
-        private void CreateAndCompileCSProj(string fileName)
+        private void CreateAndCompileCSProj(string tmpFile, string fileName, OSDMap options)
         {
+            File.Delete(tmpFile);
             string projFile = FindProjFile(Path.GetDirectoryName(fileName));
             BasicProject project = ProjectReader.Instance.ReadProject(projFile);
             CsprojCompiler compiler = new CsprojCompiler();
             compiler.Compile(project);
+            string dllFile = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(projFile) + ".dll");
+            string copiedDllFile = Path.GetFileNameWithoutExtension(projFile) + ".dll";
             if (project.BuildOutput == "Project built successfully!")
             {
-                string dllFile = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(projFile) + ".dll");
-                string copiedDllFile = Path.GetFileNameWithoutExtension(projFile) + ".dll";
-                CopyAndInstallDllFile(dllFile, copiedDllFile);
+                if(options != null)
+                    m_log.Warn(options["CompileFinished"]);
+                CopyAndInstallDllFile(dllFile, copiedDllFile, options);
             }
             else
-                MainConsole.Instance.Output("Failed to compile the module, exiting! (" + project.BuildOutput + ")", log4net.Core.Level.Warn);
+                m_log.Warn("Failed to compile the module, exiting! (" + project.BuildOutput + ")");
+            
+            File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), "Aurora.sln"));
+            File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), projFile));
+            File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), projFile + ".user"));
+            File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), copiedDllFile));
         }
 
-        private void CopyAndInstallDllFile(string dllFile, string copiedDllFile)
+        private void CopyAndInstallDllFile(string dllFile, string copiedDllFile, OSDMap options)
         {
             try
             {
                 File.Copy(dllFile, copiedDllFile);
+                if (options != null)
+                    m_log.Warn(options["CopyFinished"]);
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Output("Failed to copy the module! (" + ex + ")", log4net.Core.Level.Warn);
+                m_log.Warn("Failed to copy the module! (" + ex + ")");
                 if (MainConsole.Instance.CmdPrompt("Continue?", "yes", new List<string>(new string[2] { "yes", "no" })) == "no")
                     return;
             }
             string basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
             basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
             LoadModulesFromDllFile(basePath);
-            MainConsole.Instance.Output("Installed the module successfully!", log4net.Core.Level.Warn);
+            m_log.Warn("Installed the module successfully!");
         }
 
-        private string ReadFileAndCreatePrebuildFile(string fileName)
+        private void ReadFileAndCreatePrebuildFile(string tmpFile, string fileName)
         {
             string file = System.IO.File.ReadAllText(fileName);
             file = file.Replace("<?xml version=\"1.0\" ?>", "<?xml version=\"1.0\" ?>" + Environment.NewLine +
@@ -217,9 +268,7 @@ namespace Aurora.Modules.Installer
             file = FixPath(file);
             file = file.Replace("../../../bin/", "../bin");
             file = file.Replace("../../..", "../bin");
-            string tmpFile = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + ".tmp.xml");
             System.IO.File.WriteAllText(tmpFile, file);
-            return tmpFile;
         }
 
         private void LoadModulesFromDllFile(string copiedDllFile)
