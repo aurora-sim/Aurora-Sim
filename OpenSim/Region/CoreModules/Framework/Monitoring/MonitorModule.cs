@@ -170,7 +170,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     //Start the stats heartbeat
                     m_report.AutoReset = false;
                     m_report.Interval = statsUpdatesEveryMS;
-                    m_report.Elapsed += new ElapsedEventHandler(statsHeartBeat);
+                    m_report.Elapsed += statsHeartBeat;
                     m_report.Enabled = true;
                 }
                 else //As we arn't a scene, we add all of the monitors that do not need the scene and run for the entire instance
@@ -404,6 +404,28 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region Stats Heartbeat
 
             private SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
+            private SimStatsPacket.RegionBlock rb = null;
+
+            protected void buildInitialRegionBlock()
+            {
+                rb = new SimStatsPacket.RegionBlock();
+                uint regionFlags = 0;
+
+                try
+                {
+                    if (m_estateModule == null)
+                        m_estateModule = m_currentScene.RequestModuleInterface<IEstateModule>();
+                    regionFlags = m_estateModule != null ? m_estateModule.GetRegionFlags() : (uint)0;
+                }
+                catch (Exception)
+                {
+                    // leave region flags at 0
+                }
+                rb.ObjectCapacity = (uint)m_currentScene.RegionInfo.ObjectCapacity;
+                rb.RegionFlags = regionFlags;
+                rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX / Constants.RegionSize;
+                rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY / Constants.RegionSize;
+            }
 
             /// <summary>
             /// This is called by a timer and makes a SimStats class of the current stats that we have in this simulator.
@@ -416,29 +438,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             {
                 lock(m_report)
                     m_report.Stop ();
-                SimStatsPacket.RegionBlock rb = new SimStatsPacket.RegionBlock();
+                if (rb == null)
+                    buildInitialRegionBlock();
 
                 // Know what's not thread safe in Mono... modifying timers.
                 lock (m_report)
                 {
-                    uint regionFlags = 0;
-
-                    try
-                    {
-                        if (m_estateModule == null)
-                            m_estateModule = m_currentScene.RequestModuleInterface<IEstateModule>();
-                        regionFlags = m_estateModule != null ? m_estateModule.GetRegionFlags() : (uint)0;
-                    }
-                    catch (Exception)
-                    {
-                        // leave region flags at 0
-                    }
-
-                    rb.ObjectCapacity = (uint)m_currentScene.RegionInfo.ObjectCapacity;
-                    rb.RegionFlags = regionFlags;
-                    rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX / Constants.RegionSize;
-                    rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY / Constants.RegionSize;
-
                     ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor(MonitorModuleHelper.SimFrameStats);
                     ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor(MonitorModuleHelper.TimeDilation);
                     ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)GetMonitor(MonitorModuleHelper.TotalFrameTime);
@@ -602,7 +607,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     {
                         if (float.IsInfinity(sb[i].StatValue) ||
                             float.IsNaN(sb[i].StatValue))
-                            sb[i].StatValue = 0;
+                            sb[i].StatValue = 0;//Don't send huge values
                         lastReportedSimStats[i] = sb[i].StatValue;
                     }
 
