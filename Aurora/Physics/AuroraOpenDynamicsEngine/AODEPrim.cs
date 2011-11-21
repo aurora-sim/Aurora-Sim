@@ -2413,18 +2413,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 parent = (AuroraODEPrim)_parent;
 
             // Cleanup of old prim geometry and Bodies
-            if (IsPhysical && Body != IntPtr.Zero)
+            if (chp)
             {
-                if (chp)
-                {
-                    if (parent != null)
-                        parent.ChildDelink (this);
-                }
-                else
-                {
-                    DestroyBody ();
-                }
+                if (parent != null)
+                    parent.DestroyBody();
             }
+            else
+            {
+                DestroyBody();
+            }
+
             if (prim_geom != IntPtr.Zero)
             {
                 try
@@ -2447,15 +2445,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _size.Z = 0.01f;
             // Construction of new prim
 
+
+            
             if (_parent_scene.needsMeshing (_parent_entity))
             {
-                // Don't need to re-enable body..   it's done in SetMesh
                 float meshlod = _parent_scene.meshSculptLOD;
-
-//                if (IsPhysical)
-//                    meshlod = _parent_scene.MeshSculptphysicalLOD;
-
-                IMesh mesh = _parent_scene.mesher.CreateMesh (_parent_entity.Name, _pbs, _size, meshlod, true);
+                IMesh mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size, meshlod, true);
                 // createmesh returns null when it doesn't mesh.
                 CreateGeom (m_targetSpace, mesh);
             }
@@ -2470,21 +2465,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (prim_geom != IntPtr.Zero)
                 {
-                    CalculatePrimMass ();
+                    CalculatePrimMass();
 
-                    if (m_isphysical && !chp)
-                        MakeBody ();
-                    else
-                    {
-                        d.GeomSetPosition (prim_geom, _position.X, _position.Y, _position.Z);
-                        d.Quaternion myrot = new d.Quaternion ();
-                        Quaternion fake = _orientation;
-                        myrot.X = fake.X;
-                        myrot.Y = fake.Y;
-                        myrot.Z = fake.Z;
-                        myrot.W = fake.W;
-                        d.GeomSetQuaternion (prim_geom, ref myrot);
-                    }
+                    d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
+                    d.Quaternion myrot = new d.Quaternion();
+                    Quaternion fake = _orientation;
+                    myrot.X = fake.X;
+                    myrot.Y = fake.Y;
+                    myrot.Z = fake.Z;
+                    myrot.W = fake.W;
+                    d.GeomSetQuaternion(prim_geom, ref myrot);
 
                     _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
                 }
@@ -2492,11 +2482,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             changeSelectedStatus (m_isSelected);
 
-            if (chp && parent != null)
+            if (chp)
             {
-                parent.ChildSetGeom(this);
+                if (parent != null)
+                {
+                    parent.MakeBody();
+                }
             }
-            resetCollisionAccounting();
+            else
+                MakeBody(); ;
         }
 
         public void changeshape (object arg)
