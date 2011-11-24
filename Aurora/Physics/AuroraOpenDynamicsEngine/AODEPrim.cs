@@ -62,6 +62,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     {
         private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
 
+        private struct strVehicleFloatParam
+        {
+            public int param;
+            public float value;
+        }
+        private struct strVehicleVectorParam
+        {
+            public int param;
+            public Vector3 value;
+        }
+        private struct strVehicleQuartParam
+        {
+            public int param;
+            public Quaternion value;
+        }
+        private struct strVehicleBoolParam
+        {
+            public int param;
+            public bool value;
+        }
+
         private Vector3 _position;
         private Vector3 showposition; // a temp hack for now rest of code expects position to be changed imediatly
         // and now we do it delayed, so fake we changed it
@@ -149,9 +170,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_throttleUpdates;
         private int throttleCounter;
 
-        float m_UpdateTimecntr = 0;
-        float m_UpdateFPScntr = 0.05f;
-
         //private int _updatesPerThrottledUpdate;
         public int m_interpenetrationcount;
         public float m_collisionscore;
@@ -208,7 +226,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         internal int m_material = (int)Material.Wood;
 
         public ContactParameter primContactParam = new ContactParameter(0.6f, 0.5f); // wood
-        public ContactParameter vehicleContactParam = new ContactParameter(0, 0.3f);
+        public ContactParameter vehicleContactParam = new ContactParameter(0, 0);
 
         public AuroraODEPrim (ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical)
         {
@@ -251,11 +269,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _triMeshData = IntPtr.Zero;
 
             CalcPrimBodyData();
-
-            m_UpdateTimecntr = 0;
-            m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
-            if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
-                m_UpdateTimecntr = .1f;
 
             AddChange (changes.Add, null);
         }
@@ -419,6 +432,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return;
             }
 
+            if (!m_isphysical) // only physical things get a body
+                return;
+
             if (Body != IntPtr.Zero) // who shouldn't have one already ?
             {
                 d.BodyDestroy (Body);
@@ -426,8 +442,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_log.Warn("[PHYSICS]: MakeBody called having a body");
             }
 
-            if (!m_isphysical) // only physical things get a body
-                return;
 
             d.Mass objdmass = new d.Mass {};
             d.Matrix3 mymat = new d.Matrix3();
@@ -522,12 +536,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_collisionFlags |= (CollisionCategories.Land | CollisionCategories.Wind);
 
             // disconnect from world gravity so we can apply buoyancy
-            if (!testRealGravity)
+//            if (!testRealGravity)
                 d.BodySetGravityMode (Body, false);
 
             d.BodySetAutoDisableFlag (Body, true);
             d.BodySetAutoDisableSteps (Body, body_autodisable_frames);
-//            d.BodySetDamping (Body, .001f, .0002f);
+            d.BodySetDamping (Body, .001f, .0002f);
             m_disabled = false;
 
             d.GeomSetCategoryBits (prim_geom, (int)m_collisionCategories);
@@ -586,16 +600,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (m_vehicle.Type != Vehicle.TYPE_NONE)
                 m_vehicle.Enable (Body, this, _parent_scene);
 
-            _parent_scene.addActivePrim (this);
-
-            /* debug only things
-                        d.Mass mtmp;
-                        d.BodyGetMass(Body, out mtmp);
-                        d.Matrix3 mt = d.GeomGetRotation(prim_geom);
-                        d.Matrix3 mt2 = d.BodyGetRotation(Body);
-                        dvtmp = d.GeomGetPosition(prim_geom);
-                        dbtmp = d.BodyGetPosition(Body);
-            */
+            _parent_scene.addActivePrim (this); 
         }
 
         private void SetInStaticSpace(AuroraODEPrim prm)
@@ -661,12 +666,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         #region Mass Calculation
 
-        private float CalculatePrimMass ()
+        private float CalculatePrimVolume ()
         {
             float volume = _size.X * _size.Y * _size.Z; // default
             float tmp;
 
-            float returnMass = 0;
             float hollowAmount = (float)_pbs.ProfileHollow * 2.0e-5f;
             float hollowVolume = hollowAmount * hollowAmount;
 
@@ -887,8 +891,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
             }
 
-
-
             float taperX1;
             float taperY1;
             float taperX;
@@ -934,21 +936,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             profileBegin = (float)_pbs.ProfileBegin * 2.0e-5f;
             profileEnd = 1.0f - (float)_pbs.ProfileEnd * 2.0e-5f;
             volume *= (profileEnd - profileBegin);
-
-            returnMass = (_parent_entity.Density / 100) * volume;//Divide by 100 as its a bit high for ODE....
-
-            if (returnMass <= 0)
-                returnMass = 0.0001f;//ckrinke: Mass must be greater then zero.
-            //            else if (returnMass > _parent_scene.maximumMassObject)
-            //                returnMass = _parent_scene.maximumMassObject;
-
-            if (returnMass > _parent_scene.maximumMassObject)
-                returnMass = _parent_scene.maximumMassObject;
-
-            primMass = returnMass;
-            _mass = primMass;
-
-            return returnMass;
+            return volume;
         }// end CalculateMass
 
 
@@ -980,7 +968,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             // also its own inertia and mass
             // keep using basic shape mass for now
-            CalculatePrimMass();
+            float volume = CalculatePrimVolume();
+
+            primMass = _parent_entity.Density * volume;//Divide by 100 as its a bit high for ODE....
+
+            if (primMass <= 0)
+                primMass = 0.0001f;//ckrinke: Mass must be greater then zero.
+            //            else if (returnMass > _parent_scene.maximumMassObject)
+            //                returnMass = _parent_scene.maximumMassObject;
+
+            if (primMass > _parent_scene.maximumMassObject)
+                primMass = _parent_scene.maximumMassObject;
+
+            _mass = primMass;
+
             d.MassSetBoxTotal(out primdMass, primMass, primOOBsize.X, primOOBsize.Y, primOOBsize.Z);
 
             d.MassTranslate(ref primdMass,
@@ -992,33 +993,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             primOOBradiusSQ = primOOBsize.LengthSquared();
         }
 
-/*
-        public void calcdMass ()
-        {
-            // very aproximated handling of tortured prims
-            Vector3 s;
-
-            s.X = IntAABB.MaxX - IntAABB.MinX;
-            s.Y = IntAABB.MaxY - IntAABB.MinY;
-            s.Z = IntAABB.MaxZ - IntAABB.MinZ;
-          
-            d.MassSetBoxTotal (out primdMass, primMass, s.X, s.Y, s.Z);
-
-            IntCMOffset.X = (IntAABB.MaxX + IntAABB.MinX) * 0.5f;
-            IntCMOffset.Y = (IntAABB.MaxY + IntAABB.MinY) * 0.5f;
-            IntCMOffset.Z = (IntAABB.MaxZ + IntAABB.MinZ) * 0.5f;
-
-            d.MassTranslate (ref primdMass,
-                                IntCMOffset.X,
-                                IntCMOffset.Y,
-                                IntCMOffset.Z);
-        }
-*/
         #endregion
 
         private static Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr> ();
 
-        public void setMesh (AuroraODEPhysicsScene parent_scene, IMesh mesh)
+        public bool setMesh (AuroraODEPhysicsScene parent_scene, IMesh mesh)
         {
             // This sleeper is there to moderate how long it takes between
             // setting up the mesh and pre-processing it when we get rapid fire mesh requests on a single object
@@ -1048,6 +1027,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             mesh.getVertexListAsPtrToFloatArray (out vertices, out vertexStride, out vertexCount); // Note, that vertices are fixed in unmanaged heap
             mesh.getIndexListAsPtrToIntArray (out indices, out triStride, out indexCount); // Also fixed, needs release after usage
 
+            if (vertexCount == 0 || indexCount == 0)
+                return false;
+
             primOOBoffset = mesh.GetCentroid();
             hasOOBoffsetFromMesh = true;
 
@@ -1070,14 +1052,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (prim_geom == IntPtr.Zero)
                 {
-                    SetGeom (d.CreateTriMesh (m_targetSpace, _triMeshData, parent_scene.triCallback, null, null));
+                    SetGeom (d.CreateTriMesh (m_targetSpace, _triMeshData, null, null, null));
                 }
             }
             catch (AccessViolationException)
             {
                 m_log.Error ("[PHYSICS]: MESH LOCKED");
-                return;
+                return false;
             }
+
+            return true;
         }
 
         private void changeAngularLock (Object arg)
@@ -1383,7 +1367,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!m_isSelected)
             {
                 _zeroFlag = false;
-                m_previousForceIsSame = 0;
             }
         }//end changeSelectedStatus
 
@@ -1391,12 +1374,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             hasOOBoffsetFromMesh = false;
 
+            bool havemesh = false;
             //Console.WriteLine("CreateGeom:");
             if (_mesh != null)
             {
-                setMesh (_parent_scene, _mesh); // this will give a mesh to non trivial known prims
+                havemesh = setMesh(_parent_scene, _mesh); // this will give a mesh to non trivial known prims
             }
-            else
+
+            if (!havemesh)
             {
                 if (_pbs.ProfileShape == ProfileShape.HalfCircle && _pbs.PathCurve == (byte)Extrusion.Curve1
                     && _size.X == _size.Y && _size.Y == _size.Z)
@@ -1461,7 +1446,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             CalcPrimBodyData();
         }
 
-        public void changeadd ()
+        public void changeadd()
         {
             // all prims are now created non physical
             IntPtr targetspace = _parent_scene.calculateSpaceForGeom(_position);
@@ -1469,47 +1454,35 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (_mesh == null)
             {
-                if (_parent_scene.needsMeshing (_parent_entity))
+                if (_parent_scene.needsMeshing(_parent_entity))
                 {
                     // Don't need to re-enable body..   it's done in SetMesh
-                    _mesh = _parent_scene.mesher.CreateMesh (_parent_entity.Name, _pbs, _size, _parent_scene.meshSculptLOD, IsPhysical);
+                    _mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size, _parent_scene.meshSculptLOD, true);
                     // createmesh returns null when it's a shape that isn't a cube.
                     // m_log.Debug(m_localID);
                 }
             }
 
 
-                //Console.WriteLine("changeadd 1");
-                CreateGeom (m_targetSpace, _mesh);
+            //Console.WriteLine("changeadd 1");
+            CreateGeom(m_targetSpace, _mesh);
+            CalcPrimBodyData();
 
-                if (prim_geom != IntPtr.Zero)
-                {
-                    CalculatePrimMass();
-
-                    d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-                    d.Quaternion myrot = new d.Quaternion();
-                    Quaternion fake = _orientation;
-                    myrot.X = fake.X;
-                    myrot.Y = fake.Y;
-                    myrot.Z = fake.Z;
-                    myrot.W = fake.W;
-                    d.GeomSetQuaternion(prim_geom, ref myrot);
-                    //                    _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
-                }
-/*
-            if (m_isphysical && Body == IntPtr.Zero)
+            if (prim_geom != IntPtr.Zero)
             {
-                if (_pbs.SculptEntry && _parent_scene.meshSculptedPrim)
-                {
-                    changeshape(_pbs);
-                }
-                else
-                {
-                    MakeBody();
-                }
+
+                d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
+                d.Quaternion myrot = new d.Quaternion();
+                Quaternion fake = _orientation;
+                myrot.X = fake.X;
+                myrot.Y = fake.Y;
+                myrot.Z = fake.Z;
+                myrot.W = fake.W;
+                d.GeomSetQuaternion(prim_geom, ref myrot);
+                //                    _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
             }
-*/
-            changeSelectedStatus (m_isSelected);
+
+            changeSelectedStatus(m_isSelected);
         }
 
         public void changePosition(Vector3 newpos)
@@ -1677,17 +1650,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             resetCollisionAccounting();
         }
 */
-        private Vector3 m_PreviousForce = Vector3.Zero;
-        private const int previousForceSameMax = 100;
-        internal int m_previousForceIsSame = 0;
+
         public void Move (float timestep, ref List<AuroraODEPrim> defects)
         {
-            float fx = 0;
-            float fy = 0;
-            float fz = 0;
-            bool forceUpdate = false;
-            if (m_isphysical && (Body != IntPtr.Zero) && !m_isSelected && !childPrim && !m_blockPhysicalReconstruction)        // KF: Only move root prims.
+            if (m_isphysical && Body != IntPtr.Zero && !m_isSelected && !childPrim && !m_blockPhysicalReconstruction)        // KF: Only move root prims.
             {
+                float fx = 0;
+                float fy = 0;
+                float fz = 0;
+
                 if (m_vehicle.Type != Vehicle.TYPE_NONE)
                 {
                     // 'VEHICLES' are dealt with in ODEDynamics.cs
@@ -1701,6 +1672,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     else
                     {
+                        /*
                         d.Vector3 vel = d.BodyGetLinearVel (Body);
                         m_lastVelocity = _velocity;
                         _velocity = new Vector3 ((float)vel.X, (float)vel.Y, (float)vel.Z);
@@ -1708,17 +1680,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_lastposition = _position;
                         _position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
                         d.Quaternion ori;
-                        /*foreach (AuroraODEPrim child in childrenPrim)
-                        {
-                            pos = d.GeomGetPosition (child.prim_geom);
-                            child.m_lastposition = child._position;
-                            child._position = new Vector3 ((float)pos.X, (float)pos.Y, (float)pos.Z);
-                            d.GeomCopyQuaternion (child.prim_geom, out ori);
-                            child._orientation.X = ori.X;
-                            child._orientation.Y = ori.Y;
-                            child._orientation.Z = ori.Z;
-                            child._orientation.W = ori.W;
-                        }*/
                         _zeroFlag = false;
 
                         _acceleration = ((_velocity - m_lastVelocity) / timestep);
@@ -1732,28 +1693,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_rotationalVelocity.X = (float)rotvel.X;
                         m_rotationalVelocity.Y = (float)rotvel.Y;
                         m_rotationalVelocity.Z = (float)rotvel.Z;
+                         */
                     }
                 }
                 else
                 {
+
                     float m_mass = _mass;
                     d.Vector3 dcpos = d.BodyGetPosition (Body);
                     d.Vector3 vel = d.BodyGetLinearVel (Body);
 
-                    //KF: m_buoyancy should be set by llSetBuoyancy() for non-vehicle.
-                    // would come from SceneObjectPart.cs, public void SetBuoyancy(float fvalue) , PhysActor.Buoyancy = fvalue; ??
-                    // m_buoyancy: (unlimited value) <0=Falls fast; 0=1g; 1=0g; >1 = floats up 
-                    // gravityz multiplier = 1 - m_buoyancy
                     float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     Vector3 gravForce = new Vector3 ();
                     _parent_scene.CalculateGravity(m_mass, dcpos, true, gravModifier, ref gravForce);
 
+/*
                     Vector3 windForce = new Vector3 ();
                     _parent_scene.AddWindForce(m_mass, dcpos, ref windForce);
                     fx += windForce.X;
                     fy += windForce.Y;
                     fz += windForce.Z;
-
+*/
                     /*#region PID
                     if (_parent_entity.PIDActive)
                     {
@@ -1940,36 +1900,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     fx += m_pushForce.X * 10;
                     fy += m_pushForce.Y * 10;
                     fz += m_pushForce.Z * 10;
-
-                    //This is for llSetForce and friends, we don't remove it... even if it seems weird
-                    //m_force = Vector3.Zero;
-
-                    if (m_pushForce != Vector3.Zero)
-                    {
-                        forceUpdate = true;
-                        _zeroFlag = false;
-                        m_previousForceIsSame = 0;
-                    }
-
-                    //However, this is for things that only happen once, remove it
                     m_pushForce = Vector3.Zero;
 
                     #region drag and forces accumulators
 
-                    Vector3 newtorque;
-                    newtorque.X = m_angularforceacc.X;
-                    newtorque.Y = m_angularforceacc.Y;
-                    newtorque.Z = m_angularforceacc.Z;
-                    m_angularforceacc = Vector3.Zero;
 
                     fx += m_forceacc.X;
                     fy += m_forceacc.Y;
                     fz += m_forceacc.Z;
                     m_forceacc = Vector3.Zero;
 
+                    Vector3 newtorque;
+                    newtorque.X = m_angularforceacc.X;
+                    newtorque.Y = m_angularforceacc.Y;
+                    newtorque.Z = m_angularforceacc.Z;
+                    m_angularforceacc = Vector3.Zero;
                     #endregion
 
                     // 35n times the mass per second applied maximum.
+/*
                     float nmax = 35f * m_mass;
                     float nmin = -35f * m_mass;
 
@@ -1981,7 +1930,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         fy = nmax;
                     if (fy < nmin)
                         fy = nmin;
-
+*/
                     if (Math.Abs (fx) < 0.01)
                         fx = 0;
                     if (Math.Abs (fy) < 0.01)
@@ -1998,52 +1947,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
                         fz += gravForce.Z * -1 * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
-                        if (Math.Abs (fz) < 1)
-                            fz = 0.05f;
-                        forceUpdate = true;
-                        if(m_previousForceIsSame != 0)
-                            m_previousForceIsSame = 0;
                     }*/
 
-                    /*if (!forceUpdate && m_lastposition != Vector3.Zero && ((Math.Abs (m_lastposition.X - _position.X) > 0.1)
-                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.1)
-                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.1))
-                        //|| (Math.Abs (m_lastorientation.X - _orientation.X) > 0.1)
-                        //|| (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.1)
-                        //|| (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.1)
-                        )
-                    {
-                        forceUpdate = true;
-                        m_previousForceIsSame = 0;
-                    }*/
 
                     //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
-                    if (fx != 0 || fy != 0 || fz != 0 || newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
-                    {
-                        if (Body != IntPtr.Zero)
-                        {
-                            //ODE autodisables not moving prims, accept it and reenable when we need to
-                            if (!d.BodyIsEnabled (Body))
+
+                    if (!d.BodyIsEnabled (Body))
                                 d.BodyEnable (Body);
-                            if (fx != 0 || fy != 0 || fz != 0)
-                            {
-                                if (Math.Abs(m_PreviousForce.X - fx) > 0.1f ||
-                                    Math.Abs(m_PreviousForce.Y - fy) > 0.1f ||
-                                    Math.Abs(m_PreviousForce.Z - fz) > 0.1f ||
-                                    m_isSelected)
-                                    m_previousForceIsSame = 0;
-                                else if (!m_isSelected)
-                                    m_previousForceIsSame++;
 
-                                if (forceUpdate || m_previousForceIsSame < previousForceSameMax)
-                                    m_PreviousForce = new Vector3 (fx, fy, fz);
-                                d.BodyAddForce (Body, fx, fy, fz);
-                            }
+                    if (fx != 0 || fy != 0 || fz != 0)
+                        d.BodyAddForce (Body, fx, fy, fz);
 
-                            if(newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
-                                d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
-                        }
-                    }
+                    if(newtorque.X != 0 || newtorque.Y != 0 || newtorque.Z != 0)
+                        d.BodyAddTorque (Body, newtorque.X, newtorque.Y, newtorque.Z);
                 }
             }
         }
@@ -2059,10 +1975,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     d.Vector3 cpos = d.BodyGetPosition (Body); // object position ( center of mass)
                     d.Vector3 lpos = d.GeomGetPosition (prim_geom); // root position that is seem by rest of simulator
-                    d.Quaternion ori;
-                    d.GeomCopyQuaternion (prim_geom, out ori);
-                    d.Vector3 vel = d.BodyGetLinearVel (Body);
-                    d.Vector3 rotvel = d.BodyGetAngularVel (Body);
 
                     #region Crossing failures
                     
@@ -2163,133 +2075,88 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     #endregion
 
-                    if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                    {
-                        _position.X = (float)lpos.X;
-                        _position.Y = (float)lpos.Y;
-                        _position.Z = (float)lpos.Z;
-                    }
-                    _orientation.X = (float)ori.X;
-                    _orientation.Y = (float)ori.Y;
-                    _orientation.Z = (float)ori.Z;
-                    _orientation.W = (float)ori.W;
+                    d.Quaternion ori;
+                    d.GeomCopyQuaternion(prim_geom, out ori);
 
-                    if (!_zeroFlag &&
-                        (((Math.Abs (vel.X) < 0.02)
-                        && (Math.Abs (vel.Y) < 0.02)
-                        && (Math.Abs (vel.Z) < 0.02)
-                        && (Math.Abs (rotvel.X) < 0.001)   
-                                                            //This makes stacks of prims not stop collding :/
-                                                            // Ubit then fix that elsewhere
-                                                            // without this prims dont rotate if vel is small
-                        && (Math.Abs (rotvel.Y) < 0.001)
-                        && (Math.Abs (rotvel.Z) < 0.001))
-                        && m_previousForceIsSame > previousForceSameMax
-                        && m_vehicle.Type == Vehicle.TYPE_NONE)
+                    if ((Math.Abs(m_lastposition.X - lpos.X) < 0.01)
+                        && (Math.Abs(m_lastposition.Y - lpos.Y) < 0.01)
+                        && (Math.Abs(m_lastposition.Z - lpos.Z) < 0.01)
+                        && (Math.Abs(m_lastorientation.X - ori.X) < 0.001)
+                        && (Math.Abs(m_lastorientation.Y - ori.Y) < 0.001)
+                        && (Math.Abs(m_lastorientation.Z - ori.Z) < 0.001)
                         )
                     {
                         _zeroFlag = true;
                     }
-                    else if(!_zeroFlag)
+                    else 
                     {
                         _zeroFlag = false;
                         m_lastUpdateSent = 2;
                     }
 
                     bool needupdate = false;
-                    bool forceupdate = false;
+                  
 
                     if (_zeroFlag)
                     {
-                        m_lastposition = _position;
-                        m_lastorientation = _orientation;
-
-                        //Keep the velocity, it won't be sent anywhere outside of the physics engine because of the _zeroFlag checks
-                        //And this allows us to keep the _zeroFlag check a bit more stable
-                        m_lastVelocity = _velocity; // for accelaration
-                        _velocity.X = (float)vel.X;
-                        _velocity.Y = (float)vel.Y;
-                        _velocity.Z = (float)vel.Z;
-
-                        _acceleration.X = 0;
-                        _acceleration.Y = 0;
-                        _acceleration.Z = 0;
-
-                        m_rotationalVelocity.X = 0;
-                        m_rotationalVelocity.Y = 0;
-                        m_rotationalVelocity.Z = 0;
-
-                        // better let ode keep dealing with small values --Ubit
-                        //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
-                        d.BodySetLinearVel(Body, 0, 0, 0);
-                        d.BodySetAngularVel(Body, 0, 0, 0);
-                        d.BodySetForce(Body, 0, 0, 0);
-                        //Physical prims fall through things if this is set when things are moving, so only do it if we are almost stopped
-                        /*if ((Math.Abs (vel.X) < 0.01)
-                            && (Math.Abs (vel.Y) < 0.01)
-                            && (Math.Abs (vel.Z) < 0.01))
-                        {
-                            if (d.BodyIsEnabled (Body))
-                                d.BodyDisable (Body);
-                        }*/
-
                         if (m_lastUpdateSent > 0)
                         {
-                            if (throttleCounter > 5 || m_lastUpdateSent >= 3)
-                            {
-                                needupdate = true;
-                                forceupdate = true;
-                                m_lastUpdateSent--;
-                                throttleCounter = 0;
-                            }
-                            else
-                                throttleCounter++;
+                            //Keep the velocity, it won't be sent anywhere outside of the physics engine because of the _zeroFlag checks
+                            //And this allows us to keep the _zeroFlag check a bit more stable
+
+                            _velocity.X = 0.0f;
+                            _velocity.Y = 0.0f;
+                            _velocity.Z = 0.0f;
+
+                            _acceleration.X = 0;
+                            _acceleration.Y = 0;
+                            _acceleration.Z = 0;
+
+                            m_rotationalVelocity.X = 0;
+                            m_rotationalVelocity.Y = 0;
+                            m_rotationalVelocity.Z = 0;
+
+                            // better let ode keep dealing with small values --Ubit
+                            //ODE doesn't deal with them though, it just keeps adding them, never stopping the movement of the prim..
+                            // its supposed to!
+/*
+                            d.BodySetLinearVel(Body, 0, 0, 0);
+                            d.BodySetAngularVel(Body, 0, 0, 0);
+                            d.BodySetForce(Body, 0, 0, 0);
+*/
+                            needupdate = true;
+                            m_lastUpdateSent--;
                         }
                     }
                     else
                     {
-                        if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                        {
-                            m_lastVelocity = _velocity; // for accelaration
-                            _velocity.X = (float)vel.X;
-                            _velocity.Y = (float)vel.Y;
-                            _velocity.Z = (float)vel.Z;
+                        _position.X = (float)lpos.X;
+                        _position.Y = (float)lpos.Y;
+                        _position.Z = (float)lpos.Z;
 
-                            _acceleration = ((_velocity - m_lastVelocity) / timestep);
-                            //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
+                        _orientation.X = (float)ori.X;
+                        _orientation.Y = (float)ori.Y;
+                        _orientation.Z = (float)ori.Z;
+                        _orientation.W = (float)ori.W;
 
-                            m_rotationalVelocity.X = (float)rotvel.X;
-                            m_rotationalVelocity.Y = (float)rotvel.Y;
-                            m_rotationalVelocity.Z = (float)rotvel.Z;
-                        }
+                        d.Vector3 vel = d.BodyGetLinearVel(Body);
+                        d.Vector3 rotvel = d.BodyGetAngularVel(Body);
+
+                        _velocity.X = (float)vel.X;
+                        _velocity.Y = (float)vel.Y;
+                        _velocity.Z = (float)vel.Z;
+
+                        _acceleration = ((_velocity - m_lastVelocity) / timestep);
+    
+                        //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
+
+                        m_rotationalVelocity.X = (float)rotvel.X;
+                        m_rotationalVelocity.Y = (float)rotvel.Y;
+                        m_rotationalVelocity.Z = (float)rotvel.Z;
+                        needupdate = true;
                     }
 
-                    // slow down updates
-                    m_UpdateTimecntr += timestep;
-                    if (!forceupdate && m_UpdateTimecntr < m_UpdateFPScntr)
-                        return;
-                    m_UpdateTimecntr = 0;
-
-                    if (!_zeroFlag && !needupdate && (
-                         (Math.Abs (m_lastposition.X - _position.X) > 0.01)
-                        || (Math.Abs (m_lastposition.Y - _position.Y) > 0.01) //Ubit: let prims move and rotate
-                        || (Math.Abs (m_lastposition.Z - _position.Z) > 0.01)
-                        || (Math.Abs (m_lastorientation.X - _orientation.X) > 0.001)
-                        || (Math.Abs (m_lastorientation.Y - _orientation.Y) > 0.001)
-                        || (Math.Abs (m_lastorientation.Z - _orientation.Z) > 0.001)
-                        || (Math.Abs (m_lastVelocity.X - _velocity.X) > 0.01)
-                        || (Math.Abs (m_lastVelocity.Y - _velocity.Y) > 0.01)
-                        || (Math.Abs (m_lastVelocity.Z - _velocity.Z) > 0.01)
-                        ))
-                    {
-                        //Limit it to 0.5 so that we don't get the throttle completely messed up later
-                        float td = _parent_scene.TimeDilation > 0.5f ? _parent_scene.TimeDilation : 0.5f;
-                        //if (!m_throttleUpdates || throttleCounter > (_parent_scene.geomUpdatesPerThrottledUpdate * td))
-                            needupdate = true;
-                        //else
-                        //    throttleCounter += 1;
-                    }
-
+                    m_lastVelocity = _velocity; // for accelaration
 
                     if (needupdate)
                     {
@@ -2465,25 +2332,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 CreateGeom (m_targetSpace, null);
             }
 
-//            lock (_parent_scene.OdeLock)
+            CalcPrimBodyData();
+
+            if (prim_geom != IntPtr.Zero)
             {
-                if (prim_geom != IntPtr.Zero)
-                {
-                    CalculatePrimMass();
+                d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
+                d.Quaternion myrot = new d.Quaternion();
+                Quaternion fake = _orientation;
+                myrot.X = fake.X;
+                myrot.Y = fake.Y;
+                myrot.Z = fake.Z;
+                myrot.W = fake.W;
+                d.GeomSetQuaternion(prim_geom, ref myrot);
 
-                    d.GeomSetPosition(prim_geom, _position.X, _position.Y, _position.Z);
-                    d.Quaternion myrot = new d.Quaternion();
-                    Quaternion fake = _orientation;
-                    myrot.X = fake.X;
-                    myrot.Y = fake.Y;
-                    myrot.Z = fake.Z;
-                    myrot.W = fake.W;
-                    d.GeomSetQuaternion(prim_geom, ref myrot);
-
-                    _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
-                }
+                _parent_scene.actor_name_map[prim_geom] = (PhysicsActor)this;
             }
-
+            
             changeSelectedStatus (m_isSelected);
 
             if (chp)
@@ -2728,36 +2592,45 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             set
             {
-                if (m_vehicle.Type == Vehicle.TYPE_NONE)
-                    m_vehicle.Enable (Body, this, _parent_scene);
-
-                m_vehicle.ProcessTypeChange (this, (Vehicle)value);
+                AddChange(changes.VehicleType, value);
             }
         }
 
         public override void VehicleFloatParam (int param, float value)
         {
-            m_vehicle.ProcessFloatVehicleParam ((Vehicle)param, value);
+            strVehicleFloatParam strf = new strVehicleFloatParam();
+            strf.param = param;
+            strf.value = value;
+            AddChange(changes.VehicleFloatParam, strf);
         }
 
         public override void VehicleVectorParam (int param, Vector3 value)
         {
-            m_vehicle.ProcessVectorVehicleParam ((Vehicle)param, value);
+            strVehicleVectorParam strv = new strVehicleVectorParam();
+            strv.param = param;
+            strv.value = value;
+            AddChange(changes.VehicleVectorParam, strv);
         }
 
-        public override void VehicleRotationParam (int param, Quaternion rotation)
+        public override void VehicleRotationParam(int param, Quaternion rotation)
         {
-            m_vehicle.ProcessRotationVehicleParam ((Vehicle)param, rotation);
+            strVehicleQuartParam strq = new strVehicleQuartParam();
+            strq.param = param;
+            strq.value = rotation;
+            AddChange(changes.VehicleRotationParam, strq);
         }
 
         public override void VehicleFlags (int param, bool remove)
         {
-            m_vehicle.ProcessVehicleFlags (param, remove);
+            strVehicleBoolParam strb = new strVehicleBoolParam();
+            strb.param = param;
+            strb.value = remove;
+            AddChange(changes.VehicleFlags, strb);
         }
 
-        public override void SetCameraPos (Quaternion CameraRotation)
+        public override void SetCameraPos(Quaternion CameraRotation)
         {
-            m_vehicle.ProcessSetCameraPos (CameraRotation);
+            AddChange(changes.VehicleSetCameraPos, CameraRotation);
         }
 
         public override Vector3 CenterOfMass
@@ -3247,6 +3120,40 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
         }
 
+        private void changeVehicleType(int value)
+        {
+            if (m_vehicle.Type == Vehicle.TYPE_NONE)
+                m_vehicle.Enable(Body, this, _parent_scene);
+
+            m_vehicle.ProcessTypeChange(this, (Vehicle)value, _parent_scene.ODE_STEPSIZE);
+        }
+
+        private void changeVehicleFloatParam(int param, float value)
+        {
+            m_vehicle.ProcessFloatVehicleParam((Vehicle)param, value, _parent_scene.ODE_STEPSIZE);
+        }
+
+        private void changeVehicleVectorParam(int param, Vector3 value)
+        {
+            m_vehicle.ProcessVectorVehicleParam((Vehicle)param, value, _parent_scene.ODE_STEPSIZE);
+        }
+
+        private void changeVehicleRotationParam(int param, Quaternion rotation)
+        {
+            m_vehicle.ProcessRotationVehicleParam((Vehicle)param, rotation);
+        }
+
+        private void changeVehicleFlags(int param, bool remove)
+        {
+            m_vehicle.ProcessVehicleFlags(param, remove);
+        }
+
+        private void changeSetCameraPos(Quaternion CameraRotation)
+        {
+            m_vehicle.ProcessSetCameraPos(CameraRotation);
+        }
+
+
         public bool DoAChange (changes what, object arg)
         {
             if (m_frozen && what != changes.Add && what != changes.Remove)
@@ -3378,6 +3285,34 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         foreach(AuroraODEPrim prm in childrenPrim)
                             prm.BlockPhysicalReconstruction=(bool)arg;
                     }
+                    break;
+
+                case changes.VehicleType:
+                    changeVehicleType((int) arg);
+                    break;
+
+                case changes.VehicleFloatParam:
+                    strVehicleFloatParam strf =(strVehicleFloatParam) arg;
+                    changeVehicleFloatParam(strf.param, strf.value);
+                    break;
+
+                case changes.VehicleVectorParam:
+                    strVehicleVectorParam strv =(strVehicleVectorParam) arg;
+                    changeVehicleVectorParam(strv.param, strv.value);
+                    break;
+
+                case changes.VehicleRotationParam:
+                    strVehicleQuartParam strq =(strVehicleQuartParam) arg;
+                    changeVehicleRotationParam(strq.param, strq.value);
+                    break;
+
+                case changes.VehicleFlags:
+                    strVehicleBoolParam strb =(strVehicleBoolParam) arg;
+                    changeVehicleFlags(strb.param, strb.value);
+                    break;
+
+                case changes.VehicleSetCameraPos:
+                    changeSetCameraPos((Quaternion) arg);
                     break;
 
                 case changes.Null:
