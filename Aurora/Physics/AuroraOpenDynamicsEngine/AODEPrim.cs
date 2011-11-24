@@ -970,7 +970,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // keep using basic shape mass for now
             float volume = CalculatePrimVolume();
 
-            primMass = _parent_entity.Density * volume;//Divide by 100 as its a bit high for ODE....
+            primMass = _parent_entity.Density * volume * 0.01f;//Divide by 100 as its a bit high for ODE....
 
             if (primMass <= 0)
                 primMass = 0.0001f;//ckrinke: Mass must be greater then zero.
