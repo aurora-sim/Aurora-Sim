@@ -35,6 +35,7 @@ namespace Aurora.Configuration
 {
     public class Configure
     {
+        private static string dbSource = "localhost";
         private static string dbPasswd = "aurora";
         private static string dbSchema = "aurora";
         private static string dbUser = "aurora";
@@ -523,7 +524,7 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraMySql()
         {
             CheckAuroraConfigMySql();
-            string str = string.Format("ConnectionString = \"Data Source=localhost;Database={0};User ID={1};Password={2};\"", dbSchema, dbUser, dbPasswd);
+            string str = string.Format("ConnectionString = \"Data Source=localhost;Database={0};User ID={1};Password={2};\"", dbSource, dbSchema, dbUser, dbPasswd);
             try
             {
                 using (TextReader reader = new StreamReader("Configuration/Data/MySql.ini.example"))
@@ -536,6 +537,10 @@ namespace Aurora.Configuration
                             if (str2.Contains("Database=opensim;User ID=opensim;Password=***;"))
                             {
                                 str2 = str2.Replace("Database=opensim;User ID=opensim;Password=***;", "Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";");
+                            }
+                            if (str2.Contains("Data Source=localhost"))
+                            {
+                                str2 = str2.Replace("Data Source=localhost", "Data Source=" + dbSource);
                             }
 
                             writer.WriteLine(str2);
@@ -556,7 +561,7 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraServerMySQL()
         {
             CheckAuroraServerMySQL();
-            string str = string.Format("ConnectionString = \"Data Source=localhost;Database={0};User ID={1};Password={2};\"", dbSchema, dbUser, dbPasswd);
+            string str = string.Format("ConnectionString = \"Data Source=localhost;Database={0};User ID={1};Password={2};\"", dbSource, dbSchema, dbUser, dbPasswd);
             try
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
@@ -569,6 +574,10 @@ namespace Aurora.Configuration
                             if (str2.Contains("Database=opensim;User ID=opensim;Password=***;"))
                             {
                                 str2 = str2.Replace("Database=opensim;User ID=opensim;Password=***;", "Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";");
+                            }
+                            if (str2.Contains("Data Source=localhost"))
+                            {
+                                str2 = str2.Replace("Data Source=localhost", "Data Source=" + dbSource);
                             }
 
                             writer.WriteLine(str2);
@@ -829,6 +838,15 @@ namespace Aurora.Configuration
             if (str != string.Empty)
             {
                 dbSchema = str;
+            }
+            Console.ResetColor();
+            Console.Write("MySql database IP: [localhost]");
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            str = Console.ReadLine();
+            if (str != string.Empty)
+            {
+                dbSource = str;
             }
             Console.ResetColor();
             Console.Write("MySql database user account: [aurora]");
