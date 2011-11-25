@@ -594,7 +594,7 @@ namespace Aurora.Configuration
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/Login.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Login.ini.ini"))
+                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Login.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -635,7 +635,7 @@ namespace Aurora.Configuration
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/GridInfoService.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/GridInfoService.ini.ini"))
+                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/GridInfoService.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
