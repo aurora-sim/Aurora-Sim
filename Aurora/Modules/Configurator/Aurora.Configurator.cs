@@ -30,6 +30,7 @@
     using System.Net;
     using System.Text;
     using System.Diagnostics;
+    using Aurora.Framework;
 
 namespace Aurora.Configuration
 {
@@ -39,7 +40,7 @@ namespace Aurora.Configuration
         private static string dbPasswd = "aurora";
         private static string dbSchema = "aurora";
         private static string dbUser = "aurora";
-        private static string ipAddress = "127.0.0.1";
+        private static string ipAddress = Aurora.Framework.Utilities.GetExternalIp();
         private static bool auroraReconfig = false;
         private static string platform = "1";
         private static string mode = "1";
@@ -917,13 +918,13 @@ namespace Aurora.Configuration
                 dbPasswd = Console.ReadLine();
             }
             Console.ResetColor();
-            Console.Write("Your external domain name (preferred) or IP address: ");
+            Console.Write("Your external domain name (preferred) or IP address: [" +Aurora.Framework.Utilities.GetExternalIp()+"]");
             Console.ForegroundColor = ConsoleColor.Green;
             
             ipAddress = Console.ReadLine();
             if (ipAddress == string.Empty)
             {
-                ipAddress = "127.0.0.1";
+                ipAddress = Aurora.Framework.Utilities.GetExternalIp();
             }
             Console.ResetColor();
             Console.Write("The name you will use for your Welcome Land: ");
