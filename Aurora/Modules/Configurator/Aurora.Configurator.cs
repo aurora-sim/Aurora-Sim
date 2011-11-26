@@ -43,6 +43,7 @@ namespace Aurora.Configuration
         private static bool auroraReconfig = false;
         private static string platform = "1";
         private static string mode = "1";
+        private static string dbregion = "1";
         private static string worldName = "Aurora-Sim";
         private static string regionFlag = "Aurora";
 
@@ -335,11 +336,11 @@ namespace Aurora.Configuration
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
                         {
-                            if (str2.Contains("Include-SQLite = Configuration/Data/SQLite.ini"))
+                            if (str2.Contains("Include-SQLite = Configuration/Data/SQLite.ini") && dbregion.Equals("1"))
                             {
                                 str2 = str2.Replace("Include-SQLite = Configuration/Data/SQLite.ini", ";Include-SQLite = Configuration/Data/SQLite.ini");
                             }
-                            if (str2.Contains(";Include-MySQL = Configuration/Data/MySQL.ini"))
+                            if (str2.Contains(";Include-MySQL = Configuration/Data/MySQL.ini") && dbregion.Equals("1"))
                             {
                                 str2 = str2.Replace(";Include-MySQL = Configuration/Data/MySQL.ini", "Include-MySQL = Configuration/Data/MySQL.ini");
                             }
@@ -818,6 +819,19 @@ namespace Aurora.Configuration
             }
             mode = mode.Trim();
             Console.ResetColor();
+            Console.Write("Which database do you want to use for the region ? \n(this will not affect Aurora.Server)");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\n[1] MySQL \n[2] SQLite");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("\nChoose 1 or 2 [1]: ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            dbregion = Console.ReadLine();
+            if (dbregion == string.Empty)
+            {
+                dbregion = "1";
+            }
+            dbregion = dbregion.Trim();
+            Console.ResetColor();
             Console.Write("Name of your Aurora-Sim: ");
             Console.ForegroundColor = ConsoleColor.Green;
             
@@ -831,7 +845,9 @@ namespace Aurora.Configuration
                 worldName = worldName.Trim();
             }
             Console.ResetColor();
-            Console.Write("MySql database name: [aurora]");
+            if (dbregion.Equals("1"))
+            {
+            Console.Write("MySql database name for your region: [aurora]");
             Console.ForegroundColor = ConsoleColor.Green;
             
             string str = Console.ReadLine();
@@ -839,6 +855,7 @@ namespace Aurora.Configuration
             {
                 dbSchema = str;
             }
+            
             Console.ResetColor();
             Console.Write("MySql database IP: [localhost]");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -862,6 +879,43 @@ namespace Aurora.Configuration
             Console.ForegroundColor = ConsoleColor.Green;
             
             dbPasswd = Console.ReadLine();
+            }
+            if (mode.Equals("2"))
+            {
+                Console.ResetColor();
+                Console.Write("MySql database name for Aurora.Server: [aurora]");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                string str = Console.ReadLine();
+                if (str != string.Empty)
+                {
+                    dbSchema = str;
+                }
+
+                Console.ResetColor();
+                Console.Write("MySql database IP: [localhost]");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                str = Console.ReadLine();
+                if (str != string.Empty)
+                {
+                    dbSource = str;
+                }
+                Console.ResetColor();
+                Console.Write("MySql database user account: [aurora]");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                str = Console.ReadLine();
+                if (str != string.Empty)
+                {
+                    dbUser = str;
+                }
+                Console.ResetColor();
+                Console.Write("MySql database password for that account: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                dbPasswd = Console.ReadLine();
+            }
             Console.ResetColor();
             Console.Write("Your external domain name (preferred) or IP address: ");
             Console.ForegroundColor = ConsoleColor.Green;
