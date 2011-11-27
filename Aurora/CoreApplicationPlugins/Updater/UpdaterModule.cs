@@ -57,7 +57,7 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!updateConfig.GetBoolean("Enabled", false))
                     return;
                 
-                m_log.Info("[AURORAUPDATOR]: Checking for updates...");
+                m_log.Info("[AuroraUpdator]: Checking for updates...");
                 string CurrentVersion = OpenSim.Framework.VersionInfo.VERSION_NUMBER;
                 string LastestVersionToBlock = updateConfig.GetString ("LatestRelease", OpenSim.Framework.VersionInfo.VERSION_NUMBER);
 

@@ -654,7 +654,7 @@ namespace OpenSim.Services.LLLoginService
                                     InventoryItemBase invItem = m_InventoryService.GetItem (new InventoryItemBase (item.Value));
                                     if (invItem == null)
                                     {
-                                        m_log.Warn ("Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
+                                        m_log.Warn("[LLOGIN SERVICE]: Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
                                         messedUp = true;
                                     }
                                 }
@@ -669,7 +669,7 @@ namespace OpenSim.Services.LLLoginService
                                 continue;
                             if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
                             {
-                                m_log.Warn("Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
+                                m_log.Warn("[LLOGIN SERVICE]: Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
                                 avappearance = new AvatarAppearance(account.PrincipalID);
                                 m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                                 break;

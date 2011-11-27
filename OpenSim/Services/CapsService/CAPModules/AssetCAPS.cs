@@ -502,7 +502,7 @@ namespace OpenSim.Services.CapsService
             asset.Data = data;
             asset.Flags = AssetFlags.Deletable | AssetFlags.Temperary;
             newAssetID = m_assetService.Store(asset);
-            m_log.InfoFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
+            m_log.DebugFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
             asset.ID = newAssetID;
         }
 

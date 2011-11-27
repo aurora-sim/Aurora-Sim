@@ -354,7 +354,7 @@ namespace OpenSim.Region.CoreModules
 
         public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
         {
-            m_log.Info("[Archive]: Writing estates to archive");
+            m_log.Debug("[Archive]: Writing estates to archive");
 
             EstateSettings settings = scene.RegionInfo.EstateSettings;
             if (settings == null)
@@ -363,15 +363,15 @@ namespace OpenSim.Region.CoreModules
             string xmlData = WebUtils.BuildXmlResponse(settings.ToKeyValuePairs(true));
             writer.WriteFile("estate/" + scene.RegionInfo.RegionName, xmlData);
 
-            m_log.Info("[Archive]: Finished writing estates to archive");
-            m_log.Info("[Archive]: Writing region info to archive");
+            m_log.Debug("[Archive]: Finished writing estates to archive");
+            m_log.Debug("[Archive]: Writing region info to archive");
 
             writer.WriteDir("regioninfo");
             RegionInfo regionInfo = scene.RegionInfo;
 
             writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData(true)));
 
-            m_log.Info("[Archive]: Finished writing region info to archive");
+            m_log.Debug("[Archive]: Finished writing region info to archive");
         }
 
         public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)

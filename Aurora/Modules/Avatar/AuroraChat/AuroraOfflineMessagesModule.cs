@@ -183,7 +183,7 @@ namespace Aurora.Modules
         {
             if (OfflineMessagesConnector == null)
                 return;
-            m_log.InfoFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
+            m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
             GridInstantMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 

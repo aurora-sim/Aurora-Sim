@@ -127,6 +127,7 @@ namespace Aurora.Modules.Installer
         {
             File.Delete(tmpFile);
             string projFile = FindProjFile(Path.GetDirectoryName(fileName));
+            m_log.Warn("Installing " + Path.GetFileNameWithoutExtension(projFile));
             BasicProject project = ProjectReader.Instance.ReadProject(projFile);
             CsprojCompiler compiler = new CsprojCompiler();
             compiler.Compile(project);
