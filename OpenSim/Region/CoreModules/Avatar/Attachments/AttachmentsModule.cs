@@ -737,7 +737,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 // Fire after attach, so we don't get messy perms dialogs
                 // 4 == AttachedRez
                 group.CreateScriptInstances(0, true, StateSource.AttachedRez, UUID.Zero);
-                group.ResumeScripts();
             }
 
             if (UUID.Zero == itemID)

@@ -854,11 +854,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     ISceneEntity[] entities = m_scene.Entities.GetEntities ();
                     foreach (ISceneEntity ent in entities)
                     {
-                        if (ent is SceneObjectGroup)
-                        {
-                            ((SceneObjectGroup)ent).CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
-                            ((SceneObjectGroup)ent).ResumeScripts ();
-                        }
+                         ent.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
                     }
                 }
                 m_scene.RegionInfo.RegionSettings.DisableScripts = !ScriptEngine;

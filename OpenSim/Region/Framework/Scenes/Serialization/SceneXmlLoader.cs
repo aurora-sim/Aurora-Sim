@@ -162,7 +162,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     if (startScripts)
                     {
                         sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
-                        sceneObject.ResumeScripts();
                     }
                 }
             }

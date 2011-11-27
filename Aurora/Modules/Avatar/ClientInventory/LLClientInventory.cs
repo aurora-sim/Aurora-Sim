@@ -1179,7 +1179,6 @@ namespace OpenSim.Region.Framework.Scenes
                         //                                         "Rezzed script {0} into prim local ID {1} for user {2}",
                         //                                         item.inventoryName, localID, remoteClient.Name);
                         part.GetProperties(remoteClient);
-                        part.ParentEntity.ResumeScripts ();
                     }
                     else
                     {
@@ -1245,7 +1244,6 @@ namespace OpenSim.Region.Framework.Scenes
                 part.GetProperties(remoteClient);
 
                 part.Inventory.CreateScriptInstance(taskItem, 0, false, StateSource.NewRez);
-                part.ParentEntity.ResumeScripts();
             }
         }
 
@@ -1772,11 +1770,7 @@ namespace OpenSim.Region.Framework.Scenes
             destPart.Inventory.AddInventoryItemExclusive(destTaskItem, false);
 
             if (running > 0)
-            {
                 destPart.Inventory.CreateScriptInstance(destTaskItem, start_param, false, StateSource.NewRez);
-            }
-
-            destPart.ParentEntity.ResumeScripts();
 
             IScenePresence avatar;
             if (m_scene.TryGetScenePresence(srcTaskItem.OwnerID, out avatar))
@@ -2299,8 +2293,6 @@ namespace OpenSim.Region.Framework.Scenes
                     remoteClient.SendAgentAlertMessage("Script saved", false);
                 }
                 part.GetProperties(remoteClient);
-
-                part.ParentEntity.ResumeScripts();
                 return errors;
             }
         }

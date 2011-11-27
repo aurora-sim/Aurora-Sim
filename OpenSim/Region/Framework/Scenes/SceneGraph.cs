@@ -1609,7 +1609,6 @@ namespace OpenSim.Region.Framework.Scenes
                     duplicatedGroup.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero);
                     duplicatedGroup.HasGroupChanged = true;
                     duplicatedGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
-                    duplicatedGroup.ResumeScripts();
 
                     // required for physics to update it's position
                     duplicatedGroup.AbsolutePosition = duplicatedGroup.AbsolutePosition;

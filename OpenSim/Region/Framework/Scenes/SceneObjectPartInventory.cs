@@ -292,6 +292,7 @@ namespace OpenSim.Region.Framework.Scenes
                                     m_part, LSLItems.ToArray(), startParam, postOnRez, stateSource, RezzedFrom);
             if(SendUpdate)
                 m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
+            ResumeScripts();
         }
 
         public List<TaskInventoryItem> GetInventoryScripts()
@@ -371,6 +372,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.ScheduleUpdate (PrimUpdateFlags.PrimFlags); //We only need to send a compressed
             }
             HasInventoryChanged = true;
+            ResumeScript(item);
         }
 
         /// <summary>
@@ -411,6 +413,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
                     }
+                    ResumeScript(item);
                 }
             }
             HasInventoryChanged = true;
@@ -1122,23 +1125,27 @@ namespace OpenSim.Region.Framework.Scenes
         
         public void ResumeScripts()
         {
-            IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-            if (engines == null)
-                return;
-
             List<TaskInventoryItem> scripts = GetInventoryScripts();
 
             foreach (TaskInventoryItem item in scripts)
             {
-                foreach (IScriptModule engine in engines)
+                ResumeScript(item);
+            }
+        }
+
+        private void ResumeScript(TaskInventoryItem item)
+        {
+            IScriptModule[] engines = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
+            if (engines == null)
+                return;
+            foreach (IScriptModule engine in engines)
+            {
+                if (engine != null)
                 {
-                    if (engine != null)
-                    {
-                        engine.ResumeScript (item.ItemID);
-                        if (item.OwnerChanged)
-                            engine.PostScriptEvent(item.ItemID, m_part.UUID, "changed", new Object[] { (int)Changed.OWNER });
-                        item.OwnerChanged = false;
-                    }
+                    engine.ResumeScript(item.ItemID);
+                    if (item.OwnerChanged)
+                        engine.PostScriptEvent(item.ItemID, m_part.UUID, "changed", new Object[] { (int)Changed.OWNER });
+                    item.OwnerChanged = false;
                 }
             }
         }

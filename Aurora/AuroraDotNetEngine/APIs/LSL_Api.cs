@@ -3476,8 +3476,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if(SetDieAtEdge)
                             new_group.RootChild.SetDieAtEdge(true);
 
-                        new_group.ResumeScripts();
-
                         //Object_rez should be dealt with by the script engine, especially in an async script engine...
 
                         float groupmass = new_group.GetMass();
@@ -4305,7 +4303,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     // Fire on_rez
                     group.CreateScriptInstances(0, true, StateSource.ScriptedRez, UUID.Zero);
-                    rootPart.ParentEntity.ResumeScripts();
                     group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }

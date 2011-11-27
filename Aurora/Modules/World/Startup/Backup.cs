@@ -339,7 +339,6 @@ namespace Aurora.Modules
                 foreach(ISceneEntity group in entities)
                 {
                     group.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
-                    group.ResumeScripts();
                 }
                 //Now reset it
                 LoadingPrims = false;
@@ -880,7 +879,6 @@ namespace Aurora.Modules
                         sceneObject.HasGroupChanged = true;
                         sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                         sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
-                        sceneObject.ResumeScripts ();
                     }
                 }
                 else if(filePath.StartsWith("assets/"))
