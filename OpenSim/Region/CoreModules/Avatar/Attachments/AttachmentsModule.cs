@@ -217,6 +217,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 //group.DetachToGround();
                 DetachSingleAttachmentToInventory(group.RootChild.FromUserInventoryItemID, remoteClient);
             }
+            else
+                SendKillEntity(new SceneObjectPart() { LocalId = objectLocalID });
         }
 
         protected void ClientDropObject(uint objectLocalID, IClientAPI remoteClient)
@@ -419,9 +421,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     foreach (ISceneEntity grp in attachments)
                     {
                         if (grp.RootChild.FromUserInventoryItemID == itemID)
-                        {
                             found = true;
-                        }
                     }
                     if (!found)
                         return; //Its not attached! What are we doing!
@@ -714,8 +714,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     part.CreateSelected = true;
                 }
             }
-            //Kill the previous entity so that it will be selected
-            SendKillEntity(group.RootChild);
 
             //NOTE: This MUST be here, otherwise we limit full updates during attachments when they are selected and it will block the first update.
             // So until that is changed, this MUST stay. The client will instantly reselect it, so this value doesn't stay borked for long.

@@ -268,14 +268,14 @@ namespace OpenSim.Services.CapsService
                 x, y);
             ISimulationService simService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             AgentData ad = new AgentData();
-            AgentCircuitData circuitData;
+            AgentCircuitData circuitData = null;
             if (destination != null)
             {
                 simService.RetrieveAgent(m_service.Region, m_service.AgentID, true, out ad, out circuitData);
                 if (ad != null)
                     ad.Position = position;
             }
-            else
+            if(destination == null || circuitData == null)
             {
                 retVal.Add("reason", "Could not find the destination region.");
                 retVal.Add("success", OSD.FromBoolean(false));
