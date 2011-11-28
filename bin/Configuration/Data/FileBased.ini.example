@@ -41,7 +41,7 @@
 	;; If you enabled SavePreviousBackup, this is the directory (in the bin folder) where the old saves
 	;; will be put
 	;; Default is "Backups"
-	PreviousBackupDirectory = "Backups"
+	PreviousBackupDirectory = "Backups/"
 	
 	;; The normal file name to load from for each region is "<Region Name Here>.abackup"
 	;; If you wish to change that, you can add this so that it becomes

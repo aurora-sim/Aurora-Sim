@@ -89,13 +89,33 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Physical,
             Selected,
             disabled,
+
+            VehicleType,
+            VehicleFloatParam,
+            VehicleVectorParam,
+            VehicleRotationParam,
+            VehicleFlags,
+            VehicleSetCameraPos,
+
             buildingrepresentation,
             blockphysicalreconstruction,
+
 
             Null             //keep this last used do dim the methods array. does nothing but pulsing the prim
         }
 
         #endregion
+
+        public struct ContactParameter
+        {
+            public float mu;
+            public float bounce;
+            public ContactParameter(float _mu, float _bounce)
+            {
+                mu = _mu;
+                bounce = _bounce;
+            }
+        }
 
         public float ODE_STEPSIZE = 0.020f;
         private float m_timeDilation = 1.0f;
@@ -124,11 +144,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private IntPtr GlobalContactsArray = IntPtr.Zero;
 
-        private d.Contact AvatarMovementprimContact;
+        public const d.ContactFlags CommumContactFlags =
+                    d.ContactFlags.SoftERP | d.ContactFlags.SoftCFM | d.ContactFlags.Bounce | d.ContactFlags.Approx1;
+        private d.Contact newGlobalcontact = new d.Contact();
 
-        private float AvatarContactFriction = 0.9f;
         private float AvatarContactBounce = 0.3f;
-        private float FrictionMovementMultiplier = 0.1f; // should lower than one
+        private float FrictionMovementMultiplier = 0.3f; // should lower than one
+        private float FrictionScale = 5.0f;
 
         private int HashspaceLow = -3;  // current ODE limits
         private int HashspaceHigh = 8;
@@ -165,7 +187,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private bool m_filterCollisions = false;
 
         private d.NearCallback nearCallback;
-        public d.TriCallback triCallback;
         private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
         private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
         private readonly object _activeprimsLock = new object ();
@@ -362,7 +383,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             OdeLock = new Object();
             nearCallback = near;
-            triCallback = TriCallback;
             lock (OdeLock)
             {
                 // Create the world and the first space
@@ -454,9 +474,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     contactsurfacelayer = physicsconfig.GetFloat("world_contact_surface_layer", 0.001f);
 
-                    AvatarContactFriction = physicsconfig.GetFloat("AvatarContactFriction", AvatarContactFriction);
                     AvatarContactBounce = physicsconfig.GetFloat("AvatarContactBounce", AvatarContactBounce);
                     FrictionMovementMultiplier = physicsconfig.GetFloat("FrictionMovementMultiplier", FrictionMovementMultiplier);
+                    FrictionScale = physicsconfig.GetFloat("FrictionMovementMultiplier", FrictionScale);
 
                     ODE_STEPSIZE = physicsconfig.GetFloat("world_stepsize", 0.020f);
                     m_physicsiterations = physicsconfig.GetInt("world_internal_steps_without_collisions", 10);
@@ -515,19 +535,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // alloc unmanaged memory to pass information to colision contact joints              
                 GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath * d.Contact.unmanagedSizeOf);
 
-                // Centeral contact friction and bounce
-                // ckrinke 11/10/08 Enabling soft_erp but not soft_cfm until I figure out why
-                // an avatar falls through in Z but not in X or Y when walking on a prim.
-
-                // Prim contact friction and bounce
-                // THis is the *non* moving version of friction and bounce
-                // Use this when an avatar comes in contact with a prim
-                // and is moving
-                AvatarMovementprimContact.surface.mode |= d.ContactFlags.SoftERP | d.ContactFlags.SoftCFM | d.ContactFlags.Bounce;
-                AvatarMovementprimContact.surface.mu = AvatarContactFriction;
-                AvatarMovementprimContact.surface.bounce = AvatarContactBounce;
-                AvatarMovementprimContact.surface.soft_cfm = 0.00010f;
-                AvatarMovementprimContact.surface.soft_erp = 0.5f;
+                newGlobalcontact.surface.mode = CommumContactFlags;
+                newGlobalcontact.surface.soft_cfm = 0.0001f;
+                newGlobalcontact.surface.soft_erp = 0.6f;
 
                 // Set the gravity,, don't disable things automatically (we set it explicitly on some things)
                 d.WorldSetGravity (world, gravityx, gravityy, gravityz);
@@ -609,13 +619,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return true;
         }
 
-        private IntPtr CreateContacJoint(ref d.Contact newcontact)
+
+
+        private IntPtr CreateContacJoint(ref d.ContactGeom geom,float mu,float bounce)
         {
             if (GlobalContactsArray == IntPtr.Zero || m_global_contactcount >= m_currentmaxContactsbeforedeath)
                 return IntPtr.Zero;
 
+            // damm copy...
+            newGlobalcontact.geom.depth = geom.depth;
+            newGlobalcontact.geom.g1 = geom.g1;
+            newGlobalcontact.geom.g2 = geom.g2;
+            newGlobalcontact.geom.pos = geom.pos;
+            newGlobalcontact.geom.normal = geom.normal;
+            newGlobalcontact.geom.side1 = geom.side1;
+            newGlobalcontact.geom.side2 = geom.side2;
+            newGlobalcontact.surface.mu = FrictionScale * mu;
+            newGlobalcontact.surface.bounce = bounce;
+
             IntPtr contact = new IntPtr(GlobalContactsArray.ToInt64() + (Int64)(m_global_contactcount * d.Contact.unmanagedSizeOf));
-            Marshal.StructureToPtr(newcontact, contact, false);
+            Marshal.StructureToPtr(newGlobalcontact, contact, false);
             return d.JointCreateContactPtr(world, contactgroup, contact);
         }
 
@@ -690,24 +713,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (!actor_name_map.TryGetValue(g2, out p2))
                 p2 = PANull;
-
-            if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
-                (p1 as AuroraODEPrim)._zeroFlag = false;
-            if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
-                (p2 as AuroraODEPrim)._zeroFlag = false;
-
+            /*
+                        if (p1 is AuroraODEPrim && (p1 as AuroraODEPrim)._zeroFlag)
+                            (p1 as AuroraODEPrim)._zeroFlag = false;
+                        if (p2 is AuroraODEPrim && (p2 as AuroraODEPrim)._zeroFlag)
+                            (p2 as AuroraODEPrim)._zeroFlag = false;
+            */
             m_StatFindContactsTime = Util.EnvironmentTickCountSubtract(FindContactsTime);
 
-            if (!DisableCollisions)
-            {
-                if (p1.CollisionScore + count >= float.MaxValue)
-                    p1.CollisionScore = 0;
-                p1.CollisionScore += count;
+            if (p1.CollisionScore >= float.MaxValue - count)
+                p1.CollisionScore = 0;
+            p1.CollisionScore += count;
 
-                if (p2.CollisionScore + count >= float.MaxValue)
-                    p2.CollisionScore = 0;
-                p2.CollisionScore += count;
-            }
+            if (p2.CollisionScore >= float.MaxValue - count)
+                p2.CollisionScore = 0;
+            p2.CollisionScore += count;
 
             int ContactLoopTime = Util.EnvironmentTickCount();
 
@@ -719,8 +739,39 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Contact Loop
 
             IntPtr joint = IntPtr.Zero;
+            ContactParameter contactParam1;
+            ContactParameter contactParam2;
+            float mu;
+            float bounce;
+
             for (int i = 0; i < count; i++)
             {
+                if (curContact.depth > maxDepthContact.PenetrationDepth)
+                {
+                    maxDepthContact.PenetrationDepth = curContact.depth;
+                    maxDepthContact.Position.X = curContact.pos.X;
+                    maxDepthContact.Position.Y = curContact.pos.Y;
+                    maxDepthContact.Position.Z = curContact.pos.Z;
+                    maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
+                    maxDepthContact.SurfaceNormal.X = curContact.normal.X;
+                    maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
+                    maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
+                }
+
+                bool p2col = false;
+
+                // We only need to test p2 for 'jump crouch purposes'
+                if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
+                {
+                    // Testing if the collision is at the feet of the avatar
+                    if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
+                        p2col = true;
+                }
+                else
+                    p2col = true;
+
+                p2.IsColliding = p2col;
+
                 // Logic for collision handling
                 // Note, that if *all* contacts are skipped (VolumeDetect)
                 // The prim still detects (and forwards) collision events but 
@@ -740,27 +791,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     skipThisContact = true;
 
 
-                if (!skipThisContact && 
-                    m_filterCollisions && 
-                    checkDupe (curContact, p2.PhysicsActorType))
+                if (!skipThisContact &&
+                    m_filterCollisions &&
+                    checkDupe(curContact, p2.PhysicsActorType))
                     skipThisContact = true;
+
 
                 if (!skipThisContact)
                 {
 
                     NotSkipedCount++;
-
-                    if (curContact.depth > maxDepthContact.PenetrationDepth)
-                    {
-                        maxDepthContact.PenetrationDepth = curContact.depth;
-                        maxDepthContact.Position.X = curContact.pos.X;
-                        maxDepthContact.Position.Y = curContact.pos.Y;
-                        maxDepthContact.Position.Z = curContact.pos.Z;
-                        maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
-                        maxDepthContact.SurfaceNormal.X = curContact.normal.X;
-                        maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
-                        maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
-                    }
 
                     // If we're colliding against terrain
                     if (p1.PhysicsActorType == (int)ActorTypes.Ground)
@@ -768,63 +808,46 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
                             if (m_filterCollisions)
-                                _perloopContact.Add (curContact);
+                                _perloopContact.Add(curContact);
 
-                            //Add restitution and friction changes
-                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint (ActorTypes.Ground);
+                            ((AuroraODEPrim)p2).GetContactParam(out contactParam2);
+
+                            mu = (float)Math.Sqrt(contactParam2.mu * 0.5f); // grass friction
+
                             if (((AuroraODEPrim)p2).Velocity.LengthSquared() > 0.1f)
-                                contact.surface.mu *= FrictionMovementMultiplier;
+                                mu *= FrictionMovementMultiplier;
 
-                            contact.surface.bounce *= 0.3f; // grass ?
-
-                            contact.geom = curContact;
-
-                            joint = CreateContacJoint(ref contact);
+                            bounce = contactParam2.bounce * 0.2f; // grass ?
+                            joint = CreateContacJoint(ref curContact, mu, bounce);
                         }
                         //Can't collide against anything else, agents do their own ground checks
                     }
                     else if ((p1.PhysicsActorType == (int)ActorTypes.Agent) &&
                             (p2.PhysicsActorType == (int)ActorTypes.Agent))
                     {
-                        d.Contact contact = AvatarMovementprimContact;
-                        contact.surface.mu = 10 * AvatarContactFriction * (float)Math.Sqrt(p2.Mass * p1.Mass);
 
-                        if ((((AuroraODECharacter)p2).Velocity - ((AuroraODECharacter)p1).Velocity).LengthSquared() > 0.1f)
-                            contact.surface.mu *= FrictionMovementMultiplier;
-                        
-                        contact.surface.bounce *= contact.surface.bounce;
-
-                        contact.geom = curContact;
+                        mu = 0.0f;
+                        bounce = AvatarContactBounce;
 
                         if (m_filterCollisions)
                             _perloopContact.Add(curContact);
 
-                        joint = CreateContacJoint(ref contact);
+                        joint = CreateContacJoint(ref curContact, mu, bounce);
                     }
 
                     else if (p1.PhysicsActorType == (int)ActorTypes.Prim)
                     {
                         if (p2.PhysicsActorType == (int)ActorTypes.Agent)
                         {
-                            d.Contact contact = ((AuroraODEPrim)p1).GetContactPoint(ActorTypes.Prim);
+                            ((AuroraODEPrim)p1).GetContactParam(out contactParam1);
 
-                            float tmp = 10 * AvatarContactFriction * p2.Mass;
-                            if (b1==IntPtr.Zero)
-                                contact.surface.mu = tmp;
-                            else
-                                contact.surface.mu = (float)Math.Sqrt(tmp * contact.surface.mu);
-
-                            contact.surface.bounce *= AvatarMovementprimContact.surface.bounce;
-
-                            if ((((AuroraODECharacter)p2).Velocity - ((AuroraODEPrim)p1).Velocity).LengthSquared() > 0.1f)
-                                contact.surface.mu *= FrictionMovementMultiplier;
-
-                            contact.geom = curContact;
+                            mu = 0.0f;
+                            bounce = AvatarContactBounce * contactParam1.bounce;
 
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            joint = CreateContacJoint(ref contact);
+                            joint = CreateContacJoint(ref curContact, mu, bounce);
                         }
                         else if (p2.PhysicsActorType == (int)ActorTypes.Prim)
                         {
@@ -832,26 +855,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            d.Contact contact = ((AuroraODEPrim)p2).GetContactPoint(ActorTypes.Prim);
-                            d.Contact contact1 = ((AuroraODEPrim)p1).GetContactPoint(ActorTypes.Prim);
+                            ((AuroraODEPrim)p2).GetContactParam(out contactParam2);
+                            ((AuroraODEPrim)p1).GetContactParam(out contactParam1);
 
-                            // not right ...
-                            if (b1 != IntPtr.Zero)
-                                contact.surface.mu = (float)Math.Sqrt(contact.surface.mu * contact1.surface.mu);
-
-                            contact.surface.bounce *= contact1.surface.bounce;
+                            mu = (float)Math.Sqrt(contactParam1.mu * contactParam2.mu);
+                            bounce = contactParam1.bounce * contactParam2.bounce;
 
                             if ((((AuroraODEPrim)p2).Velocity - ((AuroraODEPrim)p1).Velocity).LengthSquared() > 0.1f)
-                                contact.surface.mu *= FrictionMovementMultiplier;
+                                mu *= FrictionMovementMultiplier;
 
-                            contact.geom = curContact;
-                            joint = CreateContacJoint(ref contact);
+                            joint = CreateContacJoint(ref curContact, mu, bounce);
                         }
                     }
- 
+
                     if (m_global_contactcount < m_currentmaxContactsbeforedeath && joint != IntPtr.Zero) // stack collide!
                     {
-                        d.JointAttach (joint, b1, b2);
+                        d.JointAttach(joint, b1, b2);
                         m_global_contactcount++;
                         joint = IntPtr.Zero;
                     }
@@ -864,38 +883,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             int CollisionAccountingTime = Util.EnvironmentTickCount();
 
-            if (!DisableCollisions)
+            if (NotSkipedCount > 0)
             {
-                bool p2col = false;
-
-                if (NotSkipedCount > 0)
+                if (count > geomContactPointsStartthrottle)
                 {
-                    // We only need to test p2 for 'jump crouch purposes'
-                    if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
-                    {
-                        // Testing if the collision is at the feet of the avatar
-                        if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z * 0.6f))
-                            p2col = true;
-                    }
-                    else
-                        p2col = true;
-
-                    p2.IsColliding = p2col;
-
-                    if (count > geomContactPointsStartthrottle)
-                    {
-                        // If there are more then 3 contact points, it's likely
-                        // that we've got a pile of objects, so ...
-                        // We don't want to send out hundreds of terse updates over and over again
-                        // so lets throttle them and send them again after it's somewhat sorted out.
-                        p2.ThrottleUpdates = true;
-                    }
-                    collision_accounting_events(p1, p2, maxDepthContact);
+                    // If there are more then 3 contact points, it's likely
+                    // that we've got a pile of objects, so ...
+                    // We don't want to send out hundreds of terse updates over and over again
+                    // so lets throttle them and send them again after it's somewhat sorted out.
+                    p2.ThrottleUpdates = true;
                 }
             }
+            collision_accounting_events(p1, p2, maxDepthContact);
             m_StatCollisionAccountingTime = Util.EnvironmentTickCountSubtract(CollisionAccountingTime);
-        }
-  
+        }  
         private bool checkDupe(d.ContactGeom contactGeom, int atype)
         {
             bool result = false;
@@ -982,16 +983,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 p2.AddCollisionEvent(p1.LocalID, contact);
         }
 
-        public int TriCallback(IntPtr trimesh, IntPtr refObject, int triangleIndex)
-        {
-            d.Vector3 v0 = new d.Vector3();
-            d.Vector3 v1 = new d.Vector3();
-            d.Vector3 v2 = new d.Vector3();
-
-            d.GeomTriMeshGetTriangle(trimesh, 0, ref v0, ref v1, ref v2);
-
-            return 1;
-        }
 
         /// <summary>
         /// This is our collision testing routine in ODE
@@ -2035,8 +2026,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         int PhysicsMoveTime = Util.EnvironmentTickCount();
 
-                        if (!DisableCollisions)
-                        {
                             // Move characters
                             lock (_characters)
                             {
@@ -2064,7 +2053,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             // Move other active objects
                             lock (_activeprimsLock)
                             {
-                                List<AuroraODEPrim> defects = new List<AuroraODEPrim> ();
+                                List<AuroraODEPrim> defects = new List<AuroraODEPrim>();
                                 foreach (AuroraODEPrim prim in _activeprims)
                                 {
                                     prim.m_collisionscore = 0;
@@ -2074,32 +2063,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 {
                                     foreach (AuroraODEPrim defect in defects)
                                     {
-                                        foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities ())
+                                        foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities())
                                         {
                                             if (child.PhysActor != null)
                                             {
-                                                RemovePrimThreadLocked ((AuroraODEPrim)child.PhysActor);
+                                                RemovePrimThreadLocked((AuroraODEPrim)child.PhysActor);
                                                 child.PhysActor = null;//Delete it
                                             }
                                         }
                                         //Destroy it
-                                        RemovePrimThreadLocked (defect);
+                                        RemovePrimThreadLocked(defect);
                                         defect.ParentEntity.PhysActor = null;//Delete it
                                     }
                                 }
                             }
-                        }
                         if (m_rayCastManager != null)
                             m_rayCastManager.ProcessQueuedRequests ();
 
                         m_StatPhysicsMoveTime = Util.EnvironmentTickCountSubtract(PhysicsMoveTime);
-
-
+                        
                         int CollisionOptimizedTime = Util.EnvironmentTickCount();
 
                         m_global_contactcount = 0;
-                        
-                        collision_optimized(timeElapsed);
+                        if(!DisableCollisions)
+                            collision_optimized(timeElapsed);
                         m_StatCollisionOptimizedTime = Util.EnvironmentTickCountSubtract(CollisionOptimizedTime);
 
                         d.WorldQuickStep(world, ODE_STEPSIZE);
@@ -2242,20 +2229,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             int PrimUpdatePosAndVelocity = Util.EnvironmentTickCount();
 
-            if(!DisableCollisions)
+            lock (_activeprimsLock)
             {
-                lock(_activeprimsLock)
+                foreach (AuroraODEPrim actor in _activeprims)
                 {
-                    foreach(AuroraODEPrim actor in _activeprims)
+                    if (actor.IsPhysical)
                     {
-                        if(actor.IsPhysical)
-                        {
-                            actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-                        }
+                        actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                     }
                 }
             }
-
             m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
         }
 
