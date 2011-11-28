@@ -584,7 +584,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else if (m_data[itemIndex] is Int32)
                     return new LSLInteger((int)m_data[itemIndex]);
                 else if (m_data[itemIndex] is LSL_Types.LSLString)
-                    return new LSLInteger((string)m_data[itemIndex]);
+                    return new LSLInteger(((LSL_Types.LSLString)m_data[itemIndex]).m_string);
                 else
                     throw new InvalidCastException();
             }
