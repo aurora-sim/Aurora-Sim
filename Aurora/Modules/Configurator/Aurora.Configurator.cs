@@ -198,21 +198,6 @@ namespace Aurora.Configuration
             }
         }
 
-        private static void CheckAuroraAutoConfiguration()
-        {
-            if (System.IO.File.Exists("AuroraServerConfiguration/AutoConfiguration.ini"))
-            {
-                try
-                {
-                    System.IO.File.Move("AuroraServerConfiguration/AutoConfiguration.ini", "AuroraServerConfiguration/AutoConfiguration.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
-            }
-        }
-
         private static void CheckAuroraServer()
         {
             if (System.IO.File.Exists("AuroraServer.ini"))
@@ -679,38 +664,6 @@ namespace Aurora.Configuration
             Console.WriteLine("Your GridInfoService.ini has been successfully configured");
         }
 
-        private static void ConfigureAuroraAutoConfiguration()
-        {
-            CheckAuroraAutoConfiguration();
-            string str = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
-            try
-            {
-                using (TextReader reader = new StreamReader("AuroraServerConfiguration/AutoConfiguration.ini.example"))
-                {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/AutoConfiguration.ini"))
-                    {
-                        string str2;
-                        while ((str2 = reader.ReadLine()) != null)
-                        {
-                            if (str2.Contains("127.0.0.1"))
-                            {
-                                str2 = str2.Replace("127.0.0.1", ipAddress);
-                            }
-                            writer.WriteLine(str2);
-                        }
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error configuring AutoConfiguration.ini " + exception.Message);
-                return;
-            }
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your AutoConfiguration.ini has been successfully configured");
-        }
-
         private static void DisplayInfo()
         {
             if (mode.Equals("2"))
@@ -965,7 +918,6 @@ namespace Aurora.Configuration
                 ConfigureAuroraServerMySQL();
                 ConfigureAuroraLogin();
                 ConfigureAuroraGridInfoService();
-                ConfigureAuroraAutoConfiguration();
                 ConfigureAuroraCommon();
                 DisplayInfo();
             
