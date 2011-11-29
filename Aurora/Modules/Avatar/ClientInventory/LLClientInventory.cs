@@ -619,7 +619,7 @@ namespace OpenSim.Region.Framework.Scenes
             string gatekeeperdata = "";
             IConfigurationService configService = m_scene.RequestModuleInterface<IConfigurationService> ();
             List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
-            string gatekeeperURL = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + "/";//Assume the default
+            string gatekeeperURL = MainServer.Instance.ServerURI + "/";//Assume the default
             if (mainGridURLs.Count > 0)//Then check whether we were given one
                 gatekeeperURL = mainGridURLs[0];
             //We have one!
@@ -2051,7 +2051,7 @@ namespace OpenSim.Region.Framework.Scenes
                 MainServer.Instance.AddStreamHandler(
                     new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-                string uploaderURL = m_scene.RegionInfo.ServerURI + capsBase +
+                string uploaderURL = MainServer.Instance.ServerURI + capsBase +
                                      uploaderPath;
 
                 map = new OSDMap();
@@ -2091,7 +2091,7 @@ namespace OpenSim.Region.Framework.Scenes
             MainServer.Instance.AddStreamHandler(
                 new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
-            string uploaderURL = m_scene.RegionInfo.ServerURI + capsBase +
+            string uploaderURL = MainServer.Instance.ServerURI + capsBase +
                                  uploaderPath;
 
             map = new OSDMap();

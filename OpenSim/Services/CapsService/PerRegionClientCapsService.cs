@@ -148,7 +148,7 @@ namespace OpenSim.Services.CapsService
 
         public String HostUri
         {
-            get { return Server.HostName + ":" + Server.Port; }
+            get { return Server.ServerURI; }
         }
 
         public IRegistryCore Registry

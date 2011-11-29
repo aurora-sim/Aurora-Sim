@@ -37,8 +37,26 @@ namespace OpenSim.Framework.Servers.HttpServer
     public interface IHttpServer
     {
         uint Port { get; }
+
+        /// <summary>
+        /// Whether this server is running with HTTPS
+        /// </summary>
         bool Secure { get; }
-        string HostName { get; set;  }
+
+        /// <summary>
+        /// A well-formed URI for the host region server (namely "http://ExternalHostName:Port)
+        /// </summary>
+        string ServerURI { get; }
+
+        /// <summary>
+        /// The hostname (external IP or dns name) that this server is on (without http(s)://)
+        /// </summary>
+        string HostName { get; set; }
+
+        /// <summary>
+        /// The hostname (external IP or dns name) that this server is on (with http(s)://)
+        /// </summary>
+        string FullHostName { get; }
 
         /// <summary>
         /// Set the settings needed to run with HTTPS enabled

@@ -333,10 +333,12 @@ namespace OpenSim.Services.Interfaces
             m_regionLocY = ConvertFrom.RegionLocY;
             m_regionLocZ = ConvertFrom.RegionLocZ;
             m_internalEndPoint = ConvertFrom.InternalEndPoint;
-            m_externalHostName = ConvertFrom.ExternalHostName;
-            m_httpPort = ConvertFrom.HttpPort;
+            m_externalHostName = MainServer.Instance.HostName;
+            m_externalHostName = m_externalHostName.Replace("https://", "");
+            m_externalHostName = m_externalHostName.Replace("http://", "");
+            m_httpPort = MainServer.Instance.Port;
             RegionID = ConvertFrom.RegionID;
-            ServerURI = ConvertFrom.ServerURI;
+            ServerURI = MainServer.Instance.ServerURI;
             TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             Access = ConvertFrom.AccessLevel;

@@ -233,7 +233,7 @@ namespace Aurora.Modules
         {
             IConfigurationService configService = m_scenes[0].RequestModuleInterface<IConfigurationService> ();
             List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
-            string mainGridURL = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + "/";//Assume the default
+            string mainGridURL = MainServer.Instance.ServerURI + "/";//Assume the default
             if (mainGridURLs.Count > 0)//Then check whether we were given one
                 mainGridURL = mainGridURLs[0];
             return mainGridURL;

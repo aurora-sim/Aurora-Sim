@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                     engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
                     return urlcode;
                 }
-                string url = m_HttpServer.HostName + ":" + m_HttpServer.Port.ToString() + "/lslhttp/" + urlcode.ToString() + "/";
+                string url = m_HttpServer.ServerURI + "/lslhttp/" + urlcode.ToString() + "/";
 
                 UrlData urlData = new UrlData();
                 urlData.hostID = host.UUID;
@@ -412,7 +412,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
                     pathInfo = uri.Substring(pos3);
 
-                    UrlData url = m_UrlMap[m_HttpServer.HostName + ":" + m_HttpServer.Port.ToString() + uri_tmp];
+                    UrlData url = m_UrlMap[m_HttpServer.ServerURI + uri_tmp];
 
                     //for llGetHttpHeader support we need to store original URI here
                     //to make x-path-info / x-query-string / x-script-url / x-remote-ip headers 

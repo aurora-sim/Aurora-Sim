@@ -336,8 +336,8 @@ namespace Aurora.Simulation.Base
             string hostName =
                 m_config.Configs["Network"].GetString("HostName", "http" + (secure ? "s" : "") + "://127.0.0.1");
             //Clean it up a bit
-            if (!hostName.StartsWith ("http://") && !hostName.StartsWith ("https://"))
-                hostName = (secure ? "https://" : "http://") + hostName;
+            if (hostName.StartsWith("http://") || hostName.StartsWith("https://"))
+                hostName = hostName.Replace("https://", "").Replace("http://", "");
             if (hostName.EndsWith ("/"))
                 hostName = hostName.Remove (hostName.Length - 1, 1);
 
@@ -604,7 +604,7 @@ namespace Aurora.Simulation.Base
                 hostName = hostName.Remove(hostName.Length - 1, 1);
             foreach(IHttpServer server in m_Servers.Values)
             {
-                server.HostName = (server.Secure ? "https://" : "http://") + hostName;
+                server.HostName = hostName;
             }
             m_log.Info ("Finished reloading configuration.");
         }

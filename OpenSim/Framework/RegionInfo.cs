@@ -58,7 +58,6 @@ namespace OpenSim.Framework
         protected uint m_httpPort;
         protected string m_serverURI;
         protected string m_regionName = String.Empty;
-        protected string m_externalHostName;
         protected IPEndPoint m_internalEndPoint;
         protected int m_regionLocX;
         protected int m_regionLocY;
@@ -173,46 +172,10 @@ namespace OpenSim.Framework
             set { m_GridSecureSessionID = value; }
         }
 
-        /// <summary>
-        /// The port by which http communication occurs with the region (most noticeably, CAPS communication)
-        /// </summary>
-        public uint HttpPort
-        {
-            get { return m_httpPort; }
-            set { m_httpPort = value; }
-        }
-
-        /// <summary>
-        /// A well-formed URI for the host region server (namely "http://" + ExternalHostName)
-        /// </summary>
-        public string ServerURI
-        {
-            get
-            {
-                string protocol = "http://";
-                if(MainServer.Instance.Secure)
-                    protocol = "https://";
-                return protocol + ExternalHostName + ":" + HttpPort;
-            }
-        }
-
         public string RegionName
         {
             get { return m_regionName; }
             set { m_regionName = value; }
-        }
-
-        public string ExternalHostName
-        {
-            get { return m_externalHostName; }
-            set { m_externalHostName = value; }
-        }
-
-        private bool m_FindExternalIP = true;
-        public bool FindExternalAutomatically
-        {
-            get { return m_FindExternalIP; }
-            set { m_FindExternalIP = value; }
         }
 
         public IPEndPoint InternalEndPoint
@@ -280,8 +243,6 @@ namespace OpenSim.Framework
             config.Set("InternalAddress", m_internalEndPoint.Address.ToString());
             config.Set("InternalPort", m_internalEndPoint.Port);
 
-            config.Set("ExternalHostName", m_externalHostName);
-
             if (m_objectCapacity != 0)
                 config.Set("MaxPrims", m_objectCapacity);
 
@@ -334,9 +295,6 @@ namespace OpenSim.Framework
             args["region_id"] = OSD.FromUUID(RegionID);
             if ((RegionName != null) && !RegionName.Equals(""))
                 args["region_name"] = OSD.FromString(RegionName);
-            args["external_host_name"] = OSD.FromString(ExternalHostName);
-            args["http_port"] = OSD.FromString(HttpPort.ToString());
-            args["server_uri"] = OSD.FromString(ServerURI);
             args["region_xloc"] = OSD.FromString(RegionLocX.ToString());
             args["region_yloc"] = OSD.FromString(RegionLocY.ToString());
             args["internal_ep_address"] = OSD.FromString(InternalEndPoint.Address.ToString());
@@ -362,7 +320,6 @@ namespace OpenSim.Framework
                 args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
                 args["number_startup"] = OSD.FromInteger (NumberStartup);
                 args["startupType"] = OSD.FromInteger((int)Startup);
-                args["FindExternalIP"] = OSD.FromBoolean(FindExternalAutomatically);
                 args["RegionSettings"] = RegionSettings.ToOSD();
             }
             return args;
@@ -374,8 +331,6 @@ namespace OpenSim.Framework
                 RegionID = args["region_id"].AsUUID();
             if (args.ContainsKey("region_name"))
                 RegionName = args["region_name"].AsString();
-            if (args.ContainsKey("external_host_name"))
-                ExternalHostName = args["external_host_name"].AsString();
             if (args.ContainsKey("http_port"))
                 UInt32.TryParse(args["http_port"].AsString(), out m_httpPort);
             if (args.ContainsKey("region_xloc"))
@@ -434,10 +389,6 @@ namespace OpenSim.Framework
                 NumberStartup = args["number_startup"].AsInteger();
             if (args.ContainsKey ("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger();
-            if(args.ContainsKey("FindExternalIP"))
-                FindExternalAutomatically = args["FindExternalIP"].AsBoolean();
-            else if(ExternalHostName != "DEFAULT")
-                FindExternalAutomatically = false;
             if(args.ContainsKey("InfiniteRegion"))
                 InfiniteRegion = args["InfiniteRegion"].AsBoolean();
             if (args.ContainsKey("RegionSettings"))

@@ -95,7 +95,7 @@ namespace OpenSim.Services.Handlers.Map
 
         public string GetURLOfMap ()
         {
-            return m_server.HostName + ":" + m_server.Port + "/MapService/";
+            return m_server.ServerURI + "/MapService/";
         }
 
         public Hashtable MapRequest (Hashtable request)

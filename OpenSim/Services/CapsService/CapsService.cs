@@ -80,7 +80,7 @@ namespace OpenSim.Services.CapsService
 
         public string HostUri
         {
-            get { return m_server.HostName + ":" + m_server.Port; }
+            get { return m_server.ServerURI; }
         }
 
         #endregion

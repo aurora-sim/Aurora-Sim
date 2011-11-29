@@ -98,6 +98,31 @@ namespace OpenSim.Framework.Servers.HttpServer
             set { m_hostName = value; }
         }
 
+        public string FullHostName
+        {
+            get
+            {
+                string protocol = "http://";
+                if (Secure)
+                    protocol = "https://";
+                return protocol + m_hostName;
+            }
+        }
+
+        /// <summary>
+        /// A well-formed URI for the host region server (namely "http://ExternalHostName:Port)
+        /// </summary>
+        public string ServerURI
+        {
+            get
+            {
+                string protocol = "http://";
+                if (Secure)
+                    protocol = "https://";
+                return protocol + m_hostName + ":" + m_port.ToString();
+            }
+        }
+
         public BaseHttpServer(uint port, string hostName, bool isSecure)
         {
             m_hostName = hostName;

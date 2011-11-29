@@ -7810,7 +7810,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 IXmlRpcRouter xmlRpcRouter = World.RequestModuleInterface<IXmlRpcRouter>();
                 if (xmlRpcRouter != null)
                 {
-                    string ExternalHostName = World.RegionInfo.ExternalHostName;
+                    string ExternalHostName = MainServer.Instance.HostName;
                     
                     xmlRpcRouter.RegisterNewReceiver(m_ScriptEngine.ScriptModule, channelID, m_host.UUID, 
                                                      m_itemID, String.Format("http://{0}:{1}/", ExternalHostName, 

@@ -134,17 +134,6 @@ namespace Aurora.Modules.RegionLoader
                     region.UDPPorts.Add (iPort);
             }
             region.InternalEndPoint = new IPEndPoint (address, region.UDPPorts[0]);
-            region.HttpPort = (uint)region.InternalEndPoint.Port;
-
-            string externalName = ExternalIP.Text;
-            if (externalName == "DEFAULT")
-            {
-                externalName = Aurora.Framework.Utilities.GetExternalIp();
-                region.FindExternalAutomatically = true;
-            }
-            else
-                region.FindExternalAutomatically = false;
-            region.ExternalHostName = externalName;
 
             region.RegionType = Type.Text;
             region.ObjectCapacity = int.Parse(ObjectCount.Text);
@@ -191,7 +180,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
         {
-            RegionInfo region = m_connector.GetRegionInfo(RegionToFind.Text, false);
+            RegionInfo region = m_connector.GetRegionInfo(RegionToFind.Text);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -214,10 +203,6 @@ namespace Aurora.Modules.RegionLoader
             else
                 textBox4.Text = "Adult";
             DisabledEdit.Checked = region.Disabled;
-            if (region.FindExternalAutomatically)
-                textBox9.Text = "DEFAULT";
-            else
-                textBox9.Text = region.ExternalHostName;
             textBox7.Text = string.Join (", ", region.UDPPorts.ConvertAll<string> (delegate (int i) { return i.ToString (); }).ToArray ());
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString ();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString ();
@@ -299,7 +284,7 @@ namespace Aurora.Modules.RegionLoader
             }
             if (item.ToString().StartsWith("Online - "))
                 item = item.ToString().Remove(0, 9);
-            RegionInfo region = m_connector.GetRegionInfo(item.ToString(), false);
+            RegionInfo region = m_connector.GetRegionInfo(item.ToString());
             if (region == null)
             {
                 MessageBox.Show("You must enter a valid region name!");
@@ -324,17 +309,6 @@ namespace Aurora.Modules.RegionLoader
                     region.UDPPorts.Add (iPort);
             }
             region.InternalEndPoint = new IPEndPoint (address, region.UDPPorts[0]);
-            region.HttpPort = (uint)region.InternalEndPoint.Port;
-
-            string externalName = textBox9.Text;
-            if (externalName == "DEFAULT")
-            {
-                externalName = Aurora.Framework.Utilities.GetExternalIp();
-                region.FindExternalAutomatically = true;
-            }
-            else
-                region.FindExternalAutomatically = false;
-            region.ExternalHostName = externalName;
 
             region.RegionType = textBox11.Text;
             region.ObjectCapacity = int.Parse(textBox6.Text);
@@ -388,7 +362,7 @@ namespace Aurora.Modules.RegionLoader
             string item = RegionListBox.Items[RegionListBox.SelectedIndex].ToString();
             if(item.StartsWith("Online - "))
                 item = item.Remove(0, 9);
-            RegionInfo region = m_connector.GetRegionInfo(item, false);
+            RegionInfo region = m_connector.GetRegionInfo(item);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -507,7 +481,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 MessageBox.Show("Select a region before attempting to export.");
                 return;
             }
-            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID, false);
+            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
             if (region != null) //It never should be, but who knows
             {
                 //Make sure the directory exists
@@ -554,7 +528,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void putOnline_Click (object sender, EventArgs e)
         {
             SetStartingStatus ();
-            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID, true);
+            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
             Util.FireAndForget (delegate (object o)
             {
                 m_sceneManager.AllRegions++;
@@ -589,7 +563,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void deleteregion_Click (object sender, EventArgs e)
         {
-            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID, false);
+            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
             if (region != null) //It never should be, but who knows
             {
                 DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");

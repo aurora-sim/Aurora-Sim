@@ -244,12 +244,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 foreach (RegionInfo info in regionsToConvert)
                 {
                     RegionInfo alreadyExists;
-                    if ((alreadyExists = conn.GetRegionInfo (info.RegionID, true)) == null)
+                    if ((alreadyExists = conn.GetRegionInfo (info.RegionID)) == null)
                     {
                         changed = true;
                         if (!info.UDPPorts.Contains (info.InternalEndPoint.Port))
                             info.UDPPorts.Add (info.InternalEndPoint.Port);
-                        info.HttpPort = (uint)info.InternalEndPoint.Port;
                         info.Disabled = false;
                         conn.UpdateRegionInfo (info);
                     }
@@ -261,11 +260,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         alreadyExists.RegionLocY = info.RegionLocY;
                         alreadyExists.RegionSizeX = info.RegionSizeX;
                         alreadyExists.RegionSizeY = info.RegionSizeY;
-                        alreadyExists.ExternalHostName = info.ExternalHostName;
-                        if(alreadyExists.ExternalHostName != "DEFAULT")
-                            alreadyExists.FindExternalAutomatically = false;
-                        else
-                            alreadyExists.FindExternalAutomatically = true;
                         alreadyExists.Disabled = false;
                         if (!alreadyExists.UDPPorts.Contains (info.InternalEndPoint.Port))
                             alreadyExists.UDPPorts.Add (info.InternalEndPoint.Port);
@@ -277,7 +271,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 bool foundAll = true;
                 foreach (RegionInfo info in regionsToConvert)
                 {
-                    if (conn.GetRegionInfo(info.RegionID, false) == null)
+                    if (conn.GetRegionInfo(info.RegionID) == null)
                         foundAll = false;
                 }
                 //We found some new ones, they are all loaded
@@ -338,7 +332,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (connector != null)
             {
                 //Make sure we have this region in the database
-                if (connector.GetRegionInfo(oldName, false) == null)
+                if (connector.GetRegionInfo(oldName) == null)
                     return;
                 RegionInfo copy = new RegionInfo();
                 //Make an exact copy

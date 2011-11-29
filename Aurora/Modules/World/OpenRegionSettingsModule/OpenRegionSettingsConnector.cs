@@ -58,11 +58,9 @@ namespace Aurora.Modules
         {
             string secret = Util.RandomClass.Next(0, int.MaxValue).ToString();
             string secret2 = Util.RandomClass.Next(0, int.MaxValue).ToString();
-            string navUrl = MainServer.Instance.HostName +
-                ":" + MainServer.Instance.Port +
+            string navUrl = MainServer.Instance.ServerURI +
                 "/index.php?method=OpenRegionSettings" + secret2;
-            string url = MainServer.Instance.HostName +
-                ":" + MainServer.Instance.Port +
+            string url = MainServer.Instance.ServerURI +
                 "/index.php?method=OpenRegionSettings" + secret;
             MainServer.Instance.RemoveHTTPHandler(null, "OpenRegionSettings" + secret);
             MainServer.Instance.RemoveHTTPHandler(null, "OpenRegionSettings" + secret2);

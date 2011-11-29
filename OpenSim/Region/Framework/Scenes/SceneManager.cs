@@ -423,8 +423,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public IScene StartNewRegion (RegionInfo regionInfo)
         {
-            m_log.InfoFormat("[SceneManager]: Starting region \"{0}\" on {1}:{2} @ {3},{4}", regionInfo.RegionName,
-                regionInfo.ExternalHostName, regionInfo.HttpPort, regionInfo.RegionLocX / 256, regionInfo.RegionLocY / 256);
+            m_log.InfoFormat("[SceneManager]: Starting region \"{0}\" at @ {1},{2}", regionInfo.RegionName,
+                regionInfo.RegionLocX / 256, regionInfo.RegionLocY / 256);
             ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader> ();
             if (sceneLoader == null)
                 throw new Exception ("No Scene Loader Interface!");
@@ -450,9 +450,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //Do this here so that we don't have issues later when startup complete messages start coming in
             m_localScenes.Add (scene);
-
-            // set the initial ports
-            scene.RegionInfo.HttpPort = MainServer.Instance.Port;
 
             StartModules (scene);
 
@@ -594,8 +591,6 @@ namespace OpenSim.Region.Framework.Scenes
                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
                         scene.RegionInfo.RegionLocY != region.RegionLocY ||
                         scene.RegionInfo.RegionLocZ != region.RegionLocZ ||
-                        scene.RegionInfo.HttpPort != region.HttpPort ||
-                        scene.RegionInfo.ExternalHostName != region.ExternalHostName ||
                         scene.RegionInfo.AccessLevel != region.AccessLevel ||
                         scene.RegionInfo.RegionType != region.RegionType// ||
                         //scene.RegionInfo.RegionSizeX != region.RegionSizeX //Don't allow for size updates on the fly, that needs a restart

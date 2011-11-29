@@ -593,8 +593,6 @@ namespace OpenSim.CoreApplicationPlugins
                     region.InternalEndPoint.Port = Convert.ToInt32(requestData["listen_port"]);
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
                     
-                    region.ExternalHostName = (string)requestData["external_address"];
-
                     // default place for region configuration files is in the
                     // Regions directory of the config dir (aka /bin)
                     string regionConfigPath = Path.Combine(Util.configDir(), "Regions");

@@ -121,7 +121,7 @@ namespace OpenSim.Services.GridService
             m_simulationBase.EventManager.RegisterEventHandler("GridRegionSuccessfullyRegistered", EventManager_OnGenericEvent);
 
             m_configurationConfig = config.Configs["Configuration"];
-            m_loadBalancer.SetConfig (m_configurationConfig, this);
+            m_loadBalancer.SetConfig(config, this);
 
             if (m_configurationConfig != null)
                 m_useSessionTime = m_configurationConfig.GetBoolean ("UseSessionTime", m_useSessionTime);
@@ -485,13 +485,13 @@ namespace OpenSim.Services.GridService
             protected List<string> m_remoteLoadBalancingInstances = new List<string> ();
             protected string m_remotePassword = "";
 
-            public void SetConfig (IConfig config, GridRegistrationService gridRegService)
+            public void SetConfig (IConfigSource config, GridRegistrationService gridRegService)
             {
-                m_configurationConfig = config;
+                m_configurationConfig = config.Configs["Configuration"];
 
                 if (m_configurationConfig != null)
                 {
-                    m_defaultHostname = m_configurationConfig.GetString ("HostName", m_defaultHostname);
+                    m_defaultHostname = MainServer.Instance.FullHostName;
                     m_remotePassword = m_configurationConfig.GetString ("RemotePassword", "");
                     m_remotePort = m_configurationConfig.GetUInt ("RemoteLoadBalancingPort", m_defaultPort);
                     SetRemoteUrls (m_configurationConfig.GetString ("RemoteLoadBalancingUrls", "").Split (new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries));

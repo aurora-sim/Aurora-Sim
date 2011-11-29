@@ -2405,7 +2405,7 @@ namespace OpenSim.Framework
                         {
                             foreach (KeyValuePair<string, OSD> kvp in r)
                             {
-                                retVal[kvp.Key] = MainServer.Instance.HostName + ":" + MainServer.Instance.Port + kvp.Value;
+                                retVal[kvp.Key] = MainServer.Instance.ServerURI + kvp.Value;
                             }
                         }
                     }

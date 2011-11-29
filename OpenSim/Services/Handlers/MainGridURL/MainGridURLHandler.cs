@@ -35,7 +35,7 @@ namespace Aurora.Addon.Hypergrid
         public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             //We only return the gatekeeper URL so that regions know what it is
-            return MainServer.Instance.HostName + ":" + MainServer.Instance.Port + "/";
+            return MainServer.Instance.ServerURI + "/";
         }
 
         public void AddExistingUrlForClient (string SessionID, string url, uint port)
