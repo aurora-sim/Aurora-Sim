@@ -36,10 +36,7 @@ using System.Text.RegularExpressions;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-
 using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
@@ -56,9 +53,9 @@ namespace OpenSim.Services.LLLoginService
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool Initialized = false;
         // Global Textures
-        private string sunTexture = "cce0f112-878f-4586-a2e2-a8f104bba271";
-        private string cloudTexture = "dc4b9f0b-d008-45c6-96a4-01dd947ac621";
-        private string moonTexture = "ec4b9f0b-d008-45c6-96a4-01dd947ac621";
+        private const string sunTexture = "cce0f112-878f-4586-a2e2-a8f104bba271";
+        private const string cloudTexture = "dc4b9f0b-d008-45c6-96a4-01dd947ac621";
+        private const string moonTexture = "ec4b9f0b-d008-45c6-96a4-01dd947ac621";
 
         protected IUserAccountService m_UserAccountService;
         protected IAgentInfoService m_agentInfoService;
@@ -173,7 +170,7 @@ namespace OpenSim.Services.LLLoginService
             new GridAvatarProfileArchiver(m_UserAccountService);
             archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService, m_AssetService);
 
-            LoginModules = Aurora.Framework.AuroraModuleLoader.PickupModules<ILoginModule>();
+            LoginModules = AuroraModuleLoader.PickupModules<ILoginModule>();
             foreach (ILoginModule module in LoginModules)
             {
                 module.Initialize(this, m_config, m_UserAccountService);
@@ -268,7 +265,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.Error("[LLOGIN SERVICE]: SetLevel failed, exception " + e.ToString());
+                m_log.Error("[LLOGIN SERVICE]: SetLevel failed, exception " + e);
                 return response;
             }
 
@@ -303,11 +300,8 @@ namespace OpenSim.Services.LLLoginService
                     m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
                     return LLFailedLoginResponse.AccountProblem;
                 }
-                else
-                {
-                    m_UserAccountService.CreateUser(Name, passwd, "");
-                    account = m_UserAccountService.GetUserAccount(scopeID, Name);
-                }
+                m_UserAccountService.CreateUser(Name, passwd, "");
+                account = m_UserAccountService.GetUserAccount(scopeID, Name);
             }
 
             //Set the scopeID for the user
@@ -329,28 +323,22 @@ namespace OpenSim.Services.LLLoginService
                 return LLFailedLoginResponse.AuthenticationProblem;
             }
 
-            IAgentInfo agent = null;
-
             IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>("IAgentConnectorLocal");
             //Already tried to find it before this, so its not there at all.
             if (agentData != null)
             {
-                agent = agentData.GetAgent(account.PrincipalID);
+                IAgentInfo agent = agentData.GetAgent(account.PrincipalID);
                 if (agent == null)
                 {
                     agentData.CreateNewAgent(account.PrincipalID);
                     agent = agentData.GetAgent(account.PrincipalID);
                 }
-                if (agentData != null && mac != "")
+                if (mac != "")
                 {
                     string reason = "";
                     if (!agentData.CheckMacAndViewer(mac, clientVersion, out reason))
                         return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
                             reason, false);
-                }
-                else
-                {
-                    //We tried... might as well skip it
                 }
                 bool AcceptedNewTOS = false;
                 //This gets if the viewer has accepted the new TOS
@@ -451,7 +439,7 @@ namespace OpenSim.Services.LLLoginService
             UUID session = UUID.Random();
 
             m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
-                Name, clientIP.Address.ToString(), clientVersion, startLocation);
+                Name, clientIP.Address, clientVersion, startLocation);
             UserAccount account = m_UserAccountService.GetUserAccount (scopeID, Name);
             try
             {
@@ -485,18 +473,18 @@ namespace OpenSim.Services.LLLoginService
                     return LLFailedLoginResponse.InventoryProblem;
                 }
                 List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-                if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
+                if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                 {
                     m_InventoryService.CreateUserInventory(account.PrincipalID, m_DefaultUserAvatarArchive == "");
                     inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-                    if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel != null && inventorySkel.Count == 0)))
+                    if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                     {
                         m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
                 if (m_InventoryService.CreateUserRootFolder (account.PrincipalID))
-                    ///Gotta refetch... since something went wrong
+                    //Gotta refetch... since something went wrong
                     inventorySkel = m_InventoryService.GetInventorySkeleton (account.PrincipalID);
 
                 if (profileData != null)
@@ -569,8 +557,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     GridUserInfoFound = false;
                     // something went wrong, make something up, so that we don't have to test this anywhere else
-                    guinfo = new UserInfo();
-                    guinfo.UserID = account.PrincipalID.ToString();
+                    guinfo = new UserInfo {UserID = account.PrincipalID.ToString()};
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
                 }
 
@@ -589,23 +576,23 @@ namespace OpenSim.Services.LLLoginService
                 }
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
-                    List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
-                    GridRegion DefaultRegion = null;
-                    if (DefaultRegions.Count == 0)
-                        DefaultRegion = destination;
-                    else
-                        DefaultRegion = DefaultRegions[0];
-
-                    if (m_DefaultHomeRegion != "" && guinfo.HomeRegionID == UUID.Zero)
+                    if (m_GridService != null)
                     {
-                        GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
-                        if (newHomeRegion == null)
+                        List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
+                        GridRegion DefaultRegion = null;
+                        DefaultRegion = DefaultRegions.Count == 0 ? destination : DefaultRegions[0];
+
+                        if (m_DefaultHomeRegion != "" && guinfo.HomeRegionID == UUID.Zero)
+                        {
+                            GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
+                            if (newHomeRegion == null)
+                                guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
+                            else
+                                guinfo.HomeRegionID = guinfo.CurrentRegionID = newHomeRegion.RegionID;
+                        }
+                        else if (guinfo.HomeRegionID == UUID.Zero)
                             guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
-                        else
-                            guinfo.HomeRegionID = guinfo.CurrentRegionID = newHomeRegion.RegionID;
                     }
-                    else if (guinfo.HomeRegionID == UUID.Zero)
-                        guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
 
                     //Z = 0 so that it fixes it on the region server and puts it on the ground
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
@@ -735,7 +722,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat ("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e.ToString ());
+                m_log.WarnFormat ("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e);
                 if (account != null)
                 {
                     //Revert their logged in status if we got that far
@@ -838,7 +825,7 @@ namespace OpenSim.Services.LLLoginService
 
                 return region;
             }
-            else if (startLocation.Equals ("last"))
+            if (startLocation.Equals ("last"))
             {
                 tpFlags |= TeleportFlags.ViaLandmark;
                 // logging into last visited region
@@ -903,118 +890,100 @@ namespace OpenSim.Services.LLLoginService
                 // free uri form
                 // e.g. New Moon&135&46  New Moon@osgrid.org:8002&153&34
                 where = "url";
-                Regex reURI = new Regex (@"^uri:(?<region>[^&]+)&(?<x>\d+)&(?<y>\d+)&(?<z>\d+)$");
-                Match uriMatch = reURI.Match (startLocation);
-                if (uriMatch == null)
-                {
-                    m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, but can't process it", startLocation);
-                    return null;
-                }
-                else
-                {
-                    position = new Vector3 (float.Parse (uriMatch.Groups["x"].Value, Culture.NumberFormatInfo),
-                                           float.Parse (uriMatch.Groups["y"].Value, Culture.NumberFormatInfo),
-                                           float.Parse (uriMatch.Groups["z"].Value, Culture.NumberFormatInfo));
+                Regex reURI = new Regex(@"^uri:(?<region>[^&]+)&(?<x>\d+)&(?<y>\d+)&(?<z>\d+)$");
+                Match uriMatch = reURI.Match(startLocation);
+                position = new Vector3(float.Parse(uriMatch.Groups["x"].Value, Culture.NumberFormatInfo),
+                                       float.Parse(uriMatch.Groups["y"].Value, Culture.NumberFormatInfo),
+                                       float.Parse(uriMatch.Groups["z"].Value, Culture.NumberFormatInfo));
 
-                    string regionName = uriMatch.Groups["region"].ToString ();
-                    if (regionName != null)
+                string regionName = uriMatch.Groups["region"].ToString();
+                if (!regionName.Contains("@"))
+                {
+                    List<GridRegion> regions = m_GridService.GetRegionsByName(scopeID, regionName, 1);
+                    if ((regions == null) || (regions.Count == 0))
                     {
-                        if (!regionName.Contains ("@"))
+                        m_log.InfoFormat(
+                            "[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}. Trying defaults.",
+                            startLocation, regionName);
+                        regions = m_GridService.GetDefaultRegions(scopeID);
+                        if (regions != null && regions.Count > 0)
                         {
-                            List<GridRegion> regions = m_GridService.GetRegionsByName (scopeID, regionName, 1);
-                            if ((regions == null) || (regions != null && regions.Count == 0))
-                            {
-                                m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}. Trying defaults.", startLocation, regionName);
-                                regions = m_GridService.GetDefaultRegions (scopeID);
-                                if (regions != null && regions.Count > 0)
-                                {
-                                    where = "safe";
-                                    return regions[0];
-                                }
-                                else
-                                {
-                                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions (account.ScopeID, 0, 0);
-                                    if (fallbacks != null && fallbacks.Count > 0)
-                                    {
-                                        where = "safe";
-                                        return fallbacks[0];
-                                    }
-                                    else
-                                    {
-                                        //Try to find any safe region
-                                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions (account.ScopeID, 0, 0);
-                                        if (safeRegions != null && safeRegions.Count > 0)
-                                        {
-                                            where = "safe";
-                                            return safeRegions[0];
-                                        }
-                                        else
-                                        {
-                                            m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
-                                            return null;
-                                        }
-                                    }
-                                }
-                            }
+                            where = "safe";
                             return regions[0];
                         }
-                        else
-                        {
-                            //This is so that you can login to other grids via IWC (or HG), example"RegionTest@testingserver.com:8002". All this really needs to do is inform the other grid that we have a user who wants to connect. IWC allows users to login by default to other regions (without the host names), but if one is provided and we don't have a link, we need to create one here.
-                            string[] parts = regionName.Split (new char[] { '@' });
-                            if (parts.Length < 2)
-                            {
-                                m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}", startLocation, regionName);
-                                return null;
-                            }
-                            // Valid specification of a remote grid
-
-                            regionName = parts[0];
-                            string domainLocator = parts[1];
-
-                            //Try now that we removed the domain locator
-                            GridRegion region = m_GridService.GetRegionByName (scopeID, regionName);
-                            if (region != null && region.RegionName == regionName)//Make sure the region name is right too... it could just be a similar name
-                                return region;
-                            ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService> ();
-                            if (service != null)
-                            {
-                                region = service.GetRegionForGrid (regionName, domainLocator);
-
-                                if (region != null)
-                                    return region;
-                            }
-                        }
-                    }
-                    List<GridRegion> defaults = m_GridService.GetDefaultRegions (scopeID);
-                    if (defaults != null && defaults.Count > 0)
-                    {
-                        where = "safe";
-                        return defaults[0];
-                    }
-                    else
-                    {
-                        List<GridRegion> fallbacks = m_GridService.GetFallbackRegions (account.ScopeID, 0, 0);
+                        List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
                         if (fallbacks != null && fallbacks.Count > 0)
                         {
                             where = "safe";
                             return fallbacks[0];
                         }
-                        else
+                        //Try to find any safe region
+                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                        if (safeRegions != null && safeRegions.Count > 0)
                         {
-                            //Try to find any safe region
-                            List<GridRegion> safeRegions = m_GridService.GetSafeRegions (account.ScopeID, 0, 0);
-                            if (safeRegions != null && safeRegions.Count > 0)
-                            {
-                                where = "safe";
-                                return safeRegions[0];
-                            }
-                            else
-                            {
-                                m_log.InfoFormat ("[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.", startLocation);
-                                return null;
-                            }
+                            where = "safe";
+                            return safeRegions[0];
                         }
+                        m_log.InfoFormat(
+                            "[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.",
+                            startLocation);
+                        return null;
+                    }
+                    return regions[0];
+                }
+                //This is so that you can login to other grids via IWC (or HG), example"RegionTest@testingserver.com:8002". All this really needs to do is inform the other grid that we have a user who wants to connect. IWC allows users to login by default to other regions (without the host names), but if one is provided and we don't have a link, we need to create one here.
+                string[] parts = regionName.Split(new char[] {'@'});
+                if (parts.Length < 2)
+                {
+                    m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}",
+                                     startLocation, regionName);
+                    return null;
+                }
+                // Valid specification of a remote grid
+
+                regionName = parts[0];
+                string domainLocator = parts[1];
+
+                //Try now that we removed the domain locator
+                GridRegion region = m_GridService.GetRegionByName(scopeID, regionName);
+                if (region != null && region.RegionName == regionName)
+                    //Make sure the region name is right too... it could just be a similar name
+                    return region;
+                ICommunicationService service = m_registry.RequestModuleInterface<ICommunicationService>();
+                if (service != null)
+                {
+                    region = service.GetRegionForGrid(regionName, domainLocator);
+
+                    if (region != null)
+                        return region;
+                }
+                List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
+                if (defaults != null && defaults.Count > 0)
+                {
+                    where = "safe";
+                    return defaults[0];
+                }
+                else
+                {
+                    List<GridRegion> fallbacks = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
+                    if (fallbacks != null && fallbacks.Count > 0)
+                    {
+                        where = "safe";
+                        return fallbacks[0];
+                    }
+                    else
+                    {
+                        //Try to find any safe region
+                        List<GridRegion> safeRegions = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                        if (safeRegions != null && safeRegions.Count > 0)
+                        {
+                            where = "safe";
+                            return safeRegions[0];
+                        }
+                        m_log.InfoFormat(
+                            "[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.",
+                            startLocation);
+                        return null;
                     }
                 }
             }
@@ -1034,7 +1003,7 @@ namespace OpenSim.Services.LLLoginService
 
             #region Launch Agent
 
-            circuitCode = (uint)Util.RandomClass.Next(); ;
+            circuitCode = (uint)Util.RandomClass.Next();
             aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP);
             aCircuit.teleportFlags = (uint)tpFlags;
             success = LaunchAgentDirectly(destination, ref aCircuit, out reason);
@@ -1089,8 +1058,7 @@ namespace OpenSim.Services.LLLoginService
                 m_GridService.SetRegionSafe (destination.RegionID);
                 return aCircuit;
             }
-            else
-                return null;
+            return null;
         }
 
         protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
@@ -1107,8 +1075,7 @@ namespace OpenSim.Services.LLLoginService
                     destination = r;
                     return true;
                 }
-                else
-                    m_GridService.SetRegionUnsafe(r.RegionID);
+                m_GridService.SetRegionUnsafe(r.RegionID);
             }
             destination = null;
             return false;
@@ -1118,22 +1085,22 @@ namespace OpenSim.Services.LLLoginService
             AvatarAppearance appearance, UUID session, UUID secureSession, uint circuit, Vector3 position,
             IPEndPoint clientIP)
         {
-            AgentCircuitData aCircuit = new AgentCircuitData();
+            AgentCircuitData aCircuit = new AgentCircuitData
+                                            {
+                                                AgentID = account.PrincipalID,
+                                                Appearance = appearance ?? new AvatarAppearance(account.PrincipalID),
+                                                CapsPath = CapsUtil.GetRandomCapsObjectPath(),
+                                                child = false,
+                                                circuitcode = circuit,
+                                                SecureSessionID = secureSession,
+                                                SessionID = session,
+                                                startpos = position,
+                                                IPAddress = clientIP.Address.ToString(),
+                                                ClientIPEndPoint = clientIP
+                                            };
 
-            aCircuit.AgentID = account.PrincipalID;
-            if (appearance != null)
-                aCircuit.Appearance = appearance;
-            else
-                aCircuit.Appearance = new AvatarAppearance(account.PrincipalID);
 
-            aCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath();
-            aCircuit.child = false; // the first login agent is root
-            aCircuit.circuitcode = circuit;
-            aCircuit.SecureSessionID = secureSession;
-            aCircuit.SessionID = session;
-            aCircuit.startpos = position;
-            aCircuit.IPAddress = clientIP.Address.ToString();
-            aCircuit.ClientIPEndPoint = clientIP;
+            // the first login agent is root
 
             return aCircuit;
         }
@@ -1197,10 +1164,10 @@ namespace AvatarArchives
     public class GridAvatarArchiver : IAvatarAppearanceArchiver
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IUserAccountService UserAccountService;
-        private IAvatarService AvatarService;
-        private IInventoryService InventoryService;
-        private IAssetService AssetService;
+        private readonly IUserAccountService UserAccountService;
+        private readonly IAvatarService AvatarService;
+        private readonly IInventoryService InventoryService;
+        private readonly IAssetService AssetService;
 
         public GridAvatarArchiver (IUserAccountService ACS, IAvatarService AS, IInventoryService IS, IAssetService AService)
         {
@@ -1241,7 +1208,7 @@ namespace AvatarArchives
 
                 FileName = FileName.Substring(0, FileName.Length - 9);
 
-                Aurora.Framework.IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 AvatarArchive archive = avarchiver.GetAvatarArchive(FileName);
 
                 file = archive.ArchiveXML;
@@ -1293,7 +1260,7 @@ namespace AvatarArchives
             }
             catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex.ToString());
+                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
             }
 
             AvatarData adata = new AvatarData(appearance);
@@ -1398,7 +1365,7 @@ namespace AvatarArchives
             }
             catch (Exception ex)
             {
-                m_log.Warn("Excpetion: " + ex.ToString());
+                m_log.Warn("Excpetion: " + ex);
             }
             try
             {
@@ -1413,7 +1380,7 @@ namespace AvatarArchives
             }
             catch(Exception ex)
             {
-                m_log.Warn("Excpetion: " + ex.ToString());
+                m_log.Warn("Excpetion: " + ex);
             }
 
             map.Add("Body", body);
@@ -1427,9 +1394,7 @@ namespace AvatarArchives
                 string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
                 string ArchiveXML = OSDParser.SerializeLLSDXmlString(map);
 
-                AvatarArchive archive = new AvatarArchive();
-                archive.ArchiveXML = ArchiveXML;
-                archive.Name = ArchiveName;
+                AvatarArchive archive = new AvatarArchive {ArchiveXML = ArchiveXML, Name = ArchiveName};
 
                 if ((cmdparams.Length >= 8) && (cmdparams[7].Length == 36)) archive.Snapshot = cmdparams[7];
                 if ((cmdparams.Length >= 9) && (cmdparams[8].Length == 1)) archive.IsPublic = int.Parse(cmdparams[8]);
@@ -1480,15 +1445,17 @@ namespace AvatarArchives
 
         private AssetBase LoadAssetBase(OSDMap map)
         {
-            AssetBase asset = new AssetBase();
-            asset.Data = map["AssetData"].AsBinary();
-            asset.TypeString = map["ContentType"].AsString();
-            asset.CreationDate = map["CreationDate"].AsDate();
-            asset.CreatorID = map["CreatorID"].AsUUID();
-            asset.Description = map["Description"].AsString();
-            asset.ID = map["ID"].AsUUID();
-            asset.Name = map["Name"].AsString();
-            asset.Type = map["Type"].AsInteger();
+            AssetBase asset = new AssetBase
+                                  {
+                                      Data = map["AssetData"].AsBinary(),
+                                      TypeString = map["ContentType"].AsString(),
+                                      CreationDate = map["CreationDate"].AsDate(),
+                                      CreatorID = map["CreatorID"].AsUUID(),
+                                      Description = map["Description"].AsString(),
+                                      ID = map["ID"].AsUUID(),
+                                      Name = map["Name"].AsString(),
+                                      Type = map["Type"].AsInteger()
+                                  };
             return asset;
         }
 
@@ -1587,7 +1554,7 @@ namespace AvatarArchives
     public class GridAvatarProfileArchiver
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IUserAccountService UserAccountService;
+        private readonly IUserAccountService UserAccountService;
         public GridAvatarProfileArchiver (IUserAccountService UAS)
         {
             UserAccountService = UAS;
@@ -1619,28 +1586,34 @@ namespace AvatarArchives
             Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
 
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
-            UserAccount UDA = new UserAccount();
-            UDA.Name = cmdparams[3] + cmdparams[4];
-            UDA.PrincipalID = UUID.Random();
-            UDA.ScopeID = UUID.Zero;
-            UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
-            UDA.UserLevel = 0; //For security... Don't want everyone loading full god mode.
-            UDA.UserTitle = results["UserTitle"].ToString();
-            UDA.Email = results["Email"].ToString();
-            UDA.Created = int.Parse(results["Created"].ToString());
-            UserAccountService.StoreUserAccount(UDA);
+            if (results != null)
+            {
+                UserAccount UDA = new UserAccount
+                                      {
+                                          Name = cmdparams[3] + cmdparams[4],
+                                          PrincipalID = UUID.Random(),
+                                          ScopeID = UUID.Zero,
+                                          UserFlags = int.Parse(results["UserFlags"].ToString()),
+                                          UserLevel = 0,
+                                          UserTitle = results["UserTitle"].ToString(),
+                                          Email = results["Email"].ToString(),
+                                          Created = int.Parse(results["Created"].ToString())
+                                      };
+                //For security... Don't want everyone loading full god mode.
+                UserAccountService.StoreUserAccount(UDA);
 
-            replyData = WebUtils.ParseXmlResponse(file[2]);
-            IUserProfileInfo UPI = new IUserProfileInfo();
-            UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
-            //Update the principle ID to the new user.
-            UPI.PrincipalID = UDA.PrincipalID;
+                replyData = WebUtils.ParseXmlResponse(file[2]);
+                IUserProfileInfo UPI = new IUserProfileInfo();
+                UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
+                //Update the principle ID to the new user.
+                UPI.PrincipalID = UDA.PrincipalID;
 
-            IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
-            if (profileData.GetUserProfile(UPI.PrincipalID) == null)
-                profileData.CreateNewProfile(UPI.PrincipalID);
+                IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
+                if (profileData.GetUserProfile(UPI.PrincipalID) == null)
+                    profileData.CreateNewProfile(UPI.PrincipalID);
 
-            profileData.UpdateUserProfile(UPI);
+                profileData.UpdateUserProfile(UPI);
+            }
 
             m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }

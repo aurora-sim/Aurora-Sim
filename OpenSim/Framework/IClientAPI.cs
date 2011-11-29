@@ -28,12 +28,13 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Mischel.Collections;
 
 namespace OpenSim.Framework
 {
+
     #region Client API Delegate definitions
 
     public delegate void ViewerEffectEventHandler(IClientAPI sender, List<ViewerEffectEventHandlerArg> args);
@@ -46,8 +47,9 @@ namespace OpenSim.Framework
 
     public delegate void AvatarNowWearing(IClientAPI sender, AvatarWearingArgs e);
 
-    public delegate void ImprovedInstantMessage (IClientAPI remoteclient, GridInstantMessage im);
-    public delegate bool PreSendImprovedInstantMessage (IClientAPI remoteclient, GridInstantMessage im);
+    public delegate void ImprovedInstantMessage(IClientAPI remoteclient, GridInstantMessage im);
+
+    public delegate bool PreSendImprovedInstantMessage(IClientAPI remoteclient, GridInstantMessage im);
 
     public delegate void RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
@@ -55,19 +57,22 @@ namespace OpenSim.Framework
 
     public delegate UUID RezSingleAttachmentFromInv(IClientAPI remoteClient, UUID itemID, int AttachmentPt);
 
-    public delegate void RezMultipleAttachmentsFromInv(IClientAPI remoteClient, RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
-                                                       RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[] objects);
+    public delegate void RezMultipleAttachmentsFromInv(
+        IClientAPI remoteClient, RezMultipleAttachmentsFromInvPacket.HeaderDataBlock header,
+        RezMultipleAttachmentsFromInvPacket.ObjectDataBlock[] objects);
 
     public delegate void ObjectAttach(
         IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent);
 
-    public delegate void ModifyTerrain(UUID user, 
-        float height, float seconds, byte size, byte action, float north, float west, float south, float east,
-        UUID agentId, float BrushSize);
+    public delegate void ModifyTerrain(UUID user,
+                                       float height, float seconds, byte size, byte action, float north, float west,
+                                       float south, float east,
+                                       UUID agentId, float BrushSize);
 
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
-    public delegate void SetAppearance(IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables);
+    public delegate void SetAppearance(
+        IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables);
 
     public delegate void StartAnim(IClientAPI remoteClient, UUID animID);
 
@@ -91,7 +96,9 @@ namespace OpenSim.Framework
 
     public delegate void RequestAvatarProperties(IClientAPI remoteClient, UUID avatarID);
 
-    public delegate void UpdateAvatarProperties(IClientAPI remoteClient, string AboutText, string FLAboutText, UUID FLImageID, UUID ImageID, string WebProfileURL, bool AllowPublish, bool MaturePublish);
+    public delegate void UpdateAvatarProperties(
+        IClientAPI remoteClient, string AboutText, string FLAboutText, UUID FLImageID, UUID ImageID,
+        string WebProfileURL, bool AllowPublish, bool MaturePublish);
 
     public delegate void SetAlwaysRun(IClientAPI remoteClient, bool SetAlwaysRun);
 
@@ -125,7 +132,8 @@ namespace OpenSim.Framework
     public delegate void ObjectDrop(uint localID, IClientAPI remoteClient);
 
     public delegate void UpdatePrimFlags(
-        uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks, IClientAPI remoteClient);
+        uint localID, bool UsePhysics, bool IsTemporary, bool IsPhantom,
+        ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks, IClientAPI remoteClient);
 
     public delegate void UpdatePrimTexture(uint localID, byte[] texture, IClientAPI remoteClient);
 
@@ -137,11 +145,13 @@ namespace OpenSim.Framework
 
     public delegate void UpdatePrimSingleRotation(uint localID, Quaternion rot, IClientAPI remoteClient);
 
-    public delegate void UpdatePrimSingleRotationPosition(uint localID, Quaternion rot, Vector3 pos, IClientAPI remoteClient);
+    public delegate void UpdatePrimSingleRotationPosition(
+        uint localID, Quaternion rot, Vector3 pos, IClientAPI remoteClient);
 
     public delegate void UpdatePrimGroupRotation(uint localID, Vector3 pos, Quaternion rot, IClientAPI remoteClient);
 
-    public delegate bool ObjectDuplicate(uint localID, Vector3 offset, uint dupeFlags, UUID AgentID, UUID GroupID, Quaternion rot);
+    public delegate bool ObjectDuplicate(
+        uint localID, Vector3 offset, uint dupeFlags, UUID AgentID, UUID GroupID, Quaternion rot);
 
     public delegate void ObjectDuplicateOnRay(uint localID, uint dupeFlags, UUID AgentID, UUID GroupID,
                                               UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,
@@ -169,10 +179,13 @@ namespace OpenSim.Framework
         uint localID, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs);
 
     public delegate void MoveObject(
-        UUID objectID, Vector3 offset, Vector3 grapPos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs);
+        UUID objectID, Vector3 offset, Vector3 grapPos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs
+        );
 
     public delegate void SpinStart(UUID objectID, IClientAPI remoteClient);
+
     public delegate void SpinObject(UUID objectID, Quaternion rotation, IClientAPI remoteClient);
+
     public delegate void SpinStop(UUID objectID, IClientAPI remoteClient);
 
     public delegate void ParcelAccessListRequest(
@@ -191,7 +204,8 @@ namespace OpenSim.Framework
 
     public delegate void ParcelPropertiesUpdateRequest(LandUpdateArgs args, int local_id, IClientAPI remote_client);
 
-    public delegate void ParcelSelectObjects(int land_local_id, int request_type, List<UUID> returnIDs, IClientAPI remote_client);
+    public delegate void ParcelSelectObjects(
+        int land_local_id, int request_type, List<UUID> returnIDs, IClientAPI remote_client);
 
     public delegate void ParcelObjectOwnerRequest(int local_id, IClientAPI remote_client);
 
@@ -217,7 +231,8 @@ namespace OpenSim.Framework
     public delegate void UUIDNameRequest(UUID id, IClientAPI remote_client);
 
     public delegate void AddNewPrim(
-        UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot, PrimitiveBaseShape shape, byte bypassRaycast, Vector3 RayStart,
+        UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot, PrimitiveBaseShape shape, byte bypassRaycast,
+        Vector3 RayStart,
         UUID RayTargetID,
         byte RayEndIsIntersection);
 
@@ -342,9 +357,10 @@ namespace OpenSim.Framework
     //Estate Requests
     public delegate void DetailedEstateDataRequest(IClientAPI remoteClient, UUID invoice);
 
-    public delegate void SetEstateFlagsRequest(IClientAPI remoteClient, 
-        bool blockTerraform, bool noFly, bool allowDamage, bool blockLandResell, int maxAgents, float objectBonusFactor,
-        int matureLevel, bool restrictPushObject, bool allowParcelChanges);
+    public delegate void SetEstateFlagsRequest(IClientAPI remoteClient,
+                                               bool blockTerraform, bool noFly, bool allowDamage, bool blockLandResell,
+                                               int maxAgents, float objectBonusFactor,
+                                               int matureLevel, bool restrictPushObject, bool allowParcelChanges);
 
     public delegate void SetEstateTerrainBaseTexture(IClientAPI remoteClient, int corner, UUID side);
 
@@ -356,8 +372,9 @@ namespace OpenSim.Framework
     public delegate void CommitEstateTerrainTextureRequest(IClientAPI remoteClient);
 
     public delegate void SetRegionTerrainSettings(UUID AgentID,
-        float waterHeight, float terrainRaiseLimit, float terrainLowerLimit, bool estateSun, bool fixedSun,
-        float sunHour, bool globalSun, bool estateFixed, float estateSunHour);
+                                                  float waterHeight, float terrainRaiseLimit, float terrainLowerLimit,
+                                                  bool estateSun, bool fixedSun,
+                                                  float sunHour, bool globalSun, bool estateFixed, float estateSunHour);
 
     public delegate void EstateChangeInfo(IClientAPI client, UUID invoice, UUID senderID, UInt32 param1, UInt32 param2);
 
@@ -434,80 +451,116 @@ namespace OpenSim.Framework
     public delegate void DeclineCallingCard(IClientAPI remoteClient, UUID transactionID);
 
     public delegate void SoundTrigger(
-        UUID soundId, UUID ownerid, UUID objid, UUID parentid, double Gain, Vector3 Position, UInt64 Handle, float radius);
+        UUID soundId, UUID ownerid, UUID objid, UUID parentid, double Gain, Vector3 Position, UInt64 Handle,
+        float radius);
 
     public delegate void StartLure(byte lureType, string message, UUID targetID, IClientAPI client);
+
     public delegate void TeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client);
 
     public delegate void ClassifiedInfoRequest(UUID classifiedID, IClientAPI client);
-    public delegate void ClassifiedInfoUpdate(UUID classifiedID, uint category, string name, string description, UUID parcelID, uint parentEstate, UUID snapshotID, Vector3 globalPos, byte classifiedFlags, int price, IClientAPI client);
+
+    public delegate void ClassifiedInfoUpdate(
+        UUID classifiedID, uint category, string name, string description, UUID parcelID, uint parentEstate,
+        UUID snapshotID, Vector3 globalPos, byte classifiedFlags, int price, IClientAPI client);
+
     public delegate void ClassifiedDelete(UUID classifiedID, IClientAPI client);
 
     public delegate void EventNotificationAddRequest(uint EventID, IClientAPI client);
+
     public delegate void EventNotificationRemoveRequest(uint EventID, IClientAPI client);
 
-    public delegate void EventGodDelete(uint eventID, UUID queryID, string queryText, uint queryFlags, int queryStart, IClientAPI client);
+    public delegate void EventGodDelete(
+        uint eventID, UUID queryID, string queryText, uint queryFlags, int queryStart, IClientAPI client);
 
     public delegate void ParcelDwellRequest(int localID, IClientAPI client);
 
     public delegate void UserInfoRequest(IClientAPI client);
+
     public delegate void UpdateUserInfo(bool imViaEmail, bool visible, IClientAPI client);
+
     public delegate void RetrieveInstantMessages(IClientAPI client);
+
     public delegate void PickDelete(IClientAPI client, UUID pickID);
+
     public delegate void PickGodDelete(IClientAPI client, UUID agentID, UUID pickID, UUID queryID);
-    public delegate void PickInfoUpdate(IClientAPI client, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos);
+
+    public delegate void PickInfoUpdate(
+        IClientAPI client, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID,
+        int sortOrder, bool enabled, Vector3d globalPos);
+
     public delegate void AvatarNotesUpdate(IClientAPI client, UUID targetID, string notes);
+
     public delegate void MuteListRequest(IClientAPI client, uint muteCRC);
-    public delegate void AvatarInterestUpdate(IClientAPI client, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages);
+
+    public delegate void AvatarInterestUpdate(
+        IClientAPI client, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages);
+
     public delegate void GrantUserFriendRights(IClientAPI client, UUID requester, UUID target, int rights);
-    public delegate void PlacesQuery(UUID QueryID, UUID TransactionID, string QueryText, uint QueryFlags, byte Category, string SimName, IClientAPI client);
+
+    public delegate void PlacesQuery(
+        UUID QueryID, UUID TransactionID, string QueryText, uint QueryFlags, byte Category, string SimName,
+        IClientAPI client);
 
     public delegate void AgentFOV(IClientAPI client, float verticalAngle);
-    
-    public delegate void MuteListEntryUpdate(IClientAPI client, UUID MuteID, string Name, int Flags,UUID AgentID);
-    
-    public delegate void MuteListEntryRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID);
-    
-    public delegate void AvatarInterestReply(IClientAPI client,UUID target, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages);
-    
-    public delegate void FindAgentUpdate(IClientAPI client, UUID hunter, UUID target);
-    
-    public delegate void TrackAgentUpdate(IClientAPI client, UUID hunter, UUID target);
-    
-    public delegate void FreezeUserUpdate(IClientAPI client, UUID parcelowner,uint flags, UUID target);
-    
-    public delegate void EjectUserUpdate(IClientAPI client, UUID parcelowner,uint flags, UUID target);
-    
-    public delegate void NewUserReport(IClientAPI client, string regionName,UUID abuserID, byte catagory, byte checkflags, string details, UUID objectID, Vector3 postion, byte reportType ,UUID screenshotID, string Summary, UUID reporter);
 
-    public delegate void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY);
+    public delegate void MuteListEntryUpdate(IClientAPI client, UUID MuteID, string Name, int Flags, UUID AgentID);
+
+    public delegate void MuteListEntryRemove(IClientAPI client, UUID MuteID, string Name, UUID AgentID);
+
+    public delegate void AvatarInterestReply(
+        IClientAPI client, UUID target, uint wantmask, string wanttext, uint skillsmask, string skillstext,
+        string languages);
+
+    public delegate void FindAgentUpdate(IClientAPI client, UUID hunter, UUID target);
+
+    public delegate void TrackAgentUpdate(IClientAPI client, UUID hunter, UUID target);
+
+    public delegate void FreezeUserUpdate(IClientAPI client, UUID parcelowner, uint flags, UUID target);
+
+    public delegate void EjectUserUpdate(IClientAPI client, UUID parcelowner, uint flags, UUID target);
+
+    public delegate void NewUserReport(
+        IClientAPI client, string regionName, UUID abuserID, byte catagory, byte checkflags, string details,
+        UUID objectID, Vector3 postion, byte reportType, UUID screenshotID, string Summary, UUID reporter);
+
+    public delegate void GodUpdateRegionInfoUpdate(
+        IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName,
+        int RedirectX, int RedirectY);
 
     public delegate void GodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter);
-    
+
     public delegate void ViewerStartAuction(IClientAPI client, int LocalID, UUID SnapshotID);
 
-    public delegate void SaveStateHandler(IClientAPI client,UUID agentID);
-    
-    public delegate void GroupAccountSummaryRequest(IClientAPI client,UUID agentID, UUID groupID);
-    
-    public delegate void GroupAccountDetailsRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
-    
-    public delegate void GroupAccountTransactionsRequest(IClientAPI client,UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
-    
+    public delegate void SaveStateHandler(IClientAPI client, UUID agentID);
+
+    public delegate void GroupAccountSummaryRequest(IClientAPI client, UUID agentID, UUID groupID);
+
+    public delegate void GroupAccountDetailsRequest(
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+
+    public delegate void GroupAccountTransactionsRequest(
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+
     public delegate void ParcelBuyPass(IClientAPI client, UUID agentID, int ParcelLocalID);
-    
+
     public delegate void ParcelGodMark(IClientAPI client, UUID agentID, int ParcelLocalID);
 
-    public delegate void GroupActiveProposalsRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+    public delegate void GroupActiveProposalsRequest(
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
 
-    public delegate void GroupVoteHistoryRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+    public delegate void GroupVoteHistoryRequest(
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
 
-    public delegate void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID, UUID ProposalID, string vote);
+    public delegate void GroupProposalBallotRequest(
+        IClientAPI client, UUID agentID, UUID sessionID, UUID groupID, UUID ProposalID, string vote);
 
     public delegate void SimWideDeletesDelegate(IClientAPI client, int flags, UUID targetID);
 
     public delegate void SendPostcard(IClientAPI client);
+
     public delegate void TeleportCancel(IClientAPI client);
+
     public delegate void AgentCachedTextureRequest(IClientAPI client, List<CachedAgentArgs> args);
 
     #endregion
@@ -520,32 +573,21 @@ namespace OpenSim.Framework
 
     public class LandObjectOwners
     {
-        public int Count = 0;
-        public bool GroupOwned = false;
+        public int Count;
+        public bool GroupOwned;
+        public bool Online;
         public UUID OwnerID = UUID.Zero;
-        public bool Online = false;
-        public DateTime TimeLastRezzed = new DateTime();
+        public DateTime TimeLastRezzed;
     }
 
     public class DirPlacesReplyData
     {
-        public UUID parcelID;
-        public string name;
-        public bool forSale;
+        public uint Status;
         public bool auction;
         public float dwell;
-        public uint Status;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["parcelID"] = parcelID;
-            KVP["name"] = name;
-            KVP["forSale"] = forSale;
-            KVP["auction"] = auction;
-            KVP["dwell"] = dwell;
-            KVP["Status"] = Status;
-            return KVP;
-        }
+        public bool forSale;
+        public string name;
+        public UUID parcelID;
 
         public DirPlacesReplyData()
         {
@@ -560,39 +602,39 @@ namespace OpenSim.Framework
             name = KVP["name"].ToString();
             parcelID = UUID.Parse(KVP["parcelID"].ToString());
         }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["parcelID"] = parcelID;
+            KVP["name"] = name;
+            KVP["forSale"] = forSale;
+            KVP["auction"] = auction;
+            KVP["dwell"] = dwell;
+            KVP["Status"] = Status;
+            return KVP;
+        }
     }
 
     public struct DirPeopleReplyData
     {
         public UUID agentID;
         public string firstName;
-        public string lastName;
         public string group;
+        public string lastName;
         public bool online;
         public int reputation;
     }
 
     public class DirEventsReplyData
     {
-        public UUID ownerID;
-        public string name;
-        public uint eventID;
-        public string date;
-        public uint unixTime;
-        public uint eventFlags;
         public uint Status;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["ownerID"] = ownerID;
-            KVP["name"] = name;
-            KVP["eventID"] = eventID;
-            KVP["date"] = date;
-            KVP["unixTime"] = unixTime;
-            KVP["eventFlags"] = eventFlags;
-            KVP["Status"] = Status;
-            return KVP;
-        }
+        public string date;
+        public uint eventFlags;
+        public uint eventID;
+        public string name;
+        public UUID ownerID;
+        public uint unixTime;
 
         public DirEventsReplyData()
         {
@@ -607,6 +649,19 @@ namespace OpenSim.Framework
             eventID = uint.Parse(KVP["eventID"].ToString());
             name = KVP["name"].ToString();
             ownerID = UUID.Parse(KVP["ownerID"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["ownerID"] = ownerID;
+            KVP["name"] = name;
+            KVP["eventID"] = eventID;
+            KVP["date"] = date;
+            KVP["unixTime"] = unixTime;
+            KVP["eventFlags"] = eventFlags;
+            KVP["Status"] = Status;
+            return KVP;
         }
     }
 
@@ -642,25 +697,13 @@ namespace OpenSim.Framework
 
     public class DirClassifiedReplyData
     {
-        public UUID classifiedID;
-        public string name;
+        public uint Status;
         public byte classifiedFlags;
+        public UUID classifiedID;
         public uint creationDate;
         public uint expirationDate;
+        public string name;
         public int price;
-        public uint Status;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["classifiedID"] = classifiedID;
-            KVP["name"] = name;
-            KVP["classifiedFlags"] = classifiedFlags;
-            KVP["creationDate"] = creationDate;
-            KVP["expirationDate"] = expirationDate;
-            KVP["price"] = price;
-            KVP["Status"] = Status;
-            return KVP;
-        }
 
         public DirClassifiedReplyData()
         {
@@ -676,27 +719,29 @@ namespace OpenSim.Framework
             name = KVP["name"].ToString();
             classifiedID = UUID.Parse(KVP["classifiedID"].ToString());
         }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["classifiedID"] = classifiedID;
+            KVP["name"] = name;
+            KVP["classifiedFlags"] = classifiedFlags;
+            KVP["creationDate"] = creationDate;
+            KVP["expirationDate"] = expirationDate;
+            KVP["price"] = price;
+            KVP["Status"] = Status;
+            return KVP;
+        }
     }
 
     public class DirLandReplyData
     {
-        public UUID parcelID;
-        public string name;
+        public int actualArea;
         public bool auction;
         public bool forSale;
+        public string name;
+        public UUID parcelID;
         public int salePrice;
-        public int actualArea;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["parcelID"] = parcelID;
-            KVP["name"] = name;
-            KVP["forSale"] = forSale;
-            KVP["auction"] = auction;
-            KVP["salePrice"] = salePrice;
-            KVP["actualArea"] = actualArea;
-            return KVP;
-        }
 
         public DirLandReplyData()
         {
@@ -711,22 +756,34 @@ namespace OpenSim.Framework
             name = KVP["name"].ToString();
             parcelID = UUID.Parse(KVP["parcelID"].ToString());
         }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["parcelID"] = parcelID;
+            KVP["name"] = name;
+            KVP["forSale"] = forSale;
+            KVP["auction"] = auction;
+            KVP["salePrice"] = salePrice;
+            KVP["actualArea"] = actualArea;
+            return KVP;
+        }
     }
 
     public struct DirPopularReplyData
     {
-        public UUID parcelID;
-        public string name;
         public float dwell;
+        public string name;
+        public UUID parcelID;
     }
 
     public class EntityUpdate
     {
         public IEntity Entity;
         public PrimUpdateFlags Flags;
-        public int Version = 0;
+        public int Version;
 
-        public EntityUpdate (IEntity entity, PrimUpdateFlags flags)
+        public EntityUpdate(IEntity entity, PrimUpdateFlags flags)
         {
             Entity = entity;
             Flags = flags;
@@ -734,8 +791,8 @@ namespace OpenSim.Framework
     }
 
     /// <summary>
-    /// Specifies the fields that have been changed when sending a prim or
-    /// avatar update
+    ///   Specifies the fields that have been changed when sending a prim or
+    ///   avatar update
     /// </summary>
     [Flags]
     public enum PrimUpdateFlags : uint
@@ -767,8 +824,9 @@ namespace OpenSim.Framework
         FindBest = 1 << 23,
         ForcedFullUpdate = UInt32.MaxValue - 1,
         FullUpdate = UInt32.MaxValue,
-        TerseUpdate = PrimUpdateFlags.Position | PrimUpdateFlags.Rotation | PrimUpdateFlags.Velocity
-                | PrimUpdateFlags.Acceleration | PrimUpdateFlags.AngularVelocity
+
+        TerseUpdate = Position | Rotation | Velocity
+                      | Acceleration | AngularVelocity
     }
 
     public static class PrimUpdateFlagsExtensions
@@ -803,33 +861,32 @@ namespace OpenSim.Framework
 
         IPAddress EndPoint { get; }
 
-        bool TryGet<T> (out T iface);
-        T Get<T> ();
-
         // [Obsolete("LLClientView Specific - Replace with ???")]
         int NextAnimationSequenceNumber { get; }
 
         /// <summary>
-        /// Returns the full name of the agent/avatar represented by this client
+        ///   Returns the full name of the agent/avatar represented by this client
         /// </summary>
         string Name { get; }
 
         /// <value>
-        /// Determines whether the client thread is doing anything or not.
+        ///   Determines whether the client thread is doing anything or not.
         /// </value>
         bool IsActive { get; set; }
 
         /// <value>
-        /// Determines whether the client is logging out or not.
+        ///   Determines whether the client is logging out or not.
         /// </value>
         bool IsLoggingOut { get; set; }
-        
+
         bool SendLogoutPacketWhenClosing { set; }
 
         // [Obsolete("LLClientView Specific - Circuits are unique to LLClientView")]
         uint CircuitCode { get; }
 
         IPEndPoint RemoteEndPoint { get; }
+        bool TryGet<T>(out T iface);
+        T Get<T>();
 
         event GenericMessage OnGenericMessage;
 
@@ -1064,7 +1121,7 @@ namespace OpenSim.Framework
         event MuteListRequest OnMuteListRequest;
 
         event PlacesQuery OnPlacesQuery;
-        
+
         event FindAgentUpdate OnFindAgent;
         event TrackAgentUpdate OnTrackAgent;
         event NewUserReport OnUserReport;
@@ -1091,9 +1148,9 @@ namespace OpenSim.Framework
         event GodlikeMessage OnEstateTelehubRequest;
         event ViewerStartAuction OnViewerStartAuction;
         event AgentCachedTextureRequest OnAgentCachedTextureRequest;
-        
+
         /// <summary>
-        /// Set the debug level at which packet output should be printed to console.
+        ///   Set the debug level at which packet output should be printed to console.
         /// </summary>
         void SetDebugPacketLevel(int newDebug);
 
@@ -1105,28 +1162,29 @@ namespace OpenSim.Framework
         //     void ActivateGesture(UUID assetId, UUID gestureId);
 
         /// <summary>
-        /// Tell this client what items it should be wearing now
+        ///   Tell this client what items it should be wearing now
         /// </summary>
         void SendWearables(AvatarWearable[] wearables, int serial);
 
         void SendAgentCachedTexture(List<CachedAgentArgs> args);
 
         /// <summary>
-        /// Send information about the given agent's appearance to another client.
+        ///   Send information about the given agent's appearance to another client.
         /// </summary>
-        /// <param name="agentID">The id of the agent associated with the appearance</param>
-        /// <param name="visualParams"></param>
-        /// <param name="textureEntry"></param>
+        /// <param name = "agentID">The id of the agent associated with the appearance</param>
+        /// <param name = "visualParams"></param>
+        /// <param name = "textureEntry"></param>
         void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry);
 
         void SendStartPingCheck(byte seq);
 
         /// <summary>
-        /// Tell the client that an object has been deleted
+        ///   Tell the client that an object has been deleted
         /// </summary>
-        /// <param name="regionHandle"></param>
-        /// <param name="localID"></param>
-        void SendKillObject (ulong regionHandle, IEntity[] entities);
+        /// <param name = "regionHandle"></param>
+        /// <param name = "localID"></param>
+        void SendKillObject(ulong regionHandle, IEntity[] entities);
+
         void SendKillObject(ulong regionHandle, uint[] entities);
 
         void SendAnimations(AnimationGroup animations);
@@ -1141,37 +1199,37 @@ namespace OpenSim.Framework
         void SendGenericMessage(string method, List<byte[]> message);
 
         /// <summary>
-        /// Send the entire terrain map to the client
+        ///   Send the entire terrain map to the client
         /// </summary>
-        /// <param name="map"></param>
+        /// <param name = "map"></param>
         void SendLayerData(short[] map);
 
 
         /// <summary>
-        /// Send one patch to the client
-        /// Note: x and y variables are NOT positions, they are terrain patches!
+        ///   Send one patch to the client
+        ///   Note: x and y variables are NOT positions, they are terrain patches!
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="map"></param>
+        /// <param name = "x"></param>
+        /// <param name = "y"></param>
+        /// <param name = "map"></param>
         void SendLayerData(int px, int py, short[] map);
 
         /// <summary>
-        /// Send an array of patches to the client
-        /// Note: all x and y variables are NOT positions, they are terrain patches!
+        ///   Send an array of patches to the client
+        ///   Note: all x and y variables are NOT positions, they are terrain patches!
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="map"></param>
+        /// <param name = "x"></param>
+        /// <param name = "y"></param>
+        /// <param name = "map"></param>
         void SendLayerData(int[] x, int[] y, short[] map, TerrainPatch.LayerType type);
 
         void SendWindData(Vector2[] windSpeeds);
         void SendCloudData(float[] cloudCover);
 
         void MoveAgentIntoRegion(RegionInfo regInfo, Vector3 pos, Vector3 look);
-        
+
         /// <summary>
-        /// Return circuit information for this client.
+        ///   Return circuit information for this client.
         /// </summary>
         /// <returns></returns>
         AgentCircuitData RequestClientInfo();
@@ -1193,7 +1251,7 @@ namespace OpenSim.Framework
 
         void SetChildAgentThrottle(byte[] throttle);
 
-        void SendAvatarDataImmediate (IEntity avatar);
+        void SendAvatarDataImmediate(IEntity avatar);
         void SendAvatarUpdate(IEnumerable<EntityUpdate> updates);
         void SendPrimUpdate(IEnumerable<EntityUpdate> updates);
         void FlushPrimUpdates();
@@ -1205,9 +1263,9 @@ namespace OpenSim.Framework
         void SendInventoryItemDetails(UUID ownerID, InventoryItemBase item);
 
         /// <summary>
-        /// Tell the client that we have created the item it requested.
+        ///   Tell the client that we have created the item it requested.
         /// </summary>
-        /// <param name="Item"></param>
+        /// <param name = "Item"></param>
         void SendInventoryItemCreateUpdate(InventoryItemBase Item, uint callbackId);
 
         void SendRemoveInventoryItem(UUID itemID);
@@ -1217,13 +1275,11 @@ namespace OpenSim.Framework
         void SendTaskInventory(UUID taskID, short serial, byte[] fileName);
 
         /// <summary>
-        /// Used by the server to inform the client of new inventory items and folders.
+        ///   Used by the server to inform the client of new inventory items and folders.
         /// </summary>
-        /// 
         /// If the node is a folder then the contents will be transferred
         /// (including all descendent folders) as well as the folder itself.
-        /// 
-        /// <param name="node"></param>
+        /// <param name = "node"></param>
         void SendBulkUpdateInventory(InventoryNodeBase node);
 
         void SendXferPacket(ulong xferID, uint packet, byte[] data);
@@ -1258,29 +1314,30 @@ namespace OpenSim.Framework
         void SendLoadURL(string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message, string url);
 
         /// <summary>
-        /// Open a dialog box on the client.
+        ///   Open a dialog box on the client.
         /// </summary>
-        /// <param name="objectname"></param>
-        /// <param name="objectID"></param>
-        /// <param name="ownerID">/param>
-        /// <param name="ownerFirstName"></param>
-        /// <param name="ownerLastName"></param>
-        /// <param name="msg"></param>
-        /// <param name="textureID"></param>
-        /// <param name="ch"></param>
-        /// <param name="buttonlabels"></param>
-        void SendDialog (string objectname, UUID objectID, UUID ownerID, string ownerFirstName, string ownerLastName, string msg, UUID textureID, int ch,
+        /// <param name = "objectname"></param>
+        /// <param name = "objectID"></param>
+        /// <param name = "ownerID">/param>
+        ///   <param name = "ownerFirstName"></param>
+        ///   <param name = "ownerLastName"></param>
+        ///   <param name = "msg"></param>
+        ///   <param name = "textureID"></param>
+        ///   <param name = "ch"></param>
+        ///   <param name = "buttonlabels"></param>
+        void SendDialog(string objectname, UUID objectID, UUID ownerID, string ownerFirstName, string ownerLastName,
+                        string msg, UUID textureID, int ch,
                         string[] buttonlabels);
 
         /// <summary>
-        /// Update the client as to where the sun is currently located.
+        ///   Update the client as to where the sun is currently located.
         /// </summary>
-        /// <param name="sunPos"></param>
-        /// <param name="sunVel"></param>
-        /// <param name="CurrentTime">Seconds since Unix Epoch 01/01/1970 00:00:00</param>
-        /// <param name="SecondsPerSunCycle"></param>
-        /// <param name="SecondsPerYear"></param>
-        /// <param name="OrbitalPosition">The orbital position is given in radians, and must be "adjusted" for the linden client, see LLClientView</param>
+        /// <param name = "sunPos"></param>
+        /// <param name = "sunVel"></param>
+        /// <param name = "CurrentTime">Seconds since Unix Epoch 01/01/1970 00:00:00</param>
+        /// <param name = "SecondsPerSunCycle"></param>
+        /// <param name = "SecondsPerYear"></param>
+        /// <param name = "OrbitalPosition">The orbital position is given in radians, and must be "adjusted" for the linden client, see LLClientView</param>
         void SendSunPos(Vector3 sunPos, Vector3 sunVel, ulong CurrentTime, uint SecondsPerSunCycle, uint SecondsPerYear,
                         float OrbitalPosition);
 
@@ -1302,7 +1359,8 @@ namespace OpenSim.Framework
         void SendEstateCovenantInformation(UUID covenant, int covenantLastUpdated);
 
         void SendDetailedEstateData(UUID invoice, string estateName, uint estateID, uint parentEstate, uint estateFlags,
-                                    uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail, UUID estateOwner);
+                                    uint sunPosition, UUID covenant, int covenantLastUpdated, string abuseEmail,
+                                    UUID estateOwner);
 
         void SendLandProperties(int sequence_id, bool snap_selection, int request_result, LandData landData,
                                 float simObjectBonusFactor, int parcelObjectCapacity, int simObjectCapacity,
@@ -1314,16 +1372,6 @@ namespace OpenSim.Framework
         void SendLandObjectOwners(List<LandObjectOwners> objOwners);
         void SendLandParcelOverlay(byte[] data, int sequence_id);
 
-        #region Parcel Methods
-
-        void SendParcelMediaCommand(uint flags, ParcelMediaCommandEnum command, float time);
-
-        void SendParcelMediaUpdate(string mediaUrl, UUID mediaTextureID,
-                                   byte autoScale, string mediaType, string mediaDesc, int mediaWidth, int mediaHeight,
-                                   byte mediaLoop);
-
-        #endregion
-
         void SendAssetUploadCompleteMessage(sbyte AssetType, bool Success, UUID AssetFullID);
         void SendConfirmXfer(ulong xferID, uint PacketID);
         void SendXferRequest(ulong XferID, short AssetType, UUID vFileID, byte FilePath, byte[] FileName);
@@ -1331,33 +1379,33 @@ namespace OpenSim.Framework
         void SendInitiateDownload(string simFileName, string clientFileName);
 
         /// <summary>
-        /// Send the first part of a texture.  For sufficiently small textures, this may be the only packet.
+        ///   Send the first part of a texture.  For sufficiently small textures, this may be the only packet.
         /// </summary>
-        /// <param name="numParts"></param>
-        /// <param name="ImageUUID"></param>
-        /// <param name="ImageSize"></param>
-        /// <param name="ImageData"></param>
-        /// <param name="imageCodec"></param>
+        /// <param name = "numParts"></param>
+        /// <param name = "ImageUUID"></param>
+        /// <param name = "ImageSize"></param>
+        /// <param name = "ImageData"></param>
+        /// <param name = "imageCodec"></param>
         void SendImageFirstPart(ushort numParts, UUID ImageUUID, uint ImageSize, byte[] ImageData, byte imageCodec);
 
         /// <summary>
-        /// Send the next packet for a series of packets making up a single texture, 
-        /// as established by SendImageFirstPart()
+        ///   Send the next packet for a series of packets making up a single texture, 
+        ///   as established by SendImageFirstPart()
         /// </summary>
-        /// <param name="partNumber"></param>
-        /// <param name="imageUuid"></param>
-        /// <param name="imageData"></param>
+        /// <param name = "partNumber"></param>
+        /// <param name = "imageUuid"></param>
+        /// <param name = "imageData"></param>
         void SendImageNextPart(ushort partNumber, UUID imageUuid, byte[] imageData);
 
         /// <summary>
-        /// Tell the client that the requested texture cannot be found
+        ///   Tell the client that the requested texture cannot be found
         /// </summary>
         void SendImageNotFound(UUID imageid);
 
         /// <summary>
-        /// Send statistical information about the sim to the client.
+        ///   Send statistical information about the sim to the client.
         /// </summary>
-        /// <param name="stats"></param>
+        /// <param name = "stats"></param>
         void SendSimStats(SimStats stats);
 
         void SendObjectPropertiesFamilyData(uint RequestFlags, UUID ObjectUUID, UUID OwnerID, UUID GroupID,
@@ -1366,7 +1414,7 @@ namespace OpenSim.Framework
                                             uint Category,
                                             UUID LastOwnerID, string ObjectName, string Description);
 
-        void SendObjectPropertiesReply (List<IEntity> part);
+        void SendObjectPropertiesReply(List<IEntity> part);
 
         void SendAgentOffline(UUID[] agentIDs);
 
@@ -1432,19 +1480,26 @@ namespace OpenSim.Framework
         void SendTerminateFriend(UUID exFriendID);
 
         void SendAvatarClassifiedReply(UUID targetID, UUID[] classifiedID, string[] name);
-        void SendClassifiedInfoReply(UUID classifiedID, UUID creatorID, uint creationDate, uint expirationDate, uint category, string name, string description, UUID parcelID, uint parentEstate, UUID snapshotID, string simName, Vector3 globalPos, string parcelName, byte classifiedFlags, int price);
+
+        void SendClassifiedInfoReply(UUID classifiedID, UUID creatorID, uint creationDate, uint expirationDate,
+                                     uint category, string name, string description, UUID parcelID, uint parentEstate,
+                                     UUID snapshotID, string simName, Vector3 globalPos, string parcelName,
+                                     byte classifiedFlags, int price);
 
         void SendAgentDropGroup(UUID groupID);
         void SendAvatarNotesReply(UUID targetID, string text);
         void SendAvatarPicksReply(UUID targetID, Dictionary<UUID, string> picks);
-        void SendPickInfoReply(UUID pickID,UUID creatorID, bool topPick, UUID parcelID, string name, string desc, UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal, int sortOrder, bool enabled);
+
+        void SendPickInfoReply(UUID pickID, UUID creatorID, bool topPick, UUID parcelID, string name, string desc,
+                               UUID snapshotID, string user, string originalName, string simName, Vector3 posGlobal,
+                               int sortOrder, bool enabled);
 
         void SendAvatarClassifiedReply(UUID targetID, Dictionary<UUID, string> classifieds);
 
         void SendParcelDwellReply(int localID, UUID parcelID, float dwell);
 
         void SendUserInfoReply(bool imViaEmail, bool visible, string email);
-        
+
         void SendUseCachedMuteList();
 
         void SendMuteListUpdate(string filename);
@@ -1459,25 +1514,41 @@ namespace OpenSim.Framework
 
         void SendRebakeAvatarTextures(UUID textureID);
 
-        void SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText, string languages);
-        
-        void SendGroupAccountingDetails(IClientAPI sender,UUID groupID, UUID transactionID, UUID sessionID, int amt);
-        
-        void SendGroupAccountingSummary(IClientAPI sender,UUID groupID, uint moneyAmt, int totalTier, int usedTier);
-        
-        void SendGroupTransactionsSummaryDetails(IClientAPI sender,UUID groupID, UUID transactionID, UUID sessionID,int amt);
-        
+        void SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText,
+                                      string languages);
+
+        void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt);
+
+        void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier, int usedTier);
+
+        void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID,
+                                                 int amt);
+
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
-        void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName, string ownerLastName, UUID objectId);
-        void SendPlacesQuery(Aurora.Framework.ExtendedLandData[] LandData, UUID queryID, UUID transactionID);
+
+        void SendTextBoxRequest(string message, int chatChannel, string objectname, string ownerFirstName,
+                                string ownerLastName, UUID objectId);
+
+        void SendPlacesQuery(ExtendedLandData[] LandData, UUID queryID, UUID transactionID);
         void FireUpdateParcel(LandUpdateArgs args, int LocalID);
 
-        void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID, string Name);
+        void SendTelehubInfo(Vector3 TelehubPos, Quaternion TelehubRot, List<Vector3> SpawnPoint, UUID ObjectID,
+                             string nameT);
 
-        void StopFlying (IEntity presence);
+        void StopFlying(IEntity presence);
 
         void Reset();
 
-        void HandleChatFromClient (OSChatMessage args);
+        void HandleChatFromClient(OSChatMessage args);
+
+        #region Parcel Methods
+
+        void SendParcelMediaCommand(uint flags, ParcelMediaCommandEnum command, float time);
+
+        void SendParcelMediaUpdate(string mediaUrl, UUID mediaTextureID,
+                                   byte autoScale, string mediaType, string mediaDesc, int mediaWidth, int mediaHeight,
+                                   byte mediaLoop);
+
+        #endregion
     }
 }

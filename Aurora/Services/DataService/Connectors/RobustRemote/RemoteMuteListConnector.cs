@@ -26,33 +26,32 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteMuteListConnector : IMuteListConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IMuteListConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             m_registry = simBase;
             if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "RemoteConnector")
@@ -66,15 +65,9 @@ namespace Aurora.Services.DataService
             get { return "IMuteListConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IMuteListConnector Members
-
         public MuteList[] GetMuteList(UUID PrincipalID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "getmutelist";
@@ -83,19 +76,21 @@ namespace Aurora.Services.DataService
             List<MuteList> Mutes = new List<MuteList>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                           "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
-                           reqString);
+                                                                             m_ServerURI + "/auroradata",
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                         foreach (object f in replyData)
                         {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>) f;
                             if (value.Value is Dictionary<string, object>)
                             {
                                 Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
@@ -110,7 +105,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
             return Mutes.ToArray();
         }
@@ -126,23 +121,25 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                           "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                        m_ServerURI + "/auroradata",
-                        reqString);
+                                                                m_ServerURI + "/auroradata",
+                                                                reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
         }
 
         public void DeleteMute(UUID muteID, UUID PrincipalID)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["MUTEID"] = muteID.ToString();
@@ -152,17 +149,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                           "RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
-                           reqString);
+                                                                m_ServerURI + "/auroradata",
+                                                                reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -178,26 +177,27 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                           "RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI + "/auroradata",
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI + "/auroradata",
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-                        return bool.Parse(replyData["Muted"].ToString());
-                    }
+                    return bool.Parse(replyData["Muted"].ToString());
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
             return false;
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

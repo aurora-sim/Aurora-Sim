@@ -28,16 +28,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-
-using OpenMetaverse;
-using log4net;
-using Aurora.Framework;
+using Aurora.DataManager;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Services.Connectors;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.UserAccountService
 {
@@ -45,21 +43,18 @@ namespace OpenSim.Services.UserAccountService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected IGridService m_GridService;
         protected IAuthenticationService m_AuthenticationService;
+        protected IUserAccountData m_Database;
+        protected IGridService m_GridService;
         protected IInventoryService m_InventoryService;
-        protected IUserAccountData m_Database = null;
-        protected UserAccountCache m_cache = new UserAccountCache ();
+        protected UserAccountCache m_cache = new UserAccountCache();
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        public virtual IUserAccountService InnerService
-        {
-            get { return this; }
-        }
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -68,38 +63,13 @@ namespace OpenSim.Services.UserAccountService
                 return;
             Configure(config, registry);
         }
-        public void Configure(IConfigSource config, IRegistryCore registry)
-        {
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand(
-                        "create user",
-                        "create user [<first> [<last> [<pass> [<email>]]]]",
-                        "Create a new user", HandleCreateUser);
-                MainConsole.Instance.Commands.AddCommand("reset user password",
-                        "reset user password [<first> [<last> [<password>]]]",
-                        "Reset a user password", HandleResetUserPassword);
-                MainConsole.Instance.Commands.AddCommand (
-                        "show account",
-                        "show account <first> <last>",
-                        "Show account details for the given user", HandleShowAccount);
-                MainConsole.Instance.Commands.AddCommand (
-                            "set user level",
-                            "set user level [<first> [<last> [<level>]]]",
-                            "Set user level. If >= 200 and 'allow_grid_gods = true' in OpenSim.ini, "
-                                + "this account will be treated as god-moded. "
-                                + "It will also affect the 'login level' command. ",
-                                HandleSetUserLevel);
-            }
-            registry.RegisterModuleInterface<IUserAccountService>(this);
-        }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_GridService = registry.RequestModuleInterface<IGridService>();
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_InventoryService = registry.RequestModuleInterface<IInventoryService>();
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IUserAccountData>();
+            m_Database = DataManager.RequestPlugin<IUserAccountData>();
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
         }
@@ -108,10 +78,12 @@ namespace OpenSim.Services.UserAccountService
         {
         }
 
+        #endregion
+
         #region IUserAccountService
 
         public UserAccount GetUserAccount(UUID scopeID, string firstName,
-                string lastName)
+                                          string lastName)
         {
 //            m_log.DebugFormat(
 //                "[USER ACCOUNT SERVICE]: Retrieving account by username for {0} {1}, scope {2}",
@@ -120,32 +92,32 @@ namespace OpenSim.Services.UserAccountService
             UserAccount[] d;
 
             UserAccount account;
-            if (m_cache.Get (firstName + " " + lastName, out account))
+            if (m_cache.Get(firstName + " " + lastName, out account))
                 return account;
 
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                        new string[] { "ScopeID", "FirstName", "LastName" },
-                        new string[] { scopeID.ToString(), firstName, lastName });
+                    new[] {"ScopeID", "FirstName", "LastName"},
+                    new[] {scopeID.ToString(), firstName, lastName});
                 if (d.Length < 1)
                 {
                     d = m_Database.Get(
-                            new string[] { "ScopeID", "FirstName", "LastName" },
-                            new string[] { UUID.Zero.ToString(), firstName, lastName });
+                        new[] {"ScopeID", "FirstName", "LastName"},
+                        new[] {UUID.Zero.ToString(), firstName, lastName});
                 }
             }
             else
             {
                 d = m_Database.Get(
-                        new string[] { "FirstName", "LastName" },
-                        new string[] { firstName, lastName });
+                    new[] {"FirstName", "LastName"},
+                    new[] {firstName, lastName});
             }
 
             if (d.Length < 1)
                 return null;
 
-            m_cache.Cache (d[0].PrincipalID, d[0]);
+            m_cache.Cache(d[0].PrincipalID, d[0]);
             return d[0];
         }
 
@@ -154,20 +126,20 @@ namespace OpenSim.Services.UserAccountService
             UserAccount[] d;
 
             UserAccount account;
-            if (m_cache.Get (name, out account))
+            if (m_cache.Get(name, out account))
                 return account;
 
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                        new string[] { "ScopeID", "Name" },
-                        new string[] { scopeID.ToString(), name });
+                    new[] {"ScopeID", "Name"},
+                    new[] {scopeID.ToString(), name});
             }
             else
             {
                 d = m_Database.Get(
-                        new string[] { "Name" },
-                        new string[] { name });
+                    new[] {"Name"},
+                    new[] {name});
             }
 
             if (d.Length < 1)
@@ -175,11 +147,11 @@ namespace OpenSim.Services.UserAccountService
                 string[] split = name.Split(' ');
                 if (split.Length == 2)
                     return GetUserAccount(scopeID, split[0], split[1]);
-                
+
                 return null;
             }
 
-            m_cache.Cache (d[0].PrincipalID, d[0]);
+            m_cache.Cache(d[0].PrincipalID, d[0]);
             return d[0];
         }
 
@@ -188,35 +160,35 @@ namespace OpenSim.Services.UserAccountService
             UserAccount[] d;
 
             UserAccount account;
-            if (m_cache.Get (principalID, out account))
+            if (m_cache.Get(principalID, out account))
                 return account;
 
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                        new string[] { "ScopeID", "PrincipalID" },
-                        new string[] { scopeID.ToString(), principalID.ToString() });
+                    new[] {"ScopeID", "PrincipalID"},
+                    new[] {scopeID.ToString(), principalID.ToString()});
                 if (d.Length < 1)
                 {
                     d = m_Database.Get(
-                            new string[] { "ScopeID", "PrincipalID" },
-                            new string[] { UUID.Zero.ToString(), principalID.ToString() });
+                        new[] {"ScopeID", "PrincipalID"},
+                        new[] {UUID.Zero.ToString(), principalID.ToString()});
                 }
             }
             else
             {
                 d = m_Database.Get(
-                        new string[] { "PrincipalID" },
-                        new string[] { principalID.ToString() });
+                    new[] {"PrincipalID"},
+                    new[] {principalID.ToString()});
             }
 
             if (d.Length < 1)
             {
-                m_cache.Cache (principalID, null);
+                m_cache.Cache(principalID, null);
                 return null;
             }
 
-            m_cache.Cache (principalID, d[0]);
+            m_cache.Cache(principalID, d[0]);
             return d[0];
         }
 
@@ -254,26 +226,22 @@ namespace OpenSim.Services.UserAccountService
             string rawLevel;
             int level;
 
-            if (cmdparams.Length < 4)
-                firstName = MainConsole.Instance.CmdPrompt("First name");
-            else firstName = cmdparams[3];
+            firstName = cmdparams.Length < 4 ? MainConsole.Instance.CmdPrompt("First name") : cmdparams[3];
 
-            if (cmdparams.Length < 5)
-                lastName = MainConsole.Instance.CmdPrompt("Last name");
-            else lastName = cmdparams[4];
+            lastName = cmdparams.Length < 5 ? MainConsole.Instance.CmdPrompt("Last name") : cmdparams[4];
 
             UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
-            if (account == null) {
+            if (account == null)
+            {
                 m_log.Info("No such user");
                 return;
             }
 
-            if (cmdparams.Length < 6)
-                rawLevel = MainConsole.Instance.CmdPrompt("User level");
-            else rawLevel = cmdparams[5];
+            rawLevel = cmdparams.Length < 6 ? MainConsole.Instance.CmdPrompt("User level") : cmdparams[5];
 
-            if(int.TryParse(rawLevel, out level) == false) {
-                m_log.Info ("Invalid user level");
+            if (int.TryParse(rawLevel, out level) == false)
+            {
+                m_log.Info("Invalid user level");
                 return;
             }
 
@@ -281,9 +249,9 @@ namespace OpenSim.Services.UserAccountService
 
             bool success = StoreUserAccount(account);
             if (!success)
-                m_log.InfoFormat ("Unable to set user level for account {0} {1}.", firstName, lastName);
+                m_log.InfoFormat("Unable to set user level for account {0} {1}.", firstName, lastName);
             else
-                m_log.InfoFormat ("User level set for user {0} {1} to {2}", firstName, lastName, level);
+                m_log.InfoFormat("User level set for user {0} {1} to {2}", firstName, lastName, level);
         }
 
         protected void HandleShowAccount(string[] cmdparams)
@@ -301,23 +269,23 @@ namespace OpenSim.Services.UserAccountService
 
             if (ua == null)
             {
-                m_log.InfoFormat ("No user named {0} {1}", firstName, lastName);
+                m_log.InfoFormat("No user named {0} {1}", firstName, lastName);
                 return;
             }
 
-            m_log.InfoFormat ("Name:    {0}", ua.Name);
-            m_log.InfoFormat ("ID:      {0}", ua.PrincipalID);
-            m_log.InfoFormat ("Title:   {0}", ua.UserTitle);
+            m_log.InfoFormat("Name:    {0}", ua.Name);
+            m_log.InfoFormat("ID:      {0}", ua.PrincipalID);
+            m_log.InfoFormat("Title:   {0}", ua.UserTitle);
             m_log.InfoFormat("E-mail:  {0}", ua.Email);
-            m_log.InfoFormat ("Created: {0}", Utils.UnixTimeToDateTime (ua.Created));
-            m_log.InfoFormat ("Level:   {0}", ua.UserLevel);
+            m_log.InfoFormat("Created: {0}", Utils.UnixTimeToDateTime(ua.Created));
+            m_log.InfoFormat("Level:   {0}", ua.UserLevel);
             m_log.InfoFormat("Flags:   {0}", ua.UserFlags);
         }
 
         /// <summary>
-        /// Handle the create user command from the console.
+        ///   Handle the create user command from the console.
         /// </summary>
-        /// <param name="cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
+        /// <param name = "cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
         protected void HandleCreateUser(string[] cmdparams)
         {
             string name;
@@ -342,38 +310,45 @@ namespace OpenSim.Services.UserAccountService
 
             newPassword = MainConsole.Instance.PasswdPrompt("New password");
 
-            UserAccount account = GetUserAccount (UUID.Zero, name);
+            UserAccount account = GetUserAccount(UUID.Zero, name);
             if (account == null)
                 m_log.ErrorFormat("[USER ACCOUNT SERVICE]: No such user");
 
             bool success = false;
             if (m_AuthenticationService != null)
-                success = m_AuthenticationService.SetPassword (account.PrincipalID, "UserAccount", newPassword);
+                success = m_AuthenticationService.SetPassword(account.PrincipalID, "UserAccount", newPassword);
             if (!success)
                 m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0}.",
-                   name);
+                                  name);
             else
-                m_log.InfoFormat ("[USER ACCOUNT SERVICE]: Password reset for user {0}", name);
+                m_log.InfoFormat("[USER ACCOUNT SERVICE]: Password reset for user {0}", name);
         }
 
         #endregion
 
-        public void CreateUser (string name, string password, string email)
+        #region IUserAccountService Members
+
+        public virtual IUserAccountService InnerService
         {
-            CreateUser (UUID.Random (), name, password, email);
+            get { return this; }
+        }
+
+        public void CreateUser(string name, string password, string email)
+        {
+            CreateUser(UUID.Random(), name, password, email);
         }
 
         /// <summary>
-        /// Create a user
+        ///   Create a user
         /// </summary>
-        /// <param name="firstName"></param>
-        /// <param name="lastName"></param>
-        /// <param name="password"></param>
-        /// <param name="email"></param>
+        /// <param name = "firstName"></param>
+        /// <param name = "lastName"></param>
+        /// <param name = "password"></param>
+        /// <param name = "email"></param>
         public void CreateUser(UUID userID, string name, string password, string email)
         {
-            UserAccount account = GetUserAccount (UUID.Zero, userID);
-            UserAccount nameaccount = GetUserAccount (UUID.Zero, name);
+            UserAccount account = GetUserAccount(UUID.Zero, userID);
+            UserAccount nameaccount = GetUserAccount(UUID.Zero, name);
             if (null == account && nameaccount == null)
             {
                 account = new UserAccount(UUID.Zero, userID, name, email);
@@ -382,16 +357,16 @@ namespace OpenSim.Services.UserAccountService
                     bool success;
                     if (m_AuthenticationService != null && password != "")
                     {
-                        success = m_AuthenticationService.SetPasswordHashed (account.PrincipalID, "UserAccount", password);
+                        success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, "UserAccount", password);
                         if (!success)
                             m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
-                                name);
+                                             name);
                     }
 
-                    m_log.InfoFormat ("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
+                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                     //Cache it as well
-                    m_cache.Cache (account.PrincipalID, account);
-                } 
+                    m_cache.Cache(account.PrincipalID, account);
+                }
                 else
                 {
                     m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
@@ -401,6 +376,34 @@ namespace OpenSim.Services.UserAccountService
             {
                 m_log.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
             }
+        }
+
+        #endregion
+
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand(
+                    "create user",
+                    "create user [<first> [<last> [<pass> [<email>]]]]",
+                    "Create a new user", HandleCreateUser);
+                MainConsole.Instance.Commands.AddCommand("reset user password",
+                                                         "reset user password [<first> [<last> [<password>]]]",
+                                                         "Reset a user password", HandleResetUserPassword);
+                MainConsole.Instance.Commands.AddCommand(
+                    "show account",
+                    "show account <first> <last>",
+                    "Show account details for the given user", HandleShowAccount);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set user level",
+                    "set user level [<first> [<last> [<level>]]]",
+                    "Set user level. If >= 200 and 'allow_grid_gods = true' in OpenSim.ini, "
+                    + "this account will be treated as god-moded. "
+                    + "It will also affect the 'login level' command. ",
+                    HandleSetUserLevel);
+            }
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
     }
 }

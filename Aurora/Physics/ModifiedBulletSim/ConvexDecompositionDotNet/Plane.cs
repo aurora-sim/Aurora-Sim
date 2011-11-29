@@ -25,14 +25,12 @@
  * THE SOFTWARE.
  */
 
-using System;
-
 namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class Plane
     {
-        public float3 normal = new float3();
         public float dist; // distance below origin - the D from plane equasion Ax+By+Cz+D=0
+        public float3 normal = new float3();
 
         public Plane(float3 n, float d)
         {
@@ -55,8 +53,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         {
             //   Transforms the plane to the space defined by the
             //   given position/orientation
-            float3 newNormal = Quaternion.Inverse(orientation) * normal;
-            float3 origin = Quaternion.Inverse(orientation) * (-normal * dist - position);
+            float3 newNormal = Quaternion.Inverse(orientation)*normal;
+            float3 origin = Quaternion.Inverse(orientation)*(-normal*dist - position);
 
             normal = newNormal;
             dist = -float3.dot(newNormal, origin);

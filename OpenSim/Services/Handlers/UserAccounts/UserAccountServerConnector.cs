@@ -25,23 +25,61 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework;
+using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
     public class UserAccountServiceConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
+
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "UserAccountServerURI"; }
+        }
+
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new UserAccountServerPostHandler(url,
+                                                                     m_registry.RequestModuleInterface
+                                                                         <IUserAccountService>(), SessionID, m_registry));
+        }
+
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
+        {
+            string url = "/accounts" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new UserAccountServerPostHandler(url,
+                                                                     m_registry.RequestModuleInterface
+                                                                         <IUserAccountService>(), SessionID, m_registry));
+            return url;
+        }
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -60,36 +98,6 @@ namespace OpenSim.Services
 
         public void FinishedStartup()
         {
-        }
-
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "UserAccountServerURI"; }
-        }
-
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler (new UserAccountServerPostHandler (url, m_registry.RequestModuleInterface<IUserAccountService> (), SessionID, m_registry));
-        }
-
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
-        {
-            string url = "/accounts" + UUID.Random();
-
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler (new UserAccountServerPostHandler (url, m_registry.RequestModuleInterface<IUserAccountService> (), SessionID, m_registry));
-            return url;
-        }
-
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion

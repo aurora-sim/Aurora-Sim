@@ -25,23 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-
+using Aurora.Framework;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
     public interface IGroupsServicesConnector
     {
-        UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
-        void UpdateGroup(UUID RequestingAgentID, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
+        UUID CreateGroup(UUID RequestingAgentID, string name, string charter, bool showInList, UUID insigniaID,
+                         int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID);
+
+        void UpdateGroup(UUID RequestingAgentID, UUID groupID, string charter, bool showInList, UUID insigniaID,
+                         int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
+
         GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
         List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, int queryStart, uint queryFlags);
         List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
 
-        void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description, string title, ulong powers);
-        void UpdateGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description, string title, ulong powers);
+        void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description,
+                          string title, ulong powers);
+
+        void UpdateGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description,
+                             string title, ulong powers);
+
         void RemoveGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID);
         List<GroupRolesData> GetGroupRoles(UUID RequestingAgentID, UUID GroupID);
         List<GroupRoleMembersData> GetGroupRoleMembers(UUID RequestingAgentID, UUID GroupID);
@@ -49,7 +57,9 @@ namespace OpenSim.Framework
         void AddAgentToGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
         bool RemoveAgentFromGroup(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
 
-        void AddAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentIDFromAgentName, string FromAgentName);
+        void AddAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID, UUID groupID, UUID roleID,
+                                   UUID agentIDFromAgentName, string FromAgentName);
+
         GroupInviteInfo GetAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID);
         void RemoveAgentToGroupInvite(UUID RequestingAgentID, UUID inviteID);
 
@@ -61,33 +71,37 @@ namespace OpenSim.Framework
         GroupMembershipData GetAgentActiveMembership(UUID RequestingAgentID, UUID AgentID);
 
         string SetAgentActiveGroupRole(UUID RequestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
-        void SetAgentGroupInfo(UUID RequestingAgentID, UUID AgentID, UUID GroupID, bool AcceptNotices, bool ListInProfile);
+
+        void SetAgentGroupInfo(UUID RequestingAgentID, UUID AgentID, UUID GroupID, bool AcceptNotices,
+                               bool ListInProfile);
 
         GroupMembershipData GetAgentGroupMembership(UUID RequestingAgentID, UUID AgentID, UUID GroupID);
         List<GroupMembershipData> GetAgentGroupMemberships(UUID RequestingAgentID, UUID AgentID);
 
-        void AddGroupNotice(UUID RequestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName);
+        void AddGroupNotice(UUID RequestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject,
+                            string message, UUID ItemID, int AssetType, string ItemName);
+
         GroupNoticeInfo GetGroupNotice(UUID RequestingAgentID, UUID noticeID);
         List<GroupNoticeData> GetGroupNotices(UUID RequestingAgentID, UUID GroupID);
 
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
 
-        bool CreateSession (ChatSession chatSession);
-        void AddMemberToGroup (ChatSessionMember chatSessionMember, UUID GroupID);
-        ChatSession GetSession (UUID sessionid);
-        ChatSessionMember FindMember (UUID sessionid, UUID Agent);
-        void RemoveSession (UUID sessionid);
+        bool CreateSession(ChatSession chatSession);
+        void AddMemberToGroup(ChatSessionMember chatSessionMember, UUID GroupID);
+        ChatSession GetSession(UUID sessionid);
+        ChatSessionMember FindMember(UUID sessionid, UUID Agent);
+        void RemoveSession(UUID sessionid);
     }
-    
+
     /// <summary>
-    /// Internal class for chat sessions 
+    ///   Internal class for chat sessions
     /// </summary>
     public class ChatSession
     {
-        public UUID SessionID;
         public List<ChatSessionMember> Members;
         public string Name;
+        public UUID SessionID;
     }
 
     //Pulled from OpenMetaverse
@@ -102,6 +116,7 @@ namespace OpenSim.Framework
         // Summary:
         //     True if user has voice chat enabled
         public bool CanVoiceChat;
+        public bool HasBeenAdded;
         //
         // Summary:
         //     True of Avatar has moderator abilities
@@ -117,16 +132,15 @@ namespace OpenSim.Framework
         //
         // Summary:
         //     True if they have been requested to join the session
-        public bool HasBeenAdded;
     }
 
     public class GroupInviteInfo
     {
-        public UUID GroupID  = UUID.Zero;
-        public UUID RoleID   = UUID.Zero;
-        public UUID AgentID  = UUID.Zero;
-        public UUID InviteID = UUID.Zero;
+        public UUID AgentID = UUID.Zero;
         public string FromAgentName = "";
+        public UUID GroupID = UUID.Zero;
+        public UUID InviteID = UUID.Zero;
+        public UUID RoleID = UUID.Zero;
 
         public GroupInviteInfo()
         {
@@ -155,10 +169,10 @@ namespace OpenSim.Framework
 
     public class GroupNoticeInfo
     {
-        public GroupNoticeData noticeData = new GroupNoticeData();
+        public byte[] BinaryBucket = new byte[0];
         public UUID GroupID = UUID.Zero;
         public string Message = string.Empty;
-        public byte[] BinaryBucket = new byte[0];
+        public GroupNoticeData noticeData = new GroupNoticeData();
 
         public GroupNoticeInfo()
         {
@@ -183,28 +197,28 @@ namespace OpenSim.Framework
         }
     }
 
-    public class GroupProposalInfo : Aurora.Framework.IDataTransferable
+    public class GroupProposalInfo : IDataTransferable
     {
+        public int Duration;
         public UUID GroupID = UUID.Zero;
-        public int Duration = 0;
-        public float Majority = 0;
-        public string Text = string.Empty;
-        public int Quorum = 0;
+        public float Majority;
+        public int Quorum;
         public UUID Session = UUID.Zero;
+        public string Text = string.Empty;
 
-        public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
+        public override void FromOSD(OSDMap map)
         {
             GroupID = map["GroupID"].AsUUID();
             Duration = map["Duration"].AsInteger();
-            Majority = (float)map["Majority"].AsReal();
+            Majority = (float) map["Majority"].AsReal();
             Text = map["Text"].AsString();
             Quorum = map["Quorum"].AsInteger();
             Session = map["Session"].AsUUID();
         }
 
-        public override OpenMetaverse.StructuredData.OSDMap ToOSD()
+        public override OSDMap ToOSD()
         {
-            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            OSDMap map = new OSDMap();
             map["GroupID"] = GroupID;
             map["Duration"] = Duration;
             map["Majority"] = Majority;
@@ -224,7 +238,7 @@ namespace OpenSim.Framework
             return Util.OSDToDictionary(ToOSD());
         }
 
-        public override Aurora.Framework.IDataTransferable Duplicate()
+        public override IDataTransferable Duplicate()
         {
             GroupProposalInfo p = new GroupProposalInfo();
             p.FromOSD(ToOSD());

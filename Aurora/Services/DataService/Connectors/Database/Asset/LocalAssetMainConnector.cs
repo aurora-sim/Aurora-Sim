@@ -2,11 +2,11 @@
 using System.Data;
 using System.Reflection;
 using Aurora.Framework;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset
 {
@@ -14,6 +14,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
     {
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData m_Gd;
+
         #region Implementation of IAuroraDataPlugin
 
         public string Name
@@ -21,7 +22,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             get { return "IAssetDataPlugin"; }
         }
 
-        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") != "LocalConnector")
                 return;
@@ -30,38 +32,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            genericData.ConnectToDatabase(defaultConnectionString, "Asset", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            genericData.ConnectToDatabase(defaultConnectionString, "Asset",
+                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
             DataManager.DataManager.RegisterPlugin(Name, this);
         }
 
         #endregion
 
         #region Implementation of IAssetDataPlugin
-
-        private AssetBase GetAsset(UUID uuid, bool displaywarning)
-        {
-            IDataReader dr = null;
-            try
-            {
-                dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets", "id, name, description, assetType, local, temporary, asset_flags, creatorID, data");
-                while(dr != null && dr.Read())
-                {
-                    return LoadAssetFromDataRead(dr);
-                }
-                if (displaywarning) 
-                    m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
-            }
-            catch (Exception e)
-            {
-                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e.ToString());
-            }
-            finally
-            {
-                if (dr != null)
-                    dr.Close();
-            }
-            return null;
-        }
 
         public AssetBase GetAsset(UUID uuid)
         {
@@ -73,7 +51,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             IDataReader dr = null;
             try
             {
-                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, creatorID");
+                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets",
+                                    "id, name, description, assetType, local, temporary, asset_flags, creatorID");
                 while (dr.Read())
                 {
                     return LoadAssetFromDataRead(dr);
@@ -82,28 +61,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e.ToString());
-            }
-            finally
-            {
-                if (dr != null) dr.Close();
-            }
-            return null;
-        }
-
-        public Byte[] GetData(UUID uuid)
-        {
-            IDataReader dr = null;
-            try
-            {
-                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
-                if (dr != null)
-                    return (byte[])dr["data"];
-                m_Log.Warn("[LocalAssetDatabase] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
-            }
-            catch (Exception e)
-            {
-                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e.ToString());
+                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -122,11 +80,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             try
             {
-                if(asset.Name.Length > 64)
+                if (asset.Name.Length > 64)
                     asset.Name = asset.Name.Substring(0, 64);
-                if(asset.Description.Length > 128)
+                if (asset.Description.Length > 128)
                     asset.Description = asset.Description.Substring(0, 128);
-                int now = (int)Utils.DateTimeToUnixTime(DateTime.UtcNow);
+                int now = (int) Utils.DateTimeToUnixTime(DateTime.UtcNow);
                 if (ExistsAsset(asset.ID))
                 {
                     AssetBase oldAsset = GetAsset(asset.ID);
@@ -134,27 +92,60 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     {
                         m_Log.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
                         Delete(asset.ID, true);
-                        m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
-                            new object[] { asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(), (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                        m_Gd.Insert("assets",
+                                    new[]
+                                        {
+                                            "id", "name", "description", "assetType", "local", "temporary", "create_time",
+                                            "access_time", "asset_flags", "creatorID", "data"
+                                        },
+                                    new object[]
+                                        {
+                                            asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(),
+                                            (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
+                                            (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
+                                            (int) asset.Flags, asset.CreatorID, asset.Data
+                                        });
                     }
                     else
                     {
                         m_Log.Warn("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
                         asset.ID = UUID.Random();
-                        m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
-                            new object[] { asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(), (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                        m_Gd.Insert("assets",
+                                    new[]
+                                        {
+                                            "id", "name", "description", "assetType", "local", "temporary", "create_time",
+                                            "access_time", "asset_flags", "creatorID", "data"
+                                        },
+                                    new object[]
+                                        {
+                                            asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(),
+                                            (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
+                                            (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
+                                            (int) asset.Flags, asset.CreatorID, asset.Data
+                                        });
                     }
                 }
                 else
                 {
-                    m_Gd.Insert("assets", new[] { "id", "name", "description", "assetType", "local", "temporary", "create_time", "access_time", "asset_flags", "creatorID", "data" },
-                        new object[] { asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(), (sbyte)asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local, (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now, (int)asset.Flags, asset.CreatorID, asset.Data });
+                    m_Gd.Insert("assets",
+                                new[]
+                                    {
+                                        "id", "name", "description", "assetType", "local", "temporary", "create_time",
+                                        "access_time", "asset_flags", "creatorID", "data"
+                                    },
+                                new object[]
+                                    {
+                                        asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(),
+                                        (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
+                                        (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
+                                        (int) asset.Flags, asset.CreatorID, asset.Data
+                                    });
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 m_Log.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
-                    asset.ID, asset.Name, e.ToString());
+                                  asset.ID, asset.Name, e);
             }
             return true;
         }
@@ -163,11 +154,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             try
             {
-                m_Gd.Update("assets", new object[] { asset }, new[] { "data" }, new[] { "id" }, new object[] { id });
+                m_Gd.Update("assets", new object[] {asset}, new[] {"data"}, new[] {"id"}, new object[] {id});
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e.ToString());
+                m_Log.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
             }
         }
 
@@ -180,7 +171,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             catch (Exception e)
             {
                 m_Log.ErrorFormat(
-                    "[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e.ToString(), uuid);
+                    "[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
         }
@@ -188,6 +179,53 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         public bool Delete(UUID id)
         {
             return Delete(id, false);
+        }
+
+        private AssetBase GetAsset(UUID uuid, bool displaywarning)
+        {
+            IDataReader dr = null;
+            try
+            {
+                dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets",
+                                    "id, name, description, assetType, local, temporary, asset_flags, creatorID, data");
+                while (dr != null && dr.Read())
+                {
+                    return LoadAssetFromDataRead(dr);
+                }
+                if (displaywarning)
+                    m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
+            }
+            catch (Exception e)
+            {
+                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+            }
+            finally
+            {
+                if (dr != null)
+                    dr.Close();
+            }
+            return null;
+        }
+
+        public Byte[] GetData(UUID uuid)
+        {
+            IDataReader dr = null;
+            try
+            {
+                dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
+                if (dr != null)
+                    return (byte[]) dr["data"];
+                m_Log.Warn("[LocalAssetDatabase] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
+            }
+            catch (Exception e)
+            {
+                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+            }
+            finally
+            {
+                if (dr != null) dr.Close();
+            }
+            return null;
         }
 
         private bool Delete(UUID id, bool ignoreFlags)
@@ -199,8 +237,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     AssetBase asset = GetAsset(id, false);
                     if (asset == null)
                         return false;
-                    if ((int)(asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
-                    (int)(asset.Flags & AssetFlags.Deletable) != 0)
+                    if ((int) (asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
+                        (int) (asset.Flags & AssetFlags.Deletable) != 0)
                         ignoreFlags = true;
                 }
                 if (ignoreFlags)
@@ -208,7 +246,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase] Error while deleting asset " + e.ToString());
+                m_Log.Error("[LocalAssetDatabase] Error while deleting asset " + e);
             }
             return true;
         }
@@ -216,18 +254,18 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private static AssetBase LoadAssetFromDataRead(IDataRecord dr)
         {
             AssetBase asset = new AssetBase(dr["id"].ToString())
-            {
-                Name = dr["name"].ToString(),
-                Description = dr["description"].ToString()
-            };
+                                  {
+                                      Name = dr["name"].ToString(),
+                                      Description = dr["description"].ToString()
+                                  };
             string Flags = dr["asset_flags"].ToString();
-            if(Flags != "")
-                asset.Flags = (AssetFlags)int.Parse(Flags);
+            if (Flags != "")
+                asset.Flags = (AssetFlags) int.Parse(Flags);
             string type = dr["assetType"].ToString();
-            asset.TypeAsset = (AssetType)int.Parse(type);
+            asset.TypeAsset = (AssetType) int.Parse(type);
             UUID creator;
 
-            if(UUID.TryParse(dr["creatorID"].ToString(), out creator))
+            if (UUID.TryParse(dr["creatorID"].ToString(), out creator))
                 asset.CreatorID = creator;
             try
             {
@@ -247,24 +285,25 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 asset.MetaOnly = true;
                 asset.Data = new byte[0];
-                m_Log.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex.ToString());
+                m_Log.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex);
             }
-            
-            if (dr["local"].ToString().Equals("1") || dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
+
+            if (dr["local"].ToString().Equals("1") ||
+                dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                 asset.Flags |= AssetFlags.Local;
             string temp = dr["temporary"].ToString();
-            if(temp != "")
+            if (temp != "")
             {
                 bool tempbool = false;
                 int tempint = 0;
-                if(bool.TryParse(temp, out tempbool))
+                if (bool.TryParse(temp, out tempbool))
                 {
-                    if(tempbool)
+                    if (tempbool)
                         asset.Flags |= AssetFlags.Temperary;
                 }
-                else if(int.TryParse(temp, out tempint))
+                else if (int.TryParse(temp, out tempint))
                 {
-                    if(tempint == 1)
+                    if (tempint == 1)
                         asset.Flags |= AssetFlags.Temperary;
                 }
             }

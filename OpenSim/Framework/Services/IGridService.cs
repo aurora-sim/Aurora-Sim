@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -53,6 +52,9 @@ namespace OpenSim.Services.Interfaces
         /// Register a region with the grid service.
         /// </summary>
         /// <param name="regionInfos"> </param>
+        /// <param name="oldSessionID"></param>
+        /// <param name="SessionID"></param>
+        /// <param name="neighbors"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
         string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID, out List<GridRegion> neighbors);
@@ -60,7 +62,9 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Deregister a region with the grid service.
         /// </summary>
+        /// <param name="regionhandle"></param>
         /// <param name="regionID"></param>
+        /// <param name="SessionID"></param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region deregistration failed</exception>
         bool DeregisterRegion(ulong regionhandle, UUID regionID, UUID SessionID);
@@ -93,6 +97,7 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// Get information about regions starting with the provided name. 
         /// </summary>
+        /// <param name="scopeID"></param>
         /// <param name="name">
         /// The name to match against.
         /// </param>
@@ -286,11 +291,7 @@ namespace OpenSim.Services.Interfaces
             get { return m_RegionSizeZ; }
         }
 
-        public int Flags
-        {
-            get { return m_flags; }
-            set { m_flags = value; }
-        }
+        public int Flags { get; set; }
 
         public UUID SessionID
         {
@@ -303,7 +304,6 @@ namespace OpenSim.Services.Interfaces
         private int m_RegionSizeZ = 256;
         public UUID RegionID = UUID.Zero;
         public UUID ScopeID = UUID.Zero;
-        private int m_flags = 0;
         private UUID m_SessionID = UUID.Zero;
 
         public UUID TerrainImage = UUID.Zero;
@@ -323,10 +323,12 @@ namespace OpenSim.Services.Interfaces
 
         public GridRegion()
         {
+            Flags = 0;
         }
 
         public GridRegion(RegionInfo ConvertFrom)
         {
+            Flags = 0;
             m_regionName = ConvertFrom.RegionName;
             m_regionType = ConvertFrom.RegionType;
             m_regionLocX = ConvertFrom.RegionLocX;
@@ -359,7 +361,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         public bool Equals(GridRegion region)
         {
-            if ((object)region == null)
+            if (region == null)
                 return false;
             // Return true if the non-zero UUIDs are equal:
             return (RegionID != UUID.Zero) && RegionID.Equals(region.RegionID);
@@ -433,7 +435,7 @@ namespace OpenSim.Services.Interfaces
             kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
             kvp["access"] = Access.ToString();
             kvp["owner_uuid"] = EstateOwner.ToString();
-            kvp["Token"] = AuthToken.ToString();
+            kvp["Token"] = AuthToken;
             kvp["sizeX"] = RegionSizeX.ToString();
             kvp["sizeY"] = RegionSizeY.ToString();
             return kvp;
@@ -441,6 +443,7 @@ namespace OpenSim.Services.Interfaces
 
         public GridRegion(Dictionary<string, object> kvp)
         {
+            Flags = 0;
             if (kvp.ContainsKey("uuid"))
                 RegionID = new UUID((string)kvp["uuid"]);
 
@@ -562,15 +565,7 @@ namespace OpenSim.Services.Interfaces
             if (map.ContainsKey("regionType"))
                 RegionType = map["regionType"].AsString();
 
-            if (map.ContainsKey("serverIP"))
-            {
-                //int port = 0;
-                //Int32.TryParse((string)kvp["serverPort"], out port);
-                //IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["serverIP"]), port);
-                ExternalHostName = map["serverIP"].AsString();
-            }
-            else
-                ExternalHostName = "127.0.0.1";
+            ExternalHostName = map.ContainsKey("serverIP") ? map["serverIP"].AsString() : "127.0.0.1";
 
             if (map.ContainsKey("serverPort"))
             {
@@ -642,12 +637,11 @@ namespace OpenSim.Services.Interfaces
         /// Time before handlers will need to reregister (in hours)
         /// </summary>
         float ExpiresTime { get; }
-        
+
         /// <summary>
         /// Gets a list of secure URLs for the given RegionHandle and SessionID
         /// </summary>
         /// <param name="SessionID"></param>
-        /// <param name="RegionHandle"></param>
         /// <returns></returns>
         OSDMap GetUrlForRegisteringClient(string SessionID);
 
@@ -661,7 +655,6 @@ namespace OpenSim.Services.Interfaces
         /// Remove the URLs for the given region
         /// </summary>
         /// <param name="SessionID"></param>
-        /// <param name="RegionHandle"></param>
         void RemoveUrlsForClient(string SessionID);
 
         /// <summary>

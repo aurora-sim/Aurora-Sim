@@ -26,16 +26,14 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Text;
-using log4net;
 
 namespace OpenSim.Framework.Serialization
 {
     /// <summary>
-    /// Temporary code to produce a tar archive in tar v7 format
+    ///   Temporary code to produce a tar archive in tar v7 format
     /// </summary>
     public class TarArchiveWriter
     {
@@ -43,12 +41,13 @@ namespace OpenSim.Framework.Serialization
 
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
         protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
-        protected bool m_closed = false;
 
         /// <summary>
-        /// Binary writer for the underlying stream
+        ///   Binary writer for the underlying stream
         /// </summary>
         protected BinaryWriter m_bw;
+
+        protected bool m_closed;
 
         public TarArchiveWriter(Stream s)
         {
@@ -57,9 +56,9 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Write a directory entry to the tar archive.  We can only handle one path level right now!
+        ///   Write a directory entry to the tar archive.  We can only handle one path level right now!
         /// </summary>
-        /// <param name="dirName"></param>
+        /// <param name = "dirName"></param>
         public void WriteDir(string dirName)
         {
             // Directories are signalled by a final /
@@ -70,20 +69,20 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Write a file to the tar archive
+        ///   Write a file to the tar archive
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="data"></param>
+        /// <param name = "filePath"></param>
+        /// <param name = "data"></param>
         public void WriteFile(string filePath, string data)
         {
             WriteFile(filePath, m_utf8Encoding.GetBytes(data));
         }
 
         /// <summary>
-        /// Write a file to the tar archive
+        ///   Write a file to the tar archive
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="data"></param>
+        /// <param name = "filePath"></param>
+        /// <param name = "data"></param>
         public void WriteFile(string filePath, byte[] data)
         {
             if (filePath.Length > 100)
@@ -91,23 +90,16 @@ namespace OpenSim.Framework.Serialization
 
             char fileType;
 
-            if (filePath.EndsWith("/"))
-            {
-                fileType = '5';
-            }
-            else
-            {
-                fileType = '0';
-            }
+            fileType = filePath.EndsWith("/") ? '5' : '0';
 
             WriteEntry(filePath, data, fileType);
             data = null;
         }
 
         /// <summary>
-        /// Finish writing the raw tar archive data to a stream.  The stream will be closed on completion.
+        ///   Finish writing the raw tar archive data to a stream.  The stream will be closed on completion.
         /// </summary>
-        /// <param name="s">Stream to which to write the data</param>
+        /// <param name = "s">Stream to which to write the data</param>
         /// <returns></returns>
         public void Close()
         {
@@ -135,7 +127,7 @@ namespace OpenSim.Framework.Serialization
 
             while (d > 0)
             {
-                oString = Convert.ToString((byte)'0' + d & 7) + oString;
+                oString = Convert.ToString((byte) '0' + d & 7) + oString;
                 d >>= 3;
             }
 
@@ -150,16 +142,16 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Write a particular entry
+        ///   Write a particular entry
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="data"></param>
-        /// <param name="fileType"></param>
+        /// <param name = "filePath"></param>
+        /// <param name = "data"></param>
+        /// <param name = "fileType"></param>
         protected void WriteEntry(string filePath, byte[] data, char fileType)
         {
 //            m_log.DebugFormat(
 //                "[TAR ARCHIVE WRITER]: Data for {0} is {1} bytes", filePath, (null == data ? "null" : data.Length.ToString()));
-                  
+
             byte[] header = new byte[512];
 
             // file path field (100)
@@ -192,7 +184,7 @@ namespace OpenSim.Framework.Serialization
             Array.Copy(lastModTimeBytes, 0, header, 136, 11);
 
             // entry type indicator (1)
-            header[156] = m_asciiEncoding.GetBytes(new char[] { fileType })[0];
+            header[156] = m_asciiEncoding.GetBytes(new[] {fileType})[0];
 
             Array.Copy(m_asciiEncoding.GetBytes("0000000"), 0, header, 329, 7);
             Array.Copy(m_asciiEncoding.GetBytes("0000000"), 0, header, 337, 7);
@@ -200,11 +192,7 @@ namespace OpenSim.Framework.Serialization
             // check sum for header block (8) [calculated last]
             Array.Copy(m_asciiEncoding.GetBytes("        "), 0, header, 148, 8);
 
-            int checksum = 0;
-            foreach (byte b in header)
-            {
-                checksum += b;
-            }
+            int checksum = header.Aggregate(0, (current, b) => current + b);
 
             //m_log.DebugFormat("[TAR ARCHIVE WRITER]: Decimal header checksum is {0}", checksum);
 
@@ -218,18 +206,18 @@ namespace OpenSim.Framework.Serialization
             {
                 // Write out header
                 m_bw.Write(header);
-    
+
                 // Write out data
                 // An IOException occurs if we try to write out an empty array in Mono 2.6
                 if (data.Length > 0)
                     m_bw.Write(data);
-    
-                if (data.Length % 512 != 0)
+
+                if (data.Length%512 != 0)
                 {
-                    int paddingRequired = 512 - (data.Length % 512);
-    
+                    int paddingRequired = 512 - (data.Length%512);
+
                     //m_log.DebugFormat("[TAR ARCHIVE WRITER]: Padding data with {0} bytes", paddingRequired);
-    
+
                     byte[] padding = new byte[paddingRequired];
                     m_bw.Write(padding);
                 }

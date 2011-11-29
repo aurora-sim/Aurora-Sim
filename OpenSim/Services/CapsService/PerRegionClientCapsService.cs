@@ -26,15 +26,12 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using System.Net;
 using System.Reflection;
 using log4net;
-using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
@@ -58,16 +55,14 @@ namespace OpenSim.Services.CapsService
         private bool m_disabled = true;
         private AgentCircuitData m_circuitData;
         private IHttpServer m_server;
-        private System.Net.IPAddress m_LoopbackRegionIP;
+
         public AgentCircuitData CircuitData
         {
             get { return m_circuitData; }
         }
-        public System.Net.IPAddress LoopbackRegionIP
-        {
-            get { return m_LoopbackRegionIP; }
-            set { m_LoopbackRegionIP = value; }
-        }
+
+        public IPAddress LoopbackRegionIP { get; set; }
+
         public bool Disabled
         {
             get { return m_disabled; }
@@ -106,12 +101,7 @@ namespace OpenSim.Services.CapsService
             }
         }
 
-        private Vector3 m_lastPosition;
-        public Vector3 LastPosition
-        {
-            get { return m_lastPosition; }
-            set { m_lastPosition = value; }
-        }
+        public Vector3 LastPosition { get; set; }
 
         /// <summary>
         /// This is the /CAPS/UUID 0000/ string
@@ -158,12 +148,7 @@ namespace OpenSim.Services.CapsService
 
         public IHttpServer Server
         {
-            get 
-            {
-                if (m_server == null)
-                    m_server = m_clientCapsService.Server; 
-                return m_server;
-            }
+            get { return m_server ?? (m_server = m_clientCapsService.Server); }
             set
             {
                 m_server = value;
@@ -178,7 +163,7 @@ namespace OpenSim.Services.CapsService
         {
             get 
             {
-                if (m_overrideCapsURL != "" && m_overrideCapsURL != null)
+                if (!string.IsNullOrEmpty(m_overrideCapsURL))
                     return m_overrideCapsURL;
                 return HostUri + m_capsUrlBase;
             }
@@ -260,15 +245,12 @@ namespace OpenSim.Services.CapsService
             string path = registeredCAPS[method].AsString ();
             if (path != "")//If it doesn't exist...
             {
-                if (path.StartsWith (this.HostUri))//Only try to remove local ones
+                if (path.StartsWith (HostUri))//Only try to remove local ones
                 {
-                    path = path.Remove (0, this.HostUri.Length);
+                    path = path.Remove (0, HostUri.Length);
                     Server.RemoveStreamHandler (httpMethod, path);
                 }
                 RemoveCaps (method);
-            }
-            else
-            {
             }
         }
 
@@ -276,10 +258,10 @@ namespace OpenSim.Services.CapsService
 
         #region SEED cap handling
 
-        public void AddSEEDCap(string CapsUrl)
+        public void AddSEEDCap(string CapsUrl2)
         {
-            if (CapsUrl != "")
-                m_capsUrlBase = CapsUrl;
+            if (CapsUrl2 != "")
+                m_capsUrlBase = CapsUrl2;
             Disabled = false;
             //Add our SEED cap
             AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));

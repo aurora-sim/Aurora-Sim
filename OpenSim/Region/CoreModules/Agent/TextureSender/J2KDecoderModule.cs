@@ -28,21 +28,17 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using log4net;
+using CSJ2K;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using CSJ2K;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureSender
 {
@@ -52,25 +48,42 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        /// <summary>Temporarily holds deserialized layer data information in memory</summary>
-        private readonly ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]> m_decodedCache = new ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]>();
-        /// <summary>List of client methods to notify of results of decode</summary>
-        private readonly Dictionary<UUID, List<DecodedCallback>> m_notifyList = new Dictionary<UUID, List<DecodedCallback>>();
-        /// <summary>Cache that will store decoded JPEG2000 layer boundary data</summary>
+        /// <summary>
+        ///   Temporarily holds deserialized layer data information in memory
+        /// </summary>
+        private readonly ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]> m_decodedCache =
+            new ExpiringCache<UUID, OpenJPEG.J2KLayerInfo[]>();
+
+        /// <summary>
+        ///   List of client methods to notify of results of decode
+        /// </summary>
+        private readonly Dictionary<UUID, List<DecodedCallback>> m_notifyList =
+            new Dictionary<UUID, List<DecodedCallback>>();
+
+        /// <summary>
+        ///   Cache that will store decoded JPEG2000 layer boundary data
+        /// </summary>
         private IImprovedAssetCache m_cache;
-        /// <summary>Reference to a scene (doesn't matter which one as long as it can load the cache module)</summary>
+
+        /// <summary>
+        ///   Reference to a scene (doesn't matter which one as long as it can load the cache module)
+        /// </summary>
         private IScene m_scene;
+
         private bool m_useCache = true;
 
         #region IRegionModule
 
         private bool m_useCSJ2K = true;
 
-        public string Name { get { return "J2KDecoderModule"; } }
-        public bool IsSharedModule { get { return true; } }
-
-        public J2KDecoderModule()
+        public bool IsSharedModule
         {
+            get { return true; }
+        }
+
+        public string Name
+        {
+            get { return "J2KDecoderModule"; }
         }
 
         public void Initialise(IConfigSource source)
@@ -83,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
@@ -91,12 +104,11 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             scene.RegisterModuleInterface<IJ2KDecoder>(this);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             m_cache = m_scene.RequestModuleInterface<IImprovedAssetCache>();
         }
@@ -142,8 +154,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                     }
                     else
                     {
-                        List<DecodedCallback> notifylist = new List<DecodedCallback>();
-                        notifylist.Add(callback);
+                        List<DecodedCallback> notifylist = new List<DecodedCallback> {callback};
                         m_notifyList.Add(assetID, notifylist);
                         decode = true;
                     }
@@ -156,10 +167,10 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         }
 
         /// <summary>
-        /// Provides a synchronous decode so that caller can be assured that this executes before the next line
+        ///   Provides a synchronous decode so that caller can be assured that this executes before the next line
         /// </summary>
-        /// <param name="assetID"></param>
-        /// <param name="j2kData"></param>
+        /// <param name = "assetID"></param>
+        /// <param name = "j2kData"></param>
         public bool Decode(UUID assetID, byte[] j2kData)
         {
             return DoJ2KDecode(assetID, j2kData);
@@ -167,11 +178,33 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
         #endregion IJ2KDecoder
 
+        #region IJ2KDecoder Members
+
+        public Image DecodeToImage(byte[] j2kData)
+        {
+            if (m_useCSJ2K)
+                return J2kImage.FromBytes(j2kData);
+            else
+            {
+                ManagedImage mimage;
+                Image image;
+                if (OpenJPEG.DecodeToImage(j2kData, out mimage, out image))
+                {
+                    mimage = null;
+                    return image;
+                }
+                else
+                    return null;
+            }
+        }
+
+        #endregion
+
         /// <summary>
-        /// Decode Jpeg2000 Asset Data
+        ///   Decode Jpeg2000 Asset Data
         /// </summary>
-        /// <param name="assetID">UUID of Asset</param>
-        /// <param name="j2kData">JPEG2000 data</param>
+        /// <param name = "assetID">UUID of Asset</param>
+        /// <param name = "j2kData">JPEG2000 data</param>
         private bool DoJ2KDecode(UUID assetID, byte[] j2kData)
         {
             return DoJ2KDecode(assetID, j2kData, m_useCSJ2K);
@@ -189,7 +222,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 {
                     try
                     {
-                        List<int> layerStarts = CSJ2K.J2kImage.GetLayerBoundaries(new MemoryStream(j2kData));
+                        List<int> layerStarts = J2kImage.GetLayerBoundaries(new MemoryStream(j2kData));
 
                         if (layerStarts != null && layerStarts.Count > 0)
                         {
@@ -197,12 +230,9 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
                             for (int i = 0; i < layerStarts.Count; i++)
                             {
-                                OpenJPEG.J2KLayerInfo layer = new OpenJPEG.J2KLayerInfo();
+                                OpenJPEG.J2KLayerInfo layer = new OpenJPEG.J2KLayerInfo
+                                                                  {Start = i == 0 ? 0 : layerStarts[i]};
 
-                                if (i == 0)
-                                    layer.Start = 0;
-                                else
-                                    layer.Start = layerStarts[i];
 
                                 if (i == layerStarts.Count - 1)
                                     layer.End = j2kData.Length;
@@ -215,7 +245,8 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                     }
                     catch (Exception ex)
                     {
-                        m_log.Warn("[J2KDecoderModule]: CSJ2K threw an exception decoding texture " + assetID + ": " + ex.Message);
+                        m_log.Warn("[J2KDecoderModule]: CSJ2K threw an exception decoding texture " + assetID + ": " +
+                                   ex.Message);
                     }
                 }
                 else
@@ -231,13 +262,17 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 {
                     if (m_useCSJ2K == this.m_useCSJ2K)
                     {
-                        m_log.Warn("[J2KDecoderModule]: Failed to decode layer data with (" + (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " + j2kData.Length + " trying " + (!m_useCSJ2K ? "CSJ2K" : "OpenJPEG"));
+                        m_log.Warn("[J2KDecoderModule]: Failed to decode layer data with (" +
+                                   (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " +
+                                   j2kData.Length + " trying " + (!m_useCSJ2K ? "CSJ2K" : "OpenJPEG"));
                         DoJ2KDecode(assetID, j2kData, !m_useCSJ2K);
                     }
                     else
                     {
                         //Second attempt at decode with the other j2k decoder, give up
-                        m_log.Warn("[J2KDecoderModule]: Failed to decode layer data (" + (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " + j2kData.Length + " guessing sane defaults");
+                        m_log.Warn("[J2KDecoderModule]: Failed to decode layer data (" +
+                                   (m_useCSJ2K ? "CSJ2K" : "OpenJPEG") + ") for texture " + assetID + ", length " +
+                                   j2kData.Length + " guessing sane defaults");
                         // Layer decoding completely failed. Guess at sane defaults for the layer boundaries
                         layers = CreateDefaultLayers(j2kData.Length);
                         // Notify Interested Parties
@@ -245,10 +280,9 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                         {
                             if (m_notifyList.ContainsKey(assetID))
                             {
-                                foreach (DecodedCallback d in m_notifyList[assetID])
+                                foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                                 {
-                                    if (d != null)
-                                        d.DynamicInvoke(assetID, layers);
+                                    d.DynamicInvoke(assetID, layers);
                                 }
                                 m_notifyList.Remove(assetID);
                             }
@@ -268,33 +302,14 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             {
                 if (m_notifyList.ContainsKey(assetID))
                 {
-                    foreach (DecodedCallback d in m_notifyList[assetID])
+                    foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                     {
-                        if (d != null)
-                            d.DynamicInvoke(assetID, layers);
+                        d.DynamicInvoke(assetID, layers);
                     }
                     m_notifyList.Remove(assetID);
                 }
             }
             return true;
-        }
-
-        public Image DecodeToImage(byte[] j2kData)
-        {
-            if (m_useCSJ2K)
-                return CSJ2K.J2kImage.FromBytes(j2kData);
-            else
-            {
-                ManagedImage mimage;
-                Image image;
-                if (OpenJPEG.DecodeToImage(j2kData, out mimage, out image))
-                {
-                    mimage = null;
-                    return image;
-                }
-                else
-                    return null;
-            }
         }
 
         private OpenJPEG.J2KLayerInfo[] CreateDefaultLayers(int j2kLength)
@@ -308,10 +323,10 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             // with extra padding thrown in for good measure. This is a worst case fallback plan
             // and may not gracefully handle all real world data
             layers[0].Start = 0;
-            layers[1].Start = (int)((float)j2kLength * 0.02f);
-            layers[2].Start = (int)((float)j2kLength * 0.05f);
-            layers[3].Start = (int)((float)j2kLength * 0.20f);
-            layers[4].Start = (int)((float)j2kLength * 0.50f);
+            layers[1].Start = (int) (j2kLength*0.02f);
+            layers[2].Start = (int) (j2kLength*0.05f);
+            layers[3].Start = (int) (j2kLength*0.20f);
+            layers[4].Start = (int) (j2kLength*0.50f);
 
             layers[0].End = layers[1].Start - 1;
             layers[1].End = layers[2].Start - 1;
@@ -332,7 +347,8 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 string assetID = "j2kCache_" + AssetId.ToString();
 
                 AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, AssetType.Notecard,
-                                                           m_scene.RegionInfo.RegionID) { Flags = AssetFlags.Local | AssetFlags.Temperary };
+                                                           m_scene.RegionInfo.RegionID)
+                                                 {Flags = AssetFlags.Local | AssetFlags.Temperary};
 
                 #region Serialize Layer Data
 
@@ -343,7 +359,8 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                     if (i == Layers.Length - 1)
                         strEnd = String.Empty;
 
-                    stringResult.AppendFormat("{0}|{1}|{2}{3}", Layers[i].Start, Layers[i].End, Layers[i].End - Layers[i].Start, strEnd);
+                    stringResult.AppendFormat("{0}|{1}|{2}{3}", Layers[i].Start, Layers[i].End,
+                                              Layers[i].End - Layers[i].Start, strEnd);
                 }
 
                 layerDecodeAsset.Data = Util.UTF8.GetBytes(stringResult.ToString());
@@ -354,7 +371,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             }
         }
 
-        bool TryLoadCacheForAsset(UUID AssetId, out OpenJPEG.J2KLayerInfo[] Layers)
+        private bool TryLoadCacheForAsset(UUID AssetId, out OpenJPEG.J2KLayerInfo[] Layers)
         {
             if (m_decodedCache.TryGetValue(AssetId, out Layers))
             {
@@ -370,7 +387,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                     #region Deserialize Layer Data
 
                     string readResult = Util.UTF8.GetString(layerDecodeAsset.Data);
-                    string[] lines = readResult.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] lines = readResult.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
 
                     if (lines.Length == 0)
                     {
@@ -400,9 +417,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                                 return false;
                             }
 
-                            Layers[i] = new OpenJPEG.J2KLayerInfo();
-                            Layers[i].Start = element1;
-                            Layers[i].End = element2;
+                            Layers[i] = new OpenJPEG.J2KLayerInfo {Start = element1, End = element2};
                         }
                         else
                         {
@@ -420,6 +435,5 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
             return false;
         }
-
     }
 }

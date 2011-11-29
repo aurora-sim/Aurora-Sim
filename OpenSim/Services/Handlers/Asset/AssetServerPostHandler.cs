@@ -25,21 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using OpenMetaverse;
-using log4net;
-using System;
-using System.Reflection;
 using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Serialization;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
@@ -47,7 +39,7 @@ namespace OpenSim.Services
     {
         // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAssetService m_AssetService;
+        private readonly IAssetService m_AssetService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
@@ -60,13 +52,13 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            XmlSerializer xs = new XmlSerializer(typeof(AssetBase));
-            AssetBase asset = (AssetBase)xs.Deserialize(request);
+            XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
+            AssetBase asset = (AssetBase) xs.Deserialize(request);
 
             IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Update", ThreatLevel.Full))
                     return new byte[0];
@@ -74,16 +66,16 @@ namespace OpenSim.Services
             if (p.Length > 1)
             {
                 bool result =
-                        m_AssetService.UpdateContent(UUID.Parse(p[1]), asset.Data);
+                    m_AssetService.UpdateContent(UUID.Parse(p[1]), asset.Data);
 
-                xs = new XmlSerializer(typeof(bool));
+                xs = new XmlSerializer(typeof (bool));
                 return WebUtils.SerializeResult(xs, result);
             }
 
             UUID id = m_AssetService.Store(asset);
             asset.ID = id;
 
-            xs = new XmlSerializer(typeof(string));
+            xs = new XmlSerializer(typeof (string));
             return WebUtils.SerializeResult(xs, id.ToString());
         }
     }

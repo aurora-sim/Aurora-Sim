@@ -25,33 +25,33 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Services.Connectors;
 using OpenSim.Services.GridService;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using RegionFlags = Aurora.Framework.RegionFlags;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCGridConnector : IGridService, IService
     {
         protected IGridService m_localService;
-        protected GridServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected GridServicesConnector m_remoteService;
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IGridService Members
 
         public virtual IGridService InnerService
         {
@@ -59,41 +59,20 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
             }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridHandler", "") != Name)
-                return;
-
-            string localHandler = handlerConfig.GetString("LocalGridHandler", "GridService");
-            List<IGridService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IGridService>();
-            foreach(IGridService s in services)
-                if(s.GetType().Name == localHandler)
-                    m_localService = s;
-
-            m_registry = registry;
-            if(m_localService == null)
-                m_localService = new GridService();
-            m_localService.Configure(config, registry);
-            m_remoteService = new GridServicesConnector();
-            m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IGridService>(this);
-        }
-
-        public void Configure (IConfigSource config, IRegistryCore registry)
+        public void Configure(IConfigSource config, IRegistryCore registry)
         {
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            if(m_localService != null)
+            if (m_localService != null)
                 m_localService.Start(config, registry);
         }
 
@@ -102,10 +81,6 @@ namespace Aurora.Modules
             if (m_localService != null)
                 m_localService.FinishedStartup();
         }
-
-        #endregion
-
-        #region IGridService Members
 
         public int MaxRegionSize
         {
@@ -117,12 +92,13 @@ namespace Aurora.Modules
             get { return m_localService.RegionViewSize; }
         }
 
-        public string RegisterRegion (GridRegion regionInfos, UUID oldSessionID, out UUID SessionID, out List<GridRegion> neighbors)
+        public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID,
+                                     out List<GridRegion> neighbors)
         {
             return m_localService.RegisterRegion(regionInfos, oldSessionID, out SessionID, out neighbors);
         }
 
-        public bool DeregisterRegion (ulong regionHandle, UUID regionID, UUID SessionID)
+        public bool DeregisterRegion(ulong regionHandle, UUID regionID, UUID SessionID)
         {
             return m_localService.DeregisterRegion(regionHandle, regionID, SessionID);
         }
@@ -160,16 +136,16 @@ namespace Aurora.Modules
             return r;
         }
 
-        public List<GridRegion> GetRegionsByName (UUID scopeID, string name, int maxNumber)
+        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
-            List<GridRegion> r = m_localService.GetRegionsByName (scopeID, name, maxNumber);
-            List<GridRegion> remoteRegions = m_remoteService.GetRegionsByName (scopeID, name, maxNumber);
-            UpdateGridRegionsForIWC (ref remoteRegions);
-            r.AddRange (remoteRegions);
+            List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, maxNumber);
+            List<GridRegion> remoteRegions = m_remoteService.GetRegionsByName(scopeID, name, maxNumber);
+            UpdateGridRegionsForIWC(ref remoteRegions);
+            r.AddRange(remoteRegions);
             //Sort to find the region with the exact name that was given
-            r.Sort (new OpenSim.Services.GridService.GridService.RegionDataComparison (name));
+            r.Sort(new GridService.RegionDataComparison(name));
             //Results are backwards... so it needs reversed
-            r.Reverse ();
+            r.Reverse();
             return r;
         }
 
@@ -200,7 +176,7 @@ namespace Aurora.Modules
         public int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             int flags = m_localService.GetRegionFlags(scopeID, regionID);
-            if(flags == -1)
+            if (flags == -1)
             {
                 flags = m_remoteService.GetRegionFlags(scopeID, regionID);
             }
@@ -222,19 +198,59 @@ namespace Aurora.Modules
             return reply;
         }
 
-        public void SetRegionUnsafe (UUID RegionID)
+        public void SetRegionUnsafe(UUID RegionID)
         {
-            m_localService.SetRegionUnsafe (RegionID);
+            m_localService.SetRegionUnsafe(RegionID);
         }
 
-        public void SetRegionSafe (UUID RegionID)
+        public void SetRegionSafe(UUID RegionID)
         {
-            m_localService.SetRegionUnsafe (RegionID);
+            m_localService.SetRegionUnsafe(RegionID);
         }
+
+        public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
+        {
+            return m_localService.VerifyRegionSessionID(r, SessionID);
+        }
+
+        public List<GridRegion> GetNeighbors(GridRegion r)
+        {
+            List<GridRegion> neighbors = m_localService.GetNeighbors(r);
+            List<GridRegion> remoteNeighbors = m_remoteService.GetNeighbors(r);
+            UpdateGridRegionsForIWC(ref remoteNeighbors);
+            neighbors.AddRange(remoteNeighbors);
+            return neighbors;
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridHandler", "") != Name)
+                return;
+
+            string localHandler = handlerConfig.GetString("LocalGridHandler", "GridService");
+            List<IGridService> services = AuroraModuleLoader.PickupModules<IGridService>();
+            foreach (IGridService s in services.Where(s => s.GetType().Name == localHandler))
+                m_localService = s;
+
+            m_registry = registry;
+            if (m_localService == null)
+                m_localService = new GridService();
+            m_localService.Configure(config, registry);
+            m_remoteService = new GridServicesConnector();
+            m_remoteService.Initialize(config, registry);
+            registry.RegisterModuleInterface<IGridService>(this);
+        }
+
+        #endregion
 
         private void UpdateGridRegionsForIWC(ref List<GridRegion> rs)
         {
-            for(int i = 0; i < rs.Count; i++)
+            for (int i = 0; i < rs.Count; i++)
             {
                 GridRegion r = rs[i];
                 UpdateGridRegionForIWC(ref r);
@@ -247,28 +263,12 @@ namespace Aurora.Modules
             if (r == null)
                 return r;
             InterWorldCommunications comms = m_registry.RequestModuleInterface<InterWorldCommunications>();
-            r.Flags |= (int)Aurora.Framework.RegionFlags.Foreign;
+            r.Flags |= (int) RegionFlags.Foreign;
             //if (r.GenericMap["GridUrl"] == "")
             //    r.GenericMap["ThreatLevel"] = comms.m_untrustedConnectionsDefaultTrust.ToString();
             //else
             //    r.GenericMap["ThreatLevel"] = comms.GetThreatLevelForUrl(r.GenericMap["GridUrl"]).ToString();
             return r;
         }
-
-        public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
-        {
-            return m_localService.VerifyRegionSessionID(r, SessionID);
-        }
-
-        public List<GridRegion> GetNeighbors (GridRegion r)
-        {
-            List<GridRegion> neighbors = m_localService.GetNeighbors (r);
-            List<GridRegion> remoteNeighbors = m_remoteService.GetNeighbors (r);
-            UpdateGridRegionsForIWC(ref remoteNeighbors);
-            neighbors.AddRange (remoteNeighbors);
-            return neighbors;
-        }
-
-        #endregion
     }
 }

@@ -25,26 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Simulation.Base;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace OpenSim.Services
 {
@@ -52,14 +50,15 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IGridService m_GridService;
-        private IRegionConnector TelehubConnector;
-        private IRegistryCore m_registry;
-        private bool m_secure = true;
-        private string m_SessionID;
+        private readonly IRegionConnector TelehubConnector;
+        private readonly IGridService m_GridService;
+        private readonly string m_SessionID;
+        private readonly IRegistryCore m_registry;
+        private readonly bool m_secure = true;
 
-        public GridServerPostHandler (string url, IRegistryCore registry, IGridService service, bool secure, string SessionID) :
-                base("POST", url)
+        public GridServerPostHandler(string url, IRegistryCore registry, IGridService service, bool secure,
+                                     string SessionID) :
+                                         base("POST", url)
         {
             m_secure = secure;
             m_GridService = service;
@@ -69,7 +68,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -81,7 +80,7 @@ namespace OpenSim.Services
             try
             {
                 Dictionary<string, object> request =
-                        WebUtils.ParseQueryString(body);
+                    WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                 {
@@ -108,7 +107,7 @@ namespace OpenSim.Services
                 string method = request["METHOD"].ToString();
 
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     case "register":
@@ -209,7 +208,6 @@ namespace OpenSim.Services
             }
 
             return FailureResult();
-
         }
 
         #region Method-specific handlers
@@ -234,7 +232,8 @@ namespace OpenSim.Services
                 m_log.WarnFormat("[GRID HANDLER]: no sessionID in request to register region");
 
             // Check the protocol version
-            if ((versionNumberMin > ProtocolVersions.ServerProtocolVersionMax && versionNumberMax < ProtocolVersions.ServerProtocolVersionMax))
+            if ((versionNumberMin > ProtocolVersions.ServerProtocolVersionMax &&
+                 versionNumberMax < ProtocolVersions.ServerProtocolVersionMax))
             {
                 // Can't do, there is no overlap in the acceptable ranges
                 return FailureResult();
@@ -258,7 +257,7 @@ namespace OpenSim.Services
             UUID SessionID = UUID.Zero;
             List<GridRegion> neighbors;
             if (rinfo != null)
-                result = m_GridService.RegisterRegion (rinfo, sessionIDIn, out SessionID, out neighbors);
+                result = m_GridService.RegisterRegion(rinfo, sessionIDIn, out SessionID, out neighbors);
 
             if (result == String.Empty)
                 return SuccessResult(SessionID.ToString());
@@ -269,12 +268,12 @@ namespace OpenSim.Services
         private byte[] NewRegister(OSDMap request)
         {
             GridRegion rinfo = new GridRegion();
-            rinfo.FromOSD((OSDMap)request["Region"]);
+            rinfo.FromOSD((OSDMap) request["Region"]);
             UUID SecureSessionID = request["SecureSessionID"].AsUUID();
             string result = "";
             List<GridRegion> neighbors = new List<GridRegion>();
             if (rinfo != null)
-                result = m_GridService.RegisterRegion (rinfo, SecureSessionID, out SecureSessionID, out neighbors);
+                result = m_GridService.RegisterRegion(rinfo, SecureSessionID, out SecureSessionID, out neighbors);
 
             OSDMap resultMap = new OSDMap();
             resultMap["SecureSessionID"] = SecureSessionID;
@@ -282,14 +281,15 @@ namespace OpenSim.Services
 
             if (result == "")
             {
-                object[] o = new object[3] { resultMap, SecureSessionID, rinfo };
-                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("GridRegionSuccessfullyRegistered", o);
+                object[] o = new object[3] {resultMap, SecureSessionID, rinfo};
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                    "GridRegionSuccessfullyRegistered", o);
 
                 //Send the neighbors as well
-                OSDArray array = new OSDArray ();
+                OSDArray array = new OSDArray();
                 foreach (GridRegion r in neighbors)
                 {
-                    array.Add (r.ToOSD ());
+                    array.Add(r.ToOSD());
                 }
                 resultMap["Neighbors"] = array;
             }
@@ -300,7 +300,7 @@ namespace OpenSim.Services
         private byte[] UpdateMap(OSDMap request)
         {
             GridRegion rinfo = new GridRegion();
-            rinfo.FromOSD((OSDMap)request["Region"]);
+            rinfo.FromOSD((OSDMap) request["Region"]);
             UUID SecureSessionID = request["SecureSessionID"].AsUUID();
             string result = "";
             if (rinfo != null)
@@ -328,15 +328,16 @@ namespace OpenSim.Services
             GridRegion r = m_GridService.GetRegionByUUID(UUID.Zero, regionID);
             if (r != null & m_SessionID == r.RegionHandle.ToString())
             {
-                bool result = m_GridService.DeregisterRegion (r.RegionHandle, regionID, sessionID);
+                bool result = m_GridService.DeregisterRegion(r.RegionHandle, regionID, sessionID);
                 if (result)
-                    m_registry.RequestModuleInterface<IGridRegistrationService> ().RemoveUrlsForClient (sessionID.ToString ());
+                    m_registry.RequestModuleInterface<IGridRegistrationService>().RemoveUrlsForClient(
+                        sessionID.ToString());
                 if (result)
-                    return SuccessResult ();
+                    return SuccessResult();
                 else
-                    return FailureResult ();
+                    return FailureResult();
             }
-            return FailureResult ();
+            return FailureResult();
         }
 
         private byte[] GetRegionByUUID(Dictionary<string, object> request)
@@ -463,9 +464,8 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
-                foreach (GridRegion rinfo in rinfos)
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -507,16 +507,15 @@ namespace OpenSim.Services
 
             List<GridRegion> rinfos = m_GridService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
             rinfos = CleanRegions(rinfos);
-            
+
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
             else
             {
                 int i = 0;
-                foreach (GridRegion rinfo in rinfos)
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -538,16 +537,15 @@ namespace OpenSim.Services
 
             List<GridRegion> rinfos = m_GridService.GetDefaultRegions(scopeID);
             rinfos = CleanRegions(rinfos);
-            
+
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
             else
             {
                 int i = 0;
-                foreach (GridRegion rinfo in rinfos)
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -580,16 +578,15 @@ namespace OpenSim.Services
 
             List<GridRegion> rinfos = m_GridService.GetFallbackRegions(scopeID, x, y);
             rinfos = CleanRegions(rinfos);
-            
+
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
             else
             {
                 int i = 0;
-                foreach (GridRegion rinfo in rinfos)
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -622,16 +619,15 @@ namespace OpenSim.Services
 
             List<GridRegion> rinfos = m_GridService.GetSafeRegions(scopeID, x, y);
             rinfos = CleanRegions(rinfos);
-            
+
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((rinfos == null) || ((rinfos != null) && (rinfos.Count == 0)))
                 result["result"] = "null";
             else
             {
                 int i = 0;
-                foreach (GridRegion rinfo in rinfos)
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -657,9 +653,9 @@ namespace OpenSim.Services
                 m_log.WarnFormat("[GRID HANDLER]: no regionID in request to get neighbours");
 
             int flags = m_GridService.GetRegionFlags(scopeID, regionID);
-           // m_log.DebugFormat("[GRID HANDLER]: flags for region {0}: {1}", regionID, flags);
+            // m_log.DebugFormat("[GRID HANDLER]: flags for region {0}: {1}", regionID, flags);
 
-            Dictionary<string, object> result = new Dictionary<string, object>(); 
+            Dictionary<string, object> result = new Dictionary<string, object>();
             result["result"] = flags.ToString();
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -671,9 +667,9 @@ namespace OpenSim.Services
         private byte[] GetMapItems(Dictionary<string, object> request)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
-            
+
             ulong regionHandle = ulong.Parse(request["REGIONHANDLE"].ToString());
-            GridItemType gridItemType = (GridItemType)int.Parse(request["GRIDITEMTYPE"].ToString());
+            GridItemType gridItemType = (GridItemType) int.Parse(request["GRIDITEMTYPE"].ToString());
 
             multipleMapItemReply items = m_GridService.GetMapItems(regionHandle, gridItemType);
 
@@ -690,12 +686,12 @@ namespace OpenSim.Services
 
             int RegionX, RegionY;
             ulong handle;
-            if (ulong.TryParse (m_SessionID, out handle))
+            if (ulong.TryParse(m_SessionID, out handle))
             {
-                Util.UlongToInts (handle, out RegionX, out RegionY);
-                GridRegion r = m_GridService.GetRegionByPosition (UUID.Zero, RegionX, RegionY);
+                Util.UlongToInts(handle, out RegionX, out RegionY);
+                GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
                 if (r != null)
-                    TelehubConnector.RemoveTelehub (r.RegionID, 0);
+                    TelehubConnector.RemoveTelehub(r.RegionID, 0);
                 result["result"] = "Successful";
             }
 
@@ -711,14 +707,14 @@ namespace OpenSim.Services
 
             int RegionX, RegionY;
             ulong handle;
-            if (ulong.TryParse (m_SessionID, out handle))
+            if (ulong.TryParse(m_SessionID, out handle))
             {
-                Util.UlongToInts (handle, out RegionX, out RegionY);
-                GridRegion r = m_GridService.GetRegionByPosition (UUID.Zero, RegionX, RegionY);
+                Util.UlongToInts(handle, out RegionX, out RegionY);
+                GridRegion r = m_GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
                 if (r != null)
                 {
                     telehub.RegionID = r.RegionID;
-                    TelehubConnector.AddTelehub (telehub, 0);
+                    TelehubConnector.AddTelehub(telehub, 0);
                 }
             }
 
@@ -743,37 +739,33 @@ namespace OpenSim.Services
         #endregion
 
         #region Misc
-        
+
         /// <summary>
-        /// Clean secure info out of the regions so that they do not get sent away from the grid service
-        /// This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
+        ///   Clean secure info out of the regions so that they do not get sent away from the grid service
+        ///   This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
         /// </summary>
-        /// <param name="regions"></param>
+        /// <param name = "regions"></param>
         /// <returns></returns>
         private List<GridRegion> CleanRegions(List<GridRegion> regions)
         {
-            List<GridRegion> regionsToReturn = new List<GridRegion>();
-            foreach (GridRegion region in regions)
-            {
-                regionsToReturn.Add(CleanRegion(region));
-            }
+            List<GridRegion> regionsToReturn = regions.Select(CleanRegion).ToList();
             return regions;
         }
 
         /// <summary>
-        /// Clean secure info out of the regions so that they do not get sent away from the grid service
-        /// This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
+        ///   Clean secure info out of the regions so that they do not get sent away from the grid service
+        ///   This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
         /// </summary>
-        /// <param name="region"></param>
+        /// <param name = "region"></param>
         /// <returns></returns>
         private GridRegion CleanRegion(GridRegion region)
         {
             if (region == null)
                 return null;
-            bool regionOnline = (region.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) != 0;
+            bool regionOnline = (region.Flags & (int) RegionFlags.RegionOnline) != 0;
             region.Flags = 0;
             if (regionOnline)
-                region.Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
+                region.Flags |= (int) RegionFlags.RegionOnline;
             region.SessionID = UUID.Zero;
             region.LastSeen = 0;
             region.AuthToken = "";
@@ -785,12 +777,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -804,7 +796,7 @@ namespace OpenSim.Services
 
         private byte[] SuccessResult(string result)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["Result"] = "Success";
             sendData["Message"] = result;
@@ -824,12 +816,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -849,8 +841,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 

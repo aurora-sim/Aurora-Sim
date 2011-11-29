@@ -27,15 +27,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
     public class UserAccount
     {
+        public int Created;
+        public string Email;
+        public OSDMap GenericData = new OSDMap();
+        public string Name;
+        public UUID PrincipalID;
+        public UUID ScopeID;
+        public Dictionary<string, object> ServiceURLs;
+        public int UserFlags;
+        public int UserLevel;
+        public string UserTitle;
+
         public UserAccount()
         {
         }
@@ -45,59 +57,30 @@ namespace OpenSim.Services.Interfaces
             PrincipalID = principalID;
         }
 
-        public UserAccount (UUID scopeID, string name, string email)
+        public UserAccount(UUID scopeID, string name, string email)
         {
-            PrincipalID = UUID.Random ();
+            PrincipalID = UUID.Random();
             ScopeID = scopeID;
             Name = name;
             Email = email;
-            ServiceURLs = new Dictionary<string, object> ();
-            Created = Util.UnixTimeSinceEpoch ();
+            ServiceURLs = new Dictionary<string, object>();
+            Created = Util.UnixTimeSinceEpoch();
         }
 
-        public UserAccount (UUID scopeID, UUID principalID, string name, string email)
+        public UserAccount(UUID scopeID, UUID principalID, string name, string email)
         {
             PrincipalID = principalID;
             ScopeID = scopeID;
             Name = name;
             Email = email;
-            ServiceURLs = new Dictionary<string, object> ();
-            Created = Util.UnixTimeSinceEpoch ();
-        }
-
-        public string Name;
-        public string Email;
-        public UUID PrincipalID;
-        public UUID ScopeID;
-        public int UserLevel;
-        public int UserFlags;
-        public string UserTitle;
-        public OSDMap GenericData = new OSDMap ();
-
-        public Dictionary<string, object> ServiceURLs;
-
-        public int Created;
-
-        public string FirstName
-        {
-            get { return Name.Split(' ')[0]; }
-        }
-
-        public string LastName
-        {
-            get
-            {
-                string[] split = Name.Split(' ');
-                if (split.Length > 1)
-                    return Name.Split(' ')[1];
-                else return "";
-            }
+            ServiceURLs = new Dictionary<string, object>();
+            Created = Util.UnixTimeSinceEpoch();
         }
 
         public UserAccount(Dictionary<string, object> kvp)
         {
             if (kvp.ContainsKey("FirstName") && kvp.ContainsKey("LastName"))
-                Name = kvp["FirstName"].ToString() + " " + kvp["LastName"].ToString();
+                Name = kvp["FirstName"] + " " + kvp["LastName"];
             if (kvp.ContainsKey("Name"))
                 Name = kvp["Name"].ToString();
             if (kvp.ContainsKey("Email"))
@@ -121,14 +104,28 @@ namespace OpenSim.Services.Interfaces
                 string str = kvp["ServiceURLs"].ToString();
                 if (str != string.Empty)
                 {
-                    string[] parts = str.Split(new char[] { ';' });
-                    foreach (string s in parts)
+                    string[] parts = str.Split(new[] {';'});
+                    foreach (string[] parts2 in parts.Select(s => s.Split(new[] {'*'})).Where(parts2 => parts2.Length == 2))
                     {
-                        string[] parts2 = s.Split(new char[] { '*' });
-                        if (parts2.Length == 2)
-                            ServiceURLs[parts2[0]] = parts2[1];
+                        ServiceURLs[parts2[0]] = parts2[1];
                     }
                 }
+            }
+        }
+
+        public string FirstName
+        {
+            get { return Name.Split(' ')[0]; }
+        }
+
+        public string LastName
+        {
+            get
+            {
+                string[] split = Name.Split(' ');
+                if (split.Length > 1)
+                    return Name.Split(' ')[1];
+                else return "";
             }
         }
 
@@ -145,80 +142,76 @@ namespace OpenSim.Services.Interfaces
             result["UserFlags"] = UserFlags.ToString();
             result["UserTitle"] = UserTitle;
 
-            string str = string.Empty;
-            foreach (KeyValuePair<string, object> kvp in ServiceURLs)
-            {
-                str += kvp.Key + "*" + (kvp.Value == null ? "" : kvp.Value) + ";";
-            }
+            string str = ServiceURLs.Aggregate(string.Empty, (current, kvp) => current + (kvp.Key + "*" + (kvp.Value ?? "") + ";"));
             result["ServiceURLs"] = str;
 
             return result;
         }
-
     };
 
     public interface IUserAccountService
     {
         IUserAccountService InnerService { get; }
+
         /// <summary>
-        /// Get a user given by UUID
+        ///   Get a user given by UUID
         /// </summary>
-        /// <param name="scopeID"></param>
-        /// <param name="userID"></param>
+        /// <param name = "scopeID"></param>
+        /// <param name = "userID"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(UUID scopeID, UUID userID);
 
         /// <summary>
-        /// Get a user given by a first and last name
+        ///   Get a user given by a first and last name
         /// </summary>
-        /// <param name="scopeID"></param>
-        /// <param name="FirstName"></param>
-        /// <param name="LastName"></param>
+        /// <param name = "scopeID"></param>
+        /// <param name = "FirstName"></param>
+        /// <param name = "LastName"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(UUID scopeID, string FirstName, string LastName);
 
         /// <summary>
-        /// Get a user given by its full name
+        ///   Get a user given by its full name
         /// </summary>
-        /// <param name="scopeID"></param>
-        /// <param name="Email"></param>
+        /// <param name = "scopeID"></param>
+        /// <param name = "Email"></param>
         /// <returns></returns>
         UserAccount GetUserAccount(UUID scopeID, string Name);
 
         /// <summary>
-        /// Returns the list of avatars that matches both the search criterion and the scope ID passed
+        ///   Returns the list of avatars that matches both the search criterion and the scope ID passed
         /// </summary>
-        /// <param name="scopeID"></param>
-        /// <param name="query"></param>
+        /// <param name = "scopeID"></param>
+        /// <param name = "query"></param>
         /// <returns></returns>
         List<UserAccount> GetUserAccounts(UUID scopeID, string query);
 
         /// <summary>
-        /// Store the data given, wich replaces the stored data, therefore must be complete.
+        ///   Store the data given, wich replaces the stored data, therefore must be complete.
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name = "data"></param>
         /// <returns></returns>
-        bool StoreUserAccount (UserAccount data);
+        bool StoreUserAccount(UserAccount data);
 
         /// <summary>
-        /// Create the user with the given info
+        ///   Create the user with the given info
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="md5password">MD5 hashed password</param>
-        /// <param name="email"></param>
-        void CreateUser (string name, string md5password, string email);
+        /// <param name = "name"></param>
+        /// <param name = "md5password">MD5 hashed password</param>
+        /// <param name = "email"></param>
+        void CreateUser(string name, string md5password, string email);
 
         /// <summary>
-        /// Create the user with the given info
+        ///   Create the user with the given info
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="md5password">MD5 hashed password</param>
-        /// <param name="email"></param>
-        void CreateUser (UUID userID, string name, string md5password, string email);
+        /// <param name = "name"></param>
+        /// <param name = "md5password">MD5 hashed password</param>
+        /// <param name = "email"></param>
+        void CreateUser(UUID userID, string name, string md5password, string email);
     }
 
     /// <summary>
-    /// An interface for connecting to the user accounts datastore
+    ///   An interface for connecting to the user accounts datastore
     /// </summary>
     public interface IUserAccountData : IAuroraDataPlugin
     {

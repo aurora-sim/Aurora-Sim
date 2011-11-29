@@ -31,10 +31,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class float4
     {
+        public float w;
         public float x;
         public float y;
         public float z;
-        public float w;
 
         public float4()
         {
@@ -74,10 +74,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 switch (i)
                 {
-                    case 0: return x;
-                    case 1: return y;
-                    case 2: return z;
-                    case 3: return w;
+                    case 0:
+                        return x;
+                    case 1:
+                        return y;
+                    case 2:
+                        return z;
+                    case 3:
+                        return w;
                 }
                 throw new ArgumentOutOfRangeException();
             }
@@ -123,13 +127,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float4 cmul(float4 a, float4 b)
         {
-            return new float4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
+            return new float4(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w);
         }
 
         public static float4 operator +(float4 a, float4 b)
         {
             return new float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
         }
+
         public static float4 operator -(float4 a, float4 b)
         {
             return new float4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
@@ -137,16 +142,16 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float4 operator *(float4 v, float4x4 m)
         {
-            return v.x * m.x + v.y * m.y + v.z * m.z + v.w * m.w; // yes this actually works
+            return v.x*m.x + v.y*m.y + v.z*m.z + v.w*m.w; // yes this actually works
         }
 
         public static bool operator ==(float4 a, float4 b)
         {
             // If both are null, or both are same instance, return true.
-            if (System.Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
                 return true;
             // If one is null, but not both, return false.
-            if (((object)a == null) || ((object)b == null))
+            if (((object) a == null) || ((object) b == null))
                 return false;
 
             return (a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w);
@@ -159,12 +164,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float4 operator *(float4 v, float s)
         {
-            return new float4(v.x * s, v.y * s, v.z * s, v.w * s);
+            return new float4(v.x*s, v.y*s, v.z*s, v.w*s);
         }
 
         public static float4 operator *(float s, float4 v)
         {
-            return new float4(v.x * s, v.y * s, v.z * s, v.w * s);
+            return new float4(v.x*s, v.y*s, v.z*s, v.w*s);
         }
     }
 }

@@ -42,253 +42,252 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
             AddSchema("auroraassets_A", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_B", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_C", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_D", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_E", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_F", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_0", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_1", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_2", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_3", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_4", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_5", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_6", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_7", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_8", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("parent_id", ColumnTypes.String36, true),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024)
+                                            ));
 
             AddSchema("auroraassets_9", ColDefs(ColDef("id", ColumnTypes.String36, true),
-               ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024),
-               ColDef("parent_id", ColumnTypes.String36, true)
-               ));
+                                                ColDef("hash_code", ColumnTypes.String64, true),
+                                                ColDef("name", ColumnTypes.String64),
+                                                ColDef("description", ColumnTypes.String128),
+                                                ColDef("asset_type", ColumnTypes.Integer11),
+                                                ColDef("create_time", ColumnTypes.Integer11),
+                                                ColDef("access_time", ColumnTypes.Integer11),
+                                                ColDef("asset_flags", ColumnTypes.String64),
+                                                ColDef("creator_id", ColumnTypes.String36, true),
+                                                ColDef("owner_id", ColumnTypes.String36),
+                                                ColDef("host_uri", ColumnTypes.String1024),
+                                                ColDef("parent_id", ColumnTypes.String36, true)
+                                            ));
 
             AddSchema("auroraassets_old", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-               ColDef("parent_id", ColumnTypes.String36, true),
-               ColDef("creator_id", ColumnTypes.String36, true),
-               ColDef("name", ColumnTypes.String64),
-               ColDef("description", ColumnTypes.String128),
-               ColDef("asset_type", ColumnTypes.Integer11),
-               ColDef("create_time", ColumnTypes.Integer11),
-               ColDef("access_time", ColumnTypes.Integer11),
-               ColDef("asset_flags", ColumnTypes.String64),
-               ColDef("owner_id", ColumnTypes.String36),
-               ColDef("host_uri", ColumnTypes.String1024)
-               ));
+                                                  ColDef("hash_code", ColumnTypes.String64, true),
+                                                  ColDef("parent_id", ColumnTypes.String36, true),
+                                                  ColDef("creator_id", ColumnTypes.String36, true),
+                                                  ColDef("name", ColumnTypes.String64),
+                                                  ColDef("description", ColumnTypes.String128),
+                                                  ColDef("asset_type", ColumnTypes.Integer11),
+                                                  ColDef("create_time", ColumnTypes.Integer11),
+                                                  ColDef("access_time", ColumnTypes.Integer11),
+                                                  ColDef("asset_flags", ColumnTypes.String64),
+                                                  ColDef("owner_id", ColumnTypes.String36),
+                                                  ColDef("host_uri", ColumnTypes.String1024)
+                                              ));
 
             AddSchema("auroraassets_tasks", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("task_type", ColumnTypes.String64),
-                ColDef("task_values", ColumnTypes.String36)
-                ));
+                                                    ColDef("task_type", ColumnTypes.String64),
+                                                    ColDef("task_values", ColumnTypes.String36)
+                                                ));
 
             AddSchema("auroraassets_temp", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                ColDef("hash_code", ColumnTypes.String64, true),
-                ColDef("creator_id", ColumnTypes.String36, true)
-                ));
-
+                                                   ColDef("hash_code", ColumnTypes.String64, true),
+                                                   ColDef("creator_id", ColumnTypes.String36, true)
+                                               ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

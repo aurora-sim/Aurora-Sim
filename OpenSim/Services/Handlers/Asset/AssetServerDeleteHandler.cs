@@ -25,21 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using OpenMetaverse;
-using log4net;
-using System;
-using System.Reflection;
 using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Serialization;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
@@ -47,13 +39,14 @@ namespace OpenSim.Services
     {
         // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAssetService m_AssetService;
-        protected bool m_allowDelete;
+        private readonly IAssetService m_AssetService;
         protected string m_SessionID;
+        protected bool m_allowDelete;
         protected IRegistryCore m_registry;
 
-        public AssetServerDeleteHandler(IAssetService service, bool allowDelete, string url, string SessionID, IRegistryCore registry) :
-            base("DELETE", url)
+        public AssetServerDeleteHandler(IAssetService service, bool allowDelete, string url, string SessionID,
+                                        IRegistryCore registry) :
+                                            base("DELETE", url)
         {
             m_AssetService = service;
             m_allowDelete = allowDelete;
@@ -62,14 +55,14 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             bool result = false;
 
             string[] p = SplitParams(path);
 
             IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Delete", ThreatLevel.Full))
                     return new byte[0];
@@ -78,7 +71,7 @@ namespace OpenSim.Services
                 result = m_AssetService.Delete(UUID.Parse(p[0]));
             }
 
-            XmlSerializer xs = new XmlSerializer(typeof(bool));
+            XmlSerializer xs = new XmlSerializer(typeof (bool));
             return WebUtils.SerializeResult(xs, result);
         }
     }

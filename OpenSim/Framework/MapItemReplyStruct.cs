@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenMetaverse;
 using System.Collections.Generic;
+using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
@@ -34,7 +34,9 @@ namespace OpenSim.Framework
     {
         public Dictionary<ulong, List<mapItemReply>> items = new Dictionary<ulong, List<mapItemReply>>();
 
-        public multipleMapItemReply() { }
+        public multipleMapItemReply()
+        {
+        }
 
         public multipleMapItemReply(Dictionary<string, object> KVP)
         {
@@ -42,7 +44,7 @@ namespace OpenSim.Framework
             {
                 ulong handle = ulong.Parse(kvp.Key.Split('A')[1]);
                 mapItemReply item = new mapItemReply(kvp.Value as Dictionary<string, object>);
-                
+
                 if (!items.ContainsKey(handle))
                     items.Add(handle, new List<mapItemReply>());
 
@@ -68,7 +70,16 @@ namespace OpenSim.Framework
 
     public class mapItemReply
     {
-        public mapItemReply() { }
+        public int Extra;
+        public int Extra2;
+        public UUID id;
+        public string name;
+        public uint x;
+        public uint y;
+
+        public mapItemReply()
+        {
+        }
 
         public mapItemReply(Dictionary<string, object> KVP)
         {
@@ -91,12 +102,5 @@ namespace OpenSim.Framework
             KVP["Name"] = name;
             return KVP;
         }
-
-        public uint x;
-        public uint y;
-        public UUID id;
-        public int Extra;
-        public int Extra2;
-        public string name;
     }
 }

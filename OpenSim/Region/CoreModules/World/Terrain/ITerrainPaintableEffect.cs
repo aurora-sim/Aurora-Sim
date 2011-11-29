@@ -26,8 +26,6 @@
  */
 
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -35,6 +33,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 {
     public interface ITerrainPaintableEffect
     {
-        void PaintEffect (ITerrainChannel map, UUID userID, float x, float y, float z, float strength, float duration, float BrushSize, List<IScene> scene);
+        void PaintEffect(ITerrainChannel map, UUID userID, float x, float y, float z, float strength, float duration,
+                         float BrushSize, List<IScene> scene);
     }
 }

@@ -26,11 +26,10 @@
  */
 
 using System;
-using OpenMetaverse;
-using log4net;
-using Nini.Config;
 using System.Reflection;
+using OpenMetaverse;
 using OpenSim.Framework;
+using log4net;
 
 namespace OpenSim.Services.AuthenticationService
 {
@@ -43,38 +42,36 @@ namespace OpenSim.Services.AuthenticationService
     public class AuthenticationServiceBase
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
- 
+
         protected IAuthenticationData m_Database;
         protected bool m_authenticateUsers = true;
 
         public bool CheckExists(UUID principalID, string authType)
         {
-            return m_Database.Get (principalID, authType) != null;
+            return m_Database.Get(principalID, authType) != null;
         }
 
-        public bool Verify (UUID principalID, string authType, string token, int lifetime)
+        public bool Verify(UUID principalID, string authType, string token, int lifetime)
         {
             return m_Database.CheckToken(principalID, token, lifetime);
         }
 
-        public virtual bool Release (UUID principalID, string token, string authType)
+        public virtual bool Release(UUID principalID, string token, string authType)
         {
             return m_Database.CheckToken(principalID, token, 0);
         }
 
-        public virtual bool SetPassword (UUID principalID, string authType, string password)
+        public virtual bool SetPassword(UUID principalID, string authType, string password)
         {
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());
             string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + passwordSalt);
 
-            AuthData auth = m_Database.Get (principalID, authType);
+            AuthData auth = m_Database.Get(principalID, authType);
             if (auth == null)
             {
-                auth = new AuthData();
-                auth.PrincipalID = principalID;
-                auth.AccountType = authType;
+                auth = new AuthData {PrincipalID = principalID, AccountType = authType};
             }
             auth.PasswordHash = md5PasswdHash;
             auth.PasswordSalt = passwordSalt;
@@ -88,12 +85,12 @@ namespace OpenSim.Services.AuthenticationService
             return true;
         }
 
-        public virtual bool Remove (UUID principalID, string authType)
+        public virtual bool Remove(UUID principalID, string authType)
         {
-            return m_Database.Delete (principalID, authType);
+            return m_Database.Delete(principalID, authType);
         }
-        
-        protected string GetToken (UUID principalID, int lifetime)
+
+        protected string GetToken(UUID principalID, int lifetime)
         {
             UUID token = UUID.Random();
 
@@ -103,17 +100,15 @@ namespace OpenSim.Services.AuthenticationService
             return String.Empty;
         }
 
-        public virtual bool SetPasswordHashed (UUID principalID, string authType, string Hashedpassword)
+        public virtual bool SetPasswordHashed(UUID principalID, string authType, string Hashedpassword)
         {
             string passwordSalt = Util.Md5Hash(UUID.Random().ToString());
             string md5PasswdHash = Util.Md5Hash(Hashedpassword + ":" + passwordSalt);
 
-            AuthData auth = m_Database.Get (principalID, authType);
+            AuthData auth = m_Database.Get(principalID, authType);
             if (auth == null)
             {
-                auth = new AuthData();
-                auth.PrincipalID = principalID;
-                auth.AccountType = authType;
+                auth = new AuthData {PrincipalID = principalID, AccountType = authType};
             }
             auth.PasswordHash = md5PasswdHash;
             auth.PasswordSalt = passwordSalt;
@@ -127,24 +122,22 @@ namespace OpenSim.Services.AuthenticationService
             return true;
         }
 
-        public virtual bool SetPlainPassword (UUID principalID, string authType, string pass)
+        public virtual bool SetPlainPassword(UUID principalID, string authType, string pass)
         {
-            AuthData auth = m_Database.Get (principalID, authType);
+            AuthData auth = m_Database.Get(principalID, authType);
             if (auth == null)
             {
-                auth = new AuthData ();
-                auth.PrincipalID = principalID;
-                auth.AccountType = authType;
+                auth = new AuthData {PrincipalID = principalID, AccountType = authType};
             }
             auth.PasswordHash = pass;
             auth.PasswordSalt = "";
-            if (!m_Database.Store (auth))
+            if (!m_Database.Store(auth))
             {
-                m_log.DebugFormat ("[AUTHENTICATION DB]: Failed to store authentication data");
+                m_log.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
                 return false;
             }
 
-            m_log.InfoFormat ("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
+            m_log.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
             return true;
         }
     }

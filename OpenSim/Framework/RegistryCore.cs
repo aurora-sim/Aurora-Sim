@@ -27,32 +27,34 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace OpenSim.Framework
 {
     public class RegistryCore : IRegistryCore
     {
         /// <value>
-        /// The module interfaces available from this scene.
+        ///   The module interfaces available from this scene.
         /// </value>
         protected Dictionary<Type, List<object>> ModuleInterfaces = new Dictionary<Type, List<object>>();
 
+        #region IRegistryCore Members
+
         /// <summary>
-        /// Register an interface to a region module.  This allows module methods to be called directly as
-        /// well as via events.  If there is already a module registered for this interface, it is not replaced
-        /// (is this the best behaviour?)
+        ///   Register an interface to a region module.  This allows module methods to be called directly as
+        ///   well as via events.  If there is already a module registered for this interface, it is not replaced
+        ///   (is this the best behaviour?)
         /// </summary>
-        /// <param name="mod"></param>
+        /// <param name = "mod"></param>
         public void RegisterModuleInterface<T>(T mod)
         {
             //            m_log.DebugFormat("[SCENE BASE]: Registering interface {0}", typeof(M));
 
             List<Object> l = null;
-            if (!ModuleInterfaces.TryGetValue(typeof(T), out l))
+            if (!ModuleInterfaces.TryGetValue(typeof (T), out l))
             {
                 l = new List<Object>();
-                ModuleInterfaces.Add(typeof(T), l);
+                ModuleInterfaces.Add(typeof (T), l);
             }
 
             if (l.Count > 0)
@@ -75,7 +77,7 @@ namespace OpenSim.Framework
         public void UnregisterModuleInterface<T>(T mod)
         {
             List<Object> l;
-            if (ModuleInterfaces.TryGetValue(typeof(T), out l))
+            if (ModuleInterfaces.TryGetValue(typeof (T), out l))
             {
                 l.Remove(mod);
             }
@@ -84,28 +86,25 @@ namespace OpenSim.Framework
         public void StackModuleInterface<T>(T mod)
         {
             List<Object> l;
-            if (ModuleInterfaces.ContainsKey(typeof(T)))
-                l = ModuleInterfaces[typeof(T)];
-            else
-                l = new List<Object>();
+            l = ModuleInterfaces.ContainsKey(typeof (T)) ? ModuleInterfaces[typeof (T)] : new List<Object>();
 
             if (l.Contains(mod))
                 return;
 
             l.Add(mod);
 
-            ModuleInterfaces[typeof(T)] = l;
+            ModuleInterfaces[typeof (T)] = l;
         }
 
         /// <summary>
-        /// For the given interface, retrieve the region module which implements it.
+        ///   For the given interface, retrieve the region module which implements it.
         /// </summary>
         /// <returns>null if there is no registered module implementing that interface</returns>
         public T RequestModuleInterface<T>()
         {
-            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
-                    (ModuleInterfaces[typeof(T)].Count > 0))
-                return (T)ModuleInterfaces[typeof(T)][0];
+            if (ModuleInterfaces.ContainsKey(typeof (T)) &&
+                (ModuleInterfaces[typeof (T)].Count > 0))
+                return (T) ModuleInterfaces[typeof (T)][0];
             else
                 return default(T);
         }
@@ -113,10 +112,10 @@ namespace OpenSim.Framework
         public bool TryRequestModuleInterface<T>(out T iface)
         {
             iface = default(T);
-            if (ModuleInterfaces.ContainsKey(typeof(T)) &&
-                    (ModuleInterfaces[typeof(T)].Count > 0))
+            if (ModuleInterfaces.ContainsKey(typeof (T)) &&
+                (ModuleInterfaces[typeof (T)].Count > 0))
             {
-                iface = (T)ModuleInterfaces[typeof(T)][0];
+                iface = (T) ModuleInterfaces[typeof (T)][0];
                 return true;
             }
             else
@@ -124,39 +123,32 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// For the given interface, retrieve an array of region modules that implement it.
+        ///   For the given interface, retrieve an array of region modules that implement it.
         /// </summary>
         /// <returns>an empty array if there are no registered modules implementing that interface</returns>
         public T[] RequestModuleInterfaces<T>()
         {
-            if (ModuleInterfaces.ContainsKey(typeof(T)))
+            if (ModuleInterfaces.ContainsKey(typeof (T)))
             {
-                List<T> ret = new List<T>();
-
-                foreach (Object o in ModuleInterfaces[typeof(T)])
-                    ret.Add((T)o);
-                return ret.ToArray();
+                return ModuleInterfaces[typeof (T)].Select(o => (T) o).ToArray();
             }
             else
             {
-                return new T[] { default(T) };
+                return new[] {default(T)};
             }
         }
 
         public Dictionary<Type, List<object>> GetInterfaces()
         {
             //Flatten the array
-            Dictionary<Type, List<object>> interfaces = new Dictionary<Type, List<object>>();
-            foreach (KeyValuePair<Type, List<object>> kvp in ModuleInterfaces)
-            {
-                interfaces.Add(kvp.Key, kvp.Value);
-            }
-            return interfaces;
+            return ModuleInterfaces.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        public void RemoveAllInterfaces ()
+        public void RemoveAllInterfaces()
         {
-            ModuleInterfaces.Clear ();
+            ModuleInterfaces.Clear();
         }
+
+        #endregion
     }
 }

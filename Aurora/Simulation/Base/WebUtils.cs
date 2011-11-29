@@ -27,51 +27,50 @@
 
 using System;
 using System.Collections;
-using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
-using System.Net.Security;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Text;
 using System.Web;
-using log4net;
-using OpenSim.Framework;
+using System.Xml;
+using System.Xml.Serialization;
+using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Servers.HttpServer;
-using Nwc.XmlRpc;
+using OpenSim.Framework;
+using log4net;
+using log4net.Core;
 
 namespace Aurora.Simulation.Base
 {
     public static class WebUtils
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        private static int m_requestNumber = 0;
-        private static int m_defaultTimeout = 20000;
-
-        // this is the header field used to communicate the local request id
-        // used for performance and debugging
         public const string OSHeaderRequestID = "opensim-request-id";
 
         // number of milliseconds a call can take before it is considered
         // a "long" call for warning & debugging purposes
         public const int LongCallTime = 500;
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static int m_requestNumber;
+        private const int m_defaultTimeout = 20000;
+
+        // this is the header field used to communicate the local request id
+        // used for performance and debugging
 
         public static byte[] SerializeResult(XmlSerializer xs, object data)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, Util.UTF8);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, Util.UTF8) {Formatting = Formatting.Indented};
             xs.Serialize(xw, data);
             xw.Flush();
 
             ms.Seek(0, SeekOrigin.Begin);
             byte[] ret = ms.GetBuffer();
-            Array.Resize(ref ret, (int)ms.Length);
+            Array.Resize(ref ret, (int) ms.Length);
 
             return ret;
         }
@@ -79,22 +78,22 @@ namespace Aurora.Simulation.Base
         public static Dictionary<string, object> ParseQueryString(string query)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
-            string[] terms = query.Split(new char[] {'&'});
+            string[] terms = query.Split(new[] {'&'});
 
             if (terms.Length == 0)
                 return result;
 
             foreach (string t in terms)
             {
-                string[] elems = t.Split(new char[] {'='});
+                string[] elems = t.Split(new[] {'='});
                 if (elems.Length == 0)
                     continue;
 
-                string name = System.Web.HttpUtility.UrlDecode(elems[0]);
+                string name = HttpUtility.UrlDecode(elems[0]);
                 string value = String.Empty;
 
                 if (elems.Length > 1)
-                    value = System.Web.HttpUtility.UrlDecode(elems[1]);
+                    value = HttpUtility.UrlDecode(elems[1]);
 
                 if (name.EndsWith("[]"))
                 {
@@ -104,15 +103,13 @@ namespace Aurora.Simulation.Base
                         if (!(result[cleanName] is List<string>))
                             continue;
 
-                        List<string> l = (List<string>)result[cleanName];
+                        List<string> l = (List<string>) result[cleanName];
 
                         l.Add(value);
                     }
                     else
                     {
-                        List<string> newList = new List<string>();
-
-                        newList.Add(value);
+                        List<string> newList = new List<string> {value};
 
                         result[cleanName] = newList;
                     }
@@ -131,18 +128,17 @@ namespace Aurora.Simulation.Base
         {
             string qstring = String.Empty;
 
-            string part;
-
             foreach (KeyValuePair<string, object> kvp in data)
             {
+                string part;
                 if (kvp.Value is List<string>)
                 {
-                    List<string> l = (List<String>)kvp.Value;
+                    List<string> l = (List<String>) kvp.Value;
 
                     foreach (string s in l)
                     {
-                        part = System.Web.HttpUtility.UrlEncode(kvp.Key) +
-                                "[]=" + System.Web.HttpUtility.UrlEncode(s);
+                        part = HttpUtility.UrlEncode(kvp.Key) +
+                               "[]=" + HttpUtility.UrlEncode(s);
 
                         if (qstring != String.Empty)
                             qstring += "&";
@@ -154,12 +150,12 @@ namespace Aurora.Simulation.Base
                 {
                     if (kvp.Value.ToString() != String.Empty)
                     {
-                        part = System.Web.HttpUtility.UrlEncode(kvp.Key) +
-                                "=" + System.Web.HttpUtility.UrlEncode(kvp.Value.ToString());
+                        part = HttpUtility.UrlEncode(kvp.Key) +
+                               "=" + HttpUtility.UrlEncode(kvp.Value.ToString());
                     }
                     else
                     {
-                        part = System.Web.HttpUtility.UrlEncode(kvp.Key);
+                        part = HttpUtility.UrlEncode(kvp.Key);
                     }
 
                     if (qstring != String.Empty)
@@ -177,13 +173,13 @@ namespace Aurora.Simulation.Base
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
             // Set the encoding declaration.
-            ((XmlDeclaration)xmlnode).Encoding = "UTF-8";
+            ((XmlDeclaration) xmlnode).Encoding = "UTF-8";
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -199,40 +195,39 @@ namespace Aurora.Simulation.Base
                 if (kvp.Value == null)
                     continue;
 
-                XmlElement elem = parent.OwnerDocument.CreateElement("",
-                        kvp.Key, "");
-
-                if (kvp.Value is Dictionary<string, object>)
+                if (parent.OwnerDocument != null)
                 {
-                    XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
-                        "type", "");
-                    type.Value = "List";
+                    XmlElement elem = parent.OwnerDocument.CreateElement("",
+                                                                         kvp.Key, "");
 
-                    elem.Attributes.Append(type);
-
-                    BuildXmlData(elem, (Dictionary<string, object>)kvp.Value);
-                }
-                else if (kvp.Value is Dictionary<string, string>)
-                {
-                    XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
-                        "type", "");
-                    type.Value = "List";
-
-                    elem.Attributes.Append(type);
-                    Dictionary<string, object> value = new Dictionary<string, object>();
-                    foreach (KeyValuePair<string, string> pair in (Dictionary<string, string>)kvp.Value)
+                    if (kvp.Value is Dictionary<string, object>)
                     {
-                        value.Add(pair.Key, pair.Value);
-                    }
-                    BuildXmlData(elem, value);
-                }
-                else
-                {
-                    elem.AppendChild(parent.OwnerDocument.CreateTextNode(
-                            kvp.Value.ToString()));
-                }
+                        XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
+                                                                                 "type", "");
+                        type.Value = "List";
 
-                parent.AppendChild(elem);
+                        elem.Attributes.Append(type);
+
+                        BuildXmlData(elem, (Dictionary<string, object>) kvp.Value);
+                    }
+                    else if (kvp.Value is Dictionary<string, string>)
+                    {
+                        XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
+                                                                                 "type", "");
+                        type.Value = "List";
+
+                        elem.Attributes.Append(type);
+                        Dictionary<string, object> value = ((Dictionary<string, string>) kvp.Value).ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key, pair => pair.Value);
+                        BuildXmlData(elem, value);
+                    }
+                    else
+                    {
+                        elem.AppendChild(parent.OwnerDocument.CreateTextNode(
+                            kvp.Value.ToString()));
+                    }
+
+                    parent.AppendChild(elem);
+                }
             }
         }
 
@@ -245,7 +240,7 @@ namespace Aurora.Simulation.Base
             XmlDocument doc = new XmlDocument();
 
             doc.LoadXml(data);
-            
+
             XmlNodeList rootL = doc.GetElementsByTagName("ServerResponse");
 
             if (rootL.Count != 1)
@@ -266,14 +261,17 @@ namespace Aurora.Simulation.Base
 
             foreach (XmlNode part in partL)
             {
-                XmlNode type = part.Attributes.GetNamedItem("type");
-                if (type == null || type.Value != "List")
+                if (part.Attributes != null)
                 {
-                    ret[part.Name] = part.InnerText;
-                }
-                else
-                {
-                    ret[part.Name] = ParseElement(part);
+                    XmlNode type = part.Attributes.GetNamedItem("type");
+                    if (type == null || type.Value != "List")
+                    {
+                        ret[part.Name] = part.InnerText;
+                    }
+                    else
+                    {
+                        ret[part.Name] = ParseElement(part);
+                    }
                 }
             }
 
@@ -281,38 +279,45 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// PUT JSON-encoded data to a web service that returns LLSD or
-        /// JSON data
+        ///   PUT JSON-encoded data to a web service that returns LLSD or
+        ///   JSON data
         /// </summary>
-        public static OSDMap PutToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
+        public static OSDMap PutToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse,
+                                          bool returnRawResult)
         {
-            return ServiceOSDRequest (url, data, "PUT", m_defaultTimeout, careAboutResponse, deserializeResponse, returnRawResult);
+            return ServiceOSDRequest(url, data, "PUT", m_defaultTimeout, careAboutResponse, deserializeResponse,
+                                     returnRawResult);
         }
 
         /// <summary>
-        /// POST URL-encoded form data to a web service that returns LLSD or
-        /// JSON data
+        ///   POST URL-encoded form data to a web service that returns LLSD or
+        ///   JSON data
         /// </summary>
-        public static OSDMap PostToService (string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
+        public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
         {
-            return ServiceOSDRequest (url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, false);
+            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, false);
         }
 
         /// <summary>
-        /// POST URL-encoded form data to a web service that returns LLSD or
-        /// JSON data
+        ///   POST URL-encoded form data to a web service that returns LLSD or
+        ///   JSON data
         /// </summary>
-        public static OSDMap PostToService (string url, OSDMap data, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
+        public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse,
+                                           bool returnRawResult)
         {
-            return ServiceOSDRequest (url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, returnRawResult);
+            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse,
+                                     returnRawResult);
         }
 
-        public static OSDMap GetFromService (string url, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
+        public static OSDMap GetFromService(string url, bool careAboutResponse, bool deserializeResponse,
+                                            bool returnRawResult)
         {
-            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout, careAboutResponse, deserializeResponse, returnRawResult);
+            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout, careAboutResponse, deserializeResponse,
+                                     returnRawResult);
         }
 
-        public static OSDMap ServiceOSDRequest (string url, OSDMap data, string method, int timeout, bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
+        public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout,
+                                               bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
         {
             int reqnum = m_requestNumber++;
             // m_log.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
@@ -322,24 +327,24 @@ namespace Aurora.Simulation.Base
             int tickdata = 0;
             int tickserialize = 0;
 
-            if(url == "")
+            if (url == "")
                 return ErrorResponseMap("No URL given.");
 
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create (url);
+                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
                 request.Method = method;
                 request.Timeout = timeout;
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout / 4;
-                request.Headers[OSHeaderRequestID] = reqnum.ToString ();
+                request.ReadWriteTimeout = timeout/4;
+                request.Headers[OSHeaderRequestID] = reqnum.ToString();
 
                 // If there is some input, write it into the request
                 if (data != null)
                 {
-                    string strBuffer = OSDParser.SerializeJsonString (data);
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes (strBuffer);
+                    string strBuffer = OSDParser.SerializeJsonString(data);
+                    byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
 
                     if (buffer.Length <= 0)
                     {
@@ -347,19 +352,19 @@ namespace Aurora.Simulation.Base
                     else
                     {
                         request.ContentType = "application/json";
-                        request.ContentLength = buffer.Length;   //Count bytes to send
-                        using (Stream requestStream = request.GetRequestStream ())
-                            requestStream.Write (buffer, 0, buffer.Length);         //Send it
+                        request.ContentLength = buffer.Length; //Count bytes to send
+                        using (Stream requestStream = request.GetRequestStream())
+                            requestStream.Write(buffer, 0, buffer.Length); //Send it
                     }
                 }
 
                 // capture how much time was spent writing, this may seem silly
                 // but with the number concurrent requests, this often blocks
-                tickdata = Util.EnvironmentTickCountSubtract (tickstart);
+                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
 
-                using (WebResponse response = request.GetResponse ())
+                using (WebResponse response = request.GetResponse())
                 {
-                    using (Stream responseStream = response.GetResponseStream ())
+                    using (Stream responseStream = response.GetResponseStream())
                     {
                         // capture how much time was spent writing, this may seem silly
                         // but with the number concurrent requests, this often blocks
@@ -367,12 +372,12 @@ namespace Aurora.Simulation.Base
                         if (careAboutResponse)
                         {
                             string responseStr = null;
-                            responseStr = responseStream.GetStreamString ();
+                            responseStr = responseStream.GetStreamString();
                             // m_log.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                            return CanonicalizeResults (responseStr, deserializeResponse, returnRawResult);
+                            return CanonicalizeResults(responseStr, deserializeResponse, returnRawResult);
                         }
                         else
-                            return new OSDMap ();
+                            return new OSDMap();
                     }
                 }
             }
@@ -381,8 +386,8 @@ namespace Aurora.Simulation.Base
                 errorMessage = we.Message;
                 if (we.Status == WebExceptionStatus.ProtocolError)
                 {
-                    HttpWebResponse webResponse = (HttpWebResponse)we.Response;
-                    errorMessage = String.Format ("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
+                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
+                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
                 }
             }
             catch (Exception ex)
@@ -392,41 +397,44 @@ namespace Aurora.Simulation.Base
             finally
             {
                 // This just dumps a warning for any operation that takes more than 500 ms
-                int tickdiff = Util.EnvironmentTickCountSubtract (tickstart);
-                if (m_log.IsEnabled (log4net.Core.Level.Trace))
+                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
+                if (m_log.IsEnabled(Level.Trace))
                 {
-                    m_log.TraceFormat ("[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
-                                     reqnum, url, method, tickdiff, tickdata, tickserialize);
+                    m_log.TraceFormat(
+                        "[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
+                        reqnum, url, method, tickdiff, tickdata, tickserialize);
                 }
                 else
                 {
                     if (tickdiff > LongCallTime)
-                        m_log.InfoFormat ("[WebUtils]: osd request took too long <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
-                                         reqnum, url, method, tickdiff, tickdata, tickserialize);
+                        m_log.InfoFormat(
+                            "[WebUtils]: osd request took too long <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
+                            reqnum, url, method, tickdiff, tickdata, tickserialize);
                 }
             }
 
-            m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url, data != null ? data.AsString() : "");
+            m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url,
+                             data != null ? data.AsString() : "");
             return ErrorResponseMap(errorMessage);
         }
 
         /// <summary>
-        /// Since there are no consistencies in the way web requests are
-        /// formed, we need to do a little guessing about the result format.
-        /// Keys:
-        ///     Success|success == the success fail of the request
-        ///     _RawResult == the raw string that came back
-        ///     _Result == the OSD unpacked string
+        ///   Since there are no consistencies in the way web requests are
+        ///   formed, we need to do a little guessing about the result format.
+        ///   Keys:
+        ///   Success|success == the success fail of the request
+        ///   _RawResult == the raw string that came back
+        ///   _Result == the OSD unpacked string
         /// </summary>
-        private static OSDMap CanonicalizeResults (string response, bool deserializeResponse, bool returnRawResult)
+        private static OSDMap CanonicalizeResults(string response, bool deserializeResponse, bool returnRawResult)
         {
             OSDMap result = new OSDMap();
 
             if (returnRawResult)
             {
-                OSD responseOSD = OSDParser.Deserialize (response);
+                OSD responseOSD = OSDParser.Deserialize(response);
                 if (responseOSD.Type == OSDType.Map)
-                    result = (OSDMap)responseOSD;
+                    result = (OSDMap) responseOSD;
                 return result;
             }
 
@@ -436,10 +444,10 @@ namespace Aurora.Simulation.Base
             result["_RawResult"] = OSD.FromString(response);
             result["_Result"] = new OSDMap();
 
-            if (response.Equals("true", System.StringComparison.OrdinalIgnoreCase))
+            if (response.Equals("true", StringComparison.OrdinalIgnoreCase))
                 return result;
 
-            if (response.Equals("false", System.StringComparison.OrdinalIgnoreCase))
+            if (response.Equals("false", StringComparison.OrdinalIgnoreCase))
             {
                 result["Success"] = OSD.FromBoolean(false);
                 result["success"] = OSD.FromBoolean(false);
@@ -450,17 +458,17 @@ namespace Aurora.Simulation.Base
             {
                 try
                 {
-                    OSD responseOSD = OSDParser.Deserialize (response);
+                    OSD responseOSD = OSDParser.Deserialize(response);
                     if (responseOSD.Type == OSDType.Map)
                     {
-                        result["_Result"] = (OSDMap)responseOSD;
+                        result["_Result"] = responseOSD;
                         return result;
                     }
                 }
                 catch (Exception e)
                 {
                     // don't need to treat this as an error... we're just guessing anyway
-                    m_log.InfoFormat ("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
+                    m_log.InfoFormat("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
                 }
             }
 
@@ -479,19 +487,18 @@ namespace Aurora.Simulation.Base
 
             try
             {
-
-                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
                 request.Method = "POST";
                 request.Timeout = timeout;
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout / 4;
+                request.ReadWriteTimeout = timeout/4;
                 request.Headers[OSHeaderRequestID] = reqnum.ToString();
 
                 if (data != null)
                 {
                     string queryString = BuildQueryString(data);
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes(queryString);
+                    byte[] buffer = Encoding.UTF8.GetBytes(queryString);
 
                     request.ContentLength = buffer.Length;
                     request.ContentType = "application/x-www-form-urlencoded";
@@ -512,7 +519,7 @@ namespace Aurora.Simulation.Base
                         responseStr = responseStream.GetStreamString();
                         OSD responseOSD = OSDParser.Deserialize(responseStr);
                         if (responseOSD.Type == OSDType.Map)
-                            return (OSDMap)responseOSD;
+                            return (OSDMap) responseOSD;
                     }
                 }
             }
@@ -521,7 +528,7 @@ namespace Aurora.Simulation.Base
                 errorMessage = we.Message;
                 if (we.Status == WebExceptionStatus.ProtocolError)
                 {
-                    HttpWebResponse webResponse = (HttpWebResponse)we.Response;
+                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
                     errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
                 }
             }
@@ -533,8 +540,9 @@ namespace Aurora.Simulation.Base
             {
                 int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
                 if (tickdiff > LongCallTime)
-                    m_log.InfoFormat("[WebUtils]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
-                                     reqnum, url, method, tickdiff, tickdata);
+                    m_log.InfoFormat(
+                        "[WebUtils]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
+                        reqnum, url, method, tickdiff, tickdata);
             }
 
             m_log.WarnFormat("[WebUtils]: <{0}> form request failed: {1}", reqnum, errorMessage);
@@ -542,8 +550,8 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Create a response map for an error, trying to keep
-        /// the result formats consistent
+        ///   Create a response map for an error, trying to keep
+        ///   the result formats consistent
         /// </summary>
         private static OSDMap ErrorResponseMap(string msg)
         {
@@ -554,8 +562,8 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// POST URL-encoded form data to a web service that returns LLSD or
-        /// JSON data
+        ///   POST URL-encoded form data to a web service that returns LLSD or
+        ///   JSON data
         /// </summary>
         public static OSDMap PostToService(string url, NameValueCollection data)
         {
@@ -565,22 +573,144 @@ namespace Aurora.Simulation.Base
         public static string BuildQueryString(NameValueCollection parameters)
         {
             List<string> items = new List<string>(parameters.Count);
-
-            foreach (string key in parameters.Keys)
-            {
-                string[] values = parameters.GetValues(key);
-                if (values != null)
-                {
-                    foreach (string value in values)
-                        items.Add(String.Concat(key, "=", HttpUtility.UrlEncode(value ?? String.Empty)));
-                }
-            }
+            items.AddRange(from string key in parameters.Keys let values = parameters.GetValues(key) where values != null from value in values select String.Concat(key, "=", HttpUtility.UrlEncode(value ?? String.Empty)));
 
             return String.Join("&", items.ToArray());
         }
 
+        /// <summary>
+        ///   Takes the value of an Accept header and returns the preferred types
+        ///   ordered by q value (if it exists).
+        ///   Example input: image/jpg;q=0.7, image/png;q=0.8, image/jp2
+        ///   Exmaple output: ["jp2", "png", "jpg"]
+        ///   NOTE: This doesn't handle the semantics of *'s...
+        /// </summary>
+        /// <param name = "accept"></param>
+        /// <returns></returns>
+        public static string[] GetPreferredImageTypes(string accept)
+        {
+            if (string.IsNullOrEmpty(accept))
+                return new string[0];
+
+            string[] types = accept.Split(new[] {','});
+            if (types.Length > 0)
+            {
+                List<string> list = new List<string>(types);
+                list.RemoveAll(s => !s.ToLower().StartsWith("image"));
+                ArrayList tlist = new ArrayList(list);
+                tlist.Sort(new QBasedComparer());
+
+                string[] result = new string[tlist.Count];
+                for (int i = 0; i < tlist.Count; i++)
+                {
+                    string mime = (string) tlist[i];
+                    string[] parts = mime.Split(new[] {';'});
+                    string[] pair = parts[0].Split(new[] {'/'});
+                    if (pair.Length == 2)
+                        result[i] = pair[1].ToLower();
+                    else // oops, we don't know what this is...
+                        result[i] = pair[0];
+                }
+
+                return result;
+            }
+            return new string[0];
+        }
+
+        /// <summary>
+        ///   Extract the param from an uri.
+        /// </summary>
+        /// <param name = "uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release/other</param>
+        /// <param name = "uuid">uuid on uuid field</param>
+        /// <param name="regionID"></param>
+        /// <param name = "action">optional action</param>
+        /// <param name = "other">Any other data</param>
+        public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action, out string other)
+        {
+            uuid = UUID.Zero;
+            regionID = UUID.Zero;
+            action = "";
+            other = "";
+
+            uri = uri.Trim(new[] {'/'});
+            string[] parts = uri.Split('/');
+            if (parts.Length <= 1)
+            {
+                return false;
+            }
+            if (!UUID.TryParse(parts[1], out uuid))
+                return false;
+
+            if (parts.Length >= 3)
+                UUID.TryParse(parts[2], out regionID);
+            if (parts.Length >= 4)
+                action = parts[3];
+            if (parts.Length >= 5)
+                other = parts[4];
+
+            return true;
+        }
+
+        /// <summary>
+        ///   Extract the param from an uri.
+        /// </summary>
+        /// <param name = "uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release</param>
+        /// <param name = "uuid">uuid on uuid field</param>
+        /// <param name="regionID"></param>
+        /// <param name = "action">optional action</param>
+        public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action)
+        {
+            uuid = UUID.Zero;
+            regionID = UUID.Zero;
+            action = "";
+
+            uri = uri.Trim(new[] {'/'});
+            string[] parts = uri.Split('/');
+            if (parts.Length <= 1)
+            {
+                return false;
+            }
+            if (!UUID.TryParse(parts[1], out uuid))
+                return false;
+
+            if (parts.Length >= 3)
+                UUID.TryParse(parts[2], out regionID);
+            if (parts.Length >= 4)
+                action = parts[3];
+
+            return true;
+        }
+
+        public static OSDMap GetOSDMap(string data)
+        {
+            if (data == "")
+                return null;
+            try
+            {
+                // We should pay attention to the content-type, but let's assume we know it's Json
+                OSD buffer = OSDParser.DeserializeJson(data);
+                if (buffer.Type == OSDType.Map)
+                {
+                    OSDMap args = (OSDMap) buffer;
+                    return args;
+                }
+                // uh?
+                m_log.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                return null;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[WebUtils]: exception on parse of REST message " + ex);
+                return null;
+            }
+        }
+
+        #region Nested type: QBasedComparer
+
         public class QBasedComparer : IComparer
         {
+            #region IComparer Members
+
             public int Compare(Object x, Object y)
             {
                 float qx = GetQ(x);
@@ -592,17 +722,19 @@ namespace Aurora.Simulation.Base
                 return 1;
             }
 
+            #endregion
+
             private float GetQ(Object o)
             {
                 // Example: image/png;q=0.9
 
                 if (o is String)
                 {
-                    string mime = (string)o;
-                    string[] parts = mime.Split(new char[] { ';' });
+                    string mime = (string) o;
+                    string[] parts = mime.Split(new[] {';'});
                     if (parts.Length > 1)
                     {
-                        string[] kvp = parts[1].Split(new char[] { '=' });
+                        string[] kvp = parts[1].Split(new[] {'='});
                         if (kvp.Length == 2 && kvp[0] == "q")
                         {
                             float qvalue = 1F;
@@ -616,157 +748,28 @@ namespace Aurora.Simulation.Base
             }
         }
 
-        /// <summary>
-        /// Takes the value of an Accept header and returns the preferred types
-        /// ordered by q value (if it exists).
-        /// Example input: image/jpg;q=0.7, image/png;q=0.8, image/jp2
-        /// Exmaple output: ["jp2", "png", "jpg"]
-        /// NOTE: This doesn't handle the semantics of *'s...
-        /// </summary>
-        /// <param name="accept"></param>
-        /// <returns></returns>
-        public static string[] GetPreferredImageTypes(string accept)
-        {
-            if (accept == null || accept == string.Empty)
-                return new string[0];
-
-            string[] types = accept.Split(new char[] { ',' });
-            if (types.Length > 0)
-            {
-                List<string> list = new List<string>(types);
-                list.RemoveAll(delegate(string s) { return !s.ToLower().StartsWith("image"); });
-                ArrayList tlist = new ArrayList(list);
-                tlist.Sort(new QBasedComparer());
-
-                string[] result = new string[tlist.Count];
-                for (int i = 0; i < tlist.Count; i++)
-                {
-                    string mime = (string)tlist[i];
-                    string[] parts = mime.Split(new char[] { ';' });
-                    string[] pair = parts[0].Split(new char[] { '/' });
-                    if (pair.Length == 2)
-                        result[i] = pair[1].ToLower();
-                    else // oops, we don't know what this is...
-                        result[i] = pair[0];
-                }
-
-                return result;
-            }
-            return new string[0];
-        }
-
-        /// <summary>
-        /// Extract the param from an uri.
-        /// </summary>
-        /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release/other</param>
-        /// <param name="uri">uuid on uuid field</param>
-        /// <param name="action">optional action</param>
-        /// <param name="other">Any other data</param>
-        public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action, out string other)
-        {
-            uuid = UUID.Zero;
-            regionID = UUID.Zero;
-            action = "";
-            other = "";
-
-            uri = uri.Trim(new char[] { '/' });
-            string[] parts = uri.Split('/');
-            if (parts.Length <= 1)
-            {
-                return false;
-            }
-            else
-            {
-                if (!UUID.TryParse(parts[1], out uuid))
-                    return false;
-
-                if (parts.Length >= 3)
-                    UUID.TryParse(parts[2], out regionID);
-                if (parts.Length >= 4)
-                    action = parts[3];
-                if (parts.Length >= 5)
-                    other = parts[4];
-
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Extract the param from an uri.
-        /// </summary>
-        /// <param name="uri">Something like this: /agent/uuid/ or /agent/uuid/handle/release</param>
-        /// <param name="uri">uuid on uuid field</param>
-        /// <param name="action">optional action</param>
-        public static bool GetParams(string uri, out UUID uuid, out UUID regionID, out string action)
-        {
-            uuid = UUID.Zero;
-            regionID = UUID.Zero;
-            action = "";
-
-            uri = uri.Trim(new char[] { '/' });
-            string[] parts = uri.Split('/');
-            if (parts.Length <= 1)
-            {
-                return false;
-            }
-            else
-            {
-                if (!UUID.TryParse(parts[1], out uuid))
-                    return false;
-
-                if (parts.Length >= 3)
-                    UUID.TryParse(parts[2], out regionID);
-                if (parts.Length >= 4)
-                    action = parts[3];
-
-                return true;
-            }
-        }
-
-        public static OSDMap GetOSDMap(string data)
-        {
-            OSDMap args = null;
-            if (data == "")
-                return null;
-            try
-            {
-                OSD buffer;
-                // We should pay attention to the content-type, but let's assume we know it's Json
-                buffer = OSDParser.DeserializeJson(data);
-                if (buffer.Type == OSDType.Map)
-                {
-                    args = (OSDMap)buffer;
-                    return args;
-                }
-                else
-                {
-                    // uh?
-                    m_log.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                m_log.Warn("[WebUtils]: exception on parse of REST message " + ex.ToString());
-                return null;
-            }
-        }
+        #endregion
     }
 
-    /// <summary>Class supporting the request side of an XML-RPC transaction.</summary>
-    public class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
+    /// <summary>
+    ///   Class supporting the request side of an XML-RPC transaction.
+    /// </summary>
+    public sealed class ConfigurableKeepAliveXmlRpcRequest : XmlRpcRequest
     {
-        private Encoding _encoding = new ASCIIEncoding();
-        private XmlRpcRequestSerializer _serializer = new XmlRpcRequestSerializer();
-        private XmlRpcResponseDeserializer _deserializer = new XmlRpcResponseDeserializer();
-        private bool _disableKeepAlive = true;
+        private readonly XmlRpcResponseDeserializer _deserializer = new XmlRpcResponseDeserializer();
+        private readonly bool _disableKeepAlive = true;
+        private readonly Encoding _encoding = new ASCIIEncoding();
+        private readonly XmlRpcRequestSerializer _serializer = new XmlRpcRequestSerializer();
 
         public string RequestResponse = String.Empty;
 
-        /// <summary>Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.</summary>
-        /// <param name="methodName"><c>String</c> designating the <i>object.method</i> on the server the request
-        /// should be directed to.</param>
-        /// <param name="parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
+        /// <summary>
+        ///   Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.
+        /// </summary>
+        /// <param name = "methodName"><c>String</c> designating the <i>object.method</i> on the server the request
+        ///   should be directed to.</param>
+        /// <param name = "parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
+        /// <param name="disableKeepAlive"></param>
         public ConfigurableKeepAliveXmlRpcRequest(String methodName, IList parameters, bool disableKeepAlive)
         {
             MethodName = methodName;
@@ -774,15 +777,18 @@ namespace Aurora.Simulation.Base
             _disableKeepAlive = disableKeepAlive;
         }
 
-        /// <summary>Send the request to the server.</summary>
-        /// <param name="url"><c>String</c> The url of the XML-RPC server.</param>
+        /// <summary>
+        ///   Send the request to the server.
+        /// </summary>
+        /// <param name = "url"><c>String</c> The url of the XML-RPC server.</param>
         /// <returns><c>XmlRpcResponse</c> The response generated.</returns>
         public XmlRpcResponse Send(String url)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
             if (request == null)
                 throw new XmlRpcException(XmlRpcErrorCodes.TRANSPORT_ERROR,
-                              XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " + url);
+                                          XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " +
+                                          url);
             request.Method = "POST";
             request.ContentType = "text/xml";
             request.AllowWriteStreamBuffering = true;
@@ -794,19 +800,19 @@ namespace Aurora.Simulation.Base
             xml.Flush();
             xml.Close();
 
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpWebResponse response = (HttpWebResponse) request.GetResponse();
             StreamReader input = new StreamReader(response.GetResponseStream());
 
             string inputXml = input.ReadToEnd();
             XmlRpcResponse resp;
             try
             {
-                resp = (XmlRpcResponse)_deserializer.Deserialize(inputXml);
+                resp = (XmlRpcResponse) _deserializer.Deserialize(inputXml);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 RequestResponse = inputXml;
-                throw e;
+                throw;
             }
             input.Close();
             response.Close();

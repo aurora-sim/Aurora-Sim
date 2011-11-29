@@ -30,15 +30,15 @@ using System;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Undo stack.  Deletes entries beyond a certain capacity
+    ///   Undo stack.  Deletes entries beyond a certain capacity
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name = "T"></typeparam>
     [Serializable]
     public class UndoStack<T>
     {
+        private readonly T[] m_Undos;
         private int m_new = 1;
-        private int m_old = 0;
-        private T[] m_Undos;
+        private int m_old;
 
         public UndoStack(int capacity)
         {

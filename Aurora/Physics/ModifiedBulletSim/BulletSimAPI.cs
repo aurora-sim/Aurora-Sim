@@ -24,211 +24,225 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 using System;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Text;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Physics.BulletSPlugin {
-
-[StructLayout(LayoutKind.Sequential)]
-public struct ConvexHull 
+namespace OpenSim.Region.Physics.BulletSPlugin
 {
-	Vector3 Offset;
-	int VertexCount;
-	Vector3[] Vertices;
-}
-[StructLayout(LayoutKind.Sequential)]
-public struct ShapeData 
-{
-    public enum PhysicsShapeType
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ConvexHull
     {
-		SHAPE_AVATAR = 0,
-		SHAPE_BOX = 1,
-		SHAPE_CONE = 2,
-		SHAPE_CYLINDER = 3,
-		SHAPE_SPHERE = 4,
-		SHAPE_HULL = 5
-    };
-    // note that bools are passed as ints since bool size changes by language
-    public const int numericTrue = 1;
-    public const int numericFalse = 0;
-    public uint ID;
-    public PhysicsShapeType Type;
-    public Vector3 Position;
-    public Quaternion Rotation;
-    public Vector3 Velocity;
-    public Vector3 Scale;
-    public float Mass;
-    public float Buoyancy;
-    public System.UInt64 MeshKey;
-    public float Friction;
-    public float Restitution;
-    public int Collidable;
-    public int Static;  // true if a static object. Otherwise gravity, etc.
-}
-[StructLayout(LayoutKind.Sequential)]
-public struct SweepHit 
-{
-    public uint ID;
-    public float Fraction;
-    public Vector3 Normal;
-    public Vector3 Point;
-}
-[StructLayout(LayoutKind.Sequential)]
-public struct RaycastHit
-{
-    public uint ID;
-    public float Fraction;
-    public Vector3 Normal;
-}
-[StructLayout(LayoutKind.Sequential)]
-public struct CollisionDesc
-{
-    public uint aID;
-    public uint bID;
-    public Vector3 point;
-    public Vector3 normal;
-}
-[StructLayout(LayoutKind.Sequential)]
-public struct EntityProperties
-{
-    public uint ID;
-    public Vector3 Position;
-    public Quaternion Rotation;
-    public Vector3 Velocity;
-    public Vector3 Acceleration;
-    public Vector3 RotationalVelocity;
-}
+        private readonly Vector3 Offset;
+        private readonly int VertexCount;
+        private readonly Vector3[] Vertices;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ShapeData
+    {
+        public enum PhysicsShapeType
+        {
+            SHAPE_AVATAR = 0,
+            SHAPE_BOX = 1,
+            SHAPE_CONE = 2,
+            SHAPE_CYLINDER = 3,
+            SHAPE_SPHERE = 4,
+            SHAPE_HULL = 5
+        };
+
+        // note that bools are passed as ints since bool size changes by language
+        public const int numericTrue = 1;
+        public const int numericFalse = 0;
+        public uint ID;
+        public PhysicsShapeType Type;
+        public Vector3 Position;
+        public Quaternion Rotation;
+        public Vector3 Velocity;
+        public Vector3 Scale;
+        public float Mass;
+        public float Buoyancy;
+        public UInt64 MeshKey;
+        public float Friction;
+        public float Restitution;
+        public int Collidable;
+        public int Static; // true if a static object. Otherwise gravity, etc.
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SweepHit
+    {
+        public uint ID;
+        public float Fraction;
+        public Vector3 Normal;
+        public Vector3 Point;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RaycastHit
+    {
+        public uint ID;
+        public float Fraction;
+        public Vector3 Normal;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CollisionDesc
+    {
+        public uint aID;
+        public uint bID;
+        public Vector3 point;
+        public Vector3 normal;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct EntityProperties
+    {
+        public uint ID;
+        public Vector3 Position;
+        public Quaternion Rotation;
+        public Vector3 Velocity;
+        public Vector3 Acceleration;
+        public Vector3 RotationalVelocity;
+    }
 
 // Format of this structure must match the definition in the C++ code
-[StructLayout(LayoutKind.Sequential)]
-public struct ConfigurationParameters
-{
-    public float defaultFriction;
-    public float defaultDensity;
-    public float defaultRestitution;
-    public float collisionMargin;
-    public float gravity;
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ConfigurationParameters
+    {
+        public float defaultFriction;
+        public float defaultDensity;
+        public float defaultRestitution;
+        public float collisionMargin;
+        public float gravity;
 
-    public float linearDamping;
-    public float angularDamping;
-    public float deactivationTime;
-    public float linearSleepingThreshold;
-    public float angularSleepingThreshold;
-	public float ccdMotionThreshold;
-	public float ccdSweptSphereRadius;
+        public float linearDamping;
+        public float angularDamping;
+        public float deactivationTime;
+        public float linearSleepingThreshold;
+        public float angularSleepingThreshold;
+        public float ccdMotionThreshold;
+        public float ccdSweptSphereRadius;
 
-    public float terrainFriction;
-    public float terrainHitFriction;
-    public float terrainRestitution;
-    public float avatarFriction;
-    public float avatarDensity;
-    public float avatarRestitution;
-    public float avatarCapsuleRadius;
-    public float avatarCapsuleHeight;
-}
+        public float terrainFriction;
+        public float terrainHitFriction;
+        public float terrainRestitution;
+        public float avatarFriction;
+        public float avatarDensity;
+        public float avatarRestitution;
+        public float avatarCapsuleRadius;
+        public float avatarCapsuleHeight;
+    }
 
-static class BulletSimAPI {
+    internal static class BulletSimAPI
+    {
+        #region Delegates
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern uint Initialize(Vector3 maxPosition, IntPtr parms, 
-                        int maxCollisions, IntPtr collisionArray, 
-                        int maxUpdates, IntPtr updateArray);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void DebugLogCallback([MarshalAs(UnmanagedType.LPStr)] string msg);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern void SetHeightmap(uint worldID, [MarshalAs(UnmanagedType.LPArray)] float[] heightMap);
+        #endregion
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern void Shutdown(uint worldID);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern uint Initialize(Vector3 maxPosition, IntPtr parms,
+                                             int maxCollisions, IntPtr collisionArray,
+                                             int maxUpdates, IntPtr updateArray);
+
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern void SetHeightmap(uint worldID, [MarshalAs(UnmanagedType.LPArray)] float[] heightMap);
+
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern void Shutdown(uint worldID);
 
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern int PhysicsStep(uint worldID, float timeStep, int maxSubSteps, float fixedTimeStep, 
-    out int updatedEntityCount, 
-    out IntPtr updatedEntitiesPtr,
-    out int collidersCount,
-    out IntPtr collidersPtr);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern int PhysicsStep(uint worldID, float timeStep, int maxSubSteps, float fixedTimeStep,
+                                             out int updatedEntityCount,
+                                             out IntPtr updatedEntitiesPtr,
+                                             out int collidersCount,
+                                             out IntPtr collidersPtr);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool CreateHull(uint worldID, System.UInt64 meshKey, int hullCount, 
-                            [MarshalAs(UnmanagedType.LPArray)] float[] hulls
-    );
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool CreateHull(uint worldID, UInt64 meshKey, int hullCount,
+                                             [MarshalAs(UnmanagedType.LPArray)] float[] hulls
+            );
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool DestroyHull(uint worldID, System.UInt64 meshKey);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool DestroyHull(uint worldID, UInt64 meshKey);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool CreateObject(uint worldID, ShapeData shapeData);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool CreateObject(uint worldID, ShapeData shapeData);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern void CreateLinkset(uint worldID, int objectCount, ShapeData[] shapeDatas);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern void CreateLinkset(uint worldID, int objectCount, ShapeData[] shapeDatas);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern void AddConstraint(uint worldID, uint id1, uint id2, 
-    Vector3 frame1, Quaternion frame1rot,
-    Vector3 frame2, Quaternion frame2rot,
-    Vector3 lowLinear, Vector3 hiLinear, Vector3 lowAngular, Vector3 hiAngular);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern void AddConstraint(uint worldID, uint id1, uint id2,
+                                                Vector3 frame1, Quaternion frame1rot,
+                                                Vector3 frame2, Quaternion frame2rot,
+                                                Vector3 lowLinear, Vector3 hiLinear, Vector3 lowAngular,
+                                                Vector3 hiAngular);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool RemoveConstraintByID(uint worldID, uint id1);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool RemoveConstraintByID(uint worldID, uint id1);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool RemoveConstraint(uint worldID, uint id1, uint id2);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool RemoveConstraint(uint worldID, uint id1, uint id2);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern Vector3 GetObjectPosition(uint WorldID, uint id);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern Vector3 GetObjectPosition(uint WorldID, uint id);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectTranslation(uint worldID, uint id, Vector3 position, Quaternion rotation);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectTranslation(uint worldID, uint id, Vector3 position, Quaternion rotation);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectVelocity(uint worldID, uint id, Vector3 velocity);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectVelocity(uint worldID, uint id, Vector3 velocity);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectAngularVelocity(uint worldID, uint id, Vector3 angularVelocity);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectAngularVelocity(uint worldID, uint id, Vector3 angularVelocity);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectForce(uint worldID, uint id, Vector3 force);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectForce(uint worldID, uint id, Vector3 force);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectScaleMass(uint worldID, uint id, Vector3 scale, float mass, bool isDynamic);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectScaleMass(uint worldID, uint id, Vector3 scale, float mass, bool isDynamic);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectCollidable(uint worldID, uint id, bool phantom);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectCollidable(uint worldID, uint id, bool phantom);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectDynamic(uint worldID, uint id, bool isDynamic, float mass);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectDynamic(uint worldID, uint id, bool isDynamic, float mass);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectGhost(uint worldID, uint id, bool ghostly);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectGhost(uint worldID, uint id, bool ghostly);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectProperties(uint worldID, uint id, bool isStatic, bool isSolid, bool genCollisions, float mass);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectProperties(uint worldID, uint id, bool isStatic, bool isSolid,
+                                                      bool genCollisions, float mass);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool SetObjectBuoyancy(uint worldID, uint id, float buoyancy);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool SetObjectBuoyancy(uint worldID, uint id, float buoyancy);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool HasObject(uint worldID, uint id);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool HasObject(uint worldID, uint id);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern bool DestroyObject(uint worldID, uint id);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern bool DestroyObject(uint worldID, uint id);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern SweepHit ConvexSweepTest(uint worldID, uint id, Vector3 to, float extraMargin);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern SweepHit ConvexSweepTest(uint worldID, uint id, Vector3 to, float extraMargin);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern RaycastHit RayTest(uint worldID, uint id, Vector3 from, Vector3 to);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern RaycastHit RayTest(uint worldID, uint id, Vector3 from, Vector3 to);
 
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern Vector3 RecoverFromPenetration(uint worldID, uint id);
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern Vector3 RecoverFromPenetration(uint worldID, uint id);
 
 // Log a debug message
-[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-public delegate void DebugLogCallback([MarshalAs(UnmanagedType.LPStr)]string msg);
-[DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-public static extern void SetDebugLogCallback(DebugLogCallback callback);
-}
+
+        [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+        public static extern void SetDebugLogCallback(DebugLogCallback callback);
+    }
 }

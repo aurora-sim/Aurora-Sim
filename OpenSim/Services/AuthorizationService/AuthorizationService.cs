@@ -25,27 +25,45 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
+using System.Linq;
 using System.Reflection;
-using Nini.Config;
-using log4net;
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenMetaverse;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.AuthorizationService
 {
     public class AuthorizationService : IAuthorizationService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
+
+        #region IAuthorizationService Members
+
+        public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
+        {
+            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (IScene scene in manager.Scenes.Where(scene => scene.RegionInfo.RegionID == region.RegionID))
+                {
+                    //Found the region, check permissions
+                    return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
+                }
+            }
+            reason = "Not Authorized as region does not exist.";
+            return false;
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -63,22 +81,6 @@ namespace OpenSim.Services.AuthorizationService
         {
         }
 
-        public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
-        {
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
-            if (manager != null)
-            {
-                foreach (IScene scene in manager.Scenes)
-                {
-                    if (scene.RegionInfo.RegionID == region.RegionID)
-                    {
-                        //Found the region, check permissions
-                        return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
-                    }
-                }
-            }
-            reason = "Not Authorized as region does not exist.";
-            return false;
-        }
+        #endregion
     }
 }

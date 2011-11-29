@@ -25,23 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Specialized;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using Aurora.Framework;
-using Aurora.DataManager;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using log4net;
-using System.IO;
-using System.Reflection;
-using Nini.Config;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
 
 namespace Aurora.Services.DataService
 {
@@ -49,7 +40,10 @@ namespace Aurora.Services.DataService
     {
         private List<string> m_ServerURIs = new List<string>();
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString)
+        #region IMuteListConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string DefaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "SimianConnector")
             {
@@ -63,29 +57,20 @@ namespace Aurora.Services.DataService
             get { return "IMuteListConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IMuteListConnector Members
-
         public MuteList[] GetMuteList(UUID PrincipalID)
         {
             List<MuteList> Mutes = new List<MuteList>();
-            Dictionary<string, OSDMap> Map;
-            foreach (string m_ServerURI in m_ServerURIs)
+            Dictionary<string, OSDMap> Map = null;
+            if (m_ServerURIs.Any(m_ServerURI => SimianUtils.GetGenericEntries(PrincipalID, "MuteList", m_ServerURI, out Map)))
             {
-                if (SimianUtils.GetGenericEntries(PrincipalID, "MuteList", m_ServerURI, out Map))
+                foreach (object OSDMap in Map.Values)
                 {
-                    foreach (object OSDMap in Map.Values)
-                    {
-                        MuteList mute = new MuteList();
-                        mute.FromOSD((OSDMap)OSDMap);
-                        Mutes.Add(mute);
-                    }
-
-                    return Mutes.ToArray();
+                    MuteList mute = new MuteList();
+                    mute.FromOSD((OSDMap) OSDMap);
+                    Mutes.Add(mute);
                 }
+
+                return Mutes.ToArray();
             }
             return null;
         }
@@ -118,5 +103,9 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

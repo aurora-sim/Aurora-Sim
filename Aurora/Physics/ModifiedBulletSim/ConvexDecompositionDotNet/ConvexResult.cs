@@ -25,15 +25,14 @@
  * THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class ConvexResult
     {
-        public List<float3> HullVertices;
         public List<int> HullIndices;
+        public List<float3> HullVertices;
 
         public float mHullVolume; // the volume of the convex hull.
 

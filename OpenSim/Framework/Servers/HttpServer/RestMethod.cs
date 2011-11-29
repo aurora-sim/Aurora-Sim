@@ -29,6 +29,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public delegate string RestMethod(string request, string path, string param,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+
     public delegate byte[] RestBytesMethod(string request, string path, string param,
-                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse);
 }

@@ -30,6 +30,7 @@ using OpenMetaverse;
 namespace OpenSim.Region.Framework.Interfaces
 {
     public delegate void ChangeDelegate(UUID regionID);
+
     public delegate void MessageDelegate(UUID regionID, UUID fromID, string fromName, string message);
 
     public interface IEstateModule : INonSharedRegionModule
@@ -40,20 +41,20 @@ namespace OpenSim.Region.Framework.Interfaces
 
         uint GetRegionFlags();
         bool IsManager(UUID avatarID);
-        
+
         /// <summary>
-        /// Tell all clients about the current state of the region (terrain textures, water height, etc.).
+        ///   Tell all clients about the current state of the region (terrain textures, water height, etc.).
         /// </summary>
         void sendRegionHandshakeToAll();
 
         void TriggerEstateSunUpdate();
 
         /// <summary>
-        /// Disable/Enable the scripting engine, the collision events, and the physics engine
+        ///   Disable/Enable the scripting engine, the collision events, and the physics engine
         /// </summary>
-        /// <param name="ScriptEngine"></param>
-        /// <param name="CollisionEvents"></param>
-        /// <param name="PhysicsEngine"></param>
+        /// <param name = "ScriptEngine"></param>
+        /// <param name = "CollisionEvents"></param>
+        /// <param name = "PhysicsEngine"></param>
         void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine);
     }
 }

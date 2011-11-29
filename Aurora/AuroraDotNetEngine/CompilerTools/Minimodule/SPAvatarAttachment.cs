@@ -25,26 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public class SPAvatarAttachment : IAvatarAttachment
     {
-        private readonly IScene m_rootScene;
-        //private readonly IAvatar m_parent;
-        private readonly int m_location;
         //private readonly UUID m_itemId;
         private readonly UUID m_assetId;
+        private readonly int m_location;
+        private readonly IScene m_rootScene;
 
         private readonly ISecurityCredential m_security;
 
-        public SPAvatarAttachment (IScene rootScene, IAvatar self, int location, UUID itemId, UUID assetId, ISecurityCredential security)
+        public SPAvatarAttachment(IScene rootScene, IAvatar self, int location, UUID itemId, UUID assetId,
+                                  ISecurityCredential security)
         {
             m_rootScene = rootScene;
             m_security = security;
@@ -53,15 +49,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             //m_itemId = itemId;
             m_assetId = assetId;
         }
-        
-        public int Location { get { return m_location; } }
-        
+
+        #region IAvatarAttachment Members
+
+        public int Location
+        {
+            get { return m_location; }
+        }
+
         public IObject Asset
         {
-            get
-            {
-                return new SOPObject(m_rootScene, m_rootScene.GetSceneObjectPart(m_assetId).LocalId, m_security);
-            }
+            get { return new SOPObject(m_rootScene, m_rootScene.GetSceneObjectPart(m_assetId).LocalId, m_security); }
         }
+
+        #endregion
     }
 }

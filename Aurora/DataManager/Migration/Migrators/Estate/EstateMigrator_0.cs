@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -45,7 +45,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ID", ColumnTypes.String45, true),
                 ColDef("Key", ColumnTypes.String50, true),
                 ColDef("Value", ColumnTypes.Text)
-                ));
+                                     ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

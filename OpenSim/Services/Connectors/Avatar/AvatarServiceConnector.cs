@@ -25,27 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using IAvatarService = OpenSim.Services.Interfaces.IAvatarService;
-using Aurora.Simulation.Base;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
+using log4net;
 
 namespace OpenSim.Services.Connectors
 {
     public class AvatarServicesConnector : IAvatarService, IService
     {
         protected static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IRegistryCore m_registry;
@@ -54,6 +52,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual AvatarAppearance GetAppearance(UUID userID)
         {
+            m_log.Info("[AvatarServiceConnector] GetAppearance");
             AvatarData avatar = GetAvatar(userID);
             if (avatar == null)
                 return null;
@@ -82,24 +81,25 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            reqString);
+                                                                      m_ServerURI,
+                                                                      reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
                     {
                         m_log.DebugFormat("[AVATAR CONNECTOR]: GetAgent received null or empty reply");
                         return null;
                     }
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse (reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                    if ((replyData != null) && replyData.ContainsKey ("result") && (replyData["result"] != null))
+                    if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
                     {
                         if (replyData["result"] is Dictionary<string, object>)
                         {
-                            avatar = new AvatarData ((Dictionary<string, object>)replyData["result"]);
+                            avatar = new AvatarData((Dictionary<string, object>) replyData["result"]);
                             return avatar;
                         }
                     }
@@ -111,7 +111,6 @@ namespace OpenSim.Services.Connectors
             }
 
             return avatar;
-
         }
 
         public virtual bool SetAvatar(UUID userID, AvatarData avatar)
@@ -134,12 +133,12 @@ namespace OpenSim.Services.Connectors
             //m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
-                foreach (string m_ServerURI in serverURIs)
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                    m_ServerURI,
+                                                                                                                    reqString)))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -178,12 +177,12 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
-                foreach (string m_ServerURI in serverURIs)
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                    m_ServerURI,
+                                                                                                                    reqString)))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -195,7 +194,6 @@ namespace OpenSim.Services.Connectors
                         }
                         else
                             m_log.DebugFormat("[AVATAR CONNECTOR]: SetItems reply data does not contain result field");
-
                     }
                     else
                         m_log.DebugFormat("[AVATAR CONNECTOR]: SetItems received empty reply");
@@ -223,12 +221,13 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            reqString);
+                                                                m_ServerURI,
+                                                                reqString);
                 }
             }
             catch (Exception e)
@@ -239,17 +238,21 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-        #region IService Members
-
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
+        #region IAvatarService Members
+
         public virtual IAvatarService InnerService
         {
             get { return this; }
         }
+
+        #endregion
+
+        #region IService Members
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {

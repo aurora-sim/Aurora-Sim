@@ -29,32 +29,34 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-
+using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace OpenSim.Services.Connectors.SimianGrid
 {
     /// <summary>
-    /// Stores and retrieves friend lists from the SimianGrid backend
+    ///   Stores and retrieves friend lists from the SimianGrid backend
     /// </summary>
     public class SimianFriendsServiceConnector : IFriendsService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
 
-        #region IService Members
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
 
-        public string Name { get { return GetType ().Name; } }
+        #region IFriendsService Members
 
         public virtual IFriendsService InnerService
         {
@@ -64,6 +66,17 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
         }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
 
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
@@ -75,15 +88,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
             registry.RegisterModuleInterface<IFriendsService>(this);
         }
 
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-
-        public void FinishedStartup ()
-        {
-        }
-
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
@@ -92,8 +96,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             registry.RegisterModuleInterface<IFriendsService>(this);
         }
-
-        #endregion
 
         private void CommonInit(IConfigSource source)
         {
@@ -113,6 +115,50 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 m_log.Info("[SIMIAN FRIENDS CONNECTOR]: No FriendsServerURI specified, disabling connector");
         }
 
+        private OSDArray GetFriended(UUID ownerID)
+        {
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", "Friend"}
+                                                  };
+
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
+            if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
+            {
+                return (OSDArray) response["Entries"];
+            }
+            else
+            {
+                m_log.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve friends for user " + ownerID + ": " +
+                           response["Message"].AsString());
+                return new OSDArray(0);
+            }
+        }
+
+        private OSDArray GetFriendedBy(UUID ownerID)
+        {
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"Key", ownerID.ToString()},
+                                                      {"Type", "Friend"}
+                                                  };
+
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
+            if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
+            {
+                return (OSDArray) response["Entries"];
+            }
+            else
+            {
+                m_log.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve reverse friends for user " + ownerID + ": " +
+                           response["Message"].AsString());
+                return new OSDArray(0);
+            }
+        }
+
         #region IFriendsService
 
         public FriendInfo[] GetFriends(UUID principalID)
@@ -126,27 +172,29 @@ namespace OpenSim.Services.Connectors.SimianGrid
             OSDArray friendedMeArray = GetFriendedBy(principalID);
 
             // Load the list of friends and their granted permissions
-            for (int i = 0; i < friendsArray.Count; i++)
+            foreach (OSD t in friendsArray)
             {
-                OSDMap friendEntry = friendsArray[i] as OSDMap;
+                OSDMap friendEntry = t as OSDMap;
                 if (friendEntry != null)
                 {
                     UUID friendID = friendEntry["Key"].AsUUID();
 
-                    FriendInfo friend = new FriendInfo();
-                    friend.PrincipalID = principalID;
-                    friend.Friend = friendID.ToString();
-                    friend.MyFlags = friendEntry["Value"].AsInteger();
-                    friend.TheirFlags = -1;
+                    FriendInfo friend = new FriendInfo
+                                            {
+                                                PrincipalID = principalID,
+                                                Friend = friendID.ToString(),
+                                                MyFlags = friendEntry["Value"].AsInteger(),
+                                                TheirFlags = -1
+                                            };
 
                     friends[friendID] = friend;
                 }
             }
 
             // Load the permissions those friends have granted to this user
-            for (int i = 0; i < friendedMeArray.Count; i++)
+            foreach (OSD t in friendedMeArray)
             {
-                OSDMap friendedMeEntry = friendedMeArray[i] as OSDMap;
+                OSDMap friendedMeEntry = t as OSDMap;
                 if (friendedMeEntry != null)
                 {
                     UUID friendID = friendedMeEntry["OwnerID"].AsUUID();
@@ -172,19 +220,20 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return true;
 
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "AddGeneric" },
-                { "OwnerID", principalID.ToString() },
-                { "Type", "Friend" },
-                { "Key", friend },
-                { "Value", flags.ToString() }
-            };
+                                                  {
+                                                      {"RequestMethod", "AddGeneric"},
+                                                      {"OwnerID", principalID.ToString()},
+                                                      {"Type", "Friend"},
+                                                      {"Key", friend},
+                                                      {"Value", flags.ToString()}
+                                                  };
 
             OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                m_log.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to store friend " + friend + " for user " + principalID + ": " + response["Message"].AsString());
+                m_log.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to store friend " + friend + " for user " + principalID +
+                            ": " + response["Message"].AsString());
 
             return success;
         }
@@ -195,64 +244,23 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 return true;
 
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "RemoveGeneric" },
-                { "OwnerID", principalID.ToString() },
-                { "Type", "Friend" },
-                { "Key", friend }
-            };
+                                                  {
+                                                      {"RequestMethod", "RemoveGeneric"},
+                                                      {"OwnerID", principalID.ToString()},
+                                                      {"Type", "Friend"},
+                                                      {"Key", friend}
+                                                  };
 
             OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                m_log.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to remove friend " + friend + " for user " + principalID + ": " + response["Message"].AsString());
+                m_log.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to remove friend " + friend + " for user " + principalID +
+                            ": " + response["Message"].AsString());
 
             return success;
         }
 
         #endregion IFriendsService
-
-        private OSDArray GetFriended(UUID ownerID)
-        {
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", "Friend" }
-            };
-
-            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
-            if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
-            {
-                return (OSDArray)response["Entries"];
-            }
-            else
-            {
-                m_log.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve friends for user " + ownerID + ": " + response["Message"].AsString());
-                return new OSDArray(0);
-            }
-        }
-
-        private OSDArray GetFriendedBy(UUID ownerID)
-        {
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "Key", ownerID.ToString() },
-                { "Type", "Friend" }
-            };
-
-            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
-            if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
-            {
-                return (OSDArray)response["Entries"];
-            }
-            else
-            {
-                m_log.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve reverse friends for user " + ownerID + ": " + response["Message"].AsString());
-                return new OSDArray(0);
-            }
-        }
     }
 }

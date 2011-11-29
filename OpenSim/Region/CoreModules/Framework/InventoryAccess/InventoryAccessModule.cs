@@ -27,9 +27,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Reflection;
-using System.Threading;
 using System.Xml;
 
 using OpenSim.Framework;
@@ -38,9 +36,6 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse.StructuredData;
-
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-
 using OpenMetaverse;
 using log4net;
 using Nini.Config;
@@ -176,7 +171,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     return SuccessNotecardCAPSUpdate(item.AssetID, itemID);
                 }
-                else if ((InventoryType)item.InvType == InventoryType.LSL)
+                if ((InventoryType)item.InvType == InventoryType.LSL)
                 {
                     if (!m_scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
@@ -185,8 +180,8 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                     AssetBase asset =
                         CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                        asset.ID = m_scene.AssetService.Store(asset);
-                        item.AssetID = asset.ID;
+                    asset.ID = m_scene.AssetService.Store(asset);
+                    item.AssetID = asset.ID;
 
                     m_scene.InventoryService.UpdateItem(item);
 
@@ -201,12 +196,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
                 return "";
             }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[AGENT INVENTORY]: Could not find item {0} for caps inventory update",
-                    itemID);
-            }
+            m_log.ErrorFormat(
+                "[AGENT INVENTORY]: Could not find item {0} for caps inventory update",
+                itemID);
 
             return "";
         }
@@ -272,8 +264,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// </summary>
         /// <param name="action"></param>
         /// <param name="folderID"></param>
-        /// <param name="objectGroup"></param>
-        /// <param name="remoteClient"> </param>
+        /// <param name="objectGroups"></param>
+        /// <param name="agentId"></param>
+        /// <param name="itemID"></param>
         public virtual UUID DeleteToInventory(DeRezAction action, UUID folderID,
                 List<ISceneEntity> objectGroups, UUID agentId, out UUID itemID)
         {
@@ -445,19 +438,16 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 if (folder == null) // None of the above
                 {
                     folder = new InventoryFolderBase(folderID);
-
-                    if (folder == null) // Nowhere to put it
-                    {
-                        return UUID.Zero;
-                    }
                 }
 
-                item = new InventoryItemBase();
-                item.CreatorId = objectGroups[0].RootChild.CreatorID.ToString();
-                item.ID = UUID.Random();
-                item.InvType = (int)InventoryType.Object;
-                item.Folder = folder.ID;
-                item.Owner = userID;
+                item = new InventoryItemBase
+                           {
+                               CreatorId = objectGroups[0].RootChild.CreatorID.ToString(),
+                               ID = UUID.Random(),
+                               InvType = (int) InventoryType.Object,
+                               Folder = folder.ID,
+                               Owner = userID
+                           };
             }
 
             AssetBase asset = CreateAsset(
@@ -547,7 +537,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
 
                 if(objectGroups.Count != 1)
-                    item.Flags |= (uint)OpenMetaverse.InventoryItemFlags.ObjectHasMultipleItems;
+                    item.Flags |= (uint)InventoryItemFlags.ObjectHasMultipleItems;
                 item.CreationDate = Util.UnixTimeSinceEpoch();
 
                 m_LLCLientInventoryModule.AddInventoryItem(item);
@@ -565,20 +555,19 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                 }
             }
-            if (item != null)
-                itemID = item.ID;
+            itemID = item.ID;
             return assetID;
         }
 
         public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID)
         {
-            System.Xml.XmlDocument doc;
+            XmlDocument doc;
             InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
             item = m_scene.InventoryService.GetItem(item);
             return CreateObjectFromInventory(item, remoteClient, itemID, out doc);
         }
 
-        protected virtual SceneObjectGroup CreateObjectFromInventory(InventoryItemBase item, IClientAPI remoteClient, UUID itemID, out System.Xml.XmlDocument doc)
+        protected virtual SceneObjectGroup CreateObjectFromInventory(InventoryItemBase item, IClientAPI remoteClient, UUID itemID, out XmlDocument doc)
         {
             if (item != null)
             {
@@ -606,7 +595,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
 
                     string xmlData = Utils.BytesToString(rezAsset.Data);
-                    doc = new System.Xml.XmlDocument();
+                    doc = new XmlDocument();
                     try
                     {
                         doc.LoadXml(xmlData);
@@ -625,13 +614,15 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
                     string xml = "";
                     if (doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration)
-                        xml = doc.FirstChild.NextSibling.OuterXml;
+                    {
+                        if (doc.FirstChild.NextSibling != null) xml = doc.FirstChild.NextSibling.OuterXml;
+                    }
                     else
                         xml = doc.FirstChild.OuterXml;
                     SceneObjectGroup group
                                 = SceneObjectSerializer.FromOriginalXmlFormat(itemId, xml, m_scene);
                     if (group == null)
-                        return group;
+                        return null;
 
                     group.IsDeleted = false;
                     group.m_isLoaded = true;
@@ -662,7 +653,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// <param name="RezSelected"></param>
         /// <param name="RemoveItem"></param>
         /// <param name="fromTaskID"></param>
-        /// <param name="attachment"></param>
         /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful.</returns>
         public virtual SceneObjectGroup RezObject (IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
                                     UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
@@ -671,18 +661,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             // Work out position details
             byte bRayEndIsIntersection = (byte)0;
 
-            if (RayEndIsIntersection)
-            {
-                bRayEndIsIntersection = (byte)1;
-            }
-            else
-            {
-                bRayEndIsIntersection = (byte)0;
-            }
+            bRayEndIsIntersection = (byte) (RayEndIsIntersection ? 1 : 0);
 
             Vector3 scale = new Vector3 (0.5f, 0.5f, 0.5f);
 
-            System.Xml.XmlDocument doc;
+            XmlDocument doc;
             InventoryItemBase item = new InventoryItemBase (itemID, remoteClient.AgentId);
             item = m_scene.InventoryService.GetItem (item);
             SceneObjectGroup group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
@@ -700,19 +683,21 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 {
                     SceneObjectGroup grp = (SceneObjectGroup)e;
                     TaskInventoryItem taskItem = grp.RootPart.Inventory.GetInventoryItem (itemID);
-                    item = new InventoryItemBase ();
+                    item = new InventoryItemBase
+                               {
+                                   ID = UUID.Random(),
+                                   CreatorId = taskItem.CreatorID.ToString(),
+                                   Owner = remoteClient.AgentId,
+                                   AssetID = taskItem.AssetID,
+                                   Description = taskItem.Description,
+                                   Name = taskItem.Name,
+                                   AssetType = taskItem.Type,
+                                   InvType = taskItem.InvType,
+                                   Flags = taskItem.Flags,
+                                   SalePrice = taskItem.SalePrice,
+                                   SaleType = taskItem.SaleType
+                               };
 
-                    item.ID = UUID.Random ();
-                    item.CreatorId = taskItem.CreatorID.ToString ();
-                    item.Owner = remoteClient.AgentId;
-                    item.AssetID = taskItem.AssetID;
-                    item.Description = taskItem.Description;
-                    item.Name = taskItem.Name;
-                    item.AssetType = taskItem.Type;
-                    item.InvType = taskItem.InvType;
-                    item.Flags = taskItem.Flags;
-                    item.SalePrice = taskItem.SalePrice;
-                    item.SaleType = taskItem.SaleType;
 
                     if (m_scene.Permissions.PropagatePermissions ())
                     {
@@ -742,12 +727,12 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 (doc.FirstChild.NextSibling != null &&
                 doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))))
             {
-                XmlNodeList nodes = doc.FirstChild.OuterXml.StartsWith ("<groups>") ? doc.FirstChild.ChildNodes : doc.FirstChild.NextSibling.ChildNodes;
-                List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
-                if (Groups.Count != 0)
-                    return Groups[0];
-                else
+                if (doc.FirstChild.NextSibling != null)
                 {
+                    XmlNodeList nodes = doc.FirstChild.OuterXml.StartsWith ("<groups>") ? doc.FirstChild.ChildNodes : doc.FirstChild.NextSibling.ChildNodes;
+                    List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
+                    if (Groups.Count != 0)
+                        return Groups[0];
                     remoteClient.SendAlertMessage ("Failed to rez the item you requested.");
                     return null;
                 }
@@ -782,7 +767,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
             //  Set it's position in world.
-            float offsetHeight = 0;
+            const float offsetHeight = 0;
             //The OOBsize is only half the size, x2
             Vector3 newSize = (group.OOBsize * 2) * Quaternion.Inverse (group.GroupRotation);
             pos = m_scene.SceneGraph.GetNewRezLocation (
@@ -863,8 +848,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             {
                 if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                 {
-                    List<UUID> uuids = new List<UUID> ();
-                    uuids.Add (item.ID);
+                    List<UUID> uuids = new List<UUID> {item.ID};
                     m_scene.InventoryService.DeleteItems (item.Owner, uuids);
                 }
             }
@@ -877,7 +861,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             Vector3 OldMiddlePos = Vector3.Zero;
             List<SceneObjectGroup> NewGroup = new List<SceneObjectGroup>();
 
-            foreach (System.Xml.XmlNode aPrimNode in nodes)
+            foreach (XmlNode aPrimNode in nodes)
             {
                 if (aPrimNode.OuterXml.StartsWith("<middle>"))
                 {
@@ -1000,8 +984,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         // If this is done on attachments, no
                         // copy ones will be lost, so avoid it
                         //
-                        List<UUID> uuids = new List<UUID>();
-                        uuids.Add(item.ID);
+                        List<UUID> uuids = new List<UUID> {item.ID};
                         m_scene.InventoryService.DeleteItems(item.Owner, uuids);
                     }
                 }
@@ -1081,9 +1064,9 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
         /// </summary>
         /// <param name="name"></param>
         /// <param name="description"></param>
-        /// <param name="invType"></param>
         /// <param name="assetType"></param>
         /// <param name="data"></param>
+        /// <param name="creatorID"></param>
         /// <returns></returns>
         private AssetBase CreateAsset(string name, string description, sbyte assetType, byte[] data, string creatorID)
         {

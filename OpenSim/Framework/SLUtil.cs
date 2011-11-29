@@ -25,23 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using log4net;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
     public static class SLUtil
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
         #region SL / file extension / content-type conversions
 
         public static string SLAssetTypeToContentType(int assetType)
         {
-            switch ((AssetType)assetType)
+            switch ((AssetType) assetType)
             {
                 case AssetType.Texture:
                     return "image/x-j2c";
@@ -106,7 +101,7 @@ namespace OpenSim.Framework
 
         public static string SLInvTypeToContentType(int invType)
         {
-            switch ((InventoryType)invType)
+            switch ((InventoryType) invType)
             {
                 case InventoryType.Animation:
                     return "application/vnd.ll.animation";
@@ -143,74 +138,74 @@ namespace OpenSim.Framework
             {
                 case "image/x-j2c":
                 case "image/jp2":
-                    return (sbyte)AssetType.Texture;
+                    return (sbyte) AssetType.Texture;
                 case "application/ogg":
                 case "audio/ogg":
-                    return (sbyte)AssetType.Sound;
+                    return (sbyte) AssetType.Sound;
                 case "application/vnd.ll.callingcard":
                 case "application/x-metaverse-callingcard":
-                    return (sbyte)AssetType.CallingCard;
+                    return (sbyte) AssetType.CallingCard;
                 case "application/vnd.ll.landmark":
                 case "application/x-metaverse-landmark":
-                    return (sbyte)AssetType.Landmark;
+                    return (sbyte) AssetType.Landmark;
                 case "application/vnd.ll.clothing":
                 case "application/x-metaverse-clothing":
-                    return (sbyte)AssetType.Clothing;
+                    return (sbyte) AssetType.Clothing;
                 case "application/vnd.ll.primitive":
                 case "application/x-metaverse-primitive":
-                    return (sbyte)AssetType.Object;
+                    return (sbyte) AssetType.Object;
                 case "application/vnd.ll.notecard":
                 case "application/x-metaverse-notecard":
-                    return (sbyte)AssetType.Notecard;
+                    return (sbyte) AssetType.Notecard;
                 case "application/vnd.ll.folder":
-                    return (sbyte)AssetType.Folder;
+                    return (sbyte) AssetType.Folder;
                 case "application/vnd.ll.rootfolder":
-                    return (sbyte)AssetType.RootFolder;
+                    return (sbyte) AssetType.RootFolder;
                 case "application/vnd.ll.lsltext":
                 case "application/x-metaverse-lsl":
-                    return (sbyte)AssetType.LSLText;
+                    return (sbyte) AssetType.LSLText;
                 case "application/vnd.ll.lslbyte":
                 case "application/x-metaverse-lso":
-                    return (sbyte)AssetType.LSLBytecode;
+                    return (sbyte) AssetType.LSLBytecode;
                 case "image/tga":
                     // Note that AssetType.TextureTGA will be converted to AssetType.ImageTGA
-                    return (sbyte)AssetType.ImageTGA;
+                    return (sbyte) AssetType.ImageTGA;
                 case "application/vnd.ll.bodypart":
                 case "application/x-metaverse-bodypart":
-                    return (sbyte)AssetType.Bodypart;
+                    return (sbyte) AssetType.Bodypart;
                 case "application/vnd.ll.trashfolder":
-                    return (sbyte)AssetType.TrashFolder;
+                    return (sbyte) AssetType.TrashFolder;
                 case "application/vnd.ll.snapshotfolder":
-                    return (sbyte)AssetType.SnapshotFolder;
+                    return (sbyte) AssetType.SnapshotFolder;
                 case "application/vnd.ll.lostandfoundfolder":
-                    return (sbyte)AssetType.LostAndFoundFolder;
+                    return (sbyte) AssetType.LostAndFoundFolder;
                 case "audio/x-wav":
-                    return (sbyte)AssetType.SoundWAV;
+                    return (sbyte) AssetType.SoundWAV;
                 case "image/jpeg":
-                    return (sbyte)AssetType.ImageJPEG;
+                    return (sbyte) AssetType.ImageJPEG;
                 case "application/vnd.ll.animation":
                 case "application/x-metaverse-animation":
-                    return (sbyte)AssetType.Animation;
+                    return (sbyte) AssetType.Animation;
                 case "application/vnd.ll.gesture":
                 case "application/x-metaverse-gesture":
-                    return (sbyte)AssetType.Gesture;
+                    return (sbyte) AssetType.Gesture;
                 case "application/x-metaverse-simstate":
-                    return (sbyte)AssetType.Simstate;
+                    return (sbyte) AssetType.Simstate;
                 case "application/vnd.ll.favoritefolder":
-                    return (sbyte)AssetType.FavoriteFolder;
+                    return (sbyte) AssetType.FavoriteFolder;
                 case "application/vnd.ll.link":
-                    return (sbyte)AssetType.Link;
+                    return (sbyte) AssetType.Link;
                 case "application/vnd.ll.linkfolder":
-                    return (sbyte)AssetType.LinkFolder;
+                    return (sbyte) AssetType.LinkFolder;
                 case "application/vnd.ll.currentoutfitfolder":
-                    return (sbyte)AssetType.CurrentOutfitFolder;
+                    return (sbyte) AssetType.CurrentOutfitFolder;
                 case "application/vnd.ll.outfitfolder":
-                    return (sbyte)AssetType.OutfitFolder;
+                    return (sbyte) AssetType.OutfitFolder;
                 case "application/vnd.ll.myoutfitsfolder":
-                    return (sbyte)AssetType.MyOutfitsFolder;
+                    return (sbyte) AssetType.MyOutfitsFolder;
                 case "application/octet-stream":
                 default:
-                    return (sbyte)AssetType.Unknown;
+                    return (sbyte) AssetType.Unknown;
             }
         }
 
@@ -222,61 +217,63 @@ namespace OpenSim.Framework
                 case "image/jp2":
                 case "image/tga":
                 case "image/jpeg":
-                    return (sbyte)InventoryType.Texture;
+                    return (sbyte) InventoryType.Texture;
                 case "application/ogg":
                 case "audio/ogg":
                 case "audio/x-wav":
-                    return (sbyte)InventoryType.Sound;
+                    return (sbyte) InventoryType.Sound;
                 case "application/vnd.ll.callingcard":
                 case "application/x-metaverse-callingcard":
-                    return (sbyte)InventoryType.CallingCard;
+                    return (sbyte) InventoryType.CallingCard;
                 case "application/vnd.ll.landmark":
                 case "application/x-metaverse-landmark":
-                    return (sbyte)InventoryType.Landmark;
+                    return (sbyte) InventoryType.Landmark;
                 case "application/vnd.ll.clothing":
                 case "application/x-metaverse-clothing":
                 case "application/vnd.ll.bodypart":
                 case "application/x-metaverse-bodypart":
-                    return (sbyte)InventoryType.Wearable;
+                    return (sbyte) InventoryType.Wearable;
                 case "application/vnd.ll.primitive":
                 case "application/x-metaverse-primitive":
-                    return (sbyte)InventoryType.Object;
+                    return (sbyte) InventoryType.Object;
                 case "application/vnd.ll.notecard":
                 case "application/x-metaverse-notecard":
-                    return (sbyte)InventoryType.Notecard;
+                    return (sbyte) InventoryType.Notecard;
                 case "application/vnd.ll.folder":
-                    return (sbyte)InventoryType.Folder;
+                    return (sbyte) InventoryType.Folder;
                 case "application/vnd.ll.rootfolder":
-                    return (sbyte)InventoryType.RootCategory;
+                    return (sbyte) InventoryType.RootCategory;
                 case "application/vnd.ll.lsltext":
                 case "application/x-metaverse-lsl":
                 case "application/vnd.ll.lslbyte":
                 case "application/x-metaverse-lso":
-                    return (sbyte)InventoryType.LSL;
+                    return (sbyte) InventoryType.LSL;
                 case "application/vnd.ll.trashfolder":
                 case "application/vnd.ll.snapshotfolder":
                 case "application/vnd.ll.lostandfoundfolder":
-                    return (sbyte)InventoryType.Folder;
+                    return (sbyte) InventoryType.Folder;
                 case "application/vnd.ll.animation":
                 case "application/x-metaverse-animation":
-                    return (sbyte)InventoryType.Animation;
+                    return (sbyte) InventoryType.Animation;
                 case "application/vnd.ll.gesture":
                 case "application/x-metaverse-gesture":
-                    return (sbyte)InventoryType.Gesture;
+                    return (sbyte) InventoryType.Gesture;
                 case "application/x-metaverse-simstate":
-                    return (sbyte)InventoryType.Snapshot;
+                    return (sbyte) InventoryType.Snapshot;
                 case "application/octet-stream":
                 default:
-                    return (sbyte)InventoryType.Unknown;
+                    return (sbyte) InventoryType.Unknown;
             }
         }
 
         #endregion SL / file extension / content-type conversions
 
+//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
-        /// Parse a notecard in Linden format to a string of ordinary text.
+        ///   Parse a notecard in Linden format to a string of ordinary text.
         /// </summary>
-        /// <param name="rawInput"></param>
+        /// <param name = "rawInput"></param>
         /// <returns></returns>
         public static string ParseNotecardToString(string rawInput)
         {
@@ -284,14 +281,14 @@ namespace OpenSim.Framework
 
 //            foreach (string line in output)
 //                m_log.DebugFormat("[PARSE NOTECARD]: ParseNotecardToString got line {0}", line);
-            
+
             return string.Join("\n", output);
         }
-                
+
         /// <summary>
-        /// Parse a notecard in Linden format to a list of ordinary lines.
+        ///   Parse a notecard in Linden format to a list of ordinary lines.
         /// </summary>
-        /// <param name="rawInput"></param>
+        /// <param name = "rawInput"></param>
         /// <returns></returns>
         public static List<string> ParseNotecardToList(string rawInput)
         {
@@ -310,7 +307,7 @@ namespace OpenSim.Framework
                     continue;
                 }
 
-                if (input[idx]== "}")
+                if (input[idx] == "}")
                 {
                     level--;
                     idx++;
@@ -396,7 +393,7 @@ namespace OpenSim.Framework
                 }
                 idx++;
             }
-            
+
             return output;
         }
     }

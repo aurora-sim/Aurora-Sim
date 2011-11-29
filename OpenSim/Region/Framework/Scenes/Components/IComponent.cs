@@ -34,40 +34,40 @@ namespace OpenSim.Region.Framework.Scenes.Components
     public interface IComponent
     {
         /// <summary>
-        /// The type of the Component, only one of each 'type' can be loaded.
+        ///   The type of the Component, only one of each 'type' can be loaded.
         /// </summary>
         Type BaseType { get; }
 
         /// <summary>
-        /// Name of this Component
+        ///   Name of this Component
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// A representation of the current state of the Component
+        ///   A representation of the current state of the Component
         /// </summary>
-        /// <param name="obj">The object to get the value from</param>
+        /// <param name = "obj">The object to get the value from</param>
         /// <returns></returns>
-        OSD GetState (UUID obj, bool copyComponent);
+        OSD GetState(UUID obj, bool copyComponent);
 
         /// <summary>
-        /// A representation of the current state of the Component
+        ///   A representation of the current state of the Component
         /// </summary>
-        /// <param name="obj">The object to get the value from</param>
+        /// <param name = "obj">The object to get the value from</param>
         /// <returns></returns>
-        OSD GetState (UUID obj);
+        OSD GetState(UUID obj);
 
         /// <summary>
-        /// Update the state of the Component
+        ///   Update the state of the Component
         /// </summary>
-        /// <param name="obj">The object being edited</param>
-        /// <param name="osd">The value as an OSD</param>
+        /// <param name = "obj">The object being edited</param>
+        /// <param name = "osd">The value as an OSD</param>
         void SetState(UUID obj, OSD osd);
 
         /// <summary>
-        /// Removes the state for the given object
+        ///   Removes the state for the given object
         /// </summary>
-        /// <param name="obj"></param>
-        void RemoveState (UUID obj);
+        /// <param name = "obj"></param>
+        void RemoveState(UUID obj);
     }
 }

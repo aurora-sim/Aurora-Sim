@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -33,9 +32,9 @@ namespace OpenSim.Framework
 {
     public class AvatarAttachment
     {
+        public UUID AssetID;
         public int AttachPoint;
         public UUID ItemID;
-        public UUID AssetID;
 
         public AvatarAttachment(AvatarAttachment attach)
         {

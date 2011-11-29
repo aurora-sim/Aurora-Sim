@@ -25,22 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    public class World : System.MarshalByRefObject, IWorld, IWorldAudio 
+    public class World : MarshalByRefObject, IWorld, IWorldAudio
     {
-        private readonly IScene m_internalScene;
-        private readonly ISecurityCredential m_security;
         private readonly Heightmap m_heights;
+        private readonly IScene m_internalScene;
 
         private readonly ObjectAccessor m_objs;
+        private readonly ISecurityCredential m_security;
 
         public World(IScene internalScene, ISecurityCredential securityCredential)
         {
@@ -54,7 +54,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         #region OnNewUser
 
-        private event OnNewUserDelegate _OnNewUser;
         private bool _OnNewUserActive;
 
         public event OnNewUserDelegate OnNewUser
@@ -81,12 +80,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             }
         }
 
-        void EventManager_OnNewPresence (IScenePresence presence)
+        private event OnNewUserDelegate _OnNewUser;
+
+        private void EventManager_OnNewPresence(IScenePresence presence)
         {
             if (_OnNewUser != null)
             {
-                NewUserEventArgs e = new NewUserEventArgs();
-                e.Avatar = new SPAvatar(m_internalScene, presence.UUID, m_security);
+                NewUserEventArgs e = new NewUserEventArgs
+                                         {Avatar = new SPAvatar(m_internalScene, presence.UUID, m_security)};
                 _OnNewUser(this, e);
             }
         }
@@ -94,7 +95,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         #endregion
 
         #region OnChat
-        private event OnChatDelegate _OnChat;
+
         private bool _OnChatActive;
 
         public IWorldAudio Audio
@@ -128,7 +129,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             }
         }
 
-        void EventManager_OnChatFromWorld(object sender, OSChatMessage chat)
+        private event OnChatDelegate _OnChat;
+
+        private void EventManager_OnChatFromWorld(object sender, OSChatMessage chat)
         {
             if (_OnChat != null)
             {
@@ -145,29 +148,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             // Object?
             if (chat.Sender == null && chat.SenderObject != null)
             {
-                ChatEventArgs e = new ChatEventArgs();
-                e.Sender = new SOPObject(m_internalScene, chat.SenderObject.LocalId, m_security);
-                e.Text = chat.Message;
-                e.Channel = chat.Channel;
-                
+                ChatEventArgs e = new ChatEventArgs
+                                      {
+                                          Sender = new SOPObject(m_internalScene, chat.SenderObject.LocalId, m_security),
+                                          Text = chat.Message,
+                                          Channel = chat.Channel
+                                      };
+
                 _OnChat(this, e);
                 return;
             }
             // Avatar?
             if (chat.Sender != null && chat.SenderObject == null)
             {
-                ChatEventArgs e = new ChatEventArgs();
-                e.Sender = new SPAvatar(m_internalScene, chat.SenderUUID, m_security);
-                e.Text = chat.Message;
-                e.Channel = chat.Channel;
-                
+                ChatEventArgs e = new ChatEventArgs
+                                      {
+                                          Sender = new SPAvatar(m_internalScene, chat.SenderUUID, m_security),
+                                          Text = chat.Message,
+                                          Channel = chat.Channel
+                                      };
+
                 _OnChat(this, e);
                 return;
             }
             // Skip if other
         }
 
-        void EventManager_OnChatFromClient(object sender, OSChatMessage chat)
+        private void EventManager_OnChatFromClient(object sender, OSChatMessage chat)
         {
             if (_OnChat != null)
             {
@@ -175,9 +182,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 return;
             }
         }
+
         #endregion
 
         #endregion
+
+        #region IWorld Members
 
         public IObjectAccessor Objects
         {
@@ -188,16 +198,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                IParcelManagementModule parcelManagement = m_internalScene.RequestModuleInterface<IParcelManagementModule>();
+                IParcelManagementModule parcelManagement =
+                    m_internalScene.RequestModuleInterface<IParcelManagementModule>();
                 List<IParcel> m_parcels = new List<IParcel>();
                 if (parcelManagement != null)
                 {
                     List<ILandObject> m_los = parcelManagement.AllParcels();
 
-                    foreach (ILandObject landObject in m_los)
-                    {
-                        m_parcels.Add(new LOParcel(m_internalScene, landObject.LandData.LocalID));
-                    }
+                    m_parcels.AddRange(m_los.Select(landObject => new LOParcel(m_internalScene, landObject.LandData.LocalID)).Cast<IParcel>());
                 }
 
                 return m_parcels.ToArray();
@@ -209,7 +217,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                List<IScenePresence> ents = m_internalScene.Entities.GetPresences ();
+                List<IScenePresence> ents = m_internalScene.Entities.GetPresences();
                 IAvatar[] rets = new IAvatar[ents.Count];
 
                 for (int i = 0; i < ents.Count; i++)
@@ -226,6 +234,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get { return m_heights; }
         }
+
+        #endregion
 
         #region Implementation of IWorldAudio
 

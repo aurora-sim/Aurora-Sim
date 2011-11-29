@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
@@ -70,27 +69,28 @@ namespace OpenSim.Services.RobustCompat
             scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
         }
 
-        void OnSetAgentLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        void OnSetAgentLeaving(IScenePresence presence, Interfaces.GridRegion destination)
         {
             IAttachmentsModule attModule = presence.Scene.RequestModuleInterface<IAttachmentsModule>();
             if(attModule != null)
                 m_userAttachments[presence.UUID] = attModule.GetAttachmentsForAvatar(presence.UUID);
         }
 
-        private Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]>();
+        private readonly Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]>();
         public object SendAttachments (string funct, object param)
         {
             object[] parameters = (object[])param;
             IScenePresence sp = (IScenePresence)parameters[1];
-            OpenSim.Services.Interfaces.GridRegion dest = (OpenSim.Services.Interfaces.GridRegion)parameters[0];
+            Interfaces.GridRegion dest = (Interfaces.GridRegion)parameters[0];
+            // this is never used.. 
             IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule> ();
             if (m_userAttachments.ContainsKey(sp.UUID))
             {
-                Util.FireAndForget (delegate (object o)
-                {
+                Util.FireAndForget (delegate
+                                        {
                     foreach (ISceneEntity attachment in m_userAttachments[sp.UUID])
                     {
-                        OpenSim.Services.Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
+                        Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
                         attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
                         //Now send it to them
                         ssc.CreateObject (dest, (ISceneObject)attachment);
@@ -126,10 +126,7 @@ namespace OpenSim.Services.RobustCompat
                 WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
                 presence.CallbackURI = null;
             }
-            Util.FireAndForget(delegate(object o)
-            {
-                DoPresenceUpdate(presence);
-            });
+            Util.FireAndForget(o => DoPresenceUpdate(presence));
         }
 
         private void DoPresenceUpdate(IScenePresence presence)
@@ -139,7 +136,7 @@ namespace OpenSim.Services.RobustCompat
             IAgentInfoService aservice = m_scene.RequestModuleInterface<IAgentInfoService>();
             if (friendsModule != null)
             {
-                OpenSim.Services.Interfaces.FriendInfo[] friends = friendsModule.GetFriends(presence.UUID);
+                Interfaces.FriendInfo[] friends = friendsModule.GetFriends(presence.UUID);
                 string[] s = new string[friends.Length];
                 for (int i = 0; i < friends.Length; i++)
                 {
@@ -202,12 +199,7 @@ namespace OpenSim.Services.RobustCompat
 
         private bool IsLocal(UserInfo u, IScenePresence presence)
         {
-            foreach (IScene scene in presence.Scene.RequestModuleInterface<SceneManager>().Scenes)
-            {
-                if (scene.GetScenePresence(UUID.Parse(u.UserID)) != null)
-                    return true;
-            }
-            return false;
+            return presence.Scene.RequestModuleInterface<SceneManager>().Scenes.Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
         }
 
         private void ReportAgent(IScenePresence presence)
@@ -339,11 +331,12 @@ namespace OpenSim.Services.RobustCompat
         {
             //Used by incoming (home) agents from HG
             MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                delegate(string request, string path, string param2,
-                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                {
-                    return CapsRequest(request, path, param2, httpRequest, httpResponse, circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
-                }));
+                                                                       (request, path, param2, httpRequest, httpResponse)
+                                                                       =>
+                                                                       CapsRequest(request, path, param2, httpRequest,
+                                                                                   httpResponse,
+                                                                                   circuit.ServiceURLs[
+                                                                                       "IncomingCAPSHandler"].ToString())));
         }
 
         public void RegionLoaded (IScene scene)

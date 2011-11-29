@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Framework;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -36,11 +35,12 @@ namespace OpenSim.Framework
     {
         IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical);
         void RemoveMesh(ulong key);
-        void FinishedMeshing ();
+        void FinishedMeshing();
     }
 
     public interface IMesh
     {
+        ulong Key { get; }
         List<Vector3> getVertexList();
         int[] getIndexListAsInt();
         int[] getIndexListAsIntLocked();
@@ -52,6 +52,5 @@ namespace OpenSim.Framework
         void Append(IMesh newMesh);
         void TransformLinear(float[,] matrix, float[] offset);
         Vector3 GetCentroid();
-        ulong Key { get; }
     }
 }

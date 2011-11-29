@@ -27,7 +27,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -37,280 +37,39 @@ namespace OpenSim.Framework
     {
         // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        #region Delegates
+
         public delegate void SaveDelegate(EstateSettings rs);
 
-        public event SaveDelegate OnSave;
-
-        // Only the client uses these
-        //
-        private uint m_EstateID = 0;
-
-        public uint EstateID
-        {
-            get { return m_EstateID; }
-            set { m_EstateID = value; }
-        }
-
-        private string m_EstateName = "My Estate";
-
-        public string EstateName
-        {
-            get { return m_EstateName; }
-            set { m_EstateName = value; }
-        }
-
-        private string m_EstatePass = "";
-
-        public string EstatePass
-        {
-            get { return m_EstatePass; }
-            set { m_EstatePass = value; }
-        }
-
-        private bool m_AllowLandmark = true;
-
-        public bool AllowLandmark
-        {
-            get { return m_AllowLandmark; }
-            set { m_AllowLandmark = value; }
-        }
-
-        private bool m_AllowParcelChanges = true;
-
-        public bool AllowParcelChanges
-        {
-            get { return m_AllowParcelChanges; }
-            set { m_AllowParcelChanges = value; }
-        }
-
-        private bool m_AllowSetHome = true;
-
-        public bool AllowSetHome
-        {
-            get { return m_AllowSetHome; }
-            set { m_AllowSetHome = value; }
-        }
-        
-
-        private uint m_ParentEstateID = 1;
-
-        public uint ParentEstateID
-        {
-            get { return m_ParentEstateID; }
-            set { m_ParentEstateID = value; }
-        }
-
-        private float m_BillableFactor = 0.0f;
-
-        public float BillableFactor
-        {
-            get { return m_BillableFactor; }
-            set { m_BillableFactor = value; }
-        }
-
-        private int m_PricePerMeter = 1;
-
-        public int PricePerMeter
-        {
-            get { return m_PricePerMeter; }
-            set { m_PricePerMeter = value; }
-        }
-
-        private int m_RedirectGridX = 0;
-
-        public int RedirectGridX
-        {
-            get { return m_RedirectGridX; }
-            set { m_RedirectGridX = value; }
-        }
-
-        private int m_RedirectGridY = 0;
-
-        public int RedirectGridY
-        {
-            get { return m_RedirectGridY; }
-            set { m_RedirectGridY = value; }
-        }
-
-        // Used by the sim
-        //
-        private bool m_UseGlobalTime = true;
-
-        public bool UseGlobalTime
-        {
-            get { return m_UseGlobalTime; }
-            set { m_UseGlobalTime = value; }
-        }
-
-        private bool m_FixedSun = false;
-
-        public bool FixedSun
-        {
-            get { return m_FixedSun; }
-            set { m_FixedSun = value; }
-        }
-
-        private double m_SunPosition = 0.0;
-
-        public double SunPosition
-        {
-            get { return m_SunPosition; }
-            set { m_SunPosition = value; }
-        }
-
-        private bool m_AllowVoice = true;
-
-        public bool AllowVoice
-        {
-            get { return m_AllowVoice; }
-            set { m_AllowVoice = value; }
-        }
-
-        private bool m_AllowDirectTeleport = true;
-
-        public bool AllowDirectTeleport
-        {
-            get { return m_AllowDirectTeleport; }
-            set { m_AllowDirectTeleport = value; }
-        }
-
-        private bool m_DenyAnonymous = false;
-
-        public bool DenyAnonymous
-        {
-            get { return m_DenyAnonymous; }
-            set { m_DenyAnonymous = value; }
-        }
-
-        private bool m_DenyIdentified = false;
-
-        public bool DenyIdentified
-        {
-            get { return m_DenyIdentified; }
-            set { m_DenyIdentified = value; }
-        }
-
-        private bool m_DenyTransacted = false;
-
-        public bool DenyTransacted
-        {
-            get { return m_DenyTransacted; }
-            set { m_DenyTransacted = value; }
-        }
-
-        private bool m_AbuseEmailToEstateOwner = false;
-
-        public bool AbuseEmailToEstateOwner
-        {
-            get { return m_AbuseEmailToEstateOwner; }
-            set { m_AbuseEmailToEstateOwner = value; }
-        }
-
-        private bool m_BlockDwell = false;
-
-        public bool BlockDwell
-        {
-            get { return m_BlockDwell; }
-            set { m_BlockDwell = value; }
-        }
-
-        private bool m_EstateSkipScripts = false;
-
-        public bool EstateSkipScripts
-        {
-            get { return m_EstateSkipScripts; }
-            set { m_EstateSkipScripts = value; }
-        }
-
-        private bool m_ResetHomeOnTeleport = false;
-
-        public bool ResetHomeOnTeleport
-        {
-            get { return m_ResetHomeOnTeleport; }
-            set { m_ResetHomeOnTeleport = value; }
-        }
-
-        private bool m_TaxFree = false;
-
-        public bool TaxFree
-        {
-            get { return m_TaxFree; }
-            set { m_TaxFree = value; }
-        }
-
-        private bool m_PublicAccess = true;
-
-        public bool PublicAccess
-        {
-            get { return m_PublicAccess; }
-            set { m_PublicAccess = value; }
-        }
-
-        private string m_AbuseEmail = String.Empty;
-
-        public string AbuseEmail
-        {
-            get { return m_AbuseEmail; }
-            set { m_AbuseEmail= value; }
-        }
-
-        private UUID m_EstateOwner = UUID.Zero;
-
-        public UUID EstateOwner
-        {
-            get { return m_EstateOwner; }
-            set { m_EstateOwner = value; }
-        }
-
-        private bool m_DenyMinors = false;
-
-        public bool DenyMinors
-        {
-            get { return m_DenyMinors; }
-            set { m_DenyMinors = value; }
-        }
-
-        // All those lists...
-        //
-        private List<UUID> l_EstateManagers = new List<UUID>();
-
-        public UUID[] EstateManagers
-        {
-            get { return l_EstateManagers.ToArray(); }
-            set { l_EstateManagers = new List<UUID>(value); }
-        }
-
-        private List<EstateBan> l_EstateBans = new List<EstateBan>();
-
-        public EstateBan[] EstateBans
-        {
-            get { return l_EstateBans.ToArray(); }
-            set { l_EstateBans = new List<EstateBan>(value); }
-        }
+        #endregion
 
         private List<UUID> l_EstateAccess = new List<UUID>();
-
-        public UUID[] EstateAccess
-        {
-            get { return l_EstateAccess.ToArray(); }
-            set { l_EstateAccess = new List<UUID>(value); }
-        }
-
+        private List<EstateBan> l_EstateBans = new List<EstateBan>();
         private List<UUID> l_EstateGroups = new List<UUID>();
+        private List<UUID> l_EstateManagers = new List<UUID>();
+        private string m_AbuseEmail = String.Empty;
+        private bool m_AllowDirectTeleport = true;
+        private bool m_AllowLandmark = true;
+        private bool m_AllowParcelChanges = true;
+        private bool m_AllowSetHome = true;
+        private bool m_AllowVoice = true;
 
-        public UUID[] EstateGroups
-        {
-            get { return l_EstateGroups.ToArray(); }
-            set { l_EstateGroups = new List<UUID>(value); }
-        }
+        private string m_EstateName = "My Estate";
+        private UUID m_EstateOwner = UUID.Zero;
+
+        private string m_EstatePass = "";
+        private uint m_ParentEstateID = 1;
+        private int m_PricePerMeter = 1;
+        private bool m_PublicAccess = true;
+        private bool m_UseGlobalTime = true;
 
         public EstateSettings()
         {
         }
 
-        public EstateSettings(Dictionary<string,object> values)
+        public EstateSettings(Dictionary<string, object> values)
         {
-            EstateID = (uint)int.Parse(values["EstateID"].ToString());
+            EstateID = (uint) int.Parse(values["EstateID"].ToString());
             EstateName = values["EstateName"].ToString();
             AbuseEmailToEstateOwner = int.Parse(values["AbuseEmailToEstateOwner"].ToString()) == 1;
             DenyAnonymous = int.Parse(values["DenyAnonymous"].ToString()) == 1;
@@ -326,7 +85,7 @@ namespace OpenSim.Framework
             AllowDirectTeleport = int.Parse(values["AllowDirectTeleport"].ToString()) == 1;
             RedirectGridX = int.Parse(values["RedirectGridX"].ToString());
             RedirectGridY = int.Parse(values["RedirectGridY"].ToString());
-            ParentEstateID = (uint)int.Parse(values["ParentEstateID"].ToString());
+            ParentEstateID = (uint) int.Parse(values["ParentEstateID"].ToString());
             SunPosition = double.Parse(values["SunPosition"].ToString());
             EstateSkipScripts = int.Parse(values["EstateSkipScripts"].ToString()) == 1;
             BillableFactor = float.Parse(values["BillableFactor"].ToString());
@@ -342,42 +101,163 @@ namespace OpenSim.Framework
                 EstatePass = values["EstatePass"].ToString();
 
             Dictionary<string, object> Managers = values["EstateManagers"] as Dictionary<string, object>;
-            List<UUID> NewManagers = new List<UUID>();
-            foreach (object UUID in Managers.Values)
-            {
-                NewManagers.Add(new UUID(UUID.ToString()));
-            }
-            EstateManagers = NewManagers.ToArray();
+            EstateManagers = Managers.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
 
             Dictionary<string, object> Ban = values["EstateBans"] as Dictionary<string, object>;
-            List<EstateBan> NewBan = new List<EstateBan>();
-            foreach (object BannedUser in Ban.Values)
-            {
-                NewBan.Add(new EstateBan((Dictionary<string,object>)BannedUser));
-            }
-            EstateBans = NewBan.ToArray();
+            EstateBans = Ban.Values.Select(BannedUser => new EstateBan((Dictionary<string, object>) BannedUser)).ToArray();
 
             Dictionary<string, object> Access = values["EstateAccess"] as Dictionary<string, object>;
-            List<UUID> NewAccess = new List<UUID>();
-            foreach (object UUID in Access.Values)
-            {
-                NewAccess.Add(new UUID(UUID.ToString()));
-            }
-            EstateAccess = NewAccess.ToArray();
+            EstateAccess = Access.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
 
             Dictionary<string, object> Groups = values["EstateGroups"] as Dictionary<string, object>;
-            List<UUID> NewGroups = new List<UUID>();
-            foreach (object UUID in Groups.Values)
-            {
-                NewGroups.Add(new UUID(UUID.ToString()));
-            }
-            EstateGroups = NewGroups.ToArray();
+            EstateGroups = Groups.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
         }
+
+        public uint EstateID { get; set; }
+
+        public string EstateName
+        {
+            get { return m_EstateName; }
+            set { m_EstateName = value; }
+        }
+
+        public string EstatePass
+        {
+            get { return m_EstatePass; }
+            set { m_EstatePass = value; }
+        }
+
+        public bool AllowLandmark
+        {
+            get { return m_AllowLandmark; }
+            set { m_AllowLandmark = value; }
+        }
+
+        public bool AllowParcelChanges
+        {
+            get { return m_AllowParcelChanges; }
+            set { m_AllowParcelChanges = value; }
+        }
+
+        public bool AllowSetHome
+        {
+            get { return m_AllowSetHome; }
+            set { m_AllowSetHome = value; }
+        }
+
+
+        public uint ParentEstateID
+        {
+            get { return m_ParentEstateID; }
+            set { m_ParentEstateID = value; }
+        }
+
+        public float BillableFactor { get; set; }
+
+        public int PricePerMeter
+        {
+            get { return m_PricePerMeter; }
+            set { m_PricePerMeter = value; }
+        }
+
+        public int RedirectGridX { get; set; }
+
+        public int RedirectGridY { get; set; }
+
+        // Used by the sim
+        //
+
+        public bool UseGlobalTime
+        {
+            get { return m_UseGlobalTime; }
+            set { m_UseGlobalTime = value; }
+        }
+
+        public bool FixedSun { get; set; }
+
+        public double SunPosition { get; set; }
+
+        public bool AllowVoice
+        {
+            get { return m_AllowVoice; }
+            set { m_AllowVoice = value; }
+        }
+
+        public bool AllowDirectTeleport
+        {
+            get { return m_AllowDirectTeleport; }
+            set { m_AllowDirectTeleport = value; }
+        }
+
+        public bool DenyAnonymous { get; set; }
+
+        public bool DenyIdentified { get; set; }
+
+        public bool DenyTransacted { get; set; }
+
+        public bool AbuseEmailToEstateOwner { get; set; }
+
+        public bool BlockDwell { get; set; }
+
+        public bool EstateSkipScripts { get; set; }
+
+        public bool ResetHomeOnTeleport { get; set; }
+
+        public bool TaxFree { get; set; }
+
+        public bool PublicAccess
+        {
+            get { return m_PublicAccess; }
+            set { m_PublicAccess = value; }
+        }
+
+        public string AbuseEmail
+        {
+            get { return m_AbuseEmail; }
+            set { m_AbuseEmail = value; }
+        }
+
+        public UUID EstateOwner
+        {
+            get { return m_EstateOwner; }
+            set { m_EstateOwner = value; }
+        }
+
+        public bool DenyMinors { get; set; }
+
+        // All those lists...
+        //
+
+        public UUID[] EstateManagers
+        {
+            get { return l_EstateManagers.ToArray(); }
+            set { l_EstateManagers = new List<UUID>(value); }
+        }
+
+        public EstateBan[] EstateBans
+        {
+            get { return l_EstateBans.ToArray(); }
+            set { l_EstateBans = new List<EstateBan>(value); }
+        }
+
+        public UUID[] EstateAccess
+        {
+            get { return l_EstateAccess.ToArray(); }
+            set { l_EstateAccess = new List<UUID>(value); }
+        }
+
+        public UUID[] EstateGroups
+        {
+            get { return l_EstateGroups.ToArray(); }
+            set { l_EstateGroups = new List<UUID>(value); }
+        }
+
+        public event SaveDelegate OnSave;
 
         public void FromOSD(OSD v)
         {
-            OSDMap values = (OSDMap)v;
-            EstateID = (uint)values["EstateID"].AsInteger();
+            OSDMap values = (OSDMap) v;
+            EstateID = (uint) values["EstateID"].AsInteger();
             EstateName = values["EstateName"].AsString();
             AbuseEmailToEstateOwner = values["AbuseEmailToEstateOwner"].AsInteger() == 1;
             DenyAnonymous = values["DenyAnonymous"].AsInteger() == 1;
@@ -393,10 +273,10 @@ namespace OpenSim.Framework
             AllowDirectTeleport = values["AllowDirectTeleport"].AsInteger() == 1;
             RedirectGridX = values["RedirectGridX"].AsInteger();
             RedirectGridY = values["RedirectGridY"].AsInteger();
-            ParentEstateID = (uint)values["ParentEstateID"].AsInteger();
+            ParentEstateID = (uint) values["ParentEstateID"].AsInteger();
             SunPosition = values["SunPosition"].AsReal();
             EstateSkipScripts = values["EstateSkipScripts"].AsInteger() == 1;
-            BillableFactor = (float)values["BillableFactor"].AsReal();
+            BillableFactor = (float) values["BillableFactor"].AsReal();
             PublicAccess = values["PublicAccess"].AsInteger() == 1;
             AbuseEmail = values["AbuseEmail"].AsString();
             EstateOwner = values["EstateOwner"].AsUUID();
@@ -409,12 +289,7 @@ namespace OpenSim.Framework
                 EstatePass = values["EstatePass"].AsString();
 
             OSDMap Managers = values["EstateManagers"] as OSDMap;
-            List<UUID> NewManagers = new List<UUID>();
-            foreach (OSD ID in Managers.Values)
-            {
-                NewManagers.Add(ID.AsUUID());
-            }
-            EstateManagers = NewManagers.ToArray();
+            EstateManagers = Managers.Values.Select(ID => ID.AsUUID()).ToArray();
 
             OSDMap Ban = values["EstateBans"] as OSDMap;
             List<EstateBan> NewBan = new List<EstateBan>();
@@ -427,28 +302,18 @@ namespace OpenSim.Framework
             EstateBans = NewBan.ToArray();
 
             OSDMap Access = values["EstateAccess"] as OSDMap;
-            List<UUID> NewAccess = new List<UUID>();
-            foreach (OSD UUID in Access.Values)
-            {
-                NewAccess.Add(UUID.AsUUID());
-            }
-            EstateAccess = NewAccess.ToArray();
+            EstateAccess = Access.Values.Select(UUID => UUID.AsUUID()).ToArray();
 
             OSDMap Groups = values["EstateGroups"] as OSDMap;
-            List<UUID> NewGroups = new List<UUID>();
-            foreach (OSD UUID in Groups.Values)
-            {
-                NewGroups.Add(UUID.AsUUID());
-            }
-            EstateGroups = NewGroups.ToArray();
+            EstateGroups = Groups.Values.Select(UUID => UUID.AsUUID()).ToArray();
         }
 
         public OSD ToOSD(bool Local)
         {
             OSDMap values = new OSDMap();
-            values["EstateID"] = (int)EstateID;
+            values["EstateID"] = (int) EstateID;
             values["EstateName"] = EstateName;
-            values["AbuseEmailToEstateOwner"] = (int)(AbuseEmailToEstateOwner ? 1 : 0);
+            values["AbuseEmailToEstateOwner"] = (AbuseEmailToEstateOwner ? 1 : 0);
             values["DenyAnonymous"] = DenyAnonymous ? 1 : 0;
             values["ResetHomeOnTeleport"] = ResetHomeOnTeleport ? 1 : 0;
             values["FixedSun"] = FixedSun ? 1 : 0;
@@ -462,7 +327,7 @@ namespace OpenSim.Framework
             values["AllowDirectTeleport"] = AllowDirectTeleport ? 1 : 0;
             values["RedirectGridX"] = RedirectGridX;
             values["RedirectGridY"] = RedirectGridY;
-            values["ParentEstateID"] = (int)ParentEstateID;
+            values["ParentEstateID"] = (int) ParentEstateID;
             values["SunPosition"] = SunPosition;
             values["EstateSkipScripts"] = EstateSkipScripts ? 1 : 0;
             values["BillableFactor"] = BillableFactor;
@@ -473,7 +338,7 @@ namespace OpenSim.Framework
             values["AllowLandmark"] = AllowLandmark ? 1 : 0;
             values["AllowParcelChanges"] = AllowParcelChanges ? 1 : 0;
             values["AllowSetHome"] = AllowSetHome ? 1 : 0;
-            if(Local)
+            if (Local)
                 values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
 
             OSDMap Ban = new OSDMap();
@@ -515,12 +380,12 @@ namespace OpenSim.Framework
             return values;
         }
 
-        public Dictionary<string,object> ToKeyValuePairs(bool Local)
+        public Dictionary<string, object> ToKeyValuePairs(bool Local)
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
-            values["EstateID"] = (int)EstateID;
+            values["EstateID"] = (int) EstateID;
             values["EstateName"] = EstateName;
-            values["AbuseEmailToEstateOwner"] = (int)(AbuseEmailToEstateOwner ? 1 : 0);
+            values["AbuseEmailToEstateOwner"] = (AbuseEmailToEstateOwner ? 1 : 0);
             values["DenyAnonymous"] = DenyAnonymous ? 1 : 0;
             values["ResetHomeOnTeleport"] = ResetHomeOnTeleport ? 1 : 0;
             values["FixedSun"] = FixedSun ? 1 : 0;
@@ -534,7 +399,7 @@ namespace OpenSim.Framework
             values["AllowDirectTeleport"] = AllowDirectTeleport ? 1 : 0;
             values["RedirectGridX"] = RedirectGridX;
             values["RedirectGridY"] = RedirectGridY;
-            values["ParentEstateID"] = (int)ParentEstateID;
+            values["ParentEstateID"] = (int) ParentEstateID;
             values["SunPosition"] = SunPosition;
             values["EstateSkipScripts"] = EstateSkipScripts ? 1 : 0;
             values["BillableFactor"] = BillableFactor;
@@ -545,7 +410,7 @@ namespace OpenSim.Framework
             values["AllowLandmark"] = AllowLandmark ? 1 : 0;
             values["AllowParcelChanges"] = AllowParcelChanges ? 1 : 0;
             values["AllowSetHome"] = AllowSetHome ? 1 : 0;
-            if(Local)
+            if (Local)
                 values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
 
             Dictionary<string, object> Ban = new Dictionary<string, object>();
@@ -591,7 +456,6 @@ namespace OpenSim.Framework
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
@@ -600,20 +464,15 @@ namespace OpenSim.Framework
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
 
         public void Save()
@@ -682,10 +541,7 @@ namespace OpenSim.Framework
 
         public bool IsBanned(UUID avatarID)
         {
-            foreach (EstateBan ban in l_EstateBans)
-                if (ban.BannedUserID == avatarID)
-                    return true;
-            return false;
+            return l_EstateBans.Any(ban => ban.BannedUserID == avatarID);
         }
 
         public void AddBan(EstateBan ban)
@@ -703,9 +559,8 @@ namespace OpenSim.Framework
 
         public void RemoveBan(UUID avatarID)
         {
-            foreach (EstateBan ban in new List<EstateBan>(l_EstateBans))
-                if (ban.BannedUserID == avatarID)
-                    l_EstateBans.Remove(ban);
+            foreach (EstateBan ban in new List<EstateBan>(l_EstateBans).Where(ban => ban.BannedUserID == avatarID))
+                l_EstateBans.Remove(ban);
         }
 
         public bool HasAccess(UUID user)
@@ -718,11 +573,13 @@ namespace OpenSim.Framework
 
         public void SetFromFlags(ulong regionFlags)
         {
-            ResetHomeOnTeleport = ((regionFlags & (ulong)RegionFlags.ResetHomeOnTeleport) == (ulong)RegionFlags.ResetHomeOnTeleport);
-            BlockDwell = ((regionFlags & (ulong)RegionFlags.BlockDwell) == (ulong)RegionFlags.BlockDwell);
-            AllowLandmark = ((regionFlags & (ulong)RegionFlags.AllowLandmark) == (ulong)RegionFlags.AllowLandmark);
-            AllowParcelChanges = ((regionFlags & (ulong)RegionFlags.AllowParcelChanges) == (ulong)RegionFlags.AllowParcelChanges);
-            AllowSetHome = ((regionFlags & (ulong)RegionFlags.AllowSetHome) == (ulong)RegionFlags.AllowSetHome);
+            ResetHomeOnTeleport = ((regionFlags & (ulong) RegionFlags.ResetHomeOnTeleport) ==
+                                   (ulong) RegionFlags.ResetHomeOnTeleport);
+            BlockDwell = ((regionFlags & (ulong) RegionFlags.BlockDwell) == (ulong) RegionFlags.BlockDwell);
+            AllowLandmark = ((regionFlags & (ulong) RegionFlags.AllowLandmark) == (ulong) RegionFlags.AllowLandmark);
+            AllowParcelChanges = ((regionFlags & (ulong) RegionFlags.AllowParcelChanges) ==
+                                  (ulong) RegionFlags.AllowParcelChanges);
+            AllowSetHome = ((regionFlags & (ulong) RegionFlags.AllowSetHome) == (ulong) RegionFlags.AllowSetHome);
         }
     }
 }

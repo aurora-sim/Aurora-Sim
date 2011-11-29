@@ -25,23 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 //#define UseRemovingEntityUpdates
+
 #define UseDictionaryForEntityUpdates
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Reflection;
 using System.Linq;
-using System.Text;
-using Timer = System.Timers.Timer;
+using System.Reflection;
 using System.Timers;
-using System.Threading;
+using Mischel.Collections;
 using OpenMetaverse;
-using log4net;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using Mischel.Collections;
-using Nini.Config;
+using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -50,42 +48,51 @@ namespace OpenSim.Region.Framework.Scenes
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         private const double MINVIEWDSTEP = 16;
-        private const double MINVIEWDSTEPSQ = MINVIEWDSTEP * MINVIEWDSTEP;
+        private const double MINVIEWDSTEPSQ = MINVIEWDSTEP*MINVIEWDSTEP;
 
         protected IScenePresence m_presence;
         protected IScene m_scene;
+
         /// <summary>
-        /// Have we sent all of the objects in the sim that the client can see for the first time?
+        ///   Have we sent all of the objects in the sim that the client can see for the first time?
         /// </summary>
-        protected bool m_SentInitialObjects = false;
-        protected volatile bool m_queueing = false;
-        protected volatile bool m_inUse = false;
+        protected bool m_SentInitialObjects;
+
+        protected volatile bool m_queueing;
+        protected volatile bool m_inUse;
         protected Prioritizer m_prioritizer;
         protected Culler m_culler;
-        protected bool m_forceCullCheck = false;
-        private object m_presenceUpdatesToSendLock = new object ();
-        private object m_presenceAnimationsToSendLock = new object ();
-        private object m_objectPropertiesToSendLock = new object ();
-        private object m_objectUpdatesToSendLock = new object ();
+        protected bool m_forceCullCheck;
+        private readonly object m_presenceUpdatesToSendLock = new object();
+        private readonly object m_presenceAnimationsToSendLock = new object();
+        private readonly object m_objectPropertiesToSendLock = new object();
+        private readonly object m_objectUpdatesToSendLock = new object();
 #if UseRemovingEntityUpdates
         private OrderedDictionary/*<UUID, EntityUpdate>*/ m_presenceUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
 #elif UseDictionaryForEntityUpdates
-        private Dictionary<uint, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<uint, EntityUpdate> ();
+        private readonly Dictionary<uint, EntityUpdate> m_presenceUpdatesToSend = new Dictionary<uint, EntityUpdate>();
 #else
         private Queue<EntityUpdate> m_presenceUpdatesToSend = new Queue<EntityUpdate>();
 #endif
-        private Queue<AnimationGroup> m_presenceAnimationsToSend = new Queue<AnimationGroup>/*<UUID, AnimationGroup>*/ ();
-        private OrderedDictionary/*<UUID, EntityUpdate>*/ m_objectUpdatesToSend = new OrderedDictionary/*<UUID, EntityUpdate>*/ ();
-        private OrderedDictionary/*<UUID, ISceneChildEntity>*/ m_objectPropertiesToSend = new OrderedDictionary/*<UUID, ISceneChildEntity>*/ ();
-        private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity> ();
-        private Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence> ();
-        private object m_lastPresencesInViewLock = new object();
+
+        private readonly Queue<AnimationGroup> m_presenceAnimationsToSend =
+            new Queue<AnimationGroup> /*<UUID, AnimationGroup>*/();
+
+        private readonly OrderedDictionary /*<UUID, EntityUpdate>*/
+            m_objectUpdatesToSend = new OrderedDictionary /*<UUID, EntityUpdate>*/();
+
+        private readonly OrderedDictionary /*<UUID, ISceneChildEntity>*/
+            m_objectPropertiesToSend = new OrderedDictionary /*<UUID, ISceneChildEntity>*/();
+
+        private readonly HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity>();
+        private readonly Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence>();
+        private readonly object m_lastPresencesInViewLock = new object();
         private Vector3 m_lastUpdatePos;
-        private int m_numberOfLoops = 0;
+        private int m_numberOfLoops;
         private Timer m_drawDistanceChangedTimer;
-        private object m_drawDistanceTimerLock = new object ();
+        private readonly object m_drawDistanceTimerLock = new object();
         private const int NUMBER_OF_LOOPS_TO_WAIT = 30;
 
         private const float PresenceSendPercentage = 0.60f;
@@ -105,36 +112,38 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructor
 
-        public SceneViewer (IScenePresence presence)
+        public SceneViewer(IScenePresence presence)
         {
             m_presence = presence;
             m_scene = presence.Scene;
             m_presence.OnSignificantClientMovement += SignificantClientMovement;
             m_presence.Scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
             m_scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
-            m_presence.Scene.AuroraEventManager.RegisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
-            m_presence.Scene.AuroraEventManager.RegisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
-            m_prioritizer = new Prioritizer (presence.Scene);
-            m_culler = new Culler (presence.Scene);
+            m_presence.Scene.AuroraEventManager.RegisterEventHandler("DrawDistanceChanged",
+                                                                     AuroraEventManager_OnGenericEvent);
+            m_presence.Scene.AuroraEventManager.RegisterEventHandler("SignficantCameraMovement",
+                                                                     AuroraEventManager_OnGenericEvent);
+            m_prioritizer = new Prioritizer(presence.Scene);
+            m_culler = new Culler(presence.Scene);
         }
 
-        void EventManager_OnClosingClient (IClientAPI client)
+        private void EventManager_OnClosingClient(IClientAPI client)
         {
-            lock(m_lastPresencesInViewLock)
-                if (lastPresencesDInView.ContainsKey (client.AgentId))
-                    lastPresencesDInView.Remove (client.AgentId);
+            lock (m_lastPresencesInViewLock)
+                if (lastPresencesDInView.ContainsKey(client.AgentId))
+                    lastPresencesDInView.Remove(client.AgentId);
         }
 
-        void EventManager_OnMakeChildAgent (IScenePresence presence, Services.Interfaces.GridRegion destination)
+        private void EventManager_OnMakeChildAgent(IScenePresence presence, GridRegion destination)
         {
-            RemoveAvatarFromView (presence);
+            RemoveAvatarFromView(presence);
         }
 
-        object AuroraEventManager_OnGenericEvent (string FunctionName, object parameters)
+        private object AuroraEventManager_OnGenericEvent(string FunctionName, object parameters)
         {
             if (m_culler != null && m_culler.UseCulling && FunctionName == "DrawDistanceChanged")
             {
-                IScenePresence sp = (IScenePresence)parameters;
+                IScenePresence sp = (IScenePresence) parameters;
                 if (sp.UUID != m_presence.UUID)
                     return null; //Only want our av
 
@@ -144,11 +153,11 @@ namespace OpenSim.Region.Framework.Scenes
                 lock (m_drawDistanceTimerLock)
                 {
                     if (m_drawDistanceChangedTimer != null)
-                        m_drawDistanceChangedTimer.Stop (); //Stop any old timers
-                    m_drawDistanceChangedTimer = new Timer (); //Fire this again in 3 seconds so that we do send prims to children agents
-                    m_drawDistanceChangedTimer.Interval = 3000;
+                        m_drawDistanceChangedTimer.Stop(); //Stop any old timers
+                    m_drawDistanceChangedTimer = new Timer {Interval = 3000};
+                    //Fire this again in 3 seconds so that we do send prims to children agents
                     m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
-                    m_drawDistanceChangedTimer.Start ();
+                    m_drawDistanceChangedTimer.Start();
                 }
                 //SignificantClientMovement (m_presence.ControllingClient);
             }
@@ -160,67 +169,67 @@ namespace OpenSim.Region.Framework.Scenes
                 lock (m_drawDistanceTimerLock)
                 {
                     if (m_drawDistanceChangedTimer != null)
-                        m_drawDistanceChangedTimer.Stop (); //Stop any old timers
-                    m_drawDistanceChangedTimer = new Timer (); //Fire this again in 3 seconds so that we do send prims to children agents
-                    m_drawDistanceChangedTimer.Interval = 3000;
+                        m_drawDistanceChangedTimer.Stop(); //Stop any old timers
+                    m_drawDistanceChangedTimer = new Timer {Interval = 3000};
+                    //Fire this again in 3 seconds so that we do send prims to children agents
                     m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
-                    m_drawDistanceChangedTimer.Start ();
+                    m_drawDistanceChangedTimer.Start();
                 }
             }
             return null;
         }
 
-        void m_drawDistanceChangedTimer_Elapsed (object sender, ElapsedEventArgs e)
+        private void m_drawDistanceChangedTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            lock(m_drawDistanceTimerLock)
-                m_drawDistanceChangedTimer.Stop ();
-            if(m_presence != null)
-                SignificantClientMovement ();
+            lock (m_drawDistanceTimerLock)
+                m_drawDistanceChangedTimer.Stop();
+            if (m_presence != null)
+                SignificantClientMovement();
         }
 
         #endregion
 
         #region Enqueue/Remove updates for entities
 
-        public void QueuePresenceForUpdate (IScenePresence presence, PrimUpdateFlags flags)
+        public void QueuePresenceForUpdate(IScenePresence presence, PrimUpdateFlags flags)
         {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
+            if (m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lock(m_lastPresencesInViewLock)
-                    lastPresencesDInView.Remove (presence.UUID);
+                lock (m_lastPresencesInViewLock)
+                    lastPresencesDInView.Remove(presence.UUID);
                 return; // if 2 far ignore
             }
             //Is this really necessary? -7/21
             //Very much so... the client cannot get a terse update before a full update -7/25
-            lock(m_lastPresencesInViewLock)
-                if (!lastPresencesDInView.ContainsKey (presence.UUID))
-                    return;//Only send updates if they are in view
+            lock (m_lastPresencesInViewLock)
+                if (!lastPresencesDInView.ContainsKey(presence.UUID))
+                    return; //Only send updates if they are in view
             AddPresenceUpdate(presence, flags);
         }
 
-        public void QueuePresenceForFullUpdate (IScenePresence presence, bool forced)
+        public void QueuePresenceForFullUpdate(IScenePresence presence, bool forced)
         {
-            if(!forced && m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
+            if (!forced && m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lock(m_lastPresencesInViewLock)
-                    lastPresencesDInView.Remove (presence.UUID);
+                lock (m_lastPresencesInViewLock)
+                    lastPresencesDInView.Remove(presence.UUID);
                 return; // if 2 far ignore
             }
-            lock(m_lastPresencesInViewLock)
+            lock (m_lastPresencesInViewLock)
             {
-                if(!lastPresencesDInView.ContainsKey(presence.UUID))
+                if (!lastPresencesDInView.ContainsKey(presence.UUID))
                     lastPresencesDInView.Add(presence.UUID, presence);
-                else if(!forced)//Only send one full update please!
+                else if (!forced) //Only send one full update please!
                     return;
             }
 
-            SendFullUpdateForPresence (presence);
-            AddPresenceUpdate (presence, PrimUpdateFlags.ForcedFullUpdate);
+            SendFullUpdateForPresence(presence);
+            AddPresenceUpdate(presence, PrimUpdateFlags.ForcedFullUpdate);
         }
 
-        private void AddPresenceUpdate (IScenePresence presence, PrimUpdateFlags flags)
+        private void AddPresenceUpdate(IScenePresence presence, PrimUpdateFlags flags)
         {
             lock (m_presenceUpdatesToSendLock)
             {
@@ -242,14 +251,14 @@ namespace OpenSim.Region.Framework.Scenes
                     m_presenceUpdatesToSend.Insert (m_presenceUpdatesToSend.Count, presence.UUID, o);
 #elif UseDictionaryForEntityUpdates
                 EntityUpdate o = null;
-                if(!m_presenceUpdatesToSend.TryGetValue(presence.LocalId, out o))
-                    o = new EntityUpdate (presence, flags);
+                if (!m_presenceUpdatesToSend.TryGetValue(presence.LocalId, out o))
+                    o = new EntityUpdate(presence, flags);
                 else
                 {
                     if ((o.Flags & flags) == o.Flags)
                         return; //Same, leave it alone!
                     o.Flags |= flags;
-                    return;//All done, its updated, no need to readd
+                    return; //All done, its updated, no need to readd
                 }
 
                 m_presenceUpdatesToSend[presence.LocalId] = o;
@@ -261,23 +270,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void QueuePresenceForAnimationUpdate(IScenePresence presence, AnimationGroup animation)
         {
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, presence, m_scene))
+            if (m_culler != null && !m_culler.ShowEntityToClient(m_presence, presence, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lock(m_lastPresencesInViewLock)
-                    lastPresencesDInView.Remove (presence.UUID);
+                lock (m_lastPresencesInViewLock)
+                    lastPresencesDInView.Remove(presence.UUID);
                 return; // if 2 far ignore
             }
 
             //Send a terse as well, since we are sending an animation
-            if(m_presence.LocalId == presence.LocalId &&
+            if (m_presence.LocalId == presence.LocalId &&
                 presence.SittingOnUUID == UUID.Zero) //As long as we arn't sitting, in which we don't get terse updates
             {
                 //Is this really necessary? -7/21
                 //Very much so... the client cannot get a terse update before a full update -7/25
-                lock(m_lastPresencesInViewLock)
-                    if(lastPresencesDInView.ContainsKey(presence.UUID))
-                        AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);//Only send updates if they are in view
+                lock (m_lastPresencesInViewLock)
+                    if (lastPresencesDInView.ContainsKey(presence.UUID))
+                        AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
+                            //Only send updates if they are in view
             }
             else
                 AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
@@ -286,38 +296,38 @@ namespace OpenSim.Region.Framework.Scenes
                 m_presenceAnimationsToSend.Enqueue(animation);
         }
 
-        public void ClearPresenceUpdates (IScenePresence presence)
+        public void ClearPresenceUpdates(IScenePresence presence)
         {
-            lock(m_presenceUpdatesToSendLock)
+            lock (m_presenceUpdatesToSendLock)
             {
                 m_presenceUpdatesToSend.Remove(presence.LocalId);
             }
         }
 
         /// <summary>
-        /// Add the objects to the queue for which we need to send an update to the client
+        ///   Add the objects to the queue for which we need to send an update to the client
         /// </summary>
-        /// <param name="part"></param>
-        public void QueuePartForUpdate (ISceneChildEntity part, PrimUpdateFlags flags)
+        /// <param name = "part"></param>
+        public void QueuePartForUpdate(ISceneChildEntity part, PrimUpdateFlags flags)
         {
-            if(m_presence == null)
+            if (m_presence == null)
                 return;
-            if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, part.ParentEntity, m_scene))
+            if (m_culler != null && !m_culler.ShowEntityToClient(m_presence, part.ParentEntity, m_scene))
             {
                 //They are out of view and they changed, we need to update them when they do come in view
-                lastGrpsInView.Remove (part.ParentEntity);
+                lastGrpsInView.Remove(part.ParentEntity);
                 return; // if 2 far ignore
             }
             if ((!(m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)) && !lastGrpsInView.Contains (part.ParentEntity))
+                   m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY)) &&
+                !lastGrpsInView.Contains(part.ParentEntity))
             {
                 //This object entered our draw distance on its own, and we havn't seen it before
                 flags = PrimUpdateFlags.ForcedFullUpdate;
                 lock (m_objectUpdatesToSendLock)
                 {
-                    foreach (ISceneChildEntity child in part.ParentEntity.ChildrenEntities())
+                    foreach (EntityUpdate update in part.ParentEntity.ChildrenEntities().Select(child => new EntityUpdate(child, flags)))
                     {
-                        EntityUpdate update = new EntityUpdate(child, flags);
                         QueueEntityUpdate(update);
                     }
                 }
@@ -325,18 +335,18 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            EntityUpdate o = new EntityUpdate (part, flags);
+            EntityUpdate o = new EntityUpdate(part, flags);
             lock (m_objectUpdatesToSendLock)
-                QueueEntityUpdate (o);
+                QueueEntityUpdate(o);
         }
 
         /// <summary>
-        /// NOTE: DO THE LOCKING ON YOUR OWN
+        ///   NOTE: DO THE LOCKING ON YOUR OWN
         /// </summary>
-        /// <param name="update"></param>
+        /// <param name = "update"></param>
         private void QueueEntityUpdate(EntityUpdate update)
         {
-            EntityUpdate o = (EntityUpdate)m_objectUpdatesToSend[update.Entity.UUID];
+            EntityUpdate o = (EntityUpdate) m_objectUpdatesToSend[update.Entity.UUID];
             if (o == null)
                 o = update;
             else
@@ -353,11 +363,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_objectPropertiesToSendLock)
             {
-                foreach (ISceneChildEntity entity in entities)
+                foreach (ISceneChildEntity entity in entities.Where(entity => m_culler == null || m_culler.ShowEntityToClient(m_presence, entity.ParentEntity, m_scene)))
                 {
-                    if (m_culler != null && !m_culler.ShowEntityToClient (m_presence, entity.ParentEntity, m_scene))
-                        continue; // if 2 far ignore
-
                     m_objectPropertiesToSend.Remove(entity.UUID);
                     //Insert at the end
                     m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
@@ -365,10 +372,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void RemoveAvatarFromView (IScenePresence sp)
+        public void RemoveAvatarFromView(IScenePresence sp)
         {
-            lock(m_lastPresencesInViewLock)
-                lastPresencesDInView.Remove (sp.UUID);
+            lock (m_lastPresencesInViewLock)
+                lastPresencesDInView.Remove(sp.UUID);
         }
 
         public void SendPresenceFullUpdate(IScenePresence presence)
@@ -382,31 +389,32 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected void SendFullUpdateForPresence(IScenePresence presence)
         {
-            Util.FireAndForget(delegate(object o)
-            {
-                m_presence.ControllingClient.SendAvatarDataImmediate(presence);
-                //Send the animations too
-                presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
-                //Send the presence of this agent to us
-                IAvatarAppearanceModule module = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                if (module != null)
-                    module.SendAppearanceToAgent(m_presence);
-                //We need to send all attachments of this avatar as well
-                IAttachmentsModule attmodule = m_presence.Scene.RequestModuleInterface<IAttachmentsModule>();
-                if (attmodule != null)
-                {
-                    ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar(m_presence.UUID);
-                    foreach (ISceneEntity entity in entities)
-                    {
-                        QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
-                        foreach (ISceneChildEntity child in entity.ChildrenEntities())
-                        {
-                            if (!child.IsRoot)
-                                QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                        }
-                    }
-                }
-            });
+            Util.FireAndForget(delegate
+                                   {
+                                       m_presence.ControllingClient.SendAvatarDataImmediate(presence);
+                                       //Send the animations too
+                                       presence.Animator.SendAnimPackToClient(m_presence.ControllingClient);
+                                       //Send the presence of this agent to us
+                                       IAvatarAppearanceModule module =
+                                           presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                                       if (module != null)
+                                           module.SendAppearanceToAgent(m_presence);
+                                       //We need to send all attachments of this avatar as well
+                                       IAttachmentsModule attmodule =
+                                           m_presence.Scene.RequestModuleInterface<IAttachmentsModule>();
+                                       if (attmodule != null)
+                                       {
+                                           ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar(m_presence.UUID);
+                                           foreach (ISceneEntity entity in entities)
+                                           {
+                                               QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
+                                               foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
+                                               {
+                                                   QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                                               }
+                                           }
+                                       }
+                                   });
         }
 
         #endregion
@@ -414,11 +422,11 @@ namespace OpenSim.Region.Framework.Scenes
         #region Object Culling by draw distance
 
         /// <summary>
-        /// When the client moves enough to trigger this, make sure that we have sent
-        ///  the client all of the objects that have just entered their FOV in their draw distance.
+        ///   When the client moves enough to trigger this, make sure that we have sent
+        ///   the client all of the objects that have just entered their FOV in their draw distance.
         /// </summary>
-        /// <param name="remote_client"></param>
-        private void SignificantClientMovement ()
+        /// <param name = "remote_client"></param>
+        private void SignificantClientMovement()
         {
             if (m_culler == null)
                 return;
@@ -427,7 +435,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             if (!m_forceCullCheck && m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeX &&
-                    m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY && !m_presence.IsChildAgent)
+                m_presence.DrawDistance > m_presence.Scene.RegionInfo.RegionSizeY && !m_presence.IsChildAgent)
             {
                 m_forceCullCheck = false; //Make sure to reset it
                 return;
@@ -445,84 +453,72 @@ namespace OpenSim.Region.Framework.Scenes
             if (!m_presence.IsChildAgent || m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor)
             {
                 Vector3 pos = m_presence.CameraPosition;
-                float distsq = Vector3.DistanceSquared (pos, m_lastUpdatePos);
-                distsq += 0.2f * m_presence.Velocity.LengthSquared ();
-                if (distsq < MINVIEWDSTEPSQ && !m_forceCullCheck) //They havn't moved enough to trigger another update, so just quit
+                float distsq = Vector3.DistanceSquared(pos, m_lastUpdatePos);
+                distsq += 0.2f*m_presence.Velocity.LengthSquared();
+                if (distsq < MINVIEWDSTEPSQ && !m_forceCullCheck)
+                    //They havn't moved enough to trigger another update, so just quit
                     return;
                 m_forceCullCheck = false;
-                Util.FireAndForget (DoSignificantClientMovement);
+                Util.FireAndForget(DoSignificantClientMovement);
             }
         }
 
         private class DoubleComparer : IComparer
         {
+            #region IComparer Members
+
+            public int Compare(object x, object y)
+            {
+                return Compare((PriorityQueueItem<EntityUpdate, int>) x, (PriorityQueueItem<EntityUpdate, int>) y);
+            }
+
+            #endregion
+
             public static int Compare(PriorityQueueItem<EntityUpdate, int> x, PriorityQueueItem<EntityUpdate, int> y)
             {
                 return x._priority.CompareTo(y._priority);
             }
-
-            public int Compare(object x, object y)
-            {
-                return Compare((PriorityQueueItem<EntityUpdate, int>)x, (PriorityQueueItem<EntityUpdate, int>)y);
-            }
         }
 
-        private void DoSignificantClientMovement (object o)
+        private void DoSignificantClientMovement(object o)
         {
             //Just return all the entities, its quicker to do the culling check rather than the position check
-            ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities ();
+            ISceneEntity[] entities = m_presence.Scene.Entities.GetEntities();
             LPriorityQueue entsqueue = new LPriorityQueue(new DoubleComparer());
 
             // build a prioritized list of things we need to send
 
-            HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity> ();
+            HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
 
             int time = Util.EnvironmentTickCount();
-            foreach (ISceneEntity e in entities)
+            foreach (ISceneEntity e in from e in entities where e != null where !e.IsDeleted where !lastGrpsInView.Contains(e) where m_culler != null where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
             {
-                if (e != null)
-                {
-                    if (e.IsDeleted)
-                        continue;
-
-                    if (lastGrpsInView.Contains (e)) //If we've already sent it, don't send it again
-                        continue;
-
-                    if (m_culler != null)
-                    {
-                        if (!m_culler.ShowEntityToClient(m_presence, e, m_scene, time))
-                            continue;
-                        NewGrpsInView.Add (e);
-                    }
-                }
+                NewGrpsInView.Add(e);
             }
             entities = null;
             lastGrpsInView.UnionWith(NewGrpsInView);
             // send them 
             if (NewGrpsInView.Count != 0)
                 SendQueued(NewGrpsInView);
-            NewGrpsInView.Clear ();
+            NewGrpsInView.Clear();
 
 
             //Check for scenepresences as well
-            List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences ());
-            foreach (IScenePresence presence in presences)
+            List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences());
+            foreach (IScenePresence presence in presences.Where(presence => presence != null && presence.UUID != m_presence.UUID))
             {
-                if (presence != null && presence.UUID != m_presence.UUID)
-                {
-                    lock(m_lastPresencesInViewLock)
-                        if(lastPresencesDInView.ContainsKey(presence.UUID))
-                            continue; //Don't resend the update
+                lock (m_lastPresencesInViewLock)
+                    if (lastPresencesDInView.ContainsKey(presence.UUID))
+                        continue; //Don't resend the update
 
-                    //Check for culling here!
-                    if (!m_culler.ShowEntityToClient(m_presence, presence, m_scene, time))
-                        continue; // if 2 far ignore
+                //Check for culling here!
+                if (!m_culler.ShowEntityToClient(m_presence, presence, m_scene, time))
+                    continue; // if 2 far ignore
 
-                    lock(m_lastPresencesInViewLock)
-                        lastPresencesDInView.Add(presence.UUID, presence);
+                lock (m_lastPresencesInViewLock)
+                    lastPresencesDInView.Add(presence.UUID, presence);
 
-                    SendFullUpdateForPresence (presence);
-                }
+                SendFullUpdateForPresence(presence);
             }
             presences = null;
         }
@@ -532,13 +528,14 @@ namespace OpenSim.Region.Framework.Scenes
         #region SendPrimUpdates
 
         /// <summary>
-        /// This method is called by the LLUDPServer and should never be called by anyone else
-        /// It loops through the available updates and sends them out (no waiting)
+        ///   This method is called by the LLUDPServer and should never be called by anyone else
+        ///   It loops through the available updates and sends them out (no waiting)
         /// </summary>
-        /// <param name="numUpdates">The number of updates to send</param>
-        public void SendPrimUpdates (int numPrimUpdates, int numAvaUpdates)
+        /// <param name = "numUpdates">The number of updates to send</param>
+        public void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates)
         {
-            if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT) //Wait for the client to finish connecting fully before sending out bunches of updates
+            if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT)
+                //Wait for the client to finish connecting fully before sending out bunches of updates
             {
                 m_numberOfLoops++;
                 return;
@@ -549,7 +546,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_inUse = true;
             //This is for stats
-            int AgentMS = Util.EnvironmentTickCount ();
+            int AgentMS = Util.EnvironmentTickCount();
 
             #region New client entering the Scene, requires all objects in the Scene
 
@@ -558,7 +555,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SendInitialObjects();
 
             int presenceNumToSend = numAvaUpdates;
-            List<EntityUpdate> updates = new List<EntityUpdate> ();
+            List<EntityUpdate> updates = new List<EntityUpdate>();
             lock (m_presenceUpdatesToSendLock)
             {
                 //Send the numUpdates of them if that many
@@ -568,11 +565,13 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
 #if UseDictionaryForEntityUpdates
-                        Dictionary<uint, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator ();
-                        e.MoveNext ();
+                        Dictionary<uint, EntityUpdate>.Enumerator e = m_presenceUpdatesToSend.GetEnumerator();
+                        e.MoveNext();
                         List<uint> entitiesToRemove = new List<uint>();
 #endif
-                        int count = m_presenceUpdatesToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceUpdatesToSend.Count;
+                        int count = m_presenceUpdatesToSend.Count > presenceNumToSend
+                                        ? presenceNumToSend
+                                        : m_presenceUpdatesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
 #if UseRemovingEntityUpdates
@@ -591,12 +590,12 @@ namespace OpenSim.Region.Framework.Scenes
                                 updates.Add (update);
 #elif UseDictionaryForEntityUpdates
                             EntityUpdate update = e.Current.Value;
-                            entitiesToRemove.Add (update.Entity.LocalId);//Remove it later
+                            entitiesToRemove.Add(update.Entity.LocalId); //Remove it later
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
-                                SendFullUpdateForPresence ((IScenePresence)update.Entity);
+                                SendFullUpdateForPresence((IScenePresence) update.Entity);
                             else
-                                updates.Add (update);
-                            e.MoveNext ();
+                                updates.Add(update);
+                            e.MoveNext();
 #else
                             EntityUpdate update = m_presenceUpdatesToSend.Dequeue ();
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
@@ -608,24 +607,24 @@ namespace OpenSim.Region.Framework.Scenes
 #if UseDictionaryForEntityUpdates
                         foreach (uint id in entitiesToRemove)
                         {
-                            m_presenceUpdatesToSend.Remove (id);
+                            m_presenceUpdatesToSend.Remove(id);
                         }
 #endif
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString ());
+                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
                     }
                 }
             }
             if (updates.Count != 0)
             {
                 presenceNumToSend -= updates.Count;
-                m_presence.ControllingClient.SendAvatarUpdate (updates);
+                m_presence.ControllingClient.SendAvatarUpdate(updates);
             }
-            updates.Clear ();
+            updates.Clear();
 
-            List<AnimationGroup> animationsToSend = new List<AnimationGroup> ();
+            List<AnimationGroup> animationsToSend = new List<AnimationGroup>();
             lock (m_presenceAnimationsToSendLock)
             {
                 //Send the numUpdates of them if that many
@@ -634,7 +633,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        int count = m_presenceAnimationsToSend.Count > presenceNumToSend ? presenceNumToSend : m_presenceAnimationsToSend.Count;
+                        int count = m_presenceAnimationsToSend.Count > presenceNumToSend
+                                        ? presenceNumToSend
+                                        : m_presenceAnimationsToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
                             AnimationGroup update = m_presenceAnimationsToSend.Dequeue();
@@ -645,24 +646,24 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
                             }
                             m_AnimationsInPacketQueue.Add (update.AvatarID);*/
-                            animationsToSend.Add (update);
+                            animationsToSend.Add(update);
                         }
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString ());
+                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
                     }
                 }
             }
             foreach (AnimationGroup update in animationsToSend)
             {
-                m_presence.ControllingClient.SendAnimations (update);
+                m_presence.ControllingClient.SendAnimations(update);
             }
-            animationsToSend.Clear ();
+            animationsToSend.Clear();
 
             int primsNumToSend = numPrimUpdates;
 
-            List<IEntity> entities = new List<IEntity> ();
+            List<IEntity> entities = new List<IEntity>();
             lock (m_objectPropertiesToSendLock)
             {
                 //Send the numUpdates of them if that many
@@ -671,10 +672,12 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     try
                     {
-                        int count = m_objectPropertiesToSend.Count > primsNumToSend ? primsNumToSend : m_objectPropertiesToSend.Count;
+                        int count = m_objectPropertiesToSend.Count > primsNumToSend
+                                        ? primsNumToSend
+                                        : m_objectPropertiesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
+                            ISceneChildEntity entity = ((ISceneChildEntity) m_objectPropertiesToSend[0]);
                             /*if (m_PropertiesInPacketQueue.Contains (entity.UUID))
                             {
                                 m_objectPropertiesToSend.RemoveAt (0);
@@ -682,33 +685,35 @@ namespace OpenSim.Region.Framework.Scenes
                                 continue;
                             }
                             m_PropertiesInPacketQueue.Add (entity.UUID);*/
-                            m_objectPropertiesToSend.RemoveAt (0);
-                            entities.Add (entity);
+                            m_objectPropertiesToSend.RemoveAt(0);
+                            entities.Add(entity);
                         }
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[SceneViewer]: Exception while running presence loop: {0}", ex.ToString ());
+                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
                     }
                 }
             }
             if (entities.Count > 0)
             {
                 primsNumToSend -= entities.Count;
-                m_presence.ControllingClient.SendObjectPropertiesReply (entities);
+                m_presence.ControllingClient.SendObjectPropertiesReply(entities);
             }
 
-            updates = new List<EntityUpdate> ();
+            updates = new List<EntityUpdate>();
             lock (m_objectUpdatesToSendLock)
             {
                 if (m_objectUpdatesToSend.Count != 0)
                 {
                     try
                     {
-                        int count = m_objectUpdatesToSend.Count > primsNumToSend ? primsNumToSend : m_objectUpdatesToSend.Count;
+                        int count = m_objectUpdatesToSend.Count > primsNumToSend
+                                        ? primsNumToSend
+                                        : m_objectUpdatesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
+                            EntityUpdate update = ((EntityUpdate) m_objectUpdatesToSend[0]);
                             /*if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
                             {
                                 m_objectUpdatesToSend.RemoveAt (0);
@@ -720,15 +725,15 @@ namespace OpenSim.Region.Framework.Scenes
                             //Fix the CRC for this update
                             //Increment the CRC code so that the client won't be sent a cached update for this
                             if (update.Flags != PrimUpdateFlags.PrimFlags)
-                                ((ISceneChildEntity)update.Entity).CRC++;
+                                ((ISceneChildEntity) update.Entity).CRC++;
 
-                            updates.Add (update);
-                            m_objectUpdatesToSend.RemoveAt (0);
+                            updates.Add(update);
+                            m_objectUpdatesToSend.RemoveAt(0);
                         }
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[SceneViewer]: Exception while running object loop: {0}", ex.ToString ());
+                        m_log.WarnFormat("[SceneViewer]: Exception while running object loop: {0}", ex);
                     }
                     m_presence.ControllingClient.SendPrimUpdate(updates);
                 }
@@ -736,9 +741,12 @@ namespace OpenSim.Region.Framework.Scenes
 
 
             //Add the time to the stats tracker
-            IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_presence.Scene.RequestModuleInterface<IMonitorModule> ().GetMonitor (m_presence.Scene.RegionInfo.RegionID.ToString (), MonitorModuleHelper.AgentUpdateCount);
+            IAgentUpdateMonitor reporter =
+                (IAgentUpdateMonitor)
+                m_presence.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor(
+                    m_presence.Scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
             if (reporter != null)
-                reporter.AddAgentTime (Util.EnvironmentTickCountSubtract (AgentMS));
+                reporter.AddAgentTime(Util.EnvironmentTickCountSubtract(AgentMS));
 
             m_inUse = false;
         }
@@ -746,7 +754,8 @@ namespace OpenSim.Region.Framework.Scenes
         private void SendInitialObjects()
         {
             //If they are not in this region, we check to make sure that we allow seeing into neighbors
-            if (!m_presence.IsChildAgent || (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && m_prioritizer != null)
+            if (!m_presence.IsChildAgent ||
+                (m_presence.Scene.RegionInfo.SeeIntoThisSimFromNeighbor) && m_prioritizer != null)
             {
                 try
                 {
@@ -756,24 +765,9 @@ namespace OpenSim.Region.Framework.Scenes
                     HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
                     // build a prioritized list of things we need to send
                     int time = Util.EnvironmentTickCount();
-                    foreach (ISceneEntity e in allEntities)
+                    foreach (ISceneEntity e in from e in allEntities where e != null && e is SceneObjectGroup where !e.IsDeleted where !lastGrpsInView.Contains(e) where m_culler != null where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
                     {
-                        if (e != null && e is SceneObjectGroup)
-                        {
-                            if (e.IsDeleted)
-                                continue;
-
-                            if (lastGrpsInView.Contains(e))
-                                continue;
-
-                            //Check for culling here!
-                            if (m_culler != null)
-                            {
-                                if (!m_culler.ShowEntityToClient(m_presence, e, m_scene, time))
-                                    continue;
-                                NewGrpsInView.Add(e);
-                            }
-                        }
+                        NewGrpsInView.Add(e);
                     }
                     //Merge the last seen lists
                     lastGrpsInView.UnionWith(NewGrpsInView);
@@ -785,7 +779,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[SceneViewer]: Exception occured in sending initial prims, " + ex.ToString());
+                    m_log.Warn("[SceneViewer]: Exception occured in sending initial prims, " + ex);
                     //An exception occured, don't fail to send all the prims to the client
                     m_SentInitialObjects = false;
                 }
@@ -793,9 +787,9 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Once the packet has been sent, allow newer updates to be sent for the given entity
+        ///   Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name = "ID"></param>
         public void FinishedEntityPacketSend(IEnumerable<EntityUpdate> updates)
         {
             /*foreach (EntityUpdate update in updates)
@@ -805,9 +799,9 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Once the packet has been sent, allow newer updates to be sent for the given entity
+        ///   Once the packet has been sent, allow newer updates to be sent for the given entity
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name = "ID"></param>
         public void FinishedPropertyPacketSend(IEnumerable<IEntity> updates)
         {
             /*foreach (IEntity update in updates)
@@ -817,9 +811,9 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Once the packet has been sent, allow newer animations to be sent for the given entity
+        ///   Once the packet has been sent, allow newer animations to be sent for the given entity
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name = "ID"></param>
         public void FinishedAnimationPacketSend(AnimationGroup update)
         {
             //m_AnimationsInPacketQueue.Remove(update.AvatarID);
@@ -834,30 +828,27 @@ namespace OpenSim.Region.Framework.Scenes
             sortableList.Sort(sortPriority);
             lock (m_objectUpdatesToSendLock)
             {
-                for (int i = 0; i < sortableList.Count; i++)
+                foreach (ISceneEntity t in sortableList)
                 {
-                    EntityUpdate update = new EntityUpdate(sortableList[i].RootChild, PrimUpdateFlags.ForcedFullUpdate);
+                    EntityUpdate update = new EntityUpdate(t.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     QueueEntityUpdate(update);
-                    foreach (ISceneChildEntity child in sortableList[i].ChildrenEntities())
+                    foreach (ISceneChildEntity child in t.ChildrenEntities().Where(child => !child.IsRoot))
                     {
-                        if (!child.IsRoot)
-                        {
-                            update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                            QueueEntityUpdate(update);
-                        }
+                        update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                        QueueEntityUpdate(update);
                     }
                 }
             }
 
-            m_lastUpdatePos = (m_presence.IsChildAgent) ?
-                m_presence.AbsolutePosition :
-                m_presence.CameraPosition;
+            m_lastUpdatePos = (m_presence.IsChildAgent)
+                                  ? m_presence.AbsolutePosition
+                                  : m_presence.CameraPosition;
         }
 
         private int sortPriority(ISceneEntity a, ISceneEntity b)
         {
-            int prioA = (int)m_prioritizer.GetUpdatePriority(m_presence, a);
-            int prioB = (int)m_prioritizer.GetUpdatePriority(m_presence, b);
+            int prioA = (int) m_prioritizer.GetUpdatePriority(m_presence, a);
+            int prioB = (int) m_prioritizer.GetUpdatePriority(m_presence, b);
             return prioB.CompareTo(prioA);
         }
 
@@ -868,24 +859,24 @@ namespace OpenSim.Region.Framework.Scenes
         #region Reset and Close
 
         /// <summary>
-        /// The client has left this region and went into a child region
+        ///   The client has left this region and went into a child region
         /// </summary>
-        public void Reset ()
+        public void Reset()
         {
-            if(m_culler == null)
+            if (m_culler == null)
                 return;
             //Don't reset the prim... the client is just in a child region now, we don't want to resent them all the prims
             //Reset the culler so that it doesn't cache too much
-            m_culler.Reset ();
+            m_culler.Reset();
             //Gotta remove this so that if the client comes back, we don't have any issues with sending them another update
-            lock(m_lastPresencesInViewLock)
-                lastPresencesDInView.Remove (m_presence.UUID);
+            lock (m_lastPresencesInViewLock)
+                lastPresencesDInView.Remove(m_presence.UUID);
         }
 
         /// <summary>
-        /// Reset all lists that have to deal with what updates the viewer has
+        ///   Reset all lists that have to deal with what updates the viewer has
         /// </summary>
-        public void Close ()
+        public void Close()
         {
             if (m_presence == null)
                 return;
@@ -894,15 +885,17 @@ namespace OpenSim.Region.Framework.Scenes
             m_culler = null;
             m_inUse = false;
             m_queueing = false;
-            lock(m_objectUpdatesToSendLock)
-                m_objectUpdatesToSend.Clear ();
-            lock(m_presenceUpdatesToSendLock)
-                m_presenceUpdatesToSend.Clear ();
+            lock (m_objectUpdatesToSendLock)
+                m_objectUpdatesToSend.Clear();
+            lock (m_presenceUpdatesToSendLock)
+                m_presenceUpdatesToSend.Clear();
             m_presence.OnSignificantClientMovement -= SignificantClientMovement;
             m_presence.Scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
             m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
-            m_presence.Scene.AuroraEventManager.UnregisterEventHandler ("DrawDistanceChanged", AuroraEventManager_OnGenericEvent);
-            m_presence.Scene.AuroraEventManager.UnregisterEventHandler ("SignficantCameraMovement", AuroraEventManager_OnGenericEvent);
+            m_presence.Scene.AuroraEventManager.UnregisterEventHandler("DrawDistanceChanged",
+                                                                       AuroraEventManager_OnGenericEvent);
+            m_presence.Scene.AuroraEventManager.UnregisterEventHandler("SignficantCameraMovement",
+                                                                       AuroraEventManager_OnGenericEvent);
             m_presence = null;
         }
 

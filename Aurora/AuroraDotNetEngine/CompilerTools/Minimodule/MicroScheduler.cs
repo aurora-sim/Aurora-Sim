@@ -28,22 +28,22 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using log4net;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    public class MicroScheduler : System.MarshalByRefObject, IMicrothreader 
+    public class MicroScheduler : MarshalByRefObject, IMicrothreader
     {
         private readonly List<IEnumerator> m_threads = new List<IEnumerator>();
+
+        #region IMicrothreader Members
 
         public void Run(IEnumerable microthread)
         {
             lock (m_threads)
                 m_threads.Add(microthread.GetEnumerator());
         }
+
+        #endregion
 
         public void Tick(int count)
         {

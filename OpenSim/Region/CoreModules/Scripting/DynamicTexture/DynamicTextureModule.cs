@@ -29,15 +29,14 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Reflection;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using log4net;
-using System.Reflection;
-using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 {
@@ -48,14 +47,20 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         private const int ALL_SIDES = -1;
 
         public const int DISP_EXPIRE = 1;
-        public const int DISP_TEMP   = 2;
+        public const int DISP_TEMP = 2;
 
-        private Dictionary<UUID, IScene> RegisteredScenes = new Dictionary<UUID, IScene> ();
+        private readonly Dictionary<UUID, IScene> RegisteredScenes = new Dictionary<UUID, IScene>();
 
-        private Dictionary<string, IDynamicTextureRender> RenderPlugins =
+        private readonly Dictionary<string, IDynamicTextureRender> RenderPlugins =
             new Dictionary<string, IDynamicTextureRender>();
 
-        private Dictionary<UUID, DynamicTextureUpdater> Updaters = new Dictionary<UUID, DynamicTextureUpdater>();
+        private readonly Dictionary<UUID, DynamicTextureUpdater> Updaters =
+            new Dictionary<UUID, DynamicTextureUpdater>();
+
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
 
         #region IDynamicTextureManager Members
 
@@ -68,10 +73,10 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         }
 
         /// <summary>
-        /// Called by code which actually renders the dynamic texture to supply texture data.
+        ///   Called by code which actually renders the dynamic texture to supply texture data.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="data"></param>
+        /// <param name = "id"></param>
+        /// <param name = "data"></param>
         public void ReturnData(UUID id, byte[] data)
         {
             DynamicTextureUpdater updater = null;
@@ -108,36 +113,39 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         public UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url,
                                          string extraParams, int updateTimer)
         {
-            return AddDynamicTextureURL(simID, primID, oldAssetID, contentType, url, extraParams, updateTimer, false, 255);
+            return AddDynamicTextureURL(simID, primID, oldAssetID, contentType, url, extraParams, updateTimer, false,
+                                        255);
         }
 
         public UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url,
                                          string extraParams, int updateTimer, bool SetBlending, byte AlphaValue)
         {
             return AddDynamicTextureURL(simID, primID, oldAssetID, contentType, url,
-                                          extraParams, updateTimer, SetBlending, 
-                                         (int)(DISP_TEMP|DISP_EXPIRE), AlphaValue, ALL_SIDES);
+                                        extraParams, updateTimer, SetBlending,
+                                        (DISP_TEMP | DISP_EXPIRE), AlphaValue, ALL_SIDES);
         }
 
         public UUID AddDynamicTextureURL(UUID simID, UUID primID, UUID oldAssetID, string contentType, string url,
-                                         string extraParams, int updateTimer, bool SetBlending, 
+                                         string extraParams, int updateTimer, bool SetBlending,
                                          int disp, byte AlphaValue, int face)
         {
             if (RenderPlugins.ContainsKey(contentType))
             {
-                DynamicTextureUpdater updater = new DynamicTextureUpdater();
-                updater.SimUUID = simID;
-                updater.PrimID = primID;
-                updater.ContentType = contentType;
-                updater.Url = url;
-                updater.UpdateTimer = updateTimer;
-                updater.UpdaterID = UUID.Random();
-                updater.Params = extraParams;
-                updater.BlendWithOldTexture = SetBlending;
-                updater.FrontAlpha = AlphaValue;
-                updater.Face = face;
-                updater.Disp = disp;
-                updater.LastAssetID = oldAssetID;
+                DynamicTextureUpdater updater = new DynamicTextureUpdater
+                                                    {
+                                                        SimUUID = simID,
+                                                        PrimID = primID,
+                                                        ContentType = contentType,
+                                                        Url = url,
+                                                        UpdateTimer = updateTimer,
+                                                        UpdaterID = UUID.Random(),
+                                                        Params = extraParams,
+                                                        BlendWithOldTexture = SetBlending,
+                                                        FrontAlpha = AlphaValue,
+                                                        Face = face,
+                                                        Disp = disp,
+                                                        LastAssetID = oldAssetID
+                                                    };
 
                 lock (Updaters)
                 {
@@ -156,35 +164,40 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         public UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
                                           string extraParams, int updateTimer)
         {
-            return AddDynamicTextureData(simID, primID, oldAssetID, contentType, data, extraParams, updateTimer, false, 255);
+            return AddDynamicTextureData(simID, primID, oldAssetID, contentType, data, extraParams, updateTimer, false,
+                                         255);
         }
 
         public UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
                                           string extraParams, int updateTimer, bool SetBlending, byte AlphaValue)
         {
-            return AddDynamicTextureData(simID, primID, oldAssetID, contentType, data, extraParams, updateTimer, SetBlending, 
-                                          (int) (DISP_TEMP|DISP_EXPIRE), AlphaValue, ALL_SIDES);
+            return AddDynamicTextureData(simID, primID, oldAssetID, contentType, data, extraParams, updateTimer,
+                                         SetBlending,
+                                         (DISP_TEMP | DISP_EXPIRE), AlphaValue, ALL_SIDES);
         }
 
         public UUID AddDynamicTextureData(UUID simID, UUID primID, UUID oldAssetID, string contentType, string data,
-                                          string extraParams, int updateTimer, bool SetBlending, int disp, byte AlphaValue, int face)
+                                          string extraParams, int updateTimer, bool SetBlending, int disp,
+                                          byte AlphaValue, int face)
         {
             if (RenderPlugins.ContainsKey(contentType))
             {
-                DynamicTextureUpdater updater = new DynamicTextureUpdater();
-                updater.SimUUID = simID;
-                updater.PrimID = primID;
-                updater.ContentType = contentType;
-                updater.BodyData = data;
-                updater.UpdateTimer = updateTimer;
-                updater.UpdaterID = UUID.Random();
-                updater.Params = extraParams;
-                updater.BlendWithOldTexture = SetBlending;
-                updater.FrontAlpha = AlphaValue;
-                updater.Face = face;
-                updater.Url = "Local image";
-                updater.Disp = disp;
-                updater.LastAssetID = oldAssetID;
+                DynamicTextureUpdater updater = new DynamicTextureUpdater
+                                                    {
+                                                        SimUUID = simID,
+                                                        PrimID = primID,
+                                                        ContentType = contentType,
+                                                        BodyData = data,
+                                                        UpdateTimer = updateTimer,
+                                                        UpdaterID = UUID.Random(),
+                                                        Params = extraParams,
+                                                        BlendWithOldTexture = SetBlending,
+                                                        FrontAlpha = AlphaValue,
+                                                        Face = face,
+                                                        Url = "Local image",
+                                                        Disp = disp,
+                                                        LastAssetID = oldAssetID
+                                                    };
 
                 lock (Updaters)
                 {
@@ -213,13 +226,13 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 
         #endregion
 
-        #region IRegionModule Members
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -228,14 +241,12 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
@@ -256,11 +267,6 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             get { return "DynamicTextureModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #endregion
 
         #region Nested type: DynamicTextureUpdater
@@ -269,19 +275,19 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
         {
             private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-            public bool BlendWithOldTexture = false;
+            public bool BlendWithOldTexture;
             public string BodyData;
             public string ContentType;
+            public int Disp;
+            public int Face;
             public byte FrontAlpha = 255;
             public UUID LastAssetID = UUID.Zero;
             public string Params;
             public UUID PrimID;
-            public bool SetNewFrontAlpha = false;
+            public bool SetNewFrontAlpha;
             public UUID SimUUID;
-            public UUID UpdaterID;
             public int UpdateTimer;
-            public int Face;
-            public int Disp;
+            public UUID UpdaterID;
             public string Url;
 
             public DynamicTextureUpdater()
@@ -291,26 +297,26 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             }
 
             /// <summary>
-            /// Called once new texture data has been received for this updater.
+            ///   Called once new texture data has been received for this updater.
             /// </summary>
-            public void DataReceived (byte[] data, IScene scene)
+            public void DataReceived(byte[] data, IScene scene)
             {
-                ISceneChildEntity part = scene.GetSceneObjectPart (PrimID);
+                ISceneChildEntity part = scene.GetSceneObjectPart(PrimID);
 
                 if (part == null || data == null || data.Length <= 1)
                 {
-                    string msg = 
+                    string msg =
                         String.Format("DynamicTextureModule: Error preparing image using URL {0}", Url);
                     IChatModule chatModule = scene.RequestModuleInterface<IChatModule>();
                     if (chatModule != null)
-                        chatModule.SimChat(msg, ChatTypeEnum.Say, 0, 
-                            part.ParentEntity.AbsolutePosition, part.Name, part.UUID, false, scene);
+                        chatModule.SimChat(msg, ChatTypeEnum.Say, 0,
+                                           part.ParentEntity.AbsolutePosition, part.Name, part.UUID, false, scene);
                     return;
                 }
 
                 byte[] assetData = null;
                 AssetBase oldAsset = null;
-                
+
                 if (BlendWithOldTexture)
                 {
                     Primitive.TextureEntryFace defaultFace = part.Shape.Textures.DefaultTexture;
@@ -349,12 +355,11 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 }
                 else
                 {
-
                     // Create a new asset for user
-                    asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000), AssetType.Texture,
-                        scene.RegionInfo.RegionID);
-                    asset.Data = assetData;
-                    asset.Description = String.Format("URL image : {0}", Url);
+                    asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000),
+                                          AssetType.Texture,
+                                          scene.RegionInfo.RegionID)
+                                {Data = assetData, Description = String.Format("URL image : {0}", Url)};
                     if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temperary;
                     asset.ID = scene.AssetService.Store(asset);
                 }
@@ -376,7 +381,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 
                     // remove the old asset from the cache
                     oldID = tmptex.DefaultTexture.TextureID;
-                    
+
                     if (Face == ALL_SIDES)
                     {
                         tmptex.DefaultTexture.TextureID = asset.ID;
@@ -385,7 +390,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     {
                         try
                         {
-                            Primitive.TextureEntryFace texface = tmptex.CreateFace((uint)Face);
+                            Primitive.TextureEntryFace texface = tmptex.CreateFace((uint) Face);
                             texface.TextureID = asset.ID;
                             tmptex.FaceTextures[Face] = texface;
                         }
@@ -415,15 +420,16 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 }
             }
 
-            private byte[] BlendTextures (byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha, IScene scene)
+            private byte[] BlendTextures(byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha,
+                                         IScene scene)
             {
-                Image image = scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage(frontImage);
+                Image image = scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(frontImage);
 
                 if (image != null)
                 {
                     Bitmap image1 = new Bitmap(image);
 
-                    image = scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (backImage);
+                    image = scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(backImage);
                     if (image != null)
                     {
                         Bitmap image2 = new Bitmap(image);

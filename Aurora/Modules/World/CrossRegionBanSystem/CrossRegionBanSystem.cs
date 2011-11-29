@@ -26,35 +26,30 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
-using OpenSim.Framework.Servers.HttpServer;
-using Nini.Config;
-using Aurora.Framework;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using Aurora.Simulation.Base;
-using log4net;
-using OpenSim.Services.Interfaces;
+using Nini.Config;
 using OpenMetaverse;
-using Aurora.DataManager;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Region.Framework.Interfaces;
+using log4net;
 
 namespace Aurora.Modules
 {
     public class CrossRegionBanSystem : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly List<IScene> m_scenes = new List<IScene>();
         public string OurGetPassword = "";
-        private List<IScene> m_scenes = new List<IScene> ();
         private IConfigSource m_config;
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -65,17 +60,17 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scenes.Add(scene);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scenes.Remove(scene);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             //Set up the incoming handler
             MainServer.Instance.AddStreamHandler(new CRBSIncoming(this));
@@ -122,9 +117,11 @@ namespace Aurora.Modules
             get { return null; }
         }
 
+        #endregion
+
         public bool AskForeignServerForBans(string URL, string password)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["Password"] = password;
 
@@ -135,8 +132,8 @@ namespace Aurora.Modules
             try
             {
                 string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        URL + "/crbs",
-                        reqString);
+                                                                         URL + "/crbs",
+                                                                         reqString);
 
                 if (reply != string.Empty)
                 {
@@ -149,7 +146,8 @@ namespace Aurora.Modules
 
                         if (replyData["result"].ToString() == "WrongPassword")
                         {
-                            m_log.Warn("[CRBS]: Unable to connect successfully to " + URL + ", the foreign password was incorrect.");
+                            m_log.Warn("[CRBS]: Unable to connect successfully to " + URL +
+                                       ", the foreign password was incorrect.");
                             return false;
                         }
 
@@ -171,7 +169,7 @@ namespace Aurora.Modules
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[CRBS]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[CRBS]: Exception when contacting server: {0}", e);
             }
             return false;
         }
@@ -180,30 +178,32 @@ namespace Aurora.Modules
         {
             foreach (object f in replyData)
             {
-                KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                KeyValuePair<string, object> value = (KeyValuePair<string, object>) f;
                 if (value.Value is Dictionary<string, object>)
                 {
                     Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
                     foreach (object banUUID in valuevalue.Values)
                     {
-                        UUID BanID = (UUID)banUUID;
+                        UUID BanID = (UUID) banUUID;
                         foreach (IScene scene in m_scenes)
                         {
                             bool found = false;
-                            foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
+                            foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans.Where(ban => ban.BannedUserID == BanID))
                             {
-                                if (ban.BannedUserID == BanID)
-                                    found = true;
+                                found = true;
                             }
                             if (!found)
                             {
-                                scene.RegionInfo.EstateSettings.EstateBans[scene.RegionInfo.EstateSettings.EstateBans.Length] = 
-                                    new EstateBan(){
-                                        BannedUserID = BanID,
-                                        BannedHostAddress = "",
-                                        BannedHostIPMask = "",
-                                        BannedHostNameMask = "",
-                                        EstateID = scene.RegionInfo.EstateSettings.EstateID};
+                                scene.RegionInfo.EstateSettings.EstateBans[
+                                    scene.RegionInfo.EstateSettings.EstateBans.Length] =
+                                    new EstateBan
+                                        {
+                                            BannedUserID = BanID,
+                                            BannedHostAddress = "",
+                                            BannedHostIPMask = "",
+                                            BannedHostNameMask = "",
+                                            EstateID = scene.RegionInfo.EstateSettings.EstateID
+                                        };
                             }
                         }
                     }
@@ -220,16 +220,10 @@ namespace Aurora.Modules
         {
             Dictionary<string, object> Bans = new Dictionary<string, object>();
             int i = 0;
-            foreach (IScene scene in m_scenes)
+            foreach (EstateBan ban in from scene in m_scenes from ban in scene.RegionInfo.EstateSettings.EstateBans where !Bans.ContainsValue(ban.BannedUserID) select ban)
             {
-                foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
-                {
-                    if (!Bans.ContainsValue(ban.BannedUserID))
-                    {
-                        Bans.Add(ConvertDecString(i), ban.BannedUserID);
-                        i++;
-                    }
-                }
+                Bans.Add(ConvertDecString(i), ban.BannedUserID);
+                i++;
             }
             result["Bans"] = Bans;
             return result;
@@ -239,23 +233,23 @@ namespace Aurora.Modules
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             string retVal = string.Empty;
             double value = Convert.ToDouble(dvalue);
             do
             {
-                double remainder = value - (26 * Math.Truncate(value / 26));
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-                value = Math.Truncate(value / 26);
-            }
-            while (value > 0);
+                double remainder = value - (26*Math.Truncate(value/26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
+                value = Math.Truncate(value/26);
+            } while (value > 0);
             return retVal;
         }
     }
+
     public class CRBSIncoming : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private CrossRegionBanSystem CRBS;
+        private readonly CrossRegionBanSystem CRBS;
 
         public CRBSIncoming(CrossRegionBanSystem crbs) :
             base("POST", "/crbs")
@@ -264,7 +258,7 @@ namespace Aurora.Modules
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -275,7 +269,7 @@ namespace Aurora.Modules
             try
             {
                 Dictionary<string, object> request =
-                        WebUtils.ParseXmlResponse(body);
+                    WebUtils.ParseXmlResponse(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -286,7 +280,6 @@ namespace Aurora.Modules
                 {
                     case "getbans":
                         return NewConnection(request);
-
                 }
                 m_log.DebugFormat("[IWCConnector]: unknown method {0} request {1}", method.Length, method);
             }
@@ -296,19 +289,17 @@ namespace Aurora.Modules
             }
 
             return FailureResult();
-
         }
 
         /// <summary>
-        /// This deals with incoming requests to add this server to their map.
-        /// This refuses or successfully allows the foreign server to interact with
-        /// this region.
+        ///   This deals with incoming requests to add this server to their map.
+        ///   This refuses or successfully allows the foreign server to interact with
+        ///   this region.
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name = "request"></param>
         /// <returns></returns>
         private byte[] NewConnection(Dictionary<string, object> request)
         {
-
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             if (result["Password"].ToString() != CRBS.OurGetPassword)
@@ -339,12 +330,12 @@ namespace Aurora.Modules
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -366,12 +357,12 @@ namespace Aurora.Modules
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -391,8 +382,7 @@ namespace Aurora.Modules
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 

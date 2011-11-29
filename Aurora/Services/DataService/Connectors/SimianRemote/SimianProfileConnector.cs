@@ -25,24 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
-using System.Reflection;
-using Nini.Config;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-
 namespace Aurora.Services.DataService
 {
     /*public class SimianProfileConnector : IProfileConnector

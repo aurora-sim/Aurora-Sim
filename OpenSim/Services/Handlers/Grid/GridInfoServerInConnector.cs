@@ -25,15 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using log4net;
-using OpenMetaverse;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Simulation.Base;
 
 namespace OpenSim.Services
 {
@@ -43,6 +38,8 @@ namespace OpenSim.Services
         {
             get { return GetType().Name; }
         }
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -55,16 +52,20 @@ namespace OpenSim.Services
                 return;
 
             handlerConfig = config.Configs["GridInfoService"];
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("GridInfoInHandlerPort", 0));
+            IHttpServer server =
+                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
+                    (uint) handlerConfig.GetInt("GridInfoInHandlerPort", 0));
             GridInfoHandlers handlers = new GridInfoHandlers(config);
 
             server.AddStreamHandler(new RestStreamHandler("GET", "/get_grid_info",
-                                                               handlers.RestGetGridInfoMethod));
+                                                          handlers.RestGetGridInfoMethod));
             server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
         }
 
         public void FinishedStartup()
         {
         }
+
+        #endregion
     }
 }

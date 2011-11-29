@@ -28,28 +28,23 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting;
-using System.Runtime.Remoting.Lifetime;
 using System.Threading;
-using System.Xml;
-using log4net;
+using System.Timers;
+using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using OpenSim.Services.Interfaces;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
+using log4net;
+using Timer = System.Timers.Timer;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -58,68 +53,88 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         #region Declares
 
+        #region Delegates
+
+        public delegate void ObjectRemoved(UUID ObjectID);
+
+        public delegate void ScriptRemoved(UUID ItemID);
+
+        #endregion
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static ScriptProtectionModule ScriptProtection;
+
+        private readonly List<IScene> m_Scenes = new List<IScene>();
+
+        // Handles and queues incoming events from OpenSim
+
+        // Handles loading/unloading of scripts into AppDomains
+        public AppDomainManager AppDomainManager;
+        public AssemblyResolver AssemblyResolver;
+        public bool ChatCompileErrorsToDebugChannel = true;
+
+        //The compiler for all scripts
+        public Compiler Compiler;
+        public bool DisplayErrorsOnConsole = true;
+        public EventManager EventManager;
+        public bool FirstStartup = true;
+
+        //This deals with all state saving for scripts
+
+        //Handles the queues
+        public MaintenanceThread MaintenanceThread;
+
+        //Handles script errors
+
+        public bool RunScriptsInAttachments;
+        public IConfig ScriptConfigSource;
+
+        /// <summary>
+        ///   Script events per second, used by stats
+        /// </summary>
+        public int ScriptEPS;
+
+        /// <summary>
+        ///   Path to the script binaries.
+        /// </summary>
+        public string ScriptEnginesPath = "ScriptEngines";
+
+        /// <summary>
+        ///   Errors of scripts that have failed in this run of the Maintenance Thread
+        /// </summary>
+        public string ScriptErrorMessages = "";
+
+        public ScriptErrorReporter ScriptErrorReporter;
+
+        /// <summary>
+        ///   Number of scripts that have failed in this run of the Maintenance Thread
+        /// </summary>
+        public int ScriptFailCount;
+
+        public bool ShowWarnings;
+        public ScriptStateSave StateSave;
+        public Timer UpdateLeasesTimer;
+        private IScriptApi[] m_APIs = new IScriptApi[0];
+        private IConfigSource m_ConfigSource;
+        private IXmlRpcRouter m_XmlRpcRouter;
+
+        private bool m_consoleDisabled;
+        private bool m_disabled;
+        private bool m_enabled;
 
         public List<IScene> Worlds
         {
             get { return m_Scenes; }
         }
 
-        private List<IScene> m_Scenes = new List<IScene> ();
-
-        // Handles and queues incoming events from OpenSim
-        public EventManager EventManager;
-
-        // Handles loading/unloading of scripts into AppDomains
-        public AppDomainManager AppDomainManager;
-
-        //The compiler for all scripts
-        public Compiler Compiler;
-
-        //This deals with all state saving for scripts
-        public ScriptStateSave StateSave;
-        
-        //Handles the queues
-        public MaintenanceThread MaintenanceThread;
-
-        //Handles script errors
-        public ScriptErrorReporter ScriptErrorReporter;
-
-        //Handles checking of threat levels and if scripts have been compiled before
-        public static ScriptProtectionModule ScriptProtection;
-
-        public AssemblyResolver AssemblyResolver;
-
-        private IConfigSource m_ConfigSource;
-
-        public IConfig ScriptConfigSource;
-
-        private bool m_enabled = false;
-        
-        public bool RunScriptsInAttachments = false;
-        
-        public bool DisplayErrorsOnConsole = true;
-
-        public bool ChatCompileErrorsToDebugChannel = true;
-
-        public bool ShowWarnings = false;
-
-        private bool m_consoleDisabled = false;
-        private bool m_disabled = false;
-
         /// <summary>
-        /// Script events per second, used by stats
-        /// </summary>
-        public int ScriptEPS = 0;
-
-        /// <summary>
-        /// Disabled from the command line, takes presidence over normal Disabled
+        ///   Disabled from the command line, takes presidence over normal Disabled
         /// </summary>
         public bool ConsoleDisabled
         {
             get { return m_consoleDisabled; }
-            set 
-            { 
+            set
+            {
                 m_consoleDisabled = value;
                 if (!value)
                 {
@@ -127,12 +142,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     MaintenanceThread.PokeThreads(UUID.Zero);
                 }
                 else
-                    MaintenanceThread.DisableThreads ();
+                    MaintenanceThread.DisableThreads();
             }
         }
 
         /// <summary>
-        /// Temperary disable by things like OAR loading so that we don't kill loading
+        ///   Temperary disable by things like OAR loading so that we don't kill loading
         /// </summary>
         public bool Disabled
         {
@@ -146,30 +161,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     MaintenanceThread.PokeThreads(UUID.Zero);
                 }
                 else
-                    MaintenanceThread.DisableThreads ();
+                    MaintenanceThread.DisableThreads();
             }
         }
-
-        private IXmlRpcRouter m_XmlRpcRouter;
-
-        public bool FirstStartup = true;
-
-        /// <summary>
-        /// Number of scripts that have failed in this run of the Maintenance Thread
-        /// </summary>
-        public int ScriptFailCount = 0;
-
-        /// <summary>
-        /// Errors of scripts that have failed in this run of the Maintenance Thread
-        /// </summary>
-        public string ScriptErrorMessages = "";
-
-        private IScriptApi[] m_APIs = new IScriptApi[0];
-
-        /// <summary>
-        /// Path to the script binaries.
-        /// </summary>
-        public string ScriptEnginesPath = "ScriptEngines";
 
         public IConfig Config
         {
@@ -185,17 +179,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             get { return "AuroraDotNetEngine"; }
         }
-        
+
         public IScriptModule ScriptModule
         {
             get { return this; }
         }
-        
-        public System.Timers.Timer UpdateLeasesTimer = null;
-
-        public delegate void ScriptRemoved(UUID ItemID);
-
-        public delegate void ObjectRemoved(UUID ObjectID);
 
         public event ScriptRemoved OnScriptRemoved;
 
@@ -204,19 +192,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #endregion
 
         #region Constructor and Shutdown
-        
+
         public void Shutdown()
         {
             // We are shutting down
             foreach (ScriptData ID in ScriptProtection.GetAllScripts())
             {
-                ID.CloseAndDispose (true);
+                ID.CloseAndDispose(true);
             }
         }
 
         #endregion
 
         #region ISharedRegionModule
+
+        private int AmountOfStartupsLeft;
 
         public void Initialise(IConfigSource config)
         {
@@ -231,12 +221,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptEnginesPath = ScriptConfigSource.GetString("PathToLoadScriptsFrom", ScriptEnginesPath);
             ShowWarnings = ScriptConfigSource.GetBoolean("ShowWarnings", ShowWarnings);
             DisplayErrorsOnConsole = ScriptConfigSource.GetBoolean("DisplayErrorsOnConsole", DisplayErrorsOnConsole);
-            ChatCompileErrorsToDebugChannel = ScriptConfigSource.GetBoolean("ChatCompileErrorsToDebugChannel", ChatCompileErrorsToDebugChannel);
+            ChatCompileErrorsToDebugChannel = ScriptConfigSource.GetBoolean("ChatCompileErrorsToDebugChannel",
+                                                                            ChatCompileErrorsToDebugChannel);
 
             if (Compiler != null)
                 Compiler.ReadConfig();
 
-            if(ScriptProtection != null)
+            if (ScriptProtection != null)
                 ScriptProtection.Initialize(this, Config);
         }
 
@@ -244,7 +235,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -254,39 +245,46 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (MainConsole.Instance != null)
                 {
-                    MainConsole.Instance.Commands.AddCommand ("ADNE restart", "ADNE restart", "Restarts all scripts and clears all script caches", AuroraDotNetRestart);
-                    MainConsole.Instance.Commands.AddCommand ("ADNE stop", "ADNE stop", "Stops all scripts", AuroraDotNetStop);
-                    MainConsole.Instance.Commands.AddCommand ("ADNE stats", "ADNE stats", "Tells stats about the script engine", AuroraDotNetStats);
-                    MainConsole.Instance.Commands.AddCommand ("ADNE disable", "ADNE disable", "Disables the script engine temperarily", AuroraDotNetDisable);
-                    MainConsole.Instance.Commands.AddCommand ("ADNE enable", "ADNE enable", "Reenables the script engine", AuroraDotNetEnable);
+                    MainConsole.Instance.Commands.AddCommand("ADNE restart", "ADNE restart",
+                                                             "Restarts all scripts and clears all script caches",
+                                                             AuroraDotNetRestart);
+                    MainConsole.Instance.Commands.AddCommand("ADNE stop", "ADNE stop", "Stops all scripts",
+                                                             AuroraDotNetStop);
+                    MainConsole.Instance.Commands.AddCommand("ADNE stats", "ADNE stats",
+                                                             "Tells stats about the script engine", AuroraDotNetStats);
+                    MainConsole.Instance.Commands.AddCommand("ADNE disable", "ADNE disable",
+                                                             "Disables the script engine temperarily",
+                                                             AuroraDotNetDisable);
+                    MainConsole.Instance.Commands.AddCommand("ADNE enable", "ADNE enable", "Reenables the script engine",
+                                                             AuroraDotNetEnable);
                 }
 
                 // Create all objects we'll be using
                 ScriptProtection = new ScriptProtectionModule(this, Config);
                 ScriptProtection.Initialize(this, Config);
 
-                EventManager = new EventManager (this);
+                EventManager = new EventManager(this);
 
-                Compiler = new Compiler (this);
+                Compiler = new Compiler(this);
 
-                AppDomainManager = new AppDomainManager (this);
+                AppDomainManager = new AppDomainManager(this);
 
-                ScriptErrorReporter = new ScriptErrorReporter (Config);
+                ScriptErrorReporter = new ScriptErrorReporter(Config);
 
-                AssemblyResolver = new AssemblyResolver (ScriptEnginesPath);
+                AssemblyResolver = new AssemblyResolver(ScriptEnginesPath);
             }
 
             FirstStartup = false;
 
-            scene.StackModuleInterface<IScriptModule> (this);
+            scene.StackModuleInterface<IScriptModule>(this);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             if (!m_enabled)
                 return;
 
-            m_Scenes.Add (scene);
+            m_Scenes.Add(scene);
 
             //Must come AFTER the script plugins setup! Otherwise you'll get weird errors from the plugins
             if (MaintenanceThread == null)
@@ -302,16 +300,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
 
                 //Only needs created once
-                MaintenanceThread = new MaintenanceThread (this);
+                MaintenanceThread = new MaintenanceThread(this);
 
-                StateSave = new ScriptStateSave ();
-                StateSave.Initialize (this);
+                StateSave = new ScriptStateSave();
+                StateSave.Initialize(this);
 
                 FindDefaultLSLScript();
             }
 
-            AddRegionToScriptModules (scene);
-            StateSave.AddScene (scene);
+            AddRegionToScriptModules(scene);
+            StateSave.AddScene(scene);
 
             scene.EventManager.OnStartupComplete += EventManager_OnStartupComplete;
             EventManager.HookUpRegionEvents(scene);
@@ -322,13 +320,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             scene.EventManager.OnRemoveScript += StopScript;
 
-            UpdateLeasesTimer = new System.Timers.Timer(9.5 * 1000 * 60 /*9.5 minutes*/);
-            UpdateLeasesTimer.Enabled = true;
+            UpdateLeasesTimer = new Timer(9.5*1000*60 /*9.5 minutes*/) {Enabled = true};
             UpdateLeasesTimer.Elapsed += UpdateAllLeases;
             UpdateLeasesTimer.Start();
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -358,9 +355,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
         }
 
-        private int AmountOfStartupsLeft = 0;
-
-        void EventManager_OnStartupComplete(IScene scene, List<string> data)
+        private void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             AmountOfStartupsLeft++;
             SceneManager m = scene.RequestModuleInterface<SceneManager>();
@@ -375,14 +370,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Client Events
 
-        void EventManager_OnNewClient(IClientAPI client)
+        private void EventManager_OnNewClient(IClientAPI client)
         {
             client.OnScriptReset += ProcessScriptReset;
             client.OnGetScriptRunning += OnGetScriptRunning;
             client.OnSetScriptRunning += SetScriptRunning;
         }
 
-        void EventManager_OnClosingClient(IClientAPI client)
+        private void EventManager_OnClosingClient(IClientAPI client)
         {
             client.OnScriptReset -= ProcessScriptReset;
             client.OnGetScriptRunning -= OnGetScriptRunning;
@@ -392,6 +387,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #endregion
 
         #region Console Commands
+
+        public void StopAllScripts()
+        {
+            foreach (ScriptData ID in ScriptProtection.GetAllScripts())
+            {
+                ID.CloseAndDispose(true);
+            }
+        }
 
         private void FindDefaultLSLScript()
         {
@@ -409,79 +412,80 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (File.Exists(Dir))
             {
                 string defaultScript = File.ReadAllText(Dir);
-                foreach (IScene scene in m_Scenes)
+                foreach (ILLClientInventory inventoryModule in m_Scenes.Select(scene => scene.RequestModuleInterface<ILLClientInventory>()).Where(inventoryModule => inventoryModule != null))
                 {
-                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
-                    if (inventoryModule != null)
-                        inventoryModule.DefaultLSLScript = defaultScript;
+                    inventoryModule.DefaultLSLScript = defaultScript;
                 }
             }
         }
 
-        protected void AuroraDotNetRestart (string[] cmdparams)
+        protected void AuroraDotNetRestart(string[] cmdparams)
         {
-            string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)", "no");
-            if (go.Equals ("yes", StringComparison.CurrentCultureIgnoreCase))
+            string go =
+                MainConsole.Instance.CmdPrompt(
+                    "Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)",
+                    "no");
+            if (go.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
             {
                 //Clear out all of the data on the threads that we have just to make sure everything is all clean
-                this.MaintenanceThread.DisableThreads ();
+                this.MaintenanceThread.DisableThreads();
                 this.MaintenanceThread.PokeThreads(UUID.Zero);
-                ScriptData[] scripts = ScriptProtection.GetAllScripts ();
-                ScriptProtection.Reset (true);
+                ScriptData[] scripts = ScriptProtection.GetAllScripts();
+                ScriptProtection.Reset(true);
                 foreach (ScriptData ID in scripts)
                 {
-                    ID.CloseAndDispose (false); //We don't want to backup
+                    ID.CloseAndDispose(false); //We don't want to backup
                     //Remove the state save
-                    StateSave.DeleteFrom (ID);
+                    StateSave.DeleteFrom(ID);
                 }
 
-                ScriptProtection.Reset (true);
+                ScriptProtection.Reset(true);
                 //Delete all assemblies
-                Compiler.RecreateDirectory ();
-                List<LUStruct> scriptsToStart = new List<LUStruct>();
-                foreach (ScriptData ID in scripts)
-                {
-                    scriptsToStart.Add(new LUStruct() { Action = LUType.Load, ID = ID });
-                }
-                MaintenanceThread.StartScripts(scriptsToStart.ToArray());
-                m_log.Warn ("[ADNE]: All scripts have been restarted.");
+                Compiler.RecreateDirectory();
+                MaintenanceThread.StartScripts(scripts.Select(ID => new LUStruct {Action = LUType.Load, ID = ID}).ToArray());
+                m_log.Warn("[ADNE]: All scripts have been restarted.");
             }
             else
             {
-                m_log.Info ("Not restarting all scripts");
+                m_log.Info("Not restarting all scripts");
             }
         }
 
-        protected void AuroraDotNetStop (string[] cmdparams)
+        protected void AuroraDotNetStop(string[] cmdparams)
         {
-            string go = MainConsole.Instance.CmdPrompt ("Are you sure you want to stop all scripts?", "no");
-            if (go.Contains ("yes") || go.Contains ("Yes"))
+            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
+            if (go.Contains("yes") || go.Contains("Yes"))
             {
-                StopAllScripts ();
-                m_log.Warn ("[ADNE]: All scripts have been stopped.");
+                StopAllScripts();
+                m_log.Warn("[ADNE]: All scripts have been stopped.");
             }
             else
             {
-                m_log.Info ("Not restarting all scripts");
+                m_log.Info("Not restarting all scripts");
             }
         }
 
-        protected void AuroraDotNetStats (string[] cmdparams)
+        protected void AuroraDotNetStats(string[] cmdparams)
         {
-            m_log.Info ("Aurora DotNet Script Engine Stats:"
-                    + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
-                    + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel ().ToString ()
-                    + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts ().Length
-                    + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
-                    + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
-                    + "\nNumber Script Event threads: " + (MaintenanceThread.scriptThreadpool == null ? 0 : MaintenanceThread.scriptThreadpool.nthreads).ToString ()
-                    + "/" + (MaintenanceThread.scriptThreadpool == null ? 0 : MaintenanceThread.scriptThreadpool.nSleepingthreads).ToString ());
+            m_log.Info("Aurora DotNet Script Engine Stats:"
+                       + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
+                       + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel()
+                       + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
+                       + "\nNumber of app domains: " + AppDomainManager.NumberOfAppDomains
+                       + "\nPermission level of app domains: " + AppDomainManager.PermissionLevel
+                       + "\nNumber Script Event threads: " +
+                       (MaintenanceThread.scriptThreadpool == null ? 0 : MaintenanceThread.scriptThreadpool.nthreads).
+                           ToString()
+                       + "/" +
+                       (MaintenanceThread.scriptThreadpool == null
+                            ? 0
+                            : MaintenanceThread.scriptThreadpool.nSleepingthreads).ToString());
         }
 
-        protected void AuroraDotNetDisable (string[] cmdparams)
+        protected void AuroraDotNetDisable(string[] cmdparams)
         {
             ConsoleDisabled = true;
-            m_log.Warn ("[ADNE]: ADNE has been disabled.");
+            m_log.Warn("[ADNE]: ADNE has been disabled.");
         }
 
         protected void AuroraDotNetEnable(string[] cmdparams)
@@ -491,23 +495,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_log.Warn("[ADNE]: ADNE has been enabled.");
         }
 
-        public void StopAllScripts()
-        {
-            foreach (ScriptData ID in ScriptProtection.GetAllScripts())
-            {
-                ID.CloseAndDispose (true);
-            }
-        }
-
         #endregion
 
         #region Update Leases [Unused]
 
-        public void UpdateAllLeases(object sender, System.Timers.ElapsedEventArgs e)
+        public void UpdateAllLeases(object sender, ElapsedEventArgs e)
         {
             foreach (ScriptData script in ScriptProtection.GetAllScripts())
             {
-                if (script.Running == false || script.Disabled == true || script.Script == null)
+                if (script.Running == false || script.Disabled || script.Script == null)
                     return;
 
                 try
@@ -531,54 +527,57 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (ID == null || !ID.Running)
                 return false;
             return AddToScriptQueue(ID,
-                    p.EventName, p.DetectParams, priority, p.Params);
+                                    p.EventName, p.DetectParams, priority, p.Params);
         }
 
         public bool PostScriptEvent(UUID itemID, UUID primID, string name, Object[] p)
         {
             Object[] lsl_p = new Object[p.Length];
-            for (int i = 0; i < p.Length ; i++)
+            for (int i = 0; i < p.Length; i++)
             {
                 if (p[i] is int)
-                    lsl_p[i] = new LSL_Types.LSLInteger((int)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLInteger((int) p[i]);
                 else if (p[i] is UUID)
                     lsl_p[i] = new LSL_Types.LSLString(UUID.Parse(p[i].ToString()).ToString());
                 else if (p[i] is string)
-                    lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLString((string) p[i]);
                 else if (p[i] is Vector3)
-                    lsl_p[i] = new LSL_Types.Vector3(((Vector3)p[i]).X, ((Vector3)p[i]).Y, ((Vector3)p[i]).Z);
+                    lsl_p[i] = new LSL_Types.Vector3(((Vector3) p[i]).X, ((Vector3) p[i]).Y, ((Vector3) p[i]).Z);
                 else if (p[i] is Quaternion)
-                    lsl_p[i] = new LSL_Types.Quaternion(((Quaternion)p[i]).X, ((Quaternion)p[i]).Y, ((Quaternion)p[i]).Z, ((Quaternion)p[i]).W);
+                    lsl_p[i] = new LSL_Types.Quaternion(((Quaternion) p[i]).X, ((Quaternion) p[i]).Y,
+                                                        ((Quaternion) p[i]).Z, ((Quaternion) p[i]).W);
                 else if (p[i] is float)
-                    lsl_p[i] = new LSL_Types.LSLFloat((float)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLFloat((float) p[i]);
                 else
                     lsl_p[i] = p[i];
             }
 
-            return PostScriptEvent(itemID, primID, new EventParams(name, lsl_p, new DetectParams[0]), EventPriority.FirstStart);
+            return PostScriptEvent(itemID, primID, new EventParams(name, lsl_p, new DetectParams[0]),
+                                   EventPriority.FirstStart);
         }
 
         public bool PostObjectEvent(UUID primID, string name, Object[] p)
         {
             Object[] lsl_p = new Object[p.Length];
-            for (int i = 0; i < p.Length ; i++)
+            for (int i = 0; i < p.Length; i++)
             {
                 if (p[i] is int)
-                    lsl_p[i] = new LSL_Types.LSLInteger((int)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLInteger((int) p[i]);
                 else if (p[i] is UUID)
                     lsl_p[i] = new LSL_Types.LSLString(UUID.Parse(p[i].ToString()).ToString());
                 else if (p[i] is string)
-                    lsl_p[i] = new LSL_Types.LSLString((string)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLString((string) p[i]);
                 else if (p[i] is Vector3)
-                    lsl_p[i] = new LSL_Types.Vector3(((Vector3)p[i]).X, ((Vector3)p[i]).Y, ((Vector3)p[i]).Z);
+                    lsl_p[i] = new LSL_Types.Vector3(((Vector3) p[i]).X, ((Vector3) p[i]).Y, ((Vector3) p[i]).Z);
                 else if (p[i] is Quaternion)
-                    lsl_p[i] = new LSL_Types.Quaternion(((Quaternion)p[i]).X, ((Quaternion)p[i]).Y, ((Quaternion)p[i]).Z, ((Quaternion)p[i]).W);
+                    lsl_p[i] = new LSL_Types.Quaternion(((Quaternion) p[i]).X, ((Quaternion) p[i]).Y,
+                                                        ((Quaternion) p[i]).Z, ((Quaternion) p[i]).W);
                 else if (p[i] is float)
-                    lsl_p[i] = new LSL_Types.LSLFloat((float)p[i]);
+                    lsl_p[i] = new LSL_Types.LSLFloat((float) p[i]);
                 else if (p[i] is Changed)
                 {
-                    Changed c = (Changed)p[i];
-                    lsl_p[i] = new LSL_Types.LSLInteger((int)c);
+                    Changed c = (Changed) p[i];
+                    lsl_p[i] = new LSL_Types.LSLInteger((int) c);
                 }
                 else
                     lsl_p[i] = p[i];
@@ -587,13 +586,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return AddToObjectQueue(primID, name, new DetectParams[0], lsl_p);
         }
 
+        public DetectParams GetDetectParams(UUID primID, UUID itemID, int number)
+        {
+            ScriptData id = ScriptProtection.GetScript(primID, itemID);
+
+            if (id == null)
+                return null;
+
+            DetectParams[] det = id.LastDetectParams;
+
+            if (det == null || number < 0 || number >= det.Length)
+                return null;
+
+            return det[number];
+        }
+
         /// <summary>
-        /// Posts event to all objects in the group.
+        ///   Posts event to all objects in the group.
         /// </summary>
-        /// <param name="localID">Region object ID</param>
-        /// <param name="FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
-        /// <param name="VersionID">Version ID of the script. Note: If it is -1, the version ID will be detected automatically</param>
-        /// <param name="param">Array of parameters to match event mask</param>
+        /// <param name = "localID">Region object ID</param>
+        /// <param name = "FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
+        /// <param name = "VersionID">Version ID of the script. Note: If it is -1, the version ID will be detected automatically</param>
+        /// <param name = "param">Array of parameters to match event mask</param>
         public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, params object[] param)
         {
             // Determine all scripts in Object and add to their queue
@@ -612,48 +626,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        /// Posts the event to the given object.
+        ///   Posts the event to the given object.
         /// </summary>
-        /// <param name="ID"></param>
-        /// <param name="FunctionName"></param>
-        /// <param name="qParams"></param>
-        /// <param name="param"></param>
+        /// <param name = "ID"></param>
+        /// <param name = "FunctionName"></param>
+        /// <param name = "qParams"></param>
+        /// <param name = "param"></param>
         /// <returns></returns>
-        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority, params object[] param)
+        public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority,
+                                     params object[] param)
         {
             // Create a structure and add data
-            QueueItemStruct QIS = new QueueItemStruct();
-            QIS.ID = ID;
-            QIS.EventsProcData = new ScriptEventsProcData ();
-            QIS.functionName = FunctionName;
-            QIS.llDetectParams = qParams;
-            QIS.param = param;
-            QIS.VersionID = Interlocked.Read(ref ID.VersionID);
-            QIS.State = ID.State;
+            QueueItemStruct QIS = new QueueItemStruct
+                                      {
+                                          ID = ID,
+                                          EventsProcData = new ScriptEventsProcData(),
+                                          functionName = FunctionName,
+                                          llDetectParams = qParams,
+                                          param = param,
+                                          VersionID = Interlocked.Read(ref ID.VersionID),
+                                          State = ID.State
+                                      };
 
             MaintenanceThread.AddEvent(QIS, priority);
             return true;
         }
 
-        public DetectParams GetDetectParams(UUID primID, UUID itemID, int number)
-        {
-            ScriptData id = ScriptProtection.GetScript(primID, itemID);
-
-            if (id == null)
-                return null;
-
-            DetectParams[] det = id.LastDetectParams;
-
-            if (det == null || number < 0 || number >= det.Length)
-                return null;
-
-            return det[number];
-        }
-
         #endregion
-        
+
         #region Get/Set Start Parameter and Min Event Delay
-        
+
         public int GetStartParameter(UUID itemID, UUID primID)
         {
             ScriptData id = ScriptProtection.GetScript(primID, itemID);
@@ -667,16 +669,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public void SetMinEventDelay(UUID itemID, UUID primID, double delay)
         {
             ScriptData ID = ScriptProtection.GetScript(primID, itemID);
-            if(ID == null)
+            if (ID == null)
             {
-                m_log.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.",ScriptEngineName,itemID.ToString());
+                m_log.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.", ScriptEngineName,
+                                  itemID.ToString());
                 return;
             }
             if (delay > 0.001)
-                ID.EventDelayTicks = (long)delay;
+                ID.EventDelayTicks = (long) delay;
             else
                 ID.EventDelayTicks = 0;
-            ID.EventDelayTicks = (long)(delay * 10000000L);
+            ID.EventDelayTicks = (long) (delay*10000000L);
         }
 
         #endregion
@@ -712,69 +715,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 id.Running = state;
         }
 
-        public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
-        {
-            ISceneChildEntity part = findPrim (objectID);
-            if (part == null)
-                return;
-            
-            if (running)
-                OnStartScript(part.LocalId, itemID);
-            else
-                OnStopScript(part.LocalId, itemID);
-        }
-
         /// <summary>
-        /// Get the total number of active (running) scripts on the object or avatar
+        ///   Get the total number of active (running) scripts on the object or avatar
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name = "obj"></param>
         /// <returns></returns>
-        public int GetActiveScripts (IEntity obj)
+        public int GetActiveScripts(IEntity obj)
         {
             int activeScripts = 0;
             if (obj is IScenePresence)
             {
                 //Get all the scripts in the attachments and run through the loop
-                IAttachmentsModule attModule = (obj as IScenePresence).Scene.RequestModuleInterface<IAttachmentsModule>();
+                IAttachmentsModule attModule =
+                    (obj as IScenePresence).Scene.RequestModuleInterface<IAttachmentsModule>();
                 if (attModule != null)
                 {
-                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (obj.UUID);
-                    foreach (ISceneEntity grp in attachments)
-                    {
-                        activeScripts += GetActiveScripts(grp);
-                    }
+                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
+                    activeScripts += attachments.Sum(grp => GetActiveScripts(grp));
                 }
             }
             else //Ask the protection module how many Scripts there are
             {
                 ScriptData[] scripts = ScriptProtection.GetScripts(obj.UUID);
-                foreach (ScriptData script in scripts)
-                {
-                    if (script.Running) activeScripts++;
-                }
+                activeScripts += scripts.Count(script => script.Running);
             }
             return activeScripts;
         }
 
         /// <summary>
-        /// Get the total (running and non-running) scripts on the object or avatar
+        ///   Get the total (running and non-running) scripts on the object or avatar
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name = "obj"></param>
         /// <returns></returns>
-        public int GetTotalScripts (IEntity obj)
+        public int GetTotalScripts(IEntity obj)
         {
             int totalScripts = 0;
             if (obj is IScenePresence)
             {
                 //Get all the scripts in the attachments
-                IAttachmentsModule attModule = ((IScenePresence)obj).Scene.RequestModuleInterface<IAttachmentsModule> ();
+                IAttachmentsModule attModule = ((IScenePresence) obj).Scene.RequestModuleInterface<IAttachmentsModule>();
                 if (attModule != null)
                 {
-                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (obj.UUID);
-                    foreach (ISceneEntity grp in attachments)
-                    {
-                        totalScripts += GetTotalScripts(grp);
-                    }
+                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
+                    totalScripts += attachments.Sum(grp => GetTotalScripts(grp));
                 }
             }
             else //Ask the protection module how many Scripts there are
@@ -782,9 +765,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return totalScripts;
         }
 
-        public int GetScriptTime (UUID itemID)
+        public int GetScriptTime(UUID itemID)
         {
             return ScriptProtection.GetScript(itemID).ScriptScore;
+        }
+
+        public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)
+        {
+            ISceneChildEntity part = findPrim(objectID);
+            if (part == null)
+                return;
+
+            if (running)
+                OnStartScript(part.LocalId, itemID);
+            else
+                OnStopScript(part.LocalId, itemID);
         }
 
         #endregion
@@ -799,14 +794,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             ID.Reset();
 
-            if(EndEvent)
+            if (EndEvent)
                 throw new EventAbortException();
         }
 
         public void ProcessScriptReset(IClientAPI remoteClient, UUID objectID,
-                UUID itemID)
+                                       UUID itemID)
         {
-            ISceneChildEntity part = findPrim (objectID);
+            ISceneChildEntity part = findPrim(objectID);
             if (part == null)
                 return;
 
@@ -819,9 +814,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ID.Reset();
             }
         }
+
         #endregion
 
         #region Start/End/Suspend Scripts
+
+        /// <summary>
+        ///   Not from the client, only from other parts of the simulator
+        /// </summary>
+        /// <param name = "itemID"></param>
+        public void SuspendScript(UUID itemID)
+        {
+            ScriptData ID = ScriptProtection.GetScript(itemID);
+            if (ID != null)
+                ID.Suspended = true;
+        }
+
+        /// <summary>
+        ///   Not from the client, only from other parts of the simulator
+        /// </summary>
+        /// <param name = "itemID"></param>
+        public void ResumeScript(UUID itemID)
+        {
+            ScriptData ID = ScriptProtection.GetScript(itemID);
+            if (ID != null)
+                ID.Suspended = false;
+        }
 
         public void OnStartScript(uint localID, UUID itemID)
         {
@@ -830,7 +848,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             id.Running = true;
-            id.Suspended = false;//Set this too, it gets stuck sometimes...
+            id.Suspended = false; //Set this too, it gets stuck sometimes...
             id.Part.SetScriptEvents(itemID, id.Script.GetStateEventFlags(id.State));
             id.Part.ScheduleUpdate(PrimUpdateFlags.FindBest);
         }
@@ -847,45 +865,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         public void OnGetScriptRunning(IClientAPI controllingClient,
-                UUID objectID, UUID itemID)
+                                       UUID objectID, UUID itemID)
         {
             ScriptData id = ScriptProtection.GetScript(objectID, itemID);
             if (id == null)
-                return;        
+                return;
 
             IEventQueueService eq = id.World.RequestModuleInterface<IEventQueueService>();
             if (eq == null)
             {
                 controllingClient.SendScriptRunningReply(objectID, itemID,
-                        id.Running);
+                                                         id.Running);
             }
             else
             {
                 eq.ScriptRunningReply(objectID, itemID, id.Running, true,
-                           controllingClient.AgentId, controllingClient.Scene.RegionInfo.RegionHandle);
+                                      controllingClient.AgentId, controllingClient.Scene.RegionInfo.RegionHandle);
             }
-        }
-
-        /// <summary>
-        /// Not from the client, only from other parts of the simulator
-        /// </summary>
-        /// <param name="itemID"></param>
-        public void SuspendScript(UUID itemID)
-        {
-            ScriptData ID = ScriptProtection.GetScript(itemID);
-            if (ID != null)
-                ID.Suspended = true;
-        }
-
-        /// <summary>
-        /// Not from the client, only from other parts of the simulator
-        /// </summary>
-        /// <param name="itemID"></param>
-        public void ResumeScript(UUID itemID)
-        {
-            ScriptData ID = ScriptProtection.GetScript(itemID);
-            if (ID != null)
-                ID.Suspended = false;
         }
 
         #endregion
@@ -901,61 +897,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Starting, Updating, and Stopping scripts
 
-        /// <summary>
-        /// Fetches, loads and hooks up a script to an objects events
-        /// </summary>
-        /// <param name="itemID"></param>
-        /// <param name="localID"></param>
-        public LUStruct StartScript(ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez, StateSource statesource, UUID RezzedFrom)
-        {
-            ScriptData id = ScriptProtection.GetScript(part.UUID, itemID);
-            
-            LUStruct ls = new LUStruct();
-            //Its a change of the script source, needs to be recompiled and such.
-            if (id != null)
-            {
-                //Ignore prims that have crossed regions, they are already started and working
-                if ((statesource & StateSource.PrimCrossing) != 0)
-                {
-                    //Post the changed event though
-                    AddToScriptQueue(id, "changed", new DetectParams[0], EventPriority.FirstStart, new Object[] { new LSL_Types.LSLInteger(512) });
-                    return new LUStruct() { Action = LUType.Unknown };
-                }
-                else
-                {
-                    //Restart other scripts
-                    ls.Action = LUType.Load;
-                }
-                id.EventDelayTicks = 0;
-                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(id.Source);
-            }
-            else
-                ls.Action = LUType.Load;
-            if (id == null)
-                id = new ScriptData(this);
-            id.ItemID = itemID;
-            id.PostOnRez = postOnRez;
-            id.StartParam = startParam;
-            id.stateSource = statesource;
-            id.Part = part;
-            id.World = part.ParentEntity.Scene;
-            id.RezzedFrom = RezzedFrom;
-            ls.ID = id;
-            //WE MUST ADD THIS HERE, even though it hasn't compiled yet... 
-            //we need to add it so that if things go trying to add events before it fully compiles, we don't fail completely
-            ScriptEngine.ScriptProtection.AddNewScript (id);
-            return ls;
-        }
-
-        public void UpdateScript (UUID partID, UUID itemID, string script, int startParam, bool postOnRez, StateSource stateSource)
+        public void UpdateScript(UUID partID, UUID itemID, string script, int startParam, bool postOnRez,
+                                 StateSource stateSource)
         {
             ScriptData id = ScriptProtection.GetScript(partID, itemID);
             LUStruct ls = new LUStruct();
             //Its a change of the script source, needs to be recompiled and such.
             if (id == null)
             {
-                MaintenanceThread.AddScriptChange (new LUStruct[1]{ StartScript (findPrim (partID), itemID, startParam, postOnRez,
-                    stateSource, UUID.Zero) }, LoadPriority.Restart);
+                MaintenanceThread.AddScriptChange(new LUStruct[1]
+                                                      {
+                                                          StartScript(findPrim(partID), itemID, startParam, postOnRez,
+                                                                      stateSource, UUID.Zero)
+                                                      }, LoadPriority.Restart);
                 return;
             }
             ls.Action = LUType.Reupload;
@@ -971,24 +925,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //No SOP, no compile.
             if (id.Part == null)
             {
-                m_log.ErrorFormat("[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script", ScriptEngineName, partID);
+                m_log.ErrorFormat(
+                    "[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script",
+                    ScriptEngineName, partID);
                 return;
             }
             id.World = id.Part.ParentEntity.Scene;
             ls.ID = id;
-            MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Restart);
-        }
-
-        public void SaveStateSaves (UUID PrimID)
-        {
-            ScriptData[] ids = ScriptProtection.GetScripts (PrimID);
-            if (ids == null)
-                return;
-            foreach (ScriptData id in ids)
-            {
-                StateSave.SaveStateTo (id, false);
-
-            }
+            MaintenanceThread.AddScriptChange(new[] {ls}, LoadPriority.Restart);
         }
 
         public void SaveStateSave(UUID ItemID, UUID PrimID)
@@ -996,45 +940,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData id = ScriptProtection.GetScript(PrimID, ItemID);
             if (id == null)
                 return;
-            StateSave.SaveStateTo (id);
+            StateSave.SaveStateTo(id);
         }
 
-        public void SaveStateSaves ()
+        public void SaveStateSaves()
         {
-            foreach (ScriptData id in ScriptProtection.GetAllScripts ())
+            foreach (ScriptData id in ScriptProtection.GetAllScripts())
             {
                 if (id == null)
                     return;
-                StateSave.SaveStateTo (id, true, false);
+                StateSave.SaveStateTo(id, true, false);
             }
-        }
-
-        /// <summary>
-        /// Disables and unloads a script
-        /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="itemID"></param>
-        public void StopScript(uint localID, UUID itemID)
-        {
-            ScriptData data = ScriptProtection.GetScript(itemID);
-            if (data == null)
-                return;
-
-            LUStruct ls = new LUStruct();
-
-            ls.ID = data;
-            ls.Action = LUType.Unload;
-
-            MaintenanceThread.AddScriptChange(new LUStruct[] { ls }, LoadPriority.Stop);
-
-            //Disconnect from other modules
-            ObjectRemoved handlerObjectRemoved = OnObjectRemoved;
-            if (handlerObjectRemoved != null)
-                handlerObjectRemoved(ls.ID.Part.UUID);
-
-            ScriptRemoved handlerScriptRemoved = OnScriptRemoved;
-            if (handlerScriptRemoved != null)
-                handlerScriptRemoved(itemID);
         }
 
         public void UpdateScriptToNewObject(UUID olditemID, TaskInventoryItem newItem, SceneObjectPart newPart)
@@ -1052,13 +968,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ScriptControllers SC = new ScriptControllers();
                     if (presence != null)
                     {
-                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
+                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule>();
                         if (m != null)
                         {
-                            SC = m.GetScriptControler (SD.ItemID);
+                            SC = m.GetScriptControler(SD.ItemID);
                             if ((newItem.PermsMask & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) != 0)
                             {
-                                m.UnRegisterControlEventsToScript (SD.Part.LocalId, SD.ItemID);
+                                m.UnRegisterControlEventsToScript(SD.Part.LocalId, SD.ItemID);
                             }
                         }
                     }
@@ -1088,19 +1004,104 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     {
                         SC.itemID = newItem.ItemID;
                         SC.part = SD.Part;
-                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule> ();
+                        IScriptControllerModule m = presence.RequestModuleInterface<IScriptControllerModule>();
                         if (m != null)
                             m.RegisterScriptController(SC);
                     }
 
                     ScriptProtection.AddNewScript(SD);
 
-                    StateSave.SaveStateTo (SD, true);
+                    StateSave.SaveStateTo(SD, true);
                 }
             }
             catch
             {
             }
+        }
+
+        /// <summary>
+        ///   Fetches, loads and hooks up a script to an objects events
+        /// </summary>
+        /// <param name = "itemID"></param>
+        /// <param name = "localID"></param>
+        public LUStruct StartScript(ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez,
+                                    StateSource statesource, UUID RezzedFrom)
+        {
+            ScriptData id = ScriptProtection.GetScript(part.UUID, itemID);
+
+            LUStruct ls = new LUStruct();
+            //Its a change of the script source, needs to be recompiled and such.
+            if (id != null)
+            {
+                //Ignore prims that have crossed regions, they are already started and working
+                if ((statesource & StateSource.PrimCrossing) != 0)
+                {
+                    //Post the changed event though
+                    AddToScriptQueue(id, "changed", new DetectParams[0], EventPriority.FirstStart,
+                                     new Object[] {new LSL_Types.LSLInteger(512)});
+                    return new LUStruct {Action = LUType.Unknown};
+                }
+                else
+                {
+                    //Restart other scripts
+                    ls.Action = LUType.Load;
+                }
+                id.EventDelayTicks = 0;
+                ScriptProtection.RemovePreviouslyCompiled(id.Source);
+            }
+            else
+                ls.Action = LUType.Load;
+            if (id == null)
+                id = new ScriptData(this);
+            id.ItemID = itemID;
+            id.PostOnRez = postOnRez;
+            id.StartParam = startParam;
+            id.stateSource = statesource;
+            id.Part = part;
+            id.World = part.ParentEntity.Scene;
+            id.RezzedFrom = RezzedFrom;
+            ls.ID = id;
+            //WE MUST ADD THIS HERE, even though it hasn't compiled yet... 
+            //we need to add it so that if things go trying to add events before it fully compiles, we don't fail completely
+            ScriptProtection.AddNewScript(id);
+            return ls;
+        }
+
+        public void SaveStateSaves(UUID PrimID)
+        {
+            ScriptData[] ids = ScriptProtection.GetScripts(PrimID);
+            if (ids == null)
+                return;
+            foreach (ScriptData id in ids)
+            {
+                StateSave.SaveStateTo(id, false);
+            }
+        }
+
+        /// <summary>
+        ///   Disables and unloads a script
+        /// </summary>
+        /// <param name = "localID"></param>
+        /// <param name = "itemID"></param>
+        public void StopScript(uint localID, UUID itemID)
+        {
+            ScriptData data = ScriptProtection.GetScript(itemID);
+            if (data == null)
+                return;
+
+            LUStruct ls = new LUStruct {ID = data, Action = LUType.Unload};
+
+
+            MaintenanceThread.AddScriptChange(new[] {ls}, LoadPriority.Stop);
+
+            //Disconnect from other modules
+            ObjectRemoved handlerObjectRemoved = OnObjectRemoved;
+            if (handlerObjectRemoved != null)
+                handlerObjectRemoved(ls.ID.Part.UUID);
+
+            ScriptRemoved handlerScriptRemoved = OnScriptRemoved;
+            if (handlerScriptRemoved != null)
+                handlerScriptRemoved(itemID);
         }
 
         #endregion
@@ -1114,7 +1115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return "Could not find script.";
             else
             {
-                string script = OpenMetaverse.Utils.BytesToString(asset.Data);
+                string script = Utils.BytesToString(asset.Data);
                 try
                 {
                     Compiler.PerformInMemoryScriptCompile(script, itemID);
@@ -1128,11 +1129,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 if (Compiler.GetErrors().Length != 0)
                 {
-                    string error = "Error compiling script: ";
-                    foreach (string comperror in Compiler.GetErrors())
-                    {
-                        error += comperror;
-                    }
+                    string error = Compiler.GetErrors().Aggregate("Error compiling script: ", (current, comperror) => current + comperror);
                     error += ".";
                     return error;
                 }
@@ -1144,6 +1141,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region API Manager
 
+        private static Dictionary<string, IScriptApi> m_apiFunctionNamesCache = new Dictionary<string, IScriptApi>();
+
         public IScriptApi GetApi(UUID itemID, string name)
         {
             ScriptData id = ScriptProtection.GetScript(itemID);
@@ -1153,19 +1152,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return id.Apis[name];
         }
 
+        public List<string> GetAllFunctionNames()
+        {
+            List<string> FunctionNames = new List<string>();
+
+            IScriptApi[] apis = GetAPIs();
+            foreach (IScriptApi api in apis)
+            {
+                FunctionNames.AddRange(GetFunctionNames(api));
+            }
+
+            return FunctionNames;
+        }
+
         public IScriptApi[] GetAPIs()
         {
             if (m_APIs.Length == 0)
             {
                 m_APIs = AuroraModuleLoader.PickupModules<IScriptApi>().ToArray();
-                List<IScriptApi> internalApis = new List<IScriptApi>();
                 //Only add Apis that are considered safe
-                foreach (IScriptApi api in m_APIs)
-                {
-                    if (ScriptProtection.CheckAPI(api.Name))
-                        internalApis.Add(api);
-                }
-                m_APIs = internalApis.ToArray();
+                m_APIs = m_APIs.Where(api => ScriptProtection.CheckAPI(api.Name)).ToArray();
             }
             IScriptApi[] apis = new IScriptApi[m_APIs.Length];
             int i = 0;
@@ -1177,33 +1183,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return apis;
         }
 
-        public List<string> GetAllFunctionNames ()
-        {
-            List<string> FunctionNames = new List<string> ();
-
-            IScriptApi[] apis = GetAPIs ();
-            foreach (IScriptApi api in apis)
-            {
-                FunctionNames.AddRange (GetFunctionNames (api));
-            }
-
-            return FunctionNames;
-        }
-
-        private static Dictionary<string, IScriptApi> m_apiFunctionNamesCache = new Dictionary<string, IScriptApi> ();
-        public Dictionary<string, IScriptApi> GetAllFunctionNamesAPIs ()
+        public Dictionary<string, IScriptApi> GetAllFunctionNamesAPIs()
         {
             if (m_apiFunctionNamesCache.Count > 0)
                 return m_apiFunctionNamesCache;
-            Dictionary<string, IScriptApi> FunctionNames = new Dictionary<string, IScriptApi> ();
+            Dictionary<string, IScriptApi> FunctionNames = new Dictionary<string, IScriptApi>();
 
-            IScriptApi[] apis = m_APIs.Length == 0 ? GetAPIs () : m_APIs;
+            IScriptApi[] apis = m_APIs.Length == 0 ? GetAPIs() : m_APIs;
             foreach (IScriptApi api in apis)
             {
-                foreach (string functionName in GetFunctionNames (api))
-                {   
-                    if(!FunctionNames.ContainsKey(functionName))
-                        FunctionNames.Add(functionName, api);
+                foreach (string functionName in GetFunctionNames(api).Where(functionName => !FunctionNames.ContainsKey(functionName)))
+                {
+                    FunctionNames.Add(functionName, api);
                 }
             }
             m_apiFunctionNamesCache = FunctionNames;
@@ -1212,13 +1203,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public List<string> GetFunctionNames(IScriptApi api)
         {
-            List<string> FunctionNames = new List<string>();
             MemberInfo[] members = api.GetType().GetMembers();
-            foreach (MemberInfo member in members)
-            {
-                if (member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase))
-                    FunctionNames.Add(member.Name);
-            }
+            List<string> FunctionNames = (from member in members where member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase) select member.Name).ToList();
             members = null;
             return FunctionNames;
         }
@@ -1227,36 +1213,39 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Script Plugin Manager
 
-        private List<IScriptPlugin> ScriptPlugins = new List<IScriptPlugin>();
+        private readonly List<IScriptPlugin> ScriptPlugins = new List<IScriptPlugin>();
 
         public IScriptPlugin GetScriptPlugin(string Name)
         {
-            foreach (IScriptPlugin plugin in ScriptPlugins)
-            {
-                if (plugin.Name == Name)
-                    return plugin;
-            }
-            return null;
+            return ScriptPlugins.FirstOrDefault(plugin => plugin.Name == Name);
         }
 
         /// <summary>
-        /// Starts all non shared script plugins
+        ///   Make sure that the threads are running
         /// </summary>
-        /// <param name="scene"></param>
-        private void AddRegionToScriptModules (IScene scene)
+        public void PokeThreads(UUID itemID)
+        {
+            MaintenanceThread.PokeThreads(itemID);
+        }
+
+        /// <summary>
+        ///   Starts all non shared script plugins
+        /// </summary>
+        /// <param name = "scene"></param>
+        private void AddRegionToScriptModules(IScene scene)
         {
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                plugin.AddRegion (scene);
+                plugin.AddRegion(scene);
             }
         }
 
         /// <summary>
-        /// Starts all shared script plugins
+        ///   Starts all shared script plugins
         /// </summary>
         public void StartSharedScriptPlugins()
         {
-            List<IScriptPlugin> sharedPlugins = AuroraModuleLoader.PickupModules<IScriptPlugin> ();
+            List<IScriptPlugin> sharedPlugins = AuroraModuleLoader.PickupModules<IScriptPlugin>();
             foreach (IScriptPlugin plugin in sharedPlugins)
             {
                 plugin.Initialize(this);
@@ -1270,102 +1259,88 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
                 if (didAnything)
-                    plugin.Check ();
+                    plugin.Check();
                 else
-                    didAnything = plugin.Check ();
+                    didAnything = plugin.Check();
             }
             return didAnything;
         }
 
         /// <summary>
-        /// Removes a script from all Script Plugins
+        ///   Removes a script from all Script Plugins
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="itemID"></param>
+        /// <param name = "localID"></param>
+        /// <param name = "itemID"></param>
         public void RemoveScriptFromPlugins(UUID primID, UUID itemID)
         {
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
-                plugin.RemoveScript (primID, itemID);
+                plugin.RemoveScript(primID, itemID);
             }
         }
 
-        public OSDMap GetSerializationData (UUID itemID, UUID primID)
+        public OSDMap GetSerializationData(UUID itemID, UUID primID)
         {
-            OSDMap data = new OSDMap ();
+            OSDMap data = new OSDMap();
 
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
                 try
                 {
-                    data.Add (plugin.Name, plugin.GetSerializationData (itemID, primID));
+                    data.Add(plugin.Name, plugin.GetSerializationData(itemID, primID));
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn ("[" + Name + "]: Error attempting to get serialization data, " + ex.ToString ());
+                    m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex);
                 }
             }
 
             return data;
         }
 
-        public void CreateFromData (UUID primID,
-                UUID itemID, UUID hostID, OSDMap data)
+        public void CreateFromData(UUID primID,
+                                   UUID itemID, UUID hostID, OSDMap data)
         {
             foreach (KeyValuePair<string, OSD> kvp in data)
             {
-                IScriptPlugin plugin = GetScriptPlugin (kvp.Key);
+                IScriptPlugin plugin = GetScriptPlugin(kvp.Key);
                 if (plugin != null)
-                    plugin.CreateFromData (itemID, hostID, kvp.Value);
+                    plugin.CreateFromData(itemID, hostID, kvp.Value);
             }
-        }
-
-        /// <summary>
-        /// Make sure that the threads are running
-        /// </summary>
-        public void PokeThreads(UUID itemID)
-        {
-            MaintenanceThread.PokeThreads(itemID);
         }
 
         #endregion
 
         #region Helpers
 
-        public ISceneChildEntity findPrim (UUID objectID)
+        public bool PipeEventsForScript(ISceneChildEntity part, Vector3 position)
         {
-            foreach (IScene s in m_Scenes)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart (objectID);
-                if (part != null)
-                    return part;
-            }
-            return null;
+            // Changed so that child prims of attachments return ScriptDanger for their parent, so that
+            //  their scripts will actually run.
+            //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
+            ISceneChildEntity parent = part.ParentEntity.RootChild;
+            if (parent != null && parent.IsAttachment)
+                return ScriptDanger(parent, position);
+            else
+                return ScriptDanger(part, position);
+        }
+
+        public ISceneChildEntity findPrim(UUID objectID)
+        {
+            return m_Scenes.Select(s => s.GetSceneObjectPart(objectID)).FirstOrDefault(part => part != null);
         }
 
         public ISceneChildEntity findPrim(uint localID)
         {
-            foreach (IScene s in m_Scenes)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart (localID);
-                if (part != null)
-                    return part;
-            }
-            return null;
+            return m_Scenes.Select(s => s.GetSceneObjectPart(localID)).FirstOrDefault(part => part != null);
         }
 
         public IScene findPrimsScene(uint localID)
         {
-            foreach (IScene s in m_Scenes)
-            {
-                ISceneChildEntity part = s.GetSceneObjectPart (localID);
-                if (part != null)
-                    return s;
-            }
-            return null;
+            return (from s in m_Scenes let part = s.GetSceneObjectPart(localID) where part != null select s).FirstOrDefault();
         }
 
-        private bool ScriptDanger (ISceneChildEntity part, Vector3 pos)
+        private bool ScriptDanger(ISceneChildEntity part, Vector3 pos)
         {
             IScene scene = part.ParentEntity.Scene;
             if (part.IsAttachment && RunScriptsInAttachments)
@@ -1377,9 +1352,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ILandObject parcel = parcelManagement.GetLandObject(pos.X, pos.Y);
                 if (parcel != null)
                 {
-                    if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0)
+                    if ((parcel.LandData.Flags & (uint) ParcelFlags.AllowOtherScripts) != 0)
                         return true;
-                    else if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0)
+                    else if ((parcel.LandData.Flags & (uint) ParcelFlags.AllowGroupScripts) != 0)
                     {
                         if (part.OwnerID == parcel.LandData.OwnerID
                             || (parcel.LandData.IsGroupOwned && part.GroupID == parcel.LandData.GroupID)
@@ -1400,7 +1375,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 else
                 {
-                    if (pos.X > 0f && pos.X < scene.RegionInfo.RegionSizeX && pos.Y > 0f && pos.Y < scene.RegionInfo.RegionSizeY)
+                    if (pos.X > 0f && pos.X < scene.RegionInfo.RegionSizeX && pos.Y > 0f &&
+                        pos.Y < scene.RegionInfo.RegionSizeY)
                         // The only time parcel != null when an object is inside a region is when
                         // there is nothing behind the landchannel.  IE, no land plugin loaded.
                         return true;
@@ -1412,7 +1388,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             return true;
         }
 
-        public bool PipeEventsForScript (ISceneChildEntity part)
+        public bool PipeEventsForScript(ISceneChildEntity part)
         {
             // Changed so that child prims of attachments return ScriptDanger for their parent, so that
             //  their scripts will actually run.
@@ -1424,24 +1400,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return PipeEventsForScript(part, part.AbsolutePosition);
         }
 
-        public bool PipeEventsForScript (ISceneChildEntity part, Vector3 position)
-        {
-            // Changed so that child prims of attachments return ScriptDanger for their parent, so that
-            //  their scripts will actually run.
-            //      -- Leaf, Tue Aug 12 14:17:05 EDT 2008
-            ISceneChildEntity parent = part.ParentEntity.RootChild;
-            if (parent != null && parent.IsAttachment)
-                return ScriptDanger(parent, position);
-            else
-                return ScriptDanger(part, position);
-        }
-
         #endregion
 
         #region Stats
 
         /// <summary>
-        /// Get the current number of events being fired per second
+        ///   Get the current number of events being fired per second
         /// </summary>
         /// <returns></returns>
         public int GetScriptEPS()
@@ -1453,37 +1417,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        /// Get the number of active scripts in this instance
+        ///   Get the number of active scripts in this instance
         /// </summary>
         /// <returns></returns>
         public int GetActiveScripts()
         {
             //Get all the scripts
             ScriptData[] data = ScriptProtection.GetAllScripts();
-            int activeScripts = 0;
-            foreach(ScriptData script in data)
-            {
-                //Only if the script is running do we include it
-                if (script.Running) activeScripts++;
-            }
-            return activeScripts;
+            return data.Count(script => script.Running);
         }
 
         /// <summary>
-        /// Get the top scripts in this instance
+        ///   Get the top scripts in this instance
         /// </summary>
         /// <returns></returns>
         public Dictionary<uint, float> GetTopScripts(UUID RegionID)
         {
             List<ScriptData> data = new List<ScriptData>(ScriptProtection.GetAllScripts());
             data.RemoveAll(delegate(ScriptData script)
-            {
-                //Remove the scripts that are in a different region
-                if (script.World.RegionInfo.RegionID != RegionID)
-                    return true;
-                else
-                    return false;
-            });
+                               {
+                                   //Remove the scripts that are in a different region
+                                   if (script.World.RegionInfo.RegionID != RegionID)
+                                       return true;
+                                   else
+                                       return false;
+                               });
             //Now sort and put the top scripts in the correct order
             data.Sort(ScriptScoreSorter);
             if (data.Count > 100)
@@ -1511,14 +1469,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Registry pieces
 
-        private Dictionary<Type, object> m_extensions = new Dictionary<Type, object> ();
+        private readonly Dictionary<Type, object> m_extensions = new Dictionary<Type, object>();
 
         public Dictionary<Type, object> Extensions
         {
             get { return m_extensions; }
         }
 
-        public void RegisterExtension<T> (T instance)
+        public void RegisterExtension<T>(T instance)
         {
             m_extensions[typeof (T)] = instance;
         }
@@ -1529,19 +1487,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public class ScriptErrorReporter
     {
         //Errors that have been thrown while compiling
-        private Dictionary<UUID, ArrayList> Errors = new Dictionary<UUID, ArrayList>();
-        private int Timeout = 5000; // 5 seconds
+        private readonly Dictionary<UUID, ArrayList> Errors = new Dictionary<UUID, ArrayList>();
+        private readonly int Timeout = 5000; // 5 seconds
 
         public ScriptErrorReporter(IConfig config)
         {
-            Timeout = (config.GetInt("ScriptErrorFindingTimeOut", 5) * 1000);
+            Timeout = (config.GetInt("ScriptErrorFindingTimeOut", 5)*1000);
         }
 
         /// <summary>
-        /// Add a new error for the client thread to find
+        ///   Add a new error for the client thread to find
         /// </summary>
-        /// <param name="ItemID"></param>
-        /// <param name="errors"></param>
+        /// <param name = "ItemID"></param>
+        /// <param name = "errors"></param>
         public void AddError(UUID ItemID, ArrayList errors)
         {
             lock (Errors)
@@ -1551,30 +1509,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        /// Find the errors that the script may have produced while compiling
+        ///   Find the errors that the script may have produced while compiling
         /// </summary>
-        /// <param name="ItemID"></param>
+        /// <param name = "ItemID"></param>
         /// <returns></returns>
         public ArrayList FindErrors(UUID ItemID)
         {
             ArrayList Error = new ArrayList();
 
-            if(!TryFindError(ItemID, out Error))
-                return new ArrayList(new string[]{"Compile not finished."}); //Not there, but need to return something so the user knows
-            
+            if (!TryFindError(ItemID, out Error))
+                return new ArrayList(new[] {"Compile not finished."});
+                    //Not there, but need to return something so the user knows
+
             RemoveError(ItemID);
 
-            if ((string)Error[0] == "SUCCESSFULL")
+            if ((string) Error[0] == "SUCCESSFULL")
                 return new ArrayList();
 
             return Error;
         }
 
         /// <summary>
-        /// Wait while the script is processed
+        ///   Wait while the script is processed
         /// </summary>
-        /// <param name="ItemID"></param>
-        /// <param name="error"></param>
+        /// <param name = "ItemID"></param>
+        /// <param name = "error"></param>
         /// <returns></returns>
         private bool TryFindError(UUID ItemID, out ArrayList error)
         {
@@ -1598,9 +1557,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         /// <summary>
-        /// Clear this item's errors
+        ///   Clear this item's errors
         /// </summary>
-        /// <param name="ItemID"></param>
+        /// <param name = "ItemID"></param>
         public void RemoveError(UUID ItemID)
         {
             if (Errors.ContainsKey(ItemID))

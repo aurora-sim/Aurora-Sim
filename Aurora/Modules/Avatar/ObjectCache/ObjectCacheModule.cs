@@ -28,15 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using log4net;
-using System.Reflection;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using Nini.Config;
+
 namespace Aurora.Modules
 {
     public class ObjectCacheModule : INonSharedRegionModule, IObjectCache
@@ -44,8 +41,12 @@ namespace Aurora.Modules
         #region Declares
 
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private readonly Dictionary<UUID, Dictionary<uint, uint>> ObjectCacheAgents =
+            new Dictionary<UUID, Dictionary<uint, uint>>();
+
         protected bool m_Enabled = true;
-        private Dictionary<UUID, Dictionary<uint, uint>> ObjectCacheAgents = new Dictionary<UUID, Dictionary<uint, uint>>();
+
         private string m_filePath = "ObjectCache/";
         private IScene m_scene;
 
@@ -67,15 +68,13 @@ namespace Aurora.Modules
                 {
                     Directory.CreateDirectory(m_filePath);
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                }
             }
         }
 
-        public virtual void PostInitialise()
-        {
-        }
-
-        public virtual void AddRegion (IScene scene)
+        public virtual void AddRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -85,7 +84,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public virtual void RemoveRegion (IScene scene)
+        public virtual void RemoveRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -95,7 +94,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public virtual void RegionLoaded (IScene scene)
+        public virtual void RegionLoaded(IScene scene)
         {
         }
 
@@ -128,12 +127,12 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Load the file for the client async so that we don't lock up the system for too long
+        ///   Load the file for the client async so that we don't lock up the system for too long
         /// </summary>
-        /// <param name="o"></param>
+        /// <param name = "o"></param>
         public void LoadFileOnNewClient(object o)
         {
-            UUID agentID = (UUID)o;
+            UUID agentID = (UUID) o;
             LoadFromFileForClient(agentID);
         }
 
@@ -171,7 +170,7 @@ namespace Aurora.Modules
             Dictionary<uint, uint> cache = new Dictionary<uint, uint>();
             try
             {
-                OSDMap cachedMap = (OSDMap)OSDParser.DeserializeJson(osdMap);
+                OSDMap cachedMap = (OSDMap) OSDParser.DeserializeJson(osdMap);
                 foreach (KeyValuePair<string, OSD> kvp in cachedMap)
                 {
                     cache[uint.Parse(kvp.Key)] = kvp.Value.AsUInteger();
@@ -198,10 +197,11 @@ namespace Aurora.Modules
                 if (!ObjectCacheAgents.ContainsKey(AgentID))
                     return;
                 cache = new Dictionary<uint, uint>(ObjectCacheAgents[AgentID]);
-                ObjectCacheAgents[AgentID].Clear ();
-                ObjectCacheAgents.Remove (AgentID);
+                ObjectCacheAgents[AgentID].Clear();
+                ObjectCacheAgents.Remove(AgentID);
             }
-            FileStream stream = new FileStream(m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc", FileMode.Create);
+            FileStream stream = new FileStream(m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc",
+                                               FileMode.Create);
             StreamWriter m_streamWriter = new StreamWriter(stream);
             m_streamWriter.WriteLine(SerializeAgentCache(cache));
             m_streamWriter.Close();
@@ -209,7 +209,8 @@ namespace Aurora.Modules
 
         public void LoadFromFileForClient(UUID AgentID)
         {
-            FileStream stream = new FileStream (m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc", FileMode.OpenOrCreate);
+            FileStream stream = new FileStream(m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc",
+                                               FileMode.OpenOrCreate);
             StreamReader m_streamReader = new StreamReader(stream);
             string file = m_streamReader.ReadToEnd();
             m_streamReader.Close();
@@ -222,7 +223,7 @@ namespace Aurora.Modules
                     //Something went wrong, delete the file
                     try
                     {
-                        File.Delete (m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc");
+                        File.Delete(m_filePath + AgentID + m_scene.RegionInfo.RegionName + ".oc");
                     }
                     catch
                     {
@@ -238,53 +239,57 @@ namespace Aurora.Modules
 
         #endregion
 
+        public virtual void PostInitialise()
+        {
+        }
+
         #endregion
 
         #region IObjectCache
 
         /// <summary>
-        /// Check whether we can send a CachedObjectUpdate to the client
+        ///   Check whether we can send a CachedObjectUpdate to the client
         /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="localID"></param>
-        /// <param name="CurrentEntityCRC"></param>
+        /// <param name = "AgentID"></param>
+        /// <param name = "localID"></param>
+        /// <param name = "CurrentEntityCRC"></param>
         /// <returns></returns>
         public bool UseCachedObject(UUID AgentID, uint localID, uint CurrentEntityCRC)
         {
             lock (ObjectCacheAgents)
             {
-                if(ObjectCacheAgents.ContainsKey(AgentID))
+                if (ObjectCacheAgents.ContainsKey(AgentID))
                 {
                     uint CurrentCachedCRC = 0;
-                    if (ObjectCacheAgents[AgentID].TryGetValue (localID, out CurrentCachedCRC))
+                    if (ObjectCacheAgents[AgentID].TryGetValue(localID, out CurrentCachedCRC))
                     {
-                         if (CurrentEntityCRC == CurrentCachedCRC)
-                         {
-                             //The client knows of the newest version
-                             return true;
-                         }
+                        if (CurrentEntityCRC == CurrentCachedCRC)
+                        {
+                            //The client knows of the newest version
+                            return true;
+                        }
                     }
                 }
                 return false;
             }
         }
 
-        public void AddCachedObject (UUID AgentID, uint localID, uint CRC)
+        public void AddCachedObject(UUID AgentID, uint localID, uint CRC)
         {
             lock (ObjectCacheAgents)
             {
-                if (!ObjectCacheAgents.ContainsKey (AgentID))
-                    ObjectCacheAgents[AgentID] = new Dictionary<uint,uint>();
+                if (!ObjectCacheAgents.ContainsKey(AgentID))
+                    ObjectCacheAgents[AgentID] = new Dictionary<uint, uint>();
                 ObjectCacheAgents[AgentID][localID] = CRC;
             }
         }
 
-        public void RemoveObject (UUID AgentID, uint localID, byte cacheMissType)
+        public void RemoveObject(UUID AgentID, uint localID, byte cacheMissType)
         {
             lock (ObjectCacheAgents)
             {
-                if (ObjectCacheAgents.ContainsKey (AgentID))
-                    ObjectCacheAgents[AgentID].Remove (localID);
+                if (ObjectCacheAgents.ContainsKey(AgentID))
+                    ObjectCacheAgents[AgentID].Remove(localID);
             }
         }
 

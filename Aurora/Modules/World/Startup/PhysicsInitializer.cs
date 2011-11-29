@@ -26,19 +26,17 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
-using Nini.Config;
 
 namespace OpenSim.Region.CoreModules
 {
     public class PhysicsInitializer : ISharedRegionStartupModule
     {
+        #region ISharedRegionStartupModule Members
+
         public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
             IConfig PhysConfig = source.Configs["Physics"];
@@ -52,10 +50,12 @@ namespace OpenSim.Region.CoreModules
                 engine = PhysConfig.GetString("DefaultPhysicsEngine", "AuroraOpenDynamicsEngine");
                 meshEngine = MeshingConfig.GetString("DefaultMeshingEngine", "Meshmerizer");
                 string regionName = scene.RegionInfo.RegionName.Trim().Replace(' ', '_');
-                string RegionPhysicsEngine = PhysConfig.GetString("Region_" + regionName + "_PhysicsEngine", String.Empty);
+                string RegionPhysicsEngine = PhysConfig.GetString("Region_" + regionName + "_PhysicsEngine",
+                                                                  String.Empty);
                 if (RegionPhysicsEngine != "")
                     engine = RegionPhysicsEngine;
-                string RegionMeshingEngine = MeshingConfig.GetString("Region_" + regionName + "_MeshingEngine", String.Empty);
+                string RegionMeshingEngine = MeshingConfig.GetString("Region_" + regionName + "_MeshingEngine",
+                                                                     String.Empty);
                 if (RegionMeshingEngine != "")
                     meshEngine = RegionMeshingEngine;
             }
@@ -68,7 +68,8 @@ namespace OpenSim.Region.CoreModules
             PhysicsPluginManager physicsPluginManager = new PhysicsPluginManager();
             physicsPluginManager.LoadPluginsFromAssemblies(Util.BasePathCombine(Path));
 
-            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo, scene);
+            PhysicsScene pScene = physicsPluginManager.GetPhysicsScene(engine, meshEngine, source, scene.RegionInfo,
+                                                                       scene);
             scene.PhysicsScene = pScene;
         }
 
@@ -91,5 +92,7 @@ namespace OpenSim.Region.CoreModules
         public void Close(IScene scene)
         {
         }
+
+        #endregion
     }
 }

@@ -47,6 +47,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
     public interface IXMLRPC
     {
+        int Port { get; }
         UUID OpenXMLRPCChannel(UUID primID, UUID itemID, UUID channelID);
         void CloseXMLRPCChannel(UUID channelKey);
         bool hasRequests();
@@ -59,6 +60,5 @@ namespace OpenSim.Region.Framework.Interfaces
         IServiceRequest GetNextCompletedSRDRequest();
         void RemoveCompletedSRDRequest(UUID id);
         void CancelSRDRequests(UUID itemID);
-        int Port { get; }
     }
 }

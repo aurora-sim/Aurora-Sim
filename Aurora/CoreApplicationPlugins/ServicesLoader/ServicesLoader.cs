@@ -25,19 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenSim.Framework;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenSim.Framework;
 
 namespace OpenSim.CoreApplicationPlugins
 {
     public class ServicesLoader : IApplicationPlugin
     {
         private ISimulationBase m_openSim;
+
+        #region IApplicationPlugin Members
+
         public void Initialize(ISimulationBase openSim)
         {
             m_openSim = openSim;
@@ -102,6 +103,8 @@ namespace OpenSim.CoreApplicationPlugins
         {
             get { return "ServicesLoader"; }
         }
+
+        #endregion
 
         public void Dispose()
         {

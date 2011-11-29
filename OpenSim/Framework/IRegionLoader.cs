@@ -30,54 +30,54 @@ using Nini.Config;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Loads regions from all IRegionLoaderPlugins and returns them to the SceneManager (normally)
+    ///   Loads regions from all IRegionLoaderPlugins and returns them to the SceneManager (normally)
     /// </summary>
     public interface IRegionLoader
     {
         /// <summary>
-        /// Returns the plugin name
+        ///   Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        /// This determines whether this plugin will be loaded
+        ///   This determines whether this plugin will be loaded
         /// </summary>
         bool Enabled { get; }
 
         /// <summary>
-        /// This determines whether this plugin will be used for dealing with creating regions and other things
+        ///   This determines whether this plugin will be used for dealing with creating regions and other things
         /// </summary>
         bool Default { get; }
 
         /// <summary>
-        /// Starts up the module and loads configs
+        ///   Starts up the module and loads configs
         /// </summary>
-        /// <param name="configSource"></param>
-        /// <param name="openSim"></param>
+        /// <param name = "configSource"></param>
+        /// <param name = "openSim"></param>
         void Initialise(IConfigSource configSource, ISimulationBase openSim);
 
         /// <summary>
-        /// Loads all regions from all enabled plugins
+        ///   Loads all regions from all enabled plugins
         /// </summary>
         /// <returns>All regionInfos loaded</returns>
         RegionInfo[] LoadRegions();
 
         /// <summary>
-        /// This updates a Regions info given by the param 'oldName' to the new region info given
+        ///   This updates a Regions info given by the param 'oldName' to the new region info given
         /// </summary>
-        /// <param name="oldName"></param>
-        /// <param name="regionInfo"></param>
+        /// <param name = "oldName"></param>
+        /// <param name = "regionInfo"></param>
         void UpdateRegionInfo(string oldName, RegionInfo regionInfo);
 
         /// <summary>
-        /// Delete the given region from the loader
+        ///   Delete the given region from the loader
         /// </summary>
-        /// <param name="regionInfo"></param>
+        /// <param name = "regionInfo"></param>
         void DeleteRegion(RegionInfo regionInfo);
 
         /// <summary>
-        /// The region loader failed to start this loader's regions, deal with the side effects
+        ///   The region loader failed to start this loader's regions, deal with the side effects
         /// </summary>
         /// <returns></returns>
         bool FailedToStartRegions(string reason);
@@ -86,16 +86,16 @@ namespace OpenSim.Framework
     public interface ISceneLoader
     {
         /// <summary>
-        /// Returns the plugin name
+        ///   Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        /// Create a basic IScene reference with the given RegionInfo
+        ///   Create a basic IScene reference with the given RegionInfo
         /// </summary>
-        /// <param name="regionInfo"></param>
+        /// <param name = "regionInfo"></param>
         /// <returns></returns>
-        IScene CreateScene (RegionInfo regionInfo);
+        IScene CreateScene(RegionInfo regionInfo);
     }
 }

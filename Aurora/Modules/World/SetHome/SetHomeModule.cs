@@ -28,20 +28,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using log4net;
+using System.Linq;
+using System.Text;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace Aurora.Modules.World.Auction
 {
@@ -51,11 +49,13 @@ namespace Aurora.Modules.World.Auction
         //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
 
+        #region INonSharedRegionModule Members
+
         public void Initialise(IConfigSource pSource)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnNewClient += EventManager_OnNewClient;
@@ -63,24 +63,20 @@ namespace Aurora.Modules.World.Auction
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
             m_scene.EventManager.OnNewClient -= EventManager_OnNewClient;
             m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public string Name
@@ -92,12 +88,18 @@ namespace Aurora.Modules.World.Auction
         {
         }
 
-        void EventManager_OnNewClient(IClientAPI client)
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
+
+        private void EventManager_OnNewClient(IClientAPI client)
         {
             client.OnSetStartLocationRequest += SetHomeRezPoint;
         }
 
-        void EventManager_OnClosingClient(IClientAPI client)
+        private void EventManager_OnClosingClient(IClientAPI client)
         {
             client.OnSetStartLocationRequest -= SetHomeRezPoint;
         }
@@ -108,26 +110,20 @@ namespace Aurora.Modules.World.Auction
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
 
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        ProcessServerReleaseNotes(m_dhttpMethod, agentID)));
 
             retVal["CopyInventoryFromNotecard"] = CapsUtil.CreateCAPS("CopyInventoryFromNotecard", "");
 
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["CopyInventoryFromNotecard"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        CopyInventoryFromNotecard(m_dhttpMethod, agentID)));
 
             retVal["ExportObject"] = CapsUtil.CreateCAPS("ExportObject", "");
 
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ExportObject"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        CopyInventoryFromNotecard(m_dhttpMethod, agentID)));
             return retVal;
         }
 
@@ -138,8 +134,7 @@ namespace Aurora.Modules.World.Auction
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
 
-            OSDMap osd = new OSDMap();
-            osd.Add("ServerReleaseNotes", new OSDString(Aurora.Framework.Utilities.GetServerReleaseNotesURL()));
+            OSDMap osd = new OSDMap {{"ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL())}};
             string response = OSDParser.SerializeLLSDXmlString(osd);
             responsedata["str_response_string"] = response;
             return responsedata;
@@ -147,7 +142,7 @@ namespace Aurora.Modules.World.Auction
 
         private Hashtable CopyInventoryFromNotecard(Hashtable mDhttpMethod, UUID agentID)
         {
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
             UUID FolderID = rm["folder-id"].AsUUID();
             UUID ItemID = rm["item-id"].AsUUID();
             UUID NotecardID = rm["notecard-id"].AsUUID();
@@ -161,34 +156,30 @@ namespace Aurora.Modules.World.Auction
                     TaskInventoryItem item = part.Inventory.GetInventoryItem(NotecardID);
                     if (m_scene.Permissions.CanCopyObjectInventory(NotecardID, ObjectID, agentID))
                     {
-                        notecardItem = new InventoryItemBase(NotecardID, agentID);
-                        notecardItem.AssetID = item.AssetID;
+                        notecardItem = new InventoryItemBase(NotecardID, agentID) {AssetID = item.AssetID};
                     }
                 }
             }
             else
                 notecardItem = m_scene.InventoryService.GetItem(new InventoryItemBase(NotecardID));
-            if(notecardItem != null && notecardItem.Owner == agentID)
+            if (notecardItem != null && notecardItem.Owner == agentID)
             {
                 AssetBase asset = m_scene.AssetService.Get(notecardItem.AssetID.ToString());
                 if (asset != null)
                 {
-                    System.Text.UTF8Encoding enc =
-                                new System.Text.UTF8Encoding();
+                    UTF8Encoding enc =
+                        new UTF8Encoding();
                     List<string> notecardData = SLUtil.ParseNotecardToList(enc.GetString(asset.Data));
-                    OpenMetaverse.Assets.AssetNotecard noteCardAsset = new OpenMetaverse.Assets.AssetNotecard(UUID.Zero, asset.Data);
+                    AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset.Data);
                     noteCardAsset.Decode();
                     bool found = false;
                     UUID lastOwnerID = UUID.Zero;
-                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems)
+                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
                     {
-                        if (notecardObjectItem.UUID == ItemID)
-                        {
-                            //Make sure that it exists
-                            found = true;
-                            lastOwnerID = notecardObjectItem.OwnerID;
-                            break;
-                        }
+                        //Make sure that it exists
+                        found = true;
+                        lastOwnerID = notecardObjectItem.OwnerID;
+                        break;
                     }
                     if (found)
                     {
@@ -199,7 +190,7 @@ namespace Aurora.Modules.World.Auction
 
                         IClientAPI client;
                         m_scene.ClientManager.TryGetValue(agentID, out client);
-                        if(item != null)
+                        if (item != null)
                             client.SendBulkUpdateInventory(item);
                         else
                             client.SendAlertMessage("Failed to retrieve item");
@@ -217,29 +208,31 @@ namespace Aurora.Modules.World.Auction
         }
 
         /// <summary>
-        /// Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
+        ///   Sets the Home Point. The LoginService uses this to know where to put a user when they log-in
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="regionHandle"></param>
-        /// <param name="position"></param>
-        /// <param name="lookAt"></param>
-        /// <param name="flags"></param>
-        public void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt, uint flags)
+        /// <param name = "remoteClient"></param>
+        /// <param name = "regionHandle"></param>
+        /// <param name = "position"></param>
+        /// <param name = "lookAt"></param>
+        /// <param name = "flags"></param>
+        public void SetHomeRezPoint(IClientAPI remoteClient, ulong regionHandle, Vector3 position, Vector3 lookAt,
+                                    uint flags)
         {
             IScene scene = remoteClient.Scene;
 
-            IScenePresence SP = scene.GetScenePresence (remoteClient.AgentId);
+            IScenePresence SP = scene.GetScenePresence(remoteClient.AgentId);
             IDialogModule module = scene.RequestModuleInterface<IDialogModule>();
 
             if (SP != null)
             {
                 if (scene.Permissions.CanSetHome(SP.UUID))
                 {
-                    IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
-                    position.Z += appearance.Appearance.AvatarHeight / 2;
+                    IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+                    position.Z += appearance.Appearance.AvatarHeight/2;
                     IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                     if (agentInfoService != null &&
-                        agentInfoService.SetHomePosition(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID, position, lookAt) &&
+                        agentInfoService.SetHomePosition(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID,
+                                                         position, lookAt) &&
                         module != null) //Do this last so it doesn't screw up the rest
                     {
                         // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
@@ -249,7 +242,8 @@ namespace Aurora.Modules.World.Auction
                         module.SendAlertToUser(remoteClient, "Set Home request failed.");
                 }
                 else if (module != null)
-                    module.SendAlertToUser(remoteClient, "Set Home request failed: Permissions do not allow the setting of home here.");
+                    module.SendAlertToUser(remoteClient,
+                                           "Set Home request failed: Permissions do not allow the setting of home here.");
             }
         }
     }

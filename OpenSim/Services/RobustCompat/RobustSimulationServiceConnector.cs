@@ -25,54 +25,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using Aurora.Simulation.Base;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 using OpenSim.Services.Connectors.Simulation;
+using OpenSim.Services.Interfaces;
+using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.RobustCompat
 {
     public class RobustSimulationServicesConnector : SimulationServiceConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+
         private IRegistryCore m_registry;
 
-        #region IService Members
-
-        public override void Initialize (IConfigSource config, IRegistryCore registry)
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];
             m_registry = registry;
-            if (handlers.GetString ("SimulationHandler", "") == "RobustSimulationServiceConnector")
+            if (handlers.GetString("SimulationHandler", "") == "RobustSimulationServiceConnector")
             {
-                registry.RegisterModuleInterface<ISimulationService> (this);
-                m_localBackend = new LocalSimulationServiceConnector ();
-                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler ("ReleaseAgent", ReleaseAgentHandler);
+                registry.RegisterModuleInterface<ISimulationService>(this);
+                m_localBackend = new LocalSimulationServiceConnector();
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("ReleaseAgent",
+                                                                                                       ReleaseAgentHandler);
             }
         }
 
-        private object ReleaseAgentHandler (string mod, object param)
+        private object ReleaseAgentHandler(string mod, object param)
         {
-            object[] o = (object[])param;
-            CloseAgent ((GridRegion)o[1], (UUID)o[0]);
+            object[] o = (object[]) param;
+            CloseAgent((GridRegion) o[1], (UUID) o[0]);
 
             return null;
         }
-
-        #endregion
     }
 }

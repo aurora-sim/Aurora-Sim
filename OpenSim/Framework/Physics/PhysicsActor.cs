@@ -33,10 +33,10 @@ namespace OpenSim.Framework
 {
     public struct ContactPoint
     {
+        public float PenetrationDepth;
         public Vector3 Position;
         public Vector3 SurfaceNormal;
         public ActorTypes Type;
-        public float PenetrationDepth;
 
         public ContactPoint(Vector3 position, Vector3 surfaceNormal, float penetrationDepth, ActorTypes type)
         {
@@ -51,8 +51,8 @@ namespace OpenSim.Framework
     {
         // Raising the event on the object, so don't need to provide location..  further up the tree knows that info.
 
+        public bool Cleared;
         public Dictionary<uint, ContactPoint> m_objCollisionList = new Dictionary<uint, ContactPoint>();
-        public bool Cleared = false;
 
         public CollisionEventUpdate(Dictionary<uint, ContactPoint> objCollisionList)
         {
@@ -70,8 +70,9 @@ namespace OpenSim.Framework
             /*ContactPoint oldCol;
             if(!m_objCollisionList.TryGetValue(localID, out oldCol))
             {
-                */lock(m_objCollisionList)
-                    m_objCollisionList[localID] = contact;
+                */
+            lock (m_objCollisionList)
+                m_objCollisionList[localID] = contact;
             /*}
             else
             {
@@ -82,21 +83,21 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Reset all the info about this collider
+        ///   Reset all the info about this collider
         /// </summary>
-        public void Clear ()
+        public void Clear()
         {
             Cleared = true;
-            lock(m_objCollisionList)
-                m_objCollisionList.Clear ();
+            lock (m_objCollisionList)
+                m_objCollisionList.Clear();
         }
 
-        public CollisionEventUpdate Copy ()
+        public CollisionEventUpdate Copy()
         {
             CollisionEventUpdate c = new CollisionEventUpdate();
-            lock(m_objCollisionList)
+            lock (m_objCollisionList)
             {
-                foreach(KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
+                foreach (KeyValuePair<uint, ContactPoint> kvp in m_objCollisionList)
                     c.m_objCollisionList.Add(kvp.Key, kvp.Value);
             }
             return c;
@@ -179,10 +180,6 @@ namespace OpenSim.Framework
             set { }
         }
 
-        public override void CrossingFailure()
-        {
-        }
-
         public override Quaternion Orientation
         {
             get { return Quaternion.Identity; }
@@ -220,16 +217,7 @@ namespace OpenSim.Framework
 
         public override int PhysicsActorType
         {
-            get { return (int)ActorTypes.Ground; }
-        }
-
-        public override void AddForce(Vector3 force, bool pushforce)
-        {
-        }
-
-        public override void AddAngularForce(Vector3 force, bool pushforce)
-        {
-            
+            get { return (int) ActorTypes.Ground; }
         }
 
         public override Vector3 RotationalVelocity
@@ -238,24 +226,36 @@ namespace OpenSim.Framework
             set { return; }
         }
 
+        public override void CrossingFailure()
+        {
+        }
+
+        public override void AddForce(Vector3 force, bool pushforce)
+        {
+        }
+
+        public override void AddAngularForce(Vector3 force, bool pushforce)
+        {
+        }
+
         public override void SubscribeEvents(int ms)
         {
-
         }
+
         public override void UnSubscribeEvents()
         {
-
         }
+
         public override bool SubscribedEvents()
         {
             return false;
         }
 
-        public override void SendCollisions ()
+        public override void SendCollisions()
         {
         }
 
-        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
         }
     }
@@ -266,15 +266,18 @@ namespace OpenSim.Framework
         {
             get { return false; }
         }
+
         public override bool IsPreJumping
         {
             get { return false; }
         }
+
         public override float SpeedModifier
         {
             get { return 1.0f; }
             set { }
         }
+
         public override Vector3 Position
         {
             get { return Vector3.Zero; }
@@ -376,11 +379,7 @@ namespace OpenSim.Framework
 
         public override int PhysicsActorType
         {
-            get { return (int)ActorTypes.Unknown; }
-        }
-
-        public override void AddForce(Vector3 force, bool pushforce)
-        {
+            get { return (int) ActorTypes.Unknown; }
         }
 
         public override Vector3 RotationalVelocity
@@ -389,24 +388,28 @@ namespace OpenSim.Framework
             set { return; }
         }
 
+        public override void AddForce(Vector3 force, bool pushforce)
+        {
+        }
+
         public override void SubscribeEvents(int ms)
         {
-
         }
+
         public override void UnSubscribeEvents()
         {
-
         }
+
         public override bool SubscribedEvents()
         {
             return false;
         }
 
-        public override void SendCollisions ()
+        public override void SendCollisions()
         {
         }
 
-        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
         }
     }

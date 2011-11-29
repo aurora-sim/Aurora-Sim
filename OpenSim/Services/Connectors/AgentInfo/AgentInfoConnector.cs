@@ -28,14 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
-using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Simulation.Base;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.Connectors
 {
@@ -47,7 +45,12 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-        #region IService Members
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #region IAgentInfoService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -67,15 +70,6 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public string Name
-        {
-            get { return GetType().Name; }
-        }
-
-        #endregion
-
-        #region IAgentInfoService Members
-
         public IAgentInfoService InnerService
         {
             get { return this; }
@@ -83,7 +77,8 @@ namespace OpenSim.Services.Connectors
 
         public UserInfo GetUserInfo(string userID)
         {
-            List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID, "AgentInfoServerURI");
+            List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID,
+                                                                                                       "AgentInfoServerURI");
             foreach (string url in urls)
             {
                 try
@@ -95,15 +90,15 @@ namespace OpenSim.Services.Connectors
                     OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
                     if (r is OSDMap)
                     {
-                        OSDMap innerresult = (OSDMap)r;
+                        OSDMap innerresult = (OSDMap) r;
                         UserInfo info = new UserInfo();
-                        if(innerresult["Result"].AsString() == "null")
+                        if (innerresult["Result"].AsString() == "null")
                             return null;
-                        info.FromOSD((OSDMap)innerresult["Result"]);
+                        info.FromOSD((OSDMap) innerresult["Result"]);
                         return info;
                     }
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                 }
             }
@@ -112,15 +107,16 @@ namespace OpenSim.Services.Connectors
 
         public UserInfo[] GetUserInfos(string[] userIDs)
         {
-            List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
+            List<string> urls =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
             List<UserInfo> retVal = new List<UserInfo>();
             foreach (string url in urls)
             {
                 OSDMap request = new OSDMap();
                 OSDArray requestArray = new OSDArray();
-                for (int i = 0; i < userIDs.Length; i++)
+                foreach (string t in userIDs)
                 {
-                    requestArray.Add(userIDs[i]);
+                    requestArray.Add(t);
                 }
                 request["userIDs"] = requestArray;
                 request["Method"] = "GetUserInfos";
@@ -128,12 +124,12 @@ namespace OpenSim.Services.Connectors
                 OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
                 if (r is OSDMap)
                 {
-                    OSDMap innerresult = (OSDMap)r;
-                    OSDArray resultArray = (OSDArray)innerresult["Result"];
+                    OSDMap innerresult = (OSDMap) r;
+                    OSDArray resultArray = (OSDArray) innerresult["Result"];
                     foreach (OSD o in resultArray)
                     {
                         UserInfo info = new UserInfo();
-                        info.FromOSD((OSDMap)o);
+                        info.FromOSD((OSDMap) o);
                         retVal.Add(info);
                     }
                 }
@@ -143,14 +139,15 @@ namespace OpenSim.Services.Connectors
 
         public string[] GetAgentsLocations(string requestor, string[] userIDs)
         {
-            List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
+            List<string> urls =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AgentInfoServerURI");
             List<string> retVal = new List<string>(userIDs.Length);
             foreach (string url in urls)
             {
                 OSDMap request = new OSDMap();
                 OSDArray requestArray = new OSDArray();
-                for (int i = 0; i < userIDs.Length; i++)
-                    requestArray.Add(userIDs[i]);
+                foreach (string t in userIDs)
+                    requestArray.Add(t);
 
                 request["userIDs"] = requestArray;
                 request["requestor"] = requestor;
@@ -158,13 +155,12 @@ namespace OpenSim.Services.Connectors
                 OSDMap result = WebUtils.PostToService(url, request, true, false);
                 try
                 {
-                    OSD r = OSDParser.DeserializeJson (result["_RawResult"]);
+                    OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
                     if (r is OSDMap)
                     {
-                        OSDMap innerresult = (OSDMap)r;
-                        OSDArray resultArray = (OSDArray)innerresult["Result"];
-                        foreach (OSD o in resultArray)
-                            retVal.Add (o.AsString ());
+                        OSDMap innerresult = (OSDMap) r;
+                        OSDArray resultArray = (OSDArray) innerresult["Result"];
+                        retVal.AddRange(resultArray.Select(o => o.AsString()));
                     }
                 }
                 catch
@@ -184,7 +180,7 @@ namespace OpenSim.Services.Connectors
         {
         }
 
-        public void SetLoggedIn (string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
+        public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
         }
 

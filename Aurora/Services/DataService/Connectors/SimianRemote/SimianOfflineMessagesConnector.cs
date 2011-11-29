@@ -25,22 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using Aurora.Framework;
-using Aurora.DataManager;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using log4net;
-using System.IO;
-using System.Reflection;
-using Nini.Config;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
 
 namespace Aurora.Services.DataService
 {
@@ -48,9 +39,13 @@ namespace Aurora.Services.DataService
     {
         private List<string> m_ServerURIs = new List<string>();
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IOfflineMessagesConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "SimianConnector")
+            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
+                "SimianConnector")
             {
                 m_ServerURIs = simBase.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 DataManager.DataManager.RegisterPlugin(Name, this);
@@ -62,16 +57,10 @@ namespace Aurora.Services.DataService
             get { return "IOfflineMessagesConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IOfflineMessagesConnector Members
-
         public GridInstantMessage[] GetOfflineMessages(UUID PrincipalID)
         {
             List<GridInstantMessage> Messages = new List<GridInstantMessage>();
-            Dictionary<string, OSDMap> Maps = new Dictionary<string,OSDMap>();
+            Dictionary<string, OSDMap> Maps = new Dictionary<string, OSDMap>();
             foreach (string m_ServerURI in m_ServerURIs)
             {
                 if (SimianUtils.GetGenericEntries(PrincipalID, "OfflineMessages", m_ServerURI, out Maps))
@@ -87,15 +76,20 @@ namespace Aurora.Services.DataService
             return Messages.ToArray();
         }
 
-        public bool AddOfflineMessage (GridInstantMessage message)
+        public bool AddOfflineMessage(GridInstantMessage message)
         {
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                SimianUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), m_ServerURI);
+                SimianUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(),
+                                       m_ServerURI);
             }
             return true;
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

@@ -38,39 +38,21 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class RestSessionObject<TRequest>
     {
-        private string sid;
-        private string aid;
-        private TRequest request_body;
+        public string SessionID { get; set; }
 
-        public string SessionID
-        {
-            get { return sid; }
-            set { sid = value; }
-        }
+        public string AvatarID { get; set; }
 
-        public string AvatarID
-        {
-            get { return aid; }
-            set { aid = value; }
-        }
-
-        public TRequest Body
-        {
-            get { return request_body; }
-            set { request_body = value; }
-        }
+        public TRequest Body { get; set; }
     }
 
     public class SynchronousRestSessionObjectPoster<TRequest, TResponse>
     {
         public static TResponse BeginPostObject(string verb, string requestUrl, TRequest obj, string sid, string aid)
         {
-            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest>();
-            sobj.SessionID = sid;
-            sobj.AvatarID = aid;
-            sobj.Body = obj;
+            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest>
+                                                   {SessionID = sid, AvatarID = aid, Body = obj};
 
-            Type type = typeof(RestSessionObject<TRequest>);
+            Type type = typeof (RestSessionObject<TRequest>);
 
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
@@ -79,8 +61,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Encoding.UTF8;
+            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {
@@ -89,7 +70,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 writer.Flush();
             }
 
-            int length = (int)buffer.Length;
+            int length = (int) buffer.Length;
             request.ContentLength = length;
 
             Stream requestStream = request.GetRequestStream();
@@ -100,14 +81,16 @@ namespace OpenSim.Framework.Servers.HttpServer
             TResponse deserial = default(TResponse);
             using (WebResponse resp = request.GetResponse())
             {
-                XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
+                XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
                 Stream respStream = null;
                 try
                 {
                     respStream = resp.GetResponseStream();
-                    deserial = (TResponse)deserializer.Deserialize(respStream);
+                    if (respStream != null) deserial = (TResponse) deserializer.Deserialize(respStream);
                 }
-                catch { }
+                catch
+                {
+                }
                 finally
                 {
                     if (respStream != null)
@@ -119,7 +102,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         }
     }
 
-    public class RestSessionObjectPosterResponse<TRequest, TResponse>
+    public class RestSessionObjectPosterResponse<TRequest, TResponse> where TResponse : class
     {
         public ReturnResponse<TResponse> ResponseCallback;
 
@@ -130,12 +113,10 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         public void BeginPostObject(string verb, string requestUrl, TRequest obj, string sid, string aid)
         {
-            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest>();
-            sobj.SessionID = sid;
-            sobj.AvatarID = aid;
-            sobj.Body = obj;
+            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest>
+                                                   {SessionID = sid, AvatarID = aid, Body = obj};
 
-            Type type = typeof(RestSessionObject<TRequest>);
+            Type type = typeof (RestSessionObject<TRequest>);
 
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
@@ -144,8 +125,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Encoding.UTF8;
+            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {
@@ -155,7 +135,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             buffer.Close();
 
-            int length = (int)buffer.Length;
+            int length = (int) buffer.Length;
             request.ContentLength = length;
 
             Stream requestStream = request.GetRequestStream();
@@ -167,25 +147,29 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         private void AsyncCallback(IAsyncResult result)
         {
-            WebRequest request = (WebRequest)result.AsyncState;
+            WebRequest request = (WebRequest) result.AsyncState;
             using (WebResponse resp = request.EndGetResponse(result))
             {
                 TResponse deserial;
-                XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
+                XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
                 Stream stream = resp.GetResponseStream();
 
                 // This is currently a bad debug stanza since it gobbles us the response...
                 //                StreamReader reader = new StreamReader(stream);
                 //                m_log.DebugFormat("[REST OBJECT POSTER RESPONSE]: Received {0}", reader.ReadToEnd());
 
-                deserial = (TResponse)deserializer.Deserialize(stream);
                 if (stream != null)
+                {
+                    deserial = (TResponse) deserializer.Deserialize(stream);
                     stream.Close();
 
-                if (deserial != null && ResponseCallback != null)
-                {
-                    ResponseCallback(deserial);
+                    if (deserial != null && ResponseCallback != null)
+                    {
+                        ResponseCallback(deserial);
+                    }
                 }
+
+                
             }
         }
     }
@@ -198,17 +182,19 @@ namespace OpenSim.Framework.Servers.HttpServer
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private RestDeserialiseMethod<TRequest, TResponse> m_method;
-        private CheckIdentityMethod m_smethod;
+        private readonly RestDeserialiseMethod<TRequest, TResponse> m_method;
+        private readonly CheckIdentityMethod m_smethod;
 
         public RestDeserialiseSecureHandler(
-             string httpMethod, string path,
-             RestDeserialiseMethod<TRequest, TResponse> method, CheckIdentityMethod smethod)
+            string httpMethod, string path,
+            RestDeserialiseMethod<TRequest, TResponse> method, CheckIdentityMethod smethod)
             : base(httpMethod, path)
         {
             m_smethod = smethod;
             m_method = method;
         }
+
+        #region IStreamHandler Members
 
         public void Handle(string path, Stream request, Stream responseStream,
                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -220,8 +206,8 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 try
                 {
-                    XmlSerializer deserializer = new XmlSerializer(typeof(RestSessionObject<TRequest>));
-                    deserial = (RestSessionObject<TRequest>)deserializer.Deserialize(xmlReader);
+                    XmlSerializer deserializer = new XmlSerializer(typeof (RestSessionObject<TRequest>));
+                    deserial = (RestSessionObject<TRequest>) deserializer.Deserialize(xmlReader);
                 }
                 catch (Exception e)
                 {
@@ -236,12 +222,14 @@ namespace OpenSim.Framework.Servers.HttpServer
                 response = m_method(deserial.Body);
             }
 
-            using (XmlWriter xmlWriter = XmlTextWriter.Create(responseStream))
+            using (XmlWriter xmlWriter = XmlWriter.Create(responseStream))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(TResponse));
+                XmlSerializer serializer = new XmlSerializer(typeof (TResponse));
                 serializer.Serialize(xmlWriter, response);
             }
         }
+
+        #endregion
     }
 
     public delegate bool CheckTrustedSourceMethod(IPEndPoint peer);
@@ -253,21 +241,25 @@ namespace OpenSim.Framework.Servers.HttpServer
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// The operation to perform once trust has been established.
+        ///   The operation to perform once trust has been established.
         /// </summary>
-        private RestDeserialiseMethod<TRequest, TResponse> m_method;
+        private readonly RestDeserialiseMethod<TRequest, TResponse> m_method;
 
         /// <summary>
-        /// The method used to check whether a request is trusted.
+        ///   The method used to check whether a request is trusted.
         /// </summary>
-        private CheckTrustedSourceMethod m_tmethod;
+        private readonly CheckTrustedSourceMethod m_tmethod;
 
-        public RestDeserialiseTrustedHandler(string httpMethod, string path, RestDeserialiseMethod<TRequest, TResponse> method, CheckTrustedSourceMethod tmethod)
+        public RestDeserialiseTrustedHandler(string httpMethod, string path,
+                                             RestDeserialiseMethod<TRequest, TResponse> method,
+                                             CheckTrustedSourceMethod tmethod)
             : base(httpMethod, path)
         {
             m_tmethod = tmethod;
             m_method = method;
         }
+
+        #region IStreamHandler Members
 
         public void Handle(string path, Stream request, Stream responseStream,
                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -279,8 +271,8 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 try
                 {
-                    XmlSerializer deserializer = new XmlSerializer(typeof(TRequest));
-                    deserial = (TRequest)deserializer.Deserialize(xmlReader);
+                    XmlSerializer deserializer = new XmlSerializer(typeof (TRequest));
+                    deserial = (TRequest) deserializer.Deserialize(xmlReader);
                 }
                 catch (Exception e)
                 {
@@ -295,12 +287,13 @@ namespace OpenSim.Framework.Servers.HttpServer
                 response = m_method(deserial);
             }
 
-            using (XmlWriter xmlWriter = XmlTextWriter.Create(responseStream))
+            using (XmlWriter xmlWriter = XmlWriter.Create(responseStream))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(TResponse));
+                XmlSerializer serializer = new XmlSerializer(typeof (TResponse));
                 serializer.Serialize(xmlWriter, response);
             }
         }
-    }
 
+        #endregion
+    }
 }

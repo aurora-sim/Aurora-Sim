@@ -25,66 +25,67 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.DataManager;
+using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using System;
-using System.Collections.Generic;
 using OpenSim.Services.Interfaces;
-using Nini.Config;
-using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.Friends
 {
     public class FriendsService : IFriendsService, IService
     {
-        protected IFriendsData m_Database = null;
-        protected IRegistryCore m_registry = null;
+        protected IFriendsData m_Database;
+        protected IRegistryCore m_registry;
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
+        #region IFriendsService Members
+
         public virtual IFriendsService InnerService
         {
             get { return this; }
         }
 
-        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
-            registry.RegisterModuleInterface<IFriendsService> (this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
             m_registry = registry;
         }
 
-        public virtual void Start (IConfigSource config, IRegistryCore registry)
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IFriendsData> ();
+            m_Database = DataManager.RequestPlugin<IFriendsData>();
         }
 
-        public virtual void FinishedStartup ()
+        public virtual void FinishedStartup()
         {
         }
 
-        public virtual FriendInfo[] GetFriends (UUID PrincipalID)
+        public virtual FriendInfo[] GetFriends(UUID PrincipalID)
         {
             return m_Database.GetFriends(PrincipalID);
         }
 
-        public virtual bool StoreFriend (UUID PrincipalID, string Friend, int flags)
+        public virtual bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
             return m_Database.Store(PrincipalID, Friend, flags, 0);
         }
 
-        public virtual bool Delete (UUID PrincipalID, string Friend)
+        public virtual bool Delete(UUID PrincipalID, string Friend)
         {
             return m_Database.Delete(PrincipalID, Friend);
         }
+
+        #endregion
     }
 }

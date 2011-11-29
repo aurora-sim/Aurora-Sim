@@ -32,17 +32,17 @@ namespace OpenSim.Framework
 {
     public class GroupRecord
     {
-        public UUID GroupID;
-        public string GroupName;
         public bool AllowPublish = true;
-        public bool MaturePublish = true;
         public string Charter;
         public UUID FounderID = UUID.Zero;
+        public UUID GroupID;
+        public string GroupName;
         public UUID GroupPicture = UUID.Zero;
-        public int MembershipFee = 0;
+        public bool MaturePublish = true;
+        public int MembershipFee;
         public bool OpenEnrollment = true;
         public UUID OwnerRoleID = UUID.Zero;
-        public bool ShowInList = false;
+        public bool ShowInList;
 
         public GroupRecord()
         {
@@ -84,25 +84,25 @@ namespace OpenSim.Framework
     public class GroupMembershipData
     {
         // Group base data
+        public bool AcceptNotices = true;
+        public bool Active;
+        public UUID ActiveRole = UUID.Zero;
+        public bool AllowPublish = true;
+        public string Charter;
+        public int Contribution;
+        public UUID FounderID = UUID.Zero;
         public UUID GroupID;
         public string GroupName;
-        public bool AllowPublish = true;
-        public bool MaturePublish = true;
-        public string Charter;
-        public UUID FounderID = UUID.Zero;
         public UUID GroupPicture = UUID.Zero;
-        public int MembershipFee = 0;
+        public ulong GroupPowers;
+        public string GroupTitle;
+        public bool ListInProfile;
+        public bool MaturePublish = true;
+        public int MembershipFee;
         public bool OpenEnrollment = true;
         public bool ShowInList = true;
 
         // Per user data
-        public bool AcceptNotices = true;
-        public int Contribution = 0;
-        public ulong GroupPowers = 0;
-        public bool Active = false;
-        public UUID ActiveRole = UUID.Zero;
-        public bool ListInProfile = false;
-        public string GroupTitle;
 
         public GroupMembershipData()
         {
@@ -156,8 +156,8 @@ namespace OpenSim.Framework
     public class GroupTitlesData
     {
         public string Name;
-        public UUID UUID;
         public bool Selected;
+        public UUID UUID;
 
         public GroupTitlesData()
         {
@@ -182,22 +182,22 @@ namespace OpenSim.Framework
 
     public class GroupProfileData
     {
-        public UUID GroupID;
-        public string Name;
+        public bool AllowPublish;
         public string Charter;
-        public bool ShowInList;
-        public string MemberTitle;
-        public ulong PowersMask;
-        public UUID InsigniaID;
         public UUID FounderID;
-        public int MembershipFee;
-        public bool OpenEnrollment;
-        public int Money;
+        public UUID GroupID;
         public int GroupMembershipCount;
         public int GroupRolesCount;
-        public bool AllowPublish;
+        public UUID InsigniaID;
         public bool MaturePublish;
+        public string MemberTitle;
+        public int MembershipFee;
+        public int Money;
+        public string Name;
+        public bool OpenEnrollment;
         public UUID OwnerRole;
+        public ulong PowersMask;
+        public bool ShowInList;
 
         public GroupProfileData()
         {
@@ -248,14 +248,14 @@ namespace OpenSim.Framework
 
     public class GroupMembersData
     {
+        public bool AcceptNotices;
         public UUID AgentID;
-        public int Contribution;
-        public string OnlineStatus;
         public ulong AgentPowers;
-        public string Title;
+        public int Contribution;
         public bool IsOwner;
         public bool ListInProfile;
-        public bool AcceptNotices;
+        public string OnlineStatus;
+        public string Title;
 
         public GroupMembersData()
         {
@@ -290,12 +290,12 @@ namespace OpenSim.Framework
 
     public class GroupRolesData
     {
-        public UUID RoleID;
-        public string Name;
-        public string Title;
         public string Description;
-        public ulong Powers;
         public int Members;
+        public string Name;
+        public ulong Powers;
+        public UUID RoleID;
+        public string Title;
 
         public GroupRolesData()
         {
@@ -326,8 +326,8 @@ namespace OpenSim.Framework
 
     public class GroupRoleMembersData
     {
-        public UUID RoleID;
         public UUID MemberID;
+        public UUID RoleID;
 
         public GroupRoleMembersData()
         {
@@ -350,14 +350,14 @@ namespace OpenSim.Framework
 
     public class GroupNoticeData
     {
-        public UUID NoticeID;
-        public uint Timestamp;
-        public string FromName;
-        public string Subject;
-        public bool HasAttachment;
         public byte AssetType;
+        public string FromName;
+        public bool HasAttachment;
         public UUID ItemID;
         public string ItemName;
+        public UUID NoticeID;
+        public string Subject;
+        public uint Timestamp;
 
         public GroupNoticeData()
         {
@@ -372,7 +372,7 @@ namespace OpenSim.Framework
             HasAttachment = bool.Parse(values["HasAttachment"].ToString());
             AssetType = byte.Parse(values["AssetType"].ToString());
             ItemID = UUID.Parse(values["ItemID"].ToString());
-            if(values.ContainsKey("ItemName"))
+            if (values.ContainsKey("ItemName"))
                 ItemName = values["ItemName"].ToString();
         }
 
@@ -393,28 +393,28 @@ namespace OpenSim.Framework
 
     public struct GroupVoteHistory
     {
+        public string EndDateTime;
+        public string Majority;
+        public string ProposalText;
+        public string Quorum;
+        public string StartDateTime;
+        public string TerseDateID;
         public string VoteID;
         public string VoteInitiator;
-        public string Majority;
-        public string Quorum;
-        public string TerseDateID;
-        public string StartDateTime;
-        public string EndDateTime;
-        public string VoteType;
         public string VoteResult;
-        public string ProposalText;
+        public string VoteType;
     }
 
     public struct GroupActiveProposals
     {
+        public string EndDateTime;
+        public string Majority;
+        public string ProposalText;
+        public string Quorum;
+        public string StartDateTime;
+        public string TerseDateID;
         public string VoteID;
         public string VoteInitiator;
-        public string Majority;
-        public string Quorum;
-        public string TerseDateID;
-        public string StartDateTime;
-        public string EndDateTime;
-        public string ProposalText;
     }
 
     public struct GroupVoteHistoryItem

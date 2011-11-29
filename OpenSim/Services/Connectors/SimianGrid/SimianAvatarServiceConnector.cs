@@ -28,39 +28,45 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-// DEBUG ON
-using System.Diagnostics;
-// DEBUG OFF
+using System.Linq;
 using System.Reflection;
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Simulation.Base;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
+using log4net;
+// DEBUG ON
+// DEBUG OFF
 
 namespace OpenSim.Services.Connectors.SimianGrid
 {
     /// <summary>
-    /// Connects avatar appearance data to the SimianGrid backend
+    ///   Connects avatar appearance data to the SimianGrid backend
     /// </summary>
     public class SimianAvatarServiceConnector : IAvatarService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_serverUrl = String.Empty;
-        public string Name { get { return GetType ().Name; } }
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #region IAvatarService Members
 
         public virtual IAvatarService InnerService
         {
             get { return this; }
         }
-        
+
+        #endregion
+
         #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
@@ -111,23 +117,28 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public AvatarAppearance GetAppearance(UUID userID)
         {
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetUser" },
-                { "UserID", userID.ToString() }
-            };
+                                                  {
+                                                      {"RequestMethod", "GetUser"},
+                                                      {"UserID", userID.ToString()}
+                                                  };
 
             OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 OSDMap map = null;
-                try { map = OSDParser.DeserializeJson(response["LLPackedAppearance"].AsString()) as OSDMap; }
-                catch { }
+                try
+                {
+                    map = OSDParser.DeserializeJson(response["LLPackedAppearance"].AsString()) as OSDMap;
+                }
+                catch
+                {
+                }
 
                 if (map != null)
                 {
                     AvatarAppearance appearance = new AvatarAppearance(map);
                     // DEBUG ON
-                    m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR] retrieved appearance for {0}:\n{1}", userID, appearance.ToString());
+                    m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR] retrieved appearance for {0}:\n{1}", userID, appearance);
                     // DEBUG OFF
                     return appearance;
                 }
@@ -158,11 +169,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             // DEBUG OFF
 
             NameValueCollection requestArgs = new NameValueCollection
-                {
-                        { "RequestMethod", "AddUserData" },
-                        { "UserID", userID.ToString() },
-                        { "LLPackedAppearance", OSDParser.SerializeJsonString(map) }
-                };
+                                                  {
+                                                      {"RequestMethod", "AddUserData"},
+                                                      {"UserID", userID.ToString()},
+                                                      {"LLPackedAppearance", OSDParser.SerializeJsonString(map)}
+                                                  };
 
             OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             bool success = response["Success"].AsBoolean();
@@ -180,17 +191,22 @@ namespace OpenSim.Services.Connectors.SimianGrid
         public AvatarData GetAvatar(UUID userID)
         {
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetUser" },
-                { "UserID", userID.ToString() }
-            };
+                                                  {
+                                                      {"RequestMethod", "GetUser"},
+                                                      {"UserID", userID.ToString()}
+                                                  };
 
             OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
             {
                 OSDMap map = null;
-                try { map = OSDParser.DeserializeJson(response["LLAppearance"].AsString()) as OSDMap; }
-                catch { }
+                try
+                {
+                    map = OSDParser.DeserializeJson(response["LLAppearance"].AsString()) as OSDMap;
+                }
+                catch
+                {
+                }
 
                 if (map != null)
                 {
@@ -209,16 +225,23 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     wearables[11] = new AvatarWearable(map["UnderpantsItem"].AsUUID(), map["UnderpantsAsset"].AsUUID());
                     wearables[12] = new AvatarWearable(map["SkirtItem"].AsUUID(), map["SkirtAsset"].AsUUID());
 
-                    AvatarAppearance appearance = new AvatarAppearance(userID);
-                    appearance.Wearables = wearables;
-                    appearance.AvatarHeight = (float)map["Height"].AsReal();
+                    AvatarAppearance appearance = new AvatarAppearance(userID)
+                                                      {
+                                                          Wearables = wearables,
+                                                          AvatarHeight = (float) map["Height"].AsReal()
+                                                      };
 
                     AvatarData avatar = new AvatarData(appearance);
 
                     // Get attachments
                     map = null;
-                    try { map = OSDParser.DeserializeJson(response["LLAttachments"].AsString()) as OSDMap; }
-                    catch { }
+                    try
+                    {
+                        map = OSDParser.DeserializeJson(response["LLAttachments"].AsString()) as OSDMap;
+                    }
+                    catch
+                    {
+                    }
 
                     if (map != null)
                     {
@@ -231,14 +254,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 else
                 {
                     m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed to get user appearance for " + userID +
-                        ", LLAppearance is missing or invalid");
+                               ", LLAppearance is missing or invalid");
                     return null;
                 }
             }
             else
             {
                 m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed to get user appearance for " + userID + ": " +
-                    response["Message"].AsString());
+                           response["Message"].AsString());
             }
 
             return null;
@@ -288,31 +311,32 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
 
                 OSDMap items = new OSDMap();
-                foreach (KeyValuePair<string, string> kvp in avatar.Data)
+                foreach (KeyValuePair<string, string> kvp in avatar.Data.Where(kvp => kvp.Key.StartsWith("_ap_")))
                 {
-                    if (kvp.Key.StartsWith("_ap_"))
-                        items.Add(kvp.Key, OSD.FromString(kvp.Value));
+                    items.Add(kvp.Key, OSD.FromString(kvp.Value));
                 }
 
                 NameValueCollection requestArgs = new NameValueCollection
-                {
-                    { "RequestMethod", "AddUserData" },
-                    { "UserID", userID.ToString() },
-                    { "LLAppearance", OSDParser.SerializeJsonString(map) },
-                    { "LLAttachments", OSDParser.SerializeJsonString(items) }
-                };
+                                                      {
+                                                          {"RequestMethod", "AddUserData"},
+                                                          {"UserID", userID.ToString()},
+                                                          {"LLAppearance", OSDParser.SerializeJsonString(map)},
+                                                          {"LLAttachments", OSDParser.SerializeJsonString(items)}
+                                                      };
 
                 OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
                 bool success = response["Success"].AsBoolean();
 
                 if (!success)
-                    m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed saving appearance for " + userID + ": " + response["Message"].AsString());
+                    m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed saving appearance for " + userID + ": " +
+                               response["Message"].AsString());
 
                 return success;
             }
             else
             {
-                m_log.Error("[SIMIAN AVATAR CONNECTOR]: Can't save appearance for " + userID + ". Unhandled avatar type " + avatar.AvatarType);
+                m_log.Error("[SIMIAN AVATAR CONNECTOR]: Can't save appearance for " + userID +
+                            ". Unhandled avatar type " + avatar.AvatarType);
                 return false;
             }
         }

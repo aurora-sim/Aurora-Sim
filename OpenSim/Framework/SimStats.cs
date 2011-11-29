@@ -31,33 +31,36 @@ using OpenMetaverse.Packets;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Enapsulate statistics for a simulator/scene.
+    ///   Enapsulate statistics for a simulator/scene.
     /// </summary>
     public class SimStats
     {
-        public SimStatsPacket.RegionBlock RegionBlock
-        {
-            get { return m_regionBlock; }
-        }
-        private SimStatsPacket.RegionBlock m_regionBlock;
-        
-        public SimStatsPacket.StatBlock[] StatsBlock
-        {
-            get { return m_statsBlock; }
-        }
-        private SimStatsPacket.StatBlock[] m_statsBlock;
-        
-        public UUID RegionUUID
-        {
-            get { return regionUUID; }
-        }
-        private UUID regionUUID;
-                
+        private readonly SimStatsPacket.RegionBlock m_regionBlock;
+
+        private readonly SimStatsPacket.StatBlock[] m_statsBlock;
+
+        private readonly UUID regionUUID;
+
         public SimStats(SimStatsPacket.RegionBlock regionBlock, SimStatsPacket.StatBlock[] statsBlock, UUID pRUUID)
         {
             regionUUID = pRUUID;
             m_regionBlock = regionBlock;
             m_statsBlock = statsBlock;
+        }
+
+        public SimStatsPacket.RegionBlock RegionBlock
+        {
+            get { return m_regionBlock; }
+        }
+
+        public SimStatsPacket.StatBlock[] StatsBlock
+        {
+            get { return m_statsBlock; }
+        }
+
+        public UUID RegionUUID
+        {
+            get { return regionUUID; }
         }
     }
 }

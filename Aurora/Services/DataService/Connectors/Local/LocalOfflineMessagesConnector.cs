@@ -25,42 +25,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.DataManager;
 using Aurora.Framework;
-using OpenMetaverse;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
-using System.Xml;
-using System.Xml.Serialization;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
     public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
-	{
-        private IGenericData GD = null;
-        private int m_maxOfflineMessages = 20;
+    {
+        private IGenericData GD;
         private int m_maxGroupOfflineMessages = 50;
+        private int m_maxOfflineMessages = 20;
         private bool m_saveGroupOfflineMessages = true;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IOfflineMessagesConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             GD = GenericData;
 
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Generics", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            GD.ConnectToDatabase(defaultConnectionString, "Generics",
+                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name+"Local", this);
+            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
             m_maxOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxOfflineMessages", m_maxOfflineMessages);
-            m_maxGroupOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxGroupOfflineMessages", m_maxGroupOfflineMessages);
-            m_saveGroupOfflineMessages = source.Configs["AuroraConnectors"].GetBoolean("SaveOfflineGroupChatMessages", m_saveGroupOfflineMessages);
-            if(source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") == "LocalConnector")
+            m_maxGroupOfflineMessages = source.Configs["AuroraConnectors"].GetInt("MaxGroupOfflineMessages",
+                                                                                  m_maxGroupOfflineMessages);
+            m_saveGroupOfflineMessages = source.Configs["AuroraConnectors"].GetBoolean("SaveOfflineGroupChatMessages",
+                                                                                       m_saveGroupOfflineMessages);
+            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -71,53 +72,58 @@ namespace Aurora.Services.DataService
             get { return "IOfflineMessagesConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         /// <summary>
-        /// Gets all offline messages for the user in GridInstantMessage format.
+        ///   Gets all offline messages for the user in GridInstantMessage format.
         /// </summary>
-        /// <param name="agentID"></param>
+        /// <param name = "agentID"></param>
         /// <returns></returns>
         public GridInstantMessage[] GetOfflineMessages(UUID agentID)
-		{
+        {
             //Get all the messages
-            List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD, new GridInstantMessage());
-            Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD, new GridInstantMessage()));
+            List<GridInstantMessage> Messages = GenericUtils.GetGenerics(agentID, "OfflineMessages", GD,
+                                                                         new GridInstantMessage());
+            Messages.AddRange(GenericUtils.GetGenerics(agentID, "GroupOfflineMessages", GD, new GridInstantMessage()));
             //Clear them out now that we have them
             GenericUtils.RemoveGeneric(agentID, "OfflineMessages", GD);
             GenericUtils.RemoveGeneric(agentID, "GroupOfflineMessages", GD);
             return Messages.ToArray();
-		}
+        }
 
         /// <summary>
-        /// Adds a new offline message for the user.
+        ///   Adds a new offline message for the user.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name = "message"></param>
         public bool AddOfflineMessage(GridInstantMessage message)
-		{
-            if(message.fromGroup)
+        {
+            if (message.fromGroup)
             {
-                if(!m_saveGroupOfflineMessages)
+                if (!m_saveGroupOfflineMessages)
                     return false;
-                if(m_maxGroupOfflineMessages <= 0 ||
+                if (m_maxGroupOfflineMessages <= 0 ||
                     GenericUtils.GetGenericCount(message.toAgentID, "GroupOfflineMessages", GD) < m_maxOfflineMessages)
                 {
-                    GenericUtils.AddGeneric(message.toAgentID, "GroupOfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+                    GenericUtils.AddGeneric(message.toAgentID, "GroupOfflineMessages", UUID.Random().ToString(),
+                                            message.ToOSD(), GD);
                     return true;
                 }
             }
             else
             {
-                if(m_maxOfflineMessages <= 0 ||
+                if (m_maxOfflineMessages <= 0 ||
                     GenericUtils.GetGenericCount(message.toAgentID, "OfflineMessages", GD) < m_maxOfflineMessages)
                 {
-                    GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(), message.ToOSD(), GD);
+                    GenericUtils.AddGeneric(message.toAgentID, "OfflineMessages", UUID.Random().ToString(),
+                                            message.ToOSD(), GD);
                     return true;
                 }
             }
             return false;
-		}
-	}
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+        }
+    }
 }

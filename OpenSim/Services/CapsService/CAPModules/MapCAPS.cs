@@ -25,56 +25,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Reflection;
-using System.Text;
-using log4net;
 using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework.Capabilities;
+using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-
-using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Services.DataService;
-using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService
 {
     public class MapCAPS : ICapsServiceConnector
     {
-        private readonly string m_mapLayerPath = "0001";
-        private IRegionClientCapsService m_service;
-        private IGridService m_gridService;
-        private List<MapBlockData> m_mapLayer = new List<MapBlockData>();
-        private bool m_allowCapsMessage = true;
         private const int m_mapDistance = 100;
+        private readonly List<MapBlockData> m_mapLayer = new List<MapBlockData>();
+        private readonly string m_mapLayerPath = "0001";
+        private bool m_allowCapsMessage = true;
+        private IGridService m_gridService;
+        private IRegionClientCapsService m_service;
+
+        #region ICapsServiceConnector Members
 
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
             m_gridService = service.Registry.RequestModuleInterface<IGridService>();
-            IConfig config = service.ClientCaps.Registry.RequestModuleInterface<ISimulationBase> ().ConfigSource.Configs["MapCaps"];
-            if(config != null)
-                m_allowCapsMessage = config.GetBoolean ("AllowCapsMessage", m_allowCapsMessage);
+            IConfig config =
+                service.ClientCaps.Registry.RequestModuleInterface<ISimulationBase>().ConfigSource.Configs["MapCaps"];
+            if (config != null)
+                m_allowCapsMessage = config.GetBoolean("AllowCapsMessage", m_allowCapsMessage);
 
-            RestMethod method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return MapLayerRequest(request, path, param, httpRequest, httpResponse, m_service.AgentID);
-            };
-            m_service.AddStreamHandler("MapLayer", new RestStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
-                                                      method));
-            m_service.AddStreamHandler("MapLayerGod", new RestStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", m_mapLayerPath),
-                                                      method));
+            RestMethod method =
+                (request, path, param, httpRequest, httpResponse) =>
+                MapLayerRequest(request, path, param, httpRequest, httpResponse,
+                                m_service.AgentID);
+            m_service.AddStreamHandler("MapLayer",
+                                       new RestStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
+                                                             method));
+            m_service.AddStreamHandler("MapLayerGod",
+                                       new RestStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", m_mapLayerPath),
+                                                             method));
         }
 
         public void EnteringRegion()
@@ -84,50 +75,52 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
-            m_service.RemoveStreamHandler ("MapLayer", "POST");
+            m_service.RemoveStreamHandler("MapLayer", "POST");
             m_mapLayer.Clear();
         }
 
+        #endregion
+
         /// <summary>
-        /// Callback for a map layer request
+        ///   Callback for a map layer request
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="path"></param>
-        /// <param name="param"></param>
-        /// <param name="agentID"></param>
-        /// <param name="caps"></param>
+        /// <param name = "request"></param>
+        /// <param name = "path"></param>
+        /// <param name = "param"></param>
+        /// <param name = "agentID"></param>
+        /// <param name = "caps"></param>
         /// <returns></returns>
         public string MapLayerRequest(string request, string path, string param,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
-            int bottom = (m_service.RegionY / Constants.RegionSize) - m_mapDistance;
-            int top = (int)(m_service.RegionY / Constants.RegionSize) + m_mapDistance;
-            int left = (int)(m_service.RegionX / Constants.RegionSize) - m_mapDistance;
-            int right = (int)(m_service.RegionX / Constants.RegionSize) + m_mapDistance;
+            int bottom = (m_service.RegionY/Constants.RegionSize) - m_mapDistance;
+            int top = (m_service.RegionY/Constants.RegionSize) + m_mapDistance;
+            int left = (m_service.RegionX/Constants.RegionSize) - m_mapDistance;
+            int right = (m_service.RegionX/Constants.RegionSize) + m_mapDistance;
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             int flags = map["Flags"].AsInteger();
 
-            OSDArray layerData = new OSDArray();
-            layerData.Add(GetOSDMapLayerResponse(bottom, left, right, top, new UUID("00000000-0000-1111-9999-000000000006")));
+            OSDArray layerData = new OSDArray
+                                     {
+                                         GetOSDMapLayerResponse(bottom, left, right, top,
+                                                                new UUID("00000000-0000-1111-9999-000000000006"))
+                                     };
             OSDArray mapBlocksData = new OSDArray();
 
             if (m_allowCapsMessage)
             {
                 if (m_mapLayer == null || m_mapLayer.Count == 0)
                 {
-                    List<GridRegion> regions = m_gridService.GetRegionRange (UUID.Zero,
-                            left * (int)Constants.RegionSize,
-                            right * (int)Constants.RegionSize,
-                            bottom * (int)Constants.RegionSize,
-                            top * (int)Constants.RegionSize);
+                    List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                                                                            left*Constants.RegionSize,
+                                                                            right*Constants.RegionSize,
+                                                                            bottom*Constants.RegionSize,
+                                                                            top*Constants.RegionSize);
                     foreach (GridRegion r in regions)
                     {
-                        if (flags == 0) //Map
-                            m_mapLayer.Add(MapBlockFromGridRegion(r));
-                        else
-                            m_mapLayer.Add(TerrainBlockFromGridRegion(r));
+                        m_mapLayer.Add(flags == 0 ? MapBlockFromGridRegion(r) : TerrainBlockFromGridRegion(r));
                     }
                 }
             }
@@ -146,17 +139,17 @@ namespace OpenSim.Services.CapsService
             MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.Down;
+                block.Access = (byte) SimAccess.Down;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainImage;
             block.Name = r.RegionName;
-            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
-            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)(r.RegionSizeX);
-            block.SizeY = (ushort)(r.RegionSizeY);
+            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
+            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
+            block.SizeX = (ushort) (r.RegionSizeX);
+            block.SizeY = (ushort) (r.RegionSizeY);
             return block;
         }
 
@@ -165,15 +158,15 @@ namespace OpenSim.Services.CapsService
             MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte)SimAccess.Down;
+                block.Access = (byte) SimAccess.Down;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
             block.Access = r.Access;
             block.MapImageID = r.TerrainMapImage;
             block.Name = r.RegionName;
-            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
-            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
+            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
             return block;
         }
 
@@ -188,10 +181,9 @@ namespace OpenSim.Services.CapsService
             return map;
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
+        ///<summary>
+        ///</summary>
+        ///<returns></returns>
         protected static OSDMap GetOSDMapLayerResponse(int bottom, int left, int right, int top, UUID imageID)
         {
             OSDMap mapLayer = new OSDMap();

@@ -25,28 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Net;
-using System.Reflection;
-using System.Text;
 using System.Web;
-using log4net;
-using Nini.Config;
-using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework.Capabilities;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Services.DataService;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService
@@ -57,7 +48,7 @@ namespace OpenSim.Services.CapsService
 
     public class StreamHandler : BaseStreamHandler
     {
-        StreamHandlerCallback m_callback;
+        readonly StreamHandlerCallback m_callback;
 
         public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
             : base(httpMethod, path)
@@ -87,32 +78,20 @@ namespace OpenSim.Services.CapsService
             m_agentInfoService = service.Registry.RequestModuleInterface<IAgentInfoService>();
             m_agentProcessing = service.Registry.RequestModuleInterface<IAgentProcessing>();
             
-            GenericHTTPMethod method = delegate(Hashtable httpMethod)
-            {
-                return ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
-            };
+            GenericHTTPMethod method = httpMethod => ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
             service.AddStreamHandler("UpdateAgentLanguage", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
                                                       method));
-            method = delegate(Hashtable httpMethod)
-            {
-                return ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
-            };
+            method = httpMethod => ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
             service.AddStreamHandler("UpdateAgentInformation", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
                                 method));
 
             service.AddStreamHandler ("AvatarPickerSearch", new StreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
                                                       ProcessAvatarPickerSearch));
 
-            method = delegate(Hashtable httpMethod)
-            {
-                return HomeLocation(httpMethod, m_service.AgentID);
-            };
+            method = httpMethod => HomeLocation(httpMethod, m_service.AgentID);
             service.AddStreamHandler("HomeLocation", new RestHTTPHandler("POST", service.CreateCAPS("HomeLocation", ""),
                                                       method));
-            method = delegate(Hashtable httpMethod)
-            {
-                return TeleportLocation(httpMethod, m_service.AgentID);
-            };
+            method = httpMethod => TeleportLocation(httpMethod, m_service.AgentID);
             service.AddStreamHandler("TeleportLocation", new RestHTTPHandler("POST", service.CreateCAPS("TeleportLocation", ""),
                                                       method));
         }
@@ -136,17 +115,20 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             OSDMap HomeLocation = rm["HomeLocation"] as OSDMap;
-            OSDMap pos = HomeLocation["LocationPos"] as OSDMap;
-            Vector3 position = new Vector3((float)pos["X"].AsReal(),
-                (float)pos["Y"].AsReal(),
-                (float)pos["Z"].AsReal());
-            OSDMap lookat = HomeLocation["LocationLookAt"] as OSDMap;
-            Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
-                (float)lookat["Y"].AsReal(),
-                (float)lookat["Z"].AsReal());
-            //int locationID = HomeLocation["LocationId"].AsInteger();
+            if (HomeLocation != null)
+            {
+                OSDMap pos = HomeLocation["LocationPos"] as OSDMap;
+                Vector3 position = new Vector3((float)pos["X"].AsReal(),
+                                               (float)pos["Y"].AsReal(),
+                                               (float)pos["Z"].AsReal());
+                OSDMap lookat = HomeLocation["LocationLookAt"] as OSDMap;
+                Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
+                                             (float)lookat["Y"].AsReal(),
+                                             (float)lookat["Z"].AsReal());
+                //int locationID = HomeLocation["LocationId"].AsInteger();
 
-            m_agentInfoService.SetHomePosition(agentID.ToString(), m_service.Region.RegionID, position, lookAt);
+                m_agentInfoService.SetHomePosition(agentID.ToString(), m_service.Region.RegionID, position, lookAt);
+            }
 
             rm.Add("success", OSD.FromBoolean(true));
 
@@ -189,17 +171,16 @@ namespace OpenSim.Services.CapsService
             NameValueCollection query = HttpUtility.ParseQueryString(httpRequest.Url.Query);
             string amt = query.GetOne("page-size");
             string name = query.GetOne("names");
-            List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name);
+            List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name) ??
+                                         new List<UserAccount>(0);
 
-            if (accounts == null)
-                accounts = new List<UserAccount>(0);
             OSDMap body = new OSDMap();
             OSDArray array = new OSDArray();
             foreach (UserAccount account in accounts)
             {
                 OSDMap map = new OSDMap();
                 map["agent_id"] = account.PrincipalID;
-                IUserProfileInfo profileInfo = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
+                IUserProfileInfo profileInfo = DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(account.PrincipalID);
                 map["display_name"] = (profileInfo == null || profileInfo.DisplayName == "") ? account.Name : profileInfo.DisplayName;
                 map["username"] = account.Name;
                 array.Add(map);
@@ -254,11 +235,12 @@ namespace OpenSim.Services.CapsService
                 (float)pos["Y"].AsReal(),
                 (float)pos["Z"].AsReal());
             OSDMap lookat = rm["LocationLookAt"] as OSDMap;
+            // this vector does not appear to be used
             Vector3 lookAt = new Vector3((float)lookat["X"].AsReal(),
                 (float)lookat["Y"].AsReal(),
                 (float)lookat["Z"].AsReal());
             ulong RegionHandle = rm["RegionHandle"].AsULong();
-            uint tpFlags = 16;
+            const uint tpFlags = 16;
 
             OSDMap retVal = new OSDMap();
             string reason = "";

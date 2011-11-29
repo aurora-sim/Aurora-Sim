@@ -29,10 +29,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
-
 using log4net;
 
 namespace OpenSim.Framework.Servers.HttpServer
@@ -40,25 +36,24 @@ namespace OpenSim.Framework.Servers.HttpServer
     public class SynchronousRestFormsRequester
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        
-        /// <summary>
-        /// Perform a synchronous REST request.
-        /// </summary>
-        /// <param name="verb"></param>
-        /// <param name="requestUrl"></param>
-        /// <param name="obj"> </param>
-        /// <returns></returns>
-        ///
-        /// <exception cref="System.Net.WebException">Thrown if we encounter a network issue while posting
-        /// the request.  You'll want to make sure you deal with this as they're not uncommon</exception>
+
+        ///<summary>
+        ///  Perform a synchronous REST request.
+        ///</summary>
+        ///<param name = "verb"></param>
+        ///<param name = "requestUrl"></param>
+        ///<param name = "obj"> </param>
+        ///<returns></returns>
+        ///<exception cref = "System.Net.WebException">Thrown if we encounter a network issue while posting
+        ///  the request.  You'll want to make sure you deal with this as they're not uncommon</exception>
         public static string MakeRequest(string verb, string requestUrl, string obj)
         {
             WebRequest request;
             try
             {
-                request = WebRequest.Create (requestUrl);
+                request = WebRequest.Create(requestUrl);
             }
             catch
             {
@@ -81,7 +76,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                         writer.Flush();
                     }
 
-                    length = (int)obj.Length;
+                    length = obj.Length;
                     request.ContentLength = length;
 
                     Stream requestStream = null;
@@ -92,8 +87,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e.ToString(), requestUrl);
-                        return(respstring);
+                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
+                        return (respstring);
                     }
                     finally
                     {
@@ -112,14 +107,15 @@ namespace OpenSim.Framework.Servers.HttpServer
                             try
                             {
                                 respStream = resp.GetResponseStream();
-                                using (StreamReader reader = new StreamReader(respStream))
-                                {
-                                    respstring = reader.ReadToEnd();
-                                }
+                                if (respStream != null)
+                                    using (StreamReader reader = new StreamReader(respStream))
+                                    {
+                                        respstring = reader.ReadToEnd();
+                                    }
                             }
                             catch (Exception e)
                             {
-                                m_log.DebugFormat("[FORMS]: exception occured on receiving reply " + e.ToString());
+                                m_log.DebugFormat("[FORMS]: exception occured on receiving reply " + e);
                             }
                             finally
                             {
@@ -129,7 +125,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                         }
                     }
                 }
-                catch (System.InvalidOperationException)
+                catch (InvalidOperationException)
                 {
                     // This is what happens when there is invalid XML
                     m_log.DebugFormat("[FORMS]: InvalidOperationException on receiving request");

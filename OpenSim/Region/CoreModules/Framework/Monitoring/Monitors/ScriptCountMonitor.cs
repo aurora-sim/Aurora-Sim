@@ -25,45 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Linq;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class ScriptCountMonitor : IScriptCountMonitor
+    internal class ScriptCountMonitor : IScriptCountMonitor
     {
         private readonly IScene m_scene;
-
-        public int ActiveScripts
-        {
-            get
-            {
-                int ActiveScripts = 0;
-                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-                foreach (IScriptModule module in modules)
-                {
-                    if(module != null)
-                        ActiveScripts += module.GetActiveScripts();
-                }
-                return ActiveScripts;
-            }
-        }
-
-        public int ScriptEPS
-        {
-            get
-            {
-                int ScriptEPS = 0;
-                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
-                foreach (IScriptModule module in modules)
-                {
-                    if(module != null)
-                        ScriptEPS += module.GetScriptEPS();
-                }
-                return ScriptEPS;
-            }
-        }
 
         public ScriptCountMonitor(IScene scene)
         {
@@ -87,8 +57,30 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return ActiveScripts + " active script(s), " + ScriptEPS + " event(s) per second";
         }
 
-        public void ResetStats ()
+        public void ResetStats()
         {
+        }
+
+        #endregion
+
+        #region IScriptCountMonitor Members
+
+        public int ActiveScripts
+        {
+            get
+            {
+                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                return modules.Where(module => module != null).Sum(module => module.GetActiveScripts());
+            }
+        }
+
+        public int ScriptEPS
+        {
+            get
+            {
+                IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
+                return modules.Where(module => module != null).Sum(module => module.GetScriptEPS());
+            }
         }
 
         #endregion

@@ -331,8 +331,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     x=y=z=s=0;
                     return;
                 }
-                bool res;
-                res = Double.TryParse(tmps[0], NumberStyles.Float, Culture.NumberFormatInfo, out x);
+                bool res = Double.TryParse(tmps[0], NumberStyles.Float, Culture.NumberFormatInfo, out x);
                 res = res & Double.TryParse(tmps[1], NumberStyles.Float, Culture.NumberFormatInfo, out y);
                 res = res & Double.TryParse(tmps[2], NumberStyles.Float, Culture.NumberFormatInfo, out z);
                 res = res & Double.TryParse(tmps[3], NumberStyles.Float, Culture.NumberFormatInfo, out s);

@@ -31,24 +31,16 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Net;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using Aurora.DataManager;
 using Aurora.Framework;
-using OpenSim.Services.Interfaces;
 using System.Timers;
 
 namespace Aurora.Modules
@@ -58,22 +50,22 @@ namespace Aurora.Modules
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static readonly string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
+        private const string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
         //private static readonly UUID STOP_UUID = UUID.Random();
 
         //private IConfig m_config;
         protected IScene m_scene;
         private byte[] myMapImageJPEG;
-        protected bool m_Enabled = false;
+        protected bool m_Enabled;
         private IConfigSource m_config;
-        private ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
+        private readonly ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
 
-        private Queue<MapItemRequester> m_itemsToRequest = new Queue<MapItemRequester> ();
-        private bool itemRequesterIsRunning = false;
-        private static AuroraThreadPool threadpool = null;
-        private static AuroraThreadPool blockthreadpool = null;
+        private readonly Queue<MapItemRequester> m_itemsToRequest = new Queue<MapItemRequester> ();
+        private bool itemRequesterIsRunning;
+        private static AuroraThreadPool threadpool;
+        private static AuroraThreadPool blockthreadpool;
         private double minutes = 60 * 24;
-        private double oneminute = 60000;
+        private const double oneminute = 60000;
         private System.Timers.Timer UpdateMapImage;
         private System.Timers.Timer UpdateOnlineStatus;
         private bool m_generateMapTiles = true;
@@ -171,9 +163,8 @@ namespace Aurora.Modules
             if (!m_Enabled)
                 return;
 
-            AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo();
-            info.priority = ThreadPriority.Lowest;
-            info.Threads = 1;
+            AuroraThreadPoolStartInfo info = new AuroraThreadPoolStartInfo
+                                                 {priority = ThreadPriority.Lowest, Threads = 1};
             threadpool = new AuroraThreadPool(info);
             blockthreadpool = new AuroraThreadPool(info);
 
@@ -268,29 +259,31 @@ namespace Aurora.Modules
             if (remoteClient.Scene.GetScenePresence (remoteClient.AgentId).IsChildAgent)
                 return;//No child agent requests
 
-            uint xstart = 0;
-            uint ystart = 0;
-            OpenMetaverse.Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            uint xstart;
+            uint ystart;
+            Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out xstart, out ystart);
             
             List<mapItemReply> mapitems = new List<mapItemReply>();
             int tc = Environment.TickCount;
-            if (itemtype == (int)OpenMetaverse.GridItemType.AgentLocations)
+            if (itemtype == (int)GridItemType.AgentLocations)
             {
                 //If its local, just let it do it on its own.
                 if (regionhandle == 0 || regionhandle == m_scene.RegionInfo.RegionHandle)
                 {
                     //Only one person here, send a zero person response
-                    mapItemReply mapitem = new mapItemReply();
+                    mapItemReply mapitem;
                     IEntityCountModule entityCountModule = m_scene.RequestModuleInterface<IEntityCountModule>();
                     if (entityCountModule != null && entityCountModule.RootAgents <= 1)
                     {
-                        mapitem = new mapItemReply();
-                        mapitem.x = (uint)(xstart + 1);
-                        mapitem.y = (uint)(ystart + 1);
-                        mapitem.id = UUID.Zero;
-                        mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-                        mapitem.Extra = 0;
-                        mapitem.Extra2 = 0;
+                        mapitem = new mapItemReply
+                                      {
+                                          x = xstart + 1,
+                                          y = ystart + 1,
+                                          id = UUID.Zero,
+                                          name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString()),
+                                          Extra = 0,
+                                          Extra2 = 0
+                                      };
                         mapitems.Add(mapitem);
                         remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
                         return;
@@ -300,13 +293,15 @@ namespace Aurora.Modules
                         // Don't send a green dot for yourself
                         if (!sp.IsChildAgent && sp.UUID != remoteClient.AgentId)
                         {
-                            mapitem = new mapItemReply();
-                            mapitem.x = (uint)(xstart + sp.AbsolutePosition.X);
-                            mapitem.y = (uint)(ystart + sp.AbsolutePosition.Y);
-                            mapitem.id = UUID.Zero;
-                            mapitem.name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString());
-                            mapitem.Extra = 1;
-                            mapitem.Extra2 = 0;
+                            mapitem = new mapItemReply
+                                          {
+                                              x = (uint) (xstart + sp.AbsolutePosition.X),
+                                              y = (uint) (ystart + sp.AbsolutePosition.Y),
+                                              id = UUID.Zero,
+                                              name = Util.Md5Hash(m_scene.RegionInfo.RegionName + tc.ToString()),
+                                              Extra = 1,
+                                              Extra2 = 0
+                                          };
                             mapitems.Add(mapitem);
                         }
                     });
@@ -317,8 +312,8 @@ namespace Aurora.Modules
                     List<mapItemReply> reply;
                     if (!m_mapItemCache.TryGetValue(regionhandle, out reply))
                     {
-                        m_itemsToRequest.Enqueue(new MapItemRequester()
-                        {
+                        m_itemsToRequest.Enqueue(new MapItemRequester
+                                                     {
                             flags = flags,
                             itemtype = itemtype,
                             regionhandle = regionhandle,
@@ -347,10 +342,10 @@ namespace Aurora.Modules
                 if (item == null)
                     break; //Nothing in the queue
 
-                List<mapItemReply> mapitems = new List<mapItemReply>();
+                List<mapItemReply> mapitems;
                 if (!m_mapItemCache.TryGetValue(item.regionhandle, out mapitems)) //try again, might have gotten picked up by this already
                 {
-                    multipleMapItemReply allmapitems = m_scene.GridService.GetMapItems(item.regionhandle, (OpenMetaverse.GridItemType)item.itemtype);
+                    multipleMapItemReply allmapitems = m_scene.GridService.GetMapItems(item.regionhandle, (GridItemType)item.itemtype);
 
                     if (allmapitems == null)
                         continue;
@@ -374,14 +369,16 @@ namespace Aurora.Modules
             itemRequesterIsRunning = false;
         }
 
-		/// <summary>
-		/// Requests map blocks in area of minX, maxX, minY, MaxY in world cordinates
-		/// </summary>
-		/// <param name="minX"></param>
-		/// <param name="minY"></param>
-		/// <param name="maxX"></param>
-		/// <param name="maxY"></param>
-		public virtual void RequestMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
+        /// <summary>
+        /// Requests map blocks in area of minX, maxX, minY, MaxY in world cordinates
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="minX"></param>
+        /// <param name="minY"></param>
+        /// <param name="maxX"></param>
+        /// <param name="maxY"></param>
+        /// <param name="flag"></param>
+        public virtual void RequestMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
 		{
             if ((flag & 0x10000) != 0)  // user clicked on the map a tile that isn't visible
             {
@@ -406,8 +403,8 @@ namespace Aurora.Modules
 
         protected virtual void ClickedOnTile(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Enqueue (new MapBlockRequester ()
-            {
+            m_blockitemsToRequest.Enqueue (new MapBlockRequester
+                                               {
                 maxX = maxX,
                 maxY = maxY,
                 minX = minX,
@@ -421,8 +418,8 @@ namespace Aurora.Modules
 
         protected virtual void GetAndSendMapBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Enqueue(new MapBlockRequester()
-            {
+            m_blockitemsToRequest.Enqueue(new MapBlockRequester
+                                              {
                 maxX = maxX,
                 maxY = maxY,
                 minX = minX,
@@ -436,8 +433,8 @@ namespace Aurora.Modules
 
         protected virtual void GetAndSendTerrainBlocks(IClientAPI remoteClient, int minX, int minY, int maxX, int maxY, uint flag)
         {
-            m_blockitemsToRequest.Enqueue (new MapBlockRequester ()
-            {
+            m_blockitemsToRequest.Enqueue (new MapBlockRequester
+                                               {
                 maxX = maxX,
                 maxY = maxY,
                 minX = minX,
@@ -449,8 +446,8 @@ namespace Aurora.Modules
                 blockthreadpool.QueueEvent(GetMapBlocks, 3);
         }
 
-        private bool blockRequesterIsRunning = false;
-        private Queue<MapBlockRequester> m_blockitemsToRequest = new Queue<MapBlockRequester> ();
+        private bool blockRequesterIsRunning;
+        private readonly Queue<MapBlockRequester> m_blockitemsToRequest = new Queue<MapBlockRequester> ();
 
         private class MapBlockRequester
         {
@@ -477,10 +474,10 @@ namespace Aurora.Modules
                     List<MapBlockData> mapBlocks = new List<MapBlockData>();
 
                     List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                            (item.minX - 4) * (int)Constants.RegionSize,
-                            (item.maxX + 4) * (int)Constants.RegionSize,
-                            (item.minY - 4) * (int)Constants.RegionSize,
-                            (item.maxY + 4) * (int)Constants.RegionSize);
+                            (item.minX - 4) * Constants.RegionSize,
+                            (item.maxX + 4) * Constants.RegionSize,
+                            (item.minY - 4) * Constants.RegionSize,
+                            (item.maxY + 4) * Constants.RegionSize);
 
                     foreach (GridRegion region in regions)
                     {
@@ -519,8 +516,8 @@ namespace Aurora.Modules
                 block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)(int)r.RegionSizeX;
-            block.SizeY = (ushort)(int)r.RegionSizeY;
+            block.SizeX = (ushort)r.RegionSizeX;
+            block.SizeY = (ushort)r.RegionSizeY;
 
             return block;
         }
@@ -555,14 +552,17 @@ namespace Aurora.Modules
                     {
                         if (x == 0 && y == 0)
                             continue;
-                         block = new MapBlockData ();
-                        block.Access = r.Access;
-                        block.MapImageID = r.TerrainImage;
-                        block.Name = r.RegionName; //Child piece, so ignore it
-                        block.X = (ushort)((r.RegionLocX / Constants.RegionSize) + x);
-                        block.Y = (ushort)((r.RegionLocY / Constants.RegionSize) + y);
-                        block.SizeX = (ushort)r.RegionSizeX;
-                        block.SizeY = (ushort)r.RegionSizeY;
+                        block = new MapBlockData
+                                    {
+                                        Access = r.Access,
+                                        MapImageID = r.TerrainImage,
+                                        Name = r.RegionName,
+                                        X = (ushort) ((r.RegionLocX/Constants.RegionSize) + x),
+                                        Y = (ushort) ((r.RegionLocY/Constants.RegionSize) + y),
+                                        SizeX = (ushort) r.RegionSizeX,
+                                        SizeY = (ushort) r.RegionSizeY
+                                    };
+                        //Child piece, so ignore it
                         blocks.Add (block);
                     }
                 }
@@ -596,7 +596,7 @@ namespace Aurora.Modules
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
             if (TryCoordsSearch)
             {
-                GridRegion region = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, (int)(XCoord * Constants.RegionSize), (int)(YCoord * Constants.RegionSize));
+                GridRegion region = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, XCoord * Constants.RegionSize, YCoord * Constants.RegionSize);
                 if (region != null)
                 {
                     region.RegionName = mapName + " - " + region.RegionName;
@@ -614,10 +614,10 @@ namespace Aurora.Modules
                 }
                 //Then send surrounding regions
                 List<GridRegion> regions = m_scene.GridService.GetRegionRange (m_scene.RegionInfo.ScopeID,
-                    (region.RegionLocX - (4 * (int)Constants.RegionSize)),
-                    (region.RegionLocX + (4 * (int)Constants.RegionSize)),
-                    (region.RegionLocY - (4 * (int)Constants.RegionSize)),
-                    (region.RegionLocY + (4 * (int)Constants.RegionSize)));
+                    (region.RegionLocX - (4 * Constants.RegionSize)),
+                    (region.RegionLocX + (4 * Constants.RegionSize)),
+                    (region.RegionLocY - (4 * Constants.RegionSize)),
+                    (region.RegionLocY + (4 * Constants.RegionSize)));
                 if (regions != null)
                 {
                     foreach (GridRegion r in regions)
@@ -632,17 +632,20 @@ namespace Aurora.Modules
             }
 
             // final block, closing the search result
-            MapBlockData data = new MapBlockData();
-            data.Agents = 0;
-            data.Access = 255;
-            data.MapImageID = UUID.Zero;
-            data.Name = mapName;
-            data.RegionFlags = 0;
-            data.WaterHeight = 0; // not used
-            data.X = 0;
-            data.Y = 0;
-            data.SizeX = 256;
-            data.SizeY = 256;
+            MapBlockData data = new MapBlockData
+                                    {
+                                        Agents = 0,
+                                        Access = 255,
+                                        MapImageID = UUID.Zero,
+                                        Name = mapName,
+                                        RegionFlags = 0,
+                                        WaterHeight = 0,
+                                        X = 0,
+                                        Y = 0,
+                                        SizeX = 256,
+                                        SizeY = 256
+                                    };
+            // not used
             blocks.Add(data);
 
             remoteClient.SendMapBlock (blocks, flags);
@@ -666,8 +669,8 @@ namespace Aurora.Modules
             block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)(int)r.RegionSizeX;
-            block.SizeY = (ushort)(int)r.RegionSizeY;
+            block.SizeX = (ushort)r.RegionSizeX;
+            block.SizeY = (ushort)r.RegionSizeY;
             return block;
         }
 
@@ -688,8 +691,8 @@ namespace Aurora.Modules
                 block.Name = r.RegionName;
             block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
             block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
-            block.SizeX = (ushort)(int)r.RegionSizeX;
-            block.SizeY = (ushort)(int)r.RegionSizeY;
+            block.SizeX = (ushort)r.RegionSizeX;
+            block.SizeY = (ushort)r.RegionSizeY;
             return block;
         }
 
@@ -701,7 +704,7 @@ namespace Aurora.Modules
             if (keysvals["method"].ToString() != regionImage)
                 return reply;
             m_log.Debug("[WORLD MAP]: Sending map image jpeg");
-            int statuscode = 200;
+            const int statuscode = 200;
             byte[] jpeg = new byte[0];
 
             if (myMapImageJPEG == null ||myMapImageJPEG.Length == 0)
@@ -748,17 +751,13 @@ namespace Aurora.Modules
                 {
                     // Reclaim memory, these are unmanaged resources
                     // If we encountered an exception, one or more of these will be null
-                    if (mapTexture != null)
-                        mapTexture.Dispose();
+                    mapTexture.Dispose();
 
                     if (image != null)
                         image.Dispose();
 
-                    if (imgstream != null)
-                    {
-                        imgstream.Close();
-                        imgstream.Dispose();
-                    }
+                    imgstream.Close();
+                    imgstream.Dispose();
                 }
             }
             else
@@ -777,20 +776,13 @@ namespace Aurora.Modules
         // From msdn
         private static ImageCodecInfo GetEncoderInfo(String mimeType)
         {
-            ImageCodecInfo[] encoders;
-            encoders = ImageCodecInfo.GetImageEncoders();
-            for (int j = 0; j < encoders.Length; ++j)
-            {
-                if (encoders[j].MimeType == mimeType)
-                    return encoders[j];
-            }
-            return null;
+            ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders();
+            return encoders.FirstOrDefault(t => t.MimeType == mimeType);
         }
 
         /// <summary>
         /// Update the world map
         /// </summary>
-        /// <param name="fileName"></param>
         public void HandleUpdateWorldMapConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != null && m_scene != MainConsole.Instance.ConsoleScene)
@@ -801,37 +793,25 @@ namespace Aurora.Modules
         /// <summary>
         /// Export the world map
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="cmdparams"></param>
         public void HandleExportWorldMapConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
 
-            string exportPath;
-
-            if (cmdparams.Length > 1)
-                exportPath = cmdparams[1];
-            else
-                exportPath = DEFAULT_WORLD_MAP_EXPORT_PATH;
+            string exportPath = cmdparams.Length > 1 ? cmdparams[1] : DEFAULT_WORLD_MAP_EXPORT_PATH;
 
             m_log.InfoFormat(
                 "[WORLD MAP]: Exporting world map for {0} to {1}", m_scene.RegionInfo.RegionName, exportPath);
 
             List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
-                    (int)(m_scene.RegionInfo.RegionLocX - (9 * (int)Constants.RegionSize)),
-                    (int)(m_scene.RegionInfo.RegionLocX + (9 * (int)Constants.RegionSize)),
-                    (int)(m_scene.RegionInfo.RegionLocY - (9 * (int)Constants.RegionSize)),
-                    (int)(m_scene.RegionInfo.RegionLocY + (9 * (int)Constants.RegionSize)));
-            List<AssetBase> textures = new List<AssetBase>();
+                    m_scene.RegionInfo.RegionLocX - (9 * Constants.RegionSize),
+                    m_scene.RegionInfo.RegionLocX + (9 * Constants.RegionSize),
+                    m_scene.RegionInfo.RegionLocY - (9 * Constants.RegionSize),
+                    m_scene.RegionInfo.RegionLocY + (9 * Constants.RegionSize));
             List<Image> bitImages = new List<Image>();
 
-            foreach (GridRegion r in regions)
-            {
-                AssetBase texAsset = m_scene.AssetService.Get(r.TerrainImage.ToString());
-
-                if (texAsset != null)
-                    textures.Add(texAsset);
-            }
+            List<AssetBase> textures = regions.Select(r => m_scene.AssetService.Get(r.TerrainImage.ToString())).Where(texAsset => texAsset != null).ToList();
 
             foreach (AssetBase asset in textures)
             {
@@ -841,21 +821,21 @@ namespace Aurora.Modules
                     bitImages.Add(image);
             }
 
-            int size = 2560;
-            int offsetSize = size / 10 / 2;
+            const int size = 2560;
+            const int offsetSize = size / 10 / 2;
             Bitmap mapTexture = new Bitmap(size, size);
             Graphics g = Graphics.FromImage(mapTexture);
             SolidBrush sea = new SolidBrush(Color.DarkBlue);
             g.FillRectangle(sea, 0, 0, size, size);
 
             int regionXOffset = (m_scene.RegionInfo.RegionSizeX / 2 - 128) * -1;//Neg because the image is upside down
-            int regionYOffset = 0;// (m_scene.RegionInfo.RegionSizeY / 2 - 128) * -1;
+            const int regionYOffset = 0; // (m_scene.RegionInfo.RegionSizeY / 2 - 128) * -1;
 
             for (int i = 0; i < regions.Count; i++)
             {
                 int regionSizeOffset = regions[i].RegionSizeX / 2 - 128;
-                int x = (int)(((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) / Constants.RegionSize) + 10);
-                int y = (int)(((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) / Constants.RegionSize) + 10);
+                int x = ((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) / Constants.RegionSize) + 10;
+                int y = ((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) / Constants.RegionSize) + 10;
                 g.DrawImage(bitImages[i], (x * offsetSize) + regionXOffset, size - (y * offsetSize + regionSizeOffset) + regionYOffset, regions[i].RegionSizeX / 2, regions[i].RegionSizeY / 2); // y origin is top
             }
 
@@ -927,17 +907,21 @@ namespace Aurora.Modules
                 m_scene.RegionInfo.RegionSettings.TerrainImageID,
                 "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
                 AssetType.Simstate,
-                m_scene.RegionInfo.RegionID);
-            Mapasset.Description = m_scene.RegionInfo.RegionName;
-            Mapasset.Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile;
+                m_scene.RegionInfo.RegionID)
+                                     {
+                                         Description = m_scene.RegionInfo.RegionName,
+                                         Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                                     };
 
             AssetBase Terrainasset = new AssetBase(
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID,
                 "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
                 AssetType.Simstate,
-                m_scene.RegionInfo.RegionID);
-            Terrainasset.Description = m_scene.RegionInfo.RegionName;
-            Terrainasset.Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile;
+                m_scene.RegionInfo.RegionID)
+                                         {
+                                             Description = m_scene.RegionInfo.RegionName,
+                                             Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                                         };
 
             if(changed)
                 m_scene.RegionInfo.RegionSettings.Save();
@@ -1010,7 +994,7 @@ namespace Aurora.Modules
         {
             MemoryStream imgstream = new MemoryStream();
             Bitmap mapTexture = new Bitmap(1, 1);
-            Image image = (Image)mapTexture;
+            Image image = mapTexture;
 
             try
             {
@@ -1044,16 +1028,12 @@ namespace Aurora.Modules
             {
                 // Reclaim memory, these are unmanaged resources
                 // If we encountered an exception, one or more of these will be null
-                if (mapTexture != null)
-                    mapTexture.Dispose();
+                mapTexture.Dispose();
 
                 if (image != null)
                     image.Dispose();
 
-                if (imgstream != null)
-                {
-                    imgstream.Close();
-                }
+                imgstream.Close();
             }
         }
 

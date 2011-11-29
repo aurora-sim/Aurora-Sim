@@ -28,22 +28,21 @@
 using System;
 using System.IO;
 using System.Text;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 {
     /// <summary>
-    /// Terragen File Format Loader
-    /// Built from specification at
-    /// http://www.planetside.co.uk/terragen/dev/tgterrain.html
+    ///   Terragen File Format Loader
+    ///   Built from specification at
+    ///   http://www.planetside.co.uk/terragen/dev/tgterrain.html
     /// </summary>
     internal class Terragen : ITerrainLoader
     {
         #region ITerrainLoader Members
 
-        public ITerrainChannel LoadFile (string filename, IScene scene)
+        public ITerrainChannel LoadFile(string filename, IScene scene)
         {
             FileInfo file = new FileInfo(filename);
             FileStream s = file.Open(FileMode.Open, FileAccess.Read);
@@ -54,7 +53,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight, int sectionWidth, int sectionHeight)
+        public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight,
+                                        int sectionWidth, int sectionHeight)
         {
             TerrainChannel retval = new TerrainChannel(sectionWidth, sectionHeight, null);
 
@@ -81,7 +81,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                         bs.ReadInt16();
                         break;
                     case "YPTS":
-                        /*int fileYPoints = */bs.ReadInt16();
+                        /*int fileYPoints = */
+                        bs.ReadInt16();
                         bs.ReadInt16();
                         break;
                     case "ALTW":
@@ -96,8 +97,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                         while (currFileYOffset < offsetY)
                         {
                             // read a whole strip of regions
-                            int heightsToRead = sectionHeight * fileXPoints;
-                            bs.ReadBytes(heightsToRead * 2); // because the shorts are 2 bytes in the file
+                            int heightsToRead = sectionHeight*fileXPoints;
+                            bs.ReadBytes(heightsToRead*2); // because the shorts are 2 bytes in the file
                             currFileYOffset++;
                         }
 
@@ -110,7 +111,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             // i.e. eat X upto where we start
                             while (currFileXOffset < offsetX)
                             {
-                                bs.ReadBytes(sectionWidth * 2); // 2 bytes = short
+                                bs.ReadBytes(sectionWidth*2); // 2 bytes = short
                                 currFileXOffset++;
                             }
 
@@ -118,7 +119,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             for (int x = 0; x < sectionWidth; x++)
                             {
                                 // Read a strip and continue
-                                retval[x, y] = baseHeight + bs.ReadInt16() * heightScale / 65536;
+                                retval[x, y] = baseHeight + bs.ReadInt16()*heightScale/65536;
                             }
                             // record that we wrote it
                             currFileXOffset++;
@@ -128,7 +129,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             while (currFileXOffset < fileWidth)
                             {
                                 // eat the next regions x line
-                                bs.ReadBytes(sectionWidth * 2); // 2 bytes = short
+                                bs.ReadBytes(sectionWidth*2); // 2 bytes = short
                                 currFileXOffset++;
                             }
                             //eat the last additional point
@@ -149,9 +150,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadStream (Stream s, IScene scene)
+        public ITerrainChannel LoadStream(Stream s, IScene scene)
         {
-            int size = (int)System.Math.Sqrt(s.Length);
+            int size = (int) Math.Sqrt(s.Length);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
 
             BinaryReader bs = new BinaryReader(s);
@@ -191,7 +192,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                             {
                                 for (int x = 0; x < fileWidth; x++)
                                 {
-                                    retval[x, y] = baseHeight + bs.ReadInt16() * heightScale / 65536;
+                                    retval[x, y] = baseHeight + bs.ReadInt16()*heightScale/65536;
                                 }
                             }
                             break;
@@ -236,7 +237,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 }
             }
 
-            double baseHeight = Math.Floor((heightMax + heightMin) / 2d);
+            double baseHeight = Math.Floor((heightMax + heightMin)/2d);
 
             double horizontalScale = Math.Ceiling((heightMax - heightMin));
 
@@ -244,23 +245,23 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             if (horizontalScale < 0.01d)
                 horizontalScale = 0.01d;
 
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            ASCIIEncoding enc = new ASCIIEncoding();
 
             bs.Write(enc.GetBytes("TERRAGENTERRAIN "));
 
             bs.Write(enc.GetBytes("SIZE"));
             bs.Write(Convert.ToInt16(Constants.RegionSize));
-            bs.Write(Convert.ToInt16(0));  // necessary padding
+            bs.Write(Convert.ToInt16(0)); // necessary padding
 
             //The XPTS and YPTS chunks are not needed for square regions
             //but L3DT won't load the terrain file properly without them.
             bs.Write(enc.GetBytes("XPTS"));
             bs.Write(Convert.ToInt16(map.Scene.RegionInfo.RegionSizeX));
-            bs.Write(Convert.ToInt16(0));  // necessary padding
+            bs.Write(Convert.ToInt16(0)); // necessary padding
 
             bs.Write(enc.GetBytes("YPTS"));
             bs.Write(Convert.ToInt16(map.Scene.RegionInfo.RegionSizeY));
-            bs.Write(Convert.ToInt16(0));  // necessary padding
+            bs.Write(Convert.ToInt16(0)); // necessary padding
 
             bs.Write(enc.GetBytes("SCAL"));
             bs.Write(ToLittleEndian(1f)); //we're going to say that 1 terrain unit is 1 metre
@@ -279,7 +280,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             {
                 for (int x = 0; x < map.Width; x++)
                 {
-                    float elevation = (float)((map[x, y] - baseHeight) * 65536) / (float)horizontalScale; // see LoadStream for inverse
+                    float elevation = (float) ((map[x, y] - baseHeight)*65536)/(float) horizontalScale;
+                        // see LoadStream for inverse
 
                     // clamp rounding issues
                     if (elevation > Int16.MaxValue)
@@ -310,10 +312,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         }
 
         /// <summary>
-        /// terragen SCAL floats need to be written intel ordered regardless of
-        /// big or little endian system
+        ///   terragen SCAL floats need to be written intel ordered regardless of
+        ///   big or little endian system
         /// </summary>
-        /// <param name="number"></param>
+        /// <param name = "number"></param>
         /// <returns></returns>
         private byte[] ToLittleEndian(float number)
         {
@@ -326,10 +328,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                     tmp[i] = retVal[3 - i];
                 }
                 retVal = tmp;
-
             }
             return retVal;
         }
-
     }
 }

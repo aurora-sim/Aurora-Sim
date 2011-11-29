@@ -27,18 +27,18 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
-using log4net;
 
 namespace OpenSim.Framework.Serialization
 {
     /// <summary>
-    /// Temporary code to do the bare minimum required to read a tar archive for our purposes
+    ///   Temporary code to do the bare minimum required to read a tar archive for our purposes
     /// </summary>
     public class TarArchiveReader
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region TarEntryType enum
 
         public enum TarEntryType
         {
@@ -53,35 +53,38 @@ namespace OpenSim.Framework.Serialization
             TYPE_CONTIGUOUS_FILE = 8,
         }
 
+        #endregion
+
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
 
         /// <summary>
-        /// Binary reader for the underlying stream
+        ///   Used to trim off null chars
+        /// </summary>
+        protected static char[] m_nullCharArray = new[] {'\0'};
+
+        /// <summary>
+        ///   Used to trim off space chars
+        /// </summary>
+        protected static char[] m_spaceCharArray = new[] {' '};
+
+        /// <summary>
+        ///   Binary reader for the underlying stream
         /// </summary>
         protected BinaryReader m_br;
 
         /// <summary>
-        /// Used to trim off null chars
+        ///   Generate a tar reader which reads from the given stream.
         /// </summary>
-        protected static char[] m_nullCharArray = new char[] { '\0' };
-        /// <summary>
-        /// Used to trim off space chars
-        /// </summary>
-        protected static char[] m_spaceCharArray = new char[] { ' ' };
-
-        /// <summary>
-        /// Generate a tar reader which reads from the given stream.
-        /// </summary>
-        /// <param name="s"></param>
+        /// <param name = "s"></param>
         public TarArchiveReader(Stream s)
         {
             m_br = new BinaryReader(s);
         }
 
         /// <summary>
-        /// Read the next entry in the tar file.
+        ///   Read the next entry in the tar file.
         /// </summary>
-        /// <param name="filePath"></param>
+        /// <param name = "filePath"></param>
         /// <returns>the data for the entry.  Returns null if there are no more entries</returns>
         public byte[] ReadEntry(out string filePath, out TarEntryType entryType)
         {
@@ -98,7 +101,7 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Read the next 512 byte chunk of data as a tar header.
+        ///   Read the next 512 byte chunk of data as a tar header.
         /// </summary>
         /// <returns>A tar header struct.  null if we have reached the end of the archive.</returns>
         protected TarHeader ReadHeader()
@@ -117,7 +120,7 @@ namespace OpenSim.Framework.Serialization
             TarHeader tarHeader = new TarHeader();
 
             // If we're looking at a GNU tar long link then extract the long name and pull up the next header
-            if (header[156] == (byte)'L')
+            if (header[156] == (byte) 'L')
             {
                 int longNameLength = ConvertOctalBytesToDecimal(header, 124, 11);
                 tarHeader.FilePath = m_asciiEncoding.GetString(ReadData(longNameLength));
@@ -138,39 +141,39 @@ namespace OpenSim.Framework.Serialization
                 case 0:
                     tarHeader.EntryType = TarEntryType.TYPE_NORMAL_FILE;
                     break;
-                case (byte)'0':
+                case (byte) '0':
                     tarHeader.EntryType = TarEntryType.TYPE_NORMAL_FILE;
-                break;
-                case (byte)'1':
+                    break;
+                case (byte) '1':
                     tarHeader.EntryType = TarEntryType.TYPE_HARD_LINK;
-                break;
-                case (byte)'2':
+                    break;
+                case (byte) '2':
                     tarHeader.EntryType = TarEntryType.TYPE_SYMBOLIC_LINK;
-                break;
-                case (byte)'3':
+                    break;
+                case (byte) '3':
                     tarHeader.EntryType = TarEntryType.TYPE_CHAR_SPECIAL;
-                break;
-                case (byte)'4':
+                    break;
+                case (byte) '4':
                     tarHeader.EntryType = TarEntryType.TYPE_BLOCK_SPECIAL;
-                break;
-                case (byte)'5':
+                    break;
+                case (byte) '5':
                     tarHeader.EntryType = TarEntryType.TYPE_DIRECTORY;
-                break;
-                case (byte)'6':
+                    break;
+                case (byte) '6':
                     tarHeader.EntryType = TarEntryType.TYPE_FIFO;
-                break;
-                case (byte)'7':
+                    break;
+                case (byte) '7':
                     tarHeader.EntryType = TarEntryType.TYPE_CONTIGUOUS_FILE;
-                break;
+                    break;
             }
 
             return tarHeader;
         }
 
         /// <summary>
-        /// Read data following a header
+        ///   Read data following a header
         /// </summary>
-        /// <param name="fileSize"></param>
+        /// <param name = "fileSize"></param>
         /// <returns></returns>
         protected byte[] ReadData(int fileSize)
         {
@@ -179,9 +182,9 @@ namespace OpenSim.Framework.Serialization
             //m_log.DebugFormat("[TAR ARCHIVE READER]: fileSize {0}", fileSize);
 
             // Read the rest of the empty padding in the 512 byte block
-            if (fileSize % 512 != 0)
+            if (fileSize%512 != 0)
             {
-                int paddingLeft = 512 - (fileSize % 512);
+                int paddingLeft = 512 - (fileSize%512);
 
                 //m_log.DebugFormat("[TAR ARCHIVE READER]: Reading {0} padding bytes", paddingLeft);
 
@@ -197,9 +200,9 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Convert octal bytes to a decimal representation
+        ///   Convert octal bytes to a decimal representation
         /// </summary>
-        /// <param name="bytes"></param>
+        /// <param name = "bytes"></param>
         /// <returns></returns>
         public static int ConvertOctalBytesToDecimal(byte[] bytes, int startIndex, int count)
         {
@@ -221,8 +224,8 @@ namespace OpenSim.Framework.Serialization
 
     public class TarHeader
     {
+        public TarArchiveReader.TarEntryType EntryType;
         public string FilePath;
         public int FileSize;
-        public TarArchiveReader.TarEntryType EntryType;
     }
 }

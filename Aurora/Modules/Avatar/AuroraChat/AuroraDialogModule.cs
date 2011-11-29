@@ -26,83 +26,35 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using log4net;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Aurora.Framework;
+using log4net;
 
 namespace Aurora.Modules
 {
     /// <summary>
-    /// This dialog module has support for mute lists
+    ///   This dialog module has support for mute lists
     /// </summary>
     public class AuroraDialogModule : INonSharedRegionModule, IDialogModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected IScene m_scene;
         protected bool m_enabled = true;
-        protected IMuteListModule m_muteListModule = null;
-            
-        public void Initialise(IConfigSource source)
+        protected IMuteListModule m_muteListModule;
+        protected IScene m_scene;
+
+        public bool IsSharedModule
         {
-            IConfig m_config = source.Configs["Dialog"];
-
-            if (null == m_config)
-            {
-                m_enabled = false;
-                return;
-            }
-
-            if (m_config.GetString("DialogModule", "DialogModule") != "AuroraDialogModule")
-            {
-                m_enabled = false;
-            }
+            get { return false; }
         }
 
-        public void AddRegion (IScene scene)
-        {
-            if (!m_enabled)
-                return;
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IDialogModule>(this);
-            m_scene.EventManager.OnPermissionError += SendAlertToUser;
-
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand (
-                    "alert", "alert [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
-
-                MainConsole.Instance.Commands.AddCommand (
-                    "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand);
-            }
-        }
-
-        public void RemoveRegion (IScene scene)
-        {
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-            m_muteListModule = m_scene.RequestModuleInterface<IMuteListModule>();
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise() { }
-        public void Close() { }
-        public string Name { get { return "Dialog Module"; } }
-        public bool IsSharedModule { get { return false; } }
+        #region IDialogModule Members
 
         public void SendAlertToUser(IClientAPI client, string message)
         {
@@ -137,10 +89,10 @@ namespace Aurora.Modules
         public void SendGeneralAlert(string message)
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence presence)
-            {
-                if (!presence.IsChildAgent)
-                    presence.ControllingClient.SendAlertMessage(message);
-            });
+                                             {
+                                                 if (!presence.IsChildAgent)
+                                                     presence.ControllingClient.SendAlertMessage(message);
+                                             });
         }
 
         public void SendDialogToUser(
@@ -164,31 +116,30 @@ namespace Aurora.Modules
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
-                foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
+                if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                 {
-                    if (mute.MuteID == ownerID)
-                        return;
+                    return;
                 }
             }
 
-            IScenePresence sp = m_scene.GetScenePresence (avatarID);
+            IScenePresence sp = m_scene.GetScenePresence(avatarID);
             if (sp != null && !sp.IsChildAgent)
-                sp.ControllingClient.SendDialog(objectName, objectID, ownerID, ownerFirstName, ownerLastName, message, textureID, ch, buttonlabels);
+                sp.ControllingClient.SendDialog(objectName, objectID, ownerID, ownerFirstName, ownerLastName, message,
+                                                textureID, ch, buttonlabels);
         }
 
         public void SendUrlToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
         {
-            IScenePresence sp = m_scene.GetScenePresence (avatarID);
+            IScenePresence sp = m_scene.GetScenePresence(avatarID);
 
             //If the user is muted, do NOT send them URL boxes
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
-                foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
+                if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                 {
-                    if (mute.MuteID == ownerID)
-                        return;
+                    return;
                 }
             }
 
@@ -196,9 +147,10 @@ namespace Aurora.Modules
                 sp.ControllingClient.SendLoadURL(objectName, objectID, ownerID, groupOwned, message, url);
         }
 
-        public void SendTextBoxToUser(UUID avatarID, string message, int chatChannel, string name, UUID objectID, UUID ownerID)
+        public void SendTextBoxToUser(UUID avatarID, string message, int chatChannel, string name, UUID objectID,
+                                      UUID ownerID)
         {
-            IScenePresence sp = m_scene.GetScenePresence (avatarID);
+            IScenePresence sp = m_scene.GetScenePresence(avatarID);
 
             if (sp != null && !sp.IsChildAgent)
             {
@@ -227,13 +179,13 @@ namespace Aurora.Modules
                 if (m_muteListModule != null)
                 {
                     bool cached = false; //Unneeded
-                    foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
+                    if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                     {
-                        if (mute.MuteID == ownerID)
-                            return;
+                        return;
                     }
                 }
-                sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName, objectID);
+                sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName,
+                                                        objectID);
             }
         }
 
@@ -241,17 +193,86 @@ namespace Aurora.Modules
             UUID fromAvatarID, string fromAvatarName, string message)
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence presence)
+                                             {
+                                                 if (!presence.IsChildAgent)
+                                                     presence.ControllingClient.SendBlueBoxMessage(fromAvatarID,
+                                                                                                   fromAvatarName,
+                                                                                                   message);
+                                             });
+        }
+
+        #endregion
+
+        #region INonSharedRegionModule Members
+
+        public void Initialise(IConfigSource source)
+        {
+            IConfig m_config = source.Configs["Dialog"];
+
+            if (null == m_config)
             {
-                if (!presence.IsChildAgent)
-                    presence.ControllingClient.SendBlueBoxMessage(fromAvatarID, fromAvatarName, message);
-            });
+                m_enabled = false;
+                return;
+            }
+
+            if (m_config.GetString("DialogModule", "DialogModule") != "AuroraDialogModule")
+            {
+                m_enabled = false;
+            }
+        }
+
+        public void AddRegion(IScene scene)
+        {
+            if (!m_enabled)
+                return;
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IDialogModule>(this);
+            m_scene.EventManager.OnPermissionError += SendAlertToUser;
+
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand(
+                    "alert", "alert [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
+
+                MainConsole.Instance.Commands.AddCommand(
+                    "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand);
+            }
+        }
+
+        public void RemoveRegion(IScene scene)
+        {
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+            m_muteListModule = m_scene.RequestModuleInterface<IMuteListModule>();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "Dialog Module"; }
+        }
+
+        #endregion
+
+        public void PostInitialise()
+        {
         }
 
         /// <summary>
-        /// Handle an alert command from the console.
+        ///   Handle an alert command from the console.
         /// </summary>
-        /// <param name="module"></param>
-        /// <param name="cmdparams"></param>
+        /// <param name = "module"></param>
+        /// <param name = "cmdparams"></param>
         public void HandleAlertConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
@@ -262,7 +283,8 @@ namespace Aurora.Modules
                 string message = Util.CombineParams(cmdparams, 2);
 
                 m_log.InfoFormat(
-                    "[DIALOG]: Sending general alert in region {0} with message {1}", m_scene.RegionInfo.RegionName, message);
+                    "[DIALOG]: Sending general alert in region {0} with message {1}", m_scene.RegionInfo.RegionName,
+                    message);
                 SendGeneralAlert(message);
             }
             else

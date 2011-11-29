@@ -26,106 +26,37 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
     public class DataserverPlugin : IScriptPlugin
     {
+        private readonly Dictionary<string, DataserverRequest> DataserverRequests =
+            new Dictionary<string, DataserverRequest>();
+
         public ScriptEngine m_ScriptEngine;
 
-        private Dictionary<string, DataserverRequest> DataserverRequests =
-                new Dictionary<string, DataserverRequest>();
+        #region IScriptPlugin Members
 
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
-        }
-
-        private class DataserverRequest
-        {
-            public UUID primID;
-            public UUID itemID;
-
-            public UUID ID;
-            public string handle;
-
-            public DateTime startTime;
-            public DateTime IsCompleteAt;
-            public string Reply;
-        }
-
-        public UUID RegisterRequest(UUID primID, UUID itemID,
-                                      string identifier)
-        {
-            DataserverRequest ds = new DataserverRequest();
-
-            ds.primID = primID;
-            ds.itemID = itemID;
-
-            ds.ID = UUID.Random();
-            ds.handle = identifier;
-
-            ds.startTime = DateTime.Now;
-            ds.IsCompleteAt = DateTime.Now.AddHours(1);
-            ds.Reply = "";
-
-            lock (DataserverRequests)
-            {
-                if (DataserverRequests.ContainsKey(identifier))
-                    return UUID.Zero;
-
-                DataserverRequests[identifier] = ds;
-            }
-
-            //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads (ds.itemID);
-
-            return ds.ID;
-        }
-
-        private void DataserverReply(string identifier, string reply)
-        {
-            DataserverRequest ds;
-
-            lock (DataserverRequests)
-            {
-                if (!DataserverRequests.ContainsKey(identifier))
-                    return;
-
-                ds = DataserverRequests[identifier];
-            }
-
-            m_ScriptEngine.PostObjectEvent(ds.primID,
-                    "dataserver", new Object[]
-                            { new LSL_Types.LSLString(ds.ID.ToString()),
-                            new LSL_Types.LSLString(reply)});
         }
 
         public void RemoveScript(UUID primID, UUID itemID)
         {
             lock (DataserverRequests)
             {
-                List<DataserverRequest> ToRemove = new List<DataserverRequest>();
-                foreach (DataserverRequest ds in DataserverRequests.Values)
-                {
-                    if (ds.itemID == itemID)
-                    {
-                        ToRemove.Add(ds);
-                    }
-                }
+                List<DataserverRequest> ToRemove = DataserverRequests.Values.Where(ds => ds.itemID == itemID).ToList();
                 foreach (DataserverRequest re in ToRemove)
                 {
                     DataserverRequests.Remove(re.handle);
@@ -159,6 +90,73 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
+        public string Name
+        {
+            get { return "Dataserver"; }
+        }
+
+        public OSD GetSerializationData(UUID itemID, UUID primID)
+        {
+            return "";
+        }
+
+        public void CreateFromData(UUID itemID, UUID objectID, OSD data)
+        {
+        }
+
+        #endregion
+
+        public UUID RegisterRequest(UUID primID, UUID itemID,
+                                    string identifier)
+        {
+            DataserverRequest ds = new DataserverRequest
+                                       {
+                                           primID = primID,
+                                           itemID = itemID,
+                                           ID = UUID.Random(),
+                                           handle = identifier,
+                                           startTime = DateTime.Now,
+                                           IsCompleteAt = DateTime.Now.AddHours(1),
+                                           Reply = ""
+                                       };
+
+
+
+
+            lock (DataserverRequests)
+            {
+                if (DataserverRequests.ContainsKey(identifier))
+                    return UUID.Zero;
+
+                DataserverRequests[identifier] = ds;
+            }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads(ds.itemID);
+
+            return ds.ID;
+        }
+
+        private void DataserverReply(string identifier, string reply)
+        {
+            DataserverRequest ds;
+
+            lock (DataserverRequests)
+            {
+                if (!DataserverRequests.ContainsKey(identifier))
+                    return;
+
+                ds = DataserverRequests[identifier];
+            }
+
+            m_ScriptEngine.PostObjectEvent(ds.primID,
+                                           "dataserver", new Object[]
+                                                             {
+                                                                 new LSL_Types.LSLString(ds.ID.ToString()),
+                                                                 new LSL_Types.LSLString(reply)
+                                                             });
+        }
+
         internal void AddReply(string handle, string reply, int millisecondsToWait)
         {
             lock (DataserverRequests)
@@ -167,7 +165,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 if (DataserverRequests.TryGetValue(handle, out request))
                 {
                     //Wait for the value to be returned in LSL_Api
-                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait / 1000 + 0.1);
+                    request.IsCompleteAt = DateTime.Now.AddSeconds(millisecondsToWait/1000 + 0.1);
                     request.Reply = reply;
                     //Make sure that the cmd handler thread is running
                     m_ScriptEngine.MaintenanceThread.PokeThreads(request.itemID);
@@ -175,22 +173,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
         }
 
-        public string Name
-        {
-            get { return "Dataserver"; }
-        }
-
         public void Dispose()
         {
         }
 
-        public OSD GetSerializationData(UUID itemID, UUID primID)
+        #region Nested type: DataserverRequest
+
+        private class DataserverRequest
         {
-            return "";
+            public UUID ID;
+            public DateTime IsCompleteAt;
+            public string Reply;
+            public string handle;
+            public UUID itemID;
+            public UUID primID;
+            public DateTime startTime;
         }
 
-        public void CreateFromData (UUID itemID, UUID objectID, OSD data)
-        {
-        }
+        #endregion
     }
 }

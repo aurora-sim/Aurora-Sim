@@ -38,36 +38,36 @@ namespace OpenSim.Region.Framework.Interfaces
         event NewGroupNotice OnNewGroupNotice;
 
         /// <summary>
-        /// Create a group
+        ///   Create a group
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="name"></param>
-        /// <param name="charter"></param>
-        /// <param name="showInList"></param>
-        /// <param name="insigniaID"></param>
-        /// <param name="membershipFee"></param>
-        /// <param name="openEnrollment"></param>
-        /// <param name="allowPublish"></param>
-        /// <param name="maturePublish"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "name"></param>
+        /// <param name = "charter"></param>
+        /// <param name = "showInList"></param>
+        /// <param name = "insigniaID"></param>
+        /// <param name = "membershipFee"></param>
+        /// <param name = "openEnrollment"></param>
+        /// <param name = "allowPublish"></param>
+        /// <param name = "maturePublish"></param>
         /// <returns>The UUID of the created group</returns>
         UUID CreateGroup(
-            IClientAPI remoteClient, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, 
+            IClientAPI remoteClient, string name, string charter, bool showInList, UUID insigniaID, int membershipFee,
             bool openEnrollment, bool allowPublish, bool maturePublish);
 
         /// <summary>
-        /// Get a group
+        ///   Get a group
         /// </summary>
-        /// <param name="name">Name of the group</param>
+        /// <param name = "name">Name of the group</param>
         /// <returns>The group's data.  Null if there is no such group.</returns>
         GroupRecord GetGroupRecord(string name);
 
         /// <summary>
-        /// Get a group
+        ///   Get a group
         /// </summary>
-        /// <param name="GroupID">ID of the group</param>
+        /// <param name = "GroupID">ID of the group</param>
         /// <returns>The group's data.  Null if there is no such group.</returns>
         GroupRecord GetGroupRecord(UUID GroupID);
-        
+
         void ActivateGroup(IClientAPI remoteClient, UUID groupID);
         List<GroupTitlesData> GroupTitlesRequest(IClientAPI remoteClient, UUID groupID);
         List<GroupMembersData> GroupMembersRequest(IClientAPI remoteClient, UUID groupID);
@@ -77,15 +77,19 @@ namespace OpenSim.Region.Framework.Interfaces
         GroupMembershipData[] GetMembershipData(UUID UserID);
         GroupMembershipData GetMembershipData(UUID GroupID, UUID UserID);
 
-        void UpdateGroupInfo(IClientAPI remoteClient, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
+        void UpdateGroupInfo(IClientAPI remoteClient, UUID groupID, string charter, bool showInList, UUID insigniaID,
+                             int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
 
         void SetGroupAcceptNotices(IClientAPI remoteClient, UUID groupID, bool acceptNotices, bool listInProfile);
 
         void GroupTitleUpdate(IClientAPI remoteClient, UUID GroupID, UUID TitleRoleID);
-        
+
         GroupNoticeData[] GroupNoticesListRequest(IClientAPI remoteClient, UUID GroupID);
         string GetGroupTitle(UUID avatarID);
-        void GroupRoleUpdate(IClientAPI remoteClient, UUID GroupID, UUID RoleID, string name, string description, string title, ulong powers, byte updateType);
+
+        void GroupRoleUpdate(IClientAPI remoteClient, UUID GroupID, UUID RoleID, string name, string description,
+                             string title, ulong powers, byte updateType);
+
         void GroupRoleChanges(IClientAPI remoteClient, UUID GroupID, UUID RoleID, UUID MemberID, uint changes);
         void GroupNoticeRequest(IClientAPI remoteClient, UUID groupNoticeID);
         GridInstantMessage CreateGroupNoticeIM(UUID agentID, UUID groupNoticeID, byte dialog);

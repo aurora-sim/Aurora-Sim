@@ -30,24 +30,23 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
-using log4net;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 {
     /// <summary>
-    /// A virtual class designed to have methods overloaded,
-    /// this class provides an interface for a generic image
-    /// saving and loading mechanism, but does not specify the
-    /// format. It should not be insubstantiated directly.
+    ///   A virtual class designed to have methods overloaded,
+    ///   this class provides an interface for a generic image
+    ///   saving and loading mechanism, but does not specify the
+    ///   format. It should not be insubstantiated directly.
     /// </summary>
     public class GenericSystemDrawing : ITerrainLoader
     {
-        #region ITerrainLoader Members
-
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region ITerrainLoader Members
 
         public string FileExtension
         {
@@ -55,14 +54,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         }
 
         /// <summary>
-        /// Loads a file from a specified filename on the disk,
-        /// parses the image using the System.Drawing parsers
-        /// then returns a terrain channel. Values are
-        /// returned based on HSL brightness between 0m and 128m
+        ///   Loads a file from a specified filename on the disk,
+        ///   parses the image using the System.Drawing parsers
+        ///   then returns a terrain channel. Values are
+        ///   returned based on HSL brightness between 0m and 128m
         /// </summary>
-        /// <param name="filename">The target image to load</param>
+        /// <param name = "filename">The target image to load</param>
         /// <returns>A terrain channel generated from the image.</returns>
-        public virtual ITerrainChannel LoadFile (string filename, IScene scene)
+        public virtual ITerrainChannel LoadFile(string filename, IScene scene)
         {
             return LoadBitmap(new Bitmap(filename));
         }
@@ -76,8 +75,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             // Prevents off-by-one issue
             fileHeight--;
 
-            int xoffset = w * x;
-            int yoffset = h * (fileHeight - y);
+            int xoffset = w*x;
+            int yoffset = h*(fileHeight - y);
 
             //m_log.DebugFormat(
             //    "[TERRAIN]: Loading tile {0},{1} (offset {2},{3}) from tilemap size of {4},{5}",
@@ -95,8 +94,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 // This error WILL appear if the number of Y tiles is too high because of how it works from the bottom up
                 // However, this still spits out ugly unreferenced object errors on the console
                 m_log.ErrorFormat(
-                "[TERRAIN]: Couldn't load tile {0},{1} (from bitmap coordinates {2},{3}). Number of specified Y tiles may be too high: {4}",
-                x, y, xoffset, yoffset, e);
+                    "[TERRAIN]: Couldn't load tile {0},{1} (from bitmap coordinates {2},{3}). Number of specified Y tiles may be too high: {4}",
+                    x, y, xoffset, yoffset, e);
             }
             finally
             {
@@ -107,10 +106,36 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return LoadBitmap(cloneBitmap);
         }
 
-        public virtual ITerrainChannel LoadStream (Stream stream, IScene scene)
+        public virtual ITerrainChannel LoadStream(Stream stream, IScene scene)
         {
             return LoadBitmap(new Bitmap(stream));
         }
+
+        /// <summary>
+        ///   Exports a file to a image on the disk using a System.Drawing exporter.
+        /// </summary>
+        /// <param name = "filename">The target filename</param>
+        /// <param name = "map">The terrain channel being saved</param>
+        public virtual void SaveFile(string filename, ITerrainChannel map)
+        {
+            Bitmap colours = CreateGrayscaleBitmapFromMap(map);
+
+            colours.Save(filename, ImageFormat.Png);
+        }
+
+        /// <summary>
+        ///   Exports a stream using a System.Drawing exporter.
+        /// </summary>
+        /// <param name = "stream">The target stream</param>
+        /// <param name = "map">The terrain channel being saved</param>
+        public virtual void SaveStream(Stream stream, ITerrainChannel map)
+        {
+            Bitmap colours = CreateGrayscaleBitmapFromMap(map);
+
+            colours.Save(stream, ImageFormat.Png);
+        }
+
+        #endregion
 
         protected virtual ITerrainChannel LoadBitmap(Bitmap bitmap)
         {
@@ -122,38 +147,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 int y;
                 for (y = 0; y < bitmap.Height; y++)
                 {
-                    retval[x, y] = bitmap.GetPixel(x, bitmap.Height - y - 1).GetBrightness() * 128;
+                    retval[x, y] = bitmap.GetPixel(x, bitmap.Height - y - 1).GetBrightness()*128;
                 }
             }
 
             return retval;
         }
-
-        /// <summary>
-        /// Exports a file to a image on the disk using a System.Drawing exporter.
-        /// </summary>
-        /// <param name="filename">The target filename</param>
-        /// <param name="map">The terrain channel being saved</param>
-        public virtual void SaveFile(string filename, ITerrainChannel map)
-        {
-            Bitmap colours = CreateGrayscaleBitmapFromMap(map);
-
-            colours.Save(filename, ImageFormat.Png);
-        }
-
-        /// <summary>
-        /// Exports a stream using a System.Drawing exporter.
-        /// </summary>
-        /// <param name="stream">The target stream</param>
-        /// <param name="map">The terrain channel being saved</param>
-        public virtual void SaveStream(Stream stream, ITerrainChannel map)
-        {
-            Bitmap colours = CreateGrayscaleBitmapFromMap(map);
-
-            colours.Save(stream, ImageFormat.Png);
-        }
-
-        #endregion
 
         public override string ToString()
         {
@@ -161,10 +160,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         }
 
         /// <summary>
-        /// Protected method, generates a grayscale bitmap
-        /// image from a specified terrain channel.
+        ///   Protected method, generates a grayscale bitmap
+        ///   image from a specified terrain channel.
         /// </summary>
-        /// <param name="map">The terrain channel to export to bitmap</param>
+        /// <param name = "map">The terrain channel to export to bitmap</param>
         /// <returns>A System.Drawing.Bitmap containing a grayscale image</returns>
         protected static Bitmap CreateGrayscaleBitmapFromMap(ITerrainChannel map)
         {
@@ -183,7 +182,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 for (int x = 0; x < map.Width; x++)
                 {
                     // 512 is the largest possible height before colours clamp
-                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y] / 128.0), 0.0) * (pallete - 1));
+                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y]/128.0), 0.0)*(pallete - 1));
 
                     // Handle error conditions
                     if (colorindex > pallete - 1 || colorindex < 0)
@@ -196,10 +195,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         }
 
         /// <summary>
-        /// Protected method, generates a coloured bitmap
-        /// image from a specified terrain channel.
+        ///   Protected method, generates a coloured bitmap
+        ///   image from a specified terrain channel.
         /// </summary>
-        /// <param name="map">The terrain channel to export to bitmap</param>
+        /// <param name = "map">The terrain channel to export to bitmap</param>
         /// <returns>A System.Drawing.Bitmap containing a coloured image</returns>
         protected static Bitmap CreateBitmapFromMap(ITerrainChannel map)
         {
@@ -220,7 +219,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 for (int x = 0; x < map.Width; x++)
                 {
                     // 512 is the largest possible height before colours clamp
-                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y] / 512.0), 0.0) * (pallete - 1));
+                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y]/512.0), 0.0)*(pallete - 1));
 
                     // Handle error conditions
                     if (colorindex > pallete - 1 || colorindex < 0)

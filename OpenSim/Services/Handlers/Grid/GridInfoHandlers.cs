@@ -27,15 +27,13 @@
 
 using System;
 using System.Collections;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using log4net;
 using Nini.Config;
 using Nwc.XmlRpc;
-using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
+using log4net;
 
 namespace OpenSim.Services
 {
@@ -43,18 +41,18 @@ namespace OpenSim.Services
     {
         private static readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Hashtable _info = new Hashtable();
+        private readonly Hashtable _info = new Hashtable();
 
         /// <summary>
-        /// Instantiate a GridInfoService object.
+        ///   Instantiate a GridInfoService object.
         /// </summary>
-        /// <param name="configPath">path to config path containing
-        /// grid information</param>
+        /// <param name = "configPath">path to config path containing
+        ///   grid information</param>
         /// <remarks>
-        /// GridInfoService uses the [GridInfo] section of the
-        /// standard Aurora.ini file --- which is not optimal, but
-        /// anything else requires a general redesign of the config
-        /// system.
+        ///   GridInfoService uses the [GridInfo] section of the
+        ///   standard Aurora.ini file --- which is not optimal, but
+        ///   anything else requires a general redesign of the config
+        ///   system.
         /// </remarks>
         public GridInfoHandlers(IConfigSource configSource)
         {
@@ -82,16 +80,16 @@ namespace OpenSim.Services
                 else if (null != netCfg)
                 {
                     if (grid)
-                        _info["login"] 
+                        _info["login"]
                             = netCfg.GetString(
                                 "user_server_url", "http://127.0.0.1:" + 8002.ToString());
                     else
-                        _info["login"] 
+                        _info["login"]
                             = String.Format(
-                                "http://127.0.0.1:{0}/", 
+                                "http://127.0.0.1:{0}/",
                                 netCfg.GetString(
                                     "http_listener_port", 9000.ToString()));
-                    
+
                     IssueWarning();
                 }
                 else
@@ -104,7 +102,7 @@ namespace OpenSim.Services
             {
                 _log.Warn("[GRID INFO SERVICE]: Cannot get grid info from config source, using minimal defaults");
             }
-            
+
             _log.DebugFormat("[GRID INFO SERVICE]: Grid info service initialized with {0} keys", _info.Count);
         }
 
@@ -112,7 +110,7 @@ namespace OpenSim.Services
         {
             _log.Warn("[GRID INFO SERVICE]: found no [GridInfo] section in your configuration files");
             _log.Warn("[GRID INFO SERVICE]: trying to guess sensible defaults, you might want to provide better ones:");
-            
+
             foreach (string k in _info.Keys)
             {
                 _log.WarnFormat("[GRID INFO SERVICE]: {0}: {1}", k, _info[k]);

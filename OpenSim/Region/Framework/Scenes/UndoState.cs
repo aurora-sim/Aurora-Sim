@@ -25,17 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Linq;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.Framework.Scenes
 {
     public class UndoState
     {
         public Vector3 Position = Vector3.Zero;
-        public Vector3 Scale = Vector3.Zero;
         public Quaternion Rotation = Quaternion.Identity;
+        public Vector3 Scale = Vector3.Zero;
 
         public UndoState(SceneObjectPart part)
         {
@@ -62,7 +63,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (part.UUID == part.ParentGroup.UUID)
                 {
-                    if (Position == part.AbsolutePosition && Rotation == part.RotationOffset && Scale == part.Shape.Scale)
+                    if (Position == part.AbsolutePosition && Rotation == part.RotationOffset &&
+                        Scale == part.Shape.Scale)
                         return true;
                     else
                         return false;
@@ -73,7 +75,6 @@ namespace OpenSim.Region.Framework.Scenes
                         return true;
                     else
                         return false;
-
                 }
             }
             return false;
@@ -104,10 +105,9 @@ namespace OpenSim.Region.Framework.Scenes
                         part.Scale = Scale;
                     }
 
-                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList)
+                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList.Where(child => child.UUID != part.UUID))
                     {
-                        if(child.UUID != part.UUID)
-                            child.Undo(); //No updates here, child undo will do it on their own
+                        child.Undo(); //No updates here, child undo will do it on their own
                     }
                 }
                 else
@@ -115,7 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (Position != Vector3.Zero)
                     {
                         ChangedPos = true;
-                        part.FixOffsetPosition(Position,false);
+                        part.FixOffsetPosition(Position, false);
                     }
                     ChangedRot = true;
                     part.UpdateRotation(Rotation);
@@ -127,10 +127,11 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 part.Undoing = false;
                 part.ScheduleUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
-                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
-                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
+                                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
+                                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
             }
         }
+
         public void PlayfwdState(SceneObjectPart part)
         {
             if (part != null)
@@ -158,10 +159,9 @@ namespace OpenSim.Region.Framework.Scenes
                         part.Resize(Scale);
                     }
 
-                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList)
+                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList.Where(child => child.UUID != part.UUID))
                     {
-                        if (child.UUID != part.UUID)
-                            child.Redo(); //No updates here, child redo will do it on their own
+                        child.Redo(); //No updates here, child redo will do it on their own
                     }
                 }
                 else
@@ -169,7 +169,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (Position != Vector3.Zero)
                     {
                         ChangedPos = true;
-                        part.FixOffsetPosition(Position,false);
+                        part.FixOffsetPosition(Position, false);
                     }
                     if (Rotation != Quaternion.Identity)
                     {
@@ -184,16 +184,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 part.ScheduleUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
-                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) | 
-                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
+                                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
+                                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
                 part.Undoing = false;
             }
         }
     }
+
     public class LandUndoState
     {
-        public ITerrainModule m_terrainModule;
         public ITerrainChannel m_terrainChannel;
+        public ITerrainModule m_terrainModule;
 
         public LandUndoState(ITerrainModule terrainModule, ITerrainChannel terrainChannel)
         {

@@ -25,22 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenMetaverse;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
     public class SimulationServiceInConnector : IService
     {
         private ISimulationService m_LocalSimulationService;
-        private IRegistryCore m_registry;
         private IConfigSource m_config;
+        private IRegistryCore m_registry;
 
         public string Name
         {
@@ -53,10 +51,21 @@ namespace OpenSim.Services
         {
             m_config = config;
             m_registry = registry;
-            registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("PreRegisterRegion", EventManager_OnGenericEvent);
+            registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("PreRegisterRegion",
+                                                                                                 EventManager_OnGenericEvent);
         }
 
-        object EventManager_OnGenericEvent(string FunctionName, object parameters)
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        private object EventManager_OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName != "PreRegisterRegion")
                 return null;
@@ -68,7 +77,9 @@ namespace OpenSim.Services
                 return null;
 
             bool secure = handlerConfig.GetBoolean("SecureSimulation", true);
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("SimulationInHandlerPort"));
+            IHttpServer server =
+                m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
+                    (uint) handlerConfig.GetInt("SimulationInHandlerPort"));
 
             m_LocalSimulationService = m_registry.RequestModuleInterface<ISimulationService>();
 
@@ -83,19 +94,12 @@ namespace OpenSim.Services
                 path = "/agent/";
             }
 
-            server.AddHTTPHandler(path, new AgentHandler(m_LocalSimulationService.GetInnerService(), m_registry, secure).Handler);
-            server.AddHTTPHandler("/object/", new ObjectHandler(m_LocalSimulationService.GetInnerService(), m_config).Handler);
+            server.AddHTTPHandler(path,
+                                  new AgentHandler(m_LocalSimulationService.GetInnerService(), m_registry, secure).
+                                      Handler);
+            server.AddHTTPHandler("/object/",
+                                  new ObjectHandler(m_LocalSimulationService.GetInnerService(), m_config).Handler);
             return null;
         }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        #endregion
     }
 }

@@ -26,79 +26,34 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
     public class TimerPlugin : IScriptPlugin
     {
+        private readonly object TimerListLock = new object();
+        private readonly Dictionary<string, TimerClass> Timers = new Dictionary<string, TimerClass>();
         public ScriptEngine m_ScriptEngine;
+
+        #region IScriptPlugin Members
 
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
         }
 
         //
         // TIMER
         //
-        static private string MakeTimerKey(UUID ID, UUID itemID)
-        {
-            return ID.ToString() + itemID.ToString();
-        }
-
-        private class TimerClass
-        {
-            public UUID ID;
-            public UUID itemID;
-            public long interval;
-            public long next;
-        }
-
-        private Dictionary<string,TimerClass> Timers = new Dictionary<string,TimerClass>();
-        private object TimerListLock = new object();
-
-        public void SetTimerEvent(UUID m_ID, UUID m_itemID, double sec)
-        {
-            if (sec == 0) // Disabling timer
-            {
-                RemoveScript(m_ID, m_itemID);
-                return;
-            }
-
-            // Add to timer
-            TimerClass ts = new TimerClass();
-            ts.ID = m_ID;
-            ts.itemID = m_itemID;
-            ts.interval = (long)(sec * 1000);
-
-            //ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
-            ts.next = Environment.TickCount + ts.interval;
-
-            string key = MakeTimerKey(m_ID, m_itemID);
-            lock (TimerListLock)
-            {
-                // Adds if timer doesn't exist, otherwise replaces with new timer
-                Timers[key] = ts;
-            }
-
-            //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads(ts.itemID);
-        }
 
         public void RemoveScript(UUID m_ID, UUID m_itemID)
         {
@@ -120,54 +75,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 // Go through all timers
                 int TickCount = Environment.TickCount;
-                foreach (TimerClass ts in Timers.Values)
+                foreach (TimerClass ts in Timers.Values.Where(ts => ts.next < TickCount))
                 {
-                    // Time has passed?
-                    if (ts.next < TickCount)
-                    {
-                        // Add it to queue
-                        m_ScriptEngine.PostScriptEvent(ts.itemID, ts.ID,
-                                new EventParams("timer", new Object[0],
-                                new DetectParams[0]), EventPriority.Continued);
-                        // set next interval
+                    // Add it to queue
+                    m_ScriptEngine.PostScriptEvent(ts.itemID, ts.ID,
+                                                   new EventParams("timer", new Object[0],
+                                                                   new DetectParams[0]), EventPriority.Continued);
+                    // set next interval
 
-                        ts.next = TickCount + ts.interval;
-                    }
+                    ts.next = TickCount + ts.interval;
                 }
             }
             return Timers.Count > 0;
         }
 
-        public OSD GetSerializationData (UUID itemID, UUID primID)
+        public OSD GetSerializationData(UUID itemID, UUID primID)
         {
             OSDMap data = new OSDMap();
             string key = MakeTimerKey(primID, itemID);
             TimerClass timer;
-            if(Timers.TryGetValue(key, out timer))
+            if (Timers.TryGetValue(key, out timer))
             {
-                data.Add ("Interval", timer.interval);
-                data.Add ("Next", timer.next - Environment.TickCount);
+                data.Add("Interval", timer.interval);
+                data.Add("Next", timer.next - Environment.TickCount);
             }
             return data;
         }
 
-        public void CreateFromData (UUID itemID, UUID objectID,
+        public void CreateFromData(UUID itemID, UUID objectID,
                                    OSD data)
         {
-            OSDMap save = (OSDMap)data;
-            TimerClass ts = new TimerClass ();
+            OSDMap save = (OSDMap) data;
+            TimerClass ts = new TimerClass {ID = objectID, itemID = itemID, interval = save["Interval"].AsLong()};
 
-            ts.ID = objectID;
-            ts.itemID = itemID;
-            ts.interval = save["Interval"].AsLong ();
             if (ts.interval == 0) // Disabling timer
                 return;
 
-            ts.next = Environment.TickCount + save["Next"].AsLong ();
+            ts.next = Environment.TickCount + save["Next"].AsLong();
 
             lock (TimerListLock)
             {
-                Timers[MakeTimerKey (objectID, itemID)] = ts;
+                Timers[MakeTimerKey(objectID, itemID)] = ts;
             }
 
             //Make sure that the cmd handler thread is running
@@ -179,8 +127,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             get { return "Timer"; }
         }
 
+        #endregion
+
+        private static string MakeTimerKey(UUID ID, UUID itemID)
+        {
+            return ID.ToString() + itemID.ToString();
+        }
+
+        public void SetTimerEvent(UUID m_ID, UUID m_itemID, double sec)
+        {
+            if (sec == 0) // Disabling timer
+            {
+                RemoveScript(m_ID, m_itemID);
+                return;
+            }
+
+            // Add to timer
+            TimerClass ts = new TimerClass {ID = m_ID, itemID = m_itemID, interval = (long) (sec*1000)};
+
+            //ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
+            ts.next = Environment.TickCount + ts.interval;
+
+            string key = MakeTimerKey(m_ID, m_itemID);
+            lock (TimerListLock)
+            {
+                // Adds if timer doesn't exist, otherwise replaces with new timer
+                Timers[key] = ts;
+            }
+
+            //Make sure that the cmd handler thread is running
+            m_ScriptEngine.MaintenanceThread.PokeThreads(ts.itemID);
+        }
+
         public void Dispose()
         {
         }
+
+        #region Nested type: TimerClass
+
+        private class TimerClass
+        {
+            public UUID ID;
+            public long interval;
+            public UUID itemID;
+            public long next;
+        }
+
+        #endregion
     }
 }

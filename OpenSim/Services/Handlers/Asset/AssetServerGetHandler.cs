@@ -25,20 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
 using System.IO;
-using System.Reflection;
 using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
+using System.Reflection;
 using System.Xml.Serialization;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
@@ -46,7 +42,7 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAssetService m_AssetService;
+        private readonly IAssetService m_AssetService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
@@ -59,7 +55,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream request,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             byte[] result = new byte[0];
 
@@ -69,7 +65,7 @@ namespace OpenSim.Services
                 return result;
 
             IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Get", ThreatLevel.Low))
                     return new byte[0];
@@ -78,13 +74,13 @@ namespace OpenSim.Services
                 result = m_AssetService.GetData(p[0]);
                 if (result == null)
                 {
-                    httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
+                    httpResponse.StatusCode = (int) HttpStatusCode.NotFound;
                     httpResponse.ContentType = "text/plain";
                     result = new byte[0];
                 }
                 else
                 {
-                    httpResponse.StatusCode = (int)HttpStatusCode.OK;
+                    httpResponse.StatusCode = (int) HttpStatusCode.OK;
                     httpResponse.ContentType = "application/octet-stream";
                 }
             }
@@ -94,25 +90,26 @@ namespace OpenSim.Services
                 {
                     bool RetVal = m_AssetService.GetExists(p[0]);
                     XmlSerializer xs =
-                                   new XmlSerializer(typeof(AssetBase));
+                        new XmlSerializer(typeof (AssetBase));
                     result = WebUtils.SerializeResult(xs, RetVal);
 
                     if (result == null)
                     {
-                        httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
+                        httpResponse.StatusCode = (int) HttpStatusCode.NotFound;
                         httpResponse.ContentType = "text/plain";
                         result = new byte[0];
                     }
                     else
                     {
-                        httpResponse.StatusCode = (int)HttpStatusCode.OK;
+                        httpResponse.StatusCode = (int) HttpStatusCode.OK;
                         httpResponse.ContentType = "application/octet-stream";
                     }
                 }
                 catch (Exception ex)
                 {
                     result = new byte[0];
-                    m_log.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] + ", " + ex.ToString());
+                    m_log.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] +
+                               ", " + ex);
                 }
             }
             else
@@ -121,16 +118,16 @@ namespace OpenSim.Services
 
                 if (asset != null)
                 {
-                    XmlSerializer xs = new XmlSerializer(typeof(AssetBase));
+                    XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
                     result = WebUtils.SerializeResult(xs, asset);
 
-                    httpResponse.StatusCode = (int)HttpStatusCode.OK;
+                    httpResponse.StatusCode = (int) HttpStatusCode.OK;
                     httpResponse.ContentType =
-                            SLUtil.SLAssetTypeToContentType(asset.Type);
+                        SLUtil.SLAssetTypeToContentType(asset.Type);
                 }
                 else
                 {
-                    httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
+                    httpResponse.StatusCode = (int) HttpStatusCode.NotFound;
                     httpResponse.ContentType = "text/plain";
                     result = new byte[0];
                 }

@@ -26,72 +26,70 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-
-using OpenSim.Framework;
+using System.Linq;
 using Aurora.Framework;
-
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
     public interface IAvatarService
     {
         /// <summary>
-        /// Called by the login service
+        ///   The local service (if possible)
         /// </summary>
-        /// <param name="userID"></param>
+        IAvatarService InnerService { get; }
+
+        /// <summary>
+        ///   Called by the login service
+        /// </summary>
+        /// <param name = "userID"></param>
         /// <returns></returns>
         AvatarAppearance GetAppearance(UUID userID);
 
         /// <summary>
-        /// Called by everyone who can change the avatar data (so, regions)
+        ///   Called by everyone who can change the avatar data (so, regions)
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="appearance"></param>
+        /// <param name = "userID"></param>
+        /// <param name = "appearance"></param>
         /// <returns></returns>
         bool SetAppearance(UUID userID, AvatarAppearance appearance);
 
         /// <summary>
-        /// Called by the login service
+        ///   Called by the login service
         /// </summary>
-        /// <param name="userID"></param>
+        /// <param name = "userID"></param>
         /// <returns></returns>
         AvatarData GetAvatar(UUID userID);
 
         /// <summary>
-        /// Called by everyone who can change the avatar data (so, regions)
+        ///   Called by everyone who can change the avatar data (so, regions)
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="avatar"></param>
+        /// <param name = "userID"></param>
+        /// <param name = "avatar"></param>
         /// <returns></returns>
         bool SetAvatar(UUID userID, AvatarData avatar);
 
         /// <summary>
-        /// Not sure if it's needed
+        ///   Not sure if it's needed
         /// </summary>
-        /// <param name="userID"></param>
+        /// <param name = "userID"></param>
         /// <returns></returns>
         bool ResetAvatar(UUID userID);
 
         /// <summary>
-        /// Cache the given avatarWearable for the client
+        ///   Cache the given avatarWearable for the client
         /// </summary>
-        /// <param name="principalID"></param>
-        /// <param name="cachedWearable"></param>
+        /// <param name = "principalID"></param>
+        /// <param name = "cachedWearable"></param>
         void CacheWearableData(UUID principalID, AvatarWearable cachedWearable);
-
-        /// <summary>
-        /// The local service (if possible)
-        /// </summary>
-        IAvatarService InnerService { get; }
     }
 
     /// <summary>
-    /// Each region/client that uses avatars will have a data structure
-    /// of this type representing the avatars.
+    ///   Each region/client that uses avatars will have a data structure
+    ///   of this type representing the avatars.
     /// </summary>
     public class AvatarData
     {
@@ -127,37 +125,15 @@ namespace OpenSim.Services.Interfaces
                 if (_kvp.Value != null)
                 {
                     string key = _kvp.Key;
-                    if (_kvp.Key.StartsWith ("Wearable"))
+                    if (_kvp.Key.StartsWith("Wearable"))
                     {
-                        key = _kvp.Key.Replace ("Wearable", "");
-                        if(key.Length == 2)
-                            key = key.Insert (1, ":"); //Add the : back
-                        else
-                            key = key.Insert(2, ":"); //Add the : back
+                        key = _kvp.Key.Replace("Wearable", "");
+                        key = key.Insert(key.Length == 2 ? 1 : 2, ":");
                         key = "Wearable " + key; //Add the space back
                     }
-                    Data[key] = _kvp.Value.ToString ();
+                    Data[key] = _kvp.Value.ToString();
                 }
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
-
-            result["AvatarType"] = AvatarType.ToString();
-            foreach (KeyValuePair<string, string> _kvp in Data)
-            {
-                if (_kvp.Value != null)
-                {
-                    //Remove spaces
-                    result[_kvp.Key.Replace (" ", "").Replace (":", "")] = _kvp.Value;
-                }
-            }
-            return result;
         }
 
         public AvatarData(AvatarAppearance appearance)
@@ -177,8 +153,8 @@ namespace OpenSim.Services.Interfaces
                 {
                     string fieldName = String.Format("Wearable {0}:{1}", i, j);
                     Data[fieldName] = String.Format("{0}:{1}",
-                            appearance.Wearables[i][j].ItemID.ToString(),
-                            appearance.Wearables[i][j].AssetID.ToString());
+                                                    appearance.Wearables[i][j].ItemID.ToString(),
+                                                    appearance.Wearables[i][j].AssetID.ToString());
                 }
             }
 
@@ -201,6 +177,22 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            result["AvatarType"] = AvatarType.ToString();
+            foreach (KeyValuePair<string, string> _kvp in Data.Where(_kvp => _kvp.Value != null))
+            {
+                //Remove spaces
+                result[_kvp.Key.Replace(" ", "").Replace(":", "")] = _kvp.Value;
+            }
+            return result;
+        }
+
         public AvatarAppearance ToAvatarAppearance(UUID owner)
         {
             AvatarAppearance appearance = new AvatarAppearance(owner);
@@ -220,77 +212,77 @@ namespace OpenSim.Services.Interfaces
                 // Legacy Wearables
                 if (Data.ContainsKey("BodyItem"))
                     appearance.Wearables[AvatarWearable.BODY].Wear(
-                            UUID.Parse(Data["BodyItem"]),
-                            UUID.Parse(Data["BodyAsset"]));
+                        UUID.Parse(Data["BodyItem"]),
+                        UUID.Parse(Data["BodyAsset"]));
 
                 if (Data.ContainsKey("SkinItem"))
                     appearance.Wearables[AvatarWearable.SKIN].Wear(
-                            UUID.Parse(Data["SkinItem"]),
-                            UUID.Parse(Data["SkinAsset"]));
+                        UUID.Parse(Data["SkinItem"]),
+                        UUID.Parse(Data["SkinAsset"]));
 
                 if (Data.ContainsKey("HairItem"))
                     appearance.Wearables[AvatarWearable.HAIR].Wear(
-                            UUID.Parse(Data["HairItem"]),
-                            UUID.Parse(Data["HairAsset"]));
+                        UUID.Parse(Data["HairItem"]),
+                        UUID.Parse(Data["HairAsset"]));
 
                 if (Data.ContainsKey("EyesItem"))
                     appearance.Wearables[AvatarWearable.EYES].Wear(
-                            UUID.Parse(Data["EyesItem"]),
-                            UUID.Parse(Data["EyesAsset"]));
+                        UUID.Parse(Data["EyesItem"]),
+                        UUID.Parse(Data["EyesAsset"]));
 
                 if (Data.ContainsKey("ShirtItem"))
                     appearance.Wearables[AvatarWearable.SHIRT].Wear(
-                            UUID.Parse(Data["ShirtItem"]),
-                            UUID.Parse(Data["ShirtAsset"]));
+                        UUID.Parse(Data["ShirtItem"]),
+                        UUID.Parse(Data["ShirtAsset"]));
 
                 if (Data.ContainsKey("PantsItem"))
                     appearance.Wearables[AvatarWearable.PANTS].Wear(
-                            UUID.Parse(Data["PantsItem"]),
-                            UUID.Parse(Data["PantsAsset"]));
+                        UUID.Parse(Data["PantsItem"]),
+                        UUID.Parse(Data["PantsAsset"]));
 
                 if (Data.ContainsKey("ShoesItem"))
                     appearance.Wearables[AvatarWearable.SHOES].Wear(
-                            UUID.Parse(Data["ShoesItem"]),
-                            UUID.Parse(Data["ShoesAsset"]));
+                        UUID.Parse(Data["ShoesItem"]),
+                        UUID.Parse(Data["ShoesAsset"]));
 
                 if (Data.ContainsKey("SocksItem"))
                     appearance.Wearables[AvatarWearable.SOCKS].Wear(
-                            UUID.Parse(Data["SocksItem"]),
-                            UUID.Parse(Data["SocksAsset"]));
+                        UUID.Parse(Data["SocksItem"]),
+                        UUID.Parse(Data["SocksAsset"]));
 
                 if (Data.ContainsKey("JacketItem"))
                     appearance.Wearables[AvatarWearable.JACKET].Wear(
-                            UUID.Parse(Data["JacketItem"]),
-                            UUID.Parse(Data["JacketAsset"]));
+                        UUID.Parse(Data["JacketItem"]),
+                        UUID.Parse(Data["JacketAsset"]));
 
                 if (Data.ContainsKey("GlovesItem"))
                     appearance.Wearables[AvatarWearable.GLOVES].Wear(
-                            UUID.Parse(Data["GlovesItem"]),
-                            UUID.Parse(Data["GlovesAsset"]));
+                        UUID.Parse(Data["GlovesItem"]),
+                        UUID.Parse(Data["GlovesAsset"]));
 
                 if (Data.ContainsKey("UnderShirtItem"))
                     appearance.Wearables[AvatarWearable.UNDERSHIRT].Wear(
-                            UUID.Parse(Data["UnderShirtItem"]),
-                            UUID.Parse(Data["UnderShirtAsset"]));
+                        UUID.Parse(Data["UnderShirtItem"]),
+                        UUID.Parse(Data["UnderShirtAsset"]));
 
                 if (Data.ContainsKey("UnderPantsItem"))
                     appearance.Wearables[AvatarWearable.UNDERPANTS].Wear(
-                            UUID.Parse(Data["UnderPantsItem"]),
-                            UUID.Parse(Data["UnderPantsAsset"]));
+                        UUID.Parse(Data["UnderPantsItem"]),
+                        UUID.Parse(Data["UnderPantsAsset"]));
 
                 if (Data.ContainsKey("SkirtItem"))
                     appearance.Wearables[AvatarWearable.SKIRT].Wear(
-                            UUID.Parse(Data["SkirtItem"]),
-                            UUID.Parse(Data["SkirtAsset"]));
+                        UUID.Parse(Data["SkirtItem"]),
+                        UUID.Parse(Data["SkirtAsset"]));
 
 
                 if (Data.ContainsKey("VisualParams"))
                 {
-                    string[] vps = Data["VisualParams"].Split(new char[] { ',' });
+                    string[] vps = Data["VisualParams"].Split(new[] {','});
                     byte[] binary = new byte[AvatarAppearance.VISUALPARAM_COUNT];
 
                     for (int i = 0; i < vps.Length && i < binary.Length; i++)
-                        binary[i] = (byte)Convert.ToInt32(vps[i]);
+                        binary[i] = (byte) Convert.ToInt32(vps[i]);
 
                     appearance.VisualParams = binary;
                 }
@@ -308,10 +300,10 @@ namespace OpenSim.Services.Interfaces
                     if (_kvp.Key.StartsWith("Wearable "))
                     {
                         string wearIndex = _kvp.Key.Substring(9);
-                        string[] wearIndices = wearIndex.Split(new char[] { ':' });
+                        string[] wearIndices = wearIndex.Split(new[] {':'});
                         int index = Convert.ToInt32(wearIndices[0]);
 
-                        string[] ids = _kvp.Value.Split(new char[] { ':' });
+                        string[] ids = _kvp.Value.Split(new[] {':'});
                         UUID itemID = new UUID(ids[0]);
                         UUID assetID = new UUID(ids[1]);
 
@@ -322,9 +314,8 @@ namespace OpenSim.Services.Interfaces
 
                 // Attachments
                 Dictionary<string, string> attchs = new Dictionary<string, string>();
-                foreach (KeyValuePair<string, string> _kvp in Data)
-                    if (_kvp.Key.StartsWith("_ap_"))
-                        attchs[_kvp.Key] = _kvp.Value;
+                foreach (KeyValuePair<string, string> _kvp in Data.Where(_kvp => _kvp.Key.StartsWith("_ap_")))
+                    attchs[_kvp.Key] = _kvp.Value;
 
                 foreach (KeyValuePair<string, string> _kvp in attchs)
                 {
@@ -341,22 +332,22 @@ namespace OpenSim.Services.Interfaces
 
                 if (appearance.Wearables[AvatarWearable.BODY].Count == 0)
                     appearance.Wearables[AvatarWearable.BODY].Wear(
-                            AvatarWearable.DefaultWearables[
+                        AvatarWearable.DefaultWearables[
                             AvatarWearable.BODY][0]);
 
                 if (appearance.Wearables[AvatarWearable.SKIN].Count == 0)
                     appearance.Wearables[AvatarWearable.SKIN].Wear(
-                            AvatarWearable.DefaultWearables[
+                        AvatarWearable.DefaultWearables[
                             AvatarWearable.SKIN][0]);
 
                 if (appearance.Wearables[AvatarWearable.HAIR].Count == 0)
                     appearance.Wearables[AvatarWearable.HAIR].Wear(
-                            AvatarWearable.DefaultWearables[
+                        AvatarWearable.DefaultWearables[
                             AvatarWearable.HAIR][0]);
 
                 if (appearance.Wearables[AvatarWearable.EYES].Count == 0)
                     appearance.Wearables[AvatarWearable.EYES].Wear(
-                            AvatarWearable.DefaultWearables[
+                        AvatarWearable.DefaultWearables[
                             AvatarWearable.EYES][0]);
             }
             catch
@@ -372,8 +363,8 @@ namespace OpenSim.Services.Interfaces
 
     public interface IAvatarData : IAuroraDataPlugin
     {
-        AvatarData Get (string field, string val);
-        bool Store (UUID PrincipalID, AvatarData data);
-        bool Delete (string field, string val);
+        AvatarData Get(string field, string val);
+        bool Store(UUID PrincipalID, AvatarData data);
+        bool Delete(string field, string val);
     }
 }

@@ -29,23 +29,16 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using C5;
-using Aurora.DataManager;
-using Aurora.Framework;
-using OpenSim.Framework;
-using OpenMetaverse;
 using Aurora.DataManager.Migration;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.MSSQL
 {
     public class MSSQLDataLoader : DataManagerBase
     {
-        string connectionString = "";
-        private SqlConnection m_connection = null;
+        private string connectionString = "";
+        private SqlConnection m_connection;
 
         public override string Identifier
         {
@@ -62,7 +55,7 @@ namespace Aurora.DataManager.MSSQL
             }
             else
             {
-                SqlConnection clone = (SqlConnection)((ICloneable)m_connection).Clone();
+                SqlConnection clone = (SqlConnection) ((ICloneable) m_connection).Clone();
                 clone.Open();
                 return clone;
             }
@@ -75,11 +68,11 @@ namespace Aurora.DataManager.MSSQL
             {
                 dbcommand = dbcon.CreateCommand();
                 dbcommand.CommandText = sql;
-                foreach (System.Collections.Generic.KeyValuePair<string, object> param in parameters)
+                foreach (KeyValuePair<string, object> param in parameters)
                 {
                     dbcommand.Parameters.AddWithValue(param.Key, param.Value);
                 }
-                return (IDbCommand)dbcommand;
+                return dbcommand;
             }
             catch (Exception)
             {
@@ -135,7 +128,7 @@ namespace Aurora.DataManager.MSSQL
             else
             {
                 query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue.ToString());
+                                      wantedValue, table, keyRow, keyValue);
             }
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
@@ -171,7 +164,7 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
             List<string> RetVal = new List<string>();
             string query = String.Format("select {0} from {1} where {2}",
-                                      wantedValue, table, whereClause);
+                                         wantedValue, table, whereClause);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())
@@ -206,7 +199,7 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
             List<string> RetVal = new List<string>();
             string query = String.Format("select {0} from {1} {2}",
-                                      wantedValue, table, whereClause);
+                                         wantedValue, table, whereClause);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())
@@ -238,11 +231,12 @@ namespace Aurora.DataManager.MSSQL
         {
             SqlConnection dbcon = GetLockedConnection();
             string query = String.Format("select {0} from {1} {2}",
-                                      wantedValue, table, whereClause);
-            return Query (query, new Dictionary<string, object> (), dbcon).ExecuteReader();
+                                         wantedValue, table, whereClause);
+            return Query(query, new Dictionary<string, object>(), dbcon).ExecuteReader();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue,
+                                           string order)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -270,10 +264,7 @@ namespace Aurora.DataManager.MSSQL
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
                                 Type r = reader[i].GetType();
-                                if (r == typeof(DBNull))
-                                    RetVal.Add(null);
-                                else
-                                    RetVal.Add(reader.GetString(i));
+                                RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
                             }
                         }
                         return RetVal;
@@ -297,7 +288,7 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
             List<string> RetVal = new List<string>();
             string query = String.Format("select {0} from {1} where ",
-                                      wantedValue, table);
+                                         wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
@@ -305,8 +296,8 @@ namespace Aurora.DataManager.MSSQL
                 i++;
             }
             query = query.Remove(query.Length - 5);
-            
-            
+
+
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
                 using (reader = result.ExecuteReader())
@@ -318,10 +309,7 @@ namespace Aurora.DataManager.MSSQL
                             for (i = 0; i < reader.FieldCount; i++)
                             {
                                 Type r = reader[i].GetType();
-                                if (r == typeof(DBNull))
-                                    RetVal.Add(null);
-                                else
-                                    RetVal.Add(reader.GetString(i));
+                                RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
                             }
                         }
                         return RetVal;
@@ -338,68 +326,71 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue)
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
+                                                                    string wantedValue)
         {
-            SqlConnection dbcon = GetLockedConnection ();
+            SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
             IDataReader reader;
-            Dictionary<string, List<string>> RetVal = new Dictionary<string, List<string>> ();
-            string query = String.Format ("select {0} from {1} where ",
-                                      wantedValue, table);
+            Dictionary<string, List<string>> RetVal = new Dictionary<string, List<string>>();
+            string query = String.Format("select {0} from {1} where ",
+                                         wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
-                query += String.Format ("{0} = '{1}' and ", keyRow[i], value);
+                query += String.Format("{0} = '{1}' and ", keyRow[i], value);
                 i++;
             }
-            query = query.Remove (query.Length - 5);
+            query = query.Remove(query.Length - 5);
 
 
-            using (result = Query (query, new Dictionary<string, object> (), dbcon))
+            using (result = Query(query, new Dictionary<string, object>(), dbcon))
             {
-                using (reader = result.ExecuteReader ())
+                using (reader = result.ExecuteReader())
                 {
                     try
                     {
-                        while (reader.Read ())
+                        while (reader.Read())
                         {
                             for (i = 0; i < reader.FieldCount; i++)
                             {
-                                Type r = reader[i].GetType ();
+                                Type r = reader[i].GetType();
                                 if (r == typeof (DBNull))
-                                    AddValueToList (ref RetVal, reader.GetName (i), null);
+                                    AddValueToList(ref RetVal, reader.GetName(i), null);
                                 else
-                                    AddValueToList (ref RetVal, reader.GetName (i), reader[i].ToString ());
+                                    AddValueToList(ref RetVal, reader.GetName(i), reader[i].ToString());
                             }
                         }
                         return RetVal;
                     }
                     finally
                     {
-                        reader.Close ();
-                        reader.Dispose ();
-                        result.Cancel ();
-                        result.Dispose ();
-                        CloseDatabase (dbcon);
+                        reader.Close();
+                        reader.Dispose();
+                        result.Cancel();
+                        result.Dispose();
+                        CloseDatabase(dbcon);
                     }
                 }
             }
         }
 
-        private void AddValueToList (ref Dictionary<string, List<string>> dic, string key, string value)
+        private void AddValueToList(ref Dictionary<string, List<string>> dic, string key, string value)
         {
-            if (!dic.ContainsKey (key))
-                dic.Add (key, new List<string> ());
+            if (!dic.ContainsKey(key))
+                dic.Add(key, new List<string>());
 
-            dic[key].Add (value);
+            dic[key].Add(value);
         }
 
-        public override bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                          object[] keyValues)
         {
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                    object[] keyValues)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -411,7 +402,7 @@ namespace Aurora.DataManager.MSSQL
             {
                 query += string.Format("{0} = ?{1},", setRows[i], setRows[i]);
                 string valueSTR = value.ToString();
-                if(valueSTR == "")
+                if (valueSTR == "")
                     valueSTR = " ";
                 parameters["?" + setRows[i]] = valueSTR;
                 i++;
@@ -446,10 +437,7 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
 
             string query = String.Format("insert into {0} values (", table);
-            foreach (object value in values)
-            {
-                query += String.Format("'{0}',", value);
-            }
+            query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", (object[]) value));
             query = query.Remove(query.Length - 1);
             query += ")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -465,7 +453,9 @@ namespace Aurora.DataManager.MSSQL
                         CloseDatabase(dbcon);
                     }
                 }
-                catch { }
+                catch
+                {
+                }
             }
             return true;
         }
@@ -477,10 +467,7 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
 
             string query = String.Format("insert into {0} values (", table);
-            foreach (object value in values)
-            {
-                query += String.Format("'{0}',", value);
-            }
+            query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", (object[]) value));
             query = query.Remove(query.Length - 1);
             query += ")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -496,7 +483,9 @@ namespace Aurora.DataManager.MSSQL
                         CloseDatabase(dbcon);
                     }
                 }
-                catch { }
+                catch
+                {
+                }
             }
             return true;
         }
@@ -514,16 +503,10 @@ namespace Aurora.DataManager.MSSQL
 
             string query = String.Format("replace into {0} (", table);
 
-            foreach (object key in keys)
-            {
-                query += String.Format("{0},", key);
-            }
+            query = keys.Cast<object>().Aggregate(query, (current, key) => current + String.Format("{0},", (object[]) key));
             query = query.Remove(query.Length - 1);
             query += ") values (";
-            foreach (object value in values)
-            {
-                query += String.Format("'{0}',", value);
-            }
+            query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", (object[]) value));
             query = query.Remove(query.Length - 1);
             query += ")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -539,7 +522,9 @@ namespace Aurora.DataManager.MSSQL
                         CloseDatabase(dbcon);
                     }
                 }
-                catch { }
+                catch
+                {
+                }
             }
             return true;
         }
@@ -550,10 +535,7 @@ namespace Aurora.DataManager.MSSQL
             IDbCommand result;
             IDataReader reader;
             string query = String.Format("insert into {0} VALUES('", table);
-            foreach (object value in values)
-            {
-                query += value.ToString() + "','";
-            }
+            query = values.Aggregate(query, (current, value) => current + (value + "','"));
             query = query.Remove(query.Length - 2);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -579,7 +561,7 @@ namespace Aurora.DataManager.MSSQL
             int i = 0;
             foreach (object value in values)
             {
-                query += keys[i] + " = '" + value.ToString() + "' AND ";
+                query += keys[i] + " = '" + value + "' AND ";
                 i++;
             }
             if (keys.Length > 0)
@@ -610,11 +592,7 @@ namespace Aurora.DataManager.MSSQL
 
         public override string ConCat(string[] toConcat)
         {
-            string returnValue = "";
-            foreach (string s in toConcat)
-            {
-                returnValue += s + " + ";
-            }
+            string returnValue = toConcat.Aggregate("", (current, s) => current + (s + " + "));
             return returnValue.Substring(0, returnValue.Length - 3);
         }
 
@@ -678,7 +656,7 @@ namespace Aurora.DataManager.MSSQL
             }
 
             string columnDefinition = string.Empty;
-            var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
             bool multiplePrimary = primaryColumns.Count() > 1;
 
             foreach (ColumnDefinition column in columns)
@@ -687,7 +665,8 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -705,7 +684,8 @@ namespace Aurora.DataManager.MSSQL
                 multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
             }
 
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
+                                         multiplePrimaryString);
 
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
@@ -714,7 +694,8 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        public override void UpdateTable (string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns,
+                                         Dictionary<string, string> renameColumns)
         {
             if (TableExists(table))
             {
@@ -722,7 +703,7 @@ namespace Aurora.DataManager.MSSQL
             }
 
             string columnDefinition = string.Empty;
-            var primaryColumns = (from cd in columns where cd.IsPrimary == true select cd);
+            var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
             bool multiplePrimary = primaryColumns.Count() > 1;
 
             foreach (ColumnDefinition column in columns)
@@ -731,7 +712,8 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -749,7 +731,8 @@ namespace Aurora.DataManager.MSSQL
                 multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
             }
 
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
+                                         multiplePrimaryString);
 
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
@@ -829,7 +812,8 @@ namespace Aurora.DataManager.MSSQL
         {
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("drop table {0}", tableName); ;
+            dbcommand.CommandText = string.Format("drop table {0}", tableName);
+            ;
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
         }
@@ -843,11 +827,13 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
+                                                                 ColumnDefinition[] columnDefinitions)
         {
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
+            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName,
+                                                  sourceTableName);
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
         }
@@ -856,7 +842,10 @@ namespace Aurora.DataManager.MSSQL
         {
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("select table_name from information_schema.tables where table_schema=database() and table_name='{0}'", table.ToLower());
+            dbcommand.CommandText =
+                string.Format(
+                    "select table_name from information_schema.tables where table_schema=database() and table_name='{0}'",
+                    table.ToLower());
             var rdr = dbcommand.ExecuteReader();
 
             var ret = false;
@@ -886,7 +875,12 @@ namespace Aurora.DataManager.MSSQL
                 var name = rdr["Field"];
                 var pk = rdr["Key"];
                 var type = rdr["Type"];
-                defs.Add(new ColumnDefinition { Name = name.ToString(), IsPrimary = pk.ToString()=="PRI", Type = ConvertTypeToColumnType(type.ToString()) });
+                defs.Add(new ColumnDefinition
+                             {
+                                 Name = name.ToString(),
+                                 IsPrimary = pk.ToString() == "PRI",
+                                 Type = ConvertTypeToColumnType(type.ToString())
+                             });
             }
             rdr.Close();
             rdr.Dispose();
@@ -958,7 +952,8 @@ namespace Aurora.DataManager.MSSQL
                 case "tinyint(4)":
                     return ColumnTypes.TinyInt4;
                 default:
-                    throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
+                    throw new Exception(
+                        "You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType.");
             }
         }
 
@@ -968,4 +963,3 @@ namespace Aurora.DataManager.MSSQL
         }
     }
 }
-

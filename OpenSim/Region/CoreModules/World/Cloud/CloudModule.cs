@@ -26,12 +26,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using Nini.Config;
-using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules
 {
@@ -39,14 +36,21 @@ namespace OpenSim.Region.CoreModules
     {
 //        private static readonly log4net.ILog m_log 
 //            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private uint m_frame = 0;
-        private int m_frameUpdateRate = 1000;
-        private Random m_rndnums = new Random(Environment.TickCount);
-        private IScene m_scene = null;
-        private bool m_ready = false;
-        private bool m_enabled = false;
+        private readonly float[] cloudCover = new float[16*16];
+        private readonly Random m_rndnums = new Random(Environment.TickCount);
         private float m_cloudDensity = 1.0F;
-        private float[] cloudCover = new float[16 * 16];
+        private bool m_enabled;
+        private uint m_frame;
+        private int m_frameUpdateRate = 1000;
+        private bool m_ready;
+        private IScene m_scene;
+
+        public bool IsSharedModule
+        {
+            get { return false; }
+        }
+
+        #region ICloudModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -60,7 +64,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (m_enabled)
             {
@@ -76,7 +80,7 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (m_enabled)
             {
@@ -87,18 +91,13 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -110,18 +109,10 @@ namespace OpenSim.Region.CoreModules
             get { return "CloudModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         public void SetCloudDensity(float density)
         {
             m_cloudDensity = density;
-            m_scene.ForEachClient(delegate(IClientAPI client)
-            {
-                CloudsToClient(client);
-            });
+            m_scene.ForEachClient(CloudsToClient);
         }
 
         public float CloudCover(int x, int y, int z)
@@ -136,15 +127,21 @@ namespace OpenSim.Region.CoreModules
 
             if (cloudCover != null)
             {
-                cover = cloudCover[y * 16 + x];
+                cover = cloudCover[y*16 + x];
             }
 
             return cover;
         }
 
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
+
         private void UpdateCloudCover()
         {
-            float[] newCover = new float[16 * 16];
+            float[] newCover = new float[16*16];
             int rowAbove = new int();
             int rowBelow = new int();
             int columnLeft = new int();
@@ -161,12 +158,12 @@ namespace OpenSim.Region.CoreModules
                     columnRight = 0;
                     columnLeft = x - 1;
                 }
-                else 
+                else
                 {
                     columnRight = x + 1;
                     columnLeft = x - 1;
                 }
-                for (int y = 0; y< 16; y++)
+                for (int y = 0; y < 16; y++)
                 {
                     if (y == 0)
                     {
@@ -183,29 +180,29 @@ namespace OpenSim.Region.CoreModules
                         rowAbove = y + 1;
                         rowBelow = y - 1;
                     }
-                    float neighborAverage = (cloudCover[rowBelow * 16 + columnLeft] + 
-                                             cloudCover[y * 16 + columnLeft] + 
-                                             cloudCover[rowAbove * 16 + columnLeft] + 
-                                             cloudCover[rowBelow * 16 + x] + 
-                                             cloudCover[rowAbove * 16 + x] + 
-                                             cloudCover[rowBelow * 16 + columnRight] + 
-                                             cloudCover[y * 16 + columnRight] + 
-                                             cloudCover[rowAbove * 16 + columnRight] + 
-                                             cloudCover[y * 16 + x]) / 9;
-                    newCover[y * 16 + x] = ((neighborAverage / m_cloudDensity) + 0.175f) % 1.0f;
-                    newCover[y * 16 + x] *= m_cloudDensity;
+                    float neighborAverage = (cloudCover[rowBelow*16 + columnLeft] +
+                                             cloudCover[y*16 + columnLeft] +
+                                             cloudCover[rowAbove*16 + columnLeft] +
+                                             cloudCover[rowBelow*16 + x] +
+                                             cloudCover[rowAbove*16 + x] +
+                                             cloudCover[rowBelow*16 + columnRight] +
+                                             cloudCover[y*16 + columnRight] +
+                                             cloudCover[rowAbove*16 + columnRight] +
+                                             cloudCover[y*16 + x])/9;
+                    newCover[y*16 + x] = ((neighborAverage/m_cloudDensity) + 0.175f)%1.0f;
+                    newCover[y*16 + x] *= m_cloudDensity;
                 }
             }
-            Array.Copy(newCover, cloudCover, 16 * 16);
+            Array.Copy(newCover, cloudCover, 16*16);
         }
-  
-       private void CloudUpdate()
-       {
-           if (((m_frame++ % m_frameUpdateRate) != 0) || !m_ready || (m_cloudDensity == 0))
-           {
-               return;
-           }
-           UpdateCloudCover();
+
+        private void CloudUpdate()
+        {
+            if (((m_frame++%m_frameUpdateRate) != 0) || !m_ready || (m_cloudDensity == 0))
+            {
+                return;
+            }
+            UpdateCloudCover();
         }
 
         public void CloudsToClient(IClientAPI client)
@@ -216,9 +213,9 @@ namespace OpenSim.Region.CoreModules
             }
         }
 
-       
+
         /// <summary>
-        /// Calculate the cloud cover over the region.
+        ///   Calculate the cloud cover over the region.
         /// </summary>
         private void GenerateCloudCover()
         {
@@ -226,8 +223,8 @@ namespace OpenSim.Region.CoreModules
             {
                 for (int x = 0; x < 16; x++)
                 {
-                    cloudCover[y * 16 + x] = (float)(m_rndnums.NextDouble()); // 0 to 1
-                    cloudCover[y * 16 + x] *= m_cloudDensity;
+                    cloudCover[y*16 + x] = (float) (m_rndnums.NextDouble()); // 0 to 1
+                    cloudCover[y*16 + x] *= m_cloudDensity;
                 }
             }
         }

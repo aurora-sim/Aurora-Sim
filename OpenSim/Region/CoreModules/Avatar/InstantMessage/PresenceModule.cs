@@ -26,34 +26,31 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using System.Reflection;
-using log4net;
 using Nini.Config;
-using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
     public class PresenceModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
+            MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected List<IScene> m_Scenes = new List<IScene> ();
+        protected List<IScene> m_Scenes = new List<IScene>();
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_Scenes.Add(scene);
 
@@ -61,11 +58,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_Scenes.Remove(scene);
 
@@ -91,6 +88,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             get { return null; }
         }
 
+        #endregion
+
         public void OnNewClient(IClientAPI client)
         {
             client.AddGenericPacketHandler("requestonlinenotification", OnRequestOnlineNotification);
@@ -106,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI client = (IClientAPI)sender;
+            IClientAPI client = (IClientAPI) sender;
             m_log.DebugFormat("[PRESENCE MODULE]: OnlineNotification requested by {0}", client.Name);
 
             UserInfo[] status = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfos(args.ToArray());

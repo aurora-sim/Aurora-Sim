@@ -25,120 +25,116 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenSim.Services.MessagingService;
-using Nini.Config;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 
 namespace Aurora.Modules
 {
     public class IWCMessagingServiceInHandler : IService, IAsyncMessageRecievedService, IGridRegistrationUrlModule
     {
-        protected bool m_enabled = false;
-        public void Initialize (IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString ("MessagingServiceInHandler", "") != Name)
-                return;
-            registry.RegisterModuleInterface<IAsyncMessageRecievedService> (this);
-            m_enabled = true;
-        }
+        protected bool m_enabled;
 
         private IRegistryCore m_registry;
+
         public string Name
         {
-            get
-            {
-                return GetType ().Name;
-            }
-        }
-
-        public void Start (IConfigSource config, IRegistryCore registry)
-        {
-            if (!m_enabled)
-                return;
-
-            m_registry = registry;
-            m_registry.RequestModuleInterface<IGridRegistrationService> ().RegisterModule (this);
-        }
-
-        public void FinishedStartup ()
-        {
+            get { return GetType().Name; }
         }
 
         #region IAsyncMessageRecievedService Members
 
         public event MessageReceived OnMessageReceived;
 
-        #endregion
-
-        public OSDMap FireMessageReceived (string SessionID, OSDMap message)
+        public OSDMap FireMessageReceived(string SessionID, OSDMap message)
         {
             OSDMap result = null;
             ulong reg;
-            if (ulong.TryParse (SessionID, out reg))//Local region
+            if (ulong.TryParse(SessionID, out reg)) //Local region
             {
                 if (OnMessageReceived != null)
                 {
                     MessageReceived eventCopy = OnMessageReceived;
-                    foreach (MessageReceived messagedelegate in eventCopy.GetInvocationList ())
+                    foreach (OSDMap r in from MessageReceived messagedelegate in eventCopy.GetInvocationList() select messagedelegate(message) into r where r != null select r)
                     {
-                        OSDMap r = messagedelegate (message);
-                        if (r != null)
-                            result = r;
+                        result = r;
                     }
                 }
             }
-            else//IWC
+            else //IWC
             {
                 string[] session = SessionID.Split('|');
-                ISyncMessagePosterService smps = m_registry.RequestModuleInterface<ISyncMessagePosterService> ();
+                ISyncMessagePosterService smps = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 //Forward it on
-                result = smps.Get (message, UUID.Parse(session[0]), ulong.Parse (session[1]));
+                result = smps.Get(message, UUID.Parse(session[0]), ulong.Parse(session[1]));
             }
 
             return result;
         }
 
+        #endregion
+
         #region IGridRegistrationUrlModule Members
 
         public string UrlName
         {
-            get
-            {
-                return "MessagingServerURI";
-            }
+            get { return "MessagingServerURI"; }
         }
 
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new MessagingServiceInPostHandler (url, m_registry, this, SessionID));
+            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, SessionID));
         }
 
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
         {
-            string url = "/messagingservice" + UUID.Random ();
+            string url = "/messagingservice" + UUID.Random();
 
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            server.AddStreamHandler (new MessagingServiceInPostHandler (url, m_registry, this, SessionID));
+            server.AddStreamHandler(new MessagingServiceInPostHandler(url, m_registry, this, SessionID));
 
             return url;
         }
 
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
         {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (port);
-            server.RemoveHTTPHandler ("POST", url);
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("MessagingServiceInHandler", "") != Name)
+                return;
+            registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
+            m_enabled = true;
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            if (!m_enabled)
+                return;
+
+            m_registry = registry;
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+        }
+
+        public void FinishedStartup()
+        {
         }
 
         #endregion

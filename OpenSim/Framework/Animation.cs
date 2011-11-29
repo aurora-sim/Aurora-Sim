@@ -32,50 +32,26 @@ using OpenMetaverse.StructuredData;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Information about an Animation
+    ///   Information about an Animation
     /// </summary>
     [Serializable]
     public class Animation
     {
         private UUID animID;
 
-        /// <summary>
-        /// ID of Animation
-        /// </summary>
-        public UUID AnimID
-        {
-            get { return animID; }
-            set { animID = value; }
-        }
-
-        private int sequenceNum;
-        public int SequenceNum
-        {
-            get { return sequenceNum; }
-            set { sequenceNum = value; }
-        }
-
         private UUID objectID;
-
-        /// <summary>
-        /// Unique ID of object that is being animated
-        /// </summary>
-        public UUID ObjectID
-        {
-            get { return objectID; }
-            set { objectID = value; }
-        }
+        private int sequenceNum;
 
         public Animation()
         {
         }
 
         /// <summary>
-        /// Creates an Animation based on the data
+        ///   Creates an Animation based on the data
         /// </summary>
-        /// <param name="animID">UUID ID of animation</param>
-        /// <param name="sequenceNum"></param>
-        /// <param name="objectID">ID of object to be animated</param>
+        /// <param name = "animID">UUID ID of animation</param>
+        /// <param name = "sequenceNum"></param>
+        /// <param name = "objectID">ID of object to be animated</param>
         public Animation(UUID animID, int sequenceNum, UUID objectID)
         {
             this.animID = animID;
@@ -84,17 +60,41 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Animation from OSDMap from LLSD XML or LLSD json
+        ///   Animation from OSDMap from LLSD XML or LLSD json
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name = "args"></param>
         public Animation(OSDMap args)
         {
             UnpackUpdateMessage(args);
         }
 
+        /// <summary>
+        ///   ID of Animation
+        /// </summary>
+        public UUID AnimID
+        {
+            get { return animID; }
+            set { animID = value; }
+        }
+
+        public int SequenceNum
+        {
+            get { return sequenceNum; }
+            set { sequenceNum = value; }
+        }
 
         /// <summary>
-        /// Pack this object up as an OSDMap for transferring via LLSD XML or LLSD json
+        ///   Unique ID of object that is being animated
+        /// </summary>
+        public UUID ObjectID
+        {
+            get { return objectID; }
+            set { objectID = value; }
+        }
+
+
+        /// <summary>
+        ///   Pack this object up as an OSDMap for transferring via LLSD XML or LLSD json
         /// </summary>
         /// <returns></returns>
         public OSDMap PackUpdateMessage()
@@ -107,9 +107,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Fill object with data from OSDMap
+        ///   Fill object with data from OSDMap
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name = "args"></param>
         public void UnpackUpdateMessage(OSDMap args)
         {
             if (args["animation"] != null)
@@ -119,6 +119,5 @@ namespace OpenSim.Framework
             if (args["seq_num"] != null)
                 sequenceNum = args["seq_num"].AsInteger();
         }
-
     }
 }

@@ -25,22 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
@@ -48,12 +45,13 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IUserAccountService m_UserAccountService;
+        private readonly IUserAccountService m_UserAccountService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public UserAccountServerPostHandler (string url, IUserAccountService service, string SessionID, IRegistryCore registry) :
-                base("POST", url)
+        public UserAccountServerPostHandler(string url, IUserAccountService service, string SessionID,
+                                            IRegistryCore registry) :
+                                                base("POST", url)
         {
             m_UserAccountService = service.InnerService;
             m_SessionID = SessionID;
@@ -61,7 +59,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -76,14 +74,14 @@ namespace OpenSim.Services
             try
             {
                 Dictionary<string, object> request =
-                        WebUtils.ParseQueryString(body);
+                    WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
 
                 method = request["METHOD"].ToString();
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     case "getaccount":
@@ -110,10 +108,9 @@ namespace OpenSim.Services
             }
 
             return FailureResult();
-
         }
 
-        byte[] GetAccount(Dictionary<string, object> request)
+        private byte[] GetAccount(Dictionary<string, object> request)
         {
             UserAccount account = null;
             UUID scopeID = UUID.Zero;
@@ -140,8 +137,9 @@ namespace OpenSim.Services
             else if (request.ContainsKey("Name") && request["Name"] != null)
                 account = m_UserAccountService.GetUserAccount(scopeID, request["Name"].ToString());
             else if (request.ContainsKey("FirstName") && request.ContainsKey("LastName") &&
-                request["FirstName"] != null && request["LastName"] != null)
-                account = m_UserAccountService.GetUserAccount(scopeID, request["FirstName"].ToString(), request["LastName"].ToString());
+                     request["FirstName"] != null && request["LastName"] != null)
+                account = m_UserAccountService.GetUserAccount(scopeID, request["FirstName"].ToString(),
+                                                              request["LastName"].ToString());
 
             if (account == null)
                 result["result"] = "null";
@@ -153,7 +151,7 @@ namespace OpenSim.Services
             return ResultToBytes(result);
         }
 
-        byte[] GetAccounts(Dictionary<string, object> request)
+        private byte[] GetAccounts(Dictionary<string, object> request)
         {
             if (!request.ContainsKey("ScopeID") || !request.ContainsKey("query"))
                 return FailureResult();
@@ -172,9 +170,8 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
-                foreach (UserAccount acc in accounts)
+                foreach (Dictionary<string, object> rinfoDict in accounts.Select(acc => acc.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = acc.ToKeyValuePairs();
                     result["account" + i] = rinfoDict;
                     i++;
                 }
@@ -186,7 +183,7 @@ namespace OpenSim.Services
             return encoding.GetBytes(xmlString);
         }
 
-        byte[] StoreAccount(Dictionary<string, object> request)
+        private byte[] StoreAccount(Dictionary<string, object> request)
         {
             // No can do. No changing user accounts from remote sims
             return FailureResult();
@@ -197,12 +194,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -219,12 +216,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -239,8 +236,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -253,7 +249,5 @@ namespace OpenSim.Services
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
-
-
     }
 }

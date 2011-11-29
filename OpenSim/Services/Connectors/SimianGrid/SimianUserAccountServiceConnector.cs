@@ -28,42 +28,39 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Reflection;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Simulation.Base;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.Connectors.SimianGrid
 {
     /// <summary>
-    /// Connects user account data (creating new users, looking up existing 
-    /// users) to the SimianGrid backend
+    ///   Connects user account data (creating new users, looking up existing 
+    ///   users) to the SimianGrid backend
     /// </summary>
     public class SimianUserAccountServiceConnector : IUserAccountService, IService
     {
         private const double CACHE_EXPIRATION_SECONDS = 120.0;
 
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        private readonly ExpiringCache<UUID, UserAccount> m_accountCache = new ExpiringCache<UUID, UserAccount>();
         private string m_serverUrl = String.Empty;
-        private ExpiringCache<UUID, UserAccount> m_accountCache = new ExpiringCache<UUID, UserAccount>();
 
-        public virtual IUserAccountService InnerService
+        public string Name
         {
-            get { return this; }
+            get { return GetType().Name; }
         }
 
         #region IService Members
-
-        public string Name { get { return GetType().Name; } }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -80,6 +77,156 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        #region IUserAccountService Members
+
+        public virtual IUserAccountService InnerService
+        {
+            get { return this; }
+        }
+
+        public UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
+        {
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "GetUser"},
+                                                      {"Name", firstName + ' ' + lastName}
+                                                  };
+
+            return GetUser(requestArgs);
+        }
+
+        public UserAccount GetUserAccount(UUID scopeID, string name)
+        {
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "GetUser"},
+                                                      {"Name", name}
+                                                  };
+
+            return GetUser(requestArgs);
+        }
+
+        public UserAccount GetUserAccount(UUID scopeID, UUID userID)
+        {
+            // Cache check
+            UserAccount account;
+            if (m_accountCache.TryGetValue(userID, out account))
+                return account;
+
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "GetUser"},
+                                                      {"UserID", userID.ToString()}
+                                                  };
+
+            account = GetUser(requestArgs);
+
+            if (account == null)
+            {
+                // Store null responses too, to avoid repeated lookups for missing accounts
+                m_accountCache.AddOrUpdate(userID, null, CACHE_EXPIRATION_SECONDS);
+            }
+
+            return account;
+        }
+
+        public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
+        {
+            List<UserAccount> accounts = new List<UserAccount>();
+
+            m_log.DebugFormat("[SIMIAN ACCOUNT CONNECTOR]: Searching for user accounts with name query " + query);
+
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "GetUsers"},
+                                                      {"NameQuery", query}
+                                                  };
+
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
+            if (response["Success"].AsBoolean())
+            {
+                OSDArray array = response["Users"] as OSDArray;
+                if (array != null && array.Count > 0)
+                {
+                    accounts.AddRange(array.Select(t => ResponseToUserAccount(t as OSDMap)).Where(account => account != null));
+                }
+                else
+                {
+                    m_log.Warn(
+                        "[SIMIAN ACCOUNT CONNECTOR]: Account search failed, response data was in an invalid format");
+                }
+            }
+            else
+            {
+                m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Failed to search for account data by name " + query);
+            }
+
+            return accounts;
+        }
+
+        public bool StoreUserAccount(UserAccount data)
+        {
+            m_log.InfoFormat("[SIMIAN ACCOUNT CONNECTOR]: Storing user account for " + data.Name);
+
+            NameValueCollection requestArgs = new NameValueCollection
+                                                  {
+                                                      {"RequestMethod", "AddUser"},
+                                                      {"UserID", data.PrincipalID.ToString()},
+                                                      {"Name", data.Name},
+                                                      {"Email", data.Email},
+                                                      {"AccessLevel", data.UserLevel.ToString()}
+                                                  };
+
+            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
+
+            if (response["Success"].AsBoolean())
+            {
+                m_log.InfoFormat("[SIMIAN ACCOUNT CONNECTOR]: Storing user account data for " + data.Name);
+
+                requestArgs = new NameValueCollection
+                                  {
+                                      {"RequestMethod", "AddUserData"},
+                                      {"UserID", data.PrincipalID.ToString()},
+                                      {"CreationDate", data.Created.ToString()},
+                                      {"UserFlags", data.UserFlags.ToString()},
+                                      {"UserTitle", data.UserTitle}
+                                  };
+
+                response = WebUtils.PostToService(m_serverUrl, requestArgs);
+                bool success = response["Success"].AsBoolean();
+
+                if (success)
+                {
+                    // Cache the user account info
+                    m_accountCache.AddOrUpdate(data.PrincipalID, data, CACHE_EXPIRATION_SECONDS);
+                }
+                else
+                {
+                    m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Failed to store user account data for " + data.Name + ": " +
+                               response["Message"].AsString());
+                }
+
+                return success;
+            }
+            else
+            {
+                m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Failed to store user account for " + data.Name + ": " +
+                           response["Message"].AsString());
+            }
+
+            return false;
+        }
+
+        public void CreateUser(string name, string password, string email)
+        {
+        }
+
+        public void CreateUser(UUID userID, string name, string password, string email)
         {
         }
 
@@ -103,153 +250,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 m_log.Info("[SIMIAN ACCOUNT CONNECTOR]: No UserAccountServerURI specified, disabling connector");
         }
 
-        public UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
-        {
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetUser" },
-                { "Name", firstName + ' ' + lastName }
-            };
-
-            return GetUser(requestArgs);
-        }
-
-        public UserAccount GetUserAccount(UUID scopeID, string name)
-        {
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetUser" },
-                { "Name", name }
-            };
-
-            return GetUser(requestArgs);
-        }
-
-        public UserAccount GetUserAccount(UUID scopeID, UUID userID)
-        {
-            // Cache check
-            UserAccount account;
-            if (m_accountCache.TryGetValue(userID, out account))
-                return account;
-
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetUser" },
-                { "UserID", userID.ToString() }
-            };
-
-            account = GetUser(requestArgs);
-
-            if (account == null)
-            {
-                // Store null responses too, to avoid repeated lookups for missing accounts
-                m_accountCache.AddOrUpdate(userID, null, CACHE_EXPIRATION_SECONDS);
-            }
-
-            return account;
-        }
-
-        public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
-        {
-            List<UserAccount> accounts = new List<UserAccount>();
-
-            m_log.DebugFormat("[SIMIAN ACCOUNT CONNECTOR]: Searching for user accounts with name query " + query);
-
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetUsers" },
-                { "NameQuery", query }
-            };
-
-            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
-            if (response["Success"].AsBoolean())
-            {
-                OSDArray array = response["Users"] as OSDArray;
-                if (array != null && array.Count > 0)
-                {
-                    for (int i = 0; i < array.Count; i++)
-                    {
-                        UserAccount account = ResponseToUserAccount(array[i] as OSDMap);
-                        if (account != null)
-                            accounts.Add(account);
-                    }
-                }
-                else
-                {
-                    m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Account search failed, response data was in an invalid format");
-                }
-            }
-            else
-            {
-                m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Failed to search for account data by name " + query);
-            }
-
-            return accounts;
-        }
-
-        public bool StoreUserAccount(UserAccount data)
-        {
-            m_log.InfoFormat("[SIMIAN ACCOUNT CONNECTOR]: Storing user account for " + data.Name);
-
-            NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "AddUser" },
-                { "UserID", data.PrincipalID.ToString() },
-                { "Name", data.Name },
-                { "Email", data.Email },
-                { "AccessLevel", data.UserLevel.ToString() }
-            };
-
-            OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
-            
-            if (response["Success"].AsBoolean())
-            {
-                m_log.InfoFormat("[SIMIAN ACCOUNT CONNECTOR]: Storing user account data for " + data.Name);
-
-                requestArgs = new NameValueCollection
-                {
-                    { "RequestMethod", "AddUserData" },
-                    { "UserID", data.PrincipalID.ToString() },
-                    { "CreationDate", data.Created.ToString() },
-                    { "UserFlags", data.UserFlags.ToString() },
-                    { "UserTitle", data.UserTitle }
-                };
-
-                response = WebUtils.PostToService(m_serverUrl, requestArgs);
-                bool success = response["Success"].AsBoolean();
-
-                if (success)
-                {
-                    // Cache the user account info
-                    m_accountCache.AddOrUpdate(data.PrincipalID, data, CACHE_EXPIRATION_SECONDS);
-                }
-                else
-                {
-                    m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Failed to store user account data for " + data.Name + ": " + response["Message"].AsString());
-                }
-
-                return success;
-            }
-            else
-            {
-                m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Failed to store user account for " + data.Name + ": " + response["Message"].AsString());
-            }
-
-            return false;
-        }
-
-        public void CreateUser (string name, string password, string email)
-        {
-        }
-
-        public void CreateUser (UUID userID, string name, string password, string email)
-        {
-        }
-
         /// <summary>
-        /// Helper method for the various ways of retrieving a user account
+        ///   Helper method for the various ways of retrieving a user account
         /// </summary>
-        /// <param name="requestArgs">Service query parameters</param>
+        /// <param name = "requestArgs">Service query parameters</param>
         /// <returns>A UserAccount object on success, null on failure</returns>
         private UserAccount GetUser(NameValueCollection requestArgs)
         {
@@ -263,7 +267,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 if (user != null)
                     return ResponseToUserAccount(user);
                 else
-                    m_log.Warn("[SIMIAN ACCOUNT CONNECTOR]: Account search failed, response data was in an invalid format");
+                    m_log.Warn(
+                        "[SIMIAN ACCOUNT CONNECTOR]: Account search failed, response data was in an invalid format");
             }
             else
             {
@@ -274,24 +279,26 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         /// <summary>
-        /// Convert a User object in LLSD format to a UserAccount
+        ///   Convert a User object in LLSD format to a UserAccount
         /// </summary>
-        /// <param name="response">LLSD containing user account data</param>
+        /// <param name = "response">LLSD containing user account data</param>
         /// <returns>A UserAccount object on success, null on failure</returns>
         private UserAccount ResponseToUserAccount(OSDMap response)
         {
             if (response == null)
                 return null;
 
-            UserAccount account = new UserAccount();
-            account.PrincipalID = response["UserID"].AsUUID();
-            account.Created = response["CreationDate"].AsInteger();
-            account.Email = response["Email"].AsString();
-            account.ServiceURLs = new Dictionary<string, object>(0);
-            account.UserFlags = response["UserFlags"].AsInteger();
-            account.UserLevel = response["AccessLevel"].AsInteger();
-            account.UserTitle = response["UserTitle"].AsString();
-            account.Name = response["Name"].AsString();
+            UserAccount account = new UserAccount
+                                      {
+                                          PrincipalID = response["UserID"].AsUUID(),
+                                          Created = response["CreationDate"].AsInteger(),
+                                          Email = response["Email"].AsString(),
+                                          ServiceURLs = new Dictionary<string, object>(0),
+                                          UserFlags = response["UserFlags"].AsInteger(),
+                                          UserLevel = response["AccessLevel"].AsInteger(),
+                                          UserTitle = response["UserTitle"].AsString(),
+                                          Name = response["Name"].AsString()
+                                      };
 
             // Cache the user account info
             m_accountCache.AddOrUpdate(account.PrincipalID, account, CACHE_EXPIRATION_SECONDS);
@@ -300,11 +307,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         /// <summary>
-        /// Convert a name with a single space in it to a first and last name
+        ///   Convert a name with a single space in it to a first and last name
         /// </summary>
-        /// <param name="name">A full name such as "John Doe"</param>
-        /// <param name="firstName">First name</param>
-        /// <param name="lastName">Last name (surname)</param>
+        /// <param name = "name">A full name such as "John Doe"</param>
+        /// <param name = "firstName">First name</param>
+        /// <param name = "lastName">Last name (surname)</param>
         private static void GetFirstLastName(string name, out string firstName, out string lastName)
         {
             if (String.IsNullOrEmpty(name))

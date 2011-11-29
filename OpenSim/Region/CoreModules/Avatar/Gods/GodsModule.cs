@@ -27,17 +27,15 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gods
 {
@@ -45,101 +43,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        /// <summary>Special UUID for actions that apply to all agents</summary>
+        /// <summary>
+        ///   Special UUID for actions that apply to all agents
+        /// </summary>
         private static readonly UUID ALL_AGENTS = new UUID("44e87126-e794-4ded-05b3-7c42da3d5cdb");
 
-        protected IScene m_scene;
         protected IDialogModule m_dialogModule;
-        
-        public void Initialise(IConfigSource source)
+        protected IScene m_scene;
+
+        public bool IsSharedModule
         {
+            get { return false; }
         }
 
-        public void AddRegion (IScene scene)
-        {
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IGodsModule>(this);
-            m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
-            m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
-            m_scene.EventManager.OnRegisterCaps += RegisterCaps;
-        }
+        #region IGodsModule Members
 
-        public void RemoveRegion (IScene scene)
-        {
-            m_scene.UnregisterModuleInterface<IGodsModule>(this);
-            m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
-            m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
-            m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-            m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-        public void Close() {}
-        public string Name { get { return "Gods Module"; } }
-        public bool IsSharedModule { get { return false; } }
-        
-        public void SubscribeToClientEvents(IClientAPI client)
-        {
-            client.OnGodKickUser += KickUser;
-            client.OnRequestGodlikePowers += RequestGodlikePowers;
-        }
-        
-        public void UnsubscribeFromClientEvents(IClientAPI client)
-        {
-            client.OnGodKickUser -= KickUser;
-            client.OnRequestGodlikePowers -= RequestGodlikePowers;
-        }
-
-        public OSDMap RegisterCaps (UUID agentID, IHttpServer server)
-        {
-            OSDMap retVal = new OSDMap ();
-            retVal["UntrustedSimulatorMessage"] = OpenSim.Framework.Capabilities.CapsUtil.CreateCAPS ("UntrustedSimulatorMessage", "");
-
-            server.AddStreamHandler (new RestHTTPHandler ("POST", retVal["UntrustedSimulatorMessage"],
-                                                      delegate (Hashtable m_dhttpMethod)
-                                                      {
-                                                          return UntrustedSimulatorMessage (agentID, m_dhttpMethod);
-                                                      }));
-            return retVal;
-        }
-
-        private Hashtable UntrustedSimulatorMessage (UUID AgentID, Hashtable mDhttpMethod)
-        {
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml ((string)mDhttpMethod["requestbody"]);
-            if (rm["message"] == "GodKickUser")
-            {
-                OSDArray innerArray = ((OSDArray)((OSDMap)rm["body"])["UserInfo"]);
-                OSDMap innerMap = (OSDMap)innerArray[0];
-                UUID toKick = innerMap["AgentID"].AsUUID ();
-                UUID sessionID = innerMap["GodSessionID"].AsUUID ();
-                string reason = innerMap["Reason"].AsString ();
-                uint kickFlags = innerMap["KickFlags"].AsUInteger ();
-                KickUser (AgentID, sessionID, toKick, kickFlags, reason);
-            }
-            //Send back data
-            Hashtable responsedata = new Hashtable ();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            return responsedata;
-        }
-        
         public void RequestGodlikePowers(
             UUID agentID, UUID sessionID, UUID token, bool godLike, IClientAPI controllingClient)
         {
-            IScenePresence sp = m_scene.GetScenePresence (agentID);
+            IScenePresence sp = m_scene.GetScenePresence(agentID);
 
             if (sp != null)
             {
@@ -147,7 +69,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                 {
                     //Unconditionally remove god levels
                     sp.GodLevel = 0;
-                    sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
+                    sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);
                     return;
                 }
 
@@ -159,38 +81,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                         sp.GodLevel = 255;
 
                     m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
-                    sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
+                    sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);
                 }
                 else
                 {
                     if (m_dialogModule != null)
-                        m_dialogModule.SendAlertToUser(agentID, "Request for god powers denied. This request has been logged.");
+                        m_dialogModule.SendAlertToUser(agentID,
+                                                       "Request for god powers denied. This request has been logged.");
                     m_log.Info("[GODS]: God powers requested by " + sp.Name + ", user is not allowed to have god powers");
                 }
             }
         }
-        
-        /// <summary>
-        /// Kicks User specified from the simulator. This logs them off of the grid
-        /// If the client gets the UUID: 44e87126e7944ded05b37c42da3d5cdb it assumes
-        /// that you're kicking it even if the avatar's UUID isn't the UUID that the
-        /// agent is assigned
-        /// </summary>
-        /// <param name="godID">The person doing the kicking</param>
-        /// <param name="sessionID">The session of the person doing the kicking</param>
-        /// <param name="agentID">the person that is being kicked</param>
-        /// <param name="kickflags">Tells what to do to the user</param>
-        /// <param name="reason">The message to send to the user after it's been turned into a field</param>
-        public void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, byte[] reason)
-        {
-            KickUser (godID, sessionID, agentID, kickflags, Utils.BytesToString (reason));
-        }
 
-        public void KickUser (UUID godID, UUID sessionID, UUID agentID, uint kickflags, string reason)
+        public void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, string reason)
         {
             UUID kickUserID = ALL_AGENTS;
 
-            IScenePresence sp = m_scene.GetScenePresence (agentID);
+            IScenePresence sp = m_scene.GetScenePresence(agentID);
 
             if (sp != null || agentID == kickUserID)
             {
@@ -202,28 +109,30 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                         {
                             m_scene.ForEachClient(
                                 delegate(IClientAPI controller)
-                                {
-                                    if (controller.AgentId != godID)
-                                        controller.Kick(reason);
-                                }
-                            );
+                                    {
+                                        if (controller.AgentId != godID)
+                                            controller.Kick(reason);
+                                    }
+                                );
 
                             //This does modify this list, but we make a copy of it
-                            foreach (IScenePresence p in m_scene.GetScenePresences ())
+                            foreach (IScenePresence p in m_scene.GetScenePresences())
                             {
                                 if (p.UUID != godID)
                                 {
-                                    IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
+                                    IEntityTransferModule transferModule =
+                                        m_scene.RequestModuleInterface<IEntityTransferModule>();
                                     if (transferModule != null)
-                                        transferModule.IncomingCloseAgent (m_scene, p.UUID);
+                                        transferModule.IncomingCloseAgent(m_scene, p.UUID);
                                 }
                             }
                         }
                         else
                         {
-                            IEntityTransferModule transferModule = m_scene.RequestModuleInterface<IEntityTransferModule> ();
+                            IEntityTransferModule transferModule =
+                                m_scene.RequestModuleInterface<IEntityTransferModule>();
                             if (transferModule != null)
-                                transferModule.IncomingCloseAgent (m_scene, sp.UUID);
+                                transferModule.IncomingCloseAgent(m_scene, sp.UUID);
                         }
                     }
                     else if (kickflags == 1)
@@ -244,6 +153,117 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     m_dialogModule.SendAlertToUser(godID, "Kick request denied");
                 }
             }
+        }
+
+        #endregion
+
+        #region INonSharedRegionModule Members
+
+        public void Initialise(IConfigSource source)
+        {
+        }
+
+        public void AddRegion(IScene scene)
+        {
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IGodsModule>(this);
+            m_scene.EventManager.OnNewClient += SubscribeToClientEvents;
+            m_scene.EventManager.OnClosingClient += UnsubscribeFromClientEvents;
+            m_scene.EventManager.OnRegisterCaps += RegisterCaps;
+        }
+
+        public void RemoveRegion(IScene scene)
+        {
+            m_scene.UnregisterModuleInterface<IGodsModule>(this);
+            m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
+            m_scene.EventManager.OnClosingClient -= UnsubscribeFromClientEvents;
+            m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+            m_dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "Gods Module"; }
+        }
+
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
+
+        public void SubscribeToClientEvents(IClientAPI client)
+        {
+            client.OnGodKickUser += KickUser;
+            client.OnRequestGodlikePowers += RequestGodlikePowers;
+        }
+
+        public void UnsubscribeFromClientEvents(IClientAPI client)
+        {
+            client.OnGodKickUser -= KickUser;
+            client.OnRequestGodlikePowers -= RequestGodlikePowers;
+        }
+
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
+        {
+            OSDMap retVal = new OSDMap();
+            retVal["UntrustedSimulatorMessage"] = CapsUtil.CreateCAPS("UntrustedSimulatorMessage", "");
+
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UntrustedSimulatorMessage"],
+                                                        m_dhttpMethod =>
+                                                        UntrustedSimulatorMessage(agentID, m_dhttpMethod)));
+            return retVal;
+        }
+
+        private Hashtable UntrustedSimulatorMessage(UUID AgentID, Hashtable mDhttpMethod)
+        {
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            if (rm["message"] == "GodKickUser")
+            {
+                OSDArray innerArray = ((OSDArray) ((OSDMap) rm["body"])["UserInfo"]);
+                OSDMap innerMap = (OSDMap) innerArray[0];
+                UUID toKick = innerMap["AgentID"].AsUUID();
+                UUID sessionID = innerMap["GodSessionID"].AsUUID();
+                string reason = innerMap["Reason"].AsString();
+                uint kickFlags = innerMap["KickFlags"].AsUInteger();
+                KickUser(AgentID, sessionID, toKick, kickFlags, reason);
+            }
+            //Send back data
+            Hashtable responsedata = new Hashtable();
+            responsedata["int_response_code"] = 200; //501; //410; //404;
+            responsedata["content_type"] = "text/plain";
+            responsedata["keepalive"] = false;
+            responsedata["str_response_string"] = "";
+            return responsedata;
+        }
+
+        /// <summary>
+        ///   Kicks User specified from the simulator. This logs them off of the grid
+        ///   If the client gets the UUID: 44e87126e7944ded05b37c42da3d5cdb it assumes
+        ///   that you're kicking it even if the avatar's UUID isn't the UUID that the
+        ///   agent is assigned
+        /// </summary>
+        /// <param name = "godID">The person doing the kicking</param>
+        /// <param name = "sessionID">The session of the person doing the kicking</param>
+        /// <param name = "agentID">the person that is being kicked</param>
+        /// <param name = "kickflags">Tells what to do to the user</param>
+        /// <param name = "reason">The message to send to the user after it's been turned into a field</param>
+        public void KickUser(UUID godID, UUID sessionID, UUID agentID, uint kickflags, byte[] reason)
+        {
+            KickUser(godID, sessionID, agentID, kickflags, Utils.BytesToString(reason));
         }
     }
 }

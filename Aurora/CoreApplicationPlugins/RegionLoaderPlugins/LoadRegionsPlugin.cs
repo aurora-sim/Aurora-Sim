@@ -27,20 +27,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using System.Threading;
-using log4net;
-using OpenSim.Framework;
-using OpenSim.Region.CoreModules.Agent.AssetTransaction;
-using OpenSim.Region.CoreModules.Avatar.InstantMessage;
-using OpenSim.Region.CoreModules.Scripting.DynamicTexture;
-using OpenSim.Region.CoreModules.Scripting.LoadImageURL;
-using OpenSim.Region.CoreModules.Scripting.XMLRPC;
-using Aurora.Modules.RegionLoader;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.CoreApplicationPlugins
 {
@@ -48,12 +41,13 @@ namespace OpenSim.CoreApplicationPlugins
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ISimulationBase m_openSim;
         public bool Enabled = true;
+
+        private const string m_name = "LoadRegionsPlugin";
+        protected ISimulationBase m_openSim;
 
         #region IApplicationPlugin Members
 
-        private string m_name = "LoadRegionsPlugin";
         public string Name
         {
             get { return m_name; }
@@ -63,7 +57,7 @@ namespace OpenSim.CoreApplicationPlugins
         public void Initialize(ISimulationBase openSim)
         {
             m_openSim = openSim;
-            openSim.ApplicationRegistry.RegisterModuleInterface<LoadRegionsPlugin>(this);
+            openSim.ApplicationRegistry.RegisterModuleInterface(this);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -113,12 +107,9 @@ namespace OpenSim.CoreApplicationPlugins
                     regions.Add(regionsToLoad);
                 }
             }
-            foreach (RegionInfo[] regionsToLoad in regions)
+            foreach (RegionInfo t in regions.SelectMany(regionsToLoad => regionsToLoad))
             {
-                for (int i = 0; i < regionsToLoad.Length; i++)
-                {
-                    manager.StartNewRegion(regionsToLoad[i]);
-                }
+                manager.StartNewRegion(t);
             }
         }
 
@@ -126,16 +117,17 @@ namespace OpenSim.CoreApplicationPlugins
         {
         }
 
+        #endregion
+
         public void Dispose()
         {
         }
 
-        #endregion
-
         /// <summary>
-        /// Check that region configuration information makes sense.
+        ///   Check that region configuration information makes sense.
         /// </summary>
-        /// <param name="regions"></param>
+        /// <param name = "regions"></param>
+        /// <param name="reason"></param>
         /// <returns>True if we're sane, false if we're insane</returns>
         private bool CheckRegionsForSanity(RegionInfo[] regions, out string reason)
         {
@@ -155,21 +147,23 @@ namespace OpenSim.CoreApplicationPlugins
                         reason = "Same UUID for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
                         return false;
                     }
-                    else if (
+                    if (
                         regions[i].RegionLocX == regions[j].RegionLocX && regions[i].RegionLocY == regions[j].RegionLocY)
                     {
                         m_log.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same grid location ({2}, {3})",
                             regions[i].RegionName, regions[j].RegionName, regions[i].RegionLocX, regions[i].RegionLocY);
-                        reason = "Same grid location for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
+                        reason = "Same grid location for regions " + regions[i].RegionName + ", " +
+                                 regions[j].RegionName;
                         return false;
                     }
-                    else if (regions[i].InternalEndPoint.Port == regions[j].InternalEndPoint.Port)
+                    if (regions[i].InternalEndPoint.Port == regions[j].InternalEndPoint.Port)
                     {
                         m_log.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same internal IP port {2}",
                             regions[i].RegionName, regions[j].RegionName, regions[i].InternalEndPoint.Port);
-                        reason = "Same internal end point for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
+                        reason = "Same internal end point for regions " + regions[i].RegionName + ", " +
+                                 regions[j].RegionName;
                         return false;
                     }
                 }

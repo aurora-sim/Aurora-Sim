@@ -31,28 +31,28 @@ using OpenSim.Framework;
 namespace OpenSim.Region.Framework.Interfaces
 {
     /// <summary>
-    /// Provide mechanisms for messaging groups.
+    ///   Provide mechanisms for messaging groups.
     /// </summary>
     public interface IGroupsMessagingModule
     {
         /// <summary>
-        /// Send a message to an entire group.
+        ///   Send a message to an entire group.
         /// </summary>
-        /// <param name="im">
-        /// The message itself.  The fields that must be populated are
+        /// <param name = "im">
+        ///   The message itself.  The fields that must be populated are
         /// 
-        /// imSessionID - Populate this with the group ID (session ID and group ID are currently identical)
-        /// fromAgentName - Populate this with whatever arbitrary name you want to show up in the chat dialog
-        /// message - The message itself
-        /// dialog - This must be (byte)InstantMessageDialog.SessionSend
+        ///   imSessionID - Populate this with the group ID (session ID and group ID are currently identical)
+        ///   fromAgentName - Populate this with whatever arbitrary name you want to show up in the chat dialog
+        ///   message - The message itself
+        ///   dialog - This must be (byte)InstantMessageDialog.SessionSend
         /// </param>
-        /// <param name="groupID"></param>
+        /// <param name = "groupID"></param>
         void SendMessageToGroup(GridInstantMessage im, UUID groupID);
 
         /// <summary>
-        /// Ensures that a group chat is created and users are added to it
+        ///   Ensures that a group chat is created and users are added to it
         /// </summary>
-        /// <param name="groupID"></param>
-        void EnsureGroupChatIsStarted (UUID groupID);
+        /// <param name = "groupID"></param>
+        void EnsureGroupChatIsStarted(UUID groupID);
     }
 }

@@ -25,41 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using log4net;
-using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Servers;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using Aurora.Framework;
 using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.CapsService
 {
     /// <summary>
-    /// This keeps track of what clients are in the given region
+    ///   This keeps track of what clients are in the given region
     /// </summary>
     public class PerRegionCapsService : IRegionCapsService
     {
         #region Declares
 
         private ulong m_RegionHandle;
-        public ulong RegionHandle
-        {
-            get { return m_RegionHandle; }
-        }
+        private GridRegion m_cachedRegion;
+
+        protected Dictionary<UUID, IRegionClientCapsService> m_clientsInThisRegion =
+            new Dictionary<UUID, IRegionClientCapsService>();
 
         private IRegistryCore m_registry;
+
         public IRegistryCore Registry
         {
             get { return m_registry; }
+        }
+
+        public ulong RegionHandle
+        {
+            get { return m_RegionHandle; }
         }
 
         public int RegionX
@@ -82,7 +78,6 @@ namespace OpenSim.Services.CapsService
             }
         }
 
-        private GridRegion m_cachedRegion;
         public GridRegion Region
         {
             get
@@ -91,24 +86,23 @@ namespace OpenSim.Services.CapsService
                     return m_cachedRegion;
                 else
                 {
-                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, RegionX, RegionY);
+                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
+                                                                                                         RegionX,
+                                                                                                         RegionY);
                     return m_cachedRegion;
                 }
             }
         }
-
-        protected Dictionary<UUID, IRegionClientCapsService> m_clientsInThisRegion =
-            new Dictionary<UUID, IRegionClientCapsService>();
 
         #endregion
 
         #region Initialize
 
         /// <summary>
-        /// Initialise the service
+        ///   Initialise the service
         /// </summary>
-        /// <param name="regionHandle"></param>
-        /// <param name="regionID"></param>
+        /// <param name = "regionHandle"></param>
+        /// <param name = "regionID"></param>
         public void Initialise(ulong regionHandle, IRegistryCore registry)
         {
             m_RegionHandle = regionHandle;
@@ -129,9 +123,9 @@ namespace OpenSim.Services.CapsService
         #region Add/Get/Remove clients
 
         /// <summary>
-        /// Add this client to the region
+        ///   Add this client to the region
         /// </summary>
-        /// <param name="service"></param>
+        /// <param name = "service"></param>
         public void AddClientToRegion(IRegionClientCapsService service)
         {
             if (!m_clientsInThisRegion.ContainsKey(service.AgentID))
@@ -141,9 +135,9 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Remove the client from this region
+        ///   Remove the client from this region
         /// </summary>
-        /// <param name="service"></param>
+        /// <param name = "service"></param>
         public void RemoveClientFromRegion(IRegionClientCapsService service)
         {
             if (m_clientsInThisRegion.ContainsKey(service.AgentID))
@@ -151,9 +145,9 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Get an agent's Caps by UUID
+        ///   Get an agent's Caps by UUID
         /// </summary>
-        /// <param name="AgentID"></param>
+        /// <param name = "AgentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetClient(UUID AgentID)
         {
@@ -163,7 +157,7 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Get all clients in this region
+        ///   Get all clients in this region
         /// </summary>
         /// <returns></returns>
         public List<IRegionClientCapsService> GetClients()

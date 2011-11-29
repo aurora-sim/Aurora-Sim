@@ -25,35 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using System.Xml;
-using log4net;
-using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {
     /// <summary>
-    /// Archives assets
+    ///   Archives assets
     /// </summary>
     public class AssetsArchiver
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <value>
-        /// Post a message to the log every x assets as a progress bar
+        ///   Post a message to the log every x assets as a progress bar
         /// </value>
         protected static int LOG_ASSET_LOAD_NOTIFICATION_INTERVAL = 50;
 
-        /// <value>
-        /// Keep a count of the number of assets written so that we can provide status updates
-        /// </value>
-        protected int m_assetsWritten; 
-        
         protected TarArchiveWriter m_archiveWriter;
+
+        /// <value>
+        ///   Keep a count of the number of assets written so that we can provide status updates
+        /// </value>
+        protected int m_assetsWritten;
 
         public AssetsArchiver(TarArchiveWriter archiveWriter)
         {
@@ -61,20 +57,16 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         }
 
         /// <summary>
-        /// Archive the assets given to this archiver to the given archive.
+        ///   Archive the assets given to this archiver to the given archive.
         /// </summary>
-        /// <param name="archive"></param>
+        /// <param name = "archive"></param>
         public void WriteAsset(AssetBase asset)
         {
             //WriteMetadata(archive);
             WriteData(asset);
         }
 
-        /// <summary>
-        /// Write an assets metadata file to the given archive
-        /// </summary>
-        /// <param name="archive"></param>
-//        protected void WriteMetadata(TarArchiveWriter archive)
+        //        protected void WriteMetadata(TarArchiveWriter archive)
 //        {
 //            StringWriter sw = new StringWriter();
 //            XmlTextWriter xtw = new XmlTextWriter(sw);
@@ -115,11 +107,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 //
 //            archive.WriteFile("assets.xml", sw.ToString());
 //        }
-
         /// <summary>
-        /// Write asset data files to the given archive
+        ///   Write an assets metadata file to the given archive
         /// </summary>
-        /// <param name="asset"></param>
+        /// <param name = "archive"></param>
+        /// <summary>
+        ///   Write asset data files to the given archive
+        /// </summary>
+        /// <param name = "asset"></param>
         protected void WriteData(AssetBase asset)
         {
             // It appears that gtar, at least, doesn't need the intermediate directory entries in the tar
@@ -127,9 +122,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             string extension = string.Empty;
 
-            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey((sbyte)asset.TypeAsset))
+            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey((sbyte) asset.TypeAsset))
             {
-                extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[(sbyte)asset.TypeAsset];
+                extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[(sbyte) asset.TypeAsset];
             }
             else
             {
@@ -145,13 +140,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_assetsWritten++;
 
             //m_log.DebugFormat("[ARCHIVER]: Added asset {0}", m_assetsWritten);
-            
-            if (m_assetsWritten % LOG_ASSET_LOAD_NOTIFICATION_INTERVAL == 0)
+
+            if (m_assetsWritten%LOG_ASSET_LOAD_NOTIFICATION_INTERVAL == 0)
                 m_log.InfoFormat("[ARCHIVER]: Added {0} assets to archive", m_assetsWritten);
         }
 
         /// <summary>
-        /// Only call this if you need to force a close on the underlying writer.
+        ///   Only call this if you need to force a close on the underlying writer.
         /// </summary>
         public void ForceClose()
         {

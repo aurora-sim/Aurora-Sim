@@ -25,22 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
     /// <summary>
-    /// Effectively a physics plugin that simulates no physics at all.
+    ///   Effectively a physics plugin that simulates no physics at all.
     /// </summary>
     public class BasicPhysicsPlugin : IPhysicsPlugin
     {
-        public BasicPhysicsPlugin()
-        {
-        }
+        #region IPhysicsPlugin Members
 
         public bool Init()
         {
@@ -60,5 +55,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public void Dispose()
         {
         }
+
+        #endregion
     }
 }

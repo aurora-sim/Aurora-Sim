@@ -25,35 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class SPAvatar : System.MarshalByRefObject, IAvatar
+    internal class SPAvatar : MarshalByRefObject, IAvatar
     {
-        private readonly IScene m_rootScene;
         private readonly UUID m_ID;
+        private readonly IScene m_rootScene;
         private readonly ISecurityCredential m_security;
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public SPAvatar (IScene scene, UUID ID, ISecurityCredential security)
+        public SPAvatar(IScene scene, UUID ID, ISecurityCredential security)
         {
             m_rootScene = scene;
             m_security = security;
             m_ID = ID;
         }
 
-        private IScenePresence GetSP ()
-        {
-            return m_rootScene.GetScenePresence(m_ID);
-        }
+        #region IAvatar Members
 
         public string Name
         {
@@ -71,28 +67,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return GetSP().AbsolutePosition; }
             set { GetSP().TeleportWithMomentum(value); }
         }
-        
+
         public bool IsChildAgent
         {
             get { return GetSP().IsChildAgent; }
         }
-        
+
+        #endregion
+
         #region IAvatar implementation
+
         public IAvatarAttachment[] Attachments
         {
-            get {
-                List<IAvatarAttachment> attachments = new List<IAvatarAttachment>();
+            get
+            {
+                IAvatarAppearanceModule appearance = GetSP().RequestModuleInterface<IAvatarAppearanceModule>();
+                List<AvatarAttachment> internalAttachments = appearance.Appearance.GetAttachments();
 
-                IAvatarAppearanceModule appearance = GetSP ().RequestModuleInterface<IAvatarAppearanceModule> ();
-                List<AvatarAttachment> internalAttachments = appearance.Appearance.GetAttachments ();
-                foreach (AvatarAttachment attach in internalAttachments)
-                {
-                    attachments.Add(new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint,
-                                                           new UUID(attach.ItemID),
-                                                           new UUID(attach.AssetID), m_security));
-                }
-                
-                return attachments.ToArray();
+                return internalAttachments.Select(attach => new SPAvatarAttachment(m_rootScene, this, attach.AttachPoint, new UUID(attach.ItemID), new UUID(attach.AssetID), m_security)).Cast<IAvatarAttachment>().ToArray();
             }
         }
 
@@ -102,6 +94,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             if (dm != null)
                 dm.SendUrlToUser(GetSP().UUID, sender.Name, sender.GlobalID, GetSP().UUID, false, message, url);
         }
+
         #endregion
+
+        private IScenePresence GetSP()
+        {
+            return m_rootScene.GetScenePresence(m_ID);
+        }
     }
 }

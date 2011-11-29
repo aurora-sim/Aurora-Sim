@@ -25,13 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
@@ -61,7 +57,6 @@ namespace Aurora.Framework
         /// Updates the region info for the given region
         /// </summary>
         /// <param name="region"></param>
-        /// <param name="Disabled"></param>
         void UpdateRegionInfo(RegionInfo region);
 
         /// <summary>
@@ -80,7 +75,6 @@ namespace Aurora.Framework
         /// <summary>
         /// Stores WindLight settings for the given region
         /// </summary>
-        /// <param name="wl"></param>
         void StoreRegionWindlightSettings (UUID RegionID, UUID ID, RegionLightShareData lsd);
 
         /// <summary>

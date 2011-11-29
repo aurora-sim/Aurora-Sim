@@ -30,7 +30,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 {
@@ -53,7 +52,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             throw new NotImplementedException();
         }
 
-        public ITerrainChannel LoadStream (Stream stream, IScene scene)
+        public ITerrainChannel LoadStream(Stream stream, IScene scene)
         {
             throw new NotImplementedException();
         }
@@ -66,10 +65,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         }
 
         /// <summary>
-        /// Exports a stream using a System.Drawing exporter.
+        ///   Exports a stream using a System.Drawing exporter.
         /// </summary>
-        /// <param name="stream">The target stream</param>
-        /// <param name="map">The terrain channel being saved</param>
+        /// <param name = "stream">The target stream</param>
+        /// <param name = "map">The terrain channel being saved</param>
         public void SaveStream(Stream stream, ITerrainChannel map)
         {
             Bitmap colours = CreateBitmapFromMap(map);
@@ -103,7 +102,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 for (int x = 0; x < map.Width; x++)
                 {
                     // 512 is the largest possible height before colours clamp
-                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y] / 512.0), 0.0) * (pallete - 1));
+                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y]/512.0), 0.0)*(pallete - 1));
                     bmp.SetPixel(x, map.Height - y - 1, colours[colorindex]);
                 }
             }

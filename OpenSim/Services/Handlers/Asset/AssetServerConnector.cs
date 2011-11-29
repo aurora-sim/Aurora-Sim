@@ -25,26 +25,71 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework;
+using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
     public class AssetServiceConnector : IService, IGridRegistrationUrlModule
     {
-        private IRegistryCore m_registry;
         private string m_ConfigName = "AssetService";
-        private bool m_allowDelete = false;
- 
+        private bool m_allowDelete;
+        private IRegistryCore m_registry;
+
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "AssetServerURI"; }
+        }
+
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new AssetServerGetHandler(GetService(SessionID != "").InnerService, url, SessionID,
+                                                              m_registry));
+            server.AddStreamHandler(new AssetServerPostHandler(GetService(SessionID != "").InnerService, url, SessionID,
+                                                               m_registry));
+            server.AddStreamHandler(new AssetServerDeleteHandler(GetService(SessionID != "").InnerService, m_allowDelete,
+                                                                 url, SessionID, m_registry));
+        }
+
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            string url = "/assets" + UUID.Random();
+
+            server.AddStreamHandler(new AssetServerGetHandler(GetService(SessionID != "").InnerService, url, SessionID,
+                                                              m_registry));
+            server.AddStreamHandler(new AssetServerPostHandler(GetService(SessionID != "").InnerService, url, SessionID,
+                                                               m_registry));
+            server.AddStreamHandler(new AssetServerDeleteHandler(GetService(SessionID != "").InnerService, m_allowDelete,
+                                                                 url, SessionID, m_registry));
+
+            return url;
+        }
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
+            server.RemoveHTTPHandler("GET", url);
+            server.RemoveHTTPHandler("DELETE", url);
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -57,10 +102,10 @@ namespace OpenSim.Services
                 return;
 
             m_registry = registry;
-            m_registry.RegisterModuleInterface<AssetServiceConnector> (this);
+            m_registry.RegisterModuleInterface(this);
 
             IConfig serverConfig = config.Configs[m_ConfigName];
-            m_allowDelete = serverConfig != null ? serverConfig.GetBoolean("AllowRemoteDelete", false) : false;
+            m_allowDelete = serverConfig != null && serverConfig.GetBoolean("AllowRemoteDelete", false);
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
@@ -69,50 +114,14 @@ namespace OpenSim.Services
         {
         }
 
-        #region IGridRegistrationUrlModule Members
+        #endregion
 
-        public string UrlName
+        public IAssetService GetService(bool isSecure)
         {
-            get { return "AssetServerURI"; }
-        }
-
-        public IAssetService GetService (bool isSecure)
-        {
-            IAssetService assetService = m_registry.RequestModuleInterface<IExternalAssetService> ();
+            IAssetService assetService = m_registry.RequestModuleInterface<IExternalAssetService>();
             if (!isSecure && assetService != null)
                 return assetService;
-            return m_registry.RequestModuleInterface<IAssetService> ();
+            return m_registry.RequestModuleInterface<IAssetService>();
         }
-
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler (new AssetServerGetHandler (GetService (SessionID != "").InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerPostHandler (GetService (SessionID != "").InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerDeleteHandler (GetService (SessionID != "").InnerService, m_allowDelete, url, SessionID, m_registry));
-        }
-
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            string url = "/assets" + UUID.Random();
-
-            server.AddStreamHandler (new AssetServerGetHandler (GetService (SessionID != "").InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerPostHandler (GetService (SessionID != "").InnerService, url, SessionID, m_registry));
-            server.AddStreamHandler (new AssetServerDeleteHandler (GetService (SessionID != "").InnerService, m_allowDelete, url, SessionID, m_registry));
-
-            return url;
-        }
-
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
-            server.RemoveHTTPHandler("GET", url);
-            server.RemoveHTTPHandler("DELETE", url);
-        }
-
-        #endregion
     }
 }

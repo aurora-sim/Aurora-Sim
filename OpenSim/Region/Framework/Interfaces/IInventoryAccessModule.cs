@@ -25,46 +25,46 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-
-using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IInventoryAccessModule
     {
         string CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data);
-        UUID DeleteToInventory (DeRezAction action, UUID folderID, List<ISceneEntity> objectGroups, UUID agentId, out UUID itemID);
+
+        UUID DeleteToInventory(DeRezAction action, UUID folderID, List<ISceneEntity> objectGroups, UUID agentId,
+                               out UUID itemID);
 
         /// <summary>
-        /// Create a SceneObjectGroup representation of an asset xml of the given item
+        ///   Create a SceneObjectGroup representation of an asset xml of the given item
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "itemID"></param>
         /// <returns></returns>
         SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID);
 
         /// <summary>
-        /// Rez an object from inventory and add it to the scene
+        ///   Rez an object from inventory and add it to the scene
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="itemID"></param>
-        /// <param name="RayEnd"></param>
-        /// <param name="RayStart"></param>
-        /// <param name="RayTargetID"></param>
-        /// <param name="BypassRayCast"></param>
-        /// <param name="RayEndIsIntersection"></param>
-        /// <param name="RezSelected"></param>
-        /// <param name="RemoveItem"></param>
-        /// <param name="fromTaskID"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "itemID"></param>
+        /// <param name = "RayEnd"></param>
+        /// <param name = "RayStart"></param>
+        /// <param name = "RayTargetID"></param>
+        /// <param name = "BypassRayCast"></param>
+        /// <param name = "RayEndIsIntersection"></param>
+        /// <param name = "RezSelected"></param>
+        /// <param name = "RemoveItem"></param>
+        /// <param name = "fromTaskID"></param>
         /// <returns></returns>
         SceneObjectGroup RezObject(IClientAPI remoteClient, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
-                                    UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
-                                    bool RezSelected, bool RemoveItem, UUID fromTaskID);
+                                   UUID RayTargetID, byte BypassRayCast, bool RayEndIsIntersection,
+                                   bool RezSelected, bool RemoveItem, UUID fromTaskID);
+
         void TransferInventoryAssets(InventoryItemBase item, UUID sender, UUID receiver);
         bool GetAgentInventoryItem(IClientAPI remoteClient, UUID itemID, UUID requestID);
 

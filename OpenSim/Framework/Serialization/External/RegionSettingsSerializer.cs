@@ -29,45 +29,44 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using OpenMetaverse;
-using OpenSim.Framework;
 
 namespace OpenSim.Framework.Serialization.External
 {
     /// <summary>
-    /// Serialize and deserialize region settings as an external format.
+    ///   Serialize and deserialize region settings as an external format.
     /// </summary>
     public class RegionSettingsSerializer
     {
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
-        
+
         /// <summary>
-        /// Deserialize settings
+        ///   Deserialize settings
         /// </summary>
-        /// <param name="serializedSettings"></param>
+        /// <param name = "serializedSettings"></param>
         /// <returns></returns>
-        /// <exception cref="System.Xml.XmlException"></exception>
+        /// <exception cref = "System.Xml.XmlException"></exception>
         public static RegionSettings Deserialize(byte[] serializedSettings)
         {
             return Deserialize(m_asciiEncoding.GetString(serializedSettings, 0, serializedSettings.Length));
         }
-        
+
         /// <summary>
-        /// Deserialize settings
+        ///   Deserialize settings
         /// </summary>
-        /// <param name="serializedSettings"></param>
+        /// <param name = "serializedSettings"></param>
         /// <returns></returns>
-        /// <exception cref="System.Xml.XmlException"></exception>
+        /// <exception cref = "System.Xml.XmlException"></exception>
         public static RegionSettings Deserialize(string serializedSettings)
         {
             RegionSettings settings = new RegionSettings();
-            
+
             StringReader sr = new StringReader(serializedSettings);
             XmlTextReader xtr = new XmlTextReader(sr);
-            
+
             xtr.ReadStartElement("RegionSettings");
-         
+
             xtr.ReadStartElement("General");
-           
+
             while (xtr.Read() && xtr.NodeType != XmlNodeType.EndElement)
             {
                 switch (xtr.Name)
@@ -113,10 +112,10 @@ namespace OpenSim.Framework.Serialization.External
                         break;
                 }
             }
-            
+
             xtr.ReadEndElement();
             xtr.ReadStartElement("GroundTextures");
-            
+
             while (xtr.Read() && xtr.NodeType != XmlNodeType.EndElement)
             {
                 switch (xtr.Name)
@@ -159,10 +158,10 @@ namespace OpenSim.Framework.Serialization.External
                         break;
                 }
             }
-           
+
             xtr.ReadEndElement();
             xtr.ReadStartElement("Terrain");
-            
+
             while (xtr.Read() && xtr.NodeType != XmlNodeType.EndElement)
             {
                 switch (xtr.Name)
@@ -171,10 +170,12 @@ namespace OpenSim.Framework.Serialization.External
                         settings.WaterHeight = double.Parse(xtr.ReadElementContentAsString(), Culture.NumberFormatInfo);
                         break;
                     case "TerrainRaiseLimit":
-                        settings.TerrainRaiseLimit = double.Parse(xtr.ReadElementContentAsString(), Culture.NumberFormatInfo);
+                        settings.TerrainRaiseLimit = double.Parse(xtr.ReadElementContentAsString(),
+                                                                  Culture.NumberFormatInfo);
                         break;
                     case "TerrainLowerLimit":
-                        settings.TerrainLowerLimit = double.Parse(xtr.ReadElementContentAsString(), Culture.NumberFormatInfo);
+                        settings.TerrainLowerLimit = double.Parse(xtr.ReadElementContentAsString(),
+                                                                  Culture.NumberFormatInfo);
                         break;
                     case "UseEstateSun":
                         settings.UseEstateSun = bool.Parse(xtr.ReadElementContentAsString());
@@ -184,22 +185,21 @@ namespace OpenSim.Framework.Serialization.External
                         break;
                 }
             }
-            
+
             xtr.Close();
             sr.Close();
-            
+
             return settings;
         }
-        
+
         public static string Serialize(RegionSettings settings)
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter xtw = new XmlTextWriter(sw);
-            xtw.Formatting = Formatting.Indented;
+            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
             xtw.WriteStartDocument();
-            
+
             xtw.WriteStartElement("RegionSettings");
-            
+
             xtw.WriteStartElement("General");
             xtw.WriteElementString("AllowDamage", settings.AllowDamage.ToString());
             xtw.WriteElementString("AllowLandResell", settings.AllowLandResell.ToString());
@@ -230,7 +230,7 @@ namespace OpenSim.Framework.Serialization.External
             xtw.WriteElementString("ElevationHighSE", settings.Elevation2SE.ToString());
             xtw.WriteElementString("ElevationHighNE", settings.Elevation2NE.ToString());
             xtw.WriteEndElement();
-            
+
             xtw.WriteStartElement("Terrain");
             xtw.WriteElementString("WaterHeight", settings.WaterHeight.ToString());
             xtw.WriteElementString("TerrainRaiseLimit", settings.TerrainRaiseLimit.ToString());
@@ -239,13 +239,13 @@ namespace OpenSim.Framework.Serialization.External
             xtw.WriteElementString("FixedSun", settings.FixedSun.ToString());
             // XXX: Need to expose interface to get sun phase information from sun module
             // xtw.WriteStartElement("SunPhase", 
-            xtw.WriteEndElement(); 
-            
             xtw.WriteEndElement();
-            
+
+            xtw.WriteEndElement();
+
             xtw.Close();
             sw.Close();
-            
+
             return sw.ToString();
         }
     }

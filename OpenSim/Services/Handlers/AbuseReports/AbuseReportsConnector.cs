@@ -25,34 +25,42 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
+using Nini.Config;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.Handlers.AbuseReports
 {
     public class AbuseReportsConnector : IService
     {
         private IAbuseReports m_AbuseReportsService;
+
         public string Name
         {
             get { return GetType().Name; }
         }
 
+        #region IService Members
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
         public void PostInitialize(IConfigSource config, IRegistryCore registry)
         {
             m_AbuseReportsService = registry.RequestModuleInterface<IAbuseReports>();
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
         }
 
         public void PostStart(IConfigSource config, IRegistryCore registry)
@@ -61,13 +69,11 @@ namespace OpenSim.Services.Handlers.AbuseReports
             if (handlerConfig.GetString("AbuseReportsInHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("AbuseReportsInHandlerPort"));
+            IHttpServer server =
+                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
+                    (uint) handlerConfig.GetInt("AbuseReportsInHandlerPort"));
 
             server.AddStreamHandler(new AbuseReportsHandler(m_AbuseReportsService));
-        }
-
-        public void FinishedStartup ()
-        {
         }
 
         public void AddNewRegistry(IConfigSource config, IRegistryCore registry)

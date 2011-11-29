@@ -25,20 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Net;
-using System.Net.Sockets;
 using Nini.Config;
-using OpenSim.Framework;
 
 namespace OpenSim.Framework
 {
     public interface IClientNetworkServer
     {
-        void Initialise (int port, IConfigSource configSource, AgentCircuitManager authenticateClass);
-        void AddScene (IScene x);
-        void Start ();
-        void Stop ();
-        IClientNetworkServer Copy ();
-        void RemoveClient (IClientAPI iClientAPI);
+        void Initialise(int port, IConfigSource configSource, AgentCircuitManager authenticateClass);
+        void AddScene(IScene x);
+        void Start();
+        void Stop();
+        IClientNetworkServer Copy();
+        void RemoveClient(IClientAPI iClientAPI);
     }
 }

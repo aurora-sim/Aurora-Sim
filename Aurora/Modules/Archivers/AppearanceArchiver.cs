@@ -26,93 +26,40 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Text;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization.External;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
+using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Framework.Serialization.External;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Services.Interfaces;
 using log4net;
-using Aurora.Framework;
 
 namespace Aurora.Modules
 {
     /// <summary>
-    /// This module loads/saves the avatar's appearance from/down into an "Avatar Archive", also known as an AA.
+    ///   This module loads/saves the avatar's appearance from/down into an "Avatar Archive", also known as an AA.
     /// </summary>
     public class AuroraAvatarAppearanceArchiver : ISharedRegionModule, IAvatarAppearanceArchiver
-	{
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IScene m_scene;
-        private IInventoryService InventoryService;
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IAssetService AssetService;
-        private IUserAccountService UserAccountService;
         private IAvatarService AvatarService;
-		
-        public void Initialise(Nini.Config.IConfigSource source)
-        {
-		}
+        private IInventoryService InventoryService;
+        private IUserAccountService UserAccountService;
+        private IScene m_scene;
 
-        public void AddRegion (IScene scene)
+        public bool IsSharedModule
         {
-            if (m_scene == null)
-                m_scene = scene;
-
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand ("save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)", HandleSaveAvatarArchive);
-                MainConsole.Instance.Commands.AddCommand ("load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
-            }
+            get { return true; }
         }
 
-        public void RemoveRegion (IScene scene)
-        {
-
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-            InventoryService = m_scene.InventoryService;
-            AssetService = m_scene.AssetService;
-            UserAccountService = m_scene.UserAccountService;
-            AvatarService = m_scene.AvatarService;
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise() { }
-
-		public void Close()
-		{
-		}
-
-		public string Name 
-        {
-			get { return "AuroraAvatarArchiver"; }
-		}
-
-		public bool IsSharedModule
-        {
-			get { return true; }
-		}
-
-		protected void HandleLoadAvatarArchive(string[] cmdparams)
-		{
-			if (cmdparams.Length != 6) {
-                m_log.Info("[AvatarArchive] Not enough parameters!");
-				return;
-			}
-			LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
-		}
+        #region IAvatarAppearanceArchiver Members
 
         public void LoadAvatarArchive(string FileName, string Name)
         {
@@ -138,11 +85,11 @@ namespace Aurora.Modules
 
             string FolderNameToLoadInto = "";
 
-            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(file));
+            OSDMap map = ((OSDMap) OSDParser.DeserializeLLSDXml(file));
 
-            OSDMap assetsMap = ((OSDMap)map["Assets"]);
-            OSDMap itemsMap = ((OSDMap)map["Items"]);
-            OSDMap bodyMap = ((OSDMap)map["Body"]);
+            OSDMap assetsMap = ((OSDMap) map["Assets"]);
+            OSDMap itemsMap = ((OSDMap) map["Items"]);
+            OSDMap bodyMap = ((OSDMap) map["Body"]);
 
             AvatarAppearance appearance = ConvertXMLToAvatarAppearance(bodyMap, out FolderNameToLoadInto);
 
@@ -150,7 +97,9 @@ namespace Aurora.Modules
 
             List<InventoryItemBase> items = new List<InventoryItemBase>();
 
-            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType (account.PrincipalID, InventoryType.Wearable, AssetType.Clothing);
+            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType(account.PrincipalID,
+                                                                                     InventoryType.Wearable,
+                                                                                     AssetType.Clothing);
 
             InventoryFolderBase folderForAppearance
                 = new InventoryFolderBase(
@@ -168,9 +117,9 @@ namespace Aurora.Modules
             }
             catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex.ToString());
+                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
             }
-            
+
             //Now update the client about the new items
             SP.ControllingClient.SendBulkUpdateInventory(folderForAppearance);
             foreach (InventoryItemBase itemCopy in items)
@@ -188,29 +137,101 @@ namespace Aurora.Modules
             m_log.Info("[AvatarArchive] Loaded archive from " + FileName);
         }
 
-        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item, InventoryFolderBase parentFolder)
+        #endregion
+
+        #region ISharedRegionModule Members
+
+        public void Initialise(IConfigSource source)
         {
-            InventoryItemBase itemCopy = new InventoryItemBase();
-            itemCopy.Owner = recipient;
-            itemCopy.CreatorId = item.CreatorId;
-            itemCopy.CreatorData = item.CreatorData;
-            itemCopy.ID = UUID.Random();
-            itemCopy.AssetID = item.AssetID;
-            itemCopy.Description = item.Description;
-            itemCopy.Name = item.Name;
-            itemCopy.AssetType = item.AssetType;
-            itemCopy.InvType = item.InvType;
-            itemCopy.Folder = UUID.Zero;
+        }
+
+        public void AddRegion(IScene scene)
+        {
+            if (m_scene == null)
+                m_scene = scene;
+
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand("save avatar archive",
+                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>",
+                                                         "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)",
+                                                         HandleSaveAvatarArchive);
+                MainConsole.Instance.Commands.AddCommand("load avatar archive",
+                                                         "load avatar archive <First> <Last> <Filename>",
+                                                         "Loads appearance from an avatar archive archive",
+                                                         HandleLoadAvatarArchive);
+            }
+        }
+
+        public void RemoveRegion(IScene scene)
+        {
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+            InventoryService = m_scene.InventoryService;
+            AssetService = m_scene.AssetService;
+            UserAccountService = m_scene.UserAccountService;
+            AvatarService = m_scene.AvatarService;
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "AuroraAvatarArchiver"; }
+        }
+
+        #endregion
+
+        protected void HandleLoadAvatarArchive(string[] cmdparams)
+        {
+            if (cmdparams.Length != 6)
+            {
+                m_log.Info("[AvatarArchive] Not enough parameters!");
+                return;
+            }
+            LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
+        }
+
+        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item,
+                                                    InventoryFolderBase parentFolder)
+        {
+            InventoryItemBase itemCopy = new InventoryItemBase
+                                             {
+                                                 Owner = recipient,
+                                                 CreatorId = item.CreatorId,
+                                                 CreatorData = item.CreatorData,
+                                                 ID = UUID.Random(),
+                                                 AssetID = item.AssetID,
+                                                 Description = item.Description,
+                                                 Name = item.Name,
+                                                 AssetType = item.AssetType,
+                                                 InvType = item.InvType,
+                                                 Folder = UUID.Zero,
+                                                 NextPermissions = (uint) PermissionMask.All,
+                                                 GroupPermissions = (uint) PermissionMask.All,
+                                                 EveryOnePermissions = (uint) PermissionMask.All,
+                                                 CurrentPermissions = (uint) PermissionMask.All
+                                             };
 
             //Give full permissions for them
-            itemCopy.NextPermissions = (uint)PermissionMask.All;
-            itemCopy.GroupPermissions = (uint)PermissionMask.All;
-            itemCopy.EveryOnePermissions = (uint)PermissionMask.All;
-            itemCopy.CurrentPermissions = (uint)PermissionMask.All;
 
             if (parentFolder == null)
             {
-                InventoryFolderBase folder = InventoryService.GetFolderForType (recipient, InventoryType.Unknown, (AssetType)itemCopy.AssetType);
+                InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, InventoryType.Unknown,
+                                                                               (AssetType) itemCopy.AssetType);
 
                 if (folder != null)
                     itemCopy.Folder = folder.ID;
@@ -267,7 +288,7 @@ namespace Aurora.Modules
             AvatarAppearance appearance = AvatarService.GetAppearance(SP.UUID);
             if (appearance == null)
             {
-                IAvatarAppearanceModule appearancemod = SP.RequestModuleInterface<IAvatarAppearanceModule> ();
+                IAvatarAppearanceModule appearancemod = SP.RequestModuleInterface<IAvatarAppearanceModule>();
                 appearance = appearancemod.Appearance;
             }
             StreamWriter writer = new StreamWriter(cmdparams[5], false);
@@ -291,13 +312,10 @@ namespace Aurora.Modules
                 }
             }
             List<AvatarAttachment> attachments = appearance.GetAttachments();
-            foreach (AvatarAttachment a in attachments)
+            foreach (AvatarAttachment a in attachments.Where(a => a.AssetID != UUID.Zero))
             {
-            	if (a.AssetID != UUID.Zero)
-            	{
-                    SaveItem(a.ItemID, items, assets);
-                    SaveAsset(a.AssetID, assets);
-                }
+                SaveItem(a.ItemID, items, assets);
+                SaveAsset(a.AssetID, assets);
             }
             map.Add("Body", body);
             map.Add("Assets", assets);
@@ -330,7 +348,7 @@ namespace Aurora.Modules
             }
             catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchive]: Could not save asset: " + AssetID.ToString() + ", " + ex.ToString());
+                m_log.Warn("[AvatarArchive]: Could not save asset: " + AssetID.ToString() + ", " + ex);
             }
         }
 
@@ -347,15 +365,17 @@ namespace Aurora.Modules
 
         private AssetBase LoadAssetBase(OSDMap map)
         {
-            AssetBase asset = new AssetBase();
-            asset.Data = map["AssetData"].AsBinary();
-            asset.TypeString = map["ContentType"].AsString();
-            asset.CreationDate = map["CreationDate"].AsDate();
-            asset.CreatorID = map["CreatorID"].AsUUID();
-            asset.Description = map["Description"].AsString();
-            asset.ID = map["ID"].AsUUID();
-            asset.Name = map["Name"].AsString();
-            asset.Type = (sbyte)map["Type"].AsInteger();
+            AssetBase asset = new AssetBase
+                                  {
+                                      Data = map["AssetData"].AsBinary(),
+                                      TypeString = map["ContentType"].AsString(),
+                                      CreationDate = map["CreationDate"].AsDate(),
+                                      CreatorID = map["CreatorID"].AsUUID(),
+                                      Description = map["Description"].AsString(),
+                                      ID = map["ID"].AsUUID(),
+                                      Name = map["Name"].AsString(),
+                                      Type = (sbyte) map["Type"].AsInteger()
+                                  };
             return asset;
         }
 
@@ -377,7 +397,7 @@ namespace Aurora.Modules
             foreach (KeyValuePair<string, OSD> kvp in assets)
             {
                 UUID AssetID = UUID.Parse(kvp.Key);
-                OSDMap assetMap = (OSDMap)kvp.Value;
+                OSDMap assetMap = (OSDMap) kvp.Value;
                 AssetBase asset = AssetService.Get(AssetID.ToString());
                 m_log.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
                 if (asset == null) //Don't overwrite
@@ -388,17 +408,18 @@ namespace Aurora.Modules
             }
         }
 
-        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance, out List<InventoryItemBase> litems)
+        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance,
+                               out List<InventoryItemBase> litems)
         {
             litems = new List<InventoryItemBase>();
             foreach (KeyValuePair<string, OSD> kvp in items)
             {
                 string serialization = kvp.Value.AsString();
-                InventoryItemBase item = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
+                InventoryItemBase item = UserInventoryItemSerializer.Deserialize(serialization);
                 m_log.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
                 item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
                 litems.Add(item);
             }
         }
-	}
+    }
 }

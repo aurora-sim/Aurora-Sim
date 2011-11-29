@@ -25,17 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
     public class CachedAgentArgs
     {
-        public byte TextureIndex;
         public UUID ID;
+        public byte TextureIndex;
     }
 }

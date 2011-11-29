@@ -26,35 +26,36 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Reflection;
 using Aurora.Framework;
-using Aurora.DataManager;
+using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using log4net;
-using System.IO;
-using System.Reflection;
-using Nini.Config;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteDirectoryServiceConnector : IDirectoryServiceConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IDirectoryServiceConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") == "RemoteConnector")
+            if (source.Configs["AuroraConnectors"].GetString("DirectoryServiceConnector", "LocalConnector") ==
+                "RemoteConnector")
             {
                 m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(Name, this);
@@ -66,14 +67,10 @@ namespace Aurora.Services.DataService
             get { return "IDirectoryServiceConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         /// <summary>
-        /// This adds the entire region into the search database
+        ///   This adds the entire region into the search database
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name = "args"></param>
         public void AddRegion(List<LandData> parcels)
         {
             OSDMap mess = new OSDMap();
@@ -82,39 +79,42 @@ namespace Aurora.Services.DataService
                 requests.Add(data.ToOSD());
             mess["Requests"] = requests;
             mess["Method"] = "addregion";
-            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                WebUtils.PostToService (m_ServerURI + "osd", mess, false, false);
+                WebUtils.PostToService(m_ServerURI + "osd", mess, false, false);
             }
         }
 
-        public void ClearRegion (UUID regionID)
+        public void ClearRegion(UUID regionID)
         {
             OSDMap mess = new OSDMap();
             mess["Method"] = "clearregion";
             mess["RegionID"] = regionID;
-            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                WebUtils.PostToService (m_ServerURI + "osd", mess, false, false);
+                WebUtils.PostToService(m_ServerURI + "osd", mess, false, false);
             }
         }
 
         public LandData GetParcelInfo(UUID InfoUUID)
         {
-            OSDMap mess = new OSDMap ();
+            OSDMap mess = new OSDMap();
             mess["Method"] = "getparcelinfo";
             mess["InfoUUID"] = InfoUUID;
-            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                OSDMap results = WebUtils.PostToService (m_ServerURI + "osd", mess, true, false);
-                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson (results["_RawResult"]);
+                OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap) OSDParser.DeserializeJson(results["_RawResult"]);
                 if (innerResults["Success"])
                 {
-                    LandData result = new LandData ();
-                    result.FromOSD (innerResults);
+                    LandData result = new LandData();
+                    result.FromOSD(innerResults);
                     return result;
                 }
             }
@@ -123,22 +123,23 @@ namespace Aurora.Services.DataService
 
         public LandData[] GetParcelByOwner(UUID OwnerID)
         {
-            List<LandData> Land = new List<LandData> ();
-            OSDMap mess = new OSDMap ();
+            List<LandData> Land = new List<LandData>();
+            OSDMap mess = new OSDMap();
             mess["Method"] = "getparcelbyowner";
             mess["OwnerID"] = OwnerID;
-            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf ("RemoteServerURI");
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {
-                OSDMap results = WebUtils.PostToService (m_ServerURI + "osd", mess, true, false);
-                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson (results["_RawResult"]);
+                OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap) OSDParser.DeserializeJson(results["_RawResult"]);
 
-                OSDArray parcels = (OSDArray)innerResults["Parcels"];
-                foreach(OSD o in parcels)
+                OSDArray parcels = (OSDArray) innerResults["Parcels"];
+                foreach (OSD o in parcels)
                 {
-                    LandData result = new LandData ();
-                    result.FromOSD ((OSDMap)o);
-                    Land.Add (result);
+                    LandData result = new LandData();
+                    result.FromOSD((OSDMap) o);
+                    Land.Add(result);
                 }
             }
             return Land.ToArray();
@@ -158,38 +159,26 @@ namespace Aurora.Services.DataService
             List<DirPlacesReplyData> Land = new List<DirPlacesReplyData>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                DirPlacesReplyData land = new DirPlacesReplyData(valuevalue);
-                                Land.Add(land);
-                            }
-                        }
-                    }
-                }
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Land.AddRange(from m_ServerURI in m_ServerURIs
+                              select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)
+                              into reply where reply != string.Empty from object f in WebUtils.ParseXmlResponse(reply)
+                              select (KeyValuePair<string, object>) f
+                              into value where value.Value is Dictionary<string, object>
+                              select value.Value as Dictionary<string, object>
+                              into valuevalue select new DirPlacesReplyData(valuevalue));
                 return Land.ToArray();
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return Land.ToArray();
         }
 
-        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags)
+        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery,
+                                                  uint Flags)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -204,33 +193,14 @@ namespace Aurora.Services.DataService
             List<DirLandReplyData> Land = new List<DirLandReplyData>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                DirLandReplyData land = new DirLandReplyData(valuevalue);
-                                Land.Add(land);
-                            }
-                        }
-                    }
-                }
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Land.AddRange(from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString) into reply where reply != string.Empty from object f in WebUtils.ParseXmlResponse(reply) select (KeyValuePair<string, object>) f into value where value.Value is Dictionary<string, object> select value.Value as Dictionary<string, object> into valuevalue select new DirLandReplyData(valuevalue));
                 return Land.ToArray();
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return Land.ToArray();
         }
@@ -248,33 +218,14 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                DirEventsReplyData direvent = new DirEventsReplyData(valuevalue);
-                                Events.Add(direvent);
-                            }
-                        }
-                    }
-                }
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Events.AddRange(from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString) into reply where reply != string.Empty from object f in WebUtils.ParseXmlResponse(reply) select (KeyValuePair<string, object>) f into value where value.Value is Dictionary<string, object> select value.Value as Dictionary<string, object> into valuevalue select new DirEventsReplyData(valuevalue));
                 return Events.ToArray();
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return Events.ToArray();
         }
@@ -291,38 +242,26 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                DirEventsReplyData direvent = new DirEventsReplyData(valuevalue);
-                                Events.Add(direvent);
-                            }
-                        }
-                    }
-                }
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Events.AddRange(from m_ServerURI in m_ServerURIs
+                                select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)
+                                into reply where reply != string.Empty from object f in WebUtils.ParseXmlResponse(reply)
+                                select (KeyValuePair<string, object>) f
+                                into value where value.Value is Dictionary<string, object>
+                                select value.Value as Dictionary<string, object>
+                                into valuevalue select new DirEventsReplyData(valuevalue));
                 return Events.ToArray();
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return Events.ToArray();
         }
 
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
+        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags,
+                                                        int StartQuery)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -336,33 +275,21 @@ namespace Aurora.Services.DataService
             List<DirClassifiedReplyData> Classifieds = new List<DirClassifiedReplyData>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                DirClassifiedReplyData classified = new DirClassifiedReplyData(valuevalue);
-                                Classifieds.Add(classified);
-                            }
-                        }
-                    }
-                }
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Classifieds.AddRange(from m_ServerURI in m_ServerURIs
+                                     select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)
+                                     into reply where reply != string.Empty
+                                     from object f in WebUtils.ParseXmlResponse(reply)
+                                     select (KeyValuePair<string, object>) f
+                                     into value where value.Value is Dictionary<string, object>
+                                     select value.Value as Dictionary<string, object>
+                                     into valuevalue select new DirClassifiedReplyData(valuevalue));
                 return Classifieds.ToArray();
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return Classifieds.ToArray();
         }
@@ -377,32 +304,18 @@ namespace Aurora.Services.DataService
             string reqString = WebUtils.BuildQueryString(sendData);
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (EventData eventdata in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                  m_ServerURI,
+                                                                                                                                  reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData from object f in replyData select (KeyValuePair<string, object>) f into value where value.Value is Dictionary<string, object> select value.Value as Dictionary<string, object> into valuevalue select new EventData(valuevalue))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        foreach (object f in replyData)
-                        {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
-                            if (value.Value is Dictionary<string, object>)
-                            {
-                                Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
-                                EventData eventdata = new EventData(valuevalue);
-                                return eventdata;
-                            }
-                        }
-                    }
+                    return eventdata;
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -418,19 +331,20 @@ namespace Aurora.Services.DataService
             List<Classified> Classifieds = new List<Classified>();
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                             m_ServerURI,
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
                         foreach (object f in replyData)
                         {
-                            KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
+                            KeyValuePair<string, object> value = (KeyValuePair<string, object>) f;
                             if (value.Value is Dictionary<string, object>)
                             {
                                 Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
@@ -445,9 +359,15 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return Classifieds.ToArray();
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -46,21 +46,21 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
     {
         private const int WSCALE = 4;
 
-        public float3 mP1;
-        public float3 mP2;
-        public float3 mP3;
+        public float mC1;
+        public float mC2;
+        public float mC3;
+        public float mConcavity;
+        public int mI1;
+        public int mI2;
+        public int mI3;
         public float3 mNear1;
         public float3 mNear2;
         public float3 mNear3;
         public float3 mNormal;
+        public float3 mP1;
+        public float3 mP2;
+        public float3 mP3;
         public float mPlaneD;
-        public float mConcavity;
-        public float mC1;
-        public float mC2;
-        public float mC3;
-        public int mI1;
-        public int mI2;
-        public int mI3;
         public int mProcessed; // already been added...
 
         public CTri(float3 p1, float3 p2, float3 p3, int i1, int i2, int i3)
@@ -106,15 +106,15 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public void addTri(int[] indices, int i1, int i2, int i3, ref int tcount)
         {
-            indices[tcount * 3 + 0] = i1;
-            indices[tcount * 3 + 1] = i2;
-            indices[tcount * 3 + 2] = i3;
+            indices[tcount*3 + 0] = i1;
+            indices[tcount*3 + 1] = i2;
+            indices[tcount*3 + 2] = i3;
             tcount++;
         }
 
         public float getVolume()
         {
-            int[] indices = new int[8 * 3];
+            int[] indices = new int[8*3];
 
             int tcount = 0;
 
@@ -130,7 +130,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             addTri(indices, 0, 3, 5, ref tcount);
             addTri(indices, 0, 5, 2, ref tcount);
 
-            List<float3> vertices = new List<float3> { mP1, mP2, mP3, mNear1, mNear2, mNear3 };
+            List<float3> vertices = new List<float3> {mP1, mP2, mP3, mNear1, mNear2, mNear3};
             List<int> indexList = new List<int>(indices);
 
             float v = Concavity.computeMeshVolume(vertices, indexList);
@@ -139,14 +139,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public float raySect(float3 p, float3 dir, ref float3 sect)
         {
-            float4 plane = new float4();
+            float4 plane = new float4 {x = mNormal.x, y = mNormal.y, z = mNormal.z, w = mPlaneD};
 
-            plane.x = mNormal.x;
-            plane.y = mNormal.y;
-            plane.z = mNormal.z;
-            plane.w = mPlaneD;
 
-            float3 dest = p + dir * 100000f;
+            float3 dest = p + dir*100000f;
 
             intersect(p, dest, ref sect, plane);
 
@@ -155,12 +151,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public float planeDistance(float3 p)
         {
-            float4 plane = new float4();
+            float4 plane = new float4 {x = mNormal.x, y = mNormal.y, z = mNormal.z, w = mPlaneD};
 
-            plane.x = mNormal.x;
-            plane.y = mNormal.y;
-            plane.z = mNormal.z;
-            plane.w = mPlaneD;
 
             return DistToPt(p, plane);
         }
@@ -210,7 +202,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public float area()
         {
-            float a = mConcavity * mP1.Area(mP2, mP3);
+            float a = mConcavity*mP1.Area(mP2, mP3);
             return a;
         }
 
@@ -246,31 +238,28 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         }
 
         private static float DistToPt(float3 p, float4 plane)
-	    {
-		    float x = p.x;
-		    float y = p.y;
-		    float z = p.z;
-		    float d = x*plane.x + y*plane.y + z*plane.z + plane.w;
-		    return d;
-	    }
+        {
+            float x = p.x;
+            float y = p.y;
+            float z = p.z;
+            float d = x*plane.x + y*plane.y + z*plane.z + plane.w;
+            return d;
+        }
 
         private static void intersect(float3 p1, float3 p2, ref float3 split, float4 plane)
         {
             float dp1 = DistToPt(p1, plane);
 
-            float3 dir = new float3();
-            dir.x = p2[0] - p1[0];
-            dir.y = p2[1] - p1[1];
-            dir.z = p2[2] - p1[2];
+            float3 dir = new float3 {x = p2[0] - p1[0], y = p2[1] - p1[1], z = p2[2] - p1[2]};
 
-            float dot1 = dir[0] * plane[0] + dir[1] * plane[1] + dir[2] * plane[2];
+            float dot1 = dir[0]*plane[0] + dir[1]*plane[1] + dir[2]*plane[2];
             float dot2 = dp1 - plane[3];
 
-            float t = -(plane[3] + dot2) / dot1;
+            float t = -(plane[3] + dot2)/dot1;
 
-            split.x = (dir[0] * t) + p1[0];
-            split.y = (dir[1] * t) + p1[1];
-            split.z = (dir[2] * t) + p1[2];
+            split.x = (dir[0]*t) + p1[0];
+            split.y = (dir[1]*t) + p1[1];
+            split.z = (dir[2]*t) + p1[2];
         }
 
         private static bool rayIntersectsTriangle(float3 p, float3 d, float3 v0, float3 v1, float3 v2, out float t)
@@ -288,33 +277,34 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             if (a > -0.00001f && a < 0.00001f)
                 return false;
 
-            f = 1f / a;
+            f = 1f/a;
             s = p - v0;
-            u = f * float3.dot(s, h);
+            u = f*float3.dot(s, h);
 
             if (u < 0.0f || u > 1.0f)
                 return false;
 
             q = float3.cross(s, e1);
-            v = f * float3.dot(d, q);
+            v = f*float3.dot(d, q);
             if (v < 0.0f || u + v > 1.0f)
                 return false;
 
             // at this stage we can compute t to find out where
             // the intersection point is on the line
-            t = f * float3.dot(e2, q);
+            t = f*float3.dot(e2, q);
             if (t > 0f) // ray intersection
                 return true;
             else // this means that there is a line intersection but not a ray intersection
                 return false;
         }
 
-        private static bool lineIntersectsTriangle(float3 rayStart, float3 rayEnd, float3 p1, float3 p2, float3 p3, ref float3 sect)
+        private static bool lineIntersectsTriangle(float3 rayStart, float3 rayEnd, float3 p1, float3 p2, float3 p3,
+                                                   ref float3 sect)
         {
             float3 dir = rayEnd - rayStart;
 
-            float d = (float)Math.Sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
-            float r = 1.0f / d;
+            float d = (float) Math.Sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
+            float r = 1.0f/d;
 
             dir *= r;
 
@@ -325,9 +315,9 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 if (t > d)
                 {
-                    sect.x = rayStart.x + dir.x * t;
-                    sect.y = rayStart.y + dir.y * t;
-                    sect.z = rayStart.z + dir.z * t;
+                    sect.x = rayStart.x + dir.x*t;
+                    sect.y = rayStart.y + dir.y*t;
+                    sect.z = rayStart.z + dir.z*t;
                 }
                 else
                 {

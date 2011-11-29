@@ -27,7 +27,6 @@
 
 using System;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -35,20 +34,28 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         #region Declares
 
-        private int logoutsTotal = 0;
-        private int logoutsToday = 0;
-        private int logoutsYesterday = 0;
-        private int successfulLoginsTotal = 0;
-        private int successfulLoginsToday = 0;
-        private int successfulLoginsYesterday = 0;
         private DateTime StartTime = DateTime.Now;
         private long abnormalClientThreadTerminations;
+        private int logoutsToday;
+        private int logoutsTotal;
+        private int logoutsYesterday;
+        private int successfulLoginsToday;
+        private int successfulLoginsTotal;
+        private int successfulLoginsYesterday;
 
         /// <summary>
-        /// Number of times that a client thread terminated because of an exception
+        ///   Number of times that a client thread terminated because of an exception
         /// </summary>
-        public long AbnormalClientThreadTerminations { get { return abnormalClientThreadTerminations; } }
-        public int SuccessfulLoginsTotal { get { return successfulLoginsTotal; } }
+        public long AbnormalClientThreadTerminations
+        {
+            get { return abnormalClientThreadTerminations; }
+        }
+
+        public int SuccessfulLoginsTotal
+        {
+            get { return successfulLoginsTotal; }
+        }
+
         public int SuccessfulLoginsToday
         {
             get
@@ -62,8 +69,17 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
                 return successfulLoginsToday;
             }
         }
-        public int SuccessfulLoginsYesterday { get { return successfulLoginsYesterday; } }
-        public int LogoutsTotal { get { return logoutsTotal; } }
+
+        public int SuccessfulLoginsYesterday
+        {
+            get { return successfulLoginsYesterday; }
+        }
+
+        public int LogoutsTotal
+        {
+            get { return logoutsTotal; }
+        }
+
         public int LogoutsToday
         {
             get
@@ -77,43 +93,17 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
                 return logoutsToday;
             }
         }
-        public int LogoutsYesterday { get { return logoutsYesterday; } }
+
+        public int LogoutsYesterday
+        {
+            get { return logoutsYesterday; }
+        }
 
         #endregion
 
         #region Implementation of IMonitor
 
-        public double GetValue()
-        {
-            return 0;
-        }
-
-        public string GetName()
-        {
-            return "LoginMonitor";
-        }
-
-        public string GetFriendlyValue()
-        {
-            string Value = "";
-            Value += "CONNECTION STATISTICS" + "\n";
-            Value += 
-string.Format(@"Successful logins Total: {0}
-Successful logins Today: {1}
-Successful logins Yesterday: {2}
-Logouts Total: {3}
-Logouts Today: {4}
-Logouts Yesterday: {5} 
-Abnormal client thread terminations: {6}",
-                    SuccessfulLoginsTotal,
-                    SuccessfulLoginsToday,
-                    SuccessfulLoginsYesterday,
-                    LogoutsTotal,
-                    LogoutsToday,
-                    LogoutsYesterday,
-                    abnormalClientThreadTerminations);
-            return Value;
-        }
+        #region ILoginMonitor Members
 
         public void AddAbnormalClientThreadTermination()
         {
@@ -132,9 +122,48 @@ Abnormal client thread terminations: {6}",
             logoutsToday++;
         }
 
-        public void ResetStats ()
+        #endregion
+
+        #region IMonitor Members
+
+        public double GetValue()
+        {
+            return 0;
+        }
+
+        public string GetName()
+        {
+            return "LoginMonitor";
+        }
+
+        public string GetFriendlyValue()
+        {
+            string Value = "";
+            Value += "CONNECTION STATISTICS" + "\n";
+            Value +=
+                string.Format(
+                    @"Successful logins Total: {0}
+Successful logins Today: {1}
+Successful logins Yesterday: {2}
+Logouts Total: {3}
+Logouts Today: {4}
+Logouts Yesterday: {5} 
+Abnormal client thread terminations: {6}",
+                    SuccessfulLoginsTotal,
+                    SuccessfulLoginsToday,
+                    SuccessfulLoginsYesterday,
+                    LogoutsTotal,
+                    LogoutsToday,
+                    LogoutsYesterday,
+                    abnormalClientThreadTerminations);
+            return Value;
+        }
+
+        public void ResetStats()
         {
         }
+
+        #endregion
 
         #endregion
     }

@@ -27,15 +27,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
@@ -43,10 +42,12 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        private readonly List<IScene> m_SceneList = new List<IScene>();
         private bool enabled = true;
-        private List<IScene> m_SceneList = new List<IScene> ();
-        private string m_RestURL = String.Empty;
         private bool m_ForwardOfflineGroupMessages = true;
+        private string m_RestURL = String.Empty;
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -57,7 +58,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
             }
             if (cnf != null && cnf.GetString("OfflineMessageModule", "None") !=
-                    "OfflineMessageModule")
+                "OfflineMessageModule")
             {
                 enabled = false;
                 return;
@@ -74,19 +75,19 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_ForwardOfflineGroupMessages = cnf.GetBoolean("ForwardOfflineGroupMessages", m_ForwardOfflineGroupMessages);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!enabled)
                 return;
 
             lock (m_SceneList)
-                m_SceneList.Add (scene);
+                m_SceneList.Add(scene);
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             if (!enabled)
                 return;
@@ -104,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 scene.RequestModuleInterface<IMessageTransferModule>().OnUndeliveredMessage += UndeliveredMessage;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!enabled)
                 return;
@@ -133,31 +134,24 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             get { return null; }
         }
-        
+
         public void Close()
         {
         }
 
+        #endregion
+
         private IScene FindScene(UUID agentID)
         {
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence presence = s.GetScenePresence (agentID);
-                if (presence != null && !presence.IsChildAgent)
-                    return s;
-            }
-            return null;
+            return (from s in m_SceneList let presence = s.GetScenePresence(agentID) where presence != null && !presence.IsChildAgent select s).FirstOrDefault();
         }
 
         private IClientAPI FindClient(UUID agentID)
         {
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence presence = s.GetScenePresence (agentID);
-                if (presence != null && !presence.IsChildAgent)
-                    return presence.ControllingClient;
-            }
-            return null;
+            return (from s in m_SceneList
+                    select s.GetScenePresence(agentID)
+                    into presence where presence != null && !presence.IsChildAgent select presence.ControllingClient).
+                FirstOrDefault();
         }
 
         private void OnNewClient(IClientAPI client)
@@ -176,7 +170,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-                List<GridInstantMessage> msglist = SynchronousRestObjectRequester.MakeRequest<UUID, List<GridInstantMessage>>(
+                List<GridInstantMessage> msglist = SynchronousRestObjectRequester.MakeRequest
+                    <UUID, List<GridInstantMessage>>(
                         "POST", m_RestURL + "/RetrieveMessages/", client.AgentId);
 
                 foreach (GridInstantMessage im in msglist)
@@ -202,24 +197,23 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
             {
                 bool success = SynchronousRestObjectRequester.MakeRequest<GridInstantMessage, bool>(
-                        "POST", m_RestURL+"/SaveMessage/", im);
+                    "POST", m_RestURL + "/SaveMessage/", im);
 
-                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
+                if (im.dialog == (byte) InstantMessageDialog.MessageFromAgent)
                 {
                     IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
                         return;
 
                     client.SendInstantMessage(new GridInstantMessage(
-                            null, im.toAgentID,
-                            "System", im.fromAgentID,
-                            (byte)InstantMessageDialog.MessageFromAgent,
-                            "User is not logged in. "+
-                            (success ? "Message saved." : "Message not saved"),
-                            false, new Vector3()));
+                                                  null, im.toAgentID,
+                                                  "System", im.fromAgentID,
+                                                  (byte) InstantMessageDialog.MessageFromAgent,
+                                                  "User is not logged in. " +
+                                                  (success ? "Message saved." : "Message not saved"),
+                                                  false, new Vector3()));
                 }
             }
         }
     }
 }
-

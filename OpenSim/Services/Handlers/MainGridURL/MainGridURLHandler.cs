@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Framework;
+﻿using OpenSim.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;

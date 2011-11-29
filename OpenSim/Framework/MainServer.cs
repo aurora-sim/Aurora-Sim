@@ -25,21 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.Reflection;
-using log4net;
 using OpenSim.Framework.Servers.HttpServer;
 
 namespace OpenSim.Framework
 {
     public class MainServer
     {
-        private static IHttpServer instance = null;
-
-        public static IHttpServer Instance
-        {
-            get { return instance; }
-            set { instance = value; }
-        }
+        public static IHttpServer Instance { get; set; }
     }
 }

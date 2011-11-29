@@ -25,34 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Services.Connectors;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Nini.Config;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.AvatarService;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services.Connectors;
+using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCAvatarConnector : IAvatarService, IService
     {
         protected AvatarService m_localService;
-        protected AvatarServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected AvatarServicesConnector m_remoteService;
 
         public string Name
         {
-            get { return GetType ().Name; }
+            get { return GetType().Name; }
         }
+
+        #region IAvatarService Members
 
         public virtual IAvatarService InnerService
         {
@@ -60,84 +54,84 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
             }
         }
 
-        public void Initialize (IConfigSource config, IRegistryCore registry)
+        public AvatarAppearance GetAppearance(UUID userID)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString ("AvatarHandler", "") != Name)
-                return;
-
-            m_localService = new AvatarService ();
-            m_localService.Initialize (config, registry);
-            m_remoteService = new AvatarServicesConnector ();
-            m_remoteService.Initialize (config, registry);
-            registry.RegisterModuleInterface<IAvatarService> (this);
-            m_registry = registry;
+            AvatarAppearance app = m_localService.GetAppearance(userID);
+            if (app == null)
+                app = m_remoteService.GetAppearance(userID);
+            return app;
         }
 
-        public void Start (IConfigSource config, IRegistryCore registry)
+        public bool SetAppearance(UUID userID, AvatarAppearance appearance)
         {
-            if (m_localService != null)
-                m_localService.Start (config, registry);
+            bool success = m_localService.SetAppearance(userID, appearance);
+            if (!success)
+                success = m_remoteService.SetAppearance(userID, appearance);
+            return success;
         }
 
-        public void FinishedStartup ()
+        public AvatarData GetAvatar(UUID userID)
         {
+            AvatarData app = m_localService.GetAvatar(userID);
+            if (app == null)
+                app = m_remoteService.GetAvatar(userID);
+            return app;
+        }
+
+        public bool SetAvatar(UUID userID, AvatarData avatar)
+        {
+            bool success = m_localService.SetAvatar(userID, avatar);
+            if (!success)
+                success = m_remoteService.SetAvatar(userID, avatar);
+            return success;
+        }
+
+        public bool ResetAvatar(UUID userID)
+        {
+            bool success = m_localService.ResetAvatar(userID);
+            if (!success)
+                success = m_remoteService.ResetAvatar(userID);
+            return success;
+        }
+
+        public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
+        {
+            //NOT DONE
         }
 
         #endregion
 
-        #region IAvatarService Members
+        #region IService Members
 
-        public AvatarAppearance GetAppearance (UUID userID)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            AvatarAppearance app = m_localService.GetAppearance (userID);
-            if (app == null)
-                app = m_remoteService.GetAppearance (userID);
-            return app;
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
+                return;
+
+            m_localService = new AvatarService();
+            m_localService.Initialize(config, registry);
+            m_remoteService = new AvatarServicesConnector();
+            m_remoteService.Initialize(config, registry);
+            registry.RegisterModuleInterface<IAvatarService>(this);
+            m_registry = registry;
         }
 
-        public bool SetAppearance (UUID userID, AvatarAppearance appearance)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
-            bool success = m_localService.SetAppearance (userID, appearance);
-            if (!success)
-                success = m_remoteService.SetAppearance (userID, appearance);
-            return success;
+            if (m_localService != null)
+                m_localService.Start(config, registry);
         }
 
-        public AvatarData GetAvatar (UUID userID)
+        public void FinishedStartup()
         {
-            AvatarData app = m_localService.GetAvatar (userID);
-            if (app == null)
-                app = m_remoteService.GetAvatar (userID);
-            return app;
-        }
-
-        public bool SetAvatar (UUID userID, AvatarData avatar)
-        {
-            bool success = m_localService.SetAvatar (userID, avatar);
-            if (!success)
-                success = m_remoteService.SetAvatar (userID, avatar);
-            return success;
-        }
-
-        public bool ResetAvatar (UUID userID)
-        {
-            bool success = m_localService.ResetAvatar (userID);
-            if (!success)
-                success = m_remoteService.ResetAvatar (userID);
-            return success;
-        }
-
-        public void CacheWearableData (UUID principalID, AvatarWearable cachedWearable)
-        {
-            //NOT DONE
         }
 
         #endregion

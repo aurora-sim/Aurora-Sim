@@ -32,14 +32,20 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class RestStreamHandler : BaseStreamHandler
     {
-        private RestMethod m_restMethod;
+        private readonly RestMethod m_restMethod;
+
+        public RestStreamHandler(string httpMethod, string path, RestMethod restMethod) : base(httpMethod, path)
+        {
+            m_restMethod = restMethod;
+        }
 
         public RestMethod Method
         {
             get { return m_restMethod; }
         }
 
-        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest,
+                                      OSHttpResponse httpResponse)
         {
             Encoding encoding = Encoding.UTF8;
             StreamReader streamReader = new StreamReader(request, encoding);
@@ -52,23 +58,25 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             return Encoding.UTF8.GetBytes(responseString);
         }
-
-        public RestStreamHandler(string httpMethod, string path, RestMethod restMethod) : base(httpMethod, path)
-        {
-            m_restMethod = restMethod;
-        }
     }
 
     public class RestBytesStreamHandler : BaseStreamHandler
     {
-        private RestBytesMethod m_restMethod;
+        private readonly RestBytesMethod m_restMethod;
+
+        public RestBytesStreamHandler(string httpMethod, string path, RestBytesMethod restMethod)
+            : base(httpMethod, path)
+        {
+            m_restMethod = restMethod;
+        }
 
         public RestBytesMethod Method
         {
             get { return m_restMethod; }
         }
 
-        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest,
+                                      OSHttpResponse httpResponse)
         {
             Encoding encoding = Encoding.UTF8;
             StreamReader streamReader = new StreamReader(request, encoding);
@@ -78,12 +86,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             string param = GetParam(path);
             return m_restMethod(requestBody, path, param, httpRequest, httpResponse);
-        }
-
-        public RestBytesStreamHandler(string httpMethod, string path, RestBytesMethod restMethod)
-            : base(httpMethod, path)
-        {
-            m_restMethod = restMethod;
         }
     }
 }

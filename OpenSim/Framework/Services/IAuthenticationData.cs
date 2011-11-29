@@ -25,24 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using OpenMetaverse;
-using OpenSim.Framework;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
     public class AuthData
     {
-        public UUID PrincipalID;
+        public string AccountType;
         public string PasswordHash;
         public string PasswordSalt;
-        public string AccountType;
+        public UUID PrincipalID;
     }
 
     /// <summary>
-    /// An interface for connecting to the authentication datastore
+    ///   An interface for connecting to the authentication datastore
     /// </summary>
     public interface IAuthenticationData : IAuroraDataPlugin
     {
@@ -56,6 +53,6 @@ namespace OpenSim.Framework
 
         bool CheckToken(UUID principalID, string token, int lifetime);
 
-        bool Delete (UUID principalID, string authType);
+        bool Delete(UUID principalID, string authType);
     }
 }

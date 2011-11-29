@@ -26,23 +26,22 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class SEUser : System.MarshalByRefObject, ISocialEntity
+    internal class SEUser : MarshalByRefObject, ISocialEntity
     {
-        private readonly UUID m_uuid;
         private readonly string m_name;
+        private readonly UUID m_uuid;
 
         public SEUser(UUID uuid, string name)
         {
             m_uuid = uuid;
             m_name = name;
         }
+
+        #region ISocialEntity Members
 
         public UUID GlobalID
         {
@@ -58,5 +57,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get { return true; }
         }
+
+        #endregion
     }
 }

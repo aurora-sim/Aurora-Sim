@@ -28,13 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using log4net;
+using Aurora.Framework;
 using Nini.Config;
-using OpenSim;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
-using Aurora.Simulation.Base;
+using OpenSim.Region.Framework.Interfaces;
+using log4net;
 
 namespace OpenSim.CoreApplicationPlugins
 {
@@ -42,106 +40,47 @@ namespace OpenSim.CoreApplicationPlugins
     {
         // Logger
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        protected List<IRegionModuleBase> IRegionModuleBaseModules = new List<IRegionModuleBase>();
+
         // Config access
-        private ISimulationBase m_openSim;
 
         // Our name
-        private string m_name = "RegionModulesControllerPlugin";
+        private const string m_name = "RegionModulesControllerPlugin";
+        private ISimulationBase m_openSim;
 
         // List of shared module instances, for adding to Scenes
         private List<ISharedRegionModule> m_sharedInstances =
-                new List<ISharedRegionModule>();
+            new List<ISharedRegionModule>();
 
-        protected List<IRegionModuleBase> IRegionModuleBaseModules = new List<IRegionModuleBase>();
-        public List<IRegionModuleBase> AllModules
-        {
-            get 
-            {
-                return IRegionModuleBaseModules;
-            }
-        }
-
-#region IApplicationPlugin implementation
-
-        public void Initialize (ISimulationBase openSim)
-        {
-            m_openSim = openSim;
-
-            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
-            if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
-                return;
-
-            m_openSim.ApplicationRegistry.RegisterModuleInterface<IRegionModulesController>(this);
-            // Scan modules and load all that aren't disabled
-            m_sharedInstances = Aurora.Framework.AuroraModuleLoader.PickupModules<ISharedRegionModule>();
-            foreach (ISharedRegionModule module in m_sharedInstances)
-            {
-                module.Initialise(m_openSim.ConfigSource);
-            }
-        }
-
-        public void ReloadConfiguration(IConfigSource config)
-        {
-            //Update all modules that we have here
-            foreach (IRegionModuleBase module in AllModules)
-            {
-                module.Initialise(config);
-            }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Start()
-        {
-        }
-
-        public void PostStart()
-        {
-            IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
-            if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
-                return;
-
-            //m_log.DebugFormat("[REGIONMODULES]: PostInitializing...");
-
-            // Immediately run PostInitialise on shared modules
-            foreach (ISharedRegionModule module in m_sharedInstances)
-            {
-                module.PostInitialise();
-            }
-        }
-
-        public void Close()
-        {
-        }
-
-#endregion
+        #region IApplicationPlugin Members
 
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get { return m_name; }
         }
 
-#region IRegionModulesController implementation
+        #endregion
+
+        #region IRegionModulesController implementation
 
         // The root of all evil.
         // This is where we handle adding the modules to scenes when they
         // load. This means that here we deal with replaceable interfaces,
         // nonshared modules, etc.
         //
-        public void AddRegionToModules (IScene scene)
+
+        protected Dictionary<IScene, Dictionary<string, IRegionModuleBase>> RegionModules =
+            new Dictionary<IScene, Dictionary<string, IRegionModuleBase>>();
+
+        public void AddRegionToModules(IScene scene)
         {
             Dictionary<Type, ISharedRegionModule> deferredSharedModules =
-                    new Dictionary<Type, ISharedRegionModule>();
+                new Dictionary<Type, ISharedRegionModule>();
             Dictionary<Type, INonSharedRegionModule> deferredNonSharedModules =
-                    new Dictionary<Type, INonSharedRegionModule>();
+                new Dictionary<Type, INonSharedRegionModule>();
 
             // We need this to see if a module has already been loaded and
             // has defined a replaceable interface. It's a generic call,
@@ -151,7 +90,7 @@ namespace OpenSim.CoreApplicationPlugins
 
             // This will hold the shared modules we actually load
             List<ISharedRegionModule> sharedlist =
-                    new List<ISharedRegionModule>();
+                new List<ISharedRegionModule>();
 
             // Iterate over the shared modules that have been loaded
             // Add them to the new Scene
@@ -168,11 +107,13 @@ namespace OpenSim.CoreApplicationPlugins
                     Type replaceableInterface = module.ReplaceableInterface;
                     if (replaceableInterface != null)
                     {
-                        MethodInfo mii = mi.MakeGenericMethod (replaceableInterface);
+                        MethodInfo mii = mi.MakeGenericMethod(replaceableInterface);
 
-                        if (mii.Invoke (scene, new object[0]) != null)
+                        if (mii.Invoke(scene, new object[0]) != null)
                         {
-                            m_log.DebugFormat ("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString ());
+                            m_log.DebugFormat(
+                                "[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name,
+                                replaceableInterface);
                             continue;
                         }
 
@@ -184,21 +125,21 @@ namespace OpenSim.CoreApplicationPlugins
                     //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
                     //                  scene.RegionInfo.RegionName, module.Name);
 
-                    module.AddRegion (scene);
-                    AddRegionModule (scene, module.Name, module);
+                    module.AddRegion(scene);
+                    AddRegionModule(scene, module.Name, module);
 
-                    IRegionModuleBaseModules.Add (module);
-                    sharedlist.Add (module);
+                    IRegionModuleBaseModules.Add(module);
+                    sharedlist.Add(module);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    m_log.Warn ("[RegionModulePlugin]: Failed to load plugin, " + ex.ToString ());
+                    m_log.Warn("[RegionModulePlugin]: Failed to load plugin, " + ex);
                 }
             }
 
             // Scan for, and load, nonshared modules
             List<INonSharedRegionModule> list = new List<INonSharedRegionModule>();
-            List<INonSharedRegionModule> m_nonSharedModules = Aurora.Framework.AuroraModuleLoader.PickupModules<INonSharedRegionModule>();
+            List<INonSharedRegionModule> m_nonSharedModules = AuroraModuleLoader.PickupModules<INonSharedRegionModule>();
             foreach (INonSharedRegionModule module in m_nonSharedModules)
             {
                 Type replaceableInterface = module.ReplaceableInterface;
@@ -208,7 +149,8 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (mii.Invoke(scene, new object[0]) != null)
                     {
-                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString());
+                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
+                                          module.Name, replaceableInterface);
                         continue;
                     }
 
@@ -253,7 +195,8 @@ namespace OpenSim.CoreApplicationPlugins
 
                 if (mii.Invoke(scene, new object[0]) != null)
                 {
-                    m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString());
+                    m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
+                                      module.Name, replaceableInterface);
                     continue;
                 }
 
@@ -270,7 +213,7 @@ namespace OpenSim.CoreApplicationPlugins
 
             // Same thing for nonshared modules, load them unless overridden
             List<INonSharedRegionModule> deferredlist =
-                    new List<INonSharedRegionModule>();
+                new List<INonSharedRegionModule>();
 
             foreach (INonSharedRegionModule module in deferredNonSharedModules.Values)
             {
@@ -282,7 +225,8 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (mii.Invoke(scene, new object[0]) != null)
                     {
-                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name, replaceableInterface.ToString());
+                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
+                                          module.Name, replaceableInterface);
                         continue;
                     }
                 }
@@ -325,16 +269,7 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        protected Dictionary<IScene, Dictionary<string, IRegionModuleBase>> RegionModules = new Dictionary<IScene, Dictionary<string, IRegionModuleBase>>();
-
-        private void AddRegionModule(IScene scene, string p, IRegionModuleBase module)
-        {
-            if (!RegionModules.ContainsKey(scene))
-                RegionModules.Add(scene, new Dictionary<string, IRegionModuleBase>());
-            RegionModules[scene][p] = module;
-        }
-
-        public void RemoveRegionFromModules (IScene scene)
+        public void RemoveRegionFromModules(IScene scene)
         {
             foreach (IRegionModuleBase module in RegionModules[scene].Values)
             {
@@ -350,6 +285,79 @@ namespace OpenSim.CoreApplicationPlugins
             RegionModules[scene].Clear();
         }
 
-#endregion
+        private void AddRegionModule(IScene scene, string p, IRegionModuleBase module)
+        {
+            if (!RegionModules.ContainsKey(scene))
+                RegionModules.Add(scene, new Dictionary<string, IRegionModuleBase>());
+            RegionModules[scene][p] = module;
+        }
+
+        #endregion
+
+        #region IRegionModulesController Members
+
+        public List<IRegionModuleBase> AllModules
+        {
+            get { return IRegionModuleBaseModules; }
+        }
+
+        #endregion
+
+        #region IApplicationPlugin implementation
+
+        public void Initialize(ISimulationBase openSim)
+        {
+            m_openSim = openSim;
+
+            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
+                return;
+
+            m_openSim.ApplicationRegistry.RegisterModuleInterface<IRegionModulesController>(this);
+            // Scan modules and load all that aren't disabled
+            m_sharedInstances = AuroraModuleLoader.PickupModules<ISharedRegionModule>();
+            foreach (ISharedRegionModule module in m_sharedInstances)
+            {
+                module.Initialise(m_openSim.ConfigSource);
+            }
+        }
+
+        public void ReloadConfiguration(IConfigSource config)
+        {
+            //Update all modules that we have here
+            foreach (IRegionModuleBase module in AllModules)
+            {
+                module.Initialise(config);
+            }
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void Start()
+        {
+        }
+
+        public void PostStart()
+        {
+            IConfig handlerConfig = m_openSim.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
+                return;
+
+            //m_log.DebugFormat("[REGIONMODULES]: PostInitializing...");
+
+            // Immediately run PostInitialise on shared modules
+            foreach (ISharedRegionModule module in m_sharedInstances)
+            {
+                module.PostInitialise();
+            }
+        }
+
+        public void Close()
+        {
+        }
+
+        #endregion
     }
 }

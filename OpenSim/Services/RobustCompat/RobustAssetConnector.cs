@@ -25,20 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Linq;
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using System.Xml.Serialization;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Aurora.Simulation.Base;
 using OpenSim.Services.Connectors;
-using System.Xml.Serialization;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.RobustCompat
 {
@@ -60,14 +59,168 @@ namespace OpenSim.Services.RobustCompat
 
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("dump asset",
-                                          "dump asset <id> <file>",
-                                          "dump one cached asset", HandleDumpAsset);
+                                                         "dump asset <id> <file>",
+                                                         "dump one cached asset", HandleDumpAsset);
 
             registry.RegisterModuleInterface<IAssetService>(this);
         }
 
+        public override Framework.AssetBase Get(string id)
+        {
+            Framework.AssetBase asset = null;
+            AssetBase rasset = null;
+
+            if (m_Cache != null)
+            {
+                asset = m_Cache.Get(id);
+                if ((asset != null) && ((asset.Data != null) && (asset.Data.Length != 0)))
+                    return asset;
+            }
+
+            List<string> serverURIs = m_registry == null
+                                          ? null
+                                          : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                                              "AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            if (serverURIs != null)
+                foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
+                {
+                    rasset = SynchronousRestObjectRequester.
+                        MakeRequest<int, AssetBase>("GET", uri, 0);
+                    asset = TearDown(rasset);
+                    if (m_Cache != null && asset != null)
+                        m_Cache.Cache(asset);
+                    if (asset != null)
+                        return asset;
+                }
+            return null;
+        }
+
+        public override bool Get(string id, object sender, AssetRetrieved handler)
+        {
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            foreach (string m_ServerURI in serverURIs)
+            {
+                string uri = m_ServerURI + "/" + id;
+
+                Framework.AssetBase asset = null;
+                if (m_Cache != null)
+                    asset = m_Cache.Get(id);
+
+                if (asset == null)
+                {
+                    bool result = false;
+
+                    AsynchronousRestObjectRequester.
+                        MakeRequest("GET", uri, 0,
+                                    delegate(AssetBase aa)
+                                        {
+                                            Framework.AssetBase a = TearDown(aa);
+                                            if (m_Cache != null)
+                                                m_Cache.Cache(a);
+                                            handler(id, sender, a);
+                                            result = true;
+                                        });
+
+                    if (result)
+                        return result;
+                }
+                else
+                {
+                    handler(id, sender, asset);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public override UUID Store(Framework.AssetBase asset)
+        {
+            AssetBase rasset = Build(asset);
+            if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
+            {
+                if (m_Cache != null)
+                    m_Cache.Cache(asset);
+
+                return asset.ID;
+            }
+
+            UUID newID = UUID.Zero;
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/"))
+            {
+                try
+                {
+                    string request = SynchronousRestObjectRequester.
+                        MakeRequest<AssetBase, string>("POST", uri, rasset);
+
+                    UUID.TryParse(request, out newID);
+                }
+                catch (Exception e)
+                {
+                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}",
+                                     asset.ID, e.Message);
+                }
+
+                if (newID != UUID.Zero)
+                {
+                    // Placing this here, so that this work with old asset servers that don't send any reply back
+                    // SynchronousRestObjectRequester returns somethins that is not an empty string
+                    asset.ID = newID;
+
+                    if (m_Cache != null)
+                        m_Cache.Cache(asset);
+                }
+                else
+                    return asset.ID; //OPENSIM
+            }
+            return newID;
+        }
+
+        public AssetBase Build(Framework.AssetBase asset)
+        {
+            AssetBase r = new AssetBase
+                              {
+                                  CreatorID = asset.CreatorID.ToString(),
+                                  Data = asset.Data,
+                                  Description = asset.Description,
+                                  Flags = asset.Flags,
+                                  ID = asset.ID.ToString(),
+                                  Name = asset.Name,
+                                  Type = (sbyte) asset.Type
+                              };
+            return r;
+        }
+
+        public Framework.AssetBase TearDown(AssetBase asset)
+        {
+            if (asset == null)
+                return null;
+            Framework.AssetBase r = new Framework.AssetBase
+                                        {
+                                            CreatorID = UUID.Parse(asset.CreatorID),
+                                            Data = asset.Data,
+                                            Description = asset.Description,
+                                            Flags = asset.Flags,
+                                            ID = UUID.Parse(asset.ID),
+                                            Name = asset.Name,
+                                            Type = asset.Type
+                                        };
+            return r;
+        }
+
+        #region Nested type: AssetBase
+
         /// <summary>
-        /// Asset class.   All Assets are reference by this class or a class derived from this class
+        ///   Asset class.   All Assets are reference by this class or a class derived from this class
         /// </summary>
         [Serializable]
         public class AssetBase
@@ -75,12 +228,12 @@ namespace OpenSim.Services.RobustCompat
             private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
             /// <summary>
-            /// Data of the Asset
+            ///   Data of the Asset
             /// </summary>
             private byte[] m_data;
 
             /// <summary>
-            /// Meta Data of the Asset
+            ///   Meta Data of the Asset
             /// </summary>
             private AssetMetadata m_metadata;
 
@@ -88,43 +241,37 @@ namespace OpenSim.Services.RobustCompat
             // Do NOT "Optimize" away!
             public AssetBase()
             {
-                m_metadata = new AssetMetadata();
-                m_metadata.FullID = UUID.Zero;
-                m_metadata.ID = UUID.Zero.ToString();
-                m_metadata.Type = (sbyte)AssetType.Unknown;
-                m_metadata.CreatorID = String.Empty;
+                m_metadata = new AssetMetadata
+                                 {
+                                     FullID = UUID.Zero,
+                                     ID = UUID.Zero.ToString(),
+                                     Type = (sbyte) AssetType.Unknown,
+                                     CreatorID = String.Empty
+                                 };
             }
 
             public AssetBase(UUID assetID, string name, sbyte assetType, string creatorID)
             {
-                if (assetType == (sbyte)AssetType.Unknown)
+                if (assetType == (sbyte) AssetType.Unknown)
                 {
-                    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(true);
+                    StackTrace trace = new StackTrace(true);
                     m_log.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
-                        name, assetID, trace.ToString());
+                                      name, assetID, trace);
                 }
 
-                m_metadata = new AssetMetadata();
-                m_metadata.FullID = assetID;
-                m_metadata.Name = name;
-                m_metadata.Type = assetType;
-                m_metadata.CreatorID = creatorID;
+                m_metadata = new AssetMetadata {FullID = assetID, Name = name, Type = assetType, CreatorID = creatorID};
             }
 
             public AssetBase(string assetID, string name, sbyte assetType, string creatorID)
             {
-                if (assetType == (sbyte)AssetType.Unknown)
+                if (assetType == (sbyte) AssetType.Unknown)
                 {
-                    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(true);
+                    StackTrace trace = new StackTrace(true);
                     m_log.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
-                        name, assetID, trace.ToString());
+                                      name, assetID, trace);
                 }
 
-                m_metadata = new AssetMetadata();
-                m_metadata.ID = assetID;
-                m_metadata.Name = name;
-                m_metadata.Type = assetType;
-                m_metadata.CreatorID = creatorID;
+                m_metadata = new AssetMetadata {ID = assetID, Name = name, Type = assetType, CreatorID = creatorID};
             }
 
             public bool ContainsReferences
@@ -133,47 +280,43 @@ namespace OpenSim.Services.RobustCompat
                 {
                     return
                         IsTextualAsset && (
-                        Type != (sbyte)AssetType.Notecard
-                        && Type != (sbyte)AssetType.CallingCard
-                        && Type != (sbyte)AssetType.LSLText
-                        && Type != (sbyte)AssetType.Landmark);
+                                              Type != (sbyte) AssetType.Notecard
+                                              && Type != (sbyte) AssetType.CallingCard
+                                              && Type != (sbyte) AssetType.LSLText
+                                              && Type != (sbyte) AssetType.Landmark);
                 }
             }
 
             public bool IsTextualAsset
             {
-                get
-                {
-                    return !IsBinaryAsset;
-                }
-
+                get { return !IsBinaryAsset; }
             }
 
             /// <summary>
-            /// Checks if this asset is a binary or text asset
+            ///   Checks if this asset is a binary or text asset
             /// </summary>
             public bool IsBinaryAsset
             {
                 get
                 {
                     return
-                        (Type == (sbyte)AssetType.Animation ||
-                         Type == (sbyte)AssetType.Gesture ||
-                         Type == (sbyte)AssetType.Simstate ||
-                         Type == (sbyte)AssetType.Unknown ||
-                         Type == (sbyte)AssetType.Object ||
-                         Type == (sbyte)AssetType.Sound ||
-                         Type == (sbyte)AssetType.SoundWAV ||
-                         Type == (sbyte)AssetType.Texture ||
-                         Type == (sbyte)AssetType.TextureTGA ||
-                         Type == (sbyte)AssetType.Folder ||
-                         Type == (sbyte)AssetType.RootFolder ||
-                         Type == (sbyte)AssetType.LostAndFoundFolder ||
-                         Type == (sbyte)AssetType.SnapshotFolder ||
-                         Type == (sbyte)AssetType.TrashFolder ||
-                         Type == (sbyte)AssetType.ImageJPEG ||
-                         Type == (sbyte)AssetType.ImageTGA ||
-                         Type == (sbyte)AssetType.LSLBytecode);
+                        (Type == (sbyte) AssetType.Animation ||
+                         Type == (sbyte) AssetType.Gesture ||
+                         Type == (sbyte) AssetType.Simstate ||
+                         Type == (sbyte) AssetType.Unknown ||
+                         Type == (sbyte) AssetType.Object ||
+                         Type == (sbyte) AssetType.Sound ||
+                         Type == (sbyte) AssetType.SoundWAV ||
+                         Type == (sbyte) AssetType.Texture ||
+                         Type == (sbyte) AssetType.TextureTGA ||
+                         Type == (sbyte) AssetType.Folder ||
+                         Type == (sbyte) AssetType.RootFolder ||
+                         Type == (sbyte) AssetType.LostAndFoundFolder ||
+                         Type == (sbyte) AssetType.SnapshotFolder ||
+                         Type == (sbyte) AssetType.TrashFolder ||
+                         Type == (sbyte) AssetType.ImageJPEG ||
+                         Type == (sbyte) AssetType.ImageTGA ||
+                         Type == (sbyte) AssetType.LSLBytecode);
                 }
             }
 
@@ -184,7 +327,7 @@ namespace OpenSim.Services.RobustCompat
             }
 
             /// <summary>
-            /// Asset UUID
+            ///   Asset UUID
             /// </summary>
             public UUID FullID
             {
@@ -193,7 +336,7 @@ namespace OpenSim.Services.RobustCompat
             }
 
             /// <summary>
-            /// Asset MetaData ID (transferring from UUID to string ID)
+            ///   Asset MetaData ID (transferring from UUID to string ID)
             /// </summary>
             public string ID
             {
@@ -214,7 +357,7 @@ namespace OpenSim.Services.RobustCompat
             }
 
             /// <summary>
-            /// (sbyte) AssetType enum
+            ///   (sbyte) AssetType enum
             /// </summary>
             public sbyte Type
             {
@@ -223,7 +366,7 @@ namespace OpenSim.Services.RobustCompat
             }
 
             /// <summary>
-            /// Is this a region only asset, or does this exist on the asset server also
+            ///   Is this a region only asset, or does this exist on the asset server also
             /// </summary>
             public bool Local
             {
@@ -232,7 +375,7 @@ namespace OpenSim.Services.RobustCompat
             }
 
             /// <summary>
-            /// Is this asset going to be saved to the asset database?
+            ///   Is this asset going to be saved to the asset database?
             /// </summary>
             public bool Temporary
             {
@@ -265,26 +408,34 @@ namespace OpenSim.Services.RobustCompat
             }
         }
 
+        #endregion
+
+        #region Nested type: AssetMetadata
+
         [Serializable]
         public class AssetMetadata
         {
+            private string m_content_type;
+            private DateTime m_creation_date;
+            private string m_creatorid;
+            private string m_description = String.Empty;
+            private AssetFlags m_flags;
             private UUID m_fullid;
             private string m_id;
-            private string m_name = String.Empty;
-            private string m_description = String.Empty;
-            private DateTime m_creation_date;
-            private sbyte m_type = (sbyte)AssetType.Unknown;
-            private string m_content_type;
-            private byte[] m_sha1;
             private bool m_local;
+            private string m_name = String.Empty;
+            private byte[] m_sha1;
             private bool m_temporary;
-            private string m_creatorid;
-            private AssetFlags m_flags;
+            private sbyte m_type = (sbyte) AssetType.Unknown;
 
             public UUID FullID
             {
                 get { return m_fullid; }
-                set { m_fullid = value; m_id = m_fullid.ToString(); }
+                set
+                {
+                    m_fullid = value;
+                    m_id = m_fullid.ToString();
+                }
             }
 
             public string ID
@@ -349,7 +500,7 @@ namespace OpenSim.Services.RobustCompat
                 {
                     m_content_type = value;
 
-                    sbyte type = (sbyte)SLUtil.ContentTypeToSLAssetType(value);
+                    sbyte type = SLUtil.ContentTypeToSLAssetType(value);
                     if (type != -1)
                         m_type = type;
                 }
@@ -386,148 +537,6 @@ namespace OpenSim.Services.RobustCompat
             }
         }
 
-        public override Framework.AssetBase Get(string id)
-        {
-            Framework.AssetBase asset = null;
-            AssetBase rasset = null;
-
-            if (m_Cache != null)
-            {
-                asset = m_Cache.Get(id);
-                if ((asset != null) && ((asset.Data != null) && (asset.Data.Length != 0)))
-                    return asset;
-            }
-
-            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            if (serverURIs != null)
-                foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
-                {
-                    rasset = SynchronousRestObjectRequester.
-                        MakeRequest<int, AssetBase>("GET", uri, 0);
-                    asset = TearDown(rasset);
-                    if (m_Cache != null && asset != null)
-                        m_Cache.Cache(asset);
-                    if (asset != null)
-                        return asset;
-                }
-            return null;
-        }
-
-        public override bool Get(string id, object sender, AssetRetrieved handler)
-        {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
-            {
-                string uri = m_ServerURI + "/" + id;
-
-                Framework.AssetBase asset = null;
-                if (m_Cache != null)
-                    asset = m_Cache.Get(id);
-
-                if (asset == null)
-                {
-                    bool result = false;
-
-                    AsynchronousRestObjectRequester.
-                            MakeRequest<int, AssetBase>("GET", uri, 0,
-                            delegate(AssetBase aa)
-                            {
-                                Framework.AssetBase a = TearDown(aa);
-                                if (m_Cache != null)
-                                    m_Cache.Cache(a);
-                                handler(id, sender, a);
-                                result = true;
-                            });
-
-                    if (result)
-                        return result;
-                }
-                else
-                {
-                    handler(id, sender, asset);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public override UUID Store(Framework.AssetBase asset)
-        {
-            AssetBase rasset = Build(asset);
-            if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
-            {
-                if (m_Cache != null)
-                    m_Cache.Cache(asset);
-
-                return asset.ID;
-            }
-
-            UUID newID = UUID.Zero;
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
-            {
-                string uri = m_ServerURI + "/";
-
-                try
-                {
-                    string request = SynchronousRestObjectRequester.
-                            MakeRequest<AssetBase, string>("POST", uri, rasset);
-
-                    UUID.TryParse(request, out newID);
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
-                }
-
-                if (newID != UUID.Zero)
-                {
-                    // Placing this here, so that this work with old asset servers that don't send any reply back
-                    // SynchronousRestObjectRequester returns somethins that is not an empty string
-                    asset.ID = newID;
-
-                    if (m_Cache != null)
-                        m_Cache.Cache(asset);
-                }
-                else
-                    return asset.ID;//OPENSIM
-            }
-            return newID;
-        }
-
-        public AssetBase Build(Framework.AssetBase asset)
-        {
-            AssetBase r = new AssetBase();
-            r.CreatorID = asset.CreatorID.ToString();
-            r.Data = asset.Data;
-            r.Description = asset.Description;
-            r.Flags = asset.Flags;
-            r.ID = asset.ID.ToString();
-            r.Name = asset.Name;
-            r.Type = (sbyte)asset.Type;
-            return r;
-        }
-
-        public Framework.AssetBase TearDown(AssetBase asset)
-        {
-            if (asset == null)
-                return null;
-            Framework.AssetBase r = new Framework.AssetBase();
-            r.CreatorID = UUID.Parse(asset.CreatorID);
-            r.Data = asset.Data;
-            r.Description = asset.Description;
-            r.Flags = asset.Flags;
-            r.ID = UUID.Parse(asset.ID);
-            r.Name = asset.Name;
-            r.Type = (int)asset.Type;
-            return r;
-        }
+        #endregion
     }
 }

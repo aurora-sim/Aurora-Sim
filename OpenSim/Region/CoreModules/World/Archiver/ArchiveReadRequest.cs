@@ -387,6 +387,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// Look up the given user id to check whether it's one that is valid for this grid.
         /// </summary>
         /// <param name="uuid"></param>
+        /// <param name="creatorID"></param>
+        /// <param name="creatorData"></param>
+        /// <param name="location"></param>
+        /// <param name="parcels"></param>
         /// <returns></returns>
         private UUID ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData, Vector3 location, List<LandData> parcels)
         {
@@ -399,56 +403,53 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     m_validUserUuids.Add(uuid, uuid);
                     return uuid;
                 }
-                else
+                if(uuid == creatorID)
                 {
-                    if(uuid == creatorID)
+                    UUID hid;
+                    string first, last, url, secret;
+                    if(HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
                     {
-                        UUID hid;
-                        string first, last, url, secret;
-                        if(HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
-                        {
-                            account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
-                            if(account != null)
-                            {
-                                m_validUserUuids.Add(uuid, account.PrincipalID);
-                                return account.PrincipalID;//Fix the UUID
-                            }
-                        }
-                    }
-                    IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement> ();
-                    if (uf != null)
-                        if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
-                        {
-                            m_validUserUuids.Add(uuid, uuid);
-                            return uuid;
-                        }
-                    UUID id = UUID.Zero;
-                    if(m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
-                    {
-                    tryAgain:
-                        string ownerName = MainConsole.Instance.CmdPrompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
-                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
+                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
                         if(account != null)
-                            id = account.PrincipalID;
-                        else if(ownerName != "")
-                            if((ownerName = MainConsole.Instance.CmdPrompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
-                                goto tryAgain;
-                    }
-                    if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
-                    {
-                        foreach (LandData data in parcels)
                         {
-                            if (ContainsPoint(data, (int)location.X + m_offsetX, (int)location.Y + m_offsetY))
-                                if (uuid != data.OwnerID)
-                                    id = data.OwnerID;
+                            m_validUserUuids.Add(uuid, account.PrincipalID);
+                            return account.PrincipalID;//Fix the UUID
                         }
                     }
-                    if(id == UUID.Zero)
-                        id = m_scene.RegionInfo.EstateSettings.EstateOwner;
-                    m_validUserUuids.Add(uuid, id);
-
-                    return m_validUserUuids[uuid];
                 }
+                IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement> ();
+                if (uf != null)
+                    if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
+                    {
+                        m_validUserUuids.Add(uuid, uuid);
+                        return uuid;
+                    }
+                UUID id = UUID.Zero;
+                if(m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
+                {
+                    tryAgain:
+                    string ownerName = MainConsole.Instance.CmdPrompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
+                    account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
+                    if(account != null)
+                        id = account.PrincipalID;
+                    else if(ownerName != "")
+                        if((ownerName = MainConsole.Instance.CmdPrompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
+                            goto tryAgain;
+                }
+                if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
+                {
+                    foreach (LandData data in parcels)
+                    {
+                        if (ContainsPoint(data, (int)location.X + m_offsetX, (int)location.Y + m_offsetY))
+                            if (uuid != data.OwnerID)
+                                id = data.OwnerID;
+                    }
+                }
+                if(id == UUID.Zero)
+                    id = m_scene.RegionInfo.EstateSettings.EstateOwner;
+                m_validUserUuids.Add(uuid, id);
+
+                return m_validUserUuids[uuid];
             }
 
             return u;
@@ -456,18 +457,19 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         private bool ContainsPoint(LandData data, int checkx, int checky)
         {
-            byte tempByte = 0;
-            int x = 0, y = 0, i = 0, bitNum = 0;
+            int x = 0, y = 0, i = 0;
             for (i = 0; i < data.Bitmap.Length; i++)
             {
+                byte tempByte = 0;
                 if (i < data.Bitmap.Length)
                     tempByte = data.Bitmap[i];
                 else
                     break;//All the rest are false then
+                int bitNum = 0;
                 for (bitNum = 0; bitNum < 8; bitNum++)
                 {
                     if (x == checkx / 4 && y == checky / 4)
-                        return Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
+                        return Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & 1);
                     x++;
                     //Remove the offset so that we get a calc from the beginning of the array, not the offset array
                     if (x > ((m_scene.RegionInfo.RegionSizeX / 4) - 1))
@@ -483,7 +485,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// <summary>
         /// Load an asset
         /// </summary>
-        /// <param name="assetFilename"></param>
+        /// <param name="assetPath"></param>
         /// <param name="data"></param>
         /// <returns>true if asset was successfully loaded, false otherwise</returns>
         private bool LoadAsset(string assetPath, byte[] data)
@@ -536,14 +538,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 return true;
             }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[ARCHIVER]: Tried to dearchive data with path {0} with an unknown type extension {1}",
-                    assetPath, extension);
+            m_log.ErrorFormat(
+                "[ARCHIVER]: Tried to dearchive data with path {0} with an unknown type extension {1}",
+                assetPath, extension);
 
-                return false;
-            }
+            return false;
         }
 
         private void SaveAssets()
@@ -674,13 +673,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 if (xtr.NodeType == XmlNodeType.Element)
                 {
-                    if (xtr.Name.ToString() == "datetime")
+                    if (xtr.Name == "datetime")
                     {
                         int value;
                         if (Int32.TryParse(xtr.ReadElementContentAsString(), out value))
                             currentRegionSettings.LoadedCreationDateTime = value;
                     }
-                    else if (xtr.Name.ToString() == "id")
+                    else if (xtr.Name == "id")
                     {
                         currentRegionSettings.LoadedCreationID = xtr.ReadElementContentAsString();
                     }

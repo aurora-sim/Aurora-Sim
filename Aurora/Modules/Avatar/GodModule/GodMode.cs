@@ -27,20 +27,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.IO;
-using System.Net;
-using System.Net.Mail;
-using System.Xml;
-using Nwc.XmlRpc;
-using log4net;
+using Aurora.Framework;
 using Nini.Config;
+using Nini.Ini;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using Aurora.Framework;
 
 namespace Aurora.Modules
 {
@@ -49,9 +42,9 @@ namespace Aurora.Modules
         #region Declares 
 
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<IScene> m_scenes = new List<IScene> ();
-        private IConfigSource m_config;
+        private readonly List<IScene> m_scenes = new List<IScene>();
         private bool m_Enabled = true;
+        private IConfigSource m_config;
         private string m_oar_directory = "";
 
         #endregion
@@ -64,8 +57,8 @@ namespace Aurora.Modules
             if (source.Configs["GodModule"] != null)
             {
                 if (source.Configs["GodModule"].GetString(
-                        "GodModule", Name) !=
-                        Name)
+                    "GodModule", Name) !=
+                    Name)
                 {
                     m_Enabled = false;
                     return;
@@ -74,7 +67,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -85,7 +78,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!m_Enabled)
                 return;
@@ -96,7 +89,7 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -122,6 +115,8 @@ namespace Aurora.Modules
 
         #region Client
 
+        private readonly Dictionary<UUID, EstateChange> ChannelDirectory = new Dictionary<UUID, EstateChange>();
+
         private void OnNewClient(IClientAPI client)
         {
             client.OnGodUpdateRegionInfoUpdate += GodUpdateRegionInfoUpdate;
@@ -137,13 +132,13 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// The user requested something from god tools
+        ///   The user requested something from god tools
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="requester"></param>
-        /// <param name="Method"></param>
-        /// <param name="Parameter"></param>
-        void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
+        /// <param name = "client"></param>
+        /// <param name = "requester"></param>
+        /// <param name = "Method"></param>
+        /// <param name = "Parameter"></param>
+        private void onGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
         {
             //Just rebuild the map
             if (Method == "refreshmapvisibility")
@@ -159,10 +154,10 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Save the state of the region
+        ///   Save the state of the region
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="agentID"></param>
+        /// <param name = "client"></param>
+        /// <param name = "agentID"></param>
         public void GodSaveState(IClientAPI client, UUID agentID)
         {
             //Check for god perms
@@ -170,26 +165,28 @@ namespace Aurora.Modules
             {
                 IScene scene = MainConsole.Instance.ConsoleScene; //Switch back later
                 MainConsole.Instance.RunCommand("change region " + client.Scene.RegionInfo.RegionName);
-                MainConsole.Instance.RunCommand("save oar " + m_oar_directory + client.Scene.RegionInfo.RegionName + Util.UnixTimeSinceEpoch().ToString() + ".statesave.oar");
-                if (scene == null) 
-                    MainConsole.Instance.RunCommand ("change region root");
+                MainConsole.Instance.RunCommand("save oar " + m_oar_directory + client.Scene.RegionInfo.RegionName +
+                                                Util.UnixTimeSinceEpoch().ToString() + ".statesave.oar");
+                if (scene == null)
+                    MainConsole.Instance.RunCommand("change region root");
                 else
                     MainConsole.Instance.RunCommand("change region " + scene.RegionInfo.RegionName);
             }
         }
 
         /// <summary>
-        /// The god has requested that we update something in the region configs
+        ///   The god has requested that we update something in the region configs
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="BillableFactor"></param>
-        /// <param name="PricePerMeter"></param>
-        /// <param name="EstateID"></param>
-        /// <param name="RegionFlags"></param>
-        /// <param name="SimName"></param>
-        /// <param name="RedirectX"></param>
-        /// <param name="RedirectY"></param>
-        public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID, ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
+        /// <param name = "client"></param>
+        /// <param name = "BillableFactor"></param>
+        /// <param name = "PricePerMeter"></param>
+        /// <param name = "EstateID"></param>
+        /// <param name = "RegionFlags"></param>
+        /// <param name = "SimName"></param>
+        /// <param name = "RedirectX"></param>
+        /// <param name = "RedirectY"></param>
+        public void GodUpdateRegionInfoUpdate(IClientAPI client, float BillableFactor, int PricePerMeter, ulong EstateID,
+                                              ulong RegionFlags, byte[] SimName, int RedirectX, int RedirectY)
         {
             //Check god perms
             if (!client.Scene.Permissions.IsGod(client.AgentId))
@@ -198,18 +195,18 @@ namespace Aurora.Modules
             //Update their current region with new information
             string oldRegionName = client.Scene.RegionInfo.RegionName;
             client.Scene.RegionInfo.RegionName = Utils.BytesToString(SimName);
-            
+
             //Set the region loc X and Y
-            if(RedirectX != 0)
-                client.Scene.RegionInfo.RegionLocX = RedirectX * (int)Constants.RegionSize;
+            if (RedirectX != 0)
+                client.Scene.RegionInfo.RegionLocX = RedirectX*Constants.RegionSize;
             if (RedirectY != 0)
-                client.Scene.RegionInfo.RegionLocY = RedirectY * (int)Constants.RegionSize;
+                client.Scene.RegionInfo.RegionLocY = RedirectY*Constants.RegionSize;
 
             //Update the estate ID
             if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
             {
                 //If they are changing estates, we have to ask them for the password to the estate, so send them an llTextBox
-                string Password = "";
+                const string Password = "";
                 IWorldComm comm = client.Scene.RequestModuleInterface<IWorldComm>();
                 IDialogModule dialog = client.Scene.RequestModuleInterface<IDialogModule>();
                 //If the comms module is not null, we send the user a text box on a random channel so that they cannot be tapped into
@@ -218,41 +215,61 @@ namespace Aurora.Modules
                     int Channel = new Random().Next(1000, 100000);
                     //Block the channel so NOONE can access it until the question is answered
                     comm.AddBlockedChannel(Channel);
-                    ChannelDirectory.Add(client.AgentId, new EstateChange() { Channel = Channel, EstateID = (uint)EstateID, OldEstateID = client.Scene.RegionInfo.EstateSettings.EstateID });
+                    ChannelDirectory.Add(client.AgentId,
+                                         new EstateChange
+                                             {
+                                                 Channel = Channel,
+                                                 EstateID = (uint) EstateID,
+                                                 OldEstateID = client.Scene.RegionInfo.EstateSettings.EstateID
+                                             });
                     //Set the ID temperarily, if it doesn't work, we will revert it later
-                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
                     client.OnChatFromClient += OnChatFromClient;
-                    dialog.SendTextBoxToUser(client.AgentId, "Please type the password for the estate you wish to join. (Note: this channel is secured and will not be able to be listened in on)", Channel, "Server", UUID.Zero, UUID.Zero);
+                    dialog.SendTextBoxToUser(client.AgentId,
+                                             "Please type the password for the estate you wish to join. (Note: this channel is secured and will not be able to be listened in on)",
+                                             Channel, "Server", UUID.Zero, UUID.Zero);
                 }
                 else
                 {
-                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(client.Scene.RegionInfo.RegionID, (int)EstateID, Util.Md5Hash(Password));
+                    bool changed =
+                        DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
+                            client.Scene.RegionInfo.RegionID, (int) EstateID, Util.Md5Hash(Password));
                     if (!changed)
                         client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                     else
                     {
-                        client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                        client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
                         client.Scene.RegionInfo.EstateSettings.Save();
                     }
                 }
             }
-            
+
             //Set the other settings
             client.Scene.RegionInfo.EstateSettings.BillableFactor = BillableFactor;
             client.Scene.RegionInfo.EstateSettings.PricePerMeter = PricePerMeter;
             client.Scene.RegionInfo.EstateSettings.SetFromFlags(RegionFlags);
 
-            client.Scene.RegionInfo.RegionSettings.AllowDamage = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.AllowDamage) == (ulong)OpenMetaverse.RegionFlags.AllowDamage);
-            client.Scene.RegionInfo.RegionSettings.FixedSun = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SunFixed) == (ulong)OpenMetaverse.RegionFlags.SunFixed);
-            client.Scene.RegionInfo.RegionSettings.BlockTerraform = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.BlockTerraform) == (ulong)OpenMetaverse.RegionFlags.BlockTerraform);
-            client.Scene.RegionInfo.RegionSettings.Sandbox = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.Sandbox) == (ulong)OpenMetaverse.RegionFlags.Sandbox);
-            
+            client.Scene.RegionInfo.RegionSettings.AllowDamage = ((RegionFlags &
+                                                                   (ulong) OpenMetaverse.RegionFlags.AllowDamage) ==
+                                                                  (ulong) OpenMetaverse.RegionFlags.AllowDamage);
+            client.Scene.RegionInfo.RegionSettings.FixedSun = ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SunFixed) ==
+                                                               (ulong) OpenMetaverse.RegionFlags.SunFixed);
+            client.Scene.RegionInfo.RegionSettings.BlockTerraform = ((RegionFlags &
+                                                                      (ulong) OpenMetaverse.RegionFlags.BlockTerraform) ==
+                                                                     (ulong) OpenMetaverse.RegionFlags.BlockTerraform);
+            client.Scene.RegionInfo.RegionSettings.Sandbox = ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.Sandbox) ==
+                                                              (ulong) OpenMetaverse.RegionFlags.Sandbox);
+
             //Update skipping scripts/physics/collisions
             IEstateModule mod = client.Scene.RequestModuleInterface<IEstateModule>();
-            if(mod != null)
-                mod.SetSceneCoreDebug(((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipScripts) == (ulong)OpenMetaverse.RegionFlags.SkipScripts),
-                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipCollisions) == (ulong)OpenMetaverse.RegionFlags.SkipCollisions),
-                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipPhysics) == (ulong)OpenMetaverse.RegionFlags.SkipPhysics));
+            if (mod != null)
+                mod.SetSceneCoreDebug(
+                    ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SkipScripts) ==
+                     (ulong) OpenMetaverse.RegionFlags.SkipScripts),
+                    ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SkipCollisions) ==
+                     (ulong) OpenMetaverse.RegionFlags.SkipCollisions),
+                    ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SkipPhysics) ==
+                     (ulong) OpenMetaverse.RegionFlags.SkipPhysics));
 
             //Save the changes
             client.Scene.RegionInfo.EstateSettings.Save();
@@ -270,10 +287,10 @@ namespace Aurora.Modules
             }
             else
                 SaveChangesFile(oldRegionName, client.Scene.RegionInfo);
-                
+
 
             //Tell the clients to update all references to the new settings
-            foreach (IScenePresence sp in client.Scene.GetScenePresences ())
+            foreach (IScenePresence sp in client.Scene.GetScenePresences())
             {
                 HandleRegionInfoRequest(sp.ControllingClient, client.Scene);
             }
@@ -284,20 +301,11 @@ namespace Aurora.Modules
                 gridRegisterModule.UpdateGridRegion(client.Scene);
         }
 
-        private class EstateChange
-        {
-            public int Channel;
-            public uint OldEstateID;
-            public uint EstateID;
-        }
-
-        private Dictionary<UUID, EstateChange> ChannelDirectory = new Dictionary<UUID, EstateChange>();
-
         /// <summary>
-        /// This sets the estateID for the region if the estate password is set right
+        ///   This sets the estateID for the region if the estate password is set right
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name = "sender"></param>
+        /// <param name = "e"></param>
         protected void OnChatFromClient(object sender, OSChatMessage e)
         {
             //For Estate Password
@@ -307,34 +315,43 @@ namespace Aurora.Modules
                 //Check whether the channel is right
                 if (Change.Channel == e.Channel)
                 {
-                    ((IClientAPI)sender).OnChatFromClient -= OnChatFromClient;
+                    ((IClientAPI) sender).OnChatFromClient -= OnChatFromClient;
                     ChannelDirectory.Remove(e.Sender.AgentId);
-                    IWorldComm comm = ((IClientAPI)sender).Scene.RequestModuleInterface<IWorldComm>();
+                    IWorldComm comm = ((IClientAPI) sender).Scene.RequestModuleInterface<IWorldComm>();
                     //Unblock the channel now that we have the password
                     comm.RemoveBlockedChannel(Change.Channel);
 
                     string Password = Util.Md5Hash(e.Message);
                     //Try to switch estates
-                    bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(((IClientAPI)sender).Scene.RegionInfo.RegionID, (int)Change.EstateID, Password);
+                    bool changed =
+                        DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
+                            ((IClientAPI) sender).Scene.RegionInfo.RegionID, (int) Change.EstateID, Password);
                     if (!changed)
                     {
                         //Revert it, it didn't work
-                        ((IClientAPI)sender).Scene.RegionInfo.EstateSettings.EstateID = Change.OldEstateID;
-                        ((IClientAPI)sender).SendAgentAlertMessage("Unable to connect to the given estate.", false);
+                        ((IClientAPI) sender).Scene.RegionInfo.EstateSettings.EstateID = Change.OldEstateID;
+                        ((IClientAPI) sender).SendAgentAlertMessage("Unable to connect to the given estate.", false);
                     }
                     else
                     {
-                        ((IClientAPI)sender).Scene.RegionInfo.EstateSettings.EstateID = Change.EstateID;
-                        ((IClientAPI)sender).Scene.RegionInfo.EstateSettings.Save();
-                        ((IClientAPI)sender).SendAgentAlertMessage("Estate Updated.", false);
+                        ((IClientAPI) sender).Scene.RegionInfo.EstateSettings.EstateID = Change.EstateID;
+                        ((IClientAPI) sender).Scene.RegionInfo.EstateSettings.Save();
+                        ((IClientAPI) sender).SendAgentAlertMessage("Estate Updated.", false);
                     }
                     //Tell the clients to update all references to the new settings
-                    foreach (IScenePresence sp in ((IClientAPI)sender).Scene.GetScenePresences ())
+                    foreach (IScenePresence sp in ((IClientAPI) sender).Scene.GetScenePresences())
                     {
-                        HandleRegionInfoRequest(sp.ControllingClient, ((IClientAPI)sender).Scene);
+                        HandleRegionInfoRequest(sp.ControllingClient, ((IClientAPI) sender).Scene);
                     }
                 }
             }
+        }
+
+        private class EstateChange
+        {
+            public int Channel;
+            public uint EstateID;
+            public uint OldEstateID;
         }
 
         #endregion
@@ -342,17 +359,17 @@ namespace Aurora.Modules
         #region Helpers
 
         /// <summary>
-        /// Save the config files
+        ///   Save the config files
         /// </summary>
-        /// <param name="OldRegionName"></param>
-        /// <param name="regionInfo"></param>
+        /// <param name = "OldRegionName"></param>
+        /// <param name = "regionInfo"></param>
         private void SaveChangesFile(string OldRegionName, RegionInfo regionInfo)
         {
             string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
 
             try
             {
-                IConfig startupConfig = (IConfig)m_config.Configs["RegionStartup"];
+                IConfig startupConfig = m_config.Configs["RegionStartup"];
                 regionConfigPath = startupConfig.GetString("RegionsDirectory", regionConfigPath).Trim();
             }
             catch (Exception)
@@ -366,21 +383,25 @@ namespace Aurora.Modules
             int i = 0;
             foreach (string file in iniFiles)
             {
-                IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
+                IConfigSource source = new IniConfigSource(file, IniFileType.AuroraStyle);
                 IConfig cnf = source.Configs[OldRegionName];
                 if (cnf != null) //Does the old one exist in this file?
                 {
                     IConfig check = source.Configs[regionInfo.RegionName];
                     if (check == null) //Is the new name non existant as well?
                     {
-                        cnf.Set("Location", (regionInfo.RegionLocX / Constants.RegionSize) + "," + (regionInfo.RegionLocY / Constants.RegionSize));
+                        cnf.Set("Location",
+                                (regionInfo.RegionLocX/Constants.RegionSize) + "," +
+                                (regionInfo.RegionLocY/Constants.RegionSize));
                         cnf.Name = regionInfo.RegionName;
                         source.Save();
                     }
                     else
                     {
                         //The new region exists too, no name change
-                        check.Set("Location", (regionInfo.RegionLocX / Constants.RegionSize) + "," + (regionInfo.RegionLocY / Constants.RegionSize));
+                        check.Set("Location",
+                                  (regionInfo.RegionLocX/Constants.RegionSize) + "," +
+                                  (regionInfo.RegionLocY/Constants.RegionSize));
                     }
                 }
                 i++;
@@ -388,45 +409,45 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Save the database configs
+        ///   Save the database configs
         /// </summary>
-        /// <param name="regionInfo"></param>
+        /// <param name = "regionInfo"></param>
         private void SaveChangesDatabase(RegionInfo regionInfo)
         {
-            IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            IRegionInfoConnector connector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (connector != null)
                 connector.UpdateRegionInfo(regionInfo);
         }
 
         /// <summary>
-        /// Tell the client about the changes
+        ///   Tell the client about the changes
         /// </summary>
-        /// <param name="remote_client"></param>
-        /// <param name="m_scene"></param>
+        /// <param name = "remote_client"></param>
+        /// <param name = "m_scene"></param>
         private void HandleRegionInfoRequest(IClientAPI remote_client, IScene m_scene)
         {
-            RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs();
-            args.billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor;
-            args.estateID = m_scene.RegionInfo.EstateSettings.EstateID;
-            args.maxAgents = (byte)m_scene.RegionInfo.RegionSettings.AgentLimit;
-            args.objectBonusFactor = (float)m_scene.RegionInfo.RegionSettings.ObjectBonus;
-            args.parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
-            args.pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter;
-            args.redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX;
-            args.redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY;
+            RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs
+                                                   {
+                                                       billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor,
+                                                       estateID = m_scene.RegionInfo.EstateSettings.EstateID,
+                                                       maxAgents = (byte) m_scene.RegionInfo.RegionSettings.AgentLimit,
+                                                       objectBonusFactor =
+                                                           (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
+                                                       parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
+                                                       pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
+                                                       redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
+                                                       redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY
+                                                   };
 
             IEstateModule estate = m_scene.RequestModuleInterface<IEstateModule>();
-            if (estate == null)
-                args.regionFlags = 0;
-            else
-                args.regionFlags = estate.GetRegionFlags();
+            args.regionFlags = estate == null ? 0 : estate.GetRegionFlags();
 
             args.simAccess = m_scene.RegionInfo.AccessLevel;
-            args.sunHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
-            args.terrainLowerLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
-            args.terrainRaiseLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
+            args.sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition;
+            args.terrainLowerLimit = (float) m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
+            args.terrainRaiseLimit = (float) m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
             args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
-            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+            args.waterHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
             args.simName = m_scene.RegionInfo.RegionName;
             args.regionType = m_scene.RegionInfo.RegionType;
 

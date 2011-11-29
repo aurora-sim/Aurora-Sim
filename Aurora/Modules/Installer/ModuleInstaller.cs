@@ -50,8 +50,11 @@ namespace Aurora.Modules.Installer
             if (commands[2] == "gui")
             {
                 bool finished = false;
-                OpenFileDialog dialog = new OpenFileDialog();
-                dialog.Filter = "Build Files (*.am)|*.am|Xml Files (*.xml)|*.xml|Dll Files (*.dll)|*.dll";
+                OpenFileDialog dialog = new OpenFileDialog
+                                            {
+                                                Filter =
+                                                    "Build Files (*.am)|*.am|Xml Files (*.xml)|*.xml|Dll Files (*.dll)|*.dll"
+                                            };
                 System.Threading.Thread t = new System.Threading.Thread(delegate()
                 {
                     if (dialog.ShowDialog() == DialogResult.OK)
@@ -117,8 +120,12 @@ namespace Aurora.Modules.Installer
 
         private static void BuildCSProj(string tmpFile)
         {
-            Process p = new Process();
-            p.StartInfo = new ProcessStartInfo("Prebuild.exe", "/target vs2008 /targetframework v3_5 /file " + tmpFile);
+            Process p = new Process
+                            {
+                                StartInfo =
+                                    new ProcessStartInfo("Prebuild.exe",
+                                                         "/target vs2008 /targetframework v3_5 /file " + tmpFile)
+                            };
             p.Start();
             p.WaitForExit();
         }
@@ -159,18 +166,17 @@ namespace Aurora.Modules.Installer
             catch (Exception ex)
             {
                 m_log.Warn("Failed to copy the module! (" + ex + ")");
-                if (MainConsole.Instance.CmdPrompt("Continue?", "yes", new List<string>(new string[2] { "yes", "no" })) == "no")
+                if (MainConsole.Instance.CmdPrompt("Continue?", "yes", new List<string>(new[] { "yes", "no" })) == "no")
                     return;
             }
             string basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
-            basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
             LoadModulesFromDllFile(basePath);
             m_log.Warn("Installed the module successfully!");
         }
 
         private void ReadFileAndCreatePrebuildFile(string tmpFile, string fileName)
         {
-            string file = System.IO.File.ReadAllText(fileName);
+            string file = File.ReadAllText(fileName);
             file = file.Replace("<?xml version=\"1.0\" ?>", "<?xml version=\"1.0\" ?>" + Environment.NewLine +
                 "<Prebuild version=\"1.7\" xmlns=\"http://dnpb.sourceforge.net/schemas/prebuild-1.7.xsd\">" + Environment.NewLine +
                 "  <Solution activeConfig=\"Debug\" name=\"Aurora\" path=\"\" version=\"0.5.0-$Rev$\">" + Environment.NewLine +
@@ -269,7 +275,7 @@ namespace Aurora.Modules.Installer
             file = FixPath(file);
             file = file.Replace("../../../bin/", "../bin");
             file = file.Replace("../../..", "../bin");
-            System.IO.File.WriteAllText(tmpFile, file);
+            File.WriteAllText(tmpFile, file);
         }
 
         private void LoadModulesFromDllFile(string copiedDllFile)
@@ -333,7 +339,7 @@ namespace Aurora.Modules.Installer
                 string l = line;
                 if (line.StartsWith("<Project frameworkVersion="))
                 {
-                    string[] lines = line.Split(new string[1] { "path=\"" }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] lines = line.Split(new[] { "path=\"" }, StringSplitOptions.RemoveEmptyEntries);
                     string li = "";
                     int i = 0;
                     foreach(string ll in lines[1].Split('"'))

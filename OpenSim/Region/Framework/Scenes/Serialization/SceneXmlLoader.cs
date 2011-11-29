@@ -28,13 +28,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Xml;
 using OpenMetaverse;
-using log4net;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Framework.Scenes.Serialization
 {
@@ -46,15 +43,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static void LoadPrimsFromXml(IScene scene, string fileName, bool newIDS, Vector3 loadOffset)
         {
             XmlDocument doc = new XmlDocument();
-            XmlNode rootNode;
 
             if (fileName.StartsWith("http:") || File.Exists(fileName))
             {
-                XmlTextReader reader = new XmlTextReader(fileName);
-                reader.WhitespaceHandling = WhitespaceHandling.None;
+                XmlTextReader reader = new XmlTextReader(fileName) {WhitespaceHandling = WhitespaceHandling.None};
                 doc.Load(reader);
                 reader.Close();
-                rootNode = doc.FirstChild;
+                XmlNode rootNode = doc.FirstChild;
                 foreach (XmlNode aPrimNode in rootNode.ChildNodes)
                 {
                     SceneObjectGroup group = SceneObjectSerializer.FromOriginalXmlFormat(aPrimNode.OuterXml, scene);
@@ -105,13 +100,12 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup DeserializeGroupFromXml2 (string xmlString, IScene scene)
         {
             XmlDocument doc = new XmlDocument ();
-            XmlNode rootNode;
 
-            XmlTextReader reader = new XmlTextReader (new StringReader (xmlString));
-            reader.WhitespaceHandling = WhitespaceHandling.None;
+            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString))
+                                       {WhitespaceHandling = WhitespaceHandling.None};
             doc.Load (reader);
             reader.Close ();
-            rootNode = doc.FirstChild;
+            XmlNode rootNode = doc.FirstChild;
 
             return SceneObjectSerializer.FromXml2Format (rootNode.OuterXml, scene);
         }
@@ -119,15 +113,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup DeserializeGroupFromXml2 (byte[] xml, IScene scene)
         {
             XmlDocument doc = new XmlDocument ();
-            XmlNode rootNode;
 
             MemoryStream stream = new MemoryStream (xml);
-            XmlTextReader reader = new XmlTextReader (stream);
-            reader.WhitespaceHandling = WhitespaceHandling.None;
+            XmlTextReader reader = new XmlTextReader(stream) {WhitespaceHandling = WhitespaceHandling.None};
             doc.Load (reader);
             reader.Close ();
             stream.Close ();
-            rootNode = doc.FirstChild;
+            XmlNode rootNode = doc.FirstChild;
 
             return SceneObjectSerializer.FromXml2Format (rootNode.OuterXml, scene);
         }
@@ -146,13 +138,9 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             reader.Close();
             XmlNode rootNode = doc.FirstChild;
 
-            ICollection<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
-            foreach (XmlNode aPrimNode in rootNode.ChildNodes)
-            {
-                SceneObjectGroup obj = CreatePrimFromXml2(scene, aPrimNode.OuterXml);
-                if (obj != null)
-                    sceneObjects.Add(obj);
-            }
+            ICollection<SceneObjectGroup> sceneObjects =
+                rootNode.ChildNodes.Cast<XmlNode>().Select(aPrimNode => CreatePrimFromXml2(scene, aPrimNode.OuterXml)).
+                    Where(obj => obj != null).ToList();
 
             foreach (SceneObjectGroup sceneObject in sceneObjects)
             {
@@ -175,7 +163,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns>The scene object created.  null if the scene object already existed</returns>
         protected static SceneObjectGroup CreatePrimFromXml2(IScene scene, string xmlData)
         {
-            SceneObjectGroup obj = SceneXmlLoader.DeserializeGroupFromXml2(xmlData, scene);
+            SceneObjectGroup obj = DeserializeGroupFromXml2(xmlData, scene);
             return obj;
         }
 
@@ -198,20 +186,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             //    primName, scene.RegionInfo.RegionName, fileName);
 
             ISceneEntity[] entityList = scene.Entities.GetEntities ();
-            List<ISceneEntity> primList = new List<ISceneEntity> ();
 
-            foreach (ISceneEntity ent in entityList)
-            {
-                if (ent is SceneObjectGroup)
-                {
-                    if (ent.Name == primName)
-                    {
-                        primList.Add(ent);
-                    }
-                }
-            }
-
-            SavePrimListToXml2(primList.ToArray(), fileName);
+            SavePrimListToXml2(entityList.OfType<SceneObjectGroup>().Where(ent => ent.Name == primName).Cast<ISceneEntity>().ToArray(), fileName);
         }
 
         public static void SavePrimListToXml2 (ISceneEntity[] entityList, string fileName)

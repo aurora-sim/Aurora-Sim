@@ -27,42 +27,39 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Xml;
-using OpenMetaverse;
+using System.Reflection;
+using System.Threading;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.Framework;
-using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace Aurora.BotManager
 {
     public class BotManager : ISharedRegionModule, IBotManager
     {
-        #region IRegionModule Members
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        
-        private Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot> ();
+        private readonly Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot>();
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
-            scene.RegisterModuleInterface<IBotManager> (this);
-            scene.RegisterModuleInterface<BotManager> (this);
+            scene.RegisterModuleInterface<IBotManager>(this);
+            scene.RegisterModuleInterface(this);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -90,81 +87,61 @@ namespace Aurora.BotManager
         #region IBotManager
 
         /// <summary>
-        /// Finds the given users appearance
+        ///   Creates a new bot inworld
         /// </summary>
-        /// <param name="target"></param>
-        /// <param name="scene"></param>
-        /// <returns></returns>
-        private AvatarAppearance GetAppearance(UUID target, IScene scene)
-        {
-            IScenePresence sp = scene.GetScenePresence (target);
-            if (sp != null)
-            {
-                IAvatarAppearanceModule aa = sp.RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (aa != null)
-                    return new AvatarAppearance(aa.Appearance);
-            }
-            return scene.AvatarService.GetAppearance (target);
-        }
-
-        /// <summary>
-        /// Creates a new bot inworld
-        /// </summary>
-        /// <param name="FirstName"></param>
-        /// <param name="LastName"></param>
-        /// <param name="cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
+        /// <param name = "FirstName"></param>
+        /// <param name = "LastName"></param>
+        /// <param name = "cloneAppearanceFrom">UUID of the avatar whos appearance will be copied to give this bot an appearance</param>
         /// <returns>ID of the bot</returns>
-        public UUID CreateAvatar (string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom, UUID creatorID, Vector3 startPos)
+        public UUID CreateAvatar(string FirstName, string LastName, IScene scene, UUID cloneAppearanceFrom,
+                                 UUID creatorID, Vector3 startPos)
         {
-            AgentCircuitData m_aCircuitData = new AgentCircuitData ();
-            m_aCircuitData.child = false;
+            AgentCircuitData m_aCircuitData = new AgentCircuitData
+                                                  {
+                                                      child = false,
+                                                      circuitcode = (uint) Util.RandomClass.Next(),
+                                                      Appearance = GetAppearance(cloneAppearanceFrom, scene)
+                                                  };
 
             //Add the circuit data so they can login
-            m_aCircuitData.circuitcode = (uint)Util.RandomClass.Next();
 
-            m_aCircuitData.Appearance = GetAppearance (cloneAppearanceFrom, scene);//Sets up appearance
+            //Sets up appearance
             if (m_aCircuitData.Appearance == null)
             {
-                m_aCircuitData.Appearance = new AvatarAppearance ();
-                m_aCircuitData.Appearance.Wearables = AvatarWearable.DefaultWearables;
+                m_aCircuitData.Appearance = new AvatarAppearance {Wearables = AvatarWearable.DefaultWearables};
             }
             //Create the new bot data
-            Bot m_character = new Bot (scene, m_aCircuitData, creatorID);
+            Bot m_character = new Bot(scene, m_aCircuitData, creatorID) {FirstName = FirstName, LastName = LastName};
 
-            m_character.FirstName = FirstName;
-            m_character.LastName = LastName;
             m_aCircuitData.AgentID = m_character.AgentId;
             m_aCircuitData.Appearance.Owner = m_character.AgentId;
-            List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments ();
+            List<AvatarAttachment> attachments = m_aCircuitData.Appearance.GetAttachments();
 
-            m_aCircuitData.Appearance.ClearAttachments ();
-            for (int i = 0; i < attachments.Count; i++)
+            m_aCircuitData.Appearance.ClearAttachments();
+            foreach (AvatarAttachment t in attachments)
             {
-                InventoryItemBase item = scene.InventoryService.GetItem (new InventoryItemBase (attachments[i].ItemID));
+                InventoryItemBase item = scene.InventoryService.GetItem(new InventoryItemBase(t.ItemID));
                 if (item != null)
                 {
-                    item.ID = UUID.Random ();
+                    item.ID = UUID.Random();
                     item.Owner = m_character.AgentId;
                     item.Folder = UUID.Zero;
-                    scene.InventoryService.AddItem (item);
+                    scene.InventoryService.AddItem(item);
                     //Now fix the ItemID
-                    m_aCircuitData.Appearance.SetAttachment (attachments[i].AttachPoint, item.ID, attachments[i].AssetID);
+                    m_aCircuitData.Appearance.SetAttachment(t.AttachPoint, item.ID, t.AssetID);
                 }
             }
 
-            scene.AuthenticateHandler.AgentCircuits.Add (m_character.CircuitCode, m_aCircuitData);
+            scene.AuthenticateHandler.AgentCircuits.Add(m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
             bool done = false;
-            scene.AddNewClient(m_character, delegate()
-            {
-                done = true;
-            });
-            while(!done)
-                System.Threading.Thread.Sleep(3);
+            scene.AddNewClient(m_character, delegate { done = true; });
+            while (!done)
+                Thread.Sleep(3);
 
             IScenePresence SP = scene.GetScenePresence(m_character.AgentId);
-            if(SP == null)
-                return UUID.Zero;//Failed!
+            if (SP == null)
+                return UUID.Zero; //Failed!
             m_character.Initialize(SP);
             SP.MakeRootAgent(m_character.StartPos, false, true);
             //Move them
@@ -182,104 +159,88 @@ namespace Aurora.BotManager
             return m_character.AgentId;
         }
 
-        public void RemoveAvatar (UUID avatarID, IScene scene, UUID userAttempting)
+        public void RemoveAvatar(UUID avatarID, IScene scene, UUID userAttempting)
         {
-            IScenePresence sp = scene.GetScenePresence (avatarID);
+            IScenePresence sp = scene.GetScenePresence(avatarID);
             if (sp == null)
                 return;
-            if(!CheckPermission(sp, userAttempting))
+            if (!CheckPermission(sp, userAttempting))
                 return;
 
             RemoveTagFromBot(avatarID, "AllBots", userAttempting);
-            if (!m_bots.Remove (avatarID))
+            if (!m_bots.Remove(avatarID))
                 return;
             //Kill the agent
-            IEntityTransferModule module = scene.RequestModuleInterface<IEntityTransferModule> ();
-            module.IncomingCloseAgent (scene, avatarID);
-        }
-        
-        private bool CheckPermission (IScenePresence sp, UUID userAttempting)
-        {
-            if(sp.ControllingClient is Bot)
-                return ((Bot)sp.ControllingClient).AvatarCreatorID == userAttempting;
-            return false;
+            IEntityTransferModule module = scene.RequestModuleInterface<IEntityTransferModule>();
+            module.IncomingCloseAgent(scene, avatarID);
         }
 
-        private bool CheckPermission (Bot bot, UUID userAttempting)
-        {
-            if(userAttempting == UUID.Zero)
-                return true;//Forced override
-            if(bot != null)
-                return bot.AvatarCreatorID == userAttempting;
-            return false;
-        }
-
-        public void PauseMovement (UUID botID, UUID userAttempting)
+        public void PauseMovement(UUID botID, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if(m_bots.TryGetValue(botID, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.PauseMovement();
             }
         }
 
-        public void ResumeMovement (UUID botID, UUID userAttempting)
+        public void ResumeMovement(UUID botID, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if(m_bots.TryGetValue(botID, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.ResumeMovement();
             }
         }
 
         /// <summary>
-        /// Sets up where the bot should be walking
+        ///   Sets up where the bot should be walking
         /// </summary>
-        /// <param name="Bot">ID of the bot</param>
-        /// <param name="Positions">List of positions the bot will move to</param>
-        /// <param name="mode">List of what the bot should be doing inbetween the positions</param>
+        /// <param name = "Bot">ID of the bot</param>
+        /// <param name = "Positions">List of positions the bot will move to</param>
+        /// <param name = "mode">List of what the bot should be doing inbetween the positions</param>
         public void SetBotMap(UUID Bot, List<Vector3> Positions, List<TravelMode> mode, int flags, UUID userAttempting)
         {
             Bot bot;
             //Find the bot
-            if(m_bots.TryGetValue(Bot, out bot))
+            if (m_bots.TryGetValue(Bot, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.SetPath(Positions, mode, flags);
             }
         }
 
         /// <summary>
-        /// Speed up or slow down the bot
+        ///   Speed up or slow down the bot
         /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void SetMovementSpeedMod (UUID Bot, float modifier, UUID userAttempting)
+        /// <param name = "Bot"></param>
+        /// <param name = "modifier"></param>
+        public void SetMovementSpeedMod(UUID Bot, float modifier, UUID userAttempting)
         {
             Bot bot;
-            if(m_bots.TryGetValue(Bot, out bot))
+            if (m_bots.TryGetValue(Bot, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.SetMovementSpeedMod(modifier);
             }
         }
 
-        public void SetBotShouldFly (UUID botID, bool shouldFly, UUID userAttempting)
+        public void SetBotShouldFly(UUID botID, bool shouldFly, UUID userAttempting)
         {
             Bot bot;
-            if(m_bots.TryGetValue(botID, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
-                if(shouldFly)
+                if (shouldFly)
                     bot.DisableWalk();
                 else
                     bot.EnableWalk();
@@ -288,104 +249,140 @@ namespace Aurora.BotManager
 
         #region Tag/Remove bots
 
-        private Dictionary<string, List<UUID>> m_botTags = new Dictionary<string, List<UUID>> ();
-        public void AddTagToBot (UUID Bot, string tag, UUID userAttempting)
+        private readonly Dictionary<string, List<UUID>> m_botTags = new Dictionary<string, List<UUID>>();
+
+        public void AddTagToBot(UUID Bot, string tag, UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue (Bot, out bot))
+            if (m_bots.TryGetValue(Bot, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
             }
-            if (!m_botTags.ContainsKey (tag))
-                m_botTags.Add (tag, new List<UUID> ());
-            m_botTags[tag].Add (Bot);
+            if (!m_botTags.ContainsKey(tag))
+                m_botTags.Add(tag, new List<UUID>());
+            m_botTags[tag].Add(Bot);
         }
 
-        public void RemoveTagFromBot (UUID Bot, string tag, UUID userAttempting)
+        public List<UUID> GetBotsWithTag(string tag)
         {
-            Bot bot;
-            if (m_bots.TryGetValue (Bot, out bot))
-            {
-                if(!CheckPermission(bot, userAttempting))
-                    return;
-            }
-            if (m_botTags.ContainsKey (tag))
-                m_botTags[tag].Remove (Bot);
+            if (!m_botTags.ContainsKey(tag))
+                return new List<UUID>();
+            return new List<UUID>(m_botTags[tag]);
         }
 
-        public List<UUID> GetBotsWithTag (string tag)
-        {
-            if (!m_botTags.ContainsKey (tag))
-                return new List<UUID> ();
-            return new List<UUID> (m_botTags[tag]);
-        }
-
-        public void RemoveBots (string tag, UUID userAttempting)
+        public void RemoveBots(string tag, UUID userAttempting)
         {
             List<UUID> bots = GetBotsWithTag(tag);
-            foreach(UUID bot in bots)
+            foreach (UUID bot in bots)
             {
                 Bot Bot;
-                if (m_bots.TryGetValue (bot, out Bot))
+                if (m_bots.TryGetValue(bot, out Bot))
                 {
-                    if(!CheckPermission(Bot, userAttempting))
+                    if (!CheckPermission(Bot, userAttempting))
                         continue;
-                    RemoveTagFromBot (bot, tag, userAttempting);
+                    RemoveTagFromBot(bot, tag, userAttempting);
                     RemoveAvatar(bot, Bot.Scene, userAttempting);
                 }
             }
         }
 
+        public void RemoveTagFromBot(UUID Bot, string tag, UUID userAttempting)
+        {
+            Bot bot;
+            if (m_bots.TryGetValue(Bot, out bot))
+            {
+                if (!CheckPermission(bot, userAttempting))
+                    return;
+            }
+            if (m_botTags.ContainsKey(tag))
+                m_botTags[tag].Remove(Bot);
+        }
+
         #endregion
+
+        /// <summary>
+        ///   Finds the given users appearance
+        /// </summary>
+        /// <param name = "target"></param>
+        /// <param name = "scene"></param>
+        /// <returns></returns>
+        private AvatarAppearance GetAppearance(UUID target, IScene scene)
+        {
+            IScenePresence sp = scene.GetScenePresence(target);
+            if (sp != null)
+            {
+                IAvatarAppearanceModule aa = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+                if (aa != null)
+                    return new AvatarAppearance(aa.Appearance);
+            }
+            return scene.AvatarService.GetAppearance(target);
+        }
+
+        private bool CheckPermission(IScenePresence sp, UUID userAttempting)
+        {
+            if (sp.ControllingClient is Bot)
+                return ((Bot) sp.ControllingClient).AvatarCreatorID == userAttempting;
+            return false;
+        }
+
+        private bool CheckPermission(Bot bot, UUID userAttempting)
+        {
+            if (userAttempting == UUID.Zero)
+                return true; //Forced override
+            if (bot != null)
+                return bot.AvatarCreatorID == userAttempting;
+            return false;
+        }
 
         #endregion
 
         #region IBotManager
 
         /// <summary>
-        /// Begins to follow the given user
+        ///   Begins to follow the given user
         /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void FollowAvatar (UUID botID, string avatarName, float startFollowDistance, float endFollowDistance, UUID userAttempting)
+        /// <param name = "Bot"></param>
+        /// <param name = "modifier"></param>
+        public void FollowAvatar(UUID botID, string avatarName, float startFollowDistance, float endFollowDistance,
+                                 UUID userAttempting)
         {
             Bot bot;
-            if (m_bots.TryGetValue (botID, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
-                bot.FollowAvatar (avatarName, startFollowDistance, endFollowDistance);
+                bot.FollowAvatar(avatarName, startFollowDistance, endFollowDistance);
             }
         }
 
         /// <summary>
-        /// Stops following the given user
+        ///   Stops following the given user
         /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void StopFollowAvatar (UUID botID, UUID userAttempting)
+        /// <param name = "Bot"></param>
+        /// <param name = "modifier"></param>
+        public void StopFollowAvatar(UUID botID, UUID userAttempting)
         {
             Bot bot;
-            if(m_bots.TryGetValue(botID, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.StopFollowAvatar();
             }
         }
 
         /// <summary>
-        /// Sends a chat message to all clients
+        ///   Sends a chat message to all clients
         /// </summary>
-        /// <param name="Bot"></param>
-        /// <param name="modifier"></param>
-        public void SendChatMessage (UUID botID, string message, int sayType, int channel, UUID userAttempting)
+        /// <param name = "Bot"></param>
+        /// <param name = "modifier"></param>
+        public void SendChatMessage(UUID botID, string message, int sayType, int channel, UUID userAttempting)
         {
             Bot bot;
-            if(m_bots.TryGetValue(botID, out bot))
+            if (m_bots.TryGetValue(botID, out bot))
             {
-                if(!CheckPermission(bot, userAttempting))
+                if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.SendChatMessage(sayType, message, channel);
             }

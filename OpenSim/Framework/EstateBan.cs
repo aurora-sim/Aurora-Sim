@@ -25,111 +25,86 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenMetaverse;
 using System.Collections.Generic;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Framework
 {
     public class EstateBan
     {
-        private uint m_estateID = 1;
-        /// <summary>
-        /// ID of the estate this ban limits access to.
-        /// </summary>
-        public uint EstateID
-        {
-            get
-            {
-                return m_estateID; 
-            }
-            set
-            {
-                m_estateID = value;
-            }
-        }
-
-        private UUID m_bannedUserID = UUID.Zero;
-        /// <summary>
-        /// ID of the banned user.
-        /// </summary>
-        public UUID BannedUserID
-        {
-            get
-            {
-                return m_bannedUserID;
-            }
-            set
-            {
-                m_bannedUserID = value;
-            }
-        }
-
         private string m_bannedHostAddress = string.Empty;
-        /// <summary>
-        /// IP address or domain name of the banned client.
-        /// </summary>
-        public string BannedHostAddress
-        {
-            get
-            {
-                return m_bannedHostAddress;
-            }
-            set
-            {
-                m_bannedHostAddress = value;
-            }
-        }
-
         private string m_bannedHostIPMask = string.Empty;
-        /// <summary>
-        /// IP address mask for banning group of client hosts.
-        /// </summary>
-        public string BannedHostIPMask
-        {
-           get
-            {
-                return m_bannedHostIPMask;
-            }
-            set
-            {
-                m_bannedHostIPMask = value;
-            }
-        }
-
         private string m_bannedHostNameMask = string.Empty;
-        /// <summary>
-        /// Domain name mask for banning group of client hosts.
-        /// </summary>
-        public string BannedHostNameMask
-        {
-            get
-            {
-                return m_bannedHostNameMask;
-            }
-            set
-            {
-                m_bannedHostNameMask = value;
-            }
-        }
+        private UUID m_bannedUserID = UUID.Zero;
+        private uint m_estateID = 1;
 
-        public EstateBan(Dictionary<string,object> values)
+        public EstateBan(Dictionary<string, object> values)
         {
             EstateID = uint.Parse(values["EstateID"].ToString());
             BannedUserID = new UUID(values["BannedUserID"].ToString());
         }
 
+        public EstateBan()
+        {
+        }
+
+        /// <summary>
+        ///   ID of the estate this ban limits access to.
+        /// </summary>
+        public uint EstateID
+        {
+            get { return m_estateID; }
+            set { m_estateID = value; }
+        }
+
+        /// <summary>
+        ///   ID of the banned user.
+        /// </summary>
+        public UUID BannedUserID
+        {
+            get { return m_bannedUserID; }
+            set { m_bannedUserID = value; }
+        }
+
+        /// <summary>
+        ///   IP address or domain name of the banned client.
+        /// </summary>
+        public string BannedHostAddress
+        {
+            get { return m_bannedHostAddress; }
+            set { m_bannedHostAddress = value; }
+        }
+
+        /// <summary>
+        ///   IP address mask for banning group of client hosts.
+        /// </summary>
+        public string BannedHostIPMask
+        {
+            get { return m_bannedHostIPMask; }
+            set { m_bannedHostIPMask = value; }
+        }
+
+        /// <summary>
+        ///   Domain name mask for banning group of client hosts.
+        /// </summary>
+        public string BannedHostNameMask
+        {
+            get { return m_bannedHostNameMask; }
+            set { m_bannedHostNameMask = value; }
+        }
+
         public void FromOSD(OSD o)
         {
-            OSDMap values = (OSDMap)o;
-            EstateID = (uint)values["EstateID"].AsInteger();
+            OSDMap values = (OSDMap) o;
+            EstateID = (uint) values["EstateID"].AsInteger();
             BannedUserID = values["BannedUserID"].AsUUID();
         }
 
         public OSD ToOSD()
         {
             OSDMap kvp = new OSDMap();
-            kvp["EstateID"] = (int)EstateID;
+            kvp["EstateID"] = (int) EstateID;
             kvp["BannedUserID"] = BannedUserID;
             return kvp;
         }
@@ -141,10 +116,5 @@ namespace OpenSim.Framework
             kvp["BannedUserID"] = BannedUserID;
             return kvp;
         }
-
-        public EstateBan()
-        {
-        }
-
     }
 }

@@ -25,40 +25,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Nini.Config;
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using Aurora.Services.DataService;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.AvatarService;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCMuteListConnector : IMuteListConnector
     {
         protected LocalMuteListConnector m_localService;
-        protected RemoteMuteListConnector m_remoteService;
 
         private IRegistryCore m_registry;
+        protected RemoteMuteListConnector m_remoteService;
 
-        public void Initialize (IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IMuteListConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString ("MuteListConnector", "LocalConnector") == "IWCConnector")
+            if (source.Configs["AuroraConnectors"].GetString("MuteListConnector", "LocalConnector") == "IWCConnector")
             {
-                m_localService = new LocalMuteListConnector ();
-                m_localService.Initialize (unneeded, source, simBase, defaultConnectionString);
-                m_remoteService = new RemoteMuteListConnector ();
-                m_remoteService.Initialize (unneeded, source, simBase, defaultConnectionString);
+                m_localService = new LocalMuteListConnector();
+                m_localService.Initialize(unneeded, source, simBase, defaultConnectionString);
+                m_remoteService = new RemoteMuteListConnector();
+                m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin (Name, this);
+                DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
 
@@ -67,54 +63,59 @@ namespace Aurora.Modules
             get { return "IMuteListConnector"; }
         }
 
-        public void Dispose ()
+        public MuteList[] GetMuteList(UUID AgentID)
         {
+            List<MuteList> list = new List<MuteList>();
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
+                                                                                       "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                return m_remoteService.GetMuteList(AgentID);
+            return m_localService.GetMuteList(AgentID);
         }
 
-        #region IMuteListConnector Members
-
-        public MuteList[] GetMuteList (UUID AgentID)
+        public void UpdateMute(MuteList mute, UUID AgentID)
         {
-            List<MuteList> list = new List<MuteList> ();
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
+                                                                                       "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                return m_remoteService.GetMuteList (AgentID);
-            return m_localService.GetMuteList (AgentID);
-        }
-
-        public void UpdateMute (MuteList mute, UUID AgentID)
-        {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
-            if (serverURIs.Count > 0) //Remote user... or should be
-                m_remoteService.UpdateMute (mute, AgentID);
+                m_remoteService.UpdateMute(mute, AgentID);
             else
-                m_localService.UpdateMute (mute, AgentID);
+                m_localService.UpdateMute(mute, AgentID);
         }
 
-        public void DeleteMute (UUID muteID, UUID AgentID)
+        public void DeleteMute(UUID muteID, UUID AgentID)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
+                                                                                       "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                m_remoteService.DeleteMute (muteID, AgentID);
+                m_remoteService.DeleteMute(muteID, AgentID);
             else
-                m_localService.DeleteMute (muteID, AgentID);
+                m_localService.DeleteMute(muteID, AgentID);
         }
 
-        public bool IsMuted (UUID AgentID, UUID PossibleMuteID)
+        public bool IsMuted(UUID AgentID, UUID PossibleMuteID)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (AgentID.ToString (), "FriendsServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
+                                                                                       "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                if (!m_remoteService.IsMuted (AgentID, PossibleMuteID))
+                if (!m_remoteService.IsMuted(AgentID, PossibleMuteID))
                     return false;
                 else
                     return true;
+            else if (!m_localService.IsMuted(AgentID, PossibleMuteID))
+                return false;
             else
-                if (!m_localService.IsMuted (AgentID, PossibleMuteID))
-                    return false;
-                else
-                    return true;
+                return true;
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

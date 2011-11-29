@@ -27,28 +27,29 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.CoreModules.Scripting.XMLRPC;
-using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Region.CoreModules.Scripting.XMLRPC;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
     public class XmlRequestPlugin : IScriptPlugin
     {
+        private readonly List<IXMLRPC> m_modules = new List<IXMLRPC>();
         public ScriptEngine m_ScriptEngine;
-        private List<IXMLRPC> m_modules = new List<IXMLRPC> ();
+
+        #region IScriptPlugin Members
 
         public void Initialize(ScriptEngine ScriptEngine)
         {
             m_ScriptEngine = ScriptEngine;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
-            m_modules.Add (scene.RequestModuleInterface<IXMLRPC> ());
+            m_modules.Add(scene.RequestModuleInterface<IXMLRPC>());
         }
 
         public bool Check()
@@ -58,10 +59,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 if (xmlrpc == null)
                     continue;
-                RPCRequestInfo rInfo = (RPCRequestInfo)xmlrpc.GetNextCompletedRequest ();
-                SendRemoteDataRequest srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
+                RPCRequestInfo rInfo = (RPCRequestInfo) xmlrpc.GetNextCompletedRequest();
+                SendRemoteDataRequest srdInfo = (SendRemoteDataRequest) xmlrpc.GetNextCompletedSRDRequest();
 
-                if(!needToContinue)
+                if (!needToContinue)
                     needToContinue = xmlrpc.hasRequests();
 
                 if (rInfo == null && srdInfo == null)
@@ -69,50 +70,50 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 while (rInfo != null)
                 {
-                    xmlrpc.RemoveCompletedRequest (rInfo.GetMessageID ());
+                    xmlrpc.RemoveCompletedRequest(rInfo.GetMessageID());
 
                     //Deliver data to prim's remote_data handler
                     object[] resobj = new object[]
-                    {
-                        new LSL_Types.LSLInteger(2),
-                        new LSL_Types.LSLString(
-                                rInfo.GetChannelKey().ToString()),
-                        new LSL_Types.LSLString(
-                                rInfo.GetMessageID().ToString()),
-                        new LSL_Types.LSLString(String.Empty),
-                        new LSL_Types.LSLInteger(rInfo.GetIntValue()),
-                        new LSL_Types.LSLString(rInfo.GetStrVal())
-                    };
+                                          {
+                                              new LSL_Types.LSLInteger(2),
+                                              new LSL_Types.LSLString(
+                                                  rInfo.GetChannelKey().ToString()),
+                                              new LSL_Types.LSLString(
+                                                  rInfo.GetMessageID().ToString()),
+                                              new LSL_Types.LSLString(String.Empty),
+                                              new LSL_Types.LSLInteger(rInfo.GetIntValue()),
+                                              new LSL_Types.LSLString(rInfo.GetStrVal())
+                                          };
 
-                    m_ScriptEngine.PostScriptEvent (
-                                rInfo.GetItemID (), rInfo.GetPrimID (), new EventParams (
-                                    "remote_data", resobj,
-                                    new DetectParams[0]), EventPriority.Suspended);
+                    m_ScriptEngine.PostScriptEvent(
+                        rInfo.GetItemID(), rInfo.GetPrimID(), new EventParams(
+                                                                  "remote_data", resobj,
+                                                                  new DetectParams[0]), EventPriority.Suspended);
 
-                    rInfo = (RPCRequestInfo)xmlrpc.GetNextCompletedRequest ();
+                    rInfo = (RPCRequestInfo) xmlrpc.GetNextCompletedRequest();
                 }
 
                 while (srdInfo != null)
                 {
-                    xmlrpc.RemoveCompletedSRDRequest (srdInfo.GetReqID ());
+                    xmlrpc.RemoveCompletedSRDRequest(srdInfo.GetReqID());
 
                     //Deliver data to prim's remote_data handler
                     object[] resobj = new object[]
-                    {
-                        new LSL_Types.LSLInteger(3),
-                        new LSL_Types.LSLString(srdInfo.Channel.ToString()),
-                        new LSL_Types.LSLString(srdInfo.GetReqID().ToString()),
-                        new LSL_Types.LSLString(String.Empty),
-                        new LSL_Types.LSLInteger(srdInfo.Idata),
-                        new LSL_Types.LSLString(srdInfo.Sdata)
-                    };
+                                          {
+                                              new LSL_Types.LSLInteger(3),
+                                              new LSL_Types.LSLString(srdInfo.Channel),
+                                              new LSL_Types.LSLString(srdInfo.GetReqID().ToString()),
+                                              new LSL_Types.LSLString(String.Empty),
+                                              new LSL_Types.LSLInteger(srdInfo.Idata),
+                                              new LSL_Types.LSLString(srdInfo.Sdata)
+                                          };
 
-                    m_ScriptEngine.PostScriptEvent (
-                                srdInfo.ItemID, srdInfo.PrimID, new EventParams (
-                                    "remote_data", resobj,
-                                    new DetectParams[0]), EventPriority.Suspended);
+                    m_ScriptEngine.PostScriptEvent(
+                        srdInfo.ItemID, srdInfo.PrimID, new EventParams(
+                                                            "remote_data", resobj,
+                                                            new DetectParams[0]), EventPriority.Suspended);
 
-                    srdInfo = (SendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest ();
+                    srdInfo = (SendRemoteDataRequest) xmlrpc.GetNextCompletedSRDRequest();
                 }
             }
             return needToContinue;
@@ -123,16 +124,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             get { return "XmlRequest"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        public OSD GetSerializationData (UUID itemID, UUID primID)
+        public OSD GetSerializationData(UUID itemID, UUID primID)
         {
             return "";
         }
 
-        public void CreateFromData (UUID itemID, UUID objectID, OSD data)
+        public void CreateFromData(UUID itemID, UUID objectID, OSD data)
         {
         }
 
@@ -140,9 +137,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             foreach (IXMLRPC xmlrpc in m_modules)
             {
-                xmlrpc.DeleteChannels (itemID);
-                xmlrpc.CancelSRDRequests (itemID);
+                xmlrpc.DeleteChannels(itemID);
+                xmlrpc.CancelSRDRequests(itemID);
             }
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
         }
     }
 }

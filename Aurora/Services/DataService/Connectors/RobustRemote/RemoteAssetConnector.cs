@@ -26,32 +26,31 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteAssetConnector : IAssetConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IAssetConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") == "RemoteConnector")
             {
@@ -65,15 +64,9 @@ namespace Aurora.Services.DataService
             get { return "IAssetConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IAssetConnector Members
-
         public void UpdateLSLData(string token, string key, string value)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["token"] = token;
             sendData["key"] = key;
@@ -84,17 +77,18 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                m_ServerURI,
+                                                                reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -111,34 +105,26 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            foreach (object obj in replyData.Values)
-                            {
-                                data.Add (obj.ToString ());
-                            }
-                        }
-                    }
-                }
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                data.AddRange(
+                    m_ServerURIs.Select(
+                        m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)).Where(
+                            reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(
+                                replyData => replyData != null).SelectMany(replyData => replyData.Values,
+                                                                           (replyData, obj) => obj.ToString()));
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e);
             }
             return data;
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

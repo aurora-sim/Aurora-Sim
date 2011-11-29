@@ -25,13 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse.StructuredData;
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -70,69 +67,64 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IOpenRegionSettingsConnector : IAuroraDataPlugin
     {
         /// <summary>
-        /// Get the OpenRegionSettings info from the database for the given region
+        ///   Get the OpenRegionSettings info from the database for the given region
         /// </summary>
-        /// <param name="regionID"></param>
+        /// <param name = "regionID"></param>
         /// <returns></returns>
         OpenRegionSettings GetSettings(UUID regionID);
 
         /// <summary>
-        /// Set the OpenRegionSettings info for the given region in the database
+        ///   Set the OpenRegionSettings info for the given region in the database
         /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="settings"></param>
+        /// <param name = "regionID"></param>
+        /// <param name = "settings"></param>
         void SetSettings(UUID regionID, OpenRegionSettings settings);
 
         /// <summary>
-        /// Create a webpage that allows for the editing of the OpenRegionSettings for the given region
+        ///   Create a webpage that allows for the editing of the OpenRegionSettings for the given region
         /// </summary>
-        /// <param name="CurrentRegionID"></param>
+        /// <param name = "CurrentRegionID"></param>
         /// <returns>The URL to the webpage</returns>
         string AddOpenRegionSettingsHTMLPage(UUID regionID);
     }
 
     /// <summary>
-    /// This module sends Aurora-specific settings to the viewer to tell it about different settings for the region
+    ///   This module sends Aurora-specific settings to the viewer to tell it about different settings for the region
     /// </summary>
     public class OpenRegionSettings : IDataTransferable
     {
         #region Declares
 
-        private float m_MaxDragDistance = -1;
+        private bool m_AllowParcelWindLight = true;
+        private bool m_AllowPhysicalPrims = true;
+        private bool m_ClampPrimSizes = true;
         private float m_DefaultDrawDistance = -1;
-
-        private float m_MaximumPrimScale = -1;
-        private float m_MinimumPrimScale = -1;
-        private float m_MaximumPhysPrimScale = -1;
+        public UUID m_DefaultUnderpants = UUID.Zero;
+        public UUID m_DefaultUndershirt = UUID.Zero;
+        private bool m_DisplayMinimap = true;
+        private bool m_ForceDrawDistance = true;
+        private OSDArray m_LSLCommands = new OSDArray();
+        private float m_MaxDragDistance = -1;
+        private int m_MaxGroups = -1;
 
         private float m_MaximumHollowSize = -1;
-        private float m_MinimumHoleSize = -1;
+        private int m_MaximumInventoryItemsTransfer = -1;
 
         private int m_MaximumLinkCount = -1;
         private int m_MaximumLinkCountPhys = -1;
+        private float m_MaximumPhysPrimScale = -1;
+        private float m_MaximumPrimScale = -1;
+        private float m_MinimumHoleSize = -1;
+        private float m_MinimumPrimScale = -1;
+        private int m_OffsetOfUTC = -8;
+        private bool m_RenderWater = true;
 
-        private float m_WhisperDistance = 10;
         private float m_SayDistance = 30;
         private float m_ShoutDistance = 100;
 
-        private OSDArray m_LSLCommands = new OSDArray();
-
-        private int m_MaximumInventoryItemsTransfer = -1;
-        private bool m_DisplayMinimap = true;
-        private bool m_RenderWater = true;
-        private float m_TerrainDetailScale = 16f;
-        private bool m_AllowPhysicalPrims = true;
-        private bool m_ClampPrimSizes = true;
-        private bool m_ForceDrawDistance = true;
-        private bool m_OffsetOfUTCDST = false;
-        private int m_OffsetOfUTC = -8;
-        private bool m_EnableTeenMode = false;
-        public UUID m_DefaultUnderpants = UUID.Zero;
-        public UUID m_DefaultUndershirt = UUID.Zero;
         private int m_ShowTags = 2; //Show always
-        private int m_MaxGroups = -1;
-        private bool m_AllowParcelWindLight = true;
-        private bool m_SetTeenMode = false;
+        private float m_TerrainDetailScale = 16f;
+        private float m_WhisperDistance = 10;
 
         #endregion
 
@@ -140,10 +132,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         public float MaxDragDistance
         {
-            get
-            {
-                return m_MaxDragDistance;
-            }
+            get { return m_MaxDragDistance; }
             set { m_MaxDragDistance = value; }
         }
 
@@ -203,19 +192,13 @@ namespace OpenSim.Region.Framework.Interfaces
 
         public int MaximumLinkCount
         {
-            get
-            {
-                return m_MaximumLinkCount;
-            }
+            get { return m_MaximumLinkCount; }
             set { m_MaximumLinkCount = value; }
         }
 
         public int MaximumLinkCountPhys
         {
-            get
-            {
-                return m_MaximumLinkCountPhys;
-            }
+            get { return m_MaximumLinkCountPhys; }
             set { m_MaximumLinkCountPhys = value; }
         }
 
@@ -261,10 +244,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         public int MaximumInventoryItemsTransfer
         {
-            get
-            {
-                return m_MaximumInventoryItemsTransfer;
-            }
+            get { return m_MaximumInventoryItemsTransfer; }
             set { m_MaximumInventoryItemsTransfer = value; }
         }
 
@@ -286,23 +266,11 @@ namespace OpenSim.Region.Framework.Interfaces
             set { m_OffsetOfUTC = value; }
         }
 
-        public bool OffsetOfUTCDST
-        {
-            get { return m_OffsetOfUTCDST; }
-            set { m_OffsetOfUTCDST = value; }
-        }
+        public bool OffsetOfUTCDST { get; set; }
 
-        public bool EnableTeenMode
-        {
-            get { return m_EnableTeenMode; }
-            set { m_EnableTeenMode = value; }
-        }
+        public bool EnableTeenMode { get; set; }
 
-        public bool SetTeenMode
-        {
-            get { return m_SetTeenMode; }
-            set { m_SetTeenMode = value; }
-        }
+        public bool SetTeenMode { get; set; }
 
         public UUID DefaultUnderpants
         {
@@ -352,19 +320,19 @@ namespace OpenSim.Region.Framework.Interfaces
 
         public override void FromOSD(OSDMap rm)
         {
-            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
+            MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
             ForceDrawDistance = rm["ForceDrawDistance"].AsInteger() == 1;
-            MaximumPrimScale = (float)rm["MaxPrimScale"].AsReal();
-            MinimumPrimScale = (float)rm["MinPrimScale"].AsReal();
-            MaximumPhysPrimScale = (float)rm["MaxPhysPrimScale"].AsReal();
-            MaximumHollowSize = (float)rm["MaxHollowSize"].AsReal();
-            MinimumHoleSize = (float)rm["MinHoleSize"].AsReal();
+            MaximumPrimScale = (float) rm["MaxPrimScale"].AsReal();
+            MinimumPrimScale = (float) rm["MinPrimScale"].AsReal();
+            MaximumPhysPrimScale = (float) rm["MaxPhysPrimScale"].AsReal();
+            MaximumHollowSize = (float) rm["MaxHollowSize"].AsReal();
+            MinimumHoleSize = (float) rm["MinHoleSize"].AsReal();
             ClampPrimSizes = rm["EnforceMaxBuild"].AsInteger() == 1;
             MaximumLinkCount = rm["MaxLinkCount"].AsInteger();
             MaximumLinkCountPhys = rm["MaxLinkCountPhys"].AsInteger();
-            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
+            MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
             RenderWater = rm["RenderWater"].AsInteger() == 1;
-            TerrainDetailScale = (float)rm["TerrainDetailScale"].AsReal();
+            TerrainDetailScale = (float) rm["TerrainDetailScale"].AsReal();
             MaximumInventoryItemsTransfer = rm["MaxInventoryItemsTransfer"].AsInteger();
             DisplayMinimap = rm["AllowMinimap"].AsInteger() == 1;
             AllowPhysicalPrims = rm["AllowPhysicalPrims"].AsInteger() == 1;
@@ -387,45 +355,40 @@ namespace OpenSim.Region.Framework.Interfaces
             return Util.OSDToDictionary(ToOSD());
         }
 
-        public override IDataTransferable Duplicate() { return new OpenRegionSettings(); }
+        public override IDataTransferable Duplicate()
+        {
+            return new OpenRegionSettings();
+        }
 
         public override OSDMap ToOSD()
         {
-            OSDMap body = new OSDMap();
-            body.Add("MaxDragDistance", OSD.FromReal(MaxDragDistance));
-
-            body.Add("DrawDistance", OSD.FromReal(DefaultDrawDistance));
-            body.Add("ForceDrawDistance", OSD.FromInteger(ForceDrawDistance ? 1 : 0));
-
-            body.Add("MaxPrimScale", OSD.FromReal(MaximumPrimScale));
-            body.Add("MinPrimScale", OSD.FromReal(MinimumPrimScale));
-            body.Add("MaxPhysPrimScale", OSD.FromReal(MaximumPhysPrimScale));
-
-            body.Add("MaxHollowSize", OSD.FromReal(MaximumHollowSize));
-            body.Add("MinHoleSize", OSD.FromReal(MinimumHoleSize));
-            body.Add("EnforceMaxBuild", OSD.FromInteger(ClampPrimSizes ? 1 : 0));
-
-            body.Add("MaxLinkCount", OSD.FromInteger(MaximumLinkCount));
-            body.Add("MaxLinkCountPhys", OSD.FromInteger(MaximumLinkCountPhys));
-
-            body.Add("LSLFunctions", LSLCommands);
-
-            body.Add("RenderWater", OSD.FromInteger(RenderWater ? 1 : 0));
-
-            body.Add("TerrainDetailScale", OSD.FromReal(TerrainDetailScale));
-
-            body.Add("MaxInventoryItemsTransfer", OSD.FromInteger(MaximumInventoryItemsTransfer));
-
-            body.Add("AllowMinimap", OSD.FromInteger(DisplayMinimap ? 1 : 0));
-            body.Add("AllowPhysicalPrims", OSD.FromInteger(AllowPhysicalPrims ? 1 : 0));
-            body.Add("OffsetOfUTC", OSD.FromInteger(OffsetOfUTC));
-            body.Add("OffsetOfUTCDST", OSD.FromInteger(OffsetOfUTCDST ? 1 : 0));
-            body.Add("ToggleTeenMode", OSD.FromInteger(EnableTeenMode ? 1 : 0));
-            body.Add("SetTeenMode", OSD.FromInteger(SetTeenMode ? 1 : 0));
-
-            body.Add("ShowTags", OSD.FromInteger(ShowTags));
-            body.Add("MaxGroups", OSD.FromInteger(MaxGroups));
-            body.Add("AllowParcelWindLight", OSD.FromInteger(AllowParcelWindLight ? 1 : 0));
+            OSDMap body = new OSDMap
+                              {
+                                  {"MaxDragDistance", OSD.FromReal(MaxDragDistance)},
+                                  {"DrawDistance", OSD.FromReal(DefaultDrawDistance)},
+                                  {"ForceDrawDistance", OSD.FromInteger(ForceDrawDistance ? 1 : 0)},
+                                  {"MaxPrimScale", OSD.FromReal(MaximumPrimScale)},
+                                  {"MinPrimScale", OSD.FromReal(MinimumPrimScale)},
+                                  {"MaxPhysPrimScale", OSD.FromReal(MaximumPhysPrimScale)},
+                                  {"MaxHollowSize", OSD.FromReal(MaximumHollowSize)},
+                                  {"MinHoleSize", OSD.FromReal(MinimumHoleSize)},
+                                  {"EnforceMaxBuild", OSD.FromInteger(ClampPrimSizes ? 1 : 0)},
+                                  {"MaxLinkCount", OSD.FromInteger(MaximumLinkCount)},
+                                  {"MaxLinkCountPhys", OSD.FromInteger(MaximumLinkCountPhys)},
+                                  {"LSLFunctions", LSLCommands},
+                                  {"RenderWater", OSD.FromInteger(RenderWater ? 1 : 0)},
+                                  {"TerrainDetailScale", OSD.FromReal(TerrainDetailScale)},
+                                  {"MaxInventoryItemsTransfer", OSD.FromInteger(MaximumInventoryItemsTransfer)},
+                                  {"AllowMinimap", OSD.FromInteger(DisplayMinimap ? 1 : 0)},
+                                  {"AllowPhysicalPrims", OSD.FromInteger(AllowPhysicalPrims ? 1 : 0)},
+                                  {"OffsetOfUTC", OSD.FromInteger(OffsetOfUTC)},
+                                  {"OffsetOfUTCDST", OSD.FromInteger(OffsetOfUTCDST ? 1 : 0)},
+                                  {"ToggleTeenMode", OSD.FromInteger(EnableTeenMode ? 1 : 0)},
+                                  {"SetTeenMode", OSD.FromInteger(SetTeenMode ? 1 : 0)},
+                                  {"ShowTags", OSD.FromInteger(ShowTags)},
+                                  {"MaxGroups", OSD.FromInteger(MaxGroups)},
+                                  {"AllowParcelWindLight", OSD.FromInteger(AllowParcelWindLight ? 1 : 0)}
+                              };
 
             return body;
         }

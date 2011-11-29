@@ -28,29 +28,23 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
-using System.IO;
-using System.Text;
 using Microsoft.CSharp;
 //using Microsoft.JScript;
-using Microsoft.VisualBasic;
-using log4net;
-using OpenSim.Region.Framework.Interfaces;
-using OpenMetaverse;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     public class LSLConverter : IScriptConverter
     {
-        private CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
+        private readonly CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private CSCodeGenerator LSL_Converter;
         private Compiler m_compiler;
 
-        public string DefaultState { get { return "default"; } }
+        #region IScriptConverter Members
+
+        public string DefaultState
+        {
+            get { return "default"; }
+        }
 
         public void Initialise(Compiler compiler)
         {
@@ -58,7 +52,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 //            LSL_Converter = new CSCodeGenerator(null, compiler);
         }
 
-        public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+        public void Convert(string Script, out string CompiledScript,
+                            out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Its LSL, convert it to C#
             LSL_Converter = new CSCodeGenerator(m_compiler);
@@ -74,10 +69,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             get { return "lsl"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
             bool complete = false;
@@ -88,10 +79,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 lock (CScodeProvider)
                 {
                     if (isFile)
-                        results = CScodeProvider.CompileAssemblyFromFile (
+                        results = CScodeProvider.CompileAssemblyFromFile(
                             parameters, Script);
                     else
-                        results = CScodeProvider.CompileAssemblyFromSource (
+                        results = CScodeProvider.CompileAssemblyFromSource(
                             parameters, Script);
                 }
                 // Deal with an occasional segv in the compiler.
@@ -101,7 +92,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // error log.
                 if (results.Errors.Count > 0)
                 {
-                    if (!retried && (results.Errors[0].FileName == null || results.Errors[0].FileName == String.Empty) &&
+                    if (!retried && string.IsNullOrEmpty(results.Errors[0].FileName) &&
                         results.Errors[0].Line == 0)
                     {
                         // System.Console.WriteLine("retrying failed compilation");
@@ -116,12 +107,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     complete = true;
                 }
-            }
-            while (!complete);
+            } while (!complete);
             return results;
         }
 
-        public void FinishCompile (IScriptModulePlugin plugin, ScriptData data, IScript Script)
+        public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
+        {
+        }
+
+        #endregion
+
+        public void Dispose()
         {
         }
     }

@@ -26,26 +26,18 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net;
+using System.Linq;
 using System.Reflection;
-using System.Threading;
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.Messages.Linden;
-using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.StructuredData.OSD>;
-using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Capabilities;
+using log4net;
+using BlockingLLSDQueue = OpenSim.Framework.BlockingQueue<OpenMetaverse.StructuredData.OSD>;
 
 namespace OpenSim.Services.CapsService
 {
@@ -58,17 +50,46 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
-        #region IService Members
-
         public override string Name
         {
             get { return GetType().Name; }
         }
 
+        #region IEventQueueService Members
+
         public override IEventQueueService InnerService
         {
             get { return this; }
         }
+
+        /// <summary>
+        ///   Add an EQ message into the queue on the remote EventQueueService
+        /// </summary>
+        /// <param name = "ev"></param>
+        /// <param name = "avatarID"></param>
+        /// <param name = "regionHandle"></param>
+        /// <returns></returns>
+        public override bool Enqueue(OSD ev, UUID avatarID, ulong regionHandle)
+        {
+            //Do this async so that we don't kill the sim while waiting for this to be sent
+            return AddToQueue(ev, avatarID, regionHandle, true);
+        }
+
+        /// <summary>
+        ///   Add an EQ message into the queue on the remote EventQueueService
+        /// </summary>
+        /// <param name = "ev"></param>
+        /// <param name = "avatarID"></param>
+        /// <param name = "regionHandle"></param>
+        /// <returns></returns>
+        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle)
+        {
+            return AddToQueue(ev, avatarID, regionHandle, false);
+        }
+
+        #endregion
+
+        #region IService Members
 
         public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -87,44 +108,25 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
-        #region IEventQueue Members
-
-        /// <summary>
-        /// Add an EQ message into the queue on the remote EventQueueService 
-        /// </summary>
-        /// <param name="ev"></param>
-        /// <param name="avatarID"></param>
-        /// <param name="regionHandle"></param>
-        /// <returns></returns>
-        public override bool Enqueue(OSD ev, UUID avatarID, ulong regionHandle)
-        {
-            //Do this async so that we don't kill the sim while waiting for this to be sent
-            return AddToQueue(ev, avatarID, regionHandle, true);
-        }
-
         private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool runasync)
         {
             //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
-            
+
             if (ev == null)
                 return false;
             try
             {
-                OSDMap request = new OSDMap();
-                request.Add("AgentID", avatarID);
-                request.Add("RegionHandle", regionHandle);
-                OSDArray events = new OSDArray();
+                OSDMap request = new OSDMap {{"AgentID", avatarID}, {"RegionHandle", regionHandle}};
+                OSDArray events = new OSDArray {OSDParser.SerializeLLSDXmlString(ev)};
                 //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
-                events.Add(OSDParser.SerializeLLSDXmlString(ev)); //Add this event
 
                 request.Add("Events", events);
 
                 IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
-                List<string> serverURIs = configService.FindValueOf (avatarID.ToString (), regionHandle.ToString(), "EventQueueServiceURI");
-                foreach (string serverURI in serverURIs)
+                List<string> serverURIs = configService.FindValueOf(avatarID.ToString(), regionHandle.ToString(),
+                                                                    "EventQueueServiceURI");
+                foreach (string serverURI in serverURIs.Where(serverURI => serverURI != ""))
                 {
-                    if(serverURI == "")
-                        continue;
                     if (runasync)
                     {
                         /*AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
@@ -136,20 +138,20 @@ namespace OpenSim.Services.CapsService
 
                         return true;*/
                         string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
-                            OSDParser.SerializeJsonString(request));
+                                                                                OSDParser.SerializeJsonString(request));
                         return RequestHandler(resp, events, avatarID, regionHandle);
                     }
                     else
                     {
                         string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
-                            OSDParser.SerializeJsonString(request));
+                                                                                OSDParser.SerializeJsonString(request));
                         return RequestHandler(resp, events, avatarID, regionHandle);
                     }
                 }
             }
             catch (Exception e)
             {
-                m_log.Error("[EVENTQUEUE] Caught exception: " + e.ToString());
+                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
             }
 
             return false;
@@ -160,7 +162,7 @@ namespace OpenSim.Services.CapsService
             OSD r = OSDParser.DeserializeJson(response);
             if (r.Type == OSDType.Map)
             {
-                OSDMap result = (OSDMap)r;
+                OSDMap result = (OSDMap) r;
                 if (result != null)
                 {
                     bool success = result["success"].AsBoolean();
@@ -172,19 +174,5 @@ namespace OpenSim.Services.CapsService
             }
             return false;
         }
-
-        /// <summary>
-        /// Add an EQ message into the queue on the remote EventQueueService 
-        /// </summary>
-        /// <param name="ev"></param>
-        /// <param name="avatarID"></param>
-        /// <param name="regionHandle"></param>
-        /// <returns></returns>
-        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle)
-        {
-            return AddToQueue(ev, avatarID, regionHandle, false);
-        }
-
-        #endregion
     }
 }

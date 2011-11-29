@@ -33,63 +33,79 @@ using HttpServer;
 namespace OpenSim.Framework.Servers.HttpServer
 {
     /// <summary>
-    /// OSHttpResponse is the OpenSim representation of an HTTP
-    /// response.
+    ///   OSHttpResponse is the OpenSim representation of an HTTP
+    ///   response.
     /// </summary>
     public class OSHttpResponse
     {
-        /// <summary>
-        /// Content type property.
-        /// </summary>
-        /// <remarks>
-        /// Setting this property will also set IsContentTypeSet to
-        /// true.
-        /// </remarks>
-        public virtual string ContentType
-        {
-            get
-            {
-                return _httpResponse.ContentType;
-            }
+        private readonly IHttpClientContext _httpClientContext;
+        protected IHttpResponse _httpResponse;
 
-            set
-            {
-                _httpResponse.ContentType = value;
-            }
+        public OSHttpResponse()
+        {
+        }
+
+        public OSHttpResponse(IHttpResponse resp)
+        {
+            _httpResponse = resp;
         }
 
         /// <summary>
-        /// Boolean property indicating whether the content type
-        /// property actively has been set.
+        ///   Instantiate an OSHttpResponse object from an OSHttpRequest
+        ///   object.
+        /// </summary
+        /// <param name = "req">Incoming OSHttpRequest to which we are
+        ///   replying</param>
+        public OSHttpResponse(OSHttpRequest req)
+        {
+            _httpResponse = new HttpResponse(req.IHttpClientContext, req.IHttpRequest);
+            _httpClientContext = req.IHttpClientContext;
+        }
+
+        public OSHttpResponse(HttpResponse resp, IHttpClientContext clientContext)
+        {
+            _httpResponse = resp;
+            _httpClientContext = clientContext;
+        }
+
+        /// <summary>
+        ///   Content type property.
         /// </summary>
         /// <remarks>
-        /// IsContentTypeSet will go away together with .NET base.
+        ///   Setting this property will also set IsContentTypeSet to
+        ///   true.
         /// </remarks>
+        public virtual string ContentType
+        {
+            get { return _httpResponse.ContentType; }
+
+            set { _httpResponse.ContentType = value; }
+        }
+
         // public bool IsContentTypeSet
         // {
         //     get { return _contentTypeSet; }
         // }
         // private bool _contentTypeSet;
-
-
         /// <summary>
-        /// Length of the body content; 0 if there is no body.
+        ///   Boolean property indicating whether the content type
+        ///   property actively has been set.
+        /// </summary>
+        /// <remarks>
+        ///   IsContentTypeSet will go away together with .NET base.
+        /// </remarks>
+        /// <summary>
+        ///   Length of the body content; 0 if there is no body.
         /// </summary>
         public long ContentLength
         {
-            get
-            {
-                return _httpResponse.ContentLength;
-            }
+            get { return _httpResponse.ContentLength; }
 
-            set
-            {
-                _httpResponse.ContentLength = value;
-            }
+            set { _httpResponse.ContentLength = value; }
         }
 
         /// <summary>
-        /// Alias for ContentLength.
+        ///   Alias for ContentLength.
         /// </summary>
         public long ContentLength64
         {
@@ -98,48 +114,32 @@ namespace OpenSim.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Encoding of the body content.
+        ///   Encoding of the body content.
         /// </summary>
         public Encoding ContentEncoding
         {
-            get
-            {
-                return _httpResponse.Encoding;
-            }
+            get { return _httpResponse.Encoding; }
 
-            set
-            {
-                _httpResponse.Encoding = value;
-            }
+            set { _httpResponse.Encoding = value; }
         }
 
         public bool KeepAlive
         {
-            get 
-            {
-                return _httpResponse.Connection == ConnectionType.KeepAlive;
-            }
+            get { return _httpResponse.Connection == ConnectionType.KeepAlive; }
 
-            set
-            {
-                if (value)
-                    _httpResponse.Connection = ConnectionType.KeepAlive;
-                else
-                    _httpResponse.Connection = ConnectionType.Close;
+            set {
+                _httpResponse.Connection = value ? ConnectionType.KeepAlive : ConnectionType.Close;
             }
         }
 
         /// <summary>
-        /// Get or set the keep alive timeout property (default is
-        /// 20). Setting this to 0 also disables KeepAlive. Setting
-        /// this to something else but 0 also enable KeepAlive.
+        ///   Get or set the keep alive timeout property (default is
+        ///   20). Setting this to 0 also disables KeepAlive. Setting
+        ///   this to something else but 0 also enable KeepAlive.
         /// </summary>
         public int KeepAliveTimeout
         {
-            get
-            {
-                return _httpResponse.KeepAlive;
-            }
+            get { return _httpResponse.KeepAlive; }
 
             set
             {
@@ -157,103 +157,70 @@ namespace OpenSim.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Return the output stream feeding the body.
+        ///   Return the output stream feeding the body.
         /// </summary>
         /// <remarks>
-        /// On its way out...
+        ///   On its way out...
         /// </remarks>
         public Stream OutputStream
         {
-            get
-            {
-                return _httpResponse.Body;
-            }
+            get { return _httpResponse.Body; }
         }
 
         public string ProtocolVersion
         {
-            get
-            {
-                return _httpResponse.ProtocolVersion;
-            }
+            get { return _httpResponse.ProtocolVersion; }
 
-            set
-            {
-                _httpResponse.ProtocolVersion = value;
-            }
+            set { _httpResponse.ProtocolVersion = value; }
         }
 
         /// <summary>
-        /// Return the output stream feeding the body.
+        ///   Return the output stream feeding the body.
         /// </summary>
         public Stream Body
         {
-            get
-            {
-                return _httpResponse.Body;
-            }
+            get { return _httpResponse.Body; }
         }
 
         /// <summary>
-        /// Set a redirct location.
+        ///   Set a redirct location.
         /// </summary>
         public string RedirectLocation
         {
             // get { return _redirectLocation; }
-            set
-            {
-                _httpResponse.Redirect(value);
-            }
+            set { _httpResponse.Redirect(value); }
         }
 
 
         /// <summary>
-        /// Chunk transfers.
+        ///   Chunk transfers.
         /// </summary>
         public bool SendChunked
         {
-            get
-            {
-                    return _httpResponse.Chunked;
-            }
+            get { return _httpResponse.Chunked; }
 
-            set
-            {
-                _httpResponse.Chunked = value;
-            }
+            set { _httpResponse.Chunked = value; }
         }
 
         /// <summary>
-        /// HTTP status code.
+        ///   HTTP status code.
         /// </summary>
         public virtual int StatusCode
         {
-            get
-            {
-                return (int)_httpResponse.Status;
-            }
+            get { return (int) _httpResponse.Status; }
 
-            set
-            {
-                _httpResponse.Status = (HttpStatusCode)value;
-            }
+            set { _httpResponse.Status = (HttpStatusCode) value; }
         }
 
 
         /// <summary>
-        /// HTTP status description.
+        ///   HTTP status description.
         /// </summary>
         public string StatusDescription
         {
-            get
-            {
-                return _httpResponse.Reason;
-            }
+            get { return _httpResponse.Reason; }
 
-            set
-            {
-                _httpResponse.Reason = value;
-            }
+            set { _httpResponse.Reason = value; }
         }
 
         public bool ReuseContext
@@ -276,59 +243,31 @@ namespace OpenSim.Framework.Servers.HttpServer
         }
 
 
-        protected IHttpResponse _httpResponse;
-        private IHttpClientContext _httpClientContext;
-
-        public OSHttpResponse() {}
-
-        public OSHttpResponse(IHttpResponse resp)
-        {
-            _httpResponse = resp;
-        }
-
         /// <summary>
-        /// Instantiate an OSHttpResponse object from an OSHttpRequest
-        /// object.
-        /// </summary
-        /// <param name="req">Incoming OSHttpRequest to which we are
-        /// replying</param>
-        public OSHttpResponse(OSHttpRequest req)
-        {
-            _httpResponse = new HttpResponse(req.IHttpClientContext, req.IHttpRequest);
-            _httpClientContext = req.IHttpClientContext;
-        }
-        public OSHttpResponse(HttpResponse resp, IHttpClientContext clientContext)
-        {
-            _httpResponse = resp;
-            _httpClientContext = clientContext;
-        }
-
-        /// <summary>
-        /// Add a header field and content to the response.
+        ///   Add a header field and content to the response.
         /// </summary>
-        /// <param name="key">string containing the header field
-        /// name</param>
-        /// <param name="value">string containing the header field
-        /// value</param>
+        /// <param name = "key">string containing the header field
+        ///   name</param>
+        /// <param name = "value">string containing the header field
+        ///   value</param>
         public void AddHeader(string key, string value)
         {
             _httpResponse.AddHeader(key, value);
         }
 
         /// <summary>
-        /// Send the response back to the remote client
+        ///   Send the response back to the remote client
         /// </summary>
         public void Send()
         {
             _httpResponse.Body.Flush();
             _httpResponse.Send();
-            
         }
+
         public void FreeContext()
         {
             if (_httpClientContext != null)
                 _httpClientContext.Close();
         }
-        
     }
 }

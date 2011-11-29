@@ -27,72 +27,74 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
     public class UserInfo : IDataTransferable
     {
-        /// <summary>
-        /// The user that this info is for
-        /// </summary>
-        public string UserID;
+        public Vector3 CurrentLookAt;
+        public Vector3 CurrentPosition;
 
         /// <summary>
-        /// The region the user is currently active in
-        /// NOTE: In a grid situation, the agent can be active in more than one region
+        ///   The region the user is currently active in
+        ///   NOTE: In a grid situation, the agent can be active in more than one region
         ///   as they can be logged in more than once
         /// </summary>
         public UUID CurrentRegionID;
-        public Vector3 CurrentPosition;
-        public Vector3 CurrentLookAt;
+
+        public Vector3 HomeLookAt;
+        public Vector3 HomePosition;
 
         /// <summary>
-        /// The home region of this user
+        ///   The home region of this user
         /// </summary>
         public UUID HomeRegionID;
-        public Vector3 HomePosition;
-        public Vector3 HomeLookAt;
 
         /// <summary>
-        /// Whether this agent is currently online
+        ///   Any other assorted into about this user
+        /// </summary>
+        public OSDMap Info = new OSDMap();
+
+        /// <summary>
+        ///   Whether this agent is currently online
         /// </summary>
         public bool IsOnline;
 
         /// <summary>
-        /// The last login of the user
+        ///   The last login of the user
         /// </summary>
         public DateTime LastLogin;
 
         /// <summary>
-        /// The last logout of the user
+        ///   The last logout of the user
         /// </summary>
         public DateTime LastLogout;
 
         /// <summary>
-        /// Any other assorted into about this user
+        ///   The user that this info is for
         /// </summary>
-        public OSDMap Info = new OSDMap();
+        public string UserID;
 
         public override OSDMap ToOSD()
         {
-             OSDMap retVal = new OSDMap();
-             retVal["UserID"] = UserID;
-             retVal["CurrentRegionID"] = CurrentRegionID;
-             retVal["CurrentPosition"] = CurrentPosition;
-             retVal["CurrentLookAt"] = CurrentLookAt;
-             retVal["HomeRegionID"] = HomeRegionID;
-             retVal["HomePosition"] = HomePosition;
-             retVal["HomeLookAt"] = HomeLookAt;
-             retVal["IsOnline"] = IsOnline;
-             retVal["LastLogin"] = LastLogin;
-             retVal["LastLogout"] = LastLogout;
-             retVal["Info"] = Info;
-             return retVal;
+            OSDMap retVal = new OSDMap();
+            retVal["UserID"] = UserID;
+            retVal["CurrentRegionID"] = CurrentRegionID;
+            retVal["CurrentPosition"] = CurrentPosition;
+            retVal["CurrentLookAt"] = CurrentLookAt;
+            retVal["HomeRegionID"] = HomeRegionID;
+            retVal["HomePosition"] = HomePosition;
+            retVal["HomeLookAt"] = HomeLookAt;
+            retVal["IsOnline"] = IsOnline;
+            retVal["LastLogin"] = LastLogin;
+            retVal["LastLogout"] = LastLogout;
+            retVal["Info"] = Info;
+            return retVal;
         }
 
         public override void FromOSD(OSDMap retVal)
@@ -108,7 +110,7 @@ namespace OpenSim.Services.Interfaces
             LastLogin = retVal["LastLogin"].AsDate();
             LastLogout = retVal["LastLogout"].AsDate();
             if (retVal["Info"].Type == OSDType.Map)
-                Info = (OSDMap)retVal["Info"];
+                Info = (OSDMap) retVal["Info"];
         }
 
         public override Dictionary<string, object> ToKeyValuePairs()
@@ -131,86 +133,86 @@ namespace OpenSim.Services.Interfaces
 
     public class AgentInfoHelpers
     {
-        public static UUID LOGIN_STATUS_LOCKED = UUID.Parse ("11111111-2222-3333-4444-555555555555");
+        public static UUID LOGIN_STATUS_LOCKED = UUID.Parse("11111111-2222-3333-4444-555555555555");
     }
 
     public interface IAgentInfoService
     {
         /// <summary>
-        /// Get the user infos for the given user
+        ///   The local service (if one exists)
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
+        IAgentInfoService InnerService { get; }
+
+        /// <summary>
+        ///   Get the user infos for the given user
+        /// </summary>
+        /// <param name = "userID"></param>
+        /// <param name = "regionID"></param>
         /// <returns></returns>
         UserInfo GetUserInfo(string userID);
 
         /// <summary>
-        /// Get the user infos for the given users
+        ///   Get the user infos for the given users
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
+        /// <param name = "userID"></param>
+        /// <param name = "regionID"></param>
         /// <returns></returns>
         UserInfo[] GetUserInfos(string[] userIDs);
 
         /// <summary>
-        /// Get the HTTP URLs for all root agents of the given users
+        ///   Get the HTTP URLs for all root agents of the given users
         /// </summary>
-        /// <param name="requestor"></param>
-        /// <param name="userIDs"></param>
+        /// <param name = "requestor"></param>
+        /// <param name = "userIDs"></param>
         /// <returns></returns>
         string[] GetAgentsLocations(string requestor, string[] userIDs);
 
         /// <summary>
-        /// Set the home position of the given user
+        ///   Set the home position of the given user
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="homeID"></param>
-        /// <param name="homePosition"></param>
-        /// <param name="homeLookAt"></param>
+        /// <param name = "userID"></param>
+        /// <param name = "homeID"></param>
+        /// <param name = "homePosition"></param>
+        /// <param name = "homeLookAt"></param>
         /// <returns></returns>
         bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt);
 
         /// <summary>
-        /// Set the last known position of the given user
+        ///   Set the last known position of the given user
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="regionID"></param>
-        /// <param name="lastPosition"></param>
-        /// <param name="lastLookAt"></param>
+        /// <param name = "userID"></param>
+        /// <param name = "regionID"></param>
+        /// <param name = "lastPosition"></param>
+        /// <param name = "lastLookAt"></param>
         void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt);
 
         /// <summary>
-        /// Log the agent in or out
+        ///   Log the agent in or out
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="loggingIn">Whether the user is logging in or out</param>
-        /// <param name="fireLoggedInEvent">Fire the event to log a user in</param>
-        /// <param name="enteringRegion">The region the user is entering (if logging in)</param>
-        void SetLoggedIn (string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion);
+        /// <param name = "userID"></param>
+        /// <param name = "loggingIn">Whether the user is logging in or out</param>
+        /// <param name = "fireLoggedInEvent">Fire the event to log a user in</param>
+        /// <param name = "enteringRegion">The region the user is entering (if logging in)</param>
+        void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion);
 
         /// <summary>
-        /// This is used in grid mode so that the sim cannot influence the login status
+        ///   This is used in grid mode so that the sim cannot influence the login status
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="locked">Whether to lock or unlock the user</param>
+        /// <param name = "userID"></param>
+        /// <param name = "locked">Whether to lock or unlock the user</param>
         void LockLoggedInStatus(string userID, bool locked);
 
-        /// <summary>
-        /// The local service (if one exists)
-        /// </summary>
-        IAgentInfoService InnerService { get; }
+        void Start(IConfigSource config, IRegistryCore registry);
 
-        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void FinishedStartup();
 
-        void FinishedStartup ();
-
-        void Initialize (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void Initialize(IConfigSource config, IRegistryCore registry);
     }
 
     public interface IAgentInfoConnector : IAuroraDataPlugin
     {
         bool Set(UserInfo info);
-        void Update (string userID, string[] keys, object[] values);
+        void Update(string userID, string[] keys, object[] values);
         void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);

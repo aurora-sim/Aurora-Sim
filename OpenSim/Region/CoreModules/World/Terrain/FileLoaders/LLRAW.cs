@@ -28,40 +28,20 @@
 using System;
 using System.IO;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 {
     public class LLRAW : ITerrainLoader
     {
-        public struct HeightmapLookupValue : IComparable<HeightmapLookupValue>
-        {
-            public ushort Index;
-            public float Value;
-
-            public HeightmapLookupValue(ushort index, float value)
-            {
-                Index = index;
-                Value = value;
-            }
-
-            public int CompareTo(HeightmapLookupValue val)
-            {
-                return Value.CompareTo(val.Value);
-            }
-        }
-
-        /// <summary>Lookup table to speed up terrain exports</summary>
-        HeightmapLookupValue[] LookupHeightTable = null;
-
-        public LLRAW()
-        {
-        }
+        /// <summary>
+        ///   Lookup table to speed up terrain exports
+        /// </summary>
+        private HeightmapLookupValue[] LookupHeightTable;
 
         #region ITerrainLoader Members
 
-        public ITerrainChannel LoadFile (string filename, IScene scene)
+        public ITerrainChannel LoadFile(string filename, IScene scene)
         {
             FileInfo file = new FileInfo(filename);
             FileStream s = file.Open(FileMode.Open, FileAccess.Read);
@@ -72,7 +52,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight, int sectionWidth, int sectionHeight)
+        public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight,
+                                        int sectionWidth, int sectionHeight)
         {
             TerrainChannel retval = new TerrainChannel(sectionWidth, sectionHeight, null);
 
@@ -87,8 +68,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             while (currFileYOffset > offsetY)
             {
                 // read a whole strip of regions
-                int heightsToRead = sectionHeight * (fileWidth * sectionWidth);
-                bs.ReadBytes(heightsToRead * 13); // because there are 13 fun channels
+                int heightsToRead = sectionHeight*(fileWidth*sectionWidth);
+                bs.ReadBytes(heightsToRead*13); // because there are 13 fun channels
                 currFileYOffset--;
             }
 
@@ -105,7 +86,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 // i.e. eat X upto where we start
                 while (currFileXOffset < offsetX)
                 {
-                    bs.ReadBytes(sectionWidth * 13);
+                    bs.ReadBytes(sectionWidth*13);
                     currFileXOffset++;
                 }
 
@@ -114,7 +95,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 for (x = 0; x < sectionWidth; x++)
                 {
                     // Read a strip and continue
-                    retval[x, y] = bs.ReadByte() * (bs.ReadByte() / 128);
+                    retval[x, y] = bs.ReadByte()*(bs.ReadByte()/128);
                     bs.ReadBytes(11);
                 }
                 // record that we wrote it
@@ -125,7 +106,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 while (currFileXOffset < fileWidth)
                 {
                     // eat the next regions x line
-                    bs.ReadBytes(sectionWidth * 13); //The 13 channels again
+                    bs.ReadBytes(sectionWidth*13); //The 13 channels again
                     currFileXOffset++;
                 }
             }
@@ -136,9 +117,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadStream (Stream s, IScene scene)
+        public ITerrainChannel LoadStream(Stream s, IScene scene)
         {
-            int size = (int)System.Math.Sqrt(s.Length / 13);
+            int size = (int) Math.Sqrt(s.Length/13);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
 
             BinaryReader bs = new BinaryReader(s);
@@ -148,7 +129,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 int x;
                 for (x = 0; x < retval.Width; x++)
                 {
-                    retval[x, (retval.Width - 1) - y] = bs.ReadByte() * (bs.ReadByte() / 128f);
+                    retval[x, (retval.Width - 1) - y] = bs.ReadByte()*(bs.ReadByte()/128f);
                     bs.ReadBytes(11); // Advance the stream to next bytes.
                 }
             }
@@ -171,16 +152,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         {
             if (LookupHeightTable == null)
             {
-                LookupHeightTable = new HeightmapLookupValue[map.Height * map.Width];
+                LookupHeightTable = new HeightmapLookupValue[map.Height*map.Width];
 
                 for (int i = 0; i < map.Height; i++)
                 {
                     for (int j = 0; j < map.Width; j++)
                     {
-                        LookupHeightTable[i + (j * map.Width)] = new HeightmapLookupValue ((ushort)(i + (j * map.Width)), (float)((double)i * ((double)j / (map.Width / 2))));
+                        LookupHeightTable[i + (j*map.Width)] = new HeightmapLookupValue((ushort) (i + (j*map.Width)),
+                                                                                        (float)
+                                                                                        (i*((double) j/(map.Width/2))));
                     }
                 }
-                Array.Sort<HeightmapLookupValue>(LookupHeightTable);
+                Array.Sort(LookupHeightTable);
             }
             BinaryWriter binStream = new BinaryWriter(s);
 
@@ -201,7 +184,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 
                     // The lookup table is pre-sorted, so we either find an exact match or
                     // the next closest (smaller) match with a binary search
-                    index = Array.BinarySearch<HeightmapLookupValue>(LookupHeightTable, new HeightmapLookupValue(0, (float)t));
+                    index = Array.BinarySearch(LookupHeightTable, new HeightmapLookupValue(0, (float) t));
                     if (index < 0)
                         index = ~index - 1;
 
@@ -251,5 +234,30 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
         {
             return "LL/SL RAW";
         }
+
+        #region Nested type: HeightmapLookupValue
+
+        public struct HeightmapLookupValue : IComparable<HeightmapLookupValue>
+        {
+            public ushort Index;
+            public float Value;
+
+            public HeightmapLookupValue(ushort index, float value)
+            {
+                Index = index;
+                Value = value;
+            }
+
+            #region IComparable<HeightmapLookupValue> Members
+
+            public int CompareTo(HeightmapLookupValue val)
+            {
+                return Value.CompareTo(val.Value);
+            }
+
+            #endregion
+        }
+
+        #endregion
     }
 }

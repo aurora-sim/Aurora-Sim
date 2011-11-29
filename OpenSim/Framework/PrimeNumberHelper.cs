@@ -30,16 +30,17 @@ using System;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Utility class that is used to find small prime numbers and test is number prime number.
+    ///   Utility class that is used to find small prime numbers and test is number prime number.
     /// </summary>
     public static class PrimeNumberHelper
     {
         /// <summary>
-        /// Precalculated prime numbers. 
+        ///   Precalculated prime numbers.
         /// </summary>
-        private static readonly int[] Primes = new int[]
+        private static readonly int[] Primes = new[]
                                                    {
-                                                       3, 7, 11, 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239,
+                                                       3, 7, 11, 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239
+                                                       ,
                                                        293, 353, 431, 521, 631, 761, 919, 1103, 1327, 1597, 1931, 2333,
                                                        2801, 3371, 4049, 4861, 5839, 7013, 8419, 10103, 12143, 14591,
                                                        17519, 21023, 25229, 30293, 36353, 43627, 52361, 62851, 75431,
@@ -50,22 +51,22 @@ namespace OpenSim.Framework
                                                    };
 
         /// <summary>
-        /// Get prime number that is equal or larger than <see cref="min"/>.
+        ///   Get prime number that is equal or larger than <see cref = "min" />.
         /// </summary>
-        /// <param name="min">
-        /// Minimal returned prime number.
+        /// <param name = "min">
+        ///   Minimal returned prime number.
         /// </param>
         /// <returns>
-        /// Primer number that is equal or larger than <see cref="min"/>. If <see cref="min"/> is too large, return -1.
+        ///   Primer number that is equal or larger than <see cref = "min" />. If <see cref = "min" /> is too large, return -1.
         /// </returns>
         public static int GetPrime(int min)
         {
             if (min <= 2)
                 return 2;
 
-            if (Primes[ Primes.Length - 1 ] < min)
+            if (Primes[Primes.Length - 1] < min)
             {
-                for (int i = min | 1 ; i < 0x7FFFFFFF ; i += 2)
+                for (int i = min | 1; i < 0x7FFFFFFF; i += 2)
                 {
                     if (IsPrime(i))
                         return i;
@@ -74,26 +75,26 @@ namespace OpenSim.Framework
                 return -1;
             }
 
-            for (int i = Primes.Length - 2 ; i >= 0 ; i--)
+            for (int i = Primes.Length - 2; i >= 0; i--)
             {
-                if (min == Primes[ i ])
+                if (min == Primes[i])
                     return min;
 
-                if (min > Primes[ i ])
-                    return Primes[ i + 1 ];
+                if (min > Primes[i])
+                    return Primes[i + 1];
             }
 
             return 2;
         }
 
         /// <summary>
-        /// Just basic Sieve of Eratosthenes prime number test.
+        ///   Just basic Sieve of Eratosthenes prime number test.
         /// </summary>
-        /// <param name="candinate">
-        /// Number that is tested.
+        /// <param name = "candinate">
+        ///   Number that is tested.
         /// </param>
         /// <returns>
-        /// true, if <see cref="candinate"/> is prime number; otherwise false.
+        ///   true, if <see cref = "candinate" /> is prime number; otherwise false.
         /// </returns>
         public static bool IsPrime(int candinate)
         {
@@ -103,9 +104,9 @@ namespace OpenSim.Framework
                 return candinate == 2;
 
             int upperBound = (int) Math.Sqrt(candinate);
-            for (int i = 3 ; i < upperBound ; i += 2)
+            for (int i = 3; i < upperBound; i += 2)
             {
-                if (candinate % i == 0)
+                if (candinate%i == 0)
                     return false;
             }
 

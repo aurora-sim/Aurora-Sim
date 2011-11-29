@@ -26,33 +26,32 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteEstateConnector : IEstateConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IEstateConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "RemoteConnector")
             {
@@ -64,10 +63,6 @@ namespace Aurora.Services.DataService
         public string Name
         {
             get { return "IEstateConnector"; }
-        }
-
-        public void Dispose()
-        {
         }
 
         public bool LoadEstateSettings(UUID regionID, out EstateSettings settings)
@@ -88,38 +83,34 @@ namespace Aurora.Services.DataService
 
             try
             {
-                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService> ();
-                List<string> m_ServerURIs = configService.FindValueOf ("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
+                List<string> m_ServerURIs = configService.FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null &&
+                        (!replyData.ContainsKey("Result") || replyData["Result"].ToString() != "Failure"))
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null && (!replyData.ContainsKey("Result") || replyData["Result"].ToString() != "Failure"))
-                        {
-                            settings = new EstateSettings(replyData);
-                            settings.OnSave += SaveEstateSettings;
-                            settings.EstatePass = Password; //Restore it here, see above for explaination
-                            return true;
-                        }
-                        else if (replyData.ContainsKey("Result") && replyData["Result"].ToString() == "Failure")
-                        {
-                            return true;
-                        }
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
-                                regionID);
-                        return false;
+                        settings = new EstateSettings(replyData);
+                        settings.OnSave += SaveEstateSettings;
+                        settings.EstatePass = Password; //Restore it here, see above for explaination
+                        return true;
                     }
+                    else if (replyData.ContainsKey("Result") && replyData["Result"].ToString() == "Failure")
+                    {
+                        return true;
+                    }
+                    else
+                        m_log.DebugFormat(
+                            "[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
+                            regionID);
+                    return false;
                 }
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -135,17 +126,18 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     AsynchronousRestObjectRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                m_ServerURI,
+                                                                reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -160,32 +152,27 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            es = new EstateSettings(replyData);
-                            es.OnSave += SaveEstateSettings;
-                            return es;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: CreateEstate {0} received null response",
-                                RegionID);
+                        es = new EstateSettings(replyData);
+                        es.OnSave += SaveEstateSettings;
+                        return es;
                     }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: CreateEstate {0} received null response",
+                                          RegionID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -201,44 +188,28 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("result"))
-                                return Estates;
-                            foreach (object obj in replyData.Values)
-                            {
-                                if (obj is Dictionary<string, object>)
-                                {
-                                    Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
-                                    foreach (object value in dictionary)
-                                    {
-                                        KeyValuePair<string, object> valuevalue = (KeyValuePair<string, object>)value;
-                                        Estates.Add(int.Parse(valuevalue.Value.ToString()));
-                                    }
-                                }
-                            }
+                        if (!replyData.ContainsKey("result"))
                             return Estates;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
-                                search);
+                        Estates.AddRange(from obj in replyData.Values.OfType<Dictionary<string, object>>() from object value in obj as Dictionary<string, object> select (KeyValuePair<string, object>) value into valuevalue select int.Parse(valuevalue.Value.ToString()));
+                        return Estates;
                     }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                                          search);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -261,44 +232,28 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("result"))
-                                return Estates;
-                            foreach (object obj in replyData.Values)
-                            {
-                                if (obj is Dictionary<string, object>)
-                                {
-                                    Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
-                                    foreach (object objobj in dictionary.Values)
-                                    {
-                                        EstateSettings es = new EstateSettings(objobj as Dictionary<string, object>);
-                                        Estates.Add(es);
-                                    }
-                                }
-                            }
+                        if (!replyData.ContainsKey("result"))
                             return Estates;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
-                                owner);
+                        Estates.AddRange(from obj in replyData.Values.OfType<Dictionary<string, object>>() select obj as Dictionary<string, object> into dictionary from objobj in dictionary.Values select new EstateSettings(objobj as Dictionary<string, object>));
+                        return Estates;
                     }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                                          owner);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -306,7 +261,7 @@ namespace Aurora.Services.DataService
 
         public bool LinkRegion(UUID regionID, int estateID, string password)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
             sendData["REGIONID"] = regionID;
             sendData["ESTATEID"] = estateID;
             sendData["PASSWORD"] = password;
@@ -316,32 +271,28 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (!replyData.ContainsKey("Result") ||
+                            (replyData["Result"].ToString().ToLower() == "failure"))
+                            return false;
 
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("Result") || (replyData["Result"].ToString().ToLower() == "failure"))
-                                return false;
-
-                            return true;
-                        }
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
-                                regionID);
+                        return true;
                     }
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
+                                          regionID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -358,88 +309,31 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (!replyData.ContainsKey("Result") ||
+                            (replyData["Result"].ToString().ToLower() == "failure"))
+                            return false;
 
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("Result") || (replyData["Result"].ToString().ToLower() == "failure"))
-                                return false;
-
-                            return true;
-                        }
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
-                                regionID);
+                        return true;
                     }
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
+                                          regionID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
-        }
-
-        public List<UUID> GetRegions(int estateID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["ESTATEID"] = estateID;
-            sendData["METHOD"] = "getregioninestate";
-            List<UUID> Regions = new List<UUID>();
-            string reqString = WebUtils.BuildQueryString(sendData);
-
-            try
-            {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
-                {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("result"))
-                                return Regions;
-                            foreach (object obj in replyData.Values)
-                            {
-                                if (obj is Dictionary<string, object>)
-                                {
-                                    Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
-                                    foreach (object value in dictionary)
-                                    {
-                                        Regions.Add(UUID.Parse(value.ToString()));
-                                    }
-                                }
-                            }
-                            return Regions;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
-                                estateID);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
-            }
-
-            return Regions;
         }
 
         public bool DeleteEstate(int estateID, string password)
@@ -453,37 +347,75 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (!replyData.ContainsKey("Result") || (replyData["Result"].ToString().ToLower() == "null"))
+                            return false;
 
-                        if (replyData != null)
-                        {
-                            if (!replyData.ContainsKey("Result") || (replyData["Result"].ToString().ToLower() == "null"))
-                                return false;
-
-                            return true;
-                        }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: DeleteEstate {0} received null response",
-                                estateID);
-
+                        return true;
                     }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: DeleteEstate {0} received null response",
+                                          estateID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+        }
+
+        public List<UUID> GetRegions(int estateID)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["ESTATEID"] = estateID;
+            sendData["METHOD"] = "getregioninestate";
+            List<UUID> Regions = new List<UUID>();
+            string reqString = WebUtils.BuildQueryString(sendData);
+
+            try
+            {
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
+                {
+                    if (replyData != null)
+                    {
+                        if (!replyData.ContainsKey("result"))
+                            return Regions;
+                        Regions.AddRange(from obj in replyData.Values.OfType<Dictionary<string, object>>() from object value in obj as Dictionary<string, object> select UUID.Parse(value.ToString()));
+                        return Regions;
+                    }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                                          estateID);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+            }
+
+            return Regions;
         }
     }
 }

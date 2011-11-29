@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -34,29 +33,51 @@ namespace OpenSim.Framework
 {
     public class RegionSettings
     {
+        #region Delegates
+
         public delegate void SaveDelegate(RegionSettings rs);
 
-        public event SaveDelegate OnSave;
-        
+        #endregion
+
         /// <value>
-        /// These appear to be terrain textures that are shipped with the client.
+        ///   These appear to be terrain textures that are shipped with the client.
         /// </value>
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_1 = new UUID("b8d3965a-ad78-bf43-699b-bff8eca6c975");
+
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_2 = new UUID("abb783e6-3e93-26c0-248a-247666855da3");
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_3 = new UUID("179cdabd-398a-9b6b-1391-4dc333ba321f");
         public static readonly UUID DEFAULT_TERRAIN_TEXTURE_4 = new UUID("beb169c7-11ea-fff2-efe5-0f24dc881df2");
+        private int m_AgentLimit = 40;
+        private bool m_AllowLandJoinDivide = true;
+        private bool m_AllowLandResell = true;
+        private UUID m_Covenant = UUID.Zero;
+        private double m_Elevation1NE = 10;
+        private double m_Elevation1NW = 10;
+        private double m_Elevation1SE = 10;
+        private double m_Elevation1SW = 10;
+        private double m_Elevation2NE = 60;
+        private double m_Elevation2NW = 60;
+        private double m_Elevation2SE = 60;
+        private double m_Elevation2SW = 60;
+        private OSDMap m_Generic = new OSDMap();
+        private String m_LoadedCreationID = String.Empty;
+        private double m_ObjectBonus = 1.0;
+        private UUID m_PaintTerrainTexture = UUID.Zero;
+
+        private UUID m_RegionUUID = UUID.Zero;
+        private double m_TerrainLowerLimit = -100;
+        private double m_TerrainRaiseLimit = 100;
+        private UUID m_TerrainTexture1 = UUID.Zero;
+        private UUID m_TerrainTexture2 = UUID.Zero;
+        private UUID m_TerrainTexture3 = UUID.Zero;
+        private UUID m_TerrainTexture4 = UUID.Zero;
+        private bool m_UseEstateSun = true;
+        private double m_WaterHeight = 20;
+
         public bool UsePaintableTerrain
         {
             get { return false; }
         }
-
-        public void Save()
-        {
-            if (OnSave != null)
-                OnSave(this);
-        }
-
-        private UUID m_RegionUUID = UUID.Zero;
 
         public UUID RegionUUID
         {
@@ -64,39 +85,13 @@ namespace OpenSim.Framework
             set { m_RegionUUID = value; }
         }
 
-        private bool m_BlockTerraform = false;
+        public bool BlockTerraform { get; set; }
 
-        public bool BlockTerraform
-        {
-            get { return m_BlockTerraform; }
-            set { m_BlockTerraform = value; }
-        }
+        public bool BlockFly { get; set; }
 
-        private bool m_BlockFly = false;
+        public bool AllowDamage { get; set; }
 
-        public bool BlockFly
-        {
-            get { return m_BlockFly; }
-            set { m_BlockFly = value; }
-        }
-
-        private bool m_AllowDamage = false;
-
-        public bool AllowDamage
-        {
-            get { return m_AllowDamage; }
-            set { m_AllowDamage = value; }
-        }
-
-        private bool m_RestrictPushing = false;
-
-        public bool RestrictPushing
-        {
-            get { return m_RestrictPushing; }
-            set { m_RestrictPushing = value; }
-        }
-
-        private bool m_AllowLandResell = true;
+        public bool RestrictPushing { get; set; }
 
         public bool AllowLandResell
         {
@@ -104,23 +99,13 @@ namespace OpenSim.Framework
             set { m_AllowLandResell = value; }
         }
 
-        private bool m_AllowLandJoinDivide = true;
-
         public bool AllowLandJoinDivide
         {
             get { return m_AllowLandJoinDivide; }
             set { m_AllowLandJoinDivide = value; }
         }
 
-        private bool m_BlockShowInSearch = false;
-
-        public bool BlockShowInSearch
-        {
-            get { return m_BlockShowInSearch; }
-            set { m_BlockShowInSearch = value; }
-        }
-
-        private int m_AgentLimit = 40;
+        public bool BlockShowInSearch { get; set; }
 
         public int AgentLimit
         {
@@ -128,60 +113,21 @@ namespace OpenSim.Framework
             set { m_AgentLimit = value; }
         }
 
-        private double m_ObjectBonus = 1.0;
-
         public double ObjectBonus
         {
             get { return m_ObjectBonus; }
             set { m_ObjectBonus = value; }
         }
 
-        private int m_Maturity = 0;
+        public int Maturity { get; set; }
 
-        public int Maturity
-        {
-            get { return m_Maturity; }
-            set { m_Maturity = value; }
-        }
+        public bool DisableScripts { get; set; }
 
-        private bool m_DisableScripts = false;
+        public bool DisableCollisions { get; set; }
 
-        public bool DisableScripts
-        {
-            get { return m_DisableScripts; }
-            set { m_DisableScripts = value; }
-        }
+        public bool DisablePhysics { get; set; }
 
-        private bool m_DisableCollisions = false;
-
-        public bool DisableCollisions
-        {
-            get { return m_DisableCollisions; }
-            set { m_DisableCollisions = value; }
-        }
-
-        private bool m_DisablePhysics = false;
-
-        public bool DisablePhysics
-        {
-            get { return m_DisablePhysics; }
-            set { m_DisablePhysics = value; }
-        }
-
-        private int m_MinimumAge = 0;
-        public int MinimumAge
-        {
-            get
-            {
-                return m_MinimumAge;
-            }
-            set
-            {
-                m_MinimumAge = value;
-            }
-        }
-
-        private UUID m_PaintTerrainTexture = UUID.Zero;
+        public int MinimumAge { get; set; }
 
         public UUID PaintableTerrainTexture
         {
@@ -191,72 +137,42 @@ namespace OpenSim.Framework
                     m_PaintTerrainTexture = UUID.Random();
                 return m_PaintTerrainTexture;
             }
-            set
-            {
-                if (value == UUID.Zero)
-                    m_PaintTerrainTexture = UUID.Random();
-                else
-                    m_PaintTerrainTexture = value;
+            set {
+                m_PaintTerrainTexture = value == UUID.Zero ? UUID.Random() : value;
             }
         }
-
-        private UUID m_TerrainTexture1 = UUID.Zero;
 
         public UUID TerrainTexture1
         {
             get { return m_TerrainTexture1; }
-            set
-            {
-                if (value == UUID.Zero)
-                    m_TerrainTexture1 = DEFAULT_TERRAIN_TEXTURE_1;
-                else
-                    m_TerrainTexture1 = value;
+            set {
+                m_TerrainTexture1 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_1 : value;
             }
         }
-
-        private UUID m_TerrainTexture2 = UUID.Zero;
 
         public UUID TerrainTexture2
         {
             get { return m_TerrainTexture2; }
-            set
-            {
-                if (value == UUID.Zero)
-                    m_TerrainTexture2 = DEFAULT_TERRAIN_TEXTURE_2;
-                else
-                    m_TerrainTexture2 = value;
+            set {
+                m_TerrainTexture2 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_2 : value;
             }
         }
-
-        private UUID m_TerrainTexture3 = UUID.Zero;
 
         public UUID TerrainTexture3
         {
             get { return m_TerrainTexture3; }
-            set
-            {
-                if (value == UUID.Zero)
-                    m_TerrainTexture3 = DEFAULT_TERRAIN_TEXTURE_3;
-                else
-                    m_TerrainTexture3 = value;
+            set {
+                m_TerrainTexture3 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_3 : value;
             }
         }
-
-        private UUID m_TerrainTexture4 = UUID.Zero;
 
         public UUID TerrainTexture4
         {
             get { return m_TerrainTexture4; }
-            set
-            {
-                if (value == UUID.Zero)
-                    m_TerrainTexture4 = DEFAULT_TERRAIN_TEXTURE_4;
-                else
-                    m_TerrainTexture4 = value;
+            set {
+                m_TerrainTexture4 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_4 : value;
             }
         }
-
-        private double m_Elevation1NW = 10;
 
         public double Elevation1NW
         {
@@ -264,15 +180,11 @@ namespace OpenSim.Framework
             set { m_Elevation1NW = value; }
         }
 
-        private double m_Elevation2NW = 60;
-
         public double Elevation2NW
         {
             get { return m_Elevation2NW; }
             set { m_Elevation2NW = value; }
         }
-
-        private double m_Elevation1NE = 10;
 
         public double Elevation1NE
         {
@@ -280,15 +192,11 @@ namespace OpenSim.Framework
             set { m_Elevation1NE = value; }
         }
 
-        private double m_Elevation2NE = 60;
-
         public double Elevation2NE
         {
             get { return m_Elevation2NE; }
             set { m_Elevation2NE = value; }
         }
-
-        private double m_Elevation1SE = 10;
 
         public double Elevation1SE
         {
@@ -296,15 +204,11 @@ namespace OpenSim.Framework
             set { m_Elevation1SE = value; }
         }
 
-        private double m_Elevation2SE = 60;
-
         public double Elevation2SE
         {
             get { return m_Elevation2SE; }
             set { m_Elevation2SE = value; }
         }
-
-        private double m_Elevation1SW = 10;
 
         public double Elevation1SW
         {
@@ -312,15 +216,11 @@ namespace OpenSim.Framework
             set { m_Elevation1SW = value; }
         }
 
-        private double m_Elevation2SW = 60;
-
         public double Elevation2SW
         {
             get { return m_Elevation2SW; }
             set { m_Elevation2SW = value; }
         }
-
-        private double m_WaterHeight = 20;
 
         public double WaterHeight
         {
@@ -328,15 +228,11 @@ namespace OpenSim.Framework
             set { m_WaterHeight = value; }
         }
 
-        private double m_TerrainRaiseLimit = 100;
-
         public double TerrainRaiseLimit
         {
             get { return m_TerrainRaiseLimit; }
             set { m_TerrainRaiseLimit = value; }
         }
-
-        private double m_TerrainLowerLimit = -100;
 
         public double TerrainLowerLimit
         {
@@ -344,67 +240,29 @@ namespace OpenSim.Framework
             set { m_TerrainLowerLimit = value; }
         }
 
-        private bool m_UseEstateSun = true;
-
         public bool UseEstateSun
         {
             get { return m_UseEstateSun; }
             set { m_UseEstateSun = value; }
         }
 
-        private bool m_Sandbox = false;
+        public bool Sandbox { get; set; }
 
-        public bool Sandbox
-        {
-            get { return m_Sandbox; }
-            set { m_Sandbox = value; }
-        }
+        public Vector3 SunVector { get; set; }
 
-        private Vector3 m_SunVector;
-
-        public Vector3 SunVector
-        {
-            get { return m_SunVector; }
-            set { m_SunVector = value; }
-        }
-
-        private UUID m_TerrainImageID;
         /// <summary>
-        /// Terrain (and probably) prims asset ID for the map
+        ///   Terrain (and probably) prims asset ID for the map
         /// </summary>
-        public UUID TerrainImageID
-        {
-            get { return m_TerrainImageID; }
-            set { m_TerrainImageID = value; }
-        }
+        public UUID TerrainImageID { get; set; }
 
-        private UUID m_TerrainMapImageID;
         /// <summary>
-        /// Terrain only asset ID for the map
+        ///   Terrain only asset ID for the map
         /// </summary>
-        public UUID TerrainMapImageID
-        {
-            get { return m_TerrainMapImageID; }
-            set { m_TerrainMapImageID = value; }
-        }
+        public UUID TerrainMapImageID { get; set; }
 
-        private bool m_FixedSun = false;
+        public bool FixedSun { get; set; }
 
-        public bool FixedSun
-        {
-            get { return m_FixedSun; }
-            set { m_FixedSun = value; }
-        }
-
-        private double m_SunPosition = 0.0;
-
-        public double SunPosition
-        {
-            get { return m_SunPosition; }
-            set { m_SunPosition = value; }
-        }
-
-        private UUID m_Covenant = UUID.Zero;
+        public double SunPosition { get; set; }
 
         public UUID Covenant
         {
@@ -412,20 +270,48 @@ namespace OpenSim.Framework
             set { m_Covenant = value; }
         }
 
-        private int m_CovenantLastUpdated = 0;
-
-        public int CovenantLastUpdated
-        {
-            get { return m_CovenantLastUpdated; }
-            set { m_CovenantLastUpdated = value; }
-        }
-
-        private OSDMap m_Generic = new OSDMap();
+        public int CovenantLastUpdated { get; set; }
 
         public OSDMap Generic
         {
             get { return m_Generic; }
             set { m_Generic = value; }
+        }
+
+        public int LoadedCreationDateTime { get; set; }
+
+        public String LoadedCreationDate
+        {
+            get
+            {
+                TimeSpan ts = new TimeSpan(0, 0, LoadedCreationDateTime);
+                DateTime stamp = new DateTime(1970, 1, 1) + ts;
+                return stamp.ToLongDateString();
+            }
+        }
+
+        public String LoadedCreationTime
+        {
+            get
+            {
+                TimeSpan ts = new TimeSpan(0, 0, LoadedCreationDateTime);
+                DateTime stamp = new DateTime(1970, 1, 1) + ts;
+                return stamp.ToLongTimeString();
+            }
+        }
+
+        public String LoadedCreationID
+        {
+            get { return m_LoadedCreationID; }
+            set { m_LoadedCreationID = value; }
+        }
+
+        public event SaveDelegate OnSave;
+
+        public void Save()
+        {
+            if (OnSave != null)
+                OnSave(this);
         }
 
         public void AddGeneric(string key, OSD value)
@@ -444,40 +330,6 @@ namespace OpenSim.Framework
             OSD value;
             m_Generic.TryGetValue(key, out value);
             return value;
-        }
-
-        private int m_LoadedCreationDateTime;
-        public int LoadedCreationDateTime
-        {
-            get { return m_LoadedCreationDateTime; }
-            set { m_LoadedCreationDateTime = value; }
-        }
-        
-        public String LoadedCreationDate
-        {
-            get 
-            { 
-                TimeSpan ts = new TimeSpan(0, 0, LoadedCreationDateTime);
-                DateTime stamp = new DateTime(1970, 1, 1) + ts;
-                return stamp.ToLongDateString(); 
-            }
-        }
-
-        public String LoadedCreationTime
-        {
-            get 
-            { 
-                TimeSpan ts = new TimeSpan(0, 0, LoadedCreationDateTime);
-                DateTime stamp = new DateTime(1970, 1, 1) + ts;
-                return stamp.ToLongTimeString(); 
-            }
-        }
-
-        private String m_LoadedCreationID = String.Empty;
-        public String LoadedCreationID
-        {
-            get { return m_LoadedCreationID; }
-            set { m_LoadedCreationID = value; }
         }
 
         public OSDMap ToOSD()
@@ -553,7 +405,7 @@ namespace OpenSim.Framework
             this.Elevation2SE = map["Elevation2SE"];
             this.Elevation2SW = map["Elevation2SW"];
             this.FixedSun = map["FixedSun"];
-            this.Generic = (OSDMap)map["Generic"];
+            this.Generic = (OSDMap) map["Generic"];
             this.LoadedCreationDateTime = map["LoadedCreationDateTime"];
             this.LoadedCreationID = map["LoadedCreationID"];
             this.Maturity = map["Maturity"];

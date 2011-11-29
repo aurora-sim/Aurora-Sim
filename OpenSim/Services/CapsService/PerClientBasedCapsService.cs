@@ -26,38 +26,31 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Text;
-using log4net;
-using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework.Capabilities;
-
-using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Services.DataService;
-using OpenMetaverse.StructuredData;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.CapsService
 {
     public class PerClientBasedCapsService : IClientCapsService
     {
-        protected Dictionary<ulong, IRegionClientCapsService> m_RegionCapsServices = new Dictionary<ulong, IRegionClientCapsService>();
         protected ICapsService m_CapsService;
-        protected UUID m_agentID;
+
+        protected Dictionary<ulong, IRegionClientCapsService> m_RegionCapsServices =
+            new Dictionary<ulong, IRegionClientCapsService>();
+
         protected UserAccount m_account;
-        protected bool m_inTeleport = false;
-        protected bool m_requestToCancelTeleport = false;
-        protected bool m_callbackHasCome = false;
-        protected IPEndPoint m_clientEndPoint = null;
+        protected UUID m_agentID;
+        protected bool m_callbackHasCome;
+        protected IPEndPoint m_clientEndPoint;
+        protected bool m_inTeleport;
+        protected bool m_requestToCancelTeleport;
+
+        #region IClientCapsService Members
 
         public UUID AgentID
         {
@@ -111,11 +104,11 @@ namespace OpenSim.Services.CapsService
         {
             m_CapsService = server;
             m_agentID = agentID;
-            m_account = Registry.RequestModuleInterface<IUserAccountService> ().GetUserAccount (UUID.Zero, agentID);
+            m_account = Registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, agentID);
         }
 
         /// <summary>
-        /// Close out all of the CAPS for this user
+        ///   Close out all of the CAPS for this user
         /// </summary>
         public void Close()
         {
@@ -128,41 +121,10 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Add a new Caps Service for the given region if one does not already exist
+        ///   Attempt to find the CapsService for the given user/region
         /// </summary>
-        /// <param name="regionHandle"></param>
-        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, AgentCircuitData circuitData, uint port)
-        {
-            if (m_clientEndPoint == null && circuitData.ClientIPEndPoint != null)
-                m_clientEndPoint = circuitData.ClientIPEndPoint;
-            if (m_clientEndPoint == null)
-            {
-                ///Should only happen in grid HG/OpenSim situtations
-                IPAddress test = null;
-                if (IPAddress.TryParse (circuitData.IPAddress, out test))
-                    m_clientEndPoint = new IPEndPoint (test, 0);//Dunno the port, so leave it alone
-            }
-            if (!m_RegionCapsServices.ContainsKey(regionHandle))
-            {
-                //Now add this client to the region caps
-                //Create if needed
-                m_CapsService.AddCapsForRegion(regionHandle);
-                IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
-
-                PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
-                regionClient.Initialise (this, regionCaps, CAPSBase, circuitData, port);
-                m_RegionCapsServices[regionHandle] = regionClient;
-
-                //Now get and add them
-                regionCaps.AddClientToRegion(regionClient);
-            }
-        }
-
-        /// <summary>
-        /// Attempt to find the CapsService for the given user/region
-        /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="agentID"></param>
+        /// <param name = "regionID"></param>
+        /// <param name = "agentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetCapsService(ulong regionID)
         {
@@ -172,19 +134,14 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Attempt to find the CapsService for the root user/region
+        ///   Attempt to find the CapsService for the root user/region
         /// </summary>
-        /// <param name="regionID"></param>
-        /// <param name="agentID"></param>
+        /// <param name = "regionID"></param>
+        /// <param name = "agentID"></param>
         /// <returns></returns>
         public IRegionClientCapsService GetRootCapsService()
         {
-            foreach (IRegionClientCapsService clientCaps in m_RegionCapsServices.Values)
-            {
-                if (clientCaps.RootAgent)
-                    return clientCaps;
-            }
-            return null;
+            return m_RegionCapsServices.Values.FirstOrDefault(clientCaps => clientCaps.RootAgent);
         }
 
         public List<IRegionClientCapsService> GetCapsServices()
@@ -193,22 +150,23 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Find, or create if one does not exist, a Caps Service for the given region
+        ///   Find, or create if one does not exist, a Caps Service for the given region
         /// </summary>
-        /// <param name="regionID"></param>
+        /// <param name = "regionID"></param>
         /// <returns></returns>
-        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase, AgentCircuitData circuitData, uint port)
+        public IRegionClientCapsService GetOrCreateCapsService(ulong regionID, string CAPSBase,
+                                                               AgentCircuitData circuitData, uint port)
         {
             //If one already exists, don't add a new one
             if (m_RegionCapsServices.ContainsKey(regionID))
             {
                 if (port == 0 || m_RegionCapsServices[regionID].Server.Port == port)
                 {
-                    m_RegionCapsServices[regionID].InformModulesOfRequest ();
+                    m_RegionCapsServices[regionID].InformModulesOfRequest();
                     return m_RegionCapsServices[regionID];
                 }
                 else
-                    RemoveCAPS (regionID);
+                    RemoveCAPS(regionID);
             }
             //Create a new one, and then call Get to find it
             AddCapsServiceForRegion(regionID, CAPSBase, circuitData, port);
@@ -216,10 +174,10 @@ namespace OpenSim.Services.CapsService
         }
 
         /// <summary>
-        /// Remove the CAPS for the given user in the given region
+        ///   Remove the CAPS for the given user in the given region
         /// </summary>
-        /// <param name="AgentID"></param>
-        /// <param name="regionHandle"></param>
+        /// <param name = "AgentID"></param>
+        /// <param name = "regionHandle"></param>
         public void RemoveCAPS(ulong regionHandle)
         {
             if (!m_RegionCapsServices.ContainsKey(regionHandle))
@@ -231,8 +189,42 @@ namespace OpenSim.Services.CapsService
                 regionCaps.RemoveClientFromRegion(m_RegionCapsServices[regionHandle]);
 
             //Remove all the CAPS handlers
-            m_RegionCapsServices[regionHandle].Close ();
-            m_RegionCapsServices.Remove (regionHandle);
+            m_RegionCapsServices[regionHandle].Close();
+            m_RegionCapsServices.Remove(regionHandle);
+        }
+
+        #endregion
+
+        /// <summary>
+        ///   Add a new Caps Service for the given region if one does not already exist
+        /// </summary>
+        /// <param name = "regionHandle"></param>
+        protected void AddCapsServiceForRegion(ulong regionHandle, string CAPSBase, AgentCircuitData circuitData,
+                                               uint port)
+        {
+            if (m_clientEndPoint == null && circuitData.ClientIPEndPoint != null)
+                m_clientEndPoint = circuitData.ClientIPEndPoint;
+            if (m_clientEndPoint == null)
+            {
+                ///Should only happen in grid HG/OpenSim situtations
+                IPAddress test = null;
+                if (IPAddress.TryParse(circuitData.IPAddress, out test))
+                    m_clientEndPoint = new IPEndPoint(test, 0); //Dunno the port, so leave it alone
+            }
+            if (!m_RegionCapsServices.ContainsKey(regionHandle))
+            {
+                //Now add this client to the region caps
+                //Create if needed
+                m_CapsService.AddCapsForRegion(regionHandle);
+                IRegionCapsService regionCaps = m_CapsService.GetCapsForRegion(regionHandle);
+
+                PerRegionClientCapsService regionClient = new PerRegionClientCapsService();
+                regionClient.Initialise(this, regionCaps, CAPSBase, circuitData, port);
+                m_RegionCapsServices[regionHandle] = regionClient;
+
+                //Now get and add them
+                regionCaps.AddClientToRegion(regionClient);
+            }
         }
     }
 }

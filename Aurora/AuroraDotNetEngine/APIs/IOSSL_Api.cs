@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections;
-
 using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
@@ -43,15 +42,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
     {
         //OpenSim functions
         string osSetDynamicTextureURL(string dynamicID, string contentType, string url, string extraParams, int timer);
+
         string osSetDynamicTextureURLBlend(string dynamicID, string contentType, string url, string extraParams,
                                            int timer, int alpha);
+
         string osSetDynamicTextureURLBlendFace(string dynamicID, string contentType, string url, string extraParams,
-                                           bool blend, int disp, int timer, int alpha, int face);
+                                               bool blend, int disp, int timer, int alpha, int face);
+
         string osSetDynamicTextureData(string dynamicID, string contentType, string data, string extraParams, int timer);
+
         string osSetDynamicTextureDataBlend(string dynamicID, string contentType, string data, string extraParams,
                                             int timer, int alpha);
+
         string osSetDynamicTextureDataBlendFace(string dynamicID, string contentType, string data, string extraParams,
-                                            bool blend, int disp, int timer, int alpha, int face);
+                                                bool blend, int disp, int timer, int alpha, int face);
 
         LSL_Float osGetTerrainHeight(int x, int y);
         LSL_Integer osSetTerrainHeight(int x, int y, double val);
@@ -69,9 +73,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_List osGetAgents();
 
         // Teleport commands
-        DateTime osTeleportAgent(string agent, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        DateTime osTeleportAgent(string agent, int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        DateTime osTeleportAgent(string agent, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        DateTime osTeleportAgent(string agent, string regionName, vector position, vector lookat);
+        DateTime osTeleportAgent(string agent, int regionX, int regionY, vector position, vector lookat);
+        DateTime osTeleportAgent(string agent, vector position, vector lookat);
 
         // Animation commands
         void osAvatarPlayAnimation(string avatar, string animation);
@@ -95,7 +99,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osDrawImage(string drawList, int width, int height, string imageUrl);
         vector osGetDrawStringSize(string contentType, string text, string fontName, int fontSize);
 
-        double osList2Double(LSL_Types.list src, int index);
+        double osList2Double(LSL_List src, int index);
 
         void osSetRegionWaterHeight(double height);
         void osSetRegionSunSettings(bool useEstateSun, bool sunFixed, double sunHour);
@@ -106,8 +110,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         // Wind Module Functions
         string osWindActiveModelPluginName();
-        void osSetWindParam (string plugin, string param, LSL_Float value);
-        LSL_Float osGetWindParam (string plugin, string param);
+        void osSetWindParam(string plugin, string param, LSL_Float value);
+        LSL_Float osGetWindParam(string plugin, string param);
 
         // Parcel commands
         void osParcelJoin(vector pos1, vector pos2);
@@ -118,9 +122,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osGetSimulatorVersion();
         Hashtable osParseJSON(string JSON);
 
-        void osMessageObject(key objectUUID,string message);
+        void osMessageObject(key objectUUID, string message);
 
-        void osMakeNotecard(string notecardName, LSL_Types.list contents);
+        void osMakeNotecard(string notecardName, LSL_List contents);
 
         string osGetNotecardLine(string name, int line);
         string osGetNotecard(string name);
@@ -143,7 +147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osLoadedCreationID();
 
         LSL_List osGetLinkPrimitiveParams(int linknumber, LSL_List rules);
-        
+
         key osGetMapTexture();
         key osGetRegionMapTexture(string regionName);
         LSL_List osGetRegionStats();
@@ -163,16 +167,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osShutDown();
 
         LSL_Integer osAddAgentToGroup(LSL_Key AgentID, LSL_String GroupName, LSL_String RequestedRole);
-        DateTime osRezObject(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, LSL_Integer isRezAtRoot, LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos);
+
+        DateTime osRezObject(string inventory, vector pos, vector vel, rotation rot, int param, LSL_Integer isRezAtRoot,
+                             LSL_Integer doRecoil, LSL_Integer SetDieAtEdge, LSL_Integer CheckPos);
+
         LSL_String osUnixTimeToTimestamp(long time);
-        DateTime osTeleportOwner(string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        DateTime osTeleportOwner(int regionX, int regionY, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
-        DateTime osTeleportOwner (LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        DateTime osTeleportOwner(string regionName, vector position, vector lookat);
+        DateTime osTeleportOwner(int regionX, int regionY, vector position, vector lookat);
+        DateTime osTeleportOwner(vector position, vector lookat);
 
-        void osCauseDamage (string avatar, double damage, string regionName, LSL_Types.Vector3 position, LSL_Types.Vector3 lookat);
+        void osCauseDamage(string avatar, double damage, string regionName, vector position, vector lookat);
 
-        void osCauseHealing (string avatar, double healing);
+        void osCauseHealing(string avatar, double healing);
 
-        void osCauseDamage (string avatar, double damage);
+        void osCauseDamage(string avatar, double damage);
     }
 }

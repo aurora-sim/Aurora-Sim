@@ -25,16 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-
 using OpenMetaverse;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     /// <summary>
-    /// This implements the methods neccesary to operate on the inventory of an object
+    ///   This implements the methods neccesary to operate on the inventory of an object
     /// </summary>
     public interface IObjectInventory : IDictionary<UUID, IInventoryItem>
     {

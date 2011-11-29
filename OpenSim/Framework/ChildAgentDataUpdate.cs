@@ -26,12 +26,11 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using log4net;
 
 namespace OpenSim.Framework
 {
@@ -44,28 +43,24 @@ namespace OpenSim.Framework
     }
 
     /// <summary>
-    /// Replacement for ChildAgentDataUpdate. Used over RESTComms and LocalComms.
+    ///   Replacement for ChildAgentDataUpdate. Used over RESTComms and LocalComms.
     /// </summary>
     public class AgentPosition : IAgentData
     {
-        private UUID m_id;
-        public UUID AgentID
-        {
-            get { return m_id; }
-            set { m_id = value; }
-        }
-
-        public ulong RegionHandle;
-
-        public float Far;
-        public Vector3 Position;
-        public Vector3 Velocity;
-        public Vector3 Center;
-        public Vector3 Size;
         public Vector3 AtAxis;
+        public Vector3 Center;
+        public float Far;
         public Vector3 LeftAxis;
+        public Vector3 Position;
+        public ulong RegionHandle;
+        public Vector3 Size;
         public Vector3 UpAxis;
         public bool UserGoingOffline;
+        public Vector3 Velocity;
+
+        #region IAgentData Members
+
+        public UUID AgentID { get; set; }
 
         public OSDMap Pack()
         {
@@ -119,19 +114,21 @@ namespace OpenSim.Framework
                 Vector3.TryParse(args["up_axis"].AsString(), out UpAxis);
 
             if (args["far"] != null)
-                Far = (float)(args["far"].AsReal());
+                Far = (float) (args["far"].AsReal());
 
-            if(args["user_going_offline"] != null)
+            if (args["user_going_offline"] != null)
                 UserGoingOffline = args["user_going_offline"];
         }
+
+        #endregion
     }
 
     public class ControllerData
     {
+        public uint EventControls;
+        public uint IgnoreControls;
         public UUID ItemID;
         public UUID ObjectID;
-        public uint IgnoreControls;
-        public uint EventControls;
 
         public ControllerData(UUID item, UUID objID, uint ignore, uint ev)
         {
@@ -160,30 +157,31 @@ namespace OpenSim.Framework
 
         public void UnpackUpdateMessage(OSDMap args)
         {
-            if(args["item"] != null)
+            if (args["item"] != null)
                 ItemID = args["item"].AsUUID();
-            if(args["object"] != null)
+            if (args["object"] != null)
                 ObjectID = args["object"].AsUUID();
             if (args["ignore"] != null)
-                IgnoreControls = (uint)args["ignore"].AsInteger();
+                IgnoreControls = (uint) args["ignore"].AsInteger();
             if (args["event"] != null)
-                EventControls = (uint)args["event"].AsInteger();
+                EventControls = (uint) args["event"].AsInteger();
         }
     }
 
     public class SittingObjectData
     {
-        public string m_sittingObjectXML = "";
-        public Vector3 m_sitTargetPos = Vector3.Zero;
-        public Quaternion m_sitTargetRot = Quaternion.Identity;
         public string m_animation = "";
         public UUID m_objectID = UUID.Zero;
+        public Vector3 m_sitTargetPos = Vector3.Zero;
+        public Quaternion m_sitTargetRot = Quaternion.Identity;
+        public string m_sittingObjectXML = "";
 
-        public SittingObjectData ()
+        public SittingObjectData()
         {
         }
 
-        public SittingObjectData (string sittingObjectXML, Vector3 sitTargetPos, Quaternion sitTargetRot, string animation)
+        public SittingObjectData(string sittingObjectXML, Vector3 sitTargetPos, Quaternion sitTargetRot,
+                                 string animation)
         {
             m_sittingObjectXML = sittingObjectXML;
             m_sitTargetPos = sitTargetPos;
@@ -191,12 +189,12 @@ namespace OpenSim.Framework
             m_animation = animation;
         }
 
-        public SittingObjectData (OSDMap args)
+        public SittingObjectData(OSDMap args)
         {
             UnpackUpdateMessage(args);
         }
 
-        public OSDMap PackUpdateMessage ()
+        public OSDMap PackUpdateMessage()
         {
             OSDMap controldata = new OSDMap();
             controldata["sittingObjectXML"] = m_sittingObjectXML;
@@ -208,76 +206,70 @@ namespace OpenSim.Framework
         }
 
 
-        public void UnpackUpdateMessage (OSDMap args)
+        public void UnpackUpdateMessage(OSDMap args)
         {
-            if(args["sittingObjectXML"] != null)
+            if (args["sittingObjectXML"] != null)
                 m_sittingObjectXML = args["sittingObjectXML"];
-            if(args["sitTargetPos"] != null)
+            if (args["sitTargetPos"] != null)
                 m_sitTargetPos = args["sitTargetPos"];
-            if(args["sitTargetRot"] != null)
+            if (args["sitTargetRot"] != null)
                 m_sitTargetRot = args["sitTargetRot"];
-            if(args["animation"] != null)
+            if (args["animation"] != null)
                 m_animation = args["animation"];
         }
     }
 
     public class AgentData : IAgentData
     {
-        private UUID m_id;
-        public UUID AgentID
-        {
-            get { return m_id; }
-            set { m_id = value; }
-        }
-        public UUID RegionID;
-        public uint CircuitCode;
-        public UUID SessionID;
-
-        public Vector3 Position;
-        public Vector3 Velocity;
-        public Vector3 Center;
-        public Vector3 Size;
-        public Vector3 AtAxis;
-        public Vector3 LeftAxis;
-        public Vector3 UpAxis;
-
-        public float Far;
-        public float Aspect;
-        //public int[] Throttles;
-        public byte[] Throttles;
-
-        public uint LocomotionState;
-        public Quaternion HeadRotation;
-        public Quaternion BodyRotation;
-        public uint ControlFlags;
-        public float EnergyLevel;
-        public Byte GodLevel;
-        public float Speed;
-        public float DrawDistance;
-        public bool AlwaysRun;
-        public UUID PreyAgent;
-        public Byte AgentAccess;
-        public UUID ActiveGroupID;
-        public bool SentInitialWearables; 
-        //Evil... only for OpenSim...
-        public string CallbackURI;
-
-        public Animation[] Anims;
-
-        public UUID GranterID;
-        public bool IsCrossing = false;
-
-        // Appearance
-        public AvatarAppearance Appearance;
-
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        public UUID ActiveGroupID;
+        public Byte AgentAccess;
+        public bool AlwaysRun;
+        public Animation[] Anims;
+        public AvatarAppearance Appearance;
+
+        public float Aspect;
+        public Vector3 AtAxis;
+        //public int[] Throttles;
+        public Quaternion BodyRotation;
+        public string CallbackURI;
+        public Vector3 Center;
+        public uint CircuitCode;
+        public uint ControlFlags;
+        public ControllerData[] Controllers;
+        public float DrawDistance;
+        public float EnergyLevel;
+        public float Far;
+        public Byte GodLevel;
+
+        public UUID GranterID;
+        public Quaternion HeadRotation;
+        public bool IsCrossing;
+        public Vector3 LeftAxis;
+        public uint LocomotionState;
+        public Vector3 Position;
+        public UUID PreyAgent;
+        public UUID RegionID;
+        public bool SentInitialWearables;
+        public UUID SessionID;
+
+        // Appearance
+
         public SittingObjectData SittingObjects;
+        public Vector3 Size;
+        public float Speed;
+        public byte[] Throttles;
+        public Vector3 UpAxis;
+        public Vector3 Velocity;
+
+        #region IAgentData Members
+
+        public UUID AgentID { get; set; }
 
         // Scripted
-        public ControllerData[] Controllers;
 
         public virtual OSDMap Pack()
         {
@@ -349,10 +341,10 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Deserialization of agent data.
-        /// Avoiding reflection makes it painful to write, but that's the price!
+        ///   Deserialization of agent data.
+        ///   Avoiding reflection makes it painful to write, but that's the price!
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name = "hash"></param>
         public virtual void Unpack(OSDMap args)
         {
             // DEBUG ON
@@ -363,7 +355,7 @@ namespace OpenSim.Framework
                 UUID.TryParse(args["region_id"].AsString(), out RegionID);
 
             if (args["circuit_code"] != null)
-                UInt32.TryParse((string)args["circuit_code"].AsString(), out CircuitCode);
+                UInt32.TryParse(args["circuit_code"].AsString(), out CircuitCode);
 
             if (args["agent_uuid"] != null)
                 AgentID = args["agent_uuid"].AsUUID();
@@ -393,10 +385,10 @@ namespace OpenSim.Framework
                 Vector3.TryParse(args["up_axis"].AsString(), out AtAxis);
 
             if (args["far"] != null)
-                Far = (float)(args["far"].AsReal());
+                Far = (float) (args["far"].AsReal());
 
             if (args["aspect"] != null)
-                Aspect = (float)args["aspect"].AsReal();
+                Aspect = (float) args["aspect"].AsReal();
 
             if (args["throttles"] != null)
                 Throttles = args["throttles"].AsBinary();
@@ -414,7 +406,7 @@ namespace OpenSim.Framework
                 UInt32.TryParse(args["control_flags"].AsString(), out ControlFlags);
 
             if (args["energy_level"] != null)
-                EnergyLevel = (float)(args["energy_level"].AsReal());
+                EnergyLevel = (float) (args["energy_level"].AsReal());
 
             //This IS checked later
             if (args["god_level"] != null)
@@ -437,10 +429,7 @@ namespace OpenSim.Framework
             if (args["always_run"] != null)
                 AlwaysRun = args["always_run"].AsBoolean();
 
-            if (args["sent_initial_wearables"] != null)
-                SentInitialWearables = args["sent_initial_wearables"].AsBoolean();
-            else
-                SentInitialWearables = false;
+            SentInitialWearables = args["sent_initial_wearables"] != null && args["sent_initial_wearables"].AsBoolean();
 
             if (args["prey_agent"] != null)
                 PreyAgent = args["prey_agent"].AsUUID();
@@ -455,19 +444,16 @@ namespace OpenSim.Framework
                 ActiveGroupID = args["active_group_id"].AsUUID();
 
             if (args["IsCrossing"] != null)
-                IsCrossing = args["IsCrossing"].AsBoolean ();
+                IsCrossing = args["IsCrossing"].AsBoolean();
 
             if ((args["animations"] != null) && (args["animations"]).Type == OSDType.Array)
             {
-                OSDArray anims = (OSDArray)(args["animations"]);
+                OSDArray anims = (OSDArray) (args["animations"]);
                 Anims = new Animation[anims.Count];
                 int i = 0;
-                foreach (OSD o in anims)
+                foreach (OSD o in anims.Where(o => o.Type == OSDType.Map))
                 {
-                    if (o.Type == OSDType.Map)
-                    {
-                        Anims[i++] = new Animation((OSDMap)o);
-                    }
+                    Anims[i++] = new Animation((OSDMap) o);
                 }
             }
 
@@ -476,8 +462,8 @@ namespace OpenSim.Framework
             try
             {
                 if (args.ContainsKey("packed_appearance") && (args["packed_appearance"]).Type == OSDType.Map)
-                    Appearance = new AvatarAppearance(AgentID, (OSDMap)args["packed_appearance"]);
-                // DEBUG ON
+                    Appearance = new AvatarAppearance(AgentID, (OSDMap) args["packed_appearance"]);
+                    // DEBUG ON
                 else
                     m_log.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
                 // DEBUG OFF
@@ -488,32 +474,27 @@ namespace OpenSim.Framework
 
             if ((args["controllers"] != null) && (args["controllers"]).Type == OSDType.Array)
             {
-                OSDArray controls = (OSDArray)(args["controllers"]);
+                OSDArray controls = (OSDArray) (args["controllers"]);
                 Controllers = new ControllerData[controls.Count];
                 int i = 0;
-                foreach (OSD o in controls)
+                foreach (OSD o in controls.Where(o => o.Type == OSDType.Map))
                 {
-                    if (o.Type == OSDType.Map)
-                    {
-                        Controllers[i++] = new ControllerData((OSDMap)o);
-                    }
+                    Controllers[i++] = new ControllerData((OSDMap) o);
                 }
             }
 
             if (args["SittingObjects"] != null && args["SittingObjects"].Type == OSDType.Map)
-                SittingObjects = new SittingObjectData((OSDMap)args["SittingObjects"]);
+                SittingObjects = new SittingObjectData((OSDMap) args["SittingObjects"]);
         }
 
-        public AgentData()
-        {
-        }
+        #endregion
 
         public void Dump()
         {
-            System.Console.WriteLine("------------ AgentData ------------");
-            System.Console.WriteLine("UUID: " + AgentID);
-            System.Console.WriteLine("Region: " + RegionID);
-            System.Console.WriteLine("Position: " + Position);
+            Console.WriteLine("------------ AgentData ------------");
+            Console.WriteLine("UUID: " + AgentID);
+            Console.WriteLine("Region: " + RegionID);
+            Console.WriteLine("Position: " + Position);
         }
     }
 }

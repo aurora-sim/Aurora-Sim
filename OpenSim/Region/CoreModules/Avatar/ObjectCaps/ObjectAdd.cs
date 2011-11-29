@@ -27,47 +27,44 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using log4net;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
     public class ObjectAdd : INonSharedRegionModule
     {
         private IScene m_scene;
-        
-        #region IRegionModule Members
+
+        public bool IsSharedModule
+        {
+            get { return false; }
+        }
+
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource pSource)
         {
-            
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -75,6 +72,17 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             get { return null; }
         }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "ObjectAddModule"; }
+        }
+
+        #endregion
 
         public void PostInitialise()
         {
@@ -85,17 +93,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             OSDMap retVal = new OSDMap();
             retVal["ObjectAdd"] = CapsUtil.CreateCAPS("ObjectAdd", "");
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ObjectAdd"],
-                                                       delegate(Hashtable m_dhttpMethod)
-                                                       {
-                                                           return ProcessAdd(m_dhttpMethod, agentID);
-                                                       }));
+                                                        m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
 
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        ProcessServerReleaseNotes(m_dhttpMethod, agentID)));
             return retVal;
         }
 
@@ -105,9 +108,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
-            
-            OSDMap osd = new OSDMap();
-            osd.Add("ServerReleaseNotes", new OSDString(Aurora.Framework.Utilities.GetServerReleaseNotesURL()));
+
+            OSDMap osd = new OSDMap {{"ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL())}};
             string response = OSDParser.SerializeLLSDXmlString(osd);
             responsedata["str_response_string"] = response;
             return responsedata;
@@ -121,12 +123,12 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "Request wasn't what was expected";
             IScenePresence avatar;
-            
+
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
                 return responsedata;
 
 
-            OSD r = OSDParser.DeserializeLLSDXml((string)request["requestbody"]);
+            OSD r = OSDParser.DeserializeLLSDXml((string) request["requestbody"]);
             //UUID session_id = UUID.Zero;
             bool bypass_raycast = false;
             uint everyone_mask = 0;
@@ -164,8 +166,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             if (r.Type != OSDType.Map) // not a proper req
                 return responsedata;
-            
-            OSDMap rm = (OSDMap)r;
+
+            OSDMap rm = (OSDMap) r;
 
             if (rm.ContainsKey("ObjectData")) //v2
             {
@@ -193,7 +195,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         return responsedata;
                     }
 
-                    OSDMap PathMap = (OSDMap)ObjMap["Path"];
+                    OSDMap PathMap = (OSDMap) ObjMap["Path"];
                     path_begin = PathMap["Begin"].AsInteger();
                     path_curve = PathMap["Curve"].AsInteger();
                     path_end = PathMap["End"].AsInteger();
@@ -208,7 +210,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     path_taper_y = PathMap["TaperY"].AsInteger();
                     path_twist = PathMap["Twist"].AsInteger();
                     path_twist_begin = PathMap["TwistBegin"].AsInteger();
-
                 }
 
                 if (ObjMap.ContainsKey("Profile"))
@@ -218,8 +219,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         responsedata["str_response_string"] = "Has Profile key, but data not in expected format";
                         return responsedata;
                     }
-                        
-                    OSDMap ProfileMap = (OSDMap)ObjMap["Profile"];
+
+                    OSDMap ProfileMap = (OSDMap) ObjMap["Profile"];
 
                     profile_begin = ProfileMap["Begin"].AsInteger();
                     profile_curve = ProfileMap["Curve"].AsInteger();
@@ -227,19 +228,20 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     hollow = ProfileMap["Hollow"].AsInteger();
                 }
                 ray_end_is_intersection = ObjMap["RayEndIsIntersection"].AsBoolean();
-                
+
                 ray_target_id = ObjMap["RayTargetId"].AsUUID();
                 state = ObjMap["State"].AsInteger();
                 try
                 {
-                    ray_end = ((OSDArray) ObjMap["RayEnd"]).AsVector3();
-                    ray_start = ((OSDArray) ObjMap["RayStart"]).AsVector3();
-                    scale = ((OSDArray) ObjMap["Scale"]).AsVector3();
-                    rotation = ((OSDArray)ObjMap["Rotation"]).AsQuaternion();
+                    ray_end = (ObjMap["RayEnd"]).AsVector3();
+                    ray_start = (ObjMap["RayStart"]).AsVector3();
+                    scale = (ObjMap["Scale"]).AsVector3();
+                    rotation = (ObjMap["Rotation"]).AsQuaternion();
                 }
                 catch (Exception)
                 {
-                    responsedata["str_response_string"] = "RayEnd, RayStart, Scale or Rotation wasn't in the expected format";
+                    responsedata["str_response_string"] =
+                        "RayEnd, RayStart, Scale or Rotation wasn't in the expected format";
                     return responsedata;
                 }
 
@@ -256,10 +258,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     //session_id = AgentDataMap["SessionId"].AsUUID();
                     group_id = AgentDataMap["GroupId"].AsUUID();
                 }
-
             }
             else
-            { //v1
+            {
+                //v1
                 bypass_raycast = rm["bypass_raycast"].AsBoolean();
 
                 everyone_mask = readuintval(rm["everyone_mask"]);
@@ -288,57 +290,61 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 profile_begin = rm["profile_begin"].AsInteger();
                 profile_curve = rm["profile_curve"].AsInteger();
                 profile_end = rm["profile_end"].AsInteger();
-                
+
                 ray_end_is_intersection = rm["ray_end_is_intersection"].AsBoolean();
-                
+
                 ray_target_id = rm["ray_target_id"].AsUUID();
-                
-                
+
+
                 //session_id = rm["session_id"].AsUUID();
                 state = rm["state"].AsInteger();
-                try 
+                try
                 {
-                    ray_end = ((OSDArray)rm["ray_end"]).AsVector3();
-                    ray_start = ((OSDArray)rm["ray_start"]).AsVector3();
-                    rotation = ((OSDArray)rm["rotation"]).AsQuaternion();
-                    scale = ((OSDArray)rm["scale"]).AsVector3();
-                } 
+                    ray_end = (rm["ray_end"]).AsVector3();
+                    ray_start = (rm["ray_start"]).AsVector3();
+                    rotation = (rm["rotation"]).AsQuaternion();
+                    scale = (rm["scale"]).AsVector3();
+                }
                 catch (Exception)
                 {
-                    responsedata["str_response_string"] = "RayEnd, RayStart, Scale or Rotation wasn't in the expected format";
+                    responsedata["str_response_string"] =
+                        "RayEnd, RayStart, Scale or Rotation wasn't in the expected format";
                     return responsedata;
                 }
             }
 
-           
 
-            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation(ray_start, ray_end, ray_target_id, rotation, (bypass_raycast) ? (byte)1 : (byte)0,  (ray_end_is_intersection) ? (byte)1 : (byte)0, true, scale, false);
+            Vector3 pos = m_scene.SceneGraph.GetNewRezLocation(ray_start, ray_end, ray_target_id, rotation,
+                                                               (bypass_raycast) ? (byte) 1 : (byte) 0,
+                                                               (ray_end_is_intersection) ? (byte) 1 : (byte) 0, true,
+                                                               scale, false);
 
             PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
 
-            pbs.PathBegin = (ushort)path_begin;
-            pbs.PathCurve = (byte)path_curve;
-            pbs.PathEnd = (ushort)path_end;
-            pbs.PathRadiusOffset = (sbyte)path_radius_offset;
-            pbs.PathRevolutions = (byte)path_revolutions;
-            pbs.PathScaleX = (byte)path_scale_x;
-            pbs.PathScaleY = (byte)path_scale_y;
+            pbs.PathBegin = (ushort) path_begin;
+            pbs.PathCurve = (byte) path_curve;
+            pbs.PathEnd = (ushort) path_end;
+            pbs.PathRadiusOffset = (sbyte) path_radius_offset;
+            pbs.PathRevolutions = (byte) path_revolutions;
+            pbs.PathScaleX = (byte) path_scale_x;
+            pbs.PathScaleY = (byte) path_scale_y;
             pbs.PathShearX = (byte) path_shear_x;
-            pbs.PathShearY = (byte)path_shear_y;
-            pbs.PathSkew = (sbyte)path_skew;
-            pbs.PathTaperX = (sbyte)path_taper_x;
-            pbs.PathTaperY = (sbyte)path_taper_y;
-            pbs.PathTwist = (sbyte)path_twist;
-            pbs.PathTwistBegin = (sbyte)path_twist_begin;
+            pbs.PathShearY = (byte) path_shear_y;
+            pbs.PathSkew = (sbyte) path_skew;
+            pbs.PathTaperX = (sbyte) path_taper_x;
+            pbs.PathTaperY = (sbyte) path_taper_y;
+            pbs.PathTwist = (sbyte) path_twist;
+            pbs.PathTwistBegin = (sbyte) path_twist_begin;
             pbs.HollowShape = (HollowShape) hollow;
-            pbs.PCode = (byte)p_code;
+            pbs.PCode = (byte) p_code;
             pbs.ProfileBegin = (ushort) profile_begin;
             pbs.ProfileCurve = (byte) profile_curve;
-            pbs.ProfileEnd = (ushort)profile_end;
+            pbs.ProfileEnd = (ushort) profile_end;
             pbs.Scale = scale;
-            pbs.State = (byte)state;
+            pbs.State = (byte) state;
 
-            SceneObjectGroup obj = null; ;
+            SceneObjectGroup obj = null;
+            ;
 
             string reason;
             if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
@@ -346,7 +352,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 // rez ON the ground, not IN the ground
                 // pos.Z += 0.25F;
 
-                obj = (SceneObjectGroup)m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+                obj = (SceneObjectGroup) m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
             }
             else
             {
@@ -359,21 +365,21 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             SceneObjectPart rootpart = obj.RootPart;
             rootpart.Shape = pbs;
-            rootpart.Flags |= (PrimFlags)flags;
+            rootpart.Flags |= (PrimFlags) flags;
             rootpart.EveryoneMask = everyone_mask;
             rootpart.GroupID = group_id;
             rootpart.GroupMask = group_mask;
             rootpart.NextOwnerMask = next_owner_mask;
-            rootpart.Material = (byte)material;
-
+            rootpart.Material = (byte) material;
 
 
             m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
-            
+
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = String.Format("<llsd><map><key>local_id</key>{0}</map></llsd>",ConvertUintToBytes(obj.LocalId));
+            responsedata["str_response_string"] = String.Format("<llsd><map><key>local_id</key>{0}</map></llsd>",
+                                                                ConvertUintToBytes(obj.LocalId));
 
             return responsedata;
         }
@@ -383,32 +389,15 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             byte[] tmp = obj.AsBinary();
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(tmp);
-            return OpenMetaverse.Utils.BytesToUInt(tmp);
-
+            return Utils.BytesToUInt(tmp);
         }
+
         private string ConvertUintToBytes(uint val)
         {
-            byte[] resultbytes = OpenMetaverse.Utils.UIntToBytes(val);
+            byte[] resultbytes = Utils.UIntToBytes(val);
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(resultbytes);
-            return String.Format("<binary encoding=\"base64\">{0}</binary>",Convert.ToBase64String(resultbytes));
+            return String.Format("<binary encoding=\"base64\">{0}</binary>", Convert.ToBase64String(resultbytes));
         }
-
-        public void Close()
-        {
-            
-        }
-
-        public string Name
-        {
-            get { return "ObjectAddModule"; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
-        #endregion
     }
 }

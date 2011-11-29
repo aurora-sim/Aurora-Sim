@@ -28,11 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using log4net;
+using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules
 {
@@ -40,28 +40,29 @@ namespace OpenSim.Region.CoreModules
     {
         public DeRezAction action;
         public UUID agentId;
-        public List<ISceneEntity> objectGroups;
         public UUID folderID;
+        public List<ISceneEntity> objectGroups;
         public bool permissionToDelete;
         public bool permissionToTake;
     }
 
     /// <summary>
-    /// Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
-    /// up the main client thread.
+    ///   Asynchronously derez objects.  This is used to derez large number of objects to inventory without holding
+    ///   up the main client thread.
     /// </summary>
     public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule, IAsyncSceneObjectGroupDeleter
     {
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
+        private bool DeleteLoopInUse;
+
         /// <value>
-        /// Is the deleter currently enabled?
+        ///   Is the deleter currently enabled?
         /// </value>
         public bool Enabled;
 
-        private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
-        private bool DeleteLoopInUse = false;
         private IScene m_scene;
 
         #region INonSharedRegionModule Members
@@ -76,7 +77,7 @@ namespace OpenSim.Region.CoreModules
             get { return null; }
         }
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
         }
 
@@ -84,18 +85,18 @@ namespace OpenSim.Region.CoreModules
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             scene.RegisterModuleInterface<IAsyncSceneObjectGroupDeleter>(this);
             m_scene = scene;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             scene.UnregisterModuleInterface<IAsyncSceneObjectGroupDeleter>(this);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -104,19 +105,21 @@ namespace OpenSim.Region.CoreModules
         #region Delete To Inventory
 
         /// <summary>
-        /// Delete the given object from the scene
+        ///   Delete the given object from the scene
         /// </summary>
         public void DeleteToInventory(DeRezAction action, UUID folderID,
-                List<ISceneEntity> objectGroups, UUID AgentId,
-                bool permissionToDelete, bool permissionToTake)
+                                      List<ISceneEntity> objectGroups, UUID AgentId,
+                                      bool permissionToDelete, bool permissionToTake)
         {
-            DeleteToInventoryHolder dtis = new DeleteToInventoryHolder();
-            dtis.action = action;
-            dtis.folderID = folderID;
-            dtis.objectGroups = objectGroups;
-            dtis.agentId = AgentId;
-            dtis.permissionToDelete = permissionToDelete;
-            dtis.permissionToTake = permissionToTake;
+            DeleteToInventoryHolder dtis = new DeleteToInventoryHolder
+                                               {
+                                                   action = action,
+                                                   folderID = folderID,
+                                                   objectGroups = objectGroups,
+                                                   agentId = AgentId,
+                                                   permissionToDelete = permissionToDelete,
+                                                   permissionToTake = permissionToTake
+                                               };
             //Do this before the locking so that the objects 'appear' gone and the client doesn't think things have gone wrong
             if (permissionToDelete)
             {
@@ -139,15 +142,17 @@ namespace OpenSim.Region.CoreModules
         private void DeleteGroups(List<ISceneEntity> objectGroups)
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-            {
-                lock (objectGroups)
-                {
-                    foreach (ISceneEntity grp in objectGroups)
-                    {
-                        avatar.ControllingClient.SendKillObject (m_scene.RegionInfo.RegionHandle, grp.ChildrenEntities().ToArray ());
-                    }
-                }
-            });
+                                             {
+                                                 lock (objectGroups)
+                                                 {
+                                                     foreach (ISceneEntity grp in objectGroups)
+                                                     {
+                                                         avatar.ControllingClient.SendKillObject(
+                                                             m_scene.RegionInfo.RegionHandle,
+                                                             grp.ChildrenEntities().ToArray());
+                                                     }
+                                                 }
+                                             });
         }
 
         public void DoDeleteObject(object o)
@@ -215,7 +220,8 @@ namespace OpenSim.Region.CoreModules
                 // FIXME: This needs to be fixed.
                 m_log.ErrorFormat(
                     "[SCENE]: Queued sending of scene object to agent {0} {1} failed: {2}",
-                    (x != null ? x.agentId.ToString() : "unavailable"), (x != null ? x.agentId.ToString() : "unavailable"), e.ToString());
+                    (x != null ? x.agentId.ToString() : "unavailable"),
+                    (x != null ? x.agentId.ToString() : "unavailable"), e);
             }
 
             //m_log.Debug("[SCENE]: No objects left in delete queue.");

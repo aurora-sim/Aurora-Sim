@@ -27,15 +27,14 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
     /// <summary>
-    /// Hydraulic Erosion Brush
+    ///   Hydraulic Erosion Brush
     /// </summary>
     public class ErodeSphere : ITerrainPaintableEffect
     {
@@ -148,13 +147,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
         {
             Moore,
             VonNeumann
-        } ;
+        };
 
         #endregion
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
+                                float duration, float BrushSize, List<IScene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -168,7 +168,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
             // Fill with rain
             for (x = 0; x < water.Width; x++)
                 for (y = 0; y < water.Height; y++)
-                    water[x, y] = (float)Math.Max(0.0, TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * rainHeight * duration);
+                    water[x, y] =
+                        (float) Math.Max(0.0, TerrainUtil.SphericalFactor(x, y, rx, ry, strength)*rainHeight*duration);
 
             for (int i = 0; i < rounds; i++)
             {
@@ -177,8 +178,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        const float solConst = (1.0f / rounds);
-                        float sedDelta = water[x, y] * solConst;
+                        const float solConst = (1.0f/rounds);
+                        float sedDelta = water[x, y]*solConst;
                         map[x, y] -= sedDelta;
                         sediment[x, y] += sedDelta;
                     }
@@ -235,7 +236,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         if (neighbours == 0)
                             continue;
 
-                        float altitudeAvg = altitudeTotal / neighbours;
+                        float altitudeAvg = altitudeTotal/neighbours;
 
                         // Step 2. Allocate water to neighbours.
                         for (int j = 0; j < NEIGHBOUR_MAX; j++)
@@ -268,10 +269,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
                                 // Calculate how much water we can move
                                 float waterMin = Math.Min(water[x, y], altitudeDelta);
-                                float waterDelta = waterMin * ((water[coords[0], coords[1]] + map[coords[0], coords[1]])
-                                                                / altitudeTotal);
+                                float waterDelta = waterMin*((water[coords[0], coords[1]] + map[coords[0], coords[1]])
+                                                             /altitudeTotal);
 
-                                float sedimentDelta = sediment[x, y] * (waterDelta / water[x, y]);
+                                float sedimentDelta = sediment[x, y]*(waterDelta/water[x, y]);
 
                                 if (sedimentDelta > 0)
                                 {
@@ -289,9 +290,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        water[x, y] *= 1.0f - (rainHeight / rounds);
+                        water[x, y] *= 1.0f - (rainHeight/rounds);
 
-                        float waterCapacity = waterSaturation * water[x, y];
+                        float waterCapacity = waterSaturation*water[x, y];
 
                         float sedimentDeposit = sediment[x, y] - waterCapacity;
                         if (sedimentDeposit > 0)
@@ -311,7 +312,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(rx + x, ry + y, 0)))
                         continue;
                     if (sediment[x, y] > 0)
-                        map[(int)rx + x, (int)ry + y] += sediment[x, y];
+                        map[(int) rx + x, (int) ry + y] += sediment[x, y];
                 }
             }
         }

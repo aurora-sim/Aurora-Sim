@@ -26,16 +26,10 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Aurora.Modules.RegionLoader;
-using log4net;
 using Nini.Config;
-using OpenMetaverse;
 using OpenSim.Framework;
 using Aurora.DataManager;
 using Aurora.Framework;
@@ -128,7 +122,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                                 try
                                 {
                                     RegionManager manager = new RegionManager(true, false, m_openSim);
-                                    System.Windows.Forms.Application.Run(manager);
+                                    Application.Run(manager);
                                     done = true;
                                 }
                                 catch
@@ -153,16 +147,12 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 return LoadRegions();
             }
-            else if (infos.Length == 0)
-                return null;
-            else
-                return infos;
+            return infos.Length == 0 ? null : infos;
         }
 
         /// <summary>
         /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
         /// </summary>
-        /// <param name="module"></param>
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {
@@ -182,7 +172,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                         try
                         {
                             RegionManager manager = new RegionManager(false, true, m_openSim);
-                            System.Windows.Forms.Application.Run(manager);
+                            Application.Run(manager);
                             done = true;
                         }
                         catch
@@ -219,11 +209,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             try
             {
                 RegionManager manager = new RegionManager(false, false, m_openSim);
-                System.Windows.Forms.Application.Run(manager);
+                Application.Run(manager);
             }
             catch(Exception ex)
             {
-                MainConsole.Instance.Output("Failed to start the region manager: " + ex.ToString());
+                MainConsole.Instance.Output("Failed to start the region manager: " + ex);
             }
         }
 
@@ -300,7 +290,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void DeleteRegion(RegionInfo regionInfo)
         {
-            IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            IRegionInfoConnector connector = DataManager.RequestPlugin<IRegionInfoConnector>();
             if (connector != null)
             {
                 connector.Delete(regionInfo);
@@ -328,7 +318,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public void UpdateRegionInfo(string oldName, RegionInfo regionInfo)
         {
-            IRegionInfoConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            IRegionInfoConnector connector = DataManager.RequestPlugin<IRegionInfoConnector>();
             if (connector != null)
             {
                 //Make sure we have this region in the database

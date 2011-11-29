@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Net;
 using System.Reflection;
@@ -38,11 +39,8 @@ using log4net;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
-using OpenSim;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Region.CoreModules.World.Terrain;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -55,8 +53,8 @@ namespace OpenSim.CoreApplicationPlugins
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static bool m_defaultAvatarsLoaded = false;
-        private static Object   m_requestLock = new Object();
-        private static Object   m_saveOarLock = new Object();
+        private static readonly Object   m_requestLock = new Object();
+        private static readonly Object   m_saveOarLock = new Object();
 
         private ISimulationBase m_application;
         private SceneManager manager;
@@ -65,8 +63,8 @@ namespace OpenSim.CoreApplicationPlugins
         private IConfigSource m_configSource;
         private string m_requiredPassword = String.Empty;
 
-        private string m_name = "RemoteAdminPlugin";
-        private string m_version = "0.0";
+        private const string m_name = "RemoteAdminPlugin";
+        private const string m_version = "0.0";
         private bool m_enabled = false;
 
         //guard for XmlRpc-related methods
@@ -153,7 +151,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     // The assumption here is that simply enabling Remote Admin as before will produce the same
                     // behavior - enable all methods unless the whitelist is in place for backward-compatibility.
-                    if (enabledMethods.ToLower() == "all" || String.IsNullOrEmpty(enabledMethods))
+                    if (enabledMethods != null && (enabledMethods.ToLower() == "all" || String.IsNullOrEmpty(enabledMethods)))
                     {
                         foreach (string method in availableMethods.Keys)
                         {
@@ -162,10 +160,11 @@ namespace OpenSim.CoreApplicationPlugins
                     }
                     else
                     {
-                        foreach (string enabledMethod in enabledMethods.Split('|'))
-                        {
-                            m_httpServer.AddXmlRPCHandler(enabledMethod, availableMethods[enabledMethod]);
-                        }
+                        if (enabledMethods != null)
+                            foreach (string enabledMethod in enabledMethods.Split('|'))
+                            {
+                                m_httpServer.AddXmlRPCHandler(enabledMethod, availableMethods[enabledMethod]);
+                            }
                     }
                 }
             }
@@ -213,7 +212,7 @@ namespace OpenSim.CoreApplicationPlugins
                 Hashtable requestData = (Hashtable)request.Params[0];
 
                 m_log.Info("[RADMIN]: Request to restart Region.");
-                CheckStringParameters(request, new string[] { "password", "regionID" });
+                CheckStringParameters(request, new[] { "password", "regionID" });
 
                 if (m_requiredPassword != String.Empty &&
                     (!requestData.Contains("password") || (string)requestData["password"] != m_requiredPassword))
@@ -239,13 +238,13 @@ namespace OpenSim.CoreApplicationPlugins
 
                     restartModule.ScheduleRestart(UUID.Zero, "Region will restart in {0}", times.ToArray(), true);
                     responseData["success"] = true;
-                };
+                }
                 response.Value = responseData;
             }
             catch (Exception e)
             {
                 m_log.ErrorFormat("[RADMIN]: Restart region: failed: {0}", e.Message);
-                m_log.DebugFormat("[RADMIN]: Restart region: failed: {0}", e.ToString());
+                m_log.DebugFormat("[RADMIN]: Restart region: failed: {0}", e);
                 responseData["accepted"] = false;
                 responseData["success"] = false;
                 responseData["rebooting"] = false;
@@ -268,7 +267,7 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 Hashtable requestData = (Hashtable) request.Params[0];
 
-                CheckStringParameters(request, new string[] {"password", "message"});
+                CheckStringParameters(request, new[] {"password", "message"});
 
                 if (m_requiredPassword != String.Empty &&
                     (!requestData.Contains("password") || (string) requestData["password"] != m_requiredPassword))
@@ -292,7 +291,7 @@ namespace OpenSim.CoreApplicationPlugins
             catch (Exception e)
             {
                 m_log.ErrorFormat("[RADMIN]: Broadcasting: failed: {0}", e.Message);
-                m_log.DebugFormat("[RADMIN]: Broadcasting: failed: {0}", e.ToString());
+                m_log.DebugFormat("[RADMIN]: Broadcasting: failed: {0}", e);
 
                 responseData["accepted"] = false;
                 responseData["success"] = false;
@@ -315,14 +314,14 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 Hashtable requestData = (Hashtable) request.Params[0];
 
-                m_log.DebugFormat("[RADMIN]: Load Terrain: XmlRpc {0}", request.ToString());
+                m_log.DebugFormat("[RADMIN]: Load Terrain: XmlRpc {0}", request);
                 // foreach (string k in requestData.Keys)
                 // {
                 //     m_log.DebugFormat("[RADMIN]: Load Terrain: XmlRpc {0}: >{1}< {2}",
                 //                       k, (string)requestData[k], ((string)requestData[k]).Length);
                 // }
 
-                CheckStringParameters(request, new string[] {"password", "filename", "regionid"});
+                CheckStringParameters(request, new[] {"password", "filename", "regionid"});
 
                 if (m_requiredPassword != String.Empty &&
                     (!requestData.Contains("password") || (string) requestData["password"] != m_requiredPassword))
@@ -363,7 +362,7 @@ namespace OpenSim.CoreApplicationPlugins
             catch (Exception e)
             {
                 m_log.ErrorFormat("[RADMIN]: Terrain Loading: failed: {0}", e.Message);
-                m_log.DebugFormat("[RADMIN]: Terrain Loading: failed: {0}", e.ToString());
+                m_log.DebugFormat("[RADMIN]: Terrain Loading: failed: {0}", e);
 
                 responseData["success"] = false;
                 responseData["error"] = e.Message;
@@ -419,9 +418,9 @@ namespace OpenSim.CoreApplicationPlugins
                         });
 
                 // Perform shutdown
-                System.Timers.Timer shutdownTimer = new System.Timers.Timer(timeout); // Wait before firing
-                shutdownTimer.AutoReset = false;
-                shutdownTimer.Elapsed += new ElapsedEventHandler(shutdownTimer_Elapsed);
+                System.Timers.Timer shutdownTimer = new System.Timers.Timer(timeout) {AutoReset = false};
+                    // Wait before firing
+                shutdownTimer.Elapsed += shutdownTimer_Elapsed;
                 lock (shutdownTimer)
                 {
                     shutdownTimer.Start();
@@ -432,7 +431,7 @@ namespace OpenSim.CoreApplicationPlugins
             catch (Exception e)
             {
                 m_log.ErrorFormat("[RADMIN] Shutdown: failed: {0}", e.Message);
-                m_log.DebugFormat("[RADMIN] Shutdown: failed: {0}", e.ToString());
+                m_log.DebugFormat("[RADMIN] Shutdown: failed: {0}", e);
 
                 responseData["accepted"] = false;
                 responseData["error"] = e.Message;
@@ -530,14 +529,14 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     Hashtable requestData = (Hashtable)request.Params[0];
 
-                    CheckStringParameters(request, new string[]
+                    CheckStringParameters(request, new[]
                                                        {
                                                            "password",
                                                            "region_name",
                                                            "listen_ip", "external_address",
                                                            "estate_name"
                                                        });
-                    CheckIntegerParams(request, new string[] { "region_x", "region_y", "listen_port" });
+                    CheckIntegerParams(request, new[] { "region_x", "region_y", "listen_port" });
 
                     // check password
                     if (!String.IsNullOrEmpty(m_requiredPassword) &&
@@ -567,30 +566,34 @@ namespace OpenSim.CoreApplicationPlugins
                     }
 
                     // create volatile or persistent region info
-                    RegionInfo region = new RegionInfo();
+                    RegionInfo region = new RegionInfo
+                                            {
+                                                RegionID = regionID,
+                                                RegionName = (string) requestData["region_name"],
+                                                RegionLocX =
+                                                    Convert.ToInt32(requestData["region_x"])*Constants.RegionSize,
+                                                RegionLocY =
+                                                    Convert.ToInt32(requestData["region_y"])*Constants.RegionSize
+                                            };
 
-                    region.RegionID = regionID;
-                    region.RegionName = (string)requestData["region_name"];
-                    region.RegionLocX = Convert.ToInt32(requestData["region_x"]) * Constants.RegionSize;
-                    region.RegionLocY = Convert.ToInt32(requestData["region_y"]) * Constants.RegionSize;
 
                     // check for collisions: region name, region UUID,
                     // region location
                     if (manager.TryGetScene(region.RegionName, out scene))
                         throw new Exception(
                             String.Format("region name already in use by region {0}",
-                                          scene.ToString()));
+                                          scene));
 
                     if (manager.TryGetScene(region.RegionLocX, region.RegionLocY, out scene))
                         throw new Exception(
                             String.Format("region location <{0},{1}> already in use by region {2}",
                                           region.RegionLocX / Constants.RegionSize, region.RegionLocY / Constants.RegionSize,
-                                          scene.ToString()));
+                                          scene));
 
                     region.InternalEndPoint =
-                        new IPEndPoint(IPAddress.Parse((string)requestData["listen_ip"]), 0);
+                        new IPEndPoint(IPAddress.Parse((string) requestData["listen_ip"]), 0)
+                            {Port = Convert.ToInt32(requestData["listen_port"])};
 
-                    region.InternalEndPoint.Port = Convert.ToInt32(requestData["listen_port"]);
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
                     
                     // default place for region configuration files is in the
@@ -617,7 +620,7 @@ namespace OpenSim.CoreApplicationPlugins
                         // Make sure that the file to be created is in a subdirectory of the region storage directory.
                         string requestedFilePath = Path.Combine(regionConfigPath, (string)requestData["region_file"]);
                         string requestedDirectory = Path.GetDirectoryName(Util.BasePathCombine(requestedFilePath));
-                        if (requestedDirectory.StartsWith(Util.BasePathCombine(regionConfigPath)))
+                        if (requestedDirectory != null && requestedDirectory.StartsWith(Util.BasePathCombine(regionConfigPath)))
                             regionIniPath = requestedFilePath;
                         else
                             throw new Exception("Invalid location for region file.");
@@ -719,7 +722,7 @@ namespace OpenSim.CoreApplicationPlugins
                 catch (Exception e)
                 {
                     m_log.ErrorFormat("[RADMIN] CreateRegion: failed {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] CreateRegion: failed {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] CreateRegion: failed {0}", e);
 
                     responseData["success"] = false;
                     responseData["error"] = e.Message;
@@ -732,11 +735,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        /// <summary>
-        /// Delete a new region.
-        /// <summary>
+        /// <summary> Delete a new region. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcDeleteRegionMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -769,7 +771,7 @@ namespace OpenSim.CoreApplicationPlugins
                 try
                 {
                     Hashtable requestData = (Hashtable) request.Params[0];
-                    CheckStringParameters(request, new string[] {"password", "region_name"});
+                    CheckStringParameters(request, new[] {"password", "region_name"});
 
                     IScene scene = null;
                     string regionName = (string) requestData["region_name"];
@@ -786,7 +788,7 @@ namespace OpenSim.CoreApplicationPlugins
                 catch (Exception e)
                 {
                     m_log.ErrorFormat("[RADMIN] DeleteRegion: failed {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] DeleteRegion: failed {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] DeleteRegion: failed {0}", e);
 
                     responseData["success"] = false;
                     responseData["error"] = e.Message;
@@ -799,11 +801,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        /// <summary>
-        /// Close a region.
-        /// <summary>
+        /// <summary> Close a region. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcCloseRegionMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -832,15 +833,15 @@ namespace OpenSim.CoreApplicationPlugins
             m_log.Info("[RADMIN]: CloseRegion: new request");
             XmlRpcResponse response = new XmlRpcResponse();
             Hashtable responseData = new Hashtable();
-            IScene scene = null;
 
             lock (m_requestLock)
             {
                 try
                 {
                     Hashtable requestData = (Hashtable) request.Params[0];
-                    CheckStringParameters(request, new string[] {"password"});
+                    CheckStringParameters(request, new[] {"password"});
 
+                    IScene scene = null;
                     if (requestData.ContainsKey("region_id") &&
                         !String.IsNullOrEmpty((string) requestData["region_id"]))
                     {
@@ -878,7 +879,7 @@ namespace OpenSim.CoreApplicationPlugins
                 catch (Exception e)
                 {
                     m_log.ErrorFormat("[RADMIN] CloseRegion: failed {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] CloseRegion: failed {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] CloseRegion: failed {0}", e);
 
                     responseData["success"] = false;
                     responseData["error"] = e.Message;
@@ -891,11 +892,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        /// <summary>
-        /// Change characteristics of an existing region.
-        /// <summary>
+        /// <summary> Change characteristics of an existing region. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcModifyRegionMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -934,7 +934,7 @@ namespace OpenSim.CoreApplicationPlugins
                 try
                 {
                     Hashtable requestData = (Hashtable) request.Params[0];
-                    CheckStringParameters(request, new string[] {"password", "region_name"});
+                    CheckStringParameters(request, new[] {"password", "region_name"});
 
                     IScene scene = null;
                     string regionName = (string) requestData["region_name"];
@@ -979,7 +979,7 @@ namespace OpenSim.CoreApplicationPlugins
                 catch (Exception e)
                 {
                     m_log.ErrorFormat("[RADMIN] ModifyRegion: failed {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] ModifyRegion: failed {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] ModifyRegion: failed {0}", e);
 
                     responseData["success"] = false;
                     responseData["error"] = e.Message;
@@ -992,11 +992,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        /// <summary>
-        /// Create a new user account.
-        /// <summary>
+        /// <summary> Create a new user account. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcCreateUserMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -1046,12 +1045,12 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
 
                     // check completeness
-                    CheckStringParameters(request, new string[]
+                    CheckStringParameters(request, new[]
                                                        {
                                                            "password", "user_firstname",
-                                                           "user_lastname", "user_password",
+                                                           "user_lastname", "user_password"
                                                        });
-                    CheckIntegerParams(request, new string[] {"start_region_x", "start_region_y"});
+                    CheckIntegerParams(request, new[] {"start_region_x", "start_region_y"});
 
                     // check password
                     if (!String.IsNullOrEmpty(m_requiredPassword) &&
@@ -1104,7 +1103,7 @@ namespace OpenSim.CoreApplicationPlugins
                 catch (Exception e)
                 {
                     m_log.ErrorFormat("[RADMIN] CreateUser: failed: {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] CreateUser: failed: {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] CreateUser: failed: {0}", e);
 
                     responseData["success"] = false;
                     responseData["avatar_uuid"] = UUID.Zero.ToString();
@@ -1117,11 +1116,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        /// <summary>
-        /// Check whether a certain user account exists.
-        /// <summary>
+        /// <summary> Check whether a certain user account exists. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcUserExistsMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -1163,7 +1161,7 @@ namespace OpenSim.CoreApplicationPlugins
                 Hashtable requestData = (Hashtable) request.Params[0];
 
                 // check completeness
-                CheckStringParameters(request, new string[] {"password", "user_firstname", "user_lastname"});
+                CheckStringParameters(request, new[] {"password", "user_firstname", "user_lastname"});
 
                 string firstName = (string) requestData["user_firstname"];
                 string lastName = (string) requestData["user_lastname"];
@@ -1196,7 +1194,7 @@ namespace OpenSim.CoreApplicationPlugins
             catch (Exception e)
             {
                 m_log.ErrorFormat("[RADMIN] UserExists: failed: {0}", e.Message);
-                m_log.DebugFormat("[RADMIN] UserExists: failed: {0}", e.ToString());
+                m_log.DebugFormat("[RADMIN] UserExists: failed: {0}", e);
 
                 responseData["success"] = false;
                 responseData["error"] = e.Message;
@@ -1208,11 +1206,10 @@ namespace OpenSim.CoreApplicationPlugins
             return response;
         }
 
-        /// <summary>
-        /// Update a user account.
-        /// <summary>
+        /// <summary> Update a user account. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcUpdateUserAccountMethod takes the following XMLRPC
         /// parameters (changeable ones are optional)
         /// <list type="table">
@@ -1250,7 +1247,6 @@ namespace OpenSim.CoreApplicationPlugins
         ///       </description></item>
         /// </list>
         /// </remarks>
-
         public XmlRpcResponse XmlRpcUpdateUserAccountMethod(XmlRpcRequest request, IPEndPoint remoteClient)
         {
             m_log.Info("[RADMIN]: UpdateUserAccount: new request");
@@ -1268,7 +1264,7 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
 
                     // check completeness
-                    CheckStringParameters(request, new string[] {
+                    CheckStringParameters(request, new[] {
                             "password", "user_firstname",
                             "user_lastname"});
 
@@ -1372,7 +1368,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
 
                     m_log.ErrorFormat("[RADMIN] UpdateUserAccount: failed: {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] UpdateUserAccount: failed: {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] UpdateUserAccount: failed: {0}", e);
 
                     responseData["success"] = false;
                     responseData["avatar_uuid"] = UUID.Zero.ToString();
@@ -1556,25 +1552,26 @@ namespace OpenSim.CoreApplicationPlugins
             // Missing destination folder? This should *never* be the case
             if (destinationFolder.Type != (short)AssetType.Clothing)
             {
-                destinationFolder = new InventoryFolderBase();
+                destinationFolder = new InventoryFolderBase
+                                        {
+                                            ID = UUID.Random(),
+                                            Name = "Clothing",
+                                            Owner = destination,
+                                            Type = (short) AssetType.Clothing,
+                                            ParentID = inventoryService.GetRootFolder(destination).ID,
+                                            Version = 1
+                                        };
 
-                destinationFolder.ID = UUID.Random();
-                destinationFolder.Name = "Clothing";
-                destinationFolder.Owner = destination;
-                destinationFolder.Type = (short)AssetType.Clothing;
-                destinationFolder.ParentID = inventoryService.GetRootFolder(destination).ID;
-                destinationFolder.Version = 1;
                 inventoryService.AddFolder(destinationFolder);     // store base record
                 m_log.ErrorFormat("[RADMIN] Created folder for destination {0}", source);
             }
 
             // Wearables
             AvatarWearable[] wearables = avatarAppearance.Wearables;
-            AvatarWearable wearable;
 
             for (int i = 0; i < wearables.Length; i++)
             {
-                wearable = wearables[i];
+                AvatarWearable wearable = wearables[i];
                 if (wearable[0].ItemID != UUID.Zero)
                 {
                     // Get inventory item and copy it
@@ -1583,27 +1580,29 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (item != null)
                     {
-                        InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination);
-                        destinationItem.Name = item.Name;
-                        destinationItem.Description = item.Description;
-                        destinationItem.InvType = item.InvType;
-                        destinationItem.CreatorId = item.CreatorId;
-                        destinationItem.CreatorData = item.CreatorData;
-                        destinationItem.CreatorIdAsUuid = item.CreatorIdAsUuid;
-                        destinationItem.NextPermissions = item.NextPermissions;
-                        destinationItem.CurrentPermissions = item.CurrentPermissions;
-                        destinationItem.BasePermissions = item.BasePermissions;
-                        destinationItem.EveryOnePermissions = item.EveryOnePermissions;
-                        destinationItem.GroupPermissions = item.GroupPermissions;
-                        destinationItem.AssetType = item.AssetType;
-                        destinationItem.AssetID = item.AssetID;
-                        destinationItem.GroupID = item.GroupID;
-                        destinationItem.GroupOwned = item.GroupOwned;
-                        destinationItem.SalePrice = item.SalePrice;
-                        destinationItem.SaleType = item.SaleType;
-                        destinationItem.Flags = item.Flags;
-                        destinationItem.CreationDate = item.CreationDate;
-                        destinationItem.Folder = destinationFolder.ID;
+                        InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
+                                                                {
+                                                                    Name = item.Name,
+                                                                    Description = item.Description,
+                                                                    InvType = item.InvType,
+                                                                    CreatorId = item.CreatorId,
+                                                                    CreatorData = item.CreatorData,
+                                                                    CreatorIdAsUuid = item.CreatorIdAsUuid,
+                                                                    NextPermissions = item.NextPermissions,
+                                                                    CurrentPermissions = item.CurrentPermissions,
+                                                                    BasePermissions = item.BasePermissions,
+                                                                    EveryOnePermissions = item.EveryOnePermissions,
+                                                                    GroupPermissions = item.GroupPermissions,
+                                                                    AssetType = item.AssetType,
+                                                                    AssetID = item.AssetID,
+                                                                    GroupID = item.GroupID,
+                                                                    GroupOwned = item.GroupOwned,
+                                                                    SalePrice = item.SalePrice,
+                                                                    SaleType = item.SaleType,
+                                                                    Flags = item.Flags,
+                                                                    CreationDate = item.CreationDate,
+                                                                    Folder = destinationFolder.ID
+                                                                };
                         ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
                             inventoryModule.AddInventoryItem(destinationItem);
@@ -1637,27 +1636,29 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (item != null)
                     {
-                        InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination);
-                        destinationItem.Name = item.Name;
-                        destinationItem.Description = item.Description;
-                        destinationItem.InvType = item.InvType;
-                        destinationItem.CreatorId = item.CreatorId;
-                        destinationItem.CreatorData = item.CreatorData;
-                        destinationItem.CreatorIdAsUuid = item.CreatorIdAsUuid;
-                        destinationItem.NextPermissions = item.NextPermissions;
-                        destinationItem.CurrentPermissions = item.CurrentPermissions;
-                        destinationItem.BasePermissions = item.BasePermissions;
-                        destinationItem.EveryOnePermissions = item.EveryOnePermissions;
-                        destinationItem.GroupPermissions = item.GroupPermissions;
-                        destinationItem.AssetType = item.AssetType;
-                        destinationItem.AssetID = item.AssetID;
-                        destinationItem.GroupID = item.GroupID;
-                        destinationItem.GroupOwned = item.GroupOwned;
-                        destinationItem.SalePrice = item.SalePrice;
-                        destinationItem.SaleType = item.SaleType;
-                        destinationItem.Flags = item.Flags;
-                        destinationItem.CreationDate = item.CreationDate;
-                        destinationItem.Folder = destinationFolder.ID;
+                        InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
+                                                                {
+                                                                    Name = item.Name,
+                                                                    Description = item.Description,
+                                                                    InvType = item.InvType,
+                                                                    CreatorId = item.CreatorId,
+                                                                    CreatorData = item.CreatorData,
+                                                                    CreatorIdAsUuid = item.CreatorIdAsUuid,
+                                                                    NextPermissions = item.NextPermissions,
+                                                                    CurrentPermissions = item.CurrentPermissions,
+                                                                    BasePermissions = item.BasePermissions,
+                                                                    EveryOnePermissions = item.EveryOnePermissions,
+                                                                    GroupPermissions = item.GroupPermissions,
+                                                                    AssetType = item.AssetType,
+                                                                    AssetID = item.AssetID,
+                                                                    GroupID = item.GroupID,
+                                                                    GroupOwned = item.GroupOwned,
+                                                                    SalePrice = item.SalePrice,
+                                                                    SaleType = item.SaleType,
+                                                                    Flags = item.Flags,
+                                                                    CreationDate = item.CreationDate,
+                                                                    Folder = destinationFolder.ID
+                                                                };
                         ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
                             inventoryModule.AddInventoryItem(destinationItem);
@@ -1694,17 +1695,15 @@ namespace OpenSim.CoreApplicationPlugins
             // Missing source folder? This should *never* be the case
             if (sourceFolder.Type != (short)assetType)
             {
-                sourceFolder = new InventoryFolderBase();
-                sourceFolder.ID       = UUID.Random();
-                if (assetType == AssetType.Clothing) {
-                    sourceFolder.Name     = "Clothing";
-                } else {
-                    sourceFolder.Name     = "Body Parts";
-                }
-                sourceFolder.Owner    = source;
-                sourceFolder.Type     = (short)assetType;
-                sourceFolder.ParentID = inventoryService.GetRootFolder(source).ID;
-                sourceFolder.Version  = 1;
+                sourceFolder = new InventoryFolderBase
+                                   {
+                                       ID = UUID.Random(),
+                                       Name = assetType == AssetType.Clothing ? "Clothing" : "Body Parts",
+                                       Owner = source,
+                                       Type = (short) assetType,
+                                       ParentID = inventoryService.GetRootFolder(source).ID,
+                                       Version = 1
+                                   };
                 inventoryService.AddFolder(sourceFolder);     // store base record
                 m_log.ErrorFormat("[RADMIN] Created folder for source {0}", source);
             }
@@ -1712,30 +1711,33 @@ namespace OpenSim.CoreApplicationPlugins
             // Missing destination folder? This should *never* be the case
             if (destinationFolder.Type != (short)assetType)
             {
-                destinationFolder = new InventoryFolderBase();
-                destinationFolder.ID       = UUID.Random();
-                destinationFolder.Name     = assetType.ToString();
-                destinationFolder.Owner    = destination;
-                destinationFolder.Type     = (short)assetType;
-                destinationFolder.ParentID = inventoryService.GetRootFolder(destination).ID;
-                destinationFolder.Version  = 1;
+                destinationFolder = new InventoryFolderBase
+                                        {
+                                            ID = UUID.Random(),
+                                            Name = assetType.ToString(),
+                                            Owner = destination,
+                                            Type = (short) assetType,
+                                            ParentID = inventoryService.GetRootFolder(destination).ID,
+                                            Version = 1
+                                        };
                 inventoryService.AddFolder(destinationFolder);     // store base record
                 m_log.ErrorFormat("[RADMIN] Created folder for destination {0}", source);
             }
 
-            InventoryFolderBase extraFolder;
             List<InventoryFolderBase> folders = inventoryService.GetFolderContent(source, sourceFolder.ID).Folders;
 
             foreach (InventoryFolderBase folder in folders)
             {
 
-                extraFolder = new InventoryFolderBase();
-                extraFolder.ID = UUID.Random();
-                extraFolder.Name = folder.Name;
-                extraFolder.Owner = destination;
-                extraFolder.Type = folder.Type;
-                extraFolder.Version = folder.Version;
-                extraFolder.ParentID = destinationFolder.ID;
+                InventoryFolderBase extraFolder = new InventoryFolderBase
+                                                      {
+                                                          ID = UUID.Random(),
+                                                          Name = folder.Name,
+                                                          Owner = destination,
+                                                          Type = folder.Type,
+                                                          Version = folder.Version,
+                                                          ParentID = destinationFolder.ID
+                                                      };
                 inventoryService.AddFolder(extraFolder);
 
                 m_log.DebugFormat("[RADMIN] Added folder {0} to folder {1}", extraFolder.ID, sourceFolder.ID);
@@ -1744,27 +1746,29 @@ namespace OpenSim.CoreApplicationPlugins
 
                 foreach (InventoryItemBase item in items)
                 {
-                    InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination);
-                    destinationItem.Name = item.Name;
-                    destinationItem.Description = item.Description;
-                    destinationItem.InvType = item.InvType;
-                    destinationItem.CreatorId = item.CreatorId;
-                    destinationItem.CreatorData = item.CreatorData;
-                    destinationItem.CreatorIdAsUuid = item.CreatorIdAsUuid;
-                    destinationItem.NextPermissions = item.NextPermissions;
-                    destinationItem.CurrentPermissions = item.CurrentPermissions;
-                    destinationItem.BasePermissions = item.BasePermissions;
-                    destinationItem.EveryOnePermissions = item.EveryOnePermissions;
-                    destinationItem.GroupPermissions = item.GroupPermissions;
-                    destinationItem.AssetType = item.AssetType;
-                    destinationItem.AssetID = item.AssetID;
-                    destinationItem.GroupID = item.GroupID;
-                    destinationItem.GroupOwned = item.GroupOwned;
-                    destinationItem.SalePrice = item.SalePrice;
-                    destinationItem.SaleType = item.SaleType;
-                    destinationItem.Flags = item.Flags;
-                    destinationItem.CreationDate = item.CreationDate;
-                    destinationItem.Folder = extraFolder.ID;
+                    InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
+                                                            {
+                                                                Name = item.Name,
+                                                                Description = item.Description,
+                                                                InvType = item.InvType,
+                                                                CreatorId = item.CreatorId,
+                                                                CreatorData = item.CreatorData,
+                                                                CreatorIdAsUuid = item.CreatorIdAsUuid,
+                                                                NextPermissions = item.NextPermissions,
+                                                                CurrentPermissions = item.CurrentPermissions,
+                                                                BasePermissions = item.BasePermissions,
+                                                                EveryOnePermissions = item.EveryOnePermissions,
+                                                                GroupPermissions = item.GroupPermissions,
+                                                                AssetType = item.AssetType,
+                                                                AssetID = item.AssetID,
+                                                                GroupID = item.GroupID,
+                                                                GroupOwned = item.GroupOwned,
+                                                                SalePrice = item.SalePrice,
+                                                                SaleType = item.SaleType,
+                                                                Flags = item.Flags,
+                                                                CreationDate = item.CreationDate,
+                                                                Folder = extraFolder.ID
+                                                            };
 
                     ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
@@ -1826,12 +1830,7 @@ namespace OpenSim.CoreApplicationPlugins
                     uint   regionYLocation     = 1000;
                     string password   = UUID.Random().ToString(); // No requirement to sign-in.
                     UUID ID = UUID.Zero;
-                    AvatarAppearance avatarAppearance;
-                    XmlNodeList avatars;
-                    XmlNodeList assets;
                     XmlNode perms = null;
-                    bool include = false;
-                    bool select  = false;
 
                     IScene scene = manager.CurrentOrFirstScene;
                     IInventoryService inventoryService = scene.InventoryService;
@@ -1840,7 +1839,7 @@ namespace OpenSim.CoreApplicationPlugins
                     doc.LoadXml(File.ReadAllText(defaultAppearanceFileName));
 
                     // Load up any included assets. Duplicates will be ignored
-                    assets = doc.GetElementsByTagName("RequiredAsset");
+                    XmlNodeList assets = doc.GetElementsByTagName("RequiredAsset");
                     foreach (XmlNode assetNode in assets)
                     {
                         AssetBase asset = new AssetBase(UUID.Random(), GetStringAttribute(assetNode, "name", ""),
@@ -1862,7 +1861,7 @@ namespace OpenSim.CoreApplicationPlugins
                         asset.ID = assetService.Store(asset);
                     }
 
-                    avatars = doc.GetElementsByTagName("Avatar");
+                    XmlNodeList avatars = doc.GetElementsByTagName("Avatar");
 
                     // The document may contain multiple avatars
 
@@ -1873,6 +1872,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                         // Create the user identified by the avatar entry
 
+                        bool include = false;
                         try
                         {
                             // Only the name value is mandatory
@@ -1927,10 +1927,9 @@ namespace OpenSim.CoreApplicationPlugins
                         {
                             // Setup for appearance processing
                             AvatarData avatarData = scene.AvatarService.GetAvatar(ID);
-                            if (avatarData != null)
-                                avatarAppearance = avatarData.ToAvatarAppearance(ID);
-                            else
-                                avatarAppearance = new AvatarAppearance();
+                            AvatarAppearance avatarAppearance = avatarData != null
+                                                                    ? avatarData.ToAvatarAppearance(ID)
+                                                                    : new AvatarAppearance();
 
                             AvatarWearable[] wearables = avatarAppearance.Wearables;
                             for (int i=0; i<wearables.Length; i++)
@@ -1948,13 +1947,15 @@ namespace OpenSim.CoreApplicationPlugins
                                 // This should *never* be the case
                                 if (clothingFolder == null || clothingFolder.Type != (short)AssetType.Clothing)
                                 {
-                                    clothingFolder = new InventoryFolderBase();
-                                    clothingFolder.ID       = UUID.Random();
-                                    clothingFolder.Name     = "Clothing";
-                                    clothingFolder.Owner    = ID;
-                                    clothingFolder.Type     = (short)AssetType.Clothing;
-                                    clothingFolder.ParentID = inventoryService.GetRootFolder(ID).ID;
-                                    clothingFolder.Version  = 1;
+                                    clothingFolder = new InventoryFolderBase
+                                                         {
+                                                             ID = UUID.Random(),
+                                                             Name = "Clothing",
+                                                             Owner = ID,
+                                                             Type = (short) AssetType.Clothing,
+                                                             ParentID = inventoryService.GetRootFolder(ID).ID,
+                                                             Version = 1
+                                                         };
                                     inventoryService.AddFolder(clothingFolder);     // store base record
                                     m_log.ErrorFormat("[RADMIN] Created clothing folder for {0}/{1}", name, ID);
                                 }
@@ -1963,44 +1964,34 @@ namespace OpenSim.CoreApplicationPlugins
                                 // default appearance XMl file.
 
                                 XmlNodeList outfits = avatar.GetElementsByTagName("Ensemble");
-                                InventoryFolderBase extraFolder;
-                                string outfitName;
-                                UUID assetid;
 
                                 foreach (XmlElement outfit in outfits)
                                 {
                                     m_log.DebugFormat("[RADMIN] Loading outfit {0} for {1}",
                                         GetStringAttribute(outfit,"name","?"), GetStringAttribute(avatar,"name","?"));
 
-                                    outfitName   = GetStringAttribute(outfit,"name","");
-                                    select  = (GetStringAttribute(outfit,"default","no") == "yes");
+                                    string outfitName = GetStringAttribute(outfit,"name","");
+                                    bool select  = (GetStringAttribute(outfit,"default","no") == "yes");
 
                                     // If the folder already exists, re-use it. The defaults may
                                     // change over time. Augment only.
 
                                     List<InventoryFolderBase> folders = inventoryService.GetFolderContent(ID, clothingFolder.ID).Folders;
-                                    extraFolder = null;
-
-                                    foreach (InventoryFolderBase folder in folders)
-                                    {
-                                    if (folder.Name == outfitName)
-                                        {
-                                            extraFolder = folder;
-                                            break;
-                                        }
-                                    }
+                                    InventoryFolderBase extraFolder = folders.FirstOrDefault(folder => folder.Name == outfitName);
 
                                     // Otherwise, we must create the folder.
                                     if (extraFolder == null)
                                     {
                                         m_log.DebugFormat("[RADMIN] Creating outfit folder {0} for {1}", outfitName, name);
-                                        extraFolder          = new InventoryFolderBase();
-                                        extraFolder.ID       = UUID.Random();
-                                        extraFolder.Name     = outfitName;
-                                        extraFolder.Owner    = ID;
-                                        extraFolder.Type     = (short)AssetType.Clothing;
-                                        extraFolder.Version  = 1;
-                                        extraFolder.ParentID = clothingFolder.ID;
+                                        extraFolder = new InventoryFolderBase
+                                                          {
+                                                              ID = UUID.Random(),
+                                                              Name = outfitName,
+                                                              Owner = ID,
+                                                              Type = (short) AssetType.Clothing,
+                                                              Version = 1,
+                                                              ParentID = clothingFolder.ID
+                                                          };
                                         inventoryService.AddFolder(extraFolder);
                                         m_log.DebugFormat("[RADMIN] Adding outfile folder {0} to folder {1}", extraFolder.ID, clothingFolder.ID);
                                     }
@@ -2010,7 +2001,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                                     foreach (XmlElement item in items)
                                     {
-                                        assetid = UUID.Zero;
+                                        UUID assetid = UUID.Zero;
                                         XmlNodeList children = item.ChildNodes;
                                         foreach (XmlNode child in children)
                                         {
@@ -2029,41 +2020,55 @@ namespace OpenSim.CoreApplicationPlugins
                                         InventoryItemBase inventoryItem = null;
 
                                         // Check if asset is in inventory already
-                                        inventoryItem = null;
                                         List<InventoryItemBase> inventoryItems = inventoryService.GetFolderContent(ID, extraFolder.ID).Items;
 
-                                        foreach (InventoryItemBase listItem in inventoryItems)
-                                        {
-                                            if (listItem.AssetID == assetid)
-                                            {
-                                                inventoryItem = listItem;
-                                                break;
-                                            }
-                                        }
+                                        inventoryItem = inventoryItems.FirstOrDefault(listItem => listItem.AssetID == assetid);
 
                                         // Create inventory item
                                         if (inventoryItem == null)
                                         {
-                                            inventoryItem = new InventoryItemBase(UUID.Random(), ID);
-                                            inventoryItem.Name = GetStringAttribute(item,"name","");
-                                            inventoryItem.Description = GetStringAttribute(item,"desc","");
-                                            inventoryItem.InvType = GetIntegerAttribute(item,"invtype",-1);
-                                            inventoryItem.CreatorId = GetStringAttribute(item,"creatorid","");
-                                            inventoryItem.CreatorIdAsUuid = (UUID)GetStringAttribute(item,"creatoruuid","");
-                                            inventoryItem.NextPermissions = GetUnsignedAttribute(perms,"next",0x7fffffff);
-                                            inventoryItem.CurrentPermissions = GetUnsignedAttribute(perms,"current",0x7fffffff);
-                                            inventoryItem.BasePermissions = GetUnsignedAttribute(perms,"base",0x7fffffff);
-                                            inventoryItem.EveryOnePermissions = GetUnsignedAttribute(perms,"everyone",0x7fffffff);
-                                            inventoryItem.GroupPermissions = GetUnsignedAttribute(perms,"group",0x7fffffff);
-                                            inventoryItem.AssetType = GetIntegerAttribute(item,"assettype",-1);
-                                            inventoryItem.AssetID = assetid; // associated asset
-                                            inventoryItem.GroupID = (UUID)GetStringAttribute(item,"groupid","");
-                                            inventoryItem.GroupOwned = (GetStringAttribute(item,"groupowned","false") == "true");
-                                            inventoryItem.SalePrice = GetIntegerAttribute(item,"saleprice",0);
-                                            inventoryItem.SaleType = (byte)GetIntegerAttribute(item,"saletype",0);
-                                            inventoryItem.Flags = GetUnsignedAttribute(item,"flags",0);
-                                            inventoryItem.CreationDate = GetIntegerAttribute(item,"creationdate",Util.UnixTimeSinceEpoch());
-                                            inventoryItem.Folder = extraFolder.ID; // Parent folder
+                                            inventoryItem = new InventoryItemBase(UUID.Random(), ID)
+                                                                {
+                                                                    Name = GetStringAttribute(item, "name", ""),
+                                                                    Description = GetStringAttribute(item, "desc", ""),
+                                                                    InvType = GetIntegerAttribute(item, "invtype", -1),
+                                                                    CreatorId =
+                                                                        GetStringAttribute(item, "creatorid", ""),
+                                                                    CreatorIdAsUuid =
+                                                                        (UUID)
+                                                                        GetStringAttribute(item, "creatoruuid", ""),
+                                                                    NextPermissions =
+                                                                        GetUnsignedAttribute(perms, "next", 0x7fffffff),
+                                                                    CurrentPermissions =
+                                                                        GetUnsignedAttribute(perms, "current",
+                                                                                             0x7fffffff),
+                                                                    BasePermissions =
+                                                                        GetUnsignedAttribute(perms, "base", 0x7fffffff),
+                                                                    EveryOnePermissions =
+                                                                        GetUnsignedAttribute(perms, "everyone",
+                                                                                             0x7fffffff),
+                                                                    GroupPermissions =
+                                                                        GetUnsignedAttribute(perms, "group", 0x7fffffff),
+                                                                    AssetType =
+                                                                        GetIntegerAttribute(item, "assettype", -1),
+                                                                    AssetID = assetid,
+                                                                    GroupID =
+                                                                        (UUID) GetStringAttribute(item, "groupid", ""),
+                                                                    GroupOwned =
+                                                                        (GetStringAttribute(item, "groupowned", "false") ==
+                                                                         "true"),
+                                                                    SalePrice =
+                                                                        GetIntegerAttribute(item, "saleprice", 0),
+                                                                    SaleType =
+                                                                        (byte) GetIntegerAttribute(item, "saletype", 0),
+                                                                    Flags = GetUnsignedAttribute(item, "flags", 0),
+                                                                    CreationDate =
+                                                                        GetIntegerAttribute(item, "creationdate",
+                                                                                            Util.UnixTimeSinceEpoch()),
+                                                                    Folder = extraFolder.ID
+                                                                };
+                                            // associated asset
+                                            // Parent folder
 
                                             ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
                                             if (inventoryModule != null)
@@ -2122,11 +2127,10 @@ namespace OpenSim.CoreApplicationPlugins
             return true;
         }
 
-        /// <summary>
-        /// Load an OAR file into a region..
-        /// <summary>
+        /// <summary> Load an OAR file into a region.. </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcLoadOARMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -2170,7 +2174,7 @@ namespace OpenSim.CoreApplicationPlugins
                     Hashtable requestData = (Hashtable) request.Params[0];
 
                     // check completeness
-                    foreach (string parameter in new string[] {"password", "filename"})
+                    foreach (string parameter in new[] {"password", "filename"})
                     {
                         if (!requestData.Contains(parameter))
                             throw new Exception(String.Format("missing parameter {0}", parameter));
@@ -2211,7 +2215,7 @@ namespace OpenSim.CoreApplicationPlugins
                 catch (Exception e)
                 {
                     m_log.InfoFormat("[RADMIN] LoadOAR: {0}", e.Message);
-                    m_log.DebugFormat("[RADMIN] LoadOAR: {0}", e.ToString());
+                    m_log.DebugFormat("[RADMIN] LoadOAR: {0}", e);
 
                     responseData["loaded"] = false;
                     responseData["error"] = e.Message;
@@ -2224,11 +2228,10 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        /// <summary>
-        /// Save a region to an OAR file
-        /// <summary>
+        /// <summary> Save a region to an OAR file </summary>
         /// <param name="request">incoming XML RPC request</param>
-        /// <remarks>
+        ///<param name="remoteClient"></param>
+        ///<remarks>
         /// XmlRpcSaveOARMethod takes the following XMLRPC
         /// parameters
         /// <list type="table">
@@ -2317,7 +2320,7 @@ namespace OpenSim.CoreApplicationPlugins
             catch (Exception e)
             {
                 m_log.InfoFormat("[RADMIN] SaveOAR: {0}", e.Message);
-                m_log.DebugFormat("[RADMIN] SaveOAR: {0}", e.ToString());
+                m_log.DebugFormat("[RADMIN] SaveOAR: {0}", e);
 
                 responseData["saved"] = false;
                 responseData["error"] = e.Message;
@@ -2667,16 +2670,10 @@ namespace OpenSim.CoreApplicationPlugins
                     //UserProfileCacheService ups = m_application.CommunicationsManager.UserProfileCacheService;
                     IScene scene = manager.CurrentOrFirstScene;
                     Hashtable users = (Hashtable) requestData["users"];
-                    List<UUID> uuids = new List<UUID>();
-                    foreach (string name in users.Values)
-                    {
-                        string[] parts = name.Split();
-                        UserAccount account = userService.GetUserAccount(scopeID, parts[0], parts[1]);
-                        if (account != null)
-                        {
-                            uuids.Add(account.PrincipalID);
-                        }
-                    }
+                    List<UUID> uuids = (from string name in users.Values
+                                        select name.Split()
+                                        into parts select userService.GetUserAccount(scopeID, parts[0], parts[1])
+                                        into account where account != null select account.PrincipalID).ToList();
                     List<UUID> accessControlList = new List<UUID>(scene.RegionInfo.EstateSettings.EstateAccess);
                     foreach (UUID uuid in uuids)
                     {
@@ -2779,7 +2776,7 @@ namespace OpenSim.CoreApplicationPlugins
             return response;
         }
 
-        private static void CheckStringParameters(XmlRpcRequest request, string[] param)
+        private static void CheckStringParameters(XmlRpcRequest request, IEnumerable<string> param)
         {
             Hashtable requestData = (Hashtable) request.Params[0];
             foreach (string parameter in param)
@@ -2791,7 +2788,7 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        private static void CheckIntegerParams(XmlRpcRequest request, string[] param)
+        private static void CheckIntegerParams(XmlRpcRequest request, IEnumerable<string> param)
         {
             Hashtable requestData = (Hashtable) request.Params[0];
             foreach (string parameter in param)
@@ -2820,25 +2817,30 @@ namespace OpenSim.CoreApplicationPlugins
                         return defaultValue;
                 }
             }
-            else
-                return defaultValue;
+            return defaultValue;
         }
 
         private int GetIntegerAttribute(XmlNode node, string attribute, int defaultValue)
         {
-            try { return Convert.ToInt32(node.Attributes[attribute].Value); } catch{}
+            try {
+                if (node.Attributes != null) return Convert.ToInt32(node.Attributes[attribute].Value);
+            } catch{}
             return defaultValue;
         }
 
         private uint GetUnsignedAttribute(XmlNode node, string attribute, uint defaultValue)
         {
-            try { return Convert.ToUInt32(node.Attributes[attribute].Value); } catch{}
+            try {
+                if (node.Attributes != null) return Convert.ToUInt32(node.Attributes[attribute].Value);
+            } catch{}
             return defaultValue;
         }
 
         private string GetStringAttribute(XmlNode node, string attribute, string defaultValue)
         {
-            try { return node.Attributes[attribute].Value; } catch{}
+            try {
+                if (node.Attributes != null) return node.Attributes[attribute].Value;
+            } catch{}
             return defaultValue;
         }
 
@@ -2908,9 +2910,8 @@ namespace OpenSim.CoreApplicationPlugins
 
                     m_log.InfoFormat("[RADMIN]: Account {0} {1} created successfully", firstName, lastName);
                     return account;
-                 } else {
-                    m_log.ErrorFormat("[RADMIN]: Account creation failed for account {0} {1}", firstName, lastName);
-                }
+                 }
+                m_log.ErrorFormat("[RADMIN]: Account creation failed for account {0} {1}", firstName, lastName);
             }
             else
             {
@@ -2944,11 +2945,8 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 return true;
             }
-            else
-            {
-                m_log.ErrorFormat("[RADMIN]: No such user");
-                return false;
-            }
+            m_log.ErrorFormat("[RADMIN]: No such user");
+            return false;
         }
     }
 }

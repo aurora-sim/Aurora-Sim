@@ -24,43 +24,42 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 using System;
-using System.Collections.Generic;
 using OpenSim.Framework;
 using OpenSim.Region.Physics.Manager;
-using OpenMetaverse;
 
 namespace OpenSim.Region.Physics.BulletSPlugin
 {
-public class BSPlugin : IPhysicsPlugin
-{
-    //private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-    private BSScene _mScene;
-
-    public BSPlugin()
+    public class BSPlugin : IPhysicsPlugin
     {
-    }
+        //private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-    public bool Init()
-    {
-        return true;
-    }
+        private BSScene _mScene;
 
-    public PhysicsScene GetScene(String sceneIdentifier)
-    {
-        if (_mScene == null)
-            _mScene = new BSScene(sceneIdentifier);
-        return (_mScene);
-    }
+        #region IPhysicsPlugin Members
 
-    public string GetName()
-    {
-        return "ModifiedBulletSim";
-    }
+        public bool Init()
+        {
+            return true;
+        }
 
-    public void Dispose()
-    {
+        public PhysicsScene GetScene(String sceneIdentifier)
+        {
+            if (_mScene == null)
+                _mScene = new BSScene(sceneIdentifier);
+            return (_mScene);
+        }
+
+        public string GetName()
+        {
+            return "ModifiedBulletSim";
+        }
+
+        public void Dispose()
+        {
+        }
+
+        #endregion
     }
-}
 }

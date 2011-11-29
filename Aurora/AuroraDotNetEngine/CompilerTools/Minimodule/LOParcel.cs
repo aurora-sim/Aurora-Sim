@@ -25,33 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class LOParcel : System.MarshalByRefObject, IParcel
+    internal class LOParcel : MarshalByRefObject, IParcel
     {
-        private readonly IScene m_scene;
         private readonly int m_parcelID;
+        private readonly IScene m_scene;
 
-        public LOParcel (IScene m_scene, int m_parcelID)
+        public LOParcel(IScene m_scene, int m_parcelID)
         {
             this.m_scene = m_scene;
             this.m_parcelID = m_parcelID;
         }
 
-        private ILandObject GetLO()
-        {
-            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
-            if (parcelManagement != null)
-            {
-                return parcelManagement.GetLandObject(m_parcelID);
-            }
-            return null;
-        }
+        #region IParcel Members
 
         public string Name
         {
@@ -67,8 +58,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public ISocialEntity Owner
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        #endregion
+
+        private ILandObject GetLO()
+        {
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                return parcelManagement.GetLandObject(m_parcelID);
+            }
+            return null;
         }
     }
 }

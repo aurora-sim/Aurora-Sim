@@ -26,25 +26,25 @@
  */
 
 // to build without references to System.Drawing, comment this out
+
 #define SYSTEM_DRAWING
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-
-#if SYSTEM_DRAWING
 using System.Drawing;
-using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
+using BitmapProcessing;
+#if SYSTEM_DRAWING
 
 namespace PrimMesher
 {
-    public unsafe class SculptMap
+    public class SculptMap
     {
-        public int width;
+        public byte[] blueBytes;
+        public byte[] greenBytes;
         public int height;
         public byte[] redBytes;
-        public byte[] greenBytes;
-        public byte[] blueBytes;
+        public int width;
 
         public SculptMap()
         {
@@ -58,15 +58,15 @@ namespace PrimMesher
             if (bmW == 0 || bmH == 0)
                 throw new Exception("SculptMap: bitmap has no data");
 
-            int numLodPixels = lod * 2 * lod * 2;  // (32 * 2)^2  = 64^2 pixels for default sculpt map image
+            int numLodPixels = lod*2*lod*2; // (32 * 2)^2  = 64^2 pixels for default sculpt map image
 
             bool needsScaling = false;
 
-            bool smallMap = bmW * bmH <= lod * lod;
+            bool smallMap = bmW*bmH <= lod*lod;
 
             width = bmW;
             height = bmH;
-            while (width * height > numLodPixels)
+            while (width*height > numLodPixels)
             {
                 width >>= 1;
                 height >>= 1;
@@ -74,33 +74,32 @@ namespace PrimMesher
             }
 
 
-
             try
             {
                 if (needsScaling)
                     bm = ScaleImage(bm, width, height,
-                        System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor);
+                                    InterpolationMode.NearestNeighbor);
             }
 
             catch (Exception e)
             {
-                throw new Exception("Exception in ScaleImage(): e: " + e.ToString());
+                throw new Exception("Exception in ScaleImage(): e: " + e);
             }
 
-            if (width * height > lod * lod)
+            if (width*height > lod*lod)
             {
                 width >>= 1;
                 height >>= 1;
             }
 
-            int numBytes = (width + 1) * (height + 1);
+            int numBytes = (width + 1)*(height + 1);
             redBytes = new byte[numBytes];
             greenBytes = new byte[numBytes];
             blueBytes = new byte[numBytes];
 
-            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bm);
+            FastBitmap unsafeBMP = new FastBitmap(bm);
             unsafeBMP.LockBitmap(); //Lock the bitmap for the unsafe operation
-            
+
             int byteNdx = 0;
 
             try
@@ -112,10 +111,10 @@ namespace PrimMesher
                         Color pixel;
                         if (smallMap)
                             pixel = unsafeBMP.GetPixel(x < width ? x : x - 1,
-                                            y < height ? y : y - 1);
+                                                       y < height ? y : y - 1);
                         else
-                            pixel = unsafeBMP.GetPixel(x < width ? x * 2 : x * 2 - 1,
-                                            y < height ? y * 2 : y * 2 - 1);
+                            pixel = unsafeBMP.GetPixel(x < width ? x*2 : x*2 - 1,
+                                                       y < height ? y*2 : y*2 - 1);
 
                         redBytes[byteNdx] = pixel.R;
                         greenBytes[byteNdx] = pixel.G;
@@ -127,7 +126,7 @@ namespace PrimMesher
             }
             catch (Exception e)
             {
-                throw new Exception("Caught exception processing byte arrays in SculptMap(): e: " + e.ToString());
+                throw new Exception("Caught exception processing byte arrays in SculptMap(): e: " + e);
             }
 
             //All done, unlock
@@ -144,7 +143,7 @@ namespace PrimMesher
 
             List<List<Coord>> rows = new List<List<Coord>>(numRows);
 
-            float pixScale = 1.0f / 255;
+            float pixScale = 1.0f/255;
 
             int rowNdx, colNdx;
             int smNdx = 0;
@@ -155,9 +154,11 @@ namespace PrimMesher
                 for (colNdx = 0; colNdx < numCols; colNdx++)
                 {
                     if (mirror)
-                        row.Add(new Coord(-(redBytes[smNdx] * pixScale - 0.5f), (greenBytes[smNdx] * pixScale - 0.5f), blueBytes[smNdx] * pixScale - 0.5f));
+                        row.Add(new Coord(-(redBytes[smNdx]*pixScale - 0.5f), (greenBytes[smNdx]*pixScale - 0.5f),
+                                          blueBytes[smNdx]*pixScale - 0.5f));
                     else
-                        row.Add(new Coord(redBytes[smNdx] * pixScale - 0.5f, greenBytes[smNdx] * pixScale - 0.5f, blueBytes[smNdx] * pixScale - 0.5f));
+                        row.Add(new Coord(redBytes[smNdx]*pixScale - 0.5f, greenBytes[smNdx]*pixScale - 0.5f,
+                                          blueBytes[smNdx]*pixScale - 0.5f));
 
                     ++smNdx;
                 }
@@ -167,7 +168,7 @@ namespace PrimMesher
         }
 
         private Bitmap ScaleImage(Bitmap srcImage, int destWidth, int destHeight,
-                System.Drawing.Drawing2D.InterpolationMode interpMode)
+                                  InterpolationMode interpMode)
         {
             Bitmap scaledImage = new Bitmap(srcImage, destWidth, destHeight);
             scaledImage.SetResolution(96.0f, 96.0f);
@@ -176,13 +177,14 @@ namespace PrimMesher
             grPhoto.InterpolationMode = interpMode;
 
             grPhoto.DrawImage(srcImage,
-                new Rectangle(0, 0, destWidth, destHeight),
-                new Rectangle(0, 0, srcImage.Width, srcImage.Height),
-                GraphicsUnit.Pixel);
+                              new Rectangle(0, 0, destWidth, destHeight),
+                              new Rectangle(0, 0, srcImage.Width, srcImage.Height),
+                              GraphicsUnit.Pixel);
 
             grPhoto.Dispose();
             return scaledImage;
         }
     }
 }
+
 #endif

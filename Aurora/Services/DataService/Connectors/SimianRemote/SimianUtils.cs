@@ -26,25 +26,18 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
+using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.DataManager;
-using Aurora.Framework;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
 
 namespace Aurora.Services.DataService
 {
     public class SimianUtils
     {
-        private static ExpiringCache<string, OSDMap> m_memoryCache = new ExpiringCache<string,OSDMap>();
+        private static readonly ExpiringCache<string, OSDMap> m_memoryCache = new ExpiringCache<string, OSDMap>();
         private static int m_cacheTimeout = 30;
 
         public static bool GetGenericEntry(UUID ownerID, string type, string key, string m_ServerURI, out OSDMap map)
@@ -52,23 +45,23 @@ namespace Aurora.Services.DataService
             //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  {0} called ({1},{2},{3})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type, key);
 
             NameValueCollection RequestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type },
-                { "Key", key}
-            };
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap Response = CachedPostRequest(RequestArgs, m_ServerURI);
             if (Response["Success"].AsBoolean() && Response["Entries"] is OSDArray)
             {
-                OSDArray entryArray = (OSDArray)Response["Entries"];
+                OSDArray entryArray = (OSDArray) Response["Entries"];
                 if (entryArray.Count == 1)
                 {
                     OSDMap entryMap = entryArray[0] as OSDMap;
                     key = entryMap["Key"].AsString();
-                    map = (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString());
+                    map = (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString());
 
                     //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
 
@@ -92,13 +85,13 @@ namespace Aurora.Services.DataService
             string value = OSDParser.SerializeJsonString(map);
 
             NameValueCollection RequestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "AddGeneric" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type },
-                { "Key", key },
-                { "Value", value}
-            };
+                                                  {
+                                                      {"RequestMethod", "AddGeneric"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type},
+                                                      {"Key", key},
+                                                      {"Value", value}
+                                                  };
 
 
             OSDMap Response = CachedPostRequest(RequestArgs, m_ServerURI);
@@ -113,7 +106,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        static OSDMap CachedPostRequest(NameValueCollection requestArgs, string m_ServerURI)
+        private static OSDMap CachedPostRequest(NameValueCollection requestArgs, string m_ServerURI)
         {
             // Immediately forward the request if the cache is disabled.
             if (m_cacheTimeout == 0)
@@ -131,7 +124,6 @@ namespace Aurora.Services.DataService
 
                 // Send update to server, return the response without caching it
                 return WebUtils.PostToService(m_ServerURI, requestArgs);
-
             }
 
             // If we're not doing an update, we must be requesting data
@@ -155,12 +147,12 @@ namespace Aurora.Services.DataService
         public static bool RemoveGenericEntry(UUID ownerID, string type, string key, string m_ServerURI)
         {
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "RemoveGeneric" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type },
-                { "Key", key }
-            };
+                                                  {
+                                                      {"RequestMethod", "RemoveGeneric"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs, m_ServerURI);
@@ -175,28 +167,22 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public static bool GetGenericEntries(UUID ownerID, string type, string m_ServerURI, out Dictionary<string, OSDMap> maps)
+        public static bool GetGenericEntries(UUID ownerID, string type, string m_ServerURI,
+                                             out Dictionary<string, OSDMap> maps)
         {
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type }
-            };
-
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs, m_ServerURI);
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
-                maps = new Dictionary<string, OSDMap>();
-
-                OSDArray entryArray = (OSDArray)response["Entries"];
-                foreach (OSDMap entryMap in entryArray)
-                {
-                    //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
-                    maps.Add(entryMap["Key"].AsString(), (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString()));
-                }
+                OSDArray entryArray = (OSDArray) response["Entries"];
+                maps = entryArray.Cast<OSDMap>().ToDictionary(entryMap => entryMap["Key"].AsString(), entryMap => (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString()));
                 if (maps.Count == 0)
                 {
                     //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
@@ -215,24 +201,18 @@ namespace Aurora.Services.DataService
         private bool GetGenericEntries(string type, string key, string m_ServerURI, out Dictionary<UUID, OSDMap> maps)
         {
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "Type", type },
-                { "Key", key }
-            };
-
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs, m_ServerURI);
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
-                maps = new Dictionary<UUID, OSDMap>();
-
-                OSDArray entryArray = (OSDArray)response["Entries"];
-                foreach (OSDMap entryMap in entryArray)
-                {
-                    maps.Add(entryMap["OwnerID"].AsUUID(), (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString()));
-                }
+                OSDArray entryArray = (OSDArray) response["Entries"];
+                maps = entryArray.Cast<OSDMap>().ToDictionary(entryMap => entryMap["OwnerID"].AsUUID(), entryMap => (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString()));
                 if (maps.Count == 0)
                 {
                     //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");

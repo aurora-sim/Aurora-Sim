@@ -32,11 +32,11 @@ using log4net.Core;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Writes log information out onto the console
+    ///   Writes log information out onto the console
     /// </summary>
     public class OpenSimAppender : AnsiColorTerminalAppender
     {
-        private ICommandConsole m_console = null;
+        private ICommandConsole m_console;
 
         public ICommandConsole Console
         {
@@ -44,7 +44,7 @@ namespace OpenSim.Framework
             set { m_console = value; }
         }
 
-        override protected void Append(LoggingEvent le)
+        protected override void Append(LoggingEvent le)
         {
             if (m_console != null)
                 m_console.LockOutput();
@@ -66,7 +66,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                System.Console.WriteLine("Couldn't write out log message: {0}", e.ToString());
+                System.Console.WriteLine("Couldn't write out log message: {0}", e);
             }
             finally
             {

@@ -33,19 +33,16 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class DecompDesc
     {
-        public List<float3> mVertices;
-        public List<int> mIndices;
-
-        // options
-        public uint mDepth; // depth to split, a maximum of 10, generally not over 7.
+        public ConvexDecompositionCallback mCallback; // the interface to receive back the results.
         public float mCpercent; // the concavity threshold percentage. 0=20 is reasonable.
-        public float mPpercent; // the percentage volume conservation threshold to collapse hulls. 0-30 is reasonable.
+        public uint mDepth; // depth to split, a maximum of 10, generally not over 7.
+        public List<int> mIndices;
 
         // hull output limits.
         public uint mMaxVertices; // maximum number of vertices in the output hull. Recommended 32 or less.
+        public float mPpercent; // the percentage volume conservation threshold to collapse hulls. 0-30 is reasonable.
         public float mSkinWidth; // a skin width to apply to the output hulls.
-
-        public ConvexDecompositionCallback mCallback; // the interface to receive back the results.
+        public List<float3> mVertices;
 
         public DecompDesc()
         {
@@ -58,11 +55,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
     public class CHull
     {
-        public float[] mMin = new float[3];
-        public float[] mMax = new float[3];
-        public float mVolume;
         public float mDiagonal;
+        public float[] mMax = new float[3];
+        public float[] mMin = new float[3];
         public ConvexResult mResult;
+        public float mVolume;
 
         public CHull(ConvexResult result)
         {
@@ -128,7 +125,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float dy = bmax[1] - bmin[1];
             float dz = bmax[2] - bmin[2];
 
-            return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            return (float) Math.Sqrt(dx*dx + dy*dy + dz*dz);
         }
 
         // return true if the two AABB's overlap.
@@ -148,12 +145,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
     public class ConvexBuilder
     {
-        public List<CHull> mChulls = new List<CHull>();
-        private ConvexDecompositionCallback mCallback;
+        private readonly ConvexDecompositionCallback mCallback;
 
-        private int MAXDEPTH = 8;
         private float CONCAVE_PERCENT = 1f;
+        private int MAXDEPTH = 8;
         private float MERGE_PERCENT = 2f;
+        public List<CHull> mChulls = new List<CHull>();
 
         public ConvexBuilder(ConvexDecompositionCallback callback)
         {
@@ -191,11 +188,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         {
             List<int> src = cr.HullIndices;
 
-            for (int i = 0; i < src.Count / 3; i++)
+            for (int i = 0; i < src.Count/3; i++)
             {
-                int i1 = src[i * 3 + 0];
-                int i2 = src[i * 3 + 1];
-                int i3 = src[i * 3 + 2];
+                int i1 = src[i*3 + 0];
+                int i2 = src[i*3 + 1];
+                int i3 = src[i*3 + 2];
 
                 float3 p1 = cr.HullVertices[i1];
                 float3 p2 = cr.HullVertices[i2];
@@ -226,7 +223,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
             int vcount = vc.GetSize();
             List<float3> vertices = vc.GetVertices();
-            int tcount = indices.Count / 3;
+            int tcount = indices.Count/3;
 
             //don't do anything if hull is empty
             if (tcount == 0)
@@ -248,7 +245,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 float combineVolume = Concavity.computeMeshVolume(hresult.OutputVertices, hresult.Indices);
                 float sumVolume = a.mVolume + b.mVolume;
 
-                float percent = (sumVolume * 100) / combineVolume;
+                float percent = (sumVolume*100)/combineVolume;
                 if (percent >= (100.0f - MERGE_PERCENT))
                 {
                     ConvexResult cr = new ConvexResult(hresult.OutputVertices, hresult.Indices);
@@ -280,7 +277,6 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
                     if (cr != match) // don't try to merge a hull with itself, that be stoopid
                     {
-
                         CHull merge = canMerge(cr, match); // if we can merge these two....
 
                         if (merge != null)
@@ -330,11 +326,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         {
             int ret = 0;
 
-            MAXDEPTH = (int)desc.mDepth;
+            MAXDEPTH = (int) desc.mDepth;
             CONCAVE_PERCENT = desc.mCpercent;
             MERGE_PERCENT = desc.mPpercent;
 
-            ConvexDecomposition.calcConvexDecomposition(desc.mVertices, desc.mIndices, ConvexDecompResult, 0f, 0, MAXDEPTH, CONCAVE_PERCENT, MERGE_PERCENT);
+            ConvexDecomposition.calcConvexDecomposition(desc.mVertices, desc.mIndices, ConvexDecompResult, 0f, 0,
+                                                        MAXDEPTH, CONCAVE_PERCENT, MERGE_PERCENT);
 
             while (combineHulls()) // keep combinging hulls until I can't combine any more...
                 ;
@@ -367,9 +364,13 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
                 if (ret2 == HullError.QE_OK)
                 {
-                    ConvexResult r = new ConvexResult(result.OutputVertices, result.Indices);
+                    ConvexResult r = new ConvexResult(result.OutputVertices, result.Indices)
+                                         {
+                                             mHullVolume =
+                                                 Concavity.computeMeshVolume(result.OutputVertices, result.Indices)
+                                         };
 
-                    r.mHullVolume = Concavity.computeMeshVolume(result.OutputVertices, result.Indices); // the volume of the hull.
+                    // the volume of the hull.
 
                     // compute the best fit OBB
                     //computeBestFitOBB(result.mNumOutputVertices, result.mOutputVertices, sizeof(float) * 3, r.mOBBSides, r.mOBBTransform);
@@ -405,7 +406,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public void sortChulls(List<CHull> hulls)
         {
-            hulls.Sort(delegate(CHull a, CHull b) { return a.mVolume.CompareTo(b.mVolume); });
+            hulls.Sort((a, b) => a.mVolume.CompareTo(b.mVolume));
         }
     }
 }

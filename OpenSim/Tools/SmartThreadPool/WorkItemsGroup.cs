@@ -2,92 +2,95 @@
 // amibar@gmail.com
 
 using System;
-using System.Threading;
-using System.Runtime.CompilerServices;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Amib.Threading.Internal
 {
+
     #region WorkItemsGroup class 
 
     /// <summary>
-    /// Summary description for WorkItemsGroup.
+    ///   Summary description for WorkItemsGroup.
     /// </summary>
     public class WorkItemsGroup : IWorkItemsGroup
     {
         #region Private members
 
-        private object _lock = new object();
         /// <summary>
-        /// Contains the name of this instance of SmartThreadPool.
-        /// Can be changed by the user.
+        ///   Defines how many work items of this WorkItemsGroup can run at once.
+        /// </summary>
+        private readonly int _concurrency;
+
+        /// <summary>
+        ///   Signaled when all of the WorkItemsGroup's work item completed.
+        /// </summary>
+        private readonly ManualResetEvent _isIdleWaitHandle = new ManualResetEvent(true);
+
+        private readonly object _lock = new object();
+
+        /// <summary>
+        ///   A reference to the SmartThreadPool instance that created this 
+        ///   WorkItemsGroup.
+        /// </summary>
+        private readonly SmartThreadPool _stp;
+
+        /// <summary>
+        ///   WorkItemsGroup start information
+        /// </summary>
+        private readonly WIGStartInfo _workItemsGroupStartInfo;
+
+        /// <summary>
+        ///   Priority queue to hold work items before they are passed 
+        ///   to the SmartThreadPool.
+        /// </summary>
+        private readonly PriorityQueue _workItemsQueue;
+
+        /// <summary>
+        ///   A common object for all the work items that this work items group
+        ///   generate so we can mark them to cancel in O(1)
+        /// </summary>
+        private CanceledWorkItemsGroup _canceledWorkItemsGroup = new CanceledWorkItemsGroup();
+
+        /// <summary>
+        ///   Contains the name of this instance of SmartThreadPool.
+        ///   Can be changed by the user.
         /// </summary>
         private string _name = "WorkItemsGroup";
 
         /// <summary>
-        /// A reference to the SmartThreadPool instance that created this 
-        /// WorkItemsGroup.
+        ///   Indicate how many work items are currently running in the SmartThreadPool.
+        ///   This value is used with the Cancel, to calculate if we can send new 
+        ///   work items to the STP.
         /// </summary>
-        private SmartThreadPool _stp;
+        private int _workItemsExecutingInStp;
 
         /// <summary>
-        /// The OnIdle event
-        /// </summary>
-        private event WorkItemsGroupIdleHandler _onIdle;
-
-        /// <summary>
-        /// Defines how many work items of this WorkItemsGroup can run at once.
-        /// </summary>
-        private int _concurrency;
-
-        /// <summary>
-        /// Priority queue to hold work items before they are passed 
-        /// to the SmartThreadPool.
-        /// </summary>
-        private PriorityQueue _workItemsQueue;
-
-        /// <summary>
-        /// Indicate how many work items are waiting in the SmartThreadPool
-        /// queue.
-        /// This value is used to apply the concurrency.
+        ///   Indicate how many work items are waiting in the SmartThreadPool
+        ///   queue.
+        ///   This value is used to apply the concurrency.
         /// </summary>
         private int _workItemsInStpQueue;
 
         /// <summary>
-        /// Indicate how many work items are currently running in the SmartThreadPool.
-        /// This value is used with the Cancel, to calculate if we can send new 
-        /// work items to the STP.
+        ///   The OnIdle event
         /// </summary>
-        private int _workItemsExecutingInStp = 0;
+        private event WorkItemsGroupIdleHandler _onIdle;
 
-        /// <summary>
-        /// WorkItemsGroup start information
-        /// </summary>
-        private WIGStartInfo _workItemsGroupStartInfo;
-
-        /// <summary>
-        /// Signaled when all of the WorkItemsGroup's work item completed.
-        /// </summary>
-        private ManualResetEvent _isIdleWaitHandle = new ManualResetEvent(true);
-
-        /// <summary>
-        /// A common object for all the work items that this work items group
-        /// generate so we can mark them to cancel in O(1)
-        /// </summary>
-        private CanceledWorkItemsGroup _canceledWorkItemsGroup = new CanceledWorkItemsGroup();
-
-        #endregion 
+        #endregion
 
         #region Construction
 
         public WorkItemsGroup(
-            SmartThreadPool stp, 
-            int concurrency, 
+            SmartThreadPool stp,
+            int concurrency,
             WIGStartInfo wigStartInfo)
         {
             if (concurrency <= 0)
             {
-                throw new ArgumentOutOfRangeException("concurrency", concurrency, "concurrency must be greater than zero");
+                throw new ArgumentOutOfRangeException("concurrency", concurrency,
+                                                      "concurrency must be greater than zero");
             }
             _stp = stp;
             _concurrency = concurrency;
@@ -99,30 +102,24 @@ namespace Amib.Threading.Internal
             _workItemsInStpQueue = _workItemsExecutingInStp;
         }
 
-        #endregion 
+        #endregion
 
         #region IWorkItemsGroup implementation
 
         /// <summary>
-        /// Get/Set the name of the SmartThreadPool instance
+        ///   Get/Set the name of the SmartThreadPool instance
         /// </summary>
-        public string Name 
-        { 
-            get
-            {
-                return _name;
-            }
+        public string Name
+        {
+            get { return _name; }
 
-            set
-            {
-                _name = value;
-            }
+            set { _name = value; }
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
+        /// <param name = "callback">A callback to execute</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(WorkItemCallback callback)
         {
@@ -132,23 +129,24 @@ namespace Amib.Threading.Internal
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="workItemPriority">The priority of the work item</param>
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "workItemPriority">The priority of the work item</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(WorkItemCallback callback, WorkItemPriority workItemPriority)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, workItemPriority);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback,
+                                                               workItemPriority);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="workItemInfo">Work item info</param>
-        /// <param name="callback">A callback to execute</param>
+        /// <param name = "workItemInfo">Work item info</param>
+        /// <param name = "callback">A callback to execute</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(WorkItemInfo workItemInfo, WorkItemCallback callback)
         {
@@ -158,11 +156,11 @@ namespace Amib.Threading.Internal
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(WorkItemCallback callback, object state)
@@ -173,131 +171,138 @@ namespace Amib.Threading.Internal
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
-        /// <param name="workItemPriority">The work item priority</param>
+        /// <param name = "workItemPriority">The work item priority</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(WorkItemCallback callback, object state, WorkItemPriority workItemPriority)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state, workItemPriority);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state,
+                                                               workItemPriority);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="workItemInfo">Work item information</param>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "workItemInfo">Work item information</param>
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(WorkItemInfo workItemInfo, WorkItemCallback callback, object state)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, workItemInfo, callback, state);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, workItemInfo, callback,
+                                                               state);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
-        /// <param name="postExecuteWorkItemCallback">
-        /// A delegate to call after the callback completion
+        /// <param name = "postExecuteWorkItemCallback">
+        ///   A delegate to call after the callback completion
         /// </param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(
-            WorkItemCallback callback, 
+            WorkItemCallback callback,
             object state,
             PostExecuteWorkItemCallback postExecuteWorkItemCallback)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state, postExecuteWorkItemCallback);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state,
+                                                               postExecuteWorkItemCallback);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
-        /// <param name="postExecuteWorkItemCallback">
-        /// A delegate to call after the callback completion
+        /// <param name = "postExecuteWorkItemCallback">
+        ///   A delegate to call after the callback completion
         /// </param>
-        /// <param name="workItemPriority">The work item priority</param>
+        /// <param name = "workItemPriority">The work item priority</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(
-            WorkItemCallback callback, 
+            WorkItemCallback callback,
             object state,
             PostExecuteWorkItemCallback postExecuteWorkItemCallback,
             WorkItemPriority workItemPriority)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state, postExecuteWorkItemCallback, workItemPriority);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state,
+                                                               postExecuteWorkItemCallback, workItemPriority);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
-        /// <param name="postExecuteWorkItemCallback">
-        /// A delegate to call after the callback completion
+        /// <param name = "postExecuteWorkItemCallback">
+        ///   A delegate to call after the callback completion
         /// </param>
-        /// <param name="callToPostExecute">Indicates on which cases to call to the post execute callback</param>
+        /// <param name = "callToPostExecute">Indicates on which cases to call to the post execute callback</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(
-            WorkItemCallback callback, 
+            WorkItemCallback callback,
             object state,
             PostExecuteWorkItemCallback postExecuteWorkItemCallback,
             CallToPostExecute callToPostExecute)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state, postExecuteWorkItemCallback, callToPostExecute);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state,
+                                                               postExecuteWorkItemCallback, callToPostExecute);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Queue a work item
+        ///   Queue a work item
         /// </summary>
-        /// <param name="callback">A callback to execute</param>
-        /// <param name="state">
-        /// The context object of the work item. Used for passing arguments to the work item. 
+        /// <param name = "callback">A callback to execute</param>
+        /// <param name = "state">
+        ///   The context object of the work item. Used for passing arguments to the work item. 
         /// </param>
-        /// <param name="postExecuteWorkItemCallback">
-        /// A delegate to call after the callback completion
+        /// <param name = "postExecuteWorkItemCallback">
+        ///   A delegate to call after the callback completion
         /// </param>
-        /// <param name="callToPostExecute">Indicates on which cases to call to the post execute callback</param>
-        /// <param name="workItemPriority">The work item priority</param>
+        /// <param name = "callToPostExecute">Indicates on which cases to call to the post execute callback</param>
+        /// <param name = "workItemPriority">The work item priority</param>
         /// <returns>Returns a work item result</returns>
         public IWorkItemResult QueueWorkItem(
-            WorkItemCallback callback, 
+            WorkItemCallback callback,
             object state,
             PostExecuteWorkItemCallback postExecuteWorkItemCallback,
             CallToPostExecute callToPostExecute,
             WorkItemPriority workItemPriority)
         {
-            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state, postExecuteWorkItemCallback, callToPostExecute, workItemPriority);
+            WorkItem workItem = WorkItemFactory.CreateWorkItem(this, _workItemsGroupStartInfo, callback, state,
+                                                               postExecuteWorkItemCallback, callToPostExecute,
+                                                               workItemPriority);
             EnqueueToSTPNextWorkItem(workItem);
             return workItem.GetWorkItemResult();
         }
 
         /// <summary>
-        /// Wait for the thread pool to be idle
+        ///   Wait for the thread pool to be idle
         /// </summary>
         public void WaitForIdle()
         {
@@ -305,15 +310,15 @@ namespace Amib.Threading.Internal
         }
 
         /// <summary>
-        /// Wait for the thread pool to be idle
+        ///   Wait for the thread pool to be idle
         /// </summary>
         public bool WaitForIdle(TimeSpan timeout)
         {
-            return WaitForIdle((int)timeout.TotalMilliseconds);
+            return WaitForIdle((int) timeout.TotalMilliseconds);
         }
 
         /// <summary>
-        /// Wait for the thread pool to be idle
+        ///   Wait for the thread pool to be idle
         /// </summary>
         public bool WaitForIdle(int millisecondsTimeout)
         {
@@ -323,27 +328,18 @@ namespace Amib.Threading.Internal
 
         public int WaitingCallbacks
         {
-            get
-            {
-                return _workItemsQueue.Count;
-            }
+            get { return _workItemsQueue.Count; }
         }
 
         public event WorkItemsGroupIdleHandler OnIdle
         {
-            add
-            {
-                _onIdle += value;
-            }
-            remove
-            {
-                _onIdle -= value;
-            }
+            add { _onIdle += value; }
+            remove { _onIdle -= value; }
         }
 
         public void Cancel()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 _canceledWorkItemsGroup.IsCanceled = true;
                 _workItemsQueue.Clear();
@@ -362,22 +358,22 @@ namespace Amib.Threading.Internal
                 }
                 _workItemsGroupStartInfo.StartSuspended = false;
             }
-            
-            for(int i = 0; i < _concurrency; ++i)
+
+            for (int i = 0; i < _concurrency; ++i)
             {
                 EnqueueToSTPNextWorkItem(null, false);
             }
         }
 
-        #endregion 
+        #endregion
 
         #region Private methods
 
         private void RegisterToWorkItemCompletion(IWorkItemResult wir)
         {
             IInternalWorkItemResult iwir = wir as IInternalWorkItemResult;
-            iwir.OnWorkItemStarted += new WorkItemStateCallback(OnWorkItemStartedCallback);
-            iwir.OnWorkItemCompleted += new WorkItemStateCallback(OnWorkItemCompletedCallback);
+            iwir.OnWorkItemStarted += OnWorkItemStartedCallback;
+            iwir.OnWorkItemCompleted += OnWorkItemCompletedCallback;
         }
 
         public void OnSTPIsStarting()
@@ -389,8 +385,8 @@ namespace Amib.Threading.Internal
                     return;
                 }
             }
-            
-            for(int i = 0; i < _concurrency; ++i)
+
+            for (int i = 0; i < _concurrency; ++i)
             {
                 EnqueueToSTPNextWorkItem(null, false);
             }
@@ -405,26 +401,28 @@ namespace Amib.Threading.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void FireOnIdleImpl(WorkItemsGroupIdleHandler onIdle)
         {
-            if(null == onIdle)
+            if (null == onIdle)
             {
                 return;
             }
 
             Delegate[] delegates = onIdle.GetInvocationList();
-            foreach(WorkItemsGroupIdleHandler eh in delegates)
+            foreach (WorkItemsGroupIdleHandler eh in delegates)
             {
                 try
                 {
                     eh(this);
                 }
                     // Ignore exceptions
-                catch{} 
+                catch
+                {
+                }
             }
         }
 
         private void OnWorkItemStartedCallback(WorkItem workItem)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 ++_workItemsExecutingInStp;
             }
@@ -442,21 +440,21 @@ namespace Amib.Threading.Internal
 
         private void EnqueueToSTPNextWorkItem(WorkItem workItem, bool decrementWorkItemsInStpQueue)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 // Got here from OnWorkItemCompletedCallback()
                 if (decrementWorkItemsInStpQueue)
                 {
                     --_workItemsInStpQueue;
 
-                    if(_workItemsInStpQueue < 0)
+                    if (_workItemsInStpQueue < 0)
                     {
                         _workItemsInStpQueue = 0;
                     }
 
                     --_workItemsExecutingInStp;
 
-                    if(_workItemsExecutingInStp < 0)
+                    if (_workItemsExecutingInStp < 0)
                     {
                         _workItemsExecutingInStp = 0;
                     }
@@ -471,7 +469,7 @@ namespace Amib.Threading.Internal
                     _workItemsQueue.Enqueue(workItem);
                     //_stp.IncrementWorkItemsCount();
 
-                    if ((1 == _workItemsQueue.Count) && 
+                    if ((1 == _workItemsQueue.Count) &&
                         (0 == _workItemsInStpQueue))
                     {
                         _stp.RegisterWorkItemsGroup(this);
@@ -488,7 +486,7 @@ namespace Amib.Threading.Internal
                         _stp.UnregisterWorkItemsGroup(this);
                         Trace.WriteLine("WorkItemsGroup " + Name + " is idle");
                         _isIdleWaitHandle.Set();
-                        _stp.QueueWorkItem(new WorkItemCallback(this.FireOnIdle));
+                        _stp.QueueWorkItem(this.FireOnIdle);
                     }
                     return;
                 }

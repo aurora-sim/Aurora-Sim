@@ -25,28 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
 using Nini.Config;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse;
+using OpenSim.Framework;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Services.DataService
 {
     public class LocalFriendsConnector : IFriendsData
     {
-        private IGenericData GD = null;
+        private IGenericData GD;
         private string m_realm = "friends";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IFriendsData Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("FriendsConnector", "LocalConnector") == "LocalConnector")
             {
@@ -56,7 +52,8 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(connectionString, "Friends", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(connectionString, "Friends",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -67,23 +64,17 @@ namespace Aurora.Services.DataService
             get { return "IFriendsData"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IFriendsData Members
-
         public bool Store(UUID PrincipalID, string Friend, int Flags, int Offered)
         {
-            GD.Delete (m_realm, new string[2] { "PrincipalID", "Friend" }, new object[2] { PrincipalID, Friend });
-            return GD.Insert(m_realm, new string[] { "PrincipalID", "Friend", "Flags", "Offered" },
-                new object[] { PrincipalID, Friend.MySqlEscape(), Flags, Offered });
+            GD.Delete(m_realm, new string[2] {"PrincipalID", "Friend"}, new object[2] {PrincipalID, Friend});
+            return GD.Insert(m_realm, new[] {"PrincipalID", "Friend", "Flags", "Offered"},
+                             new object[] {PrincipalID, Friend.MySqlEscape(), Flags, Offered});
         }
 
         public bool Delete(UUID ownerID, string friend)
         {
-            return GD.Delete(m_realm, new string[] { "PrincipalID", "Friend" },
-                new object[] { ownerID, friend.MySqlEscape() });
+            return GD.Delete(m_realm, new[] {"PrincipalID", "Friend"},
+                             new object[] {ownerID, friend.MySqlEscape()});
         }
 
         public FriendInfo[] GetFriends(UUID principalID)
@@ -97,10 +88,8 @@ namespace Aurora.Services.DataService
 
             for (int i = 0; i < query.Count; i += 2)
             {
-                FriendInfo info = new FriendInfo();
-                info.PrincipalID = principalID;
-                info.Friend = query[i];
-                info.MyFlags = int.Parse(query[i + 1]);
+                FriendInfo info = new FriendInfo
+                                      {PrincipalID = principalID, Friend = query[i], MyFlags = int.Parse(query[i + 1])};
                 infos.Add(info);
 
                 keys.Add("PrincipalID");
@@ -118,5 +107,9 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using OpenSim.Framework;
-using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -36,101 +34,63 @@ namespace OpenSim.Services.Interfaces
     public interface IAuthorizationService
     {
         /// <summary>
-        /// Gets whether the given agent is able to enter the given region as a root or child agent
+        ///   Gets whether the given agent is able to enter the given region as a root or child agent
         /// </summary>
-        /// <param name="region">The region the agent is attempting to enter</param>
-        /// <param name="agent">The CircuitData of the agent that is attempting to enter</param>
-        /// <param name="isRootAgent">Whether the agent is a root agent or not</param>
-        /// <param name="reason">If it fails, the reason they cannot enter</param>
+        /// <param name = "region">The region the agent is attempting to enter</param>
+        /// <param name = "agent">The CircuitData of the agent that is attempting to enter</param>
+        /// <param name = "isRootAgent">Whether the agent is a root agent or not</param>
+        /// <param name = "reason">If it fails, the reason they cannot enter</param>
         /// <returns></returns>
         bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent,
-            out string reason);
+                                   out string reason);
     }
-    
+
     public class AuthorizationRequest
     {
-        private string m_userID;
-        private string m_firstname;
-        private string m_surname;
-        private string m_email;
-        private string m_regionID;
-
         public AuthorizationRequest()
         {
         }
 
         public AuthorizationRequest(string ID, string RegionID)
         {
-            m_userID = ID;
-            m_regionID = RegionID;
+            this.ID = ID;
+            this.RegionID = RegionID;
         }
-        
-        public AuthorizationRequest(string ID,string FirstName, string SurName, string Email, string RegionID)
+
+        public AuthorizationRequest(string ID, string FirstName, string SurName, string Email, string RegionID)
         {
-            m_userID = ID;
-            m_firstname = FirstName;
-            m_surname = SurName;
-            m_email = Email;
-            m_regionID = RegionID;
+            this.ID = ID;
+            this.FirstName = FirstName;
+            this.SurName = SurName;
+            this.Email = Email;
+            this.RegionID = RegionID;
         }
-        
-        public string ID
-        {
-            get { return m_userID; }
-            set { m_userID = value; }
-        }
-        
-        public string FirstName
-        {
-            get { return m_firstname; }
-            set { m_firstname = value; }
-        }
-        
-        public string SurName
-        {
-            get { return m_surname; }
-            set { m_surname = value; }
-        }
-        
-        public string Email
-        {
-            get { return m_email; }
-            set { m_email = value; }
-        }
-                        
-        public string RegionID
-        {
-            get { return m_regionID; }
-            set { m_regionID = value; }
-        }
+
+        public string ID { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string SurName { get; set; }
+
+        public string Email { get; set; }
+
+        public string RegionID { get; set; }
     }
-    
+
     public class AuthorizationResponse
     {
-        private bool m_isAuthorized;
-        private string m_message;
-
         public AuthorizationResponse()
         {
         }
 
         public AuthorizationResponse(bool isAuthorized, string message)
         {
-            m_isAuthorized = isAuthorized;
-            m_message = message;
-            
+            IsAuthorized = isAuthorized;
+            Message = message;
         }
-        
-        public bool IsAuthorized
-        {
-            get { return m_isAuthorized; }
-            set { m_isAuthorized = value; }
-        }
-        
-        public string Message
-        {
-            get { return m_message; }
-            set { m_message = value; }
-        }
+
+        public bool IsAuthorized { get; set; }
+
+        public string Message { get; set; }
     }
 }

@@ -28,35 +28,31 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Timers;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
     /// <summary>
-    /// This module is run on Aurora.exe when it is being run in grid mode as it requests the
-    /// AsyncMessagePostService for any async messages that might have been queued to be sent to us
+    ///   This module is run on Aurora.exe when it is being run in grid mode as it requests the
+    ///   AsyncMessagePostService for any async messages that might have been queued to be sent to us
     /// </summary>
     public class AsyncMessageRequesterService : ISharedRegionModule
     {
         #region Declares
 
+        protected volatile bool m_locked;
         protected List<IScene> m_scenes = new List<IScene>();
-        protected volatile bool m_locked = false;
-        protected Timer m_timer = null;
+        protected Timer m_timer;
 
         #endregion
 
-        #region IRegionModuleBase Members
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -66,11 +62,11 @@ namespace OpenSim.Services.MessagingService
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             IConfig handlerConfig = scene.Config.Configs["Handlers"];
             if (handlerConfig.GetString("AsyncMessageRequesterServiceHandler", "") != Name)
@@ -83,14 +79,14 @@ namespace OpenSim.Services.MessagingService
                 m_timer = new Timer();
                 //Start the request timer
                 m_timer.Elapsed += requestAsyncMessages;
-                m_timer.Interval = 60 * 1000; //60 secs
+                m_timer.Interval = 60*1000; //60 secs
                 m_timer.Start();
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-            m_scenes.Remove (scene);
+            m_scenes.Remove(scene);
         }
 
         public void Close()
@@ -111,28 +107,30 @@ namespace OpenSim.Services.MessagingService
 
         #region Async Requester
 
-        void requestAsyncMessages(object sender, ElapsedEventArgs e)
+        private void requestAsyncMessages(object sender, ElapsedEventArgs e)
         {
             if (m_locked || m_scenes.Count == 0)
                 return;
             m_locked = true;
             OSDMap message = CreateWebRequest();
-            List<string> serverURIs = m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
+            List<string> serverURIs =
+                m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
             foreach (string host in serverURIs)
             {
-                OSDMap response = WebUtils.PostToService (host, message, true, false, true);
+                OSDMap response = WebUtils.PostToService(host, message, true, false, true);
                 if (response is OSDMap)
                 {
                     if (response["Messages"].Type == OSDType.Map)
                     {
-                        OSDMap messages = (OSDMap)response["Messages"];
+                        OSDMap messages = (OSDMap) response["Messages"];
                         foreach (KeyValuePair<string, OSD> kvp in messages)
                         {
-                            OSDArray array = (OSDArray)kvp.Value;
-                            IAsyncMessageRecievedService service = GetScene(ulong.Parse(kvp.Key)).RequestModuleInterface<IAsyncMessageRecievedService>();
+                            OSDArray array = (OSDArray) kvp.Value;
+                            IAsyncMessageRecievedService service =
+                                GetScene(ulong.Parse(kvp.Key)).RequestModuleInterface<IAsyncMessageRecievedService>();
                             foreach (OSD asyncMessage in array)
                             {
-                                service.FireMessageReceived (kvp.Key, (OSDMap)asyncMessage);
+                                service.FireMessageReceived(kvp.Key, (OSDMap) asyncMessage);
                             }
                         }
                     }
@@ -143,12 +141,7 @@ namespace OpenSim.Services.MessagingService
 
         private IScene GetScene(ulong regionHandle)
         {
-            foreach (IScene scene in m_scenes)
-            {
-                if (scene.RegionInfo.RegionHandle == regionHandle)
-                    return scene;
-            }
-            return null;
+            return m_scenes.FirstOrDefault(scene => scene.RegionInfo.RegionHandle == regionHandle);
         }
 
         #region Helpers

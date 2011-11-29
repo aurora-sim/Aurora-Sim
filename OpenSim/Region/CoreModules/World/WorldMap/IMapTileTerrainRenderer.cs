@@ -33,7 +33,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     public interface IMapTileTerrainRenderer
     {
-        void Initialise (IScene scene, IConfigSource config);
+        void Initialise(IScene scene, IConfigSource config);
         Bitmap TerrainToBitmap(Bitmap mapbmp);
     }
 }

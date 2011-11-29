@@ -25,29 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Services.Connectors;
-using OpenSim.Services.MessagingService;
-using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Nini.Config;
-using Aurora.Simulation.Base;
 using OpenSim.Framework;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services.Interfaces;
+using OpenSim.Services.MessagingService;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCSyncMessagePosterConnector : ISyncMessagePosterService, IService
     {
         protected LocalSyncMessagePosterService m_localService;
-        protected RemoteSyncMessagePosterService m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected RemoteSyncMessagePosterService m_remoteService;
 
         public string Name
         {
@@ -60,12 +52,14 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
             }
         }
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -77,7 +71,7 @@ namespace Aurora.Modules
             m_localService.Initialize(config, registry);
             m_remoteService = new RemoteSyncMessagePosterService();
             m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<ISyncMessagePosterService> (this);
+            registry.RegisterModuleInterface<ISyncMessagePosterService>(this);
             m_registry = registry;
         }
 
@@ -99,11 +93,11 @@ namespace Aurora.Modules
             m_remoteService.Post(request, RegionHandle);
         }
 
-        public OSDMap Get (OSDMap request, UUID userID, ulong RegionHandle)
+        public OSDMap Get(OSDMap request, UUID userID, ulong RegionHandle)
         {
-            OSDMap get = m_localService.Get (request, userID, RegionHandle);
+            OSDMap get = m_localService.Get(request, userID, RegionHandle);
             if (get == null)
-                get = m_remoteService.Get (request, userID, RegionHandle);
+                get = m_remoteService.Get(request, userID, RegionHandle);
             return get;
         }
 

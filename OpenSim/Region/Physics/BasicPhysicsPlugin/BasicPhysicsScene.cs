@@ -25,18 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
     public class BasicScene : PhysicsScene
     {
-        private List<PhysicsActor> _actors = new List<PhysicsActor>();
+        private readonly List<PhysicsActor> _actors = new List<PhysicsActor>();
         private short[] _heightMap;
         private RegionInfo m_region;
 
@@ -47,7 +45,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             //sceneIdentifier = _sceneIdentifier;
         }
 
-        public override void Initialise (IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
+        public override bool DisableCollisions
+        {
+            get { return false; }
+            set { }
+        }
+
+        public override bool UseUnderWaterPhysics
+        {
+            get { return false; }
+        }
+
+        public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
         {
             m_region = region;
         }
@@ -60,11 +69,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override PhysicsCharacter AddAvatar (string avName, Vector3 position, Quaternion rotation, Vector3 size, bool isFlying, uint localID, UUID UUID)
+        public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
+                                                   bool isFlying, uint localID, UUID UUID)
         {
-            BasicCharacterActor act = new BasicCharacterActor();
-            act.Position = position;
-            act.Flying = isFlying;
+            BasicCharacterActor act = new BasicCharacterActor {Position = position, Flying = isFlying};
             _actors.Add(act);
             return act;
         }
@@ -75,7 +83,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void RemoveAvatar(PhysicsCharacter actor)
         {
-            BasicCharacterActor act = (BasicCharacterActor)actor;
+            BasicCharacterActor act = (BasicCharacterActor) actor;
             if (_actors.Contains(act))
             {
                 _actors.Remove(act);
@@ -100,9 +108,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void Simulate(float timeStep)
         {
-            for (int i = 0; i < _actors.Count; ++i)
+            foreach (PhysicsActor actor in _actors)
             {
-                PhysicsActor actor = _actors[i];
                 Vector3 actorPosition = actor.Position;
                 Vector3 actorVelocity = actor.Velocity;
 
@@ -127,11 +134,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                     actorPosition.X = (m_region.RegionSizeX - 0.1f);
                 }
 
-                float height = _heightMap[(int)actor.Position.Y * m_region.RegionSizeX + (int)actor.Position.X] + actor.Size.Z;
+                float height = _heightMap[(int) actor.Position.Y*m_region.RegionSizeX + (int) actor.Position.X] +
+                               actor.Size.Z;
                 if (actor.Flying)
                 {
                     if (actor.Position.Z + (actor.Velocity.Z*timeStep) <
-                        _heightMap[(int)actor.Position.Y * m_region.RegionSizeX + (int)actor.Position.X] + 2)
+                        _heightMap[(int) actor.Position.Y*m_region.RegionSizeX + (int) actor.Position.X] + 2)
                     {
                         actorPosition.Z = height;
                         actorVelocity.Z = 0;
@@ -155,7 +163,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             }
         }
 
-        public override void SetWaterLevel (double height, short[] map)
+        public override void SetWaterLevel(double height, short[] map)
         {
         }
 
@@ -165,25 +173,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return returncolliders;
         }
 
-        public override void SetTerrain (ITerrainChannel channel, short[] heightMap)
+        public override void SetTerrain(ITerrainChannel channel, short[] heightMap)
         {
             _heightMap = heightMap;
-        }
-
-        public override bool DisableCollisions
-        {
-            get
-            {
-                return false;
-            }
-            set
-            {
-            }
-        }
-
-        public override bool UseUnderWaterPhysics
-        {
-            get { return false; }
         }
     }
 }

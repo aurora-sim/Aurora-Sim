@@ -25,40 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Nini.Config;
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using Aurora.Services.DataService;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenSim.Services.AvatarService;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCOfflineMessagesConnector : IOfflineMessagesConnector
     {
         protected LocalOfflineMessagesConnector m_localService;
-        protected RemoteOfflineMessagesConnector m_remoteService;
 
         private IRegistryCore m_registry;
+        protected RemoteOfflineMessagesConnector m_remoteService;
 
-        public void Initialize (IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IOfflineMessagesConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString ("OfflineMessagesConnector", "LocalConnector") == "IWCConnector")
+            if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
+                "IWCConnector")
             {
-                m_localService = new LocalOfflineMessagesConnector ();
-                m_localService.Initialize (unneeded, source, simBase, defaultConnectionString);
-                m_remoteService = new RemoteOfflineMessagesConnector ();
-                m_remoteService.Initialize (unneeded, source, simBase, defaultConnectionString);
+                m_localService = new LocalOfflineMessagesConnector();
+                m_localService.Initialize(unneeded, source, simBase, defaultConnectionString);
+                m_remoteService = new RemoteOfflineMessagesConnector();
+                m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin (Name, this);
+                DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
 
@@ -67,28 +64,30 @@ namespace Aurora.Modules
             get { return "IOfflineMessagesConnector"; }
         }
 
-        public void Dispose ()
+        public GridInstantMessage[] GetOfflineMessages(UUID agentID)
         {
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(agentID.ToString(),
+                                                                                       "FriendsServerURI");
+            if (serverURIs.Count > 0) //Remote user... or should be
+                return m_remoteService.GetOfflineMessages(agentID);
+            return m_localService.GetOfflineMessages(agentID);
         }
 
-        #region IOfflineMessagesConnector Members
-
-        public GridInstantMessage[] GetOfflineMessages (UUID agentID)
+        public bool AddOfflineMessage(GridInstantMessage message)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (agentID.ToString (), "FriendsServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(message.toAgentID.ToString(),
+                                                                                       "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                return m_remoteService.GetOfflineMessages (agentID);
-            return m_localService.GetOfflineMessages (agentID);
-        }
-
-        public bool AddOfflineMessage (GridInstantMessage message)
-        {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (message.toAgentID.ToString (), "FriendsServerURI");
-            if (serverURIs.Count > 0) //Remote user... or should be
-                return m_remoteService.AddOfflineMessage (message);
-            return m_localService.AddOfflineMessage (message);
+                return m_remoteService.AddOfflineMessage(message);
+            return m_localService.AddOfflineMessage(message);
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

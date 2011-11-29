@@ -27,47 +27,42 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
-using OpenSim.Framework;
 
 namespace Aurora.BotManager
 {
     public class NodeGraph
     {
-        private List<Vector3> m_listOfPositions = new List<Vector3> ();
-        private List<TravelMode> m_listOfStates = new List<TravelMode> ();
-        private object m_lock = new object ();
-        private DateTime m_lastChangedPosition = DateTime.MinValue;
-        private DateTime m_waitingSince = DateTime.MinValue;
-        /// <summary>
-        /// Loop through the current positions over and over
-        /// </summary>
-        public bool FollowIndefinitely = false;
-        public int CurrentPos = 0;
+        private readonly object m_lock = new object();
+        public int CurrentPos;
 
-        public NodeGraph ()
-        {
-        }
+        /// <summary>
+        ///   Loop through the current positions over and over
+        /// </summary>
+        public bool FollowIndefinitely;
+
+        private DateTime m_lastChangedPosition = DateTime.MinValue;
+        private List<Vector3> m_listOfPositions = new List<Vector3>();
+        private List<TravelMode> m_listOfStates = new List<TravelMode>();
+        private DateTime m_waitingSince = DateTime.MinValue;
 
         #region Add
 
-        public void Add (Vector3 position, TravelMode state)
+        public void Add(Vector3 position, TravelMode state)
         {
             lock (m_lock)
             {
-                m_listOfPositions.Add (position);
-                m_listOfStates.Add (state);
+                m_listOfPositions.Add(position);
+                m_listOfStates.Add(state);
             }
         }
 
-        public void AddRange (IEnumerable<Vector3> positions, IEnumerable<TravelMode> states)
+        public void AddRange(IEnumerable<Vector3> positions, IEnumerable<TravelMode> states)
         {
             lock (m_lock)
             {
-                m_listOfPositions.AddRange (positions);
-                m_listOfStates.AddRange (states);
+                m_listOfPositions.AddRange(positions);
+                m_listOfStates.AddRange(states);
             }
         }
 
@@ -75,24 +70,25 @@ namespace Aurora.BotManager
 
         #region Clear
 
-        public void Clear ()
+        public void Clear()
         {
             lock (m_lock)
             {
                 CurrentPos = 0;
-                m_listOfPositions.Clear ();
-                m_listOfStates.Clear ();
+                m_listOfPositions.Clear();
+                m_listOfStates.Clear();
             }
         }
 
         #endregion
 
-        public bool GetNextPosition (Vector3 currentPos, float closeToRange, int secondsBeforeForcedTeleport, out Vector3 position, out TravelMode state, out bool needsToTeleportToPosition)
+        public bool GetNextPosition(Vector3 currentPos, float closeToRange, int secondsBeforeForcedTeleport,
+                                    out Vector3 position, out TravelMode state, out bool needsToTeleportToPosition)
         {
-            bool found = false;
+            const bool found = false;
             lock (m_lock)
             {
-            findNewTarget:
+                findNewTarget:
                 position = Vector3.Zero;
                 state = TravelMode.None;
                 needsToTeleportToPosition = false;
@@ -100,7 +96,8 @@ namespace Aurora.BotManager
                 {
                     position = m_listOfPositions[CurrentPos];
                     state = m_listOfStates[CurrentPos];
-                    if(state != TravelMode.Wait && state != TravelMode.TriggerHereEvent && position.ApproxEquals(currentPos, closeToRange))
+                    if (state != TravelMode.Wait && state != TravelMode.TriggerHereEvent &&
+                        position.ApproxEquals(currentPos, closeToRange))
                     {
                         //Its close to a position, go look for the next pos
                         //m_listOfPositions.RemoveAt (0);
@@ -109,40 +106,37 @@ namespace Aurora.BotManager
                         m_lastChangedPosition = DateTime.MinValue;
                         goto findNewTarget;
                     }
-                    else
+                    if (state == TravelMode.TriggerHereEvent)
                     {
-                        if(state == TravelMode.TriggerHereEvent)
-                        {
-                            CurrentPos++;//Clear for next time, as we only fire this one time
-                            m_lastChangedPosition = DateTime.MinValue;
-                        }
-                        else if (state == TravelMode.Wait)
-                        {
-                            if (m_waitingSince == DateTime.MinValue)
-                                m_waitingSince = DateTime.Now;
-                            else
-                            {
-                                if ((DateTime.Now - m_waitingSince).Seconds > position.X)
-                                {
-                                    m_waitingSince = DateTime.MinValue;
-                                    CurrentPos++;
-                                    m_lastChangedPosition = DateTime.MinValue;
-                                    goto findNewTarget;
-                                }
-                            }
-                        }
+                        CurrentPos++; //Clear for next time, as we only fire this one time
+                        m_lastChangedPosition = DateTime.MinValue;
+                    }
+                    else if (state == TravelMode.Wait)
+                    {
+                        if (m_waitingSince == DateTime.MinValue)
+                            m_waitingSince = DateTime.Now;
                         else
                         {
-                            m_lastChangedPosition = DateTime.Now;
-                            if ((DateTime.Now - m_lastChangedPosition).Seconds > secondsBeforeForcedTeleport)
-                                needsToTeleportToPosition = true;
+                            if ((DateTime.Now - m_waitingSince).Seconds > position.X)
+                            {
+                                m_waitingSince = DateTime.MinValue;
+                                CurrentPos++;
+                                m_lastChangedPosition = DateTime.MinValue;
+                                goto findNewTarget;
+                            }
                         }
+                    }
+                    else
+                    {
+                        m_lastChangedPosition = DateTime.Now;
+                        if ((DateTime.Now - m_lastChangedPosition).Seconds > secondsBeforeForcedTeleport)
+                            needsToTeleportToPosition = true;
                     }
                     return true;
                 }
-                else if (m_listOfPositions.Count == 0)
+                if (m_listOfPositions.Count == 0)
                     return false;
-                else if (FollowIndefinitely)
+                if (FollowIndefinitely)
                 {
                     CurrentPos = 0; //Reset the position to the beginning if we have run out of positions
                     goto findNewTarget;
@@ -151,7 +145,7 @@ namespace Aurora.BotManager
             return found;
         }
 
-        public void CopyFrom (NodeGraph graph)
+        public void CopyFrom(NodeGraph graph)
         {
             m_listOfPositions = graph.m_listOfPositions;
             m_listOfStates = graph.m_listOfStates;

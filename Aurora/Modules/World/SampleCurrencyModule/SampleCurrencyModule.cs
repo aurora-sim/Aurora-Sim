@@ -27,35 +27,25 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Xml;
-using log4net;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace Aurora.OptionalModules
 {
     /// <summary>
-    /// This is a demo for you to use when making one that works for you.
-    ///  // To use the following you need to add:
-    /// -helperuri <ADDRESS TO HERE OR grid MONEY SERVER>
-    /// to the command line parameters you use to start up your client
-    /// This commonly looks like -helperuri http://127.0.0.1:9000/
+    ///   This is a demo for you to use when making one that works for you.
+    ///   // To use the following you need to add:
+    ///   -helperuri <ADDRESS TO HERE OR grid MONEY SERVER>
+    ///                to the command line parameters you use to start up your client
+    ///                This commonly looks like -helperuri http://127.0.0.1:9000/
     /// </summary>
     public class CurrencyModule : IMoneyModule, ISharedRegionModule
     {
-        private bool m_enabled = false;
+        private bool m_enabled;
 
         #region IMoneyModule Members
 
@@ -72,6 +62,7 @@ namespace Aurora.OptionalModules
 
         public event ObjectPaid OnObjectPaid;
         public event PostObjectPaid OnPostObjectPaid;
+
         public bool Transfer(UUID toID, UUID fromID, int amount, string description)
         {
             return true;
@@ -82,16 +73,16 @@ namespace Aurora.OptionalModules
             return true;
         }
 
-        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description, TransactionType type)
+        public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
+                             TransactionType type)
         {
             if ((type == TransactionType.ObjectPay) && (OnObjectPaid != null))
                 OnObjectPaid((fromObjectID == UUID.Zero) ? toObjectID : fromObjectID, fromID, amount);
             return true;
         }
 
-        public void Transfer (UUID objectID, UUID agentID, int amount)
+        public void Transfer(UUID objectID, UUID agentID, int amount)
         {
-            
         }
 
 #pragma warning restore 67
@@ -99,10 +90,10 @@ namespace Aurora.OptionalModules
         #region IRegionModuleBase Members
 
         /// <summary>
-        /// Startup
+        ///   Startup
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="config"></param>
+        /// <param name = "scene"></param>
+        /// <param name = "config"></param>
         public void Initialise(IConfigSource config)
         {
             IConfig currencyConfig = config.Configs["Currency"];
@@ -112,7 +103,7 @@ namespace Aurora.OptionalModules
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -133,11 +124,11 @@ namespace Aurora.OptionalModules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -177,16 +168,16 @@ namespace Aurora.OptionalModules
         }
 
         public void ProcessMoneyTransferRequest(UUID source, UUID destination, int amount,
-                                                        int transactiontype, string description)
+                                                int transactiontype, string description)
         {
         }
 
         #endregion
 
         /// <summary>
-        /// New Client Event Handler
+        ///   New Client Event Handler
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name = "client"></param>
         protected void OnNewClient(IClientAPI client)
         {
             // Subscribe to Money messages
@@ -204,12 +195,12 @@ namespace Aurora.OptionalModules
         }
 
         /// <summary>
-        /// Sends the the stored money balance to the client
+        ///   Sends the the stored money balance to the client
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="agentID"></param>
-        /// <param name="SessionID"></param>
-        /// <param name="TransactionID"></param>
+        /// <param name = "client"></param>
+        /// <param name = "agentID"></param>
+        /// <param name = "SessionID"></param>
+        /// <param name = "TransactionID"></param>
         protected void SendMoneyBalance(IClientAPI client, UUID agentID, UUID SessionID, UUID TransactionID)
         {
             client.SendMoneyBalance(TransactionID, true, new byte[0], 0);
@@ -219,7 +210,7 @@ namespace Aurora.OptionalModules
 
         protected XmlRpcResponse quote_func(XmlRpcRequest request, IPEndPoint ep)
         {
-            Hashtable requestData = (Hashtable)request.Params[0];
+            Hashtable requestData = (Hashtable) request.Params[0];
             UUID agentId = UUID.Zero;
             int amount = 0;
             Hashtable quoteResponse = new Hashtable();
@@ -227,17 +218,15 @@ namespace Aurora.OptionalModules
 
             if (requestData.ContainsKey("agentId") && requestData.ContainsKey("currencyBuy"))
             {
-                UUID.TryParse((string)requestData["agentId"], out agentId);
+                UUID.TryParse((string) requestData["agentId"], out agentId);
                 try
                 {
-                    amount = (Int32)requestData["currencyBuy"];
+                    amount = (Int32) requestData["currencyBuy"];
                 }
                 catch (InvalidCastException)
                 {
                 }
-                Hashtable currencyResponse = new Hashtable();
-                currencyResponse.Add("estimatedCost", 0);
-                currencyResponse.Add("currencyBuy", amount);
+                Hashtable currencyResponse = new Hashtable {{"estimatedCost", 0}, {"currencyBuy", amount}};
 
                 quoteResponse.Add("success", true);
                 quoteResponse.Add("currency", currencyResponse);
@@ -283,8 +272,7 @@ namespace Aurora.OptionalModules
                 }
             }*/
             XmlRpcResponse returnval = new XmlRpcResponse();
-            Hashtable returnresp = new Hashtable();
-            returnresp.Add("success", true);
+            Hashtable returnresp = new Hashtable {{"success", true}};
             returnval.Value = returnresp;
             return returnval;
         }
@@ -298,13 +286,10 @@ namespace Aurora.OptionalModules
             membershiplevels.Add("levels", membershiplevels);
 
             Hashtable landuse = new Hashtable();
-            
-            Hashtable level = new Hashtable();
-            level.Add("id", "00000000-0000-0000-0000-000000000000");
-            level.Add("", "Premium Membership");
 
-            Hashtable currencytable = new Hashtable();
-            currencytable.Add("estimatedCost", 0);
+            Hashtable level = new Hashtable {{"id", "00000000-0000-0000-0000-000000000000"}, {"", "Premium Membership"}};
+
+            Hashtable currencytable = new Hashtable {{"estimatedCost", 0}};
 
             retparam.Add("success", true);
             retparam.Add("currency", currencytable);
@@ -318,8 +303,7 @@ namespace Aurora.OptionalModules
         protected XmlRpcResponse landBuy_func(XmlRpcRequest request, IPEndPoint ep)
         {
             XmlRpcResponse ret = new XmlRpcResponse();
-            Hashtable retparam = new Hashtable();
-            retparam.Add("success", true);
+            Hashtable retparam = new Hashtable {{"success", true}};
             ret.Value = retparam;
             return ret;
         }
@@ -329,15 +313,15 @@ namespace Aurora.OptionalModules
         #region event Handlers
 
         /// <summary>
-        /// Event called Economy Data Request handler.
+        ///   Event called Economy Data Request handler.
         /// </summary>
-        /// <param name="agentId"></param>
+        /// <param name = "agentId"></param>
         public void EconomyDataRequestHandler(IClientAPI remoteClient)
         {
             remoteClient.SendEconomyData(0, remoteClient.Scene.RegionInfo.ObjectCapacity, 0, 0, 0,
-                                     0, 0, 0, 0, 0,
-                                     0, 0, 0, 0, 0,
-                                     0, 0);
+                                         0, 0, 0, 0, 0,
+                                         0, 0, 0, 0, 0,
+                                         0, 0);
         }
 
         public bool Charge(IClientAPI client, int amount)

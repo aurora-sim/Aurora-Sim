@@ -27,58 +27,110 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Net;
-using System.Xml;
+using System.Linq;
+using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Interfaces;
-using Aurora.Framework;
-using Nini.Config;
 
 namespace Aurora.Modules
 {
-    public class BannedViewersModule: ISharedRegionModule, IBanViewersModule
+    public class BannedViewersModule : ISharedRegionModule, IBanViewersModule
     {
-        private List<string> m_bannedViewers = new List<string> ();
-        private List<string> m_allowedViewers = new List<string> ();
+        private static OSDMap m_map;
+        private List<string> m_allowedViewers = new List<string>();
         private bool m_banEvilViewersByDefault = true;
+        private List<string> m_bannedViewers = new List<string>();
         private bool m_enabled = true;
-        private bool m_useIncludeList = false;
-        private static OSDMap m_map = null;
+        private bool m_useIncludeList;
         private string m_viewerTagURL = "http://viewertags.com/app/client_list.xml";
 
         public List<string> BannedViewers
         {
-            get
-            {
-                return m_bannedViewers;
-            }
+            get { return m_bannedViewers; }
         }
 
         public List<string> AllowedViewers
         {
-            get
+            get { return m_allowedViewers; }
+        }
+
+        #region IBanViewersModule Members
+
+        /// <summary>
+        ///   Check to see if the client has baked textures that belong to banned clients
+        /// </summary>
+        /// <param name = "client"></param>
+        /// <param name = "textureEntry"></param>
+        public void CheckForBannedViewer(IClientAPI client, Primitive.TextureEntry textureEntry)
+        {
+            try
             {
-                return m_allowedViewers;
+                //Read the website once!
+                if (m_map == null)
+                    m_map = OSDParser.Deserialize(Utilities.ReadExternalWebsite(m_viewerTagURL)) as OSDMap;
+                if (m_map == null)
+                    return;
+
+                //This is the givaway texture!
+                foreach (OSDMap viewerMap in from t in textureEntry.FaceTextures where t != null where m_map.ContainsKey(t.TextureID.ToString()) select (OSDMap) m_map[t.TextureID.ToString()])
+                {
+                    //Check the names
+                    if (IsViewerBanned(viewerMap["name"].ToString(), viewerMap["evil"].AsBoolean()))
+                    {
+                        client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
+                        IEntityTransferModule transferModule =
+                            client.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent(client.Scene, client.AgentId);
+                        break;
+                    }
+                    break;
+                }
+            }
+            catch
+            {
             }
         }
+
+        public bool IsViewerBanned(string name, bool isEvil)
+        {
+            if (m_useIncludeList)
+            {
+                if (!m_allowedViewers.Contains(name))
+                    return true;
+            }
+            else
+            {
+                if (BannedViewers.Contains(name))
+                    return true;
+                else if (m_banEvilViewersByDefault && isEvil)
+                    return true;
+            }
+            return false;
+        }
+
+        #endregion
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
             IConfig config = source.Configs["BanViewersModule"];
             if (config != null)
             {
-                string bannedViewers = config.GetString ("ViewersToBan", "");
-                m_bannedViewers = new List<string> (bannedViewers.Split (new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries));
-                string allowedViewers = config.GetString ("ViewersToAllow", "");
-                m_allowedViewers = new List<string> (allowedViewers.Split (new string[1] { "," }, StringSplitOptions.RemoveEmptyEntries));
-                m_banEvilViewersByDefault = config.GetBoolean ("BanKnownEvilViewers", true);
-                m_viewerTagURL = config.GetString ("ViewerXMLURL", m_viewerTagURL);
-                m_enabled = config.GetBoolean ("Enabled", true);
-                m_useIncludeList = config.GetBoolean ("UseAllowListInsteadOfBanList", false);
+                string bannedViewers = config.GetString("ViewersToBan", "");
+                m_bannedViewers =
+                    new List<string>(bannedViewers.Split(new string[1] {","}, StringSplitOptions.RemoveEmptyEntries));
+                string allowedViewers = config.GetString("ViewersToAllow", "");
+                m_allowedViewers =
+                    new List<string>(allowedViewers.Split(new string[1] {","}, StringSplitOptions.RemoveEmptyEntries));
+                m_banEvilViewersByDefault = config.GetBoolean("BanKnownEvilViewers", true);
+                m_viewerTagURL = config.GetString("ViewerXMLURL", m_viewerTagURL);
+                m_enabled = config.GetBoolean("Enabled", true);
+                m_useIncludeList = config.GetBoolean("UseAllowListInsteadOfBanList", false);
             }
         }
 
@@ -90,17 +142,17 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
-            if(m_enabled)
+            if (m_enabled)
                 scene.RegisterModuleInterface<IBanViewersModule>(this);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -114,61 +166,6 @@ namespace Aurora.Modules
             get { return null; }
         }
 
-        /// <summary>
-        /// Check to see if the client has baked textures that belong to banned clients
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="textureEntry"></param>
-        public void CheckForBannedViewer(IClientAPI client, Primitive.TextureEntry textureEntry)
-        {
-            try
-            {
-                //Read the website once!
-                if (m_map == null)
-                    m_map = OSDParser.Deserialize (Utilities.ReadExternalWebsite (m_viewerTagURL)) as OSDMap;
-                if (m_map == null)
-                    return;
-                
-                //This is the givaway texture!
-                for (int i = 0; i < textureEntry.FaceTextures.Length; i++)
-                {
-                    if (textureEntry.FaceTextures[i] != null)
-                    {
-                        if (m_map.ContainsKey(textureEntry.FaceTextures[i].TextureID.ToString()))
-                        {
-                            OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString()];
-                            //Check the names
-                            if (IsViewerBanned (viewerMap["name"].ToString (), viewerMap["evil"].AsBoolean ()))
-                            {
-                                client.Kick("You cannot use " + viewerMap["name"] + " in this sim.");
-                                IEntityTransferModule transferModule = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
-                                if (transferModule != null)
-                                    transferModule.IncomingCloseAgent (client.Scene, client.AgentId);
-                                break;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            catch { }
-        }
-
-        public bool IsViewerBanned(string name, bool isEvil)
-        {
-            if (m_useIncludeList)
-            {
-                if (!m_allowedViewers.Contains (name))
-                    return true;
-            }
-            else
-            {
-                if (BannedViewers.Contains (name))
-                    return true;
-                else if (m_banEvilViewersByDefault && isEvil)
-                    return true;
-            }
-            return false;
-        }
+        #endregion
     }
 }

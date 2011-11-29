@@ -27,11 +27,10 @@
 
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class ObjectCountMonitor : IMonitor
+    internal class ObjectCountMonitor : IMonitor
     {
         private readonly IScene m_scene;
 
@@ -55,10 +54,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         public string GetFriendlyValue()
         {
             return m_scene.RequestModuleInterface<IEntityCountModule>().Objects + " Object(s), " +
-                m_scene.RequestModuleInterface<IEntityCountModule>().ActiveObjects + " active Object(s)";
+                   m_scene.RequestModuleInterface<IEntityCountModule>().ActiveObjects + " active Object(s)";
         }
 
-        public void ResetStats ()
+        public void ResetStats()
         {
         }
 

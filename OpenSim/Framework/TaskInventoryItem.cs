@@ -33,169 +33,147 @@ namespace OpenSim.Framework
     public class TaskInventoryItemHelpers
     {
         /// <summary>
-        /// Inventory types
-        /// </summary>
-        public static string[] InvTypes = new string[]
-            {
-                "texture",
-                "sound",
-                "calling_card",
-                "landmark",
-                String.Empty,
-                String.Empty,
-                "object",
-                "notecard",
-                String.Empty,
-                String.Empty,
-                "lsl_text",
-                String.Empty,
-                String.Empty,
-                "bodypart",
-                String.Empty,
-                "snapshot",
-                String.Empty,
-                String.Empty,
-                "wearable",
-                "animation",
-                "gesture",
-                String.Empty,
-                String.Empty,
-                "link",
-                String.Empty,
-                String.Empty,
-                String.Empty,
-                String.Empty,
-                String.Empty,
-                String.Empty,
-                String.Empty,
-            };
-
-        /// <summary>
-        /// Asset types
-        /// </summary>
-        public static string[] Types = new string[]
-            {
-                "texture",
-                "sound",
-                "callcard",
-                "landmark",
-                "clothing", // Deprecated
-                "clothing",
-                "object",
-                "notecard",
-                "category",
-                "root",
-                "lsltext",
-                "lslbyte",
-                "txtr_tga",
-                "bodypart",
-                "trash",
-                "snapshot",
-                "lstndfnd",
-                "snd_wav",
-                "img_tga",
-                "jpeg",
-                "animatn",
-                "gesture",
-                "simstate",
-                "favoritefolder",
-                "link",
-                "linkfolder",
-                "ensemblestart",
-                "ensembleend",
-                "currentoutfitfolder",
-                "outfitfolder",
-                "myoutfitsfolder",
-                "inboxfolder"
-
-            };
-
-        /// <summary>
-        /// Asset types
-        /// </summary>
-        public static string[] SaleTypes = new string[]
-            {
-                "not",
-                "original",
-                "copy",
-                "contents"
-            };
-
-        /// <summary>
-        /// Full permissions
+        ///   Full permissions
         /// </summary>
         public const uint FULL_MASK_PERMISSIONS_GENERAL = 2147483647;
+
+        /// <summary>
+        ///   Inventory types
+        /// </summary>
+        public static string[] InvTypes = new[]
+                                              {
+                                                  "texture",
+                                                  "sound",
+                                                  "calling_card",
+                                                  "landmark",
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  "object",
+                                                  "notecard",
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  "lsl_text",
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  "bodypart",
+                                                  String.Empty,
+                                                  "snapshot",
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  "wearable",
+                                                  "animation",
+                                                  "gesture",
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  "link",
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  String.Empty,
+                                                  String.Empty,
+                                              };
+
+        /// <summary>
+        ///   Asset types
+        /// </summary>
+        public static string[] Types = new[]
+                                           {
+                                               "texture",
+                                               "sound",
+                                               "callcard",
+                                               "landmark",
+                                               "clothing", // Deprecated
+                                               "clothing",
+                                               "object",
+                                               "notecard",
+                                               "category",
+                                               "root",
+                                               "lsltext",
+                                               "lslbyte",
+                                               "txtr_tga",
+                                               "bodypart",
+                                               "trash",
+                                               "snapshot",
+                                               "lstndfnd",
+                                               "snd_wav",
+                                               "img_tga",
+                                               "jpeg",
+                                               "animatn",
+                                               "gesture",
+                                               "simstate",
+                                               "favoritefolder",
+                                               "link",
+                                               "linkfolder",
+                                               "ensemblestart",
+                                               "ensembleend",
+                                               "currentoutfitfolder",
+                                               "outfitfolder",
+                                               "myoutfitsfolder",
+                                               "inboxfolder"
+                                           };
+
+        /// <summary>
+        ///   Asset types
+        /// </summary>
+        public static string[] SaleTypes = new[]
+                                               {
+                                                   "not",
+                                                   "original",
+                                                   "copy",
+                                                   "contents"
+                                               };
     }
+
     /// <summary>
-    /// Represents an item in a task inventory
+    ///   Represents an item in a task inventory
     /// </summary>
     public class TaskInventoryItem : ICloneable
     {
-
         private UUID _assetID = UUID.Zero;
 
         private uint _baseMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
-        private uint _creationDate = 0;
-        private UUID _creatorID = UUID.Zero;
         private string _creatorData = String.Empty;
+        private UUID _creatorID = UUID.Zero;
         private string _description = String.Empty;
         private uint _everyoneMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
-        private uint _flags = 0;
         private UUID _groupID = UUID.Zero;
         private uint _groupMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
 
-        private int _invType = 0;
         private UUID _itemID = UUID.Zero;
         private UUID _lastOwnerID = UUID.Zero;
         private string _name = String.Empty;
         private uint _nextOwnerMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
+        private UUID _oldID;
         private UUID _ownerID = UUID.Zero;
         private uint _ownerMask = TaskInventoryItemHelpers.FULL_MASK_PERMISSIONS_GENERAL;
         private UUID _parentID = UUID.Zero; //parent folder id
         private UUID _parentPartID = UUID.Zero; // SceneObjectPart this is inside
-        private UUID _permsGranter;
-        private int _permsMask;
-        private int _type = 0;
-        private UUID _oldID;
-        private int _SalePrice = 0;
-        private byte _SaleType = 0;
 
-        private bool _ownerChanged = false;
-
-        public UUID AssetID {
-            get {
-                return _assetID;
-            }
-            set {
-                _assetID = value;
-            }
+        public TaskInventoryItem()
+        {
+            CreationDate = (uint) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
-        public uint BasePermissions {
-            get {
-                return _baseMask;
-            }
-            set {
-                _baseMask = value;
-            }
+        public UUID AssetID
+        {
+            get { return _assetID; }
+            set { _assetID = value; }
         }
 
-        public uint CreationDate {
-            get {
-                return _creationDate;
-            }
-            set {
-                _creationDate = value;
-            }
+        public uint BasePermissions
+        {
+            get { return _baseMask; }
+            set { _baseMask = value; }
         }
 
-        public UUID CreatorID {
-            get {
-                return _creatorID;
-            }
-            set {
-                _creatorID = value;
-            }
+        public uint CreationDate { get; set; }
+
+        public UUID CreatorID
+        {
+            get { return _creatorID; }
+            set { _creatorID = value; }
         }
 
         public string CreatorData // = <profile url>;<name>
@@ -205,18 +183,18 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Used by the DB layer to retrieve / store the entire user identification.
-        /// The identification can either be a simple UUID or a string of the form
-        /// uuid[;profile_url[;name]]
+        ///   Used by the DB layer to retrieve / store the entire user identification.
+        ///   The identification can either be a simple UUID or a string of the form
+        ///   uuid[;profile_url[;name]]
         /// </summary>
         public string CreatorIdentification
         {
             get
             {
-                if (_creatorData != null && _creatorData != string.Empty)
-                    return _creatorID.ToString () + ';' + _creatorData;
+                if (!string.IsNullOrEmpty(_creatorData))
+                    return _creatorID.ToString() + ';' + _creatorData;
                 else
-                    return _creatorID.ToString ();
+                    return _creatorID.ToString();
             }
             set
             {
@@ -226,20 +204,20 @@ namespace OpenSim.Framework
                     return;
                 }
 
-                if (!value.Contains (";")) // plain UUID
+                if (!value.Contains(";")) // plain UUID
                 {
                     UUID uuid = UUID.Zero;
-                    UUID.TryParse (value, out uuid);
+                    UUID.TryParse(value, out uuid);
                     _creatorID = uuid;
                 }
                 else // <uuid>[;<endpoint>[;name]]
                 {
                     string name = "Unknown User";
-                    string[] parts = value.Split (';');
+                    string[] parts = value.Split(';');
                     if (parts.Length >= 1)
                     {
                         UUID uuid = UUID.Zero;
-                        UUID.TryParse (parts[0], out uuid);
+                        UUID.TryParse(parts[0], out uuid);
                         _creatorID = uuid;
                     }
                     if (parts.Length >= 2)
@@ -248,206 +226,107 @@ namespace OpenSim.Framework
                         name = parts[2];
 
                     _creatorData += ';' + name;
-
                 }
             }
         }
 
-        public string Description {
-            get {
-                return _description;
-            }
-            set {
-                _description = value;
-            }
+        public string Description
+        {
+            get { return _description; }
+            set { _description = value; }
         }
 
-        public uint EveryonePermissions {
-            get {
-                return _everyoneMask;
-            }
-            set {
-                _everyoneMask = value;
-            }
+        public uint EveryonePermissions
+        {
+            get { return _everyoneMask; }
+            set { _everyoneMask = value; }
         }
 
-        public uint Flags {
-            get {
-                return _flags;
-            }
-            set {
-                _flags = value;
-            }
+        public uint Flags { get; set; }
+
+        public UUID GroupID
+        {
+            get { return _groupID; }
+            set { _groupID = value; }
         }
 
-        public UUID GroupID {
-            get {
-                return _groupID;
-            }
-            set {
-                _groupID = value;
-            }
+        public uint GroupPermissions
+        {
+            get { return _groupMask; }
+            set { _groupMask = value; }
         }
 
-        public uint GroupPermissions {
-            get {
-                return _groupMask;
-            }
-            set {
-                _groupMask = value;
-            }
+        public int InvType { get; set; }
+
+        public UUID ItemID
+        {
+            get { return _itemID; }
+            set { _itemID = value; }
         }
 
-        public int InvType {
-            get {
-                return _invType;
-            }
-            set {
-                _invType = value;
-            }
-        }
-
-        public UUID ItemID {
-            get {
-                return _itemID;
-            }
-            set {
-                _itemID = value;
-            }
-        }
-
-        public UUID OldItemID {
-            get {
-                return _oldID;
-            }
-            set {
-                if(_oldID == UUID.Zero)
+        public UUID OldItemID
+        {
+            get { return _oldID; }
+            set
+            {
+                if (_oldID == UUID.Zero)
                     _oldID = value;
             }
         }
 
-        public UUID LastOwnerID {
-            get {
-                return _lastOwnerID;
-            }
-            set {
-                _lastOwnerID = value;
-            }
-        }
-
-        public string Name {
-            get {
-                return _name;
-            }
-            set {
-                _name = value;
-            }
-        }
-
-        public uint NextPermissions {
-            get {
-                return _nextOwnerMask;
-            }
-            set {
-                _nextOwnerMask = value;
-            }
-        }
-
-        public UUID OwnerID {
-            get {
-                return _ownerID;
-            }
-            set {
-                _ownerID = value;
-            }
-        }
-
-        public uint CurrentPermissions {
-            get {
-                return _ownerMask;
-            }
-            set {
-                _ownerMask = value;
-            }
-        }
-
-        public UUID ParentID {
-            get {
-                return _parentID;
-            }
-            set {
-                _parentID = value;
-            }
-        }
-
-        public UUID ParentPartID {
-            get {
-                return _parentPartID;
-            }
-            set {
-                _parentPartID = value;
-            }
-        }
-
-        public UUID PermsGranter {
-            get {
-                return _permsGranter;
-            }
-            set {
-                _permsGranter = value;
-            }
-        }
-
-        public int PermsMask {
-            get {
-                return _permsMask;
-            }
-            set {
-                _permsMask = value;
-            }
-        }
-
-        public int Type {
-            get {
-                return _type;
-            }
-            set {
-                _type = value;
-            }
-        }
-
-        public bool OwnerChanged {
-            get {
-                return _ownerChanged;
-            }
-            set {
-                _ownerChanged = value;
-            }
-        }
-
-        public int SalePrice
+        public UUID LastOwnerID
         {
-            get
-            {
-                return _SalePrice;
-            }
-            set
-            {
-                _SalePrice = value;
-            }
+            get { return _lastOwnerID; }
+            set { _lastOwnerID = value; }
         }
 
-        public byte SaleType
+        public string Name
         {
-            get
-            {
-                return _SaleType;
-            }
-            set
-            {
-                _SaleType = value;
-            }
+            get { return _name; }
+            set { _name = value; }
         }
+
+        public uint NextPermissions
+        {
+            get { return _nextOwnerMask; }
+            set { _nextOwnerMask = value; }
+        }
+
+        public UUID OwnerID
+        {
+            get { return _ownerID; }
+            set { _ownerID = value; }
+        }
+
+        public uint CurrentPermissions
+        {
+            get { return _ownerMask; }
+            set { _ownerMask = value; }
+        }
+
+        public UUID ParentID
+        {
+            get { return _parentID; }
+            set { _parentID = value; }
+        }
+
+        public UUID ParentPartID
+        {
+            get { return _parentPartID; }
+            set { _parentPartID = value; }
+        }
+
+        public UUID PermsGranter { get; set; }
+
+        public int PermsMask { get; set; }
+
+        public int Type { get; set; }
+
+        public bool OwnerChanged { get; set; }
+
+        public int SalePrice { get; set; }
+
+        public byte SaleType { get; set; }
 
         // See ICloneable
 
@@ -461,20 +340,15 @@ namespace OpenSim.Framework
         #endregion
 
         /// <summary>
-        /// Reset the UUIDs for this item.
+        ///   Reset the UUIDs for this item.
         /// </summary>
-        /// <param name="partID">The new part ID to which this item belongs</param>
+        /// <param name = "partID">The new part ID to which this item belongs</param>
         public void ResetIDs(UUID partID)
         {
             OldItemID = ItemID;
             ItemID = UUID.Random();
             ParentPartID = partID;
             ParentID = partID;
-        }
-
-        public TaskInventoryItem()
-        {
-            CreationDate = (uint)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
         }
     }
 }

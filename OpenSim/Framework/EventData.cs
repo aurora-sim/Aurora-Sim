@@ -32,39 +32,20 @@ namespace OpenSim.Framework
 {
     public class EventData
     {
-        public uint eventID;
-        public string creator;
-        public string name;
+        public uint amount;
         public string category;
-        public string description;
+        public uint cover;
+        public string creator;
         public string date;
         public uint dateUTC;
+        public string description;
         public uint duration;
-        public uint cover;
-        public uint amount;
-        public string simName;
-        public Vector3 globalPos;
         public uint eventFlags;
+        public uint eventID;
+        public Vector3 globalPos;
         public int maturity;
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> KVP = new Dictionary<string, object>();
-            KVP["eventID"] = eventID;
-            KVP["creator"] = creator;
-            KVP["name"] = name;
-            KVP["category"] = category;
-            KVP["description"] = description;
-            KVP["date"] = date;
-            KVP["dateUTC"] = dateUTC;
-            KVP["duration"] = duration;
-            KVP["cover"] = cover;
-            KVP["amount"] = amount;
-            KVP["simName"] = simName;
-            KVP["globalPos"] = globalPos.ToRawString();
-            KVP["eventFlags"] = eventFlags;
-            KVP["maturity"] = maturity;
-            return KVP;
-        }
+        public string name;
+        public string simName;
 
         public EventData()
         {
@@ -87,6 +68,26 @@ namespace OpenSim.Framework
             globalPos = new Vector3(float.Parse(Pos[0]), float.Parse(Pos[1]), float.Parse(Pos[2]));
             eventFlags = uint.Parse(KVP["eventFlags"].ToString());
             maturity = int.Parse(KVP["maturity"].ToString());
+        }
+
+        public Dictionary<string, object> ToKeyValuePairs()
+        {
+            Dictionary<string, object> KVP = new Dictionary<string, object>();
+            KVP["eventID"] = eventID;
+            KVP["creator"] = creator;
+            KVP["name"] = name;
+            KVP["category"] = category;
+            KVP["description"] = description;
+            KVP["date"] = date;
+            KVP["dateUTC"] = dateUTC;
+            KVP["duration"] = duration;
+            KVP["cover"] = cover;
+            KVP["amount"] = amount;
+            KVP["simName"] = simName;
+            KVP["globalPos"] = globalPos.ToRawString();
+            KVP["eventFlags"] = eventFlags;
+            KVP["maturity"] = maturity;
+            return KVP;
         }
     }
 }

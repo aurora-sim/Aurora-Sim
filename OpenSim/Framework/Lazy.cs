@@ -55,11 +55,10 @@
 //
 
 using System;
-using System.Runtime.Serialization;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Threading;
-using System.Diagnostics;
 
 namespace OpenSim.Framework
 {
@@ -71,16 +70,16 @@ namespace OpenSim.Framework
     }
 
     [SerializableAttribute]
-    [ComVisibleAttribute(false)]
-    [HostProtectionAttribute(SecurityAction.LinkDemand, Synchronization = true, ExternalThreading = true)]
+    [ComVisible(false)]
+    [HostProtection(SecurityAction.LinkDemand, Synchronization = true, ExternalThreading = true)]
     public class Lazy<T>
     {
-        T value;
-        bool inited;
-        LazyThreadSafetyMode mode;
-        Func<T> factory;
-        object monitor;
-        Exception exception;
+        private readonly LazyThreadSafetyMode mode;
+        private readonly object monitor;
+        private Exception exception;
+        private Func<T> factory;
+        private bool inited;
+        private T value;
 
         public Lazy()
             : this(LazyThreadSafetyMode.ExecutionAndPublication)
@@ -93,17 +92,20 @@ namespace OpenSim.Framework
         }
 
         public Lazy(bool isThreadSafe)
-            : this(() => Activator.CreateInstance<T>(), isThreadSafe ? LazyThreadSafetyMode.ExecutionAndPublication : LazyThreadSafetyMode.None)
+            : this(
+                Activator.CreateInstance<T>,
+                isThreadSafe ? LazyThreadSafetyMode.ExecutionAndPublication : LazyThreadSafetyMode.None)
         {
         }
 
         public Lazy(Func<T> valueFactory, bool isThreadSafe)
-            : this(valueFactory, isThreadSafe ? LazyThreadSafetyMode.ExecutionAndPublication : LazyThreadSafetyMode.None)
+            : this(valueFactory, isThreadSafe ? LazyThreadSafetyMode.ExecutionAndPublication : LazyThreadSafetyMode.None
+                )
         {
         }
 
         public Lazy(LazyThreadSafetyMode mode)
-            : this(() => Activator.CreateInstance<T>(), mode)
+            : this(Activator.CreateInstance<T>, mode)
         {
         }
 
@@ -132,7 +134,12 @@ namespace OpenSim.Framework
             }
         }
 
-        T InitValue()
+        public bool IsValueCreated
+        {
+            get { return inited; }
+        }
+
+        private T InitValue()
         {
             switch (mode)
             {
@@ -140,7 +147,9 @@ namespace OpenSim.Framework
                     {
                         var init_factory = factory;
                         if (init_factory == null)
-                            throw exception = new InvalidOperationException("The initialization function tries to access Value on this instance");
+                            throw exception =
+                                  new InvalidOperationException(
+                                      "The initialization function tries to access Value on this instance");
                         try
                         {
                             factory = null;
@@ -162,10 +171,7 @@ namespace OpenSim.Framework
                         T v;
 
                         //exceptions are ignored
-                        if (init_factory != null)
-                            v = init_factory();
-                        else
-                            v = default(T);
+                        v = init_factory != null ? init_factory() : default(T);
 
                         lock (monitor)
                         {
@@ -186,7 +192,9 @@ namespace OpenSim.Framework
                                 return value;
 
                             if (factory == null)
-                                throw exception = new InvalidOperationException("The initialization function tries to access Value on this instance");
+                                throw exception =
+                                      new InvalidOperationException(
+                                          "The initialization function tries to access Value on this instance");
 
                             var init_factory = factory;
                             try
@@ -222,7 +230,8 @@ namespace OpenSim.Framework
                         return value;
 
                     if (factory == null)
-                        throw new InvalidOperationException("The initialization function tries to access Value on this instance");
+                        throw new InvalidOperationException(
+                            "The initialization function tries to access Value on this instance");
 
                     var init_factory = factory;
                     try
@@ -242,14 +251,6 @@ namespace OpenSim.Framework
             }
 
             return value;
-        }
-
-        public bool IsValueCreated
-        {
-            get
-            {
-                return inited;
-            }
         }
 
         public override string ToString()

@@ -27,36 +27,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Reflection;
-using log4net;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
     /// <value>
-    /// Indicate what action to take on an object derez request
+    ///   Indicate what action to take on an object derez request
     /// </value>
     public enum DeRezAction : byte
-    {	
+    {
         SaveToExistingUserInventoryItem = 0,
-        AcquireToUserInventory = 1,		// try to leave copy in world
+        AcquireToUserInventory = 1, // try to leave copy in world
         SaveIntoTaskInventory = 2,
         Attachment = 3,
         Take = 4,
-        GodTakeCopy = 5,   // force take copy
+        GodTakeCopy = 5, // force take copy
         Delete = 6,
         AttachmentToInventory = 7,
         AttachmentExists = 8,
-        Return = 9,           // back to owner's inventory
-        ReturnToLastOwner = 10    // deeded object back to last owner's inventory
+        Return = 9, // back to owner's inventory
+        ReturnToLastOwner = 10 // deeded object back to last owner's inventory
     };
 
     public interface IScene : IRegistryCore
@@ -78,57 +71,57 @@ namespace OpenSim.Framework
 
         #region Initialize/Close
 
-        void Initialize (RegionInfo regionInfo);
-        void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
-        void StartHeartbeat ();
-        void FinishedStartup (string p, List<string> list);
         bool ShouldRunHeartbeat { get; set; }
-        void Close ();
+        void Initialize(RegionInfo regionInfo);
+        void Initialize(RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
+        void StartHeartbeat();
+        void FinishedStartup(string p, List<string> list);
+        void Close();
 
         #endregion
 
         #region Physics methods
 
         /// <summary>
-        /// Reload the last saved physics state to the Physics Scene
+        ///   Reload the last saved physics state to the Physics Scene
         /// </summary>
-        void StartPhysicsScene ();
+        void StartPhysicsScene();
 
         /// <summary>
-        /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
+        ///   Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
         /// </summary>
-        void StopPhysicsScene ();
+        void StopPhysicsScene();
 
         #endregion
 
         #region Client Methods
 
         ClientManager ClientManager { get; }
-        void AddNewClient (IClientAPI client, BlankHandler completed);
-        IScenePresence GetScenePresence (UUID uUID);
-        List<IScenePresence> GetScenePresences ();
+        void AddNewClient(IClientAPI client, BlankHandler completed);
+        IScenePresence GetScenePresence(UUID uUID);
+        List<IScenePresence> GetScenePresences();
         int GetScenePresenceCount();
-        IScenePresence GetScenePresence (uint localID);
-        bool TryGetScenePresence (UUID agentID, out IScenePresence scenePresence);
-        bool TryGetAvatarByName (string p, out IScenePresence NewSP);
-        bool RemoveAgent (IScenePresence presence, bool forceClose);
+        IScenePresence GetScenePresence(uint localID);
+        bool TryGetScenePresence(UUID agentID, out IScenePresence scenePresence);
+        bool TryGetAvatarByName(string p, out IScenePresence NewSP);
+        bool RemoveAgent(IScenePresence presence, bool forceClose);
 
         #endregion
 
         #region ForEach
 
-        void ForEachClient (Action<IClientAPI> action);
-        void ForEachScenePresence (Action<IScenePresence> action);
-        void ForEachSceneEntity (Action<ISceneEntity> action);
+        void ForEachClient(Action<IClientAPI> action);
+        void ForEachScenePresence(Action<IScenePresence> action);
+        void ForEachSceneEntity(Action<ISceneEntity> action);
 
         #endregion
 
         #region Parts
 
-        ISceneChildEntity GetSceneObjectPart (uint localID);
-        ISceneChildEntity GetSceneObjectPart (UUID objectID);
-        ISceneEntity GetGroupByPrim (uint objectLocalID);
-        bool TryGetPart (UUID objecUUID, out ISceneChildEntity SensedObject);
+        ISceneChildEntity GetSceneObjectPart(uint localID);
+        ISceneChildEntity GetSceneObjectPart(UUID objectID);
+        ISceneEntity GetGroupByPrim(uint objectLocalID);
+        bool TryGetPart(UUID objecUUID, out ISceneChildEntity SensedObject);
 
         #endregion
 

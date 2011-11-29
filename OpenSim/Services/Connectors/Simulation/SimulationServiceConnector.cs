@@ -27,35 +27,65 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Text;
-
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Region.Framework.Scenes;
-
+using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using log4net;
-using Nini.Config;
-using Aurora.Simulation.Base;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.Connectors.Simulation
 {
     public class SimulationServiceConnector : ISimulationService, IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        ///   These are regions that have timed out and we are not sending updates to until the (int) time passes
+        /// </summary>
+        protected Dictionary<string, int> m_blackListedRegions = new Dictionary<string, int>();
+
         protected LocalSimulationServiceConnector m_localBackend;
         protected IRegistryCore m_registry;
 
-        /// <summary>
-        /// These are regions that have timed out and we are not sending updates to until the (int) time passes
-        /// </summary>
-        protected Dictionary<string, int> m_blackListedRegions = new Dictionary<string, int>();
-        
+        #region IService Members
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlers = config.Configs["Handlers"];
+            if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
+            {
+                registry.RegisterModuleInterface<ISimulationService>(this);
+                m_localBackend = new LocalSimulationServiceConnector();
+            }
+            m_registry = registry;
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+            if (m_localBackend != null)
+            {
+                SceneManager man = registry.RequestModuleInterface<SceneManager>();
+                if (man != null)
+                {
+                    man.OnAddedScene += Init;
+                    man.OnCloseScene += RemoveScene;
+                }
+            }
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        #region ISimulationService Members
+
         public IScene GetScene(ulong regionHandle)
         {
             return m_localBackend.GetScene(regionHandle);
@@ -66,20 +96,19 @@ namespace OpenSim.Services.Connectors.Simulation
             return m_localBackend;
         }
 
+        #endregion
+
         #region Agents
 
-        protected virtual string AgentPath()
-        {
-            return "/agent/";
-        }
-
-        public virtual bool CreateAgent (GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data, out int requestedUDPPort, out string reason)
+        public virtual bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags,
+                                        AgentData data, out int requestedUDPPort, out string reason)
         {
             reason = String.Empty;
             // Try local first
-            if (m_localBackend.CreateAgent(destination, ref aCircuit, teleportFlags, data, out requestedUDPPort, out reason))
+            if (m_localBackend.CreateAgent(destination, ref aCircuit, teleportFlags, data, out requestedUDPPort,
+                                           out reason))
                 return true;
-            requestedUDPPort = destination.ExternalEndPoint.Port;//Just make sure..
+            requestedUDPPort = destination.ExternalEndPoint.Port; //Just make sure..
 
             reason = String.Empty;
 
@@ -94,16 +123,16 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
                 args["teleport_flags"] = OSD.FromString(teleportFlags.ToString());
-                if(data != null)
+                if (data != null)
                     args["agent_data"] = data.Pack();
 
-                OSDMap result = WebUtils.PostToService (uri, args, true, false);
+                OSDMap result = WebUtils.PostToService(uri, args, true, false);
                 OSDMap results = WebUtils.GetOSDMap(result["_RawResult"].AsString());
                 //Pull out the result and set it as the reason
                 if (results == null)
                     return false;
                 reason = results["reason"] != null ? results["reason"].AsString() : "";
-                if (result["Success"].AsBoolean ())
+                if (result["Success"].AsBoolean())
                 {
                     //Not right... don't return true except for opensim combatibility :/
                     if (reason == "")
@@ -112,12 +141,12 @@ namespace OpenSim.Services.Connectors.Simulation
                     try
                     {
                         //We send the CapsURLs through, so we need these
-                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson (reason);
-                        if (responseMap.ContainsKey ("Reason"))
-                            reason = responseMap["Reason"].AsString ();
-                        if (responseMap.ContainsKey ("requestedUDPPort"))
+                        OSDMap responseMap = (OSDMap) OSDParser.DeserializeJson(reason);
+                        if (responseMap.ContainsKey("Reason"))
+                            reason = responseMap["Reason"].AsString();
+                        if (responseMap.ContainsKey("requestedUDPPort"))
                             requestedUDPPort = responseMap["requestedUDPPort"];
-                        return results["success"].AsBoolean ();
+                        return results["success"].AsBoolean();
                     }
                     catch
                     {
@@ -131,7 +160,7 @@ namespace OpenSim.Services.Connectors.Simulation
             }
             catch (Exception e)
             {
-                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: CreateAgent failed with exception: " + e.ToString());
+                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: CreateAgent failed with exception: " + e);
                 reason = e.Message;
             }
 
@@ -140,86 +169,12 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool UpdateAgent(GridRegion destination, AgentData data)
         {
-            return UpdateAgent(destination, (IAgentData)data);
+            return UpdateAgent(destination, (IAgentData) data);
         }
 
         public bool UpdateAgent(GridRegion destination, AgentPosition data)
         {
-            return UpdateAgent(destination, (IAgentData)data);
-        }
-
-        private bool UpdateAgent(GridRegion destination, IAgentData cAgentData)
-        {
-            // Try local first
-            if (cAgentData is AgentData)
-            {
-                if (m_localBackend.UpdateAgent(destination, (AgentData)cAgentData))
-                    return true;
-            }
-            else if (cAgentData is AgentPosition)
-            {
-                if (m_localBackend.UpdateAgent(destination, (AgentPosition)cAgentData))
-                    return true;
-            }
-
-            // else do the remote thing
-            if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
-            {
-                // Eventually, we want to use a caps url instead of the agentID
-                string uri = MakeUri(destination, true) + cAgentData.AgentID + "/";
-
-                if (m_blackListedRegions.ContainsKey(uri))
-                {
-                    //Check against time
-                    if(m_blackListedRegions[uri] > 3 && 
-                        Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
-                    {
-                        m_log.Warn ("[SimServiceConnector]: Blacklisted region " + destination.RegionName + " requested");
-                        //Still blacklisted
-                        return false;
-                    }
-                }
-                try
-                {
-                    OSDMap args = cAgentData.Pack();
-
-                    args["destination_x"] = OSD.FromString(destination.RegionLocX.ToString());
-                    args["destination_y"] = OSD.FromString(destination.RegionLocY.ToString());
-                    args["destination_name"] = OSD.FromString(destination.RegionName);
-                    args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
-
-                    OSDMap result = WebUtils.PutToService(uri, args, true, true, false);
-                    if (!result["Success"].AsBoolean())
-                    {
-                        if (m_blackListedRegions.ContainsKey (uri))
-                        {
-                            if (m_blackListedRegions[uri] == 3)
-                            {
-                                //add it to the blacklist as the request completely failed 3 times
-                                m_blackListedRegions[uri] = Util.EnvironmentTickCount () + 60 * 1000; //60 seconds
-                            }
-                            else if (m_blackListedRegions[uri] == 0)
-                                m_blackListedRegions[uri]++;
-                        }
-                        else
-                            m_blackListedRegions[uri] = 0;
-                        return result["Success"].AsBoolean();
-                    }
-                    //Clear out the blacklist if it went through
-                    m_blackListedRegions.Remove(uri);
-
-                    OSDMap innerResult = (OSDMap)result["_Result"];
-                    return innerResult["Updated"].AsBoolean();
-                }
-                catch (Exception e)
-                {
-                    m_log.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e.ToString());
-                }
-
-                return false;
-            }
-
-            return false;
+            return UpdateAgent(destination, (IAgentData) data);
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
@@ -229,7 +184,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
             // Eventually, we want to use a caps url instead of the agentID
             string uri = MakeUri(m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, RegionID),
-                true) + AgentID + "/" + RegionID.ToString() + "/";
+                                 true) + AgentID + "/" + RegionID.ToString() + "/";
 
             OSDMap data = new OSDMap();
             data["Method"] = "FailedToMoveAgentIntoNewRegion";
@@ -240,14 +195,14 @@ namespace OpenSim.Services.Connectors.Simulation
             }
             catch (Exception e)
             {
-                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e.ToString());
+                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e);
             }
             return false;
         }
 
-        public bool MakeChildAgent (UUID AgentID, GridRegion destination)
+        public bool MakeChildAgent(UUID AgentID, GridRegion destination)
         {
-            if(m_localBackend.MakeChildAgent(AgentID, destination))
+            if (m_localBackend.MakeChildAgent(AgentID, destination))
                 return true;
 
             // Eventually, we want to use a caps url instead of the agentID
@@ -260,14 +215,15 @@ namespace OpenSim.Services.Connectors.Simulation
                 WebUtils.PostToService(uri, data, false, false, false);
                 return true;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: MakeChildAgent failed with exception: " + e.ToString());
+                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: MakeChildAgent failed with exception: " + e);
             }
             return false;
         }
 
-        public bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent, out AgentCircuitData circuitData)
+        public bool RetrieveAgent(GridRegion destination, UUID id, bool agentIsLeaving, out AgentData agent,
+                                  out AgentCircuitData circuitData)
         {
             agent = null;
             // Try local first
@@ -278,30 +234,31 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 // Eventually, we want to use a caps url instead of the agentID
-                string uri = MakeUri(destination, true) + id + "/" + destination.RegionID.ToString() + "/" + agentIsLeaving.ToString() + "/";
+                string uri = MakeUri(destination, true) + id + "/" + destination.RegionID.ToString() + "/" +
+                             agentIsLeaving.ToString() + "/";
 
                 try
                 {
                     OSDMap result = WebUtils.GetFromService(uri, true, false, false);
                     if (result["Success"].AsBoolean())
                     {
-                        OSDMap r = (OSDMap)OSDParser.DeserializeJson (result["_RawResult"]);
+                        OSDMap r = (OSDMap) OSDParser.DeserializeJson(result["_RawResult"]);
                         if (r["Result"] == "Not Found")
                             return false;
                         agent = new AgentData();
 
                         if (!r.ContainsKey("AgentData"))
-                            return false;//Disable old simulators
+                            return false; //Disable old simulators
 
-                        agent.Unpack((OSDMap)r["AgentData"]);
+                        agent.Unpack((OSDMap) r["AgentData"]);
                         circuitData = new AgentCircuitData();
-                        circuitData.UnpackAgentCircuitData((OSDMap)r["CircuitData"]);
+                        circuitData.UnpackAgentCircuitData((OSDMap) r["CircuitData"]);
                         return true;
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e.ToString());
+                    m_log.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e);
                 }
 
                 return false;
@@ -327,10 +284,89 @@ namespace OpenSim.Services.Connectors.Simulation
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[REMOTE SIMULATION CONNECTOR] CloseAgent failed with exception; {0}", e.ToString());
+                    m_log.WarnFormat("[REMOTE SIMULATION CONNECTOR] CloseAgent failed with exception; {0}", e);
                 }
 
                 return true;
+            }
+
+            return false;
+        }
+
+        protected virtual string AgentPath()
+        {
+            return "/agent/";
+        }
+
+        private bool UpdateAgent(GridRegion destination, IAgentData cAgentData)
+        {
+            // Try local first
+            if (cAgentData is AgentData)
+            {
+                if (m_localBackend.UpdateAgent(destination, (AgentData) cAgentData))
+                    return true;
+            }
+            else if (cAgentData is AgentPosition)
+            {
+                if (m_localBackend.UpdateAgent(destination, (AgentPosition) cAgentData))
+                    return true;
+            }
+
+            // else do the remote thing
+            if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
+            {
+                // Eventually, we want to use a caps url instead of the agentID
+                string uri = MakeUri(destination, true) + cAgentData.AgentID + "/";
+
+                if (m_blackListedRegions.ContainsKey(uri))
+                {
+                    //Check against time
+                    if (m_blackListedRegions[uri] > 3 &&
+                        Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
+                    {
+                        m_log.Warn("[SimServiceConnector]: Blacklisted region " + destination.RegionName + " requested");
+                        //Still blacklisted
+                        return false;
+                    }
+                }
+                try
+                {
+                    OSDMap args = cAgentData.Pack();
+
+                    args["destination_x"] = OSD.FromString(destination.RegionLocX.ToString());
+                    args["destination_y"] = OSD.FromString(destination.RegionLocY.ToString());
+                    args["destination_name"] = OSD.FromString(destination.RegionName);
+                    args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
+
+                    OSDMap result = WebUtils.PutToService(uri, args, true, true, false);
+                    if (!result["Success"].AsBoolean())
+                    {
+                        if (m_blackListedRegions.ContainsKey(uri))
+                        {
+                            if (m_blackListedRegions[uri] == 3)
+                            {
+                                //add it to the blacklist as the request completely failed 3 times
+                                m_blackListedRegions[uri] = Util.EnvironmentTickCount() + 60*1000; //60 seconds
+                            }
+                            else if (m_blackListedRegions[uri] == 0)
+                                m_blackListedRegions[uri]++;
+                        }
+                        else
+                            m_blackListedRegions[uri] = 0;
+                        return result["Success"].AsBoolean();
+                    }
+                    //Clear out the blacklist if it went through
+                    m_blackListedRegions.Remove(uri);
+
+                    OSDMap innerResult = (OSDMap) result["_Result"];
+                    return innerResult["Updated"].AsBoolean();
+                }
+                catch (Exception e)
+                {
+                    m_log.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e);
+                }
+
+                return false;
             }
 
             return false;
@@ -340,15 +376,10 @@ namespace OpenSim.Services.Connectors.Simulation
 
         #region Objects
 
-        protected virtual string ObjectPath()
-        {
-            return "/object/";
-        }
-
         public bool CreateObject(GridRegion destination, ISceneObject sog)
         {
             // Try local first
-            if (m_localBackend != null && m_localBackend.CreateObject (destination, sog))
+            if (m_localBackend != null && m_localBackend.CreateObject(destination, sog))
             {
                 //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
                 return true;
@@ -370,7 +401,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                OSDMap result = WebUtils.PostToService (uri, args, true, false);
+                OSDMap result = WebUtils.PostToService(uri, args, true, false);
                 if (bool.TryParse(result["_RawResult"], out successful))
                     return successful;
             }
@@ -402,8 +433,8 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                OSDMap result = WebUtils.PostToService (uri, args, true, false);
-                if(bool.TryParse(result["_RawResult"], out successful))
+                OSDMap result = WebUtils.PostToService(uri, args, true, false);
+                if (bool.TryParse(result["_RawResult"], out successful))
                     return successful;
             }
             return successful;
@@ -419,6 +450,11 @@ namespace OpenSim.Services.Connectors.Simulation
             m_localBackend.Init(scene);
         }
 
+        protected virtual string ObjectPath()
+        {
+            return "/object/";
+        }
+
         #endregion Objects
 
         #region Misc
@@ -427,47 +463,17 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             if (isAgent && destination.GenericMap.ContainsKey("SimulationAgent"))
                 return destination.ServerURI + destination.GenericMap["SimulationAgent"].AsString();
-            if (!isAgent && destination.GenericMap.ContainsKey ("SimulationObject"))
-                return destination.ServerURI + destination.GenericMap["SimulationObject"].AsString ();
+            if (!isAgent && destination.GenericMap.ContainsKey("SimulationObject"))
+                return destination.ServerURI + destination.GenericMap["SimulationObject"].AsString();
             else
             {
-                if(destination.ServerURI == null)
+                if (destination.ServerURI == null)
                     destination.ServerURI = "http://" + destination.ExternalHostName + ":" + destination.HttpPort;
-                string url = destination.ServerURI.EndsWith ("/") ? destination.ServerURI.Remove (destination.ServerURI.Length - 1, 1) : destination.ServerURI;
-                return url + (isAgent ? AgentPath () : ObjectPath ());
+                string url = destination.ServerURI.EndsWith("/")
+                                 ? destination.ServerURI.Remove(destination.ServerURI.Length - 1, 1)
+                                 : destination.ServerURI;
+                return url + (isAgent ? AgentPath() : ObjectPath());
             }
-        }
-
-        #endregion
-
-        #region IService Members
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlers = config.Configs["Handlers"];
-            if (handlers.GetString("SimulationHandler", "") == "SimulationServiceConnector")
-            {
-                registry.RegisterModuleInterface<ISimulationService>(this);
-                m_localBackend = new LocalSimulationServiceConnector();
-            }
-            m_registry = registry;
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
-            if (m_localBackend != null)
-            {
-                SceneManager man = registry.RequestModuleInterface<SceneManager> ();
-                if (man != null)
-                {
-                    man.OnAddedScene += Init;
-                    man.OnCloseScene += RemoveScene;
-                }
-            }
-        }
-
-        public void FinishedStartup()
-        {
         }
 
         #endregion

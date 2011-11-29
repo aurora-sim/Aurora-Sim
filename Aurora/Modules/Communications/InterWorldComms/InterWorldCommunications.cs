@@ -26,28 +26,22 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using OpenSim.Framework.Servers.HttpServer;
-using Nini.Config;
 using Aurora.Framework;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using Aurora.Simulation.Base;
-using log4net;
-using OpenSim.Services.Interfaces;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using DataManager = Aurora.DataManager.DataManager;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Modules
 {
@@ -56,42 +50,50 @@ namespace Aurora.Modules
         #region Declares
 
         protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
-        /// The 'AuroraInterWorldConnectors' config 
-        /// </summary>
-        protected IConfig m_config;
-        /// <summary>
-        /// The config source
-        /// </summary>
-        protected IConfigSource m_source;
-        /// <summary>
-        /// The registry where we can get services
-        /// </summary>
-        protected IRegistryCore m_registry;
-        /// <summary>
-        /// Whether we are enabled or not
-        /// </summary>
-        protected bool m_Enabled = false;
-        /// <summary>
-        /// Should connections that come to us that are not authenticated be allowed to connect?
-        /// </summary>
-        public bool m_allowUntrustedConnections = false;
-        /// <summary>
-        /// Untrusted connections automatically get this trust level
-        /// </summary>
-        public ThreatLevel m_untrustedConnectionsDefaultTrust = ThreatLevel.Low;
-        /// <summary>
-        /// All connections that we have to other hosts
-        /// (Before sending the initial connection requests, 
+        ///   All connections that we have to other hosts
+        ///   (Before sending the initial connection requests, 
         ///   this MAY contain connections that we do not currently have)
         /// </summary>
         protected List<string> Connections = new List<string>();
+
+        public bool IsGettingUrlsForIWCConnection;
+
         /// <summary>
-        /// The class that sends requests to other hosts
+        ///   The class that sends requests to other hosts
         /// </summary>
         public IWCOutgoingConnections OutgoingPublicComms;
 
-        public bool IsGettingUrlsForIWCConnection = false;
+        /// <summary>
+        ///   Whether we are enabled or not
+        /// </summary>
+        protected bool m_Enabled;
+
+        /// <summary>
+        ///   Should connections that come to us that are not authenticated be allowed to connect?
+        /// </summary>
+        public bool m_allowUntrustedConnections;
+
+        /// <summary>
+        ///   The 'AuroraInterWorldConnectors' config
+        /// </summary>
+        protected IConfig m_config;
+
+        /// <summary>
+        ///   The registry where we can get services
+        /// </summary>
+        protected IRegistryCore m_registry;
+
+        /// <summary>
+        ///   The config source
+        /// </summary>
+        protected IConfigSource m_source;
+
+        /// <summary>
+        ///   Untrusted connections automatically get this trust level
+        /// </summary>
+        public ThreatLevel m_untrustedConnectionsDefaultTrust = ThreatLevel.Low;
 
         public IRegistryCore Registry
         {
@@ -106,21 +108,21 @@ namespace Aurora.Modules
         {
             if (MainConsole.Instance == null)
                 return;
-            MainConsole.Instance.Commands.AddCommand ("iwc add connection", "iwc add connection",
-                "Add an IWC connection to another host.", AddIWCConnection);
+            MainConsole.Instance.Commands.AddCommand("iwc add connection", "iwc add connection",
+                                                     "Add an IWC connection to another host.", AddIWCConnection);
             MainConsole.Instance.Commands.AddCommand("iwc remove connection", "iwc remove connection",
-                "Remove an IWC connection from another host.", RemoveIWCConnection);
+                                                     "Remove an IWC connection from another host.", RemoveIWCConnection);
             MainConsole.Instance.Commands.AddCommand("iwc show connections", "iwc show connections",
-                "Shows all active IWC connections.", ShowIWCConnections);
+                                                     "Shows all active IWC connections.", ShowIWCConnections);
         }
 
         #region Commands
 
         /// <summary>
-        /// Add a certificate for the given connection
+        ///   Add a certificate for the given connection
         /// </summary>
-        /// <param name="module"></param>
-        /// <param name="cmds"></param>
+        /// <param name = "module"></param>
+        /// <param name = "cmds"></param>
         private void AddIWCConnection(string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
@@ -128,27 +130,95 @@ namespace Aurora.Modules
             Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
             Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
 
-            bool success = this.OutgoingPublicComms.AttemptConnection (Url);
+            bool success = this.OutgoingPublicComms.AttemptConnection(Url);
             if (success)
-                Connections.Add (Url);
+                Connections.Add(Url);
         }
 
         private void RemoveIWCConnection(string[] cmds)
         {
             string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
-            
         }
 
         private void ShowIWCConnections(string[] cmds)
         {
             m_log.InfoFormat("Showing {0} active IWC connections.", Connections.Count);
-            for (int i = 0; i < Connections.Count; i++)
+            foreach (string t in Connections)
             {
-                m_log.Info ("Url: " + Connections[i]);
+                m_log.Info("Url: " + t);
             }
         }
 
         #endregion
+
+        #endregion
+
+        #region ICommunicationService Members
+
+        public GridRegion GetRegionForGrid(string regionName, string url)
+        {
+            bool found = Connections.Contains(url);
+            if (found)
+            {
+                //If we are already connected, the grid services are together, so we already know of the region if it exists, therefore, it does not exist
+                return null;
+            }
+            else
+            {
+                //Be user friendly, add the http:// if needed as well as the final /
+                url = (url.StartsWith("http://") || url.StartsWith("https://")) ? url : "http://" + url;
+                url = url.EndsWith("/") ? url + "iwcconnection" : url + "/iwcconnection";
+                bool success = this.OutgoingPublicComms.AttemptConnection(url);
+                if (success)
+                {
+                    IGridService service = m_registry.RequestModuleInterface<IGridService>();
+                    if (service != null)
+                    {
+                        List<GridRegion> regions = service.GetRegionsByName(UUID.Zero, regionName, 3);
+                        foreach (GridRegion t in regions.Where(t => t.RegionName == regionName))
+                        {
+                            return t;
+                        }
+                        if (regions.Count > 0)
+                            return regions[0];
+                    }
+                }
+            }
+            return null;
+        }
+
+        public OSDMap GetUrlsForUser(GridRegion region, UUID userID)
+        {
+            if ((((RegionFlags) region.Flags) & RegionFlags.Foreign) != RegionFlags.Foreign)
+            {
+                m_log.Debug("[IWC]: Not a foreign region");
+                return null;
+            }
+            string host = userID.ToString();
+            IGridRegistrationService module = Registry.RequestModuleInterface<IGridRegistrationService>();
+            if (module != null)
+            {
+                module.RemoveUrlsForClient(host);
+                module.RemoveUrlsForClient(host + "|" + region.RegionHandle);
+                IsGettingUrlsForIWCConnection = true;
+                OSDMap map = module.GetUrlForRegisteringClient(host + "|" + region.RegionHandle);
+                IsGettingUrlsForIWCConnection = false;
+
+                string url = region.GenericMap["URL"];
+                if (url == "")
+                {
+                    m_log.Warn("[IWC]: Foreign region with no URL");
+                    return null; //What the hell? Its a foreign region, it better have a URL!
+                }
+                //Remove the /Grid.... stuff
+                url = url.Remove(url.Length - 5 - 36);
+                OutgoingPublicComms.InformOfURLs(url + "/iwcconnection", map, userID, region.RegionHandle);
+
+                return map;
+            }
+
+            return null;
+        }
 
         #endregion
 
@@ -161,10 +231,15 @@ namespace Aurora.Modules
             if (m_config != null)
             {
                 m_Enabled = m_config.GetBoolean("Enabled", false);
-                m_allowUntrustedConnections = m_config.GetBoolean("AllowUntrustedConnections", m_allowUntrustedConnections);
-                m_untrustedConnectionsDefaultTrust = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), m_config.GetString("UntrustedConnectionsDefaultTrust", m_untrustedConnectionsDefaultTrust.ToString()));
-                registry.RegisterModuleInterface<InterWorldCommunications>(this);
-                registry.StackModuleInterface<ICommunicationService> (this);
+                m_allowUntrustedConnections = m_config.GetBoolean("AllowUntrustedConnections",
+                                                                  m_allowUntrustedConnections);
+                m_untrustedConnectionsDefaultTrust =
+                    (ThreatLevel)
+                    Enum.Parse(typeof (ThreatLevel),
+                               m_config.GetString("UntrustedConnectionsDefaultTrust",
+                                                  m_untrustedConnectionsDefaultTrust.ToString()));
+                registry.RegisterModuleInterface(this);
+                registry.StackModuleInterface<ICommunicationService>(this);
                 m_registry = registry;
             }
         }
@@ -198,98 +273,32 @@ namespace Aurora.Modules
             }
         }
 
-        private void ContactOtherServers ()
+        #endregion
+
+        private void ContactOtherServers()
         {
         }
 
-        #endregion
-
-        internal void AddNewConnectionFromRequest (string identifer, OSDMap args)
+        internal void AddNewConnectionFromRequest(string identifer, OSDMap args)
         {
             //Add the other servers IP to our connections=
-            IConfigurationService configService = Registry.RequestModuleInterface<IConfigurationService> ();
+            IConfigurationService configService = Registry.RequestModuleInterface<IConfigurationService>();
             if (configService != null)
             {
                 //Add the URLs they sent us
-                configService.RemoveUrls (identifer);
-                configService.AddNewUrls (identifer, args);
+                configService.RemoveUrls(identifer);
+                configService.AddNewUrls(identifer, args);
             }
-        }
-
-        public GridRegion GetRegionForGrid (string regionName, string url)
-        {
-            bool found = Connections.Contains (url);
-            if (found)
-            {
-                //If we are already connected, the grid services are together, so we already know of the region if it exists, therefore, it does not exist
-                return null;
-            }
-            else
-            {
-                //Be user friendly, add the http:// if needed as well as the final /
-                url = (url.StartsWith ("http://") || url.StartsWith ("https://")) ? url : "http://" + url;
-                url = url.EndsWith ("/") ? url + "iwcconnection" : url + "/iwcconnection";
-                bool success = this.OutgoingPublicComms.AttemptConnection (url);
-                if (success)
-                {
-                    IGridService service = m_registry.RequestModuleInterface<IGridService> ();
-                    if (service != null)
-                    {
-                        List<GridRegion> regions = service.GetRegionsByName (UUID.Zero, regionName, 3);
-                        for (int i = 0; i < regions.Count; i++)
-                        {
-                            if (regions[i].RegionName == regionName)
-                                return regions[i];
-                        }
-                        if (regions.Count > 0)
-                            return regions[0];
-                    }
-                }
-            }
-            return null;
-        }
-
-        public OSDMap GetUrlsForUser (GridRegion region, UUID userID)
-        {
-            if ((((Aurora.Framework.RegionFlags)region.Flags) & Aurora.Framework.RegionFlags.Foreign) != Framework.RegionFlags.Foreign)
-            {
-                m_log.Debug ("[IWC]: Not a foreign region");
-                return null;
-            }
-            string host = userID.ToString ();
-            IGridRegistrationService module = Registry.RequestModuleInterface<IGridRegistrationService> ();
-            if (module != null)
-            {
-                module.RemoveUrlsForClient (host);
-                module.RemoveUrlsForClient (host + "|" + region.RegionHandle);
-                IsGettingUrlsForIWCConnection = true;
-                OSDMap map = module.GetUrlForRegisteringClient (host + "|" + region.RegionHandle);
-                IsGettingUrlsForIWCConnection = false;
-
-                string url = region.GenericMap["URL"];
-                if (url == "")
-                {
-                    m_log.Warn ("[IWC]: Foreign region with no URL");
-                    return null;//What the hell? Its a foreign region, it better have a URL!
-                }
-                //Remove the /Grid.... stuff
-                url = url.Remove(url.Length - 5 - 36);
-                OutgoingPublicComms.InformOfURLs (url + "/iwcconnection", map, userID, region.RegionHandle);
-                
-                return map;
-            }
-
-            return null;
         }
     }
 
     /// <summary>
-    /// This class deals with sending requests to other hosts
+    ///   This class deals with sending requests to other hosts
     /// </summary>
     public class IWCOutgoingConnections
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private InterWorldCommunications IWC;
+        private readonly InterWorldCommunications IWC;
 
         public IWCOutgoingConnections(InterWorldCommunications iwc)
         {
@@ -297,42 +306,42 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Query the given host (by connection) and verify that we can connect to it.
+        ///   Query the given host (by connection) and verify that we can connect to it.
         /// </summary>
-        /// <param name="connector">The host to connect to</param>
+        /// <param name = "connector">The host to connect to</param>
         /// <returns>The connection that has been recieved from the host</returns>
-        public bool AttemptConnection (string host)
+        public bool AttemptConnection(string host)
         {
-            IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService> ();
+            IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService>();
             if (module != null)
             {
-                module.RemoveUrlsForClient (host);
+                module.RemoveUrlsForClient(host);
                 IWC.IsGettingUrlsForIWCConnection = true;
-                OSDMap callThem = module.GetUrlForRegisteringClient (host);
+                OSDMap callThem = module.GetUrlForRegisteringClient(host);
                 IWC.IsGettingUrlsForIWCConnection = false;
                 callThem["OurIdentifier"] = Utilities.GetAddress();
 
                 callThem["Method"] = "ConnectionRequest";
-                OSDMap result = WebUtils.PostToService (host, callThem, true, false, true);
+                OSDMap result = WebUtils.PostToService(host, callThem, true, false, true);
                 if (result["Success"])
                 {
                     //Add their URLs back again
-                    m_log.Warn ("Successfully Connected to " + host);
-                    IWC.AddNewConnectionFromRequest (result["OurIdentifier"], result);
+                    m_log.Warn("Successfully Connected to " + host);
+                    IWC.AddNewConnectionFromRequest(result["OurIdentifier"], result);
                     return true;
                 }
             }
             return false;
         }
 
-        public bool InformOfURLs (string url, OSDMap urls, UUID userID, ulong regionHandle)
+        public bool InformOfURLs(string url, OSDMap urls, UUID userID, ulong regionHandle)
         {
             urls["OurIdentifier"] = Utilities.GetAddress();
             urls["UserID"] = userID;
             urls["RegionHandle"] = regionHandle;
 
             urls["Method"] = "NewURLs";
-            OSDMap result = WebUtils.PostToService (url, urls, true, false, true);
+            OSDMap result = WebUtils.PostToService(url, urls, true, false, true);
             if (result["Success"])
                 return true;
             return false;
@@ -340,12 +349,12 @@ namespace Aurora.Modules
     }
 
     /// <summary>
-    /// This class deals with incoming requests (secure and insecure) from other hosts
+    ///   This class deals with incoming requests (secure and insecure) from other hosts
     /// </summary>
     public class IWCIncomingConnections : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private InterWorldCommunications IWC;
+        private readonly InterWorldCommunications IWC;
 
         public IWCIncomingConnections(InterWorldCommunications iwc) :
             base("POST", "/iwcconnection")
@@ -353,15 +362,15 @@ namespace Aurora.Modules
             IWC = iwc;
         }
 
-        public override byte[] Handle (string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public override byte[] Handle(string path, Stream requestData,
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            StreamReader sr = new StreamReader (requestData);
-            string body = sr.ReadToEnd ();
-            sr.Close ();
-            body = body.Trim ();
+            StreamReader sr = new StreamReader(requestData);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
 
-            OSDMap args = WebUtils.GetOSDMap (body);
+            OSDMap args = WebUtils.GetOSDMap(body);
             if (args == null)
             {
                 //No data or not an json OSDMap
@@ -369,41 +378,41 @@ namespace Aurora.Modules
             }
             else
             {
-                if (args.ContainsKey ("Method"))
+                if (args.ContainsKey("Method"))
                 {
-                    string Method = args["Method"].AsString ();
+                    string Method = args["Method"].AsString();
                     if (Method == "ConnectionRequest")
-                        return ConnectionRequest (args);
+                        return ConnectionRequest(args);
                     if (Method == "NewURLs")
-                        return NewURLs (args);
+                        return NewURLs(args);
                 }
             }
             return new byte[0];
         }
 
-        private byte[] NewURLs (OSDMap args)
+        private byte[] NewURLs(OSDMap args)
         {
             UUID userID = args["UserID"];
             ulong regionhandle = args["RegionHandle"];
             string ident = userID + "|" + regionhandle;
-            IWC.AddNewConnectionFromRequest (ident, args);
-            OSDMap result = new OSDMap ();
+            IWC.AddNewConnectionFromRequest(ident, args);
+            OSDMap result = new OSDMap();
             result["Success"] = true;
-            string json = OSDParser.SerializeJsonString (result);
-            UTF8Encoding enc = new UTF8Encoding ();
-            return enc.GetBytes (json);
+            string json = OSDParser.SerializeJsonString(result);
+            UTF8Encoding enc = new UTF8Encoding();
+            return enc.GetBytes(json);
         }
 
-        private byte[] ConnectionRequest (OSDMap args)
+        private byte[] ConnectionRequest(OSDMap args)
         {
-            IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService> ();
-            OSDMap result = new OSDMap ();
+            IGridRegistrationService module = IWC.Registry.RequestModuleInterface<IGridRegistrationService>();
+            OSDMap result = new OSDMap();
             if (module != null)
             {
                 //Add our URLs for them so that they can connect too
                 string theirIdent = args["OurIdentifier"];
                 ulong handle;
-                if (ulong.TryParse (theirIdent, out handle))
+                if (ulong.TryParse(theirIdent, out handle))
                 {
                     //Fu**in hackers
                     //No making region handle sessionIDs!
@@ -411,20 +420,20 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    module.RemoveUrlsForClient (theirIdent);
+                    module.RemoveUrlsForClient(theirIdent);
                     IWC.IsGettingUrlsForIWCConnection = true;
-                    result = module.GetUrlForRegisteringClient (theirIdent);
+                    result = module.GetUrlForRegisteringClient(theirIdent);
                     IWC.IsGettingUrlsForIWCConnection = false;
                     result["OurIdentifier"] = Utilities.GetAddress();
-                    m_log.Warn (theirIdent + " successfully connected to us");
-                    IWC.AddNewConnectionFromRequest (theirIdent, args);
+                    m_log.Warn(theirIdent + " successfully connected to us");
+                    IWC.AddNewConnectionFromRequest(theirIdent, args);
                     result["Success"] = true;
                 }
             }
 
-            string json = OSDParser.SerializeJsonString (result);
-            UTF8Encoding enc = new UTF8Encoding ();
-            return enc.GetBytes (json);
+            string json = OSDParser.SerializeJsonString(result);
+            UTF8Encoding enc = new UTF8Encoding();
+            return enc.GetBytes(json);
         }
     }
 }

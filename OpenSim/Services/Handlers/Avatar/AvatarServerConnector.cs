@@ -25,27 +25,61 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework;
+using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
     public class AvatarServiceConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
+
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        #region IGridRegistrationUrlModule Members
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
         {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
         }
+
+        public string UrlName
+        {
+            get { return "AvatarServerURI"; }
+        }
+
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new AvatarServerPostHandler(url,
+                                                                m_registry.RequestModuleInterface<IAvatarService>().
+                                                                    InnerService, SessionID, m_registry));
+        }
+
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            string url = "/avatar" + UUID.Random();
+
+            server.AddStreamHandler(new AvatarServerPostHandler(url,
+                                                                m_registry.RequestModuleInterface<IAvatarService>().
+                                                                    InnerService, SessionID, m_registry));
+
+            return url;
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -56,46 +90,20 @@ namespace OpenSim.Services
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AvatarInHandler", "") != Name)
                 return;
-            
+
             m_registry = registry;
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
-        }
-
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
         }
 
         public void FinishedStartup()
         {
         }
 
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "AvatarServerURI"; }
-        }
-
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler (new AvatarServerPostHandler (url, m_registry.RequestModuleInterface<IAvatarService> ().InnerService, SessionID, m_registry));
-        }
-
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            string url = "/avatar" + UUID.Random();
-
-            server.AddStreamHandler (new AvatarServerPostHandler (url, m_registry.RequestModuleInterface<IAvatarService> ().InnerService, SessionID, m_registry));
-
-            return url;
-        }
-
         #endregion
+
+        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
+        {
+        }
     }
 }

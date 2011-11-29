@@ -26,36 +26,33 @@
  */
 
 using System;
-using OpenMetaverse;
-using OpenSim.Framework;
 using System.Collections.Generic;
-using Aurora.Framework;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
     public class AbuseReport
     {
-        public object Category;
-        public string ReporterName;
-        public string ObjectName;
-        public UUID ObjectUUID;
-        public string AbuserName;
-        public string AbuseLocation;
         public string AbuseDetails;
-        public string ObjectPosition;
-        public string RegionName;
-        public UUID ScreenshotID;
+        public string AbuseLocation;
         public string AbuseSummary;
-        public int Number;
-        public string AssignedTo;
+        public string AbuserName;
         public bool Active;
+        public string AssignedTo;
+        public object Category;
         public bool Checked;
         public string Notes;
+        public int Number;
+        public string ObjectName;
+        public string ObjectPosition;
+        public UUID ObjectUUID;
+        public string RegionName;
+        public string ReporterName;
+        public UUID ScreenshotID;
 
         public AbuseReport()
         {
-
         }
 
         public AbuseReport(Dictionary<string, object> DicCol)
@@ -119,9 +116,10 @@ namespace OpenSim.Services.Interfaces
             ReporterName = DicCol["ReporterName"].AsString();
             ScreenshotID = new UUID(DicCol["ScreenshotID"].AsString());
         }
+
         public OSDMap ToOSD()
         {
-            OSDMap NewDicCol = new OSDMap ();
+            OSDMap NewDicCol = new OSDMap();
             NewDicCol["AbuseDetails"] = AbuseDetails;
             NewDicCol["AbuseLocation"] = AbuseLocation;
             NewDicCol["AbuserName"] = AbuserName;
@@ -145,33 +143,33 @@ namespace OpenSim.Services.Interfaces
     public interface IAbuseReports
     {
         /// <summary>
-        /// Gets the abuse report associated with the number and uses the pass to authenticate.
+        ///   Gets the abuse report associated with the number and uses the pass to authenticate.
         /// </summary>
-        /// <param name="Number"></param>
-        /// <param name="Password"></param>
+        /// <param name = "Number"></param>
+        /// <param name = "Password"></param>
         /// <returns></returns>
         AbuseReport GetAbuseReport(int Number, string Password);
 
         /// <summary>
-        /// Adds a new abuse report to the database
+        ///   Adds a new abuse report to the database
         /// </summary>
-        /// <param name="report"></param>
-        /// <param name="Password"></param>
+        /// <param name = "report"></param>
+        /// <param name = "Password"></param>
         void AddAbuseReport(AbuseReport report);
 
         /// <summary>
-        /// Updates an abuse report and authenticates with the password.
+        ///   Updates an abuse report and authenticates with the password.
         /// </summary>
-        /// <param name="report"></param>
-        /// <param name="Password"></param>
+        /// <param name = "report"></param>
+        /// <param name = "Password"></param>
         void UpdateAbuseReport(AbuseReport report, string Password);
 
         /// <summary>
-        /// Gets a collection of abuse reports
+        ///   Gets a collection of abuse reports
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="count"></param>
-        /// <param name="filter"></param>
+        /// <param name = "start"></param>
+        /// <param name = "count"></param>
+        /// <param name = "filter"></param>
         /// <returns></returns>
         List<AbuseReport> GetAbuseReports(int start, int count, string filter);
     }

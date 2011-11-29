@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.ScriptEngine.AuroraDotNetEngine;
-
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public interface ISecurityCredential

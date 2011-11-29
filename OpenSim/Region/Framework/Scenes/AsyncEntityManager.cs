@@ -1,37 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OpenSim.Framework;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
     public class AsyncEntityManager : EntityManager
     {
-        protected AsyncScene m_scene;
-        protected volatile bool m_isChanging = false;
         protected readonly object m_changeLock = new object();
-        public AsyncEntityManager (AsyncScene scene)
+        protected volatile bool m_isChanging;
+        protected AsyncScene m_scene;
+
+        public AsyncEntityManager(AsyncScene scene)
         {
             m_scene = scene;
         }
 
-        public override bool Add (IEntity entity)
+        public override bool Add(IEntity entity)
         {
-            if(entity.LocalId == 0)
+            if (entity.LocalId == 0)
             {
                 m_log.Warn("Entity with 0 localID!");
                 return false;
             }
             m_isChanging = true;
-            lock(m_changeLock)
+            lock (m_changeLock)
             {
                 try
                 {
-                    if(entity is ISceneEntity)
+                    if (entity is ISceneEntity)
                     {
-                        foreach(ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
                         {
                             m_child_2_parent_entities.Remove(part.UUID);
                             m_child_2_parent_entities.Remove(part.LocalId);
@@ -41,12 +41,12 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        IScenePresence presence = (IScenePresence)entity;
+                        IScenePresence presence = (IScenePresence) entity;
                         m_presenceEntities.Add(presence.UUID, presence);
                         m_presenceEntitiesList.Add(presence);
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     m_log.ErrorFormat("Add Entity failed: {0}", e.Message);
                 }
@@ -55,20 +55,20 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public override bool Remove (IEntity entity)
+        public override bool Remove(IEntity entity)
         {
-            if(entity == null)
+            if (entity == null)
                 return false;
 
             m_isChanging = true;
-            lock(m_changeLock)
+            lock (m_changeLock)
             {
                 try
                 {
-                    if(entity is ISceneEntity)
+                    if (entity is ISceneEntity)
                     {
                         //Remove all child entities
-                        foreach(ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
+                        foreach (ISceneChildEntity part in (entity as ISceneEntity).ChildrenEntities())
                         {
                             m_child_2_parent_entities.Remove(part.UUID);
                             m_child_2_parent_entities.Remove(part.LocalId);
@@ -78,11 +78,11 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        m_presenceEntitiesList.Remove((IScenePresence)entity);
+                        m_presenceEntitiesList.Remove((IScenePresence) entity);
                         m_presenceEntities.Remove(entity.UUID);
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     m_log.ErrorFormat("Remove Entity failed for {0}", entity.UUID, e);
                 }
@@ -91,11 +91,11 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public override void Clear ()
+        public override void Clear()
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     m_objectEntities.Clear();
                     m_presenceEntitiesList.Clear();
@@ -112,45 +112,40 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public override ISceneEntity[] GetEntities ()
+        public override ISceneEntity[] GetEntities()
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
-                    m_objectEntities.ForEach(delegate(ISceneEntity entity)
-                    {
-                        tmp.Add(entity);
-                    });
+                    m_objectEntities.ForEach(tmp.Add);
                     return tmp.ToArray();
                 }
             }
             else
             {
                 List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
-                m_objectEntities.ForEach(delegate(ISceneEntity entity)
-                {
-                    tmp.Add(entity);
-                });
+                m_objectEntities.ForEach(tmp.Add);
                 return tmp.ToArray();
             }
         }
 
-        public override ISceneEntity[] GetEntities (OpenMetaverse.Vector3 pos, float radius)
+        public override ISceneEntity[] GetEntities(Vector3 pos, float radius)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
 
                     m_objectEntities.ForEach(delegate(ISceneEntity entity)
-                    {
-                        //Add attachments as well, as they might be needed
-                        if((entity.AbsolutePosition - pos).LengthSquared() < radius * radius || entity.IsAttachment)
-                            tmp.Add(entity);
-                    });
+                                                 {
+                                                     //Add attachments as well, as they might be needed
+                                                     if ((entity.AbsolutePosition - pos).LengthSquared() < radius*radius ||
+                                                         entity.IsAttachment)
+                                                         tmp.Add(entity);
+                                                 });
                     return tmp.ToArray();
                 }
             }
@@ -159,49 +154,42 @@ namespace OpenSim.Region.Framework.Scenes
                 List<ISceneEntity> tmp = new List<ISceneEntity>(m_objectEntities.Count);
 
                 m_objectEntities.ForEach(delegate(ISceneEntity entity)
-                {
-                    //Add attachments as well, as they might be needed
-                    if((entity.AbsolutePosition - pos).LengthSquared() < radius * radius || entity.IsAttachment)
-                        tmp.Add(entity);
-                });
+                                             {
+                                                 //Add attachments as well, as they might be needed
+                                                 if ((entity.AbsolutePosition - pos).LengthSquared() < radius*radius ||
+                                                     entity.IsAttachment)
+                                                     tmp.Add(entity);
+                                             });
                 return tmp.ToArray();
             }
         }
 
-        public override IScenePresence[] GetPresences (OpenMetaverse.Vector3 pos, float radius)
+        public override IScenePresence[] GetPresences(Vector3 pos, float radius)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     List<IScenePresence> tmp = new List<IScenePresence>(m_presenceEntities.Count);
+                    tmp.AddRange(m_presenceEntities.Values.Where(entity => (entity.AbsolutePosition - pos).LengthSquared() < radius*radius));
 
-                    foreach(IScenePresence entity in m_presenceEntities.Values)
-                    {
-                        if((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
-                            tmp.Add(entity);
-                    }
                     return tmp.ToArray();
                 }
             }
             else
             {
                 List<IScenePresence> tmp = new List<IScenePresence>(m_presenceEntities.Count);
+                tmp.AddRange(m_presenceEntities.Values.Where(entity => (entity.AbsolutePosition - pos).LengthSquared() < radius*radius));
 
-                foreach(IScenePresence entity in m_presenceEntities.Values)
-                {
-                    if((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
-                        tmp.Add(entity);
-                }
                 return tmp.ToArray();
             }
         }
 
-        protected override bool InternalTryGetValue (OpenMetaverse.UUID key, bool checkRecursive, out IEntity obj)
+        protected override bool InternalTryGetValue(UUID key, bool checkRecursive, out IEntity obj)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     return InnerInternalTryGetValue(ref key, checkRecursive, out obj);
                 }
@@ -210,26 +198,25 @@ namespace OpenSim.Region.Framework.Scenes
                 return InnerInternalTryGetValue(ref key, checkRecursive, out obj);
         }
 
-        private bool InnerInternalTryGetValue (ref OpenMetaverse.UUID key, bool checkRecursive, out IEntity obj)
+        private bool InnerInternalTryGetValue(ref UUID key, bool checkRecursive, out IEntity obj)
         {
             IScenePresence presence;
             bool gotit = m_presenceEntities.TryGetValue(key, out presence);
-            if(!gotit)
+            if (!gotit)
             {
                 ISceneEntity presence2;
                 gotit = m_objectEntities.TryGetValue(key, out presence2);
 
                 //Deal with the possibility we may have been asked for a child prim
-                if((!gotit) && checkRecursive)
+                if ((!gotit) && checkRecursive)
                     return TryGetChildPrimParent(key, out obj);
-                else if(gotit)
+                else if (gotit)
                 {
                     obj = presence2;
                     return true;
                 }
-
             }
-            else if(gotit)
+            else if (gotit)
             {
                 obj = presence;
                 return true;
@@ -238,11 +225,11 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        protected override bool InternalTryGetValue (uint key, bool checkRecursive, out IEntity obj)
+        protected override bool InternalTryGetValue(uint key, bool checkRecursive, out IEntity obj)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     return InnerInternalTryGetValue(key, checkRecursive, out obj);
                 }
@@ -251,15 +238,15 @@ namespace OpenSim.Region.Framework.Scenes
                 return InnerInternalTryGetValue(key, checkRecursive, out obj);
         }
 
-        private bool InnerInternalTryGetValue (uint key, bool checkRecursive, out IEntity obj)
+        private bool InnerInternalTryGetValue(uint key, bool checkRecursive, out IEntity obj)
         {
             ISceneEntity entity;
             bool gotit = m_objectEntities.TryGetValue(key, out entity);
 
             //Deal with the possibility we may have been asked for a child prim
-            if(!gotit && checkRecursive)
+            if (!gotit && checkRecursive)
                 return TryGetChildPrimParent(key, out obj);
-            else if(gotit)
+            else if (gotit)
             {
                 obj = entity;
                 return true;
@@ -271,11 +258,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public override bool TryGetChildPrimParent (OpenMetaverse.UUID childkey, out IEntity obj)
+        public override bool TryGetChildPrimParent(UUID childkey, out IEntity obj)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     return InnerTryGetChildPrimParent(ref childkey, out obj);
                 }
@@ -284,11 +271,11 @@ namespace OpenSim.Region.Framework.Scenes
                 return InnerTryGetChildPrimParent(ref childkey, out obj);
         }
 
-        public override bool TryGetChildPrimParent (uint childkey, out IEntity obj)
+        public override bool TryGetChildPrimParent(uint childkey, out IEntity obj)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     return InnerTryGetChildPrimParent(childkey, out obj);
                 }
@@ -297,35 +284,35 @@ namespace OpenSim.Region.Framework.Scenes
                 return InnerTryGetChildPrimParent(childkey, out obj);
         }
 
-        private bool InnerTryGetChildPrimParent (uint childkey, out IEntity obj)
+        private bool InnerTryGetChildPrimParent(uint childkey, out IEntity obj)
         {
             UUID ParentKey = UUID.Zero;
             bool gotit = m_child_2_parent_entities.TryGetValue(childkey, out ParentKey);
 
-            if(gotit)
+            if (gotit)
                 return InternalTryGetValue(ParentKey, false, out obj);
 
             obj = null;
             return false;
         }
 
-        private bool InnerTryGetChildPrimParent (ref OpenMetaverse.UUID childkey, out IEntity obj)
+        private bool InnerTryGetChildPrimParent(ref UUID childkey, out IEntity obj)
         {
             UUID ParentKey = UUID.Zero;
             bool gotit = m_child_2_parent_entities.TryGetValue(childkey, out ParentKey);
 
-            if(gotit)
+            if (gotit)
                 return InternalTryGetValue(ParentKey, false, out obj);
 
             obj = null;
             return false;
         }
 
-        public override bool TryGetPresenceValue (OpenMetaverse.UUID key, out IScenePresence presence)
+        public override bool TryGetPresenceValue(UUID key, out IScenePresence presence)
         {
-            if(m_isChanging)
+            if (m_isChanging)
             {
-                lock(m_changeLock)
+                lock (m_changeLock)
                 {
                     return m_presenceEntities.TryGetValue(key, out presence);
                 }

@@ -29,14 +29,13 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using log4net;
-using System.Reflection;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 {
@@ -45,11 +44,15 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_name = "LoadImageURL";
+        private string m_proxyexcepts = "";
+        private string m_proxyurl = "";
         private IScene m_scene;
         private IDynamicTextureManager m_textureManager;
 
-        private string m_proxyurl = "";
-        private string m_proxyexcepts = "";
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
 
         #region IDynamicTextureRender Members
 
@@ -89,7 +92,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             return false;
         }
 
-        public void GetDrawStringSize(string text, string fontName, int fontSize, 
+        public void GetDrawStringSize(string text, string fontName, int fontSize,
                                       out double xSize, out double ySize)
         {
             xSize = 0;
@@ -98,7 +101,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 
         #endregion
 
-        #region IRegionModule Members
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -106,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             m_proxyexcepts = config.Configs["Startup"].GetString("HttpProxyExceptions");
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (m_scene == null)
             {
@@ -114,12 +117,11 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
@@ -146,25 +148,20 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             get { return m_name; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #endregion
 
         private void MakeHttpRequest(string url, UUID requestID)
         {
-            WebRequest request = HttpWebRequest.Create(url);
-            
-            if (m_proxyurl != null && m_proxyurl.Length > 0) 
+            WebRequest request = WebRequest.Create(url);
+
+            if (!string.IsNullOrEmpty(m_proxyurl))
             {
-                if (m_proxyexcepts != null && m_proxyexcepts.Length > 0) 
+                if (!string.IsNullOrEmpty(m_proxyexcepts))
                 {
                     string[] elist = m_proxyexcepts.Split(';');
                     request.Proxy = new WebProxy(m_proxyurl, true, elist);
-                } 
-                else 
+                }
+                else
                 {
                     request.Proxy = new WebProxy(m_proxyurl, true);
                 }
@@ -172,7 +169,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 
             RequestState state = new RequestState((HttpWebRequest) request, requestID);
             // IAsyncResult result = request.BeginGetResponse(new AsyncCallback(HttpRequestReturn), state);
-            request.BeginGetResponse(new AsyncCallback(HttpRequestReturn), state);
+            request.BeginGetResponse(HttpRequestReturn, state);
 
             TimeSpan t = (DateTime.UtcNow - new DateTime(1970, 1, 1));
             state.TimeOfRequest = (int) t.TotalSeconds;
@@ -180,15 +177,14 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 
         private void HttpRequestReturn(IAsyncResult result)
         {
-
             RequestState state = (RequestState) result.AsyncState;
-            WebRequest request = (WebRequest) state.Request;
+            WebRequest request = state.Request;
             Stream stream = null;
             byte[] imageJ2000 = new byte[0];
 
             try
             {
-                HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(result);
+                HttpWebResponse response = (HttpWebResponse) request.EndGetResponse(result);
                 if (response != null && response.StatusCode == HttpStatusCode.OK)
                 {
                     stream = response.GetResponseStream();
@@ -242,7 +238,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
             }
             catch (WebException)
             {
-
             }
             catch (ArgumentException)
             {
@@ -255,7 +250,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
                 }
             }
             m_log.DebugFormat("[LOADIMAGEURLMODULE] Returning {0} bytes of image data for request {1}",
-                                       imageJ2000.Length, state.RequestID);
+                              imageJ2000.Length, state.RequestID);
             m_textureManager.ReturnData(state.RequestID, imageJ2000);
         }
 
@@ -263,9 +258,9 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 
         public class RequestState
         {
-            public HttpWebRequest Request = null;
+            public HttpWebRequest Request;
             public UUID RequestID = UUID.Zero;
-            public int TimeOfRequest = 0;
+            public int TimeOfRequest;
 
             public RequestState(HttpWebRequest request, UUID requestID)
             {

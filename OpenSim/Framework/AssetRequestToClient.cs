@@ -30,26 +30,22 @@ using OpenMetaverse;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// This class was created to refactor OutPacket out of AssetCache
+    ///   This class was created to refactor OutPacket out of AssetCache
     /// </summary>
     public class AssetRequestToClient
     {
-        public UUID RequestAssetID;
         public AssetBase AssetInf;
-        public AssetBase ImageInfo;
-        public UUID TransferRequestID;
-        public long DataPointer = 0;
-        public int NumPackets = 0;
-        public int PacketCounter = 0;
-        public bool IsTextureRequest;
         public byte AssetRequestSource = 2;
-        public byte[] Params = null;
+        public long DataPointer;
+        public int DiscardLevel = -1;
+        public AssetBase ImageInfo;
+        public bool IsTextureRequest;
+        public int NumPackets;
+        public int PacketCounter;
+        public byte[] Params;
+        public UUID RequestAssetID;
+        public UUID TransferRequestID;
         //public bool AssetInCache;
         //public int TimeRequested;
-        public int DiscardLevel = -1;
-
-        public AssetRequestToClient()
-        {
-        }
     }
 }

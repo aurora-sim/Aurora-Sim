@@ -26,14 +26,8 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using log4net;
-using OpenMetaverse;
-using OpenSim.Framework;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
+using OpenSim.Framework;
 
 namespace Aurora.Server
 {
@@ -43,18 +37,18 @@ namespace Aurora.Server
         {
             base.SetUpConsole();
             //Fix the default prompt
-            if(m_console != null)
+            if (m_console != null)
                 m_console.DefaultPrompt = "Aurora.Server ";
         }
 
         /// <summary>
-        /// Performs initialisation of the scene, such as loading configuration from disk.
+        ///   Performs initialisation of the scene, such as loading configuration from disk.
         /// </summary>
         public override void Startup()
         {
             base.Startup();
             m_log.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
-		}
+        }
 
         public override ISimulationBase Copy()
         {

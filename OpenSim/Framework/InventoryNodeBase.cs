@@ -30,38 +30,29 @@ using OpenMetaverse;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Common base class for inventory nodes of different types (files, folders, etc.)
+    ///   Common base class for inventory nodes of different types (files, folders, etc.)
     /// </summary>
     public class InventoryNodeBase
     {
+        private string m_name = string.Empty;
+
         /// <summary>
-        /// The name of the node (64 characters or less)
+        ///   The name of the node (64 characters or less)
         /// </summary>
         public virtual string Name
         {
             get { return m_name; }
             set { m_name = value; }
-        } 
-        private string m_name = string.Empty;
-        
-        /// <summary>
-        /// A UUID containing the ID for the inventory node itself
-        /// </summary>
-        public UUID ID 
-        {
-            get { return m_id; }
-            set { m_id = value; }
         }
-        private UUID m_id;
-        
+
         /// <summary>
-        /// The agent who's inventory this is contained by
+        ///   A UUID containing the ID for the inventory node itself
         /// </summary>
-        public virtual UUID Owner
-        {
-            get { return m_owner; }
-            set { m_owner = value; }
-        }
-        private UUID m_owner;
+        public UUID ID { get; set; }
+
+        /// <summary>
+        ///   The agent who's inventory this is contained by
+        /// </summary>
+        public virtual UUID Owner { get; set; }
     }
 }

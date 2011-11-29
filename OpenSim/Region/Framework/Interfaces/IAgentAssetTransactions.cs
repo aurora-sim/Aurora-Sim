@@ -27,7 +27,6 @@
 
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -39,7 +38,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void HandleItemCreationFromTransaction(IClientAPI remoteClient, UUID transactionID, UUID folderID,
                                                uint callbackID, string description, string name, sbyte invType,
                                                sbyte type, byte wearableType, uint nextOwnerMask);
-        
+
         void HandleTaskItemUpdateFromTransaction(
             IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item);
 

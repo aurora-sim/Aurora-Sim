@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections;
-
 using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
@@ -46,13 +44,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         LSL_List aaQueryDatabase(LSL_String key, LSL_String token);
 
-        LSL_Types.list aaDeserializeXMLValues(LSL_Types.LSLString xmlFile);
+        LSL_List aaDeserializeXMLValues(key xmlFile);
 
-        LSL_Types.list aaDeserializeXMLKeys(LSL_Types.LSLString xmlFile);
+        LSL_List aaDeserializeXMLKeys(key xmlFile);
 
         void aaSetConeOfSilence(LSL_Float radius);
 
-        LSL_Types.LSLString aaSerializeXML(LSL_Types.list keys, LSL_Types.list values);
+        key aaSerializeXML(LSL_List keys, LSL_List values);
 
         LSL_String aaGetTeam(LSL_Key id);
 
@@ -64,11 +62,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         void aaJoinCombatTeam(LSL_Key id, LSL_String team);
 
-        void aaRequestCombatPermission (string ID);
+        void aaRequestCombatPermission(string ID);
 
-        void aaThawAvatar (string ID);
+        void aaThawAvatar(string ID);
 
-        void aaFreezeAvatar (string ID);
+        void aaFreezeAvatar(string ID);
 
         LSL_List aaGetTeamMembers(LSL_String team);
 
@@ -80,22 +78,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         void aaSayTo(string userID, string text);
 
-        LSL_Types.LSLInteger aaGetWalkDisabled (string userID);
+        LSL_Integer aaGetWalkDisabled(string userID);
 
         void aaSetWalkDisabled(string userID, bool Value);
 
-        LSL_Types.LSLInteger aaGetFlyDisabled (string userID);
+        LSL_Integer aaGetFlyDisabled(string userID);
 
         void aaSetFlyDisabled(string userID, bool Value);
 
-        LSL_Types.LSLString aaAvatarFullName2Key (string username);
+        key aaAvatarFullName2Key(string username);
 
         void aaRaiseError(string message);
 
-        LSL_Types.LSLString aaGetText ();
+        key aaGetText();
 
-        LSL_Types.Quaternion aaGetTextColor ();
+        rotation aaGetTextColor();
 
-        void aaSetEnv (LSL_String name, LSL_List value);
+        void aaSetEnv(LSL_String name, LSL_List value);
     }
 }

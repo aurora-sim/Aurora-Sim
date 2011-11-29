@@ -25,29 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Reflection;
 using System.Collections.Generic;
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse;
-using log4net;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.Connectors
 {
     public class UserAccountCache
     {
-        private const double CACHE_EXPIRATION_SECONDS = 6 * 60 * 1000; // 6 hour cache on useraccounts, since they should not change
+        private const double CACHE_EXPIRATION_SECONDS = 6*60*1000;
+                             // 6 hour cache on useraccounts, since they should not change
 
-        private ExpiringCache<UUID, UserAccount> m_UUIDCache;
-        private ExpiringCache<string, UUID> m_NameCache;
         private const bool m_allowNullCaching = true;
-        private Dictionary<UUID, int> m_nullCacheTimes = new Dictionary<UUID, int> ();
+        private readonly ExpiringCache<string, UUID> m_NameCache;
+        private readonly ExpiringCache<UUID, UserAccount> m_UUIDCache;
+        private readonly Dictionary<UUID, int> m_nullCacheTimes = new Dictionary<UUID, int>();
 
         public UserAccountCache()
         {
             m_UUIDCache = new ExpiringCache<UUID, UserAccount>();
-            m_NameCache = new ExpiringCache<string, UUID>(); 
+            m_NameCache = new ExpiringCache<string, UUID>();
         }
 
         public void Cache(UUID userID, UserAccount account)
@@ -56,15 +53,15 @@ namespace OpenSim.Services.Connectors
                 return;
             if (account == null)
             {
-                if (!m_nullCacheTimes.ContainsKey (userID))
+                if (!m_nullCacheTimes.ContainsKey(userID))
                     m_nullCacheTimes[userID] = 0;
                 else
                     m_nullCacheTimes[userID]++;
                 if (m_nullCacheTimes[userID] < 5)
                     return;
             }
-            else if (m_nullCacheTimes.ContainsKey (userID))
-                m_nullCacheTimes.Remove (userID);
+            else if (m_nullCacheTimes.ContainsKey(userID))
+                m_nullCacheTimes.Remove(userID);
             // Cache even null accounts
             m_UUIDCache.AddOrUpdate(userID, account, CACHE_EXPIRATION_SECONDS);
             if (account != null)

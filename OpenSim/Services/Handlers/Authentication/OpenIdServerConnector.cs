@@ -25,29 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Reflection;
-using Nini.Config;
-using log4net;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
+using Nini.Config;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class OpenIdServerConnector : IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
- 
+
         private IAuthenticationService m_AuthenticationService;
         private IUserAccountService m_UserAccountService;
+
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -58,16 +60,21 @@ namespace OpenSim.Services
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("OpenIdHandler", "") != Name)
                 return;
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("OpenIdHandlerPort"));
+            IHttpServer server =
+                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
+                    (uint) handlerConfig.GetInt("OpenIdHandlerPort"));
 
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
 
             // Handler for OpenID user identity pages
-            server.AddStreamHandler(new OpenIdStreamHandler("GET", "/users/", m_UserAccountService, m_AuthenticationService));
+            server.AddStreamHandler(new OpenIdStreamHandler("GET", "/users/", m_UserAccountService,
+                                                            m_AuthenticationService));
             // Handlers for the OpenID endpoint server
-            server.AddStreamHandler(new OpenIdStreamHandler("POST", "/openid/server/", m_UserAccountService, m_AuthenticationService));
-            server.AddStreamHandler(new OpenIdStreamHandler("GET", "/openid/server/", m_UserAccountService, m_AuthenticationService));
+            server.AddStreamHandler(new OpenIdStreamHandler("POST", "/openid/server/", m_UserAccountService,
+                                                            m_AuthenticationService));
+            server.AddStreamHandler(new OpenIdStreamHandler("GET", "/openid/server/", m_UserAccountService,
+                                                            m_AuthenticationService));
 
             m_log.Info("[OPENID]: OpenId service enabled");
         }
@@ -75,5 +82,7 @@ namespace OpenSim.Services
         public void FinishedStartup()
         {
         }
+
+        #endregion
     }
 }

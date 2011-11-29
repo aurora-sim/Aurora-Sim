@@ -25,43 +25,40 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using OpenMetaverse;
 using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     /// <summary>
-    /// Provides methods from manipulating media-on-a-prim
+    ///   Provides methods from manipulating media-on-a-prim
     /// </summary>
     public interface IMoapModule
     {
         /// <summary>
-        /// Get the media entry for a given prim face.
+        ///   Get the media entry for a given prim face.
         /// </summary>
         /// A copy of the media entry is returned rather than the original, so this can be altered at will without
         /// affecting the original settings.
-        /// <param name="part"></param>
-        /// <param name="face"></param>
+        /// <param name = "part"></param>
+        /// <param name = "face"></param>
         /// <returns></returns>
-        MediaEntry GetMediaEntry (ISceneChildEntity part, int face);
-        
+        MediaEntry GetMediaEntry(ISceneChildEntity part, int face);
+
         /// <summary>
-        /// Set the media entry for a given prim face.
+        ///   Set the media entry for a given prim face.
         /// </summary>
-        /// <param name="SceneObjectPart"></param>
-        /// <param name="face"></param>
-        /// <param name="me"></param>
-        void SetMediaEntry (ISceneChildEntity part, int face, MediaEntry me);
-        
+        /// <param name = "SceneObjectPart"></param>
+        /// <param name = "face"></param>
+        /// <param name = "me"></param>
+        void SetMediaEntry(ISceneChildEntity part, int face, MediaEntry me);
+
         /// <summary>
-        /// Clear the media entry for a given prim face.
+        ///   Clear the media entry for a given prim face.
         /// </summary>
-        /// 
         /// This is the equivalent of setting a media entry of null
-        /// 
-        /// <param name="part"></param>
-        /// <param name="face">/param>
-        void ClearMediaEntry (ISceneChildEntity part, int face);
+        /// <param name = "part"></param>
+        /// <param name = "face">/param>
+        void ClearMediaEntry(ISceneChildEntity part, int face);
     }
 }

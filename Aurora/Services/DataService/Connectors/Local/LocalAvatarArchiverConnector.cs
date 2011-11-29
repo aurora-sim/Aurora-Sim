@@ -25,32 +25,35 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using OpenSim.Framework;
-using Nini.Config;
 using System.Data;
+using Aurora.Framework;
+using Nini.Config;
+using OpenSim.Framework;
 
 namespace Aurora.Services.DataService
 {
-	//This will always be local, as this is only used by the grid server.
-	//The region server should not be using this class.
+    //This will always be local, as this is only used by the grid server.
+    //The region server should not be using this class.
     public class LocalAvatarArchiverConnector : IAvatarArchiverConnector
-	{
-		private IGenericData GD = null;
+    {
+        private IGenericData GD;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IAvatarArchiverConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 GD = GenericData;
 
                 if (source.Configs[Name] != null)
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
         }
@@ -60,67 +63,71 @@ namespace Aurora.Services.DataService
             get { return "IAvatarArchiverConnector"; }
         }
 
-        public void Dispose()
+        public AvatarArchive GetAvatarArchive(string Name)
         {
+            List<string> RetVal = GD.Query("Name", Name, "avatararchives", "*");
+            if (RetVal.Count == 0)
+                return null;
+
+            AvatarArchive Archive = new AvatarArchive {Name = RetVal[0], ArchiveXML = RetVal[1]};
+            return Archive;
         }
 
-		public AvatarArchive GetAvatarArchive(string Name)
-		{
-			List<string> RetVal = GD.Query("Name", Name, "avatararchives", "*");
-			if (RetVal.Count == 0)
-				return null;
-
-			AvatarArchive Archive = new AvatarArchive();
-            Archive.Name = RetVal[0];
-            Archive.ArchiveXML = RetVal[1];
-			return Archive;
-		}
-
         /// <summary>
-        /// Returns a list object of AvatarArchives. This is being used for wiredux
+        ///   Returns a list object of AvatarArchives. This is being used for wiredux
         /// </summary>
-        /// <param name="Public"></param>
+        /// <param name = "Public"></param>
         /// <returns></returns>
         public List<AvatarArchive> GetAvatarArchives(bool isPublic)
         {
             List<AvatarArchive> returnValue = new List<AvatarArchive>();
             try
             {
-                System.Data.IDataReader RetVal = GD.QueryData ("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
-                while (RetVal.Read ())
+                IDataReader RetVal = GD.QueryData("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
+                while (RetVal.Read())
                 {
-                    AvatarArchive Archive = new AvatarArchive ();
-                    Archive.Name = RetVal["Name"].ToString ();
-                    Archive.Snapshot = RetVal["Snapshot"].ToString ();
-                    Archive.IsPublic = int.Parse (RetVal["IsPublic"].ToString ());
-                    returnValue.Add (Archive);
+                    AvatarArchive Archive = new AvatarArchive
+                                                {
+                                                    Name = RetVal["Name"].ToString(),
+                                                    Snapshot = RetVal["Snapshot"].ToString(),
+                                                    IsPublic = int.Parse(RetVal["IsPublic"].ToString())
+                                                };
+                    returnValue.Add(Archive);
                 }
-                RetVal.Close ();
-                RetVal.Dispose ();
+                RetVal.Close();
+                RetVal.Dispose();
             }
             catch
             {
             }
-            GD.CloseDatabase ();
+            GD.CloseDatabase();
             return returnValue;
         }
-		public void SaveAvatarArchive(AvatarArchive archive)
-		{
-			List<string> Check = GD.Query("Name", archive.Name, "avatararchives", "Name");
-			if (Check.Count == 0)
+
+        public void SaveAvatarArchive(AvatarArchive archive)
+        {
+            List<string> Check = GD.Query("Name", archive.Name, "avatararchives", "Name");
+            if (Check.Count == 0)
             {
-                GD.Insert("avatararchives", new object[] {
-					archive.Name.MySqlEscape(),
-					archive.ArchiveXML,
-                    archive.Snapshot.MySqlEscape(),
-                    archive.IsPublic
-				});
-			}
+                GD.Insert("avatararchives", new object[]
+                                                {
+                                                    archive.Name.MySqlEscape(),
+                                                    archive.ArchiveXML,
+                                                    archive.Snapshot.MySqlEscape(),
+                                                    archive.IsPublic
+                                                });
+            }
             else
             {
-                GD.Update("avatararchives", new object[] { archive.ArchiveXML }, new string[] { "Archive" }, new string[] { "Name" }, new object[] { archive.Name.MySqlEscape() });
-			}
-		}
-	}
+                GD.Update("avatararchives", new object[] {archive.ArchiveXML}, new[] {"Archive"}, new[] {"Name"},
+                          new object[] {archive.Name.MySqlEscape()});
+            }
+        }
 
+        #endregion
+
+        public void Dispose()
+        {
+        }
+    }
 }

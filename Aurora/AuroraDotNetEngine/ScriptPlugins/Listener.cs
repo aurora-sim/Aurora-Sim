@@ -25,18 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using log4net;
+using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.CoreModules.Scripting.WorldComm;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenSim.Framework;
+using OpenSim.Region.CoreModules.Scripting.WorldComm;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
@@ -44,17 +39,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
     {
         // private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        private readonly List<IWorldComm> m_modules = new List<IWorldComm>();
         public ScriptEngine m_ScriptEngine;
-        private List<IWorldComm> m_modules = new List<IWorldComm> ();
 
-        public void Initialize (ScriptEngine engine)
+        #region IScriptPlugin Members
+
+        public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
-            m_modules.Add (scene.RequestModuleInterface<IWorldComm> ());
+            m_modules.Add(scene.RequestModuleInterface<IWorldComm>());
         }
 
         public bool Check()
@@ -62,54 +59,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             bool needToContinue = false;
             foreach (IWorldComm comms in m_modules)
             {
-                if(!needToContinue)
+                if (!needToContinue)
                     needToContinue = comms.HasListeners();
-                if (comms.HasMessages ())
+                if (comms.HasMessages())
                 {
-                    while (comms.HasMessages ())
+                    while (comms.HasMessages())
                     {
-                        ListenerInfo lInfo = (ListenerInfo)comms.GetNextMessage ();
+                        ListenerInfo lInfo = (ListenerInfo) comms.GetNextMessage();
 
                         //Deliver data to prim's listen handler
                         object[] resobj = new object[]
-                    {
-                        new LSL_Types.LSLInteger(lInfo.GetChannel()),
-                        new LSL_Types.LSLString(lInfo.GetName()),
-                        new LSL_Types.LSLString(lInfo.GetID().ToString()),
-                        new LSL_Types.LSLString(lInfo.GetMessage())
-                    };
+                                              {
+                                                  new LSL_Types.LSLInteger(lInfo.GetChannel()),
+                                                  new LSL_Types.LSLString(lInfo.GetName()),
+                                                  new LSL_Types.LSLString(lInfo.GetID().ToString()),
+                                                  new LSL_Types.LSLString(lInfo.GetMessage())
+                                              };
 
-                        m_ScriptEngine.PostScriptEvent (
-                                    lInfo.GetItemID (), lInfo.GetHostID (), new EventParams (
-                                    "listen", resobj,
-                                    new DetectParams[0]), EventPriority.Suspended);
+                        m_ScriptEngine.PostScriptEvent(
+                            lInfo.GetItemID(), lInfo.GetHostID(), new EventParams(
+                                                                      "listen", resobj,
+                                                                      new DetectParams[0]), EventPriority.Suspended);
                     }
                 }
             }
             return needToContinue;
         }
 
-        public OSD GetSerializationData (UUID itemID, UUID primID)
+        public OSD GetSerializationData(UUID itemID, UUID primID)
         {
-            foreach (IWorldComm comms in m_modules)
+            foreach (OSD r in m_modules.Select(comms => comms.GetSerializationData(itemID, primID)).Where(r => r != null))
             {
-                OSD r = comms.GetSerializationData (itemID, primID);
-                if (r != null)
-                    return r;
+                return r;
             }
             return new OSD();
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
-                OSD data)
+                                   OSD data)
         {
             foreach (IWorldComm comms in m_modules)
             {
-                comms.CreateFromData (itemID, hostID, data);
+                comms.CreateFromData(itemID, hostID, data);
             }
 
             //Make sure that the cmd handler thread is running
-            m_ScriptEngine.MaintenanceThread.PokeThreads (itemID);
+            m_ScriptEngine.MaintenanceThread.PokeThreads(itemID);
         }
 
         public string Name
@@ -117,16 +112,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             get { return "Listener"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         public void RemoveScript(UUID primID, UUID itemID)
         {
             foreach (IWorldComm comms in m_modules)
             {
-                comms.DeleteListener (itemID);
+                comms.DeleteListener(itemID);
             }
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
         }
     }
 }

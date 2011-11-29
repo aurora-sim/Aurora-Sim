@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using System.Collections;
 using System.Web;
@@ -24,7 +19,7 @@ namespace Aurora.Modules
 
         public void Initialize(IGenericData GenericData, Nini.Config.IConfigSource source, IRegistryCore simBase, string DefaultConnectionString)
         {
-            Aurora.DataManager.DataManager.RegisterPlugin(Name, this);
+            DataManager.DataManager.RegisterPlugin(Name, this);
         }
 
         #endregion
@@ -34,20 +29,19 @@ namespace Aurora.Modules
         public OpenRegionSettings GetSettings(UUID regionID)
         {
             OpenRegionSettings settings = new OpenRegionSettings();
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
 
             if (connector != null)
             {
-                settings = connector.GetGeneric<OpenRegionSettings>(regionID, "OpenRegionSettings", "OpenRegionSettings", new OpenRegionSettings());
-                if (settings == null)
-                    settings = new OpenRegionSettings();
+                settings = connector.GetGeneric(regionID, "OpenRegionSettings", "OpenRegionSettings", new OpenRegionSettings()) ??
+                           new OpenRegionSettings();
             }
             return settings;
         }
 
         public void SetSettings(UUID regionID, OpenRegionSettings settings)
         {
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            IGenericsConnector connector = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
 
             //Update the database
             if (connector != null)
@@ -79,11 +73,11 @@ namespace Aurora.Modules
 
         private Hashtable HandleResponse(Hashtable request, UUID regionID)
         {
-            Uri myUri = new Uri("http://localhost/index.php?" + request["body"].ToString());
-            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            Uri myUri = new Uri("http://localhost/index.php?" + request["body"]);
+            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
-                OpenSim.Region.Framework.Interfaces.OpenRegionSettings settings = orsc.GetSettings(regionID);
+                OpenRegionSettings settings = orsc.GetSettings(regionID);
                 settings.DefaultDrawDistance = float.Parse(HttpUtility.ParseQueryString(myUri.Query).Get("DDD"));
                 settings.ForceDrawDistance = HttpUtility.ParseQueryString(myUri.Query).Get("FDD") != null;
                 settings.MaxDragDistance = float.Parse(HttpUtility.ParseQueryString(myUri.Query).Get("Max Drag Distance"));
@@ -116,14 +110,14 @@ namespace Aurora.Modules
 
             return reply;
         }
-
+        // request is never used
         private Hashtable SetUpWebpage(Hashtable request, string url, UUID regionID)
         {
             Hashtable reply = new Hashtable();
-            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
-                OpenSim.Region.Framework.Interfaces.OpenRegionSettings settings = orsc.GetSettings(regionID);
+                OpenRegionSettings settings = orsc.GetSettings(regionID);
                 string html = "<html> " +
     " <body> " +
     " <form method=\"post\" action=\"" + url + "\">" +

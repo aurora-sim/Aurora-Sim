@@ -25,19 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using OpenMetaverse;
 
 namespace OpenSim.Framework.Capabilities
 {
     /// <summary>
-    /// Capabilities utility methods
+    ///   Capabilities utility methods
     /// </summary>
     public class CapsUtil
     {
         /// <summary>
-        /// Generate a CAPS seed path using a previously generated CAPS object path component
+        ///   Generate a CAPS seed path using a previously generated CAPS object path component
         /// </summary>
-        /// <param name="capsKey"></param>
+        /// <param name = "capsKey"></param>
         /// <returns></returns>
         public static string GetCapsSeedPath(string capsObjectPath)
         {
@@ -45,25 +46,23 @@ namespace OpenSim.Framework.Capabilities
         }
 
         /// <summary>
-        /// Retrieve the CapsPath from a CapsSeed
+        ///   Retrieve the CapsPath from a CapsSeed
         /// </summary>
-        /// <param name="capsSeedPath">Should be in the form of "/CAPS/CapsPath/</param>
+        /// <param name = "capsSeedPath">Should be in the form of "/CAPS/CapsPath/</param>
         /// <returns></returns>
         public static string GetCapsPathFromCapsSeed(string capsSeedPath)
         {
-            if (!capsSeedPath.StartsWith ("/CAPS/"))
-                capsSeedPath = capsSeedPath.Split (new string[1]{"/CAPS/"}, System.StringSplitOptions.RemoveEmptyEntries)[1];
-            else
-                //Remove the /CAPS/
-                capsSeedPath = capsSeedPath.Remove(0, 6);
+            capsSeedPath = !capsSeedPath.StartsWith("/CAPS/")
+                               ? capsSeedPath.Split(new string[1] {"/CAPS/"}, StringSplitOptions.RemoveEmptyEntries)[1]
+                               : capsSeedPath.Remove(0, 6);
             //Now remove the trailing /
             capsSeedPath = capsSeedPath.Remove(capsSeedPath.Length - 5, 5);
 
             return capsSeedPath;
         }
-        
+
         /// <summary>
-        /// Get a random CAPS object path component that will be used as the identifying part of all future CAPS requests
+        ///   Get a random CAPS object path component that will be used as the identifying part of all future CAPS requests
         /// </summary>
         /// <returns></returns>
         public static string GetRandomCapsObjectPath()

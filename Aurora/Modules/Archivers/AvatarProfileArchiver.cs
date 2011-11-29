@@ -26,63 +26,68 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using log4net;
-using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace Aurora.Modules
 {
     /// <summary>
-    /// This module loads/saves the avatar's profile from/into a "AvatarProfile Archive"
+    ///   This module loads/saves the avatar's profile from/into a "AvatarProfile Archive"
     /// </summary>
     public class AuroraAvatarProfileArchiver : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
+
         private IUserAccountService UserAccountService
         {
             get { return m_scene.UserAccountService; }
         }
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
+
+        #region ISharedRegionModule Members
+
+        public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (m_scene == null)
                 m_scene = scene;
 
             if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand ("save avatar profile",
-                                          "save avatar profile <First> <Last> <Filename>",
-                                          "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
-                MainConsole.Instance.Commands.AddCommand ("load avatar profile",
-                                              "load avatar profile <First> <Last> <Filename>",
-                                              "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
+                MainConsole.Instance.Commands.AddCommand("save avatar profile",
+                                                         "save avatar profile <First> <Last> <Filename>",
+                                                         "Saves profile and avatar data to an archive",
+                                                         HandleSaveAvatarProfile);
+                MainConsole.Instance.Commands.AddCommand("load avatar profile",
+                                                         "load avatar profile <First> <Last> <Filename>",
+                                                         "Loads profile and avatar data from an archive",
+                                                         HandleLoadAvatarProfile);
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
@@ -90,16 +95,20 @@ namespace Aurora.Modules
             get { return null; }
         }
 
-        public void PostInitialise() { }
-
-        public void Close() { }
-
-        public string Name { get { return "AvatarProfileArchiver"; } }
-
-        public bool IsSharedModule
+        public void PostInitialise()
         {
-            get { return true; }
         }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "AvatarProfileArchiver"; }
+        }
+
+        #endregion
 
         protected void HandleLoadAvatarProfile(string[] cmdparams)
         {
@@ -118,15 +127,18 @@ namespace Aurora.Modules
             Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
 
             Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
-            UserAccount UDA = new UserAccount();
-            UDA.Name = cmdparams[3] + cmdparams[4];
-            UDA.PrincipalID = UUID.Random();
-            UDA.ScopeID = UUID.Zero;
-            UDA.UserFlags = int.Parse(results["UserFlags"].ToString());
-            UDA.UserLevel = 0; //For security... Don't want everyone loading full god mode.
-            UDA.UserTitle = results["UserTitle"].ToString();
-            UDA.Email = results["Email"].ToString();
-            UDA.Created = int.Parse(results["Created"].ToString());
+            UserAccount UDA = new UserAccount
+                                  {
+                                      Name = cmdparams[3] + cmdparams[4],
+                                      PrincipalID = UUID.Random(),
+                                      ScopeID = UUID.Zero,
+                                      UserFlags = int.Parse(results["UserFlags"].ToString()),
+                                      UserLevel = 0,
+                                      UserTitle = results["UserTitle"].ToString(),
+                                      Email = results["Email"].ToString(),
+                                      Created = int.Parse(results["Created"].ToString())
+                                  };
+            //For security... Don't want everyone loading full god mode.
             UserAccountService.StoreUserAccount(UDA);
 
             replyData = WebUtils.ParseXmlResponse(file[2]);
@@ -135,7 +147,7 @@ namespace Aurora.Modules
             //Update the principle ID to the new user.
             UPI.PrincipalID = UDA.PrincipalID;
 
-            IProfileConnector profileData = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            IProfileConnector profileData = DataManager.DataManager.RequestPlugin<IProfileConnector>();
             if (profileData.GetUserProfile(UPI.PrincipalID) == null)
                 profileData.CreateNewProfile(UPI.PrincipalID);
 
@@ -157,7 +169,7 @@ namespace Aurora.Modules
                 m_log.Info("Account could not be found, stopping now.");
                 return;
             }
-            IProfileConnector data = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            IProfileConnector data = DataManager.DataManager.RequestPlugin<IProfileConnector>();
             string UPIxmlString = "";
             Dictionary<string, object> result = new Dictionary<string, object>();
             if (data != null)

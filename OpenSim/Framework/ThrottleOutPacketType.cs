@@ -25,47 +25,84 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-
 namespace OpenSim.Framework
 {
-    public enum ThrottleOutPacketType : int
+    public enum ThrottleOutPacketType
     {
-        /// <summary>Unthrottled packets</summary>
-    //        Unknown = -1,  hack forcing unknown to State
-        /// <summary>Packets that are being resent</summary>
+        //        Unknown = -1,  hack forcing unknown to State
+        /// <summary>
+        ///   Unthrottled packets
+        /// </summary>
+        /// <summary>
+        ///   Packets that are being resent
+        /// </summary>
         Resend = 0,
-        /// <summary>Terrain data</summary>
+
+        /// <summary>
+        ///   Terrain data
+        /// </summary>
         Land = 1,
-        /// <summary>Wind data</summary>
+
+        /// <summary>
+        ///   Wind data
+        /// </summary>
         Wind = 2,
-        /// <summary>Cloud data</summary>
+
+        /// <summary>
+        ///   Cloud data
+        /// </summary>
         Cloud = 3,
-        /// <summary>This deals almost exclusively with the object updates and properties.
-        /// It also does GenericMessages and KillObject packets as well.</summary>
-        /// <remarks>This category may become saturated with packets if there are many objects in the sim,
-        /// or if it is a very highly active sim (many moving objects).</remarks>
+
+        /// <summary>
+        ///   This deals almost exclusively with the object updates and properties.
+        ///   It also does GenericMessages and KillObject packets as well.
+        /// </summary>
+        /// <remarks>
+        ///   This category may become saturated with packets if there are many objects in the sim,
+        ///   or if it is a very highly active sim (many moving objects).
+        /// </remarks>
         Task = 4,
-        /// <summary>Texture assets</summary>
+
+        /// <summary>
+        ///   Texture assets
+        /// </summary>
         Texture = 5,
-        /// <summary>Non-texture assets</summary>
+
+        /// <summary>
+        ///   Non-texture assets
+        /// </summary>
         Asset = 6,
-        /// <summary>Avatar and primitive data</summary>
-        /// <remarks>This category WILL be saturated with packets after a link or selecting a large object.
-        /// So when assigning a packet to this category, be aware that after a link, packets will not be sent for some time
-        /// in this category.
-        /// <remarks>This is a sub-category of Task</remarks>
+
+        /// <summary>
+        ///   Avatar and primitive data
+        /// </summary>
+        /// <remarks>
+        ///   This category WILL be saturated with packets after a link or selecting a large object.
+        ///   So when assigning a packet to this category, be aware that after a link, packets will not be sent for some time
+        ///   in this category.
+        ///   <remarks>
+        ///     This is a sub-category of Task
+        ///   </remarks>
         State = 7,
-        /// <summary>This handles info that the client uses to be able to function in the world.
-        /// This includes packets like Chat and directory, group, and profile packets</summary>
-        /// <remarks>This category shouldn't ever be extremely saturated with packets.
-        ///This is a sub-category of Task</remarks>
+
+        ///<summary>
+        ///  This handles info that the client uses to be able to function in the world.
+        ///  This includes packets like Chat and directory, group, and profile packets
+        ///</summary>
+        ///<remarks>
+        ///  This category shouldn't ever be extremely saturated with packets.
+        ///  This is a sub-category of Task
+        ///</remarks>
         Transfer = 8, //This is for when the client asks for a transfer, such as an asset or a inventory list
         AvatarInfo = 9,
         OutBand = 10,
-        /// <summary>The number of packet categories to throttle on.
-        /// If a throttle category is added or removed, this number must also change</summary>
+
+        /// <summary>
+        ///   The number of packet categories to throttle on.
+        ///   If a throttle category is added or removed, this number must also change
+        /// </summary>
         Count = 11, // this must be the LAST one 
-        Immediate = 12, // This one is outside of Count and does NOT have a queue, and all packets will be sent immediately
+        Immediate = 12,
+        // This one is outside of Count and does NOT have a queue, and all packets will be sent immediately
     }
 }

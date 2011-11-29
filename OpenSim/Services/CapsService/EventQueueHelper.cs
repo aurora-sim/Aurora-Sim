@@ -26,13 +26,13 @@
  */
 
 using System;
+using System.Linq;
 using System.Net;
-using OpenSim.Framework;
 using OpenMetaverse;
+using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Messages.Linden;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Framework;
 
 namespace OpenSim.Services.CapsService
 {
@@ -41,17 +41,17 @@ namespace OpenSim.Services.CapsService
         private static byte[] ulongToByteArray(ulong uLongValue)
         {
             // Reverse endianness of RegionHandle
-            return new byte[]
-            {
-                (byte)((uLongValue >> 56) % 256),
-                (byte)((uLongValue >> 48) % 256),
-                (byte)((uLongValue >> 40) % 256),
-                (byte)((uLongValue >> 32) % 256),
-                (byte)((uLongValue >> 24) % 256),
-                (byte)((uLongValue >> 16) % 256),
-                (byte)((uLongValue >> 8) % 256),
-                (byte)(uLongValue % 256)
-            };
+            return new[]
+                       {
+                           (byte) ((uLongValue >> 56)%256),
+                           (byte) ((uLongValue >> 48)%256),
+                           (byte) ((uLongValue >> 40)%256),
+                           (byte) ((uLongValue >> 32)%256),
+                           (byte) ((uLongValue >> 24)%256),
+                           (byte) ((uLongValue >> 16)%256),
+                           (byte) ((uLongValue >> 8)%256),
+                           (byte) (uLongValue%256)
+                       };
         }
 
         private static byte[] uintToByteArray(uint uIntValue)
@@ -65,63 +65,53 @@ namespace OpenSim.Services.CapsService
 
         public static OSD buildEvent(string eventName, OSD eventBody)
         {
-            OSDMap llsdEvent = new OSDMap(2);
-            llsdEvent.Add("body", eventBody);
-            llsdEvent.Add("message", new OSDString(eventName));
+            OSDMap llsdEvent = new OSDMap(2) {{"body", eventBody}, {"message", new OSDString(eventName)}};
 
             return llsdEvent;
         }
 
         public static OSD EnableSimulator(ulong handle, byte[] IPAddress, int Port, int RegionSizeX, int RegionSizeY)
         {
-            OSDMap llsdSimInfo = new OSDMap(3);
+            OSDMap llsdSimInfo = new OSDMap(3)
+                                     {
+                                         {"Handle", new OSDBinary(ulongToByteArray(handle))},
+                                         {"IP", new OSDBinary(IPAddress)},
+                                         {"Port", new OSDInteger(Port)},
+                                         {"RegionSizeX", OSD.FromUInteger((uint) RegionSizeX)},
+                                         {"RegionSizeY", OSD.FromUInteger((uint) RegionSizeY)}
+                                     };
 
-            llsdSimInfo.Add("Handle", new OSDBinary(ulongToByteArray(handle)));
-            llsdSimInfo.Add("IP", new OSDBinary(IPAddress));
-            llsdSimInfo.Add("Port", new OSDInteger(Port));
-            llsdSimInfo.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
-            llsdSimInfo.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
+            OSDArray arr = new OSDArray(1) {llsdSimInfo};
 
-            OSDArray arr = new OSDArray(1);
-            arr.Add(llsdSimInfo);
-
-            OSDMap llsdBody = new OSDMap(1);
-            llsdBody.Add("SimulatorInfo", arr);
+            OSDMap llsdBody = new OSDMap(1) {{"SimulatorInfo", arr}};
 
             return buildEvent("EnableSimulator", llsdBody);
         }
 
-        public static OSD ObjectPhysicsProperties (ISceneChildEntity[] entities)
+        public static OSD ObjectPhysicsProperties(ISceneChildEntity[] entities)
         {
-            ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage ();
-            int i = 0;
-            foreach (ISceneChildEntity entity in entities)
-            {
-                if (entity == null)
-                    continue;
-                i++;
-            }
+            ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage();
+            int i = entities.Count(entity => entity != null);
 
             message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[i];
             i = 0;
-            foreach(ISceneChildEntity entity in entities)
+            foreach (ISceneChildEntity entity in entities.Where(entity => entity != null))
             {
-                if (entity == null)
-                    continue;
-                message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties ();
-                message.ObjectPhysicsProperties[i].Density = entity.Density;
-                message.ObjectPhysicsProperties[i].Friction = entity.Friction;
-                message.ObjectPhysicsProperties[i].GravityMultiplier = entity.GravityMultiplier;
-                message.ObjectPhysicsProperties[i].LocalID = entity.LocalId;
-                message.ObjectPhysicsProperties[i].PhysicsShapeType = (PhysicsShapeType)entity.PhysicsType;
-                message.ObjectPhysicsProperties[i].Restitution = entity.Restitution;
+                message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties
+                                                         {
+                                                             Density = entity.Density,
+                                                             Friction = entity.Friction,
+                                                             GravityMultiplier = entity.GravityMultiplier,
+                                                             LocalID = entity.LocalId,
+                                                             PhysicsShapeType = (PhysicsShapeType) entity.PhysicsType,
+                                                             Restitution = entity.Restitution
+                                                         };
                 i++;
             }
 
-            OSDMap m = new OSDMap ();
-            m.Add ("message", OSD.FromString ("ObjectPhysicsProperties"));
-            OSD message_body = message.Serialize ();
-            m.Add ("body", message_body);
+            OSDMap m = new OSDMap {{"message", OSD.FromString("ObjectPhysicsProperties")}};
+            OSD message_body = message.Serialize();
+            m.Add("body", message_body);
             return m;
         }
 
@@ -130,51 +120,39 @@ namespace OpenSim.Services.CapsService
             OSDMap llsdBody = new OSDMap(1);
             return buildEvent("DisableSimulator", llsdBody);
         }
-        
+
         public static OSD CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                                       IPAddress address, int port,
                                       string capsURL, UUID agentID, UUID sessionID, int RegionSizeX, int RegionSizeY)
         {
-            OSDArray lookAtArr = new OSDArray(3);
-            lookAtArr.Add(OSD.FromReal(lookAt.X));
-            lookAtArr.Add(OSD.FromReal(lookAt.Y));
-            lookAtArr.Add(OSD.FromReal(lookAt.Z));
+            OSDArray lookAtArr = new OSDArray(3)
+                                     {OSD.FromReal(lookAt.X), OSD.FromReal(lookAt.Y), OSD.FromReal(lookAt.Z)};
 
-            OSDArray positionArr = new OSDArray(3);
-            positionArr.Add(OSD.FromReal(pos.X));
-            positionArr.Add(OSD.FromReal(pos.Y));
-            positionArr.Add(OSD.FromReal(pos.Z));
+            OSDArray positionArr = new OSDArray(3) {OSD.FromReal(pos.X), OSD.FromReal(pos.Y), OSD.FromReal(pos.Z)};
 
-            OSDMap infoMap = new OSDMap(2);
-            infoMap.Add("LookAt", lookAtArr);
-            infoMap.Add("Position", positionArr);
+            OSDMap infoMap = new OSDMap(2) {{"LookAt", lookAtArr}, {"Position", positionArr}};
 
-            OSDArray infoArr = new OSDArray(1);
-            infoArr.Add(infoMap);
+            OSDArray infoArr = new OSDArray(1) {infoMap};
 
-            OSDMap agentDataMap = new OSDMap(2);
-            agentDataMap.Add("AgentID", OSD.FromUUID(agentID));
-            agentDataMap.Add("SessionID",  OSD.FromUUID(sessionID));
+            OSDMap agentDataMap = new OSDMap(2)
+                                      {{"AgentID", OSD.FromUUID(agentID)}, {"SessionID", OSD.FromUUID(sessionID)}};
 
-            OSDArray agentDataArr = new OSDArray(1);
-            agentDataArr.Add(agentDataMap);
+            OSDArray agentDataArr = new OSDArray(1) {agentDataMap};
 
-            OSDMap regionDataMap = new OSDMap(4);
-            regionDataMap.Add("RegionHandle", OSD.FromBinary(ulongToByteArray(handle)));
-            regionDataMap.Add("SeedCapability", OSD.FromString(capsURL));
-            regionDataMap.Add("SimIP", OSD.FromBinary(address.GetAddressBytes()));
-            regionDataMap.Add("SimPort", OSD.FromInteger(port));
+            OSDMap regionDataMap = new OSDMap(4)
+                                       {
+                                           {"RegionHandle", OSD.FromBinary(ulongToByteArray(handle))},
+                                           {"SeedCapability", OSD.FromString(capsURL)},
+                                           {"SimIP", OSD.FromBinary(address.GetAddressBytes())},
+                                           {"SimPort", OSD.FromInteger(port)},
+                                           {"RegionSizeX", OSD.FromUInteger((uint) RegionSizeX)},
+                                           {"RegionSizeY", OSD.FromUInteger((uint) RegionSizeY)}
+                                       };
 
-            regionDataMap.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
-            regionDataMap.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
+            OSDArray regionDataArr = new OSDArray(1) {regionDataMap};
 
-            OSDArray regionDataArr = new OSDArray(1);
-            regionDataArr.Add(regionDataMap);
-
-            OSDMap llsdBody = new OSDMap(3);
-            llsdBody.Add("Info", infoArr);
-            llsdBody.Add("AgentData", agentDataArr);
-            llsdBody.Add("RegionData", regionDataArr);
+            OSDMap llsdBody = new OSDMap(3)
+                                  {{"Info", infoArr}, {"AgentData", agentDataArr}, {"RegionData", regionDataArr}};
 
             return buildEvent("CrossedRegion", llsdBody);
         }
@@ -183,97 +161,98 @@ namespace OpenSim.Services.CapsService
             ulong regionHandle, byte simAccess, IPAddress address, int port,
             uint locationID, string capsURL, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY)
         {
-            OSDMap info = new OSDMap();
-            info.Add("AgentID", OSD.FromUUID(agentID));
-            info.Add("LocationID", OSD.FromBinary(uintToByteArray(locationID))); // TODO what is this?
-            info.Add("RegionHandle", OSD.FromBinary(ulongToByteArray(regionHandle)));
-            info.Add("SeedCapability", OSD.FromString(capsURL));
-            info.Add("SimAccess", OSD.FromInteger(simAccess));
-            info.Add("SimIP", OSD.FromBinary(address.GetAddressBytes()));
-            info.Add("SimPort", OSD.FromInteger(port));
-            info.Add("TeleportFlags", OSD.FromBinary(uintToByteArray(teleportFlags)));
-            
-            info.Add("RegionSizeX", OSD.FromUInteger((uint)RegionSizeX));
-            info.Add("RegionSizeY", OSD.FromUInteger((uint)RegionSizeY));
+            OSDMap info = new OSDMap
+                              {
+                                  {"AgentID", OSD.FromUUID(agentID)},
+                                  {"LocationID", OSD.FromBinary(uintToByteArray(locationID))},
+                                  {"RegionHandle", OSD.FromBinary(ulongToByteArray(regionHandle))},
+                                  {"SeedCapability", OSD.FromString(capsURL)},
+                                  {"SimAccess", OSD.FromInteger(simAccess)},
+                                  {"SimIP", OSD.FromBinary(address.GetAddressBytes())},
+                                  {"SimPort", OSD.FromInteger(port)},
+                                  {"TeleportFlags", OSD.FromBinary(uintToByteArray(teleportFlags))},
+                                  {"RegionSizeX", OSD.FromUInteger((uint) RegionSizeX)},
+                                  {"RegionSizeY", OSD.FromUInteger((uint) RegionSizeY)}
+                              };
 
-            OSDArray infoArr = new OSDArray();
-            infoArr.Add(info);
+            OSDArray infoArr = new OSDArray {info};
 
-            OSDMap body = new OSDMap();
-            body.Add("Info", infoArr);
+            OSDMap body = new OSDMap {{"Info", infoArr}};
 
             return buildEvent("TeleportFinish", body);
         }
 
         public static OSD ScriptRunningReplyEvent(UUID objectID, UUID itemID, bool running, bool mono)
         {
-            OSDMap script = new OSDMap();
-            script.Add("ObjectID", OSD.FromUUID(objectID));
-            script.Add("ItemID", OSD.FromUUID(itemID));
-            script.Add("Running", OSD.FromBoolean(running));
-            script.Add("Mono", OSD.FromBoolean(mono));
-            
-            OSDArray scriptArr = new OSDArray();
-            scriptArr.Add(script);
-            
-            OSDMap body = new OSDMap();
-            body.Add("Script", scriptArr);
-            
+            OSDMap script = new OSDMap
+                                {
+                                    {"ObjectID", OSD.FromUUID(objectID)},
+                                    {"ItemID", OSD.FromUUID(itemID)},
+                                    {"Running", OSD.FromBoolean(running)},
+                                    {"Mono", OSD.FromBoolean(mono)}
+                                };
+
+            OSDArray scriptArr = new OSDArray {script};
+
+            OSDMap body = new OSDMap {{"Script", scriptArr}};
+
             return buildEvent("ScriptRunningReply", body);
         }
 
-        public static OSD EstablishAgentCommunication(UUID agentID, ulong regionhandle, string simIpAndPort, string seedcap, int RegionSizeX, int RegionSizeY)
+        public static OSD EstablishAgentCommunication(UUID agentID, ulong regionhandle, string simIpAndPort,
+                                                      string seedcap, int RegionSizeX, int RegionSizeY)
         {
-            OSDMap body = new OSDMap(3);
-            body.Add("agent-id", new OSDUUID(agentID));
-            body.Add("sim-ip-and-port", new OSDString(simIpAndPort));
-            body.Add("seed-capability", new OSDString(seedcap));
-            body.Add("region-handle", OSD.FromULong(regionhandle));
-            body.Add("region-size-x", OSD.FromInteger(RegionSizeX));
-            body.Add("region-size-y", OSD.FromInteger(RegionSizeY));
+            OSDMap body = new OSDMap(3)
+                              {
+                                  {"agent-id", new OSDUUID(agentID)},
+                                  {"sim-ip-and-port", new OSDString(simIpAndPort)},
+                                  {"seed-capability", new OSDString(seedcap)},
+                                  {"region-handle", OSD.FromULong(regionhandle)},
+                                  {"region-size-x", OSD.FromInteger(RegionSizeX)},
+                                  {"region-size-y", OSD.FromInteger(RegionSizeY)}
+                              };
 
             return buildEvent("EstablishAgentCommunication", body);
         }
 
         public static OSD AgentParams(UUID agentID, bool checkEstate, int godLevel, bool limitedToEstate)
         {
-            OSDMap body = new OSDMap(4);
-
-            body.Add("agent_id", new OSDUUID(agentID));
-            body.Add("check_estate", new OSDInteger(checkEstate ? 1 : 0));
-            body.Add("god_level", new OSDInteger(godLevel));
-            body.Add("limited_to_estate", new OSDInteger(limitedToEstate ? 1 : 0));
+            OSDMap body = new OSDMap(4)
+                              {
+                                  {"agent_id", new OSDUUID(agentID)},
+                                  {"check_estate", new OSDInteger(checkEstate ? 1 : 0)},
+                                  {"god_level", new OSDInteger(godLevel)},
+                                  {"limited_to_estate", new OSDInteger(limitedToEstate ? 1 : 0)}
+                              };
 
             return body;
         }
 
         public static OSD InstantMessageParams(UUID fromAgent, string message, UUID toAgent,
-            string fromName, byte dialog, uint timeStamp, bool offline, int parentEstateID,
-            Vector3 position, uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket)
+                                               string fromName, byte dialog, uint timeStamp, bool offline,
+                                               int parentEstateID,
+                                               Vector3 position, uint ttl, UUID transactionID, bool fromGroup,
+                                               byte[] binaryBucket)
         {
-            OSDMap messageParams = new OSDMap(15);
-            messageParams.Add("type", new OSDInteger((int)dialog));
-            
-            OSDArray positionArray = new OSDArray(3);
-            positionArray.Add(OSD.FromReal(position.X));
-            positionArray.Add(OSD.FromReal(position.Y));
-            positionArray.Add(OSD.FromReal(position.Z));
+            OSDMap messageParams = new OSDMap(15) {{"type", new OSDInteger(dialog)}};
+
+            OSDArray positionArray = new OSDArray(3)
+                                         {OSD.FromReal(position.X), OSD.FromReal(position.Y), OSD.FromReal(position.Z)};
             messageParams.Add("position", positionArray);
 
             messageParams.Add("region_id", new OSDUUID(UUID.Zero));
             messageParams.Add("to_id", new OSDUUID(toAgent));
             messageParams.Add("source", new OSDInteger(0));
 
-            OSDMap data = new OSDMap(1);
-            data.Add("binary_bucket", OSD.FromBinary(binaryBucket));
+            OSDMap data = new OSDMap(1) {{"binary_bucket", OSD.FromBinary(binaryBucket)}};
             messageParams.Add("data", data);
             messageParams.Add("message", new OSDString(message));
             messageParams.Add("id", new OSDUUID(transactionID));
             messageParams.Add("from_name", new OSDString(fromName));
-            messageParams.Add("timestamp", new OSDInteger((int)timeStamp));
+            messageParams.Add("timestamp", new OSDInteger((int) timeStamp));
             messageParams.Add("offline", new OSDInteger(offline ? 1 : 0));
             messageParams.Add("parent_estate_id", new OSDInteger(parentEstateID));
-            messageParams.Add("ttl", new OSDInteger((int)ttl));
+            messageParams.Add("ttl", new OSDInteger((int) ttl));
             messageParams.Add("from_id", new OSDUUID(fromAgent));
             messageParams.Add("from_group", new OSDInteger(fromGroup ? 1 : 0));
 
@@ -281,83 +260,101 @@ namespace OpenSim.Services.CapsService
         }
 
         public static OSD InstantMessage(UUID fromAgent, string message, UUID toAgent,
-            string fromName, byte dialog, uint timeStamp, bool offline, int parentEstateID,
-            Vector3 position, uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket,
-            bool checkEstate, int godLevel, bool limitedToEstate)
+                                         string fromName, byte dialog, uint timeStamp, bool offline, int parentEstateID,
+                                         Vector3 position, uint ttl, UUID transactionID, bool fromGroup,
+                                         byte[] binaryBucket,
+                                         bool checkEstate, int godLevel, bool limitedToEstate)
         {
-            OSDMap im = new OSDMap(2);
-            im.Add("message_params", InstantMessageParams(fromAgent, message, toAgent,
-            fromName, dialog, timeStamp, offline, parentEstateID,
-            position, ttl, transactionID, fromGroup, binaryBucket));
-
-            im.Add("agent_params", AgentParams(fromAgent, checkEstate, godLevel, limitedToEstate));
+            OSDMap im = new OSDMap(2)
+                            {
+                                {
+                                    "message_params", InstantMessageParams(fromAgent, message, toAgent,
+                                                                           fromName, dialog, timeStamp, offline,
+                                                                           parentEstateID,
+                                                                           position, ttl, transactionID, fromGroup,
+                                                                           binaryBucket)
+                                    },
+                                {"agent_params", AgentParams(fromAgent, checkEstate, godLevel, limitedToEstate)}
+                            };
 
             return im;
         }
 
         public static OSD ChatterBoxSessionStartReply(string groupName, UUID groupID)
         {
-            OSDMap moderatedMap = new OSDMap(4);
-            moderatedMap.Add("voice", OSD.FromBoolean(false));
+            OSDMap moderatedMap = new OSDMap(4) {{"voice", OSD.FromBoolean(false)}};
 
-            OSDMap sessionMap = new OSDMap(4);
-            sessionMap.Add("moderated_mode", moderatedMap);
-            sessionMap.Add("session_name", OSD.FromString(groupName));
-            sessionMap.Add("type", OSD.FromInteger(0));
-            sessionMap.Add("voice_enabled", OSD.FromBoolean(false));
+            OSDMap sessionMap = new OSDMap(4)
+                                    {
+                                        {"moderated_mode", moderatedMap},
+                                        {"session_name", OSD.FromString(groupName)},
+                                        {"type", OSD.FromInteger(0)},
+                                        {"voice_enabled", OSD.FromBoolean(false)}
+                                    };
 
-            OSDMap bodyMap = new OSDMap(4);
-            bodyMap.Add("session_id", OSD.FromUUID(groupID));
-            bodyMap.Add("temp_session_id", OSD.FromUUID(groupID));
-            bodyMap.Add("success", OSD.FromBoolean(true));
-            bodyMap.Add("session_info", sessionMap);
+            OSDMap bodyMap = new OSDMap(4)
+                                 {
+                                     {"session_id", OSD.FromUUID(groupID)},
+                                     {"temp_session_id", OSD.FromUUID(groupID)},
+                                     {"success", OSD.FromBoolean(true)},
+                                     {"session_info", sessionMap}
+                                 };
 
             return buildEvent("ChatterBoxSessionStartReply", bodyMap);
         }
 
         public static OSD ChatterboxInvitation(UUID sessionID, string sessionName,
-            UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
-            uint timeStamp, bool offline, int parentEstateID, Vector3 position,
-            uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket)
+                                               UUID fromAgent, string message, UUID toAgent, string fromName,
+                                               byte dialog,
+                                               uint timeStamp, bool offline, int parentEstateID, Vector3 position,
+                                               uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket)
         {
-            OSDMap body = new OSDMap(5);
-            body.Add("session_id", new OSDUUID(sessionID));
-            body.Add("from_name", new OSDString(fromName));
-            body.Add("session_name", new OSDString(sessionName));
-            body.Add("from_id", new OSDUUID(fromAgent));
+            OSDMap body = new OSDMap(5)
+                              {
+                                  {"session_id", new OSDUUID(sessionID)},
+                                  {"from_name", new OSDString(fromName)},
+                                  {"session_name", new OSDString(sessionName)},
+                                  {"from_id", new OSDUUID(fromAgent)},
+                                  {
+                                      "instantmessage", InstantMessage(fromAgent, message, toAgent,
+                                                                       fromName, dialog, timeStamp, offline,
+                                                                       parentEstateID, position,
+                                                                       ttl, transactionID, fromGroup, binaryBucket, true,
+                                                                       0, true)
+                                      }
+                              };
 
-            body.Add("instantmessage", InstantMessage(fromAgent, message, toAgent,
-            fromName, dialog, timeStamp, offline, parentEstateID, position,
-            ttl, transactionID, fromGroup, binaryBucket, true, 0, true));
-
-            OSDMap chatterboxInvitation = new OSDMap(2);
-            chatterboxInvitation.Add("message", new OSDString("ChatterBoxInvitation"));
-            chatterboxInvitation.Add("body", body);
+            OSDMap chatterboxInvitation = new OSDMap(2)
+                                              {{"message", new OSDString("ChatterBoxInvitation")}, {"body", body}};
             return chatterboxInvitation;
         }
 
         public static OSD ChatterBoxSessionAgentListUpdates(UUID sessionID,
-            UUID agentID, bool canVoiceChat, bool isModerator, bool textMute)
+                                                            UUID agentID, bool canVoiceChat, bool isModerator,
+                                                            bool textMute)
         {
             OSDMap body = new OSDMap();
             OSDMap agentUpdates = new OSDMap();
             OSDMap infoDetail = new OSDMap();
-            OSDMap mutes = new OSDMap();
+            OSDMap mutes = new OSDMap {{"text", OSD.FromBoolean(textMute)}};
 
-            mutes.Add("text", OSD.FromBoolean(textMute));
             infoDetail.Add("can_voice_chat", OSD.FromBoolean(canVoiceChat));
             infoDetail.Add("is_moderator", OSD.FromBoolean(isModerator));
             infoDetail.Add("mutes", mutes);
-            OSDMap info = new OSDMap();
-            info.Add("info", infoDetail);
+            OSDMap info = new OSDMap {{"info", infoDetail}};
             agentUpdates.Add(agentID.ToString(), info);
             body.Add("agent_updates", agentUpdates);
             body.Add("session_id", OSD.FromUUID(sessionID));
             body.Add("updates", new OSD());
 
-            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap();
-            chatterBoxSessionAgentListUpdates.Add("message", OSD.FromString("ChatterBoxSessionAgentListUpdates"));
-            chatterBoxSessionAgentListUpdates.Add("body", body);
+            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap
+                                                           {
+                                                               {
+                                                                   "message",
+                                                                   OSD.FromString("ChatterBoxSessionAgentListUpdates")
+                                                                   },
+                                                               {"body", body}
+                                                           };
 
             return chatterBoxSessionAgentListUpdates;
         }
@@ -367,9 +364,7 @@ namespace OpenSim.Services.CapsService
             OSDMap body = new OSDMap();
             OSDMap sessionInfo = new OSDMap();
             //OSDMap infoDetail = new OSDMap();
-            OSDMap moderatedMode = new OSDMap();
-
-            moderatedMode.Add("voice", OSD.FromBoolean(true));
+            OSDMap moderatedMode = new OSDMap {{"voice", OSD.FromBoolean(true)}};
 
             sessionInfo.Add("moderated_mode", sessionInfo);
             sessionInfo.Add("session_name", OSD.FromString(SessionName));
@@ -380,32 +375,34 @@ namespace OpenSim.Services.CapsService
             body.Add("temp_session_id", OSD.FromUUID(sessionID));
             body.Add("success", OSD.FromBoolean(true));
 
-            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap();
-            chatterBoxSessionAgentListUpdates.Add("message", OSD.FromString("ChatterBoxSessionStartReply"));
-            chatterBoxSessionAgentListUpdates.Add("body", body);
+            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap
+                                                           {
+                                                               {"message", OSD.FromString("ChatterBoxSessionStartReply")},
+                                                               {"body", body}
+                                                           };
 
             return chatterBoxSessionAgentListUpdates;
         }
 
 
-        internal static OSD ChatterBoxSessionAgentListUpdates(UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] agentUpdatesBlock, string Transition)
+        internal static OSD ChatterBoxSessionAgentListUpdates(UUID sessionID,
+                                                              ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
+                                                                  [] agentUpdatesBlock, string Transition)
         {
             OSDMap body = new OSDMap();
             OSDMap agentUpdates = new OSDMap();
             OSDMap infoDetail = new OSDMap();
             OSDMap mutes = new OSDMap();
 
-            foreach (OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block in agentUpdatesBlock)
+            foreach (ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block in agentUpdatesBlock)
             {
                 infoDetail = new OSDMap();
-                mutes = new OSDMap();
-                mutes.Add("text", OSD.FromBoolean(block.MuteText));
-                mutes.Add("voice", OSD.FromBoolean(block.MuteVoice));
+                mutes = new OSDMap
+                            {{"text", OSD.FromBoolean(block.MuteText)}, {"voice", OSD.FromBoolean(block.MuteVoice)}};
                 infoDetail.Add("can_voice_chat", OSD.FromBoolean(block.CanVoiceChat));
                 infoDetail.Add("is_moderator", OSD.FromBoolean(block.IsModerator));
                 infoDetail.Add("mutes", mutes);
-                OSDMap info = new OSDMap();
-                info.Add("info", infoDetail);
+                OSDMap info = new OSDMap {{"info", infoDetail}};
                 if (Transition != string.Empty)
                     info.Add("transition", OSD.FromString(Transition));
                 agentUpdates.Add(block.AgentID.ToString(), info);
@@ -414,40 +411,42 @@ namespace OpenSim.Services.CapsService
             body.Add("session_id", OSD.FromUUID(sessionID));
             body.Add("updates", new OSD());
 
-            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap();
-            chatterBoxSessionAgentListUpdates.Add("message", OSD.FromString("ChatterBoxSessionAgentListUpdates"));
-            chatterBoxSessionAgentListUpdates.Add("body", body);
+            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap
+                                                           {
+                                                               {
+                                                                   "message",
+                                                                   OSD.FromString("ChatterBoxSessionAgentListUpdates")
+                                                                   },
+                                                               {"body", body}
+                                                           };
 
             return chatterBoxSessionAgentListUpdates;
         }
 
         public static OSD GroupMembership(AgentGroupDataUpdatePacket groupUpdatePacket)
         {
-            OSDMap groupUpdate = new OSDMap();
-            groupUpdate.Add("message", OSD.FromString("AgentGroupDataUpdate"));
+            OSDMap groupUpdate = new OSDMap {{"message", OSD.FromString("AgentGroupDataUpdate")}};
 
             OSDMap body = new OSDMap();
             OSDArray agentData = new OSDArray();
-            OSDMap agentDataMap = new OSDMap();
-            agentDataMap.Add("AgentID", OSD.FromUUID(groupUpdatePacket.AgentData.AgentID));
+            OSDMap agentDataMap = new OSDMap {{"AgentID", OSD.FromUUID(groupUpdatePacket.AgentData.AgentID)}};
             agentData.Add(agentDataMap);
             body.Add("AgentData", agentData);
 
             OSDArray groupData = new OSDArray();
 
-            foreach (AgentGroupDataUpdatePacket.GroupDataBlock groupDataBlock in groupUpdatePacket.GroupData)
+            foreach (OSDMap groupDataMap in groupUpdatePacket.GroupData.Select(groupDataBlock => new OSDMap
+                                                                                                     {
+                                                                                                         {"ListInProfile", OSD.FromBoolean(false)},
+                                                                                                         {"GroupID", OSD.FromUUID(groupDataBlock.GroupID)},
+                                                                                                         {"GroupInsigniaID", OSD.FromUUID(groupDataBlock.GroupInsigniaID)},
+                                                                                                         {"Contribution", OSD.FromInteger(groupDataBlock.Contribution)},
+                                                                                                         {"GroupPowers", OSD.FromBinary(ulongToByteArray(groupDataBlock.GroupPowers))},
+                                                                                                         {"GroupName", OSD.FromString(Utils.BytesToString(groupDataBlock.GroupName))},
+                                                                                                         {"AcceptNotices", OSD.FromBoolean(groupDataBlock.AcceptNotices)}
+                                                                                                     }))
             {
-                OSDMap groupDataMap = new OSDMap();
-                groupDataMap.Add("ListInProfile", OSD.FromBoolean(false));
-                groupDataMap.Add("GroupID", OSD.FromUUID(groupDataBlock.GroupID));
-                groupDataMap.Add("GroupInsigniaID", OSD.FromUUID(groupDataBlock.GroupInsigniaID));
-                groupDataMap.Add("Contribution", OSD.FromInteger(groupDataBlock.Contribution));
-                groupDataMap.Add("GroupPowers", OSD.FromBinary(ulongToByteArray(groupDataBlock.GroupPowers)));
-                groupDataMap.Add("GroupName", OSD.FromString(Utils.BytesToString(groupDataBlock.GroupName)));
-                groupDataMap.Add("AcceptNotices", OSD.FromBoolean(groupDataBlock.AcceptNotices));
-
                 groupData.Add(groupDataMap);
-
             }
             body.Add("GroupData", groupData);
             groupUpdate.Add("body", body);
@@ -457,40 +456,41 @@ namespace OpenSim.Services.CapsService
 
         public static OSD PlacesQuery(PlacesReplyPacket PlacesReply, string[] regionType)
         {
-            OSDMap placesReply = new OSDMap();
-            placesReply.Add("message", OSD.FromString("PlacesReplyMessage"));
+            OSDMap placesReply = new OSDMap {{"message", OSD.FromString("PlacesReplyMessage")}};
 
             OSDMap body = new OSDMap();
             OSDArray agentData = new OSDArray();
-            OSDMap agentDataMap = new OSDMap();
-            agentDataMap.Add("AgentID", OSD.FromUUID(PlacesReply.AgentData.AgentID));
-            agentDataMap.Add("QueryID", OSD.FromUUID(PlacesReply.AgentData.QueryID));
-            agentDataMap.Add("TransactionID", OSD.FromUUID(PlacesReply.TransactionData.TransactionID));
+            OSDMap agentDataMap = new OSDMap
+                                      {
+                                          {"AgentID", OSD.FromUUID(PlacesReply.AgentData.AgentID)},
+                                          {"QueryID", OSD.FromUUID(PlacesReply.AgentData.QueryID)},
+                                          {"TransactionID", OSD.FromUUID(PlacesReply.TransactionData.TransactionID)}
+                                      };
             agentData.Add(agentDataMap);
             body.Add("AgentData", agentData);
 
             OSDArray QueryData = new OSDArray();
-            int i = 0;
-            foreach (PlacesReplyPacket.QueryDataBlock groupDataBlock in PlacesReply.QueryData)
+            int[] i = {0};
+            foreach (OSDMap QueryDataMap in PlacesReply.QueryData.Select(groupDataBlock => new OSDMap
+                                                                                               {
+                                                                                                   {"ActualArea", OSD.FromInteger(groupDataBlock.ActualArea)},
+                                                                                                   {"BillableArea", OSD.FromInteger(groupDataBlock.BillableArea)},
+                                                                                                   {"Description", OSD.FromBinary(groupDataBlock.Desc)},
+                                                                                                   {"Dwell", OSD.FromInteger((int) groupDataBlock.Dwell)},
+                                                                                                   {"Flags", OSD.FromString(Convert.ToString(groupDataBlock.Flags))},
+                                                                                                   {"GlobalX", OSD.FromInteger((int) groupDataBlock.GlobalX)},
+                                                                                                   {"GlobalY", OSD.FromInteger((int) groupDataBlock.GlobalY)},
+                                                                                                   {"GlobalZ", OSD.FromInteger((int) groupDataBlock.GlobalZ)},
+                                                                                                   {"Name", OSD.FromBinary(groupDataBlock.Name)},
+                                                                                                   {"OwnerID", OSD.FromUUID(groupDataBlock.OwnerID)},
+                                                                                                   {"SimName", OSD.FromBinary(groupDataBlock.SimName)},
+                                                                                                   {"SnapShotID", OSD.FromUUID(groupDataBlock.SnapshotID)},
+                                                                                                   {"ProductSku", OSD.FromString(regionType[i[0]])},
+                                                                                                   {"Price", OSD.FromInteger(groupDataBlock.Price)}
+                                                                                               }))
             {
-                OSDMap QueryDataMap = new OSDMap();
-                QueryDataMap.Add("ActualArea", OSD.FromInteger(groupDataBlock.ActualArea));
-                QueryDataMap.Add("BillableArea", OSD.FromInteger(groupDataBlock.BillableArea));
-                QueryDataMap.Add("Description", OSD.FromBinary(groupDataBlock.Desc));
-                QueryDataMap.Add("Dwell", OSD.FromInteger((int)groupDataBlock.Dwell));
-                QueryDataMap.Add("Flags", OSD.FromString(Convert.ToString(groupDataBlock.Flags)));
-                QueryDataMap.Add("GlobalX", OSD.FromInteger((int)groupDataBlock.GlobalX));
-                QueryDataMap.Add("GlobalY", OSD.FromInteger((int)groupDataBlock.GlobalY));
-                QueryDataMap.Add("GlobalZ", OSD.FromInteger((int)groupDataBlock.GlobalZ));
-                QueryDataMap.Add("Name", OSD.FromBinary(groupDataBlock.Name));
-                QueryDataMap.Add("OwnerID", OSD.FromUUID(groupDataBlock.OwnerID));
-                QueryDataMap.Add("SimName", OSD.FromBinary(groupDataBlock.SimName));
-                QueryDataMap.Add("SnapShotID", OSD.FromUUID(groupDataBlock.SnapshotID));
-                QueryDataMap.Add("ProductSku", OSD.FromString(regionType[i]));
-                QueryDataMap.Add("Price", OSD.FromInteger(groupDataBlock.Price));
-                
                 QueryData.Add(QueryDataMap);
-                i++;
+                i[0]++;
             }
             body.Add("QueryData", QueryData);
             placesReply.Add("QueryData[]", body);
@@ -499,10 +499,10 @@ namespace OpenSim.Services.CapsService
 
             return placesReply;
         }
+
         public static OSD ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage)
         {
-            OSDMap message = new OSDMap();
-            message.Add("message", OSD.FromString("ParcelProperties"));
+            OSDMap message = new OSDMap {{"message", OSD.FromString("ParcelProperties")}};
             OSD message_body = parcelPropertiesMessage.Serialize();
             message.Add("body", message_body);
             return message;
@@ -510,17 +510,16 @@ namespace OpenSim.Services.CapsService
 
         public static OSD ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelPropertiesMessage)
         {
-            OSDMap message = new OSDMap();
-            message.Add("message", OSD.FromString("ParcelObjectOwnersReply"));
+            OSDMap message = new OSDMap {{"message", OSD.FromString("ParcelObjectOwnersReply")}};
             OSD message_body = parcelPropertiesMessage.Serialize();
-            if (((OSDMap)message_body).ContainsKey("DataExtended"))
+            if (((OSDMap) message_body).ContainsKey("DataExtended"))
             {
-                OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
+                OSDArray m = (OSDArray) ((OSDMap) message_body)["DataExtended"];
                 int num = 0;
-                foreach (OSD o in m)
+                foreach (OSDMap innerMap in m.Cast<OSDMap>())
                 {
-                    OSDMap innerMap = (OSDMap)o;
-                    innerMap["TimeStamp"] = OSD.FromUInteger((uint)Util.ToUnixTime(parcelPropertiesMessage.PrimOwnersBlock[num].TimeStamp));
+                    innerMap["TimeStamp"] =
+                        OSD.FromUInteger((uint) Util.ToUnixTime(parcelPropertiesMessage.PrimOwnersBlock[num].TimeStamp));
                     num++;
                 }
             }
@@ -530,15 +529,14 @@ namespace OpenSim.Services.CapsService
 
         public static OSD LandStatReply(LandStatReplyMessage statReplyMessage)
         {
-            OSDMap message = new OSDMap();
-            message.Add("message", OSD.FromString("LandStatReply"));
+            OSDMap message = new OSDMap {{"message", OSD.FromString("LandStatReply")}};
             OSD message_body = statReplyMessage.Serialize();
-            OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
+            OSDArray m = (OSDArray) ((OSDMap) message_body)["DataExtended"];
             int num = 0;
-            foreach (OSD o in m)
+            foreach (OSDMap innerMap in m.Cast<OSDMap>())
             {
-                OSDMap innerMap = (OSDMap)o;
-                innerMap["TimeStamp"] = OSD.FromUInteger((uint)Util.ToUnixTime(statReplyMessage.ReportDataBlocks[num].TimeStamp));
+                innerMap["TimeStamp"] =
+                    OSD.FromUInteger((uint) Util.ToUnixTime(statReplyMessage.ReportDataBlocks[num].TimeStamp));
                 num++;
             }
             message.Add("body", message_body);

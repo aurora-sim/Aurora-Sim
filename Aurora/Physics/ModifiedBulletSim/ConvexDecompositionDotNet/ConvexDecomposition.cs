@@ -25,7 +25,6 @@
  * THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -39,7 +38,9 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         public float3 P2;
         public float3 P3;
 
-        public FaceTri() { }
+        public FaceTri()
+        {
+        }
 
         public FaceTri(List<float3> vertices, int i1, int i2, int i3)
         {
@@ -58,7 +59,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             int i3 = vl.getIndex(p3);
 
             // do *not* process degenerate triangles!
-            if ( i1 != i2 && i1 != i3 && i2 != i3 )
+            if (i1 != i2 && i1 != i3 && i2 != i3)
             {
                 list.Add(i1);
                 list.Add(i2);
@@ -66,8 +67,9 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
         }
 
-        public static void calcConvexDecomposition(List<float3> vertices, List<int> indices, ConvexDecompositionCallback callback, float masterVolume, int depth,
-            int maxDepth, float concavePercent, float mergePercent)
+        public static void calcConvexDecomposition(List<float3> vertices, List<int> indices,
+                                                   ConvexDecompositionCallback callback, float masterVolume, int depth,
+                                                   int maxDepth, float concavePercent, float mergePercent)
         {
             float4 plane = new float4();
             bool split = false;
@@ -82,9 +84,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                     masterVolume = volume;
                 }
 
-                float percent = (c * 100.0f) / masterVolume;
+                float percent = (c*100.0f)/masterVolume;
 
-                if (percent > concavePercent) // if great than 5% of the total volume is concave, go ahead and keep splitting.
+                if (percent > concavePercent)
+                    // if great than 5% of the total volume is concave, go ahead and keep splitting.
                 {
                     split = true;
                 }
@@ -117,11 +120,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             VertexPool vback = new VertexPool();
 
             // ok..now we are going to 'split' all of the input triangles against this plane!
-            for (int i = 0; i < indices.Count / 3; i++)
+            for (int i = 0; i < indices.Count/3; i++)
             {
-                int i1 = indices[i * 3 + 0];
-                int i2 = indices[i * 3 + 1];
-                int i3 = indices[i * 3 + 2];
+                int i1 = indices[i*3 + 0];
+                int i2 = indices[i*3 + 1];
+                int i3 = indices[i*3 + 2];
 
                 FaceTri t = new FaceTri(vertices, i1, i2, i3);
 
@@ -131,11 +134,13 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 int fcount = 0;
                 int bcount = 0;
 
-                PlaneTriResult result = PlaneTri.planeTriIntersection(plane, t, 0.00001f, ref front, out fcount, ref back, out bcount);
+                PlaneTriResult result = PlaneTri.planeTriIntersection(plane, t, 0.00001f, ref front, out fcount,
+                                                                      ref back, out bcount);
 
                 if (fcount > 4 || bcount > 4)
                 {
-                    result = PlaneTri.planeTriIntersection(plane, t, 0.00001f, ref front, out fcount, ref back, out bcount);
+                    result = PlaneTri.planeTriIntersection(plane, t, 0.00001f, ref front, out fcount, ref back,
+                                                           out bcount);
                 }
 
                 switch (result)
@@ -176,9 +181,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 List<float3> vertices2 = vfront.GetVertices();
                 for (int i = 0; i < vertices2.Count; i++)
                     vertices2[i] = new float3(vertices2[i]);
-                int tcount = ifront.Count / 3;
+                int tcount = ifront.Count/3;
 
-                calcConvexDecomposition(vertices2, ifront, callback, masterVolume, depth + 1, maxDepth, concavePercent, mergePercent);
+                calcConvexDecomposition(vertices2, ifront, callback, masterVolume, depth + 1, maxDepth, concavePercent,
+                                        mergePercent);
             }
 
             ifront.Clear();
@@ -188,9 +194,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 int vcount = vback.GetSize();
                 List<float3> vertices2 = vback.GetVertices();
-                int tcount = iback.Count / 3;
+                int tcount = iback.Count/3;
 
-                calcConvexDecomposition(vertices2, iback, callback, masterVolume, depth + 1, maxDepth, concavePercent, mergePercent);
+                calcConvexDecomposition(vertices2, iback, callback, masterVolume, depth + 1, maxDepth, concavePercent,
+                                        mergePercent);
             }
 
             iback.Clear();

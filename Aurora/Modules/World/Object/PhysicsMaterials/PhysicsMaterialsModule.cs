@@ -28,20 +28,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using log4net;
+using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace Aurora.Modules
 {
@@ -51,84 +46,74 @@ namespace Aurora.Modules
         //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
 
-        public void Initialise (IConfigSource pSource)
+        #region INonSharedRegionModule Members
+
+        public void Initialise(IConfigSource pSource)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
         public Type ReplaceableInterface
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
-        public void PostInitialise ()
+        public string Name
+        {
+            get { return "PhysicsMaterialsModule"; }
+        }
+
+        public void Close()
         {
         }
 
-        public OSDMap RegisterCaps (UUID agentID, IHttpServer server)
-        {
-            OSDMap retVal = new OSDMap ();
-            retVal["GetObjectPhysicsData"] = CapsUtil.CreateCAPS ("GetObjectPhysicsData", "");
+        #endregion
 
-            server.AddStreamHandler (new RestHTTPHandler ("POST", retVal["GetObjectPhysicsData"],
-                                                      delegate (Hashtable m_dhttpMethod)
-                                                      {
-                                                          return GetObjectPhysicsData (agentID, m_dhttpMethod);
-                                                      }));
+        public void PostInitialise()
+        {
+        }
+
+        public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
+        {
+            OSDMap retVal = new OSDMap();
+            retVal["GetObjectPhysicsData"] = CapsUtil.CreateCAPS("GetObjectPhysicsData", "");
+
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["GetObjectPhysicsData"],
+                                                        m_dhttpMethod => GetObjectPhysicsData(agentID, m_dhttpMethod)));
             return retVal;
         }
 
-        private Hashtable GetObjectPhysicsData (UUID agentID, Hashtable mDhttpMethod)
+        private Hashtable GetObjectPhysicsData(UUID agentID, Hashtable mDhttpMethod)
         {
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml ((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
 
-            List<ISceneChildEntity> entities = new List<ISceneChildEntity> ();
-            OSDArray keys = (OSDArray)rm["object_ids"];
-            foreach (OSD key in keys)
-            {
-                entities.Add(m_scene.GetSceneObjectPart (key.AsUUID ()));
-            }
+            OSDArray keys = (OSDArray) rm["object_ids"];
 
-            IEventQueueService eqs = m_scene.RequestModuleInterface<IEventQueueService> ();
+            IEventQueueService eqs = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eqs != null)
-                eqs.ObjectPhysicsProperties (entities.ToArray (), agentID, m_scene.RegionInfo.RegionHandle);
+                eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(), agentID, m_scene.RegionInfo.RegionHandle);
 
             //Send back data
-            Hashtable responsedata = new Hashtable ();
+            Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = "";
             return responsedata;
-        }
-
-        public string Name
-        {
-            get
-            {
-                return "PhysicsMaterialsModule";
-            }
-        }
-
-        public void Close ()
-        {
         }
     }
 }

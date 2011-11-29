@@ -28,29 +28,28 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
-using System.IO;
-using System.Text;
-using Microsoft.CSharp;
-//using Microsoft.JScript;
 using Microsoft.VisualBasic;
-using log4net;
-using OpenSim.Region.Framework.Interfaces;
-using OpenMetaverse;
+//using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     public class VBConverter : IScriptConverter
     {
-        private VBCodeProvider VBcodeProvider = new VBCodeProvider ();
-        public string DefaultState { get { return ""; } }
+        private readonly VBCodeProvider VBcodeProvider = new VBCodeProvider();
+
+        #region IScriptConverter Members
+
+        public string DefaultState
+        {
+            get { return ""; }
+        }
 
         public void Initialise(Compiler compiler)
         {
         }
 
-        public void Convert(string Script, out string CompiledScript, out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+        public void Convert(string Script, out string CompiledScript,
+                            out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
         {
             // Remove the //vb chars
             Script = Script.Substring(4, Script.Length - 4);
@@ -61,20 +60,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public string Name
         {
             get { return "vb"; }
-        }
-        public void Dispose()
-        {
-        }
-        private string CreateCompilerScript(string compileScript)
-        {
-            compileScript = String.Empty +
-            "Imports Aurora.ScriptEngine.AuroraDotNetEngine.Runtime: Imports Aurora.ScriptEngine.AuroraDotNetEngine: Imports System.Collections.Generic: " +
-            String.Empty + "NameSpace Script:" +
-            String.Empty + "Public Class ScriptClass: Inherits Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass: " +
-            "\r\nPublic Sub New()\r\nEnd Sub: " +
-            compileScript +
-            ":End Class :End Namespace\r\n";
-            return compileScript;
         }
 
         public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
@@ -87,7 +72,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 lock (VBcodeProvider)
                 {
                     if (isFile)
-                        results = VBcodeProvider.CompileAssemblyFromFile (
+                        results = VBcodeProvider.CompileAssemblyFromFile(
                             parameters, Script);
                     else
                         results = VBcodeProvider.CompileAssemblyFromSource(
@@ -100,7 +85,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // error log.
                 if (results.Errors.Count > 0)
                 {
-                    if (!retried && (results.Errors[0].FileName == null || results.Errors[0].FileName == String.Empty) &&
+                    if (!retried && string.IsNullOrEmpty(results.Errors[0].FileName) &&
                         results.Errors[0].Line == 0)
                     {
                         // System.Console.WriteLine("retrying failed compilation");
@@ -119,8 +104,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return results;
         }
 
-        public void FinishCompile (IScriptModulePlugin plugin, ScriptData data, IScript Script)
+        public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+        }
+
+        private string CreateCompilerScript(string compileScript)
+        {
+            compileScript = String.Empty +
+                            "Imports Aurora.ScriptEngine.AuroraDotNetEngine.Runtime: Imports Aurora.ScriptEngine.AuroraDotNetEngine: Imports System.Collections.Generic: " +
+                            String.Empty + "NameSpace Script:" +
+                            String.Empty +
+                            "Public Class ScriptClass: Inherits Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass: " +
+                            "\r\nPublic Sub New()\r\nEnd Sub: " +
+                            compileScript +
+                            ":End Class :End Namespace\r\n";
+            return compileScript;
         }
     }
 }

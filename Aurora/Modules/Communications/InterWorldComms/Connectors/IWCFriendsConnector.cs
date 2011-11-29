@@ -25,34 +25,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Services.Connectors;
-using OpenSim.Services;
 using OpenSim.Services.Friends;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Framework;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCFriendsConnector : IFriendsService, IService
     {
         protected IFriendsService m_localService;
-        protected FriendsServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected FriendsServicesConnector m_remoteService;
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IFriendsService Members
 
         public IFriendsService InnerService
         {
@@ -60,7 +58,7 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
@@ -70,21 +68,20 @@ namespace Aurora.Modules
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString ("FriendsHandler", "") != Name)
+            if (handlerConfig.GetString("FriendsHandler", "") != Name)
                 return;
 
             string localHandler = handlerConfig.GetString("LocalFriendsHandler", "FriendsService");
-            List<IFriendsService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IFriendsService>();
-            foreach(IFriendsService s in services)
-                if(s.GetType().Name == localHandler)
-                    m_localService = s;
+            List<IFriendsService> services = AuroraModuleLoader.PickupModules<IFriendsService>();
+            foreach (IFriendsService s in services.Where(s => s.GetType().Name == localHandler))
+                m_localService = s;
 
-            if(m_localService == null)
-                m_localService = new FriendsService ();
+            if (m_localService == null)
+                m_localService = new FriendsService();
             m_localService.Initialize(config, registry);
-            m_remoteService = new FriendsServicesConnector ();
+            m_remoteService = new FriendsServicesConnector();
             m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IFriendsService> (this);
+            registry.RegisterModuleInterface<IFriendsService>(this);
             m_registry = registry;
         }
 
@@ -100,43 +97,43 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
-        #endregion
-
-        #region IFriendsService Members
-
-        public FriendInfo[] GetFriends (UUID PrincipalID)
+        public FriendInfo[] GetFriends(UUID PrincipalID)
         {
-            FriendInfo[] friends = m_localService.GetFriends (PrincipalID);
+            FriendInfo[] friends = m_localService.GetFriends(PrincipalID);
             if (friends == null || friends.Length == 0)
-                friends = m_remoteService.GetFriends (PrincipalID);
+                friends = m_remoteService.GetFriends(PrincipalID);
             return friends;
         }
 
-        public bool StoreFriend (UUID PrincipalID, string Friend, int flags)
+        public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "FriendsServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                       "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
             {
-                if(m_remoteService.StoreFriend (PrincipalID, Friend, flags))
+                if (m_remoteService.StoreFriend(PrincipalID, Friend, flags))
                     return true;
             }
-            bool success = m_localService.StoreFriend (PrincipalID, Friend, flags);
+            bool success = m_localService.StoreFriend(PrincipalID, Friend, flags);
             if (!success)
-                success = m_remoteService.StoreFriend (PrincipalID, Friend, flags);
+                success = m_remoteService.StoreFriend(PrincipalID, Friend, flags);
             return success;
         }
 
-        public bool Delete (UUID PrincipalID, string Friend)
+        public bool Delete(UUID PrincipalID, string Friend)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (PrincipalID.ToString (), "FriendsServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                       "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
             {
-                if (m_remoteService.Delete (PrincipalID, Friend))
+                if (m_remoteService.Delete(PrincipalID, Friend))
                     return true;
             }
-            bool success = m_localService.Delete (PrincipalID, Friend);
+            bool success = m_localService.Delete(PrincipalID, Friend);
             if (!success)
-                success = m_remoteService.Delete (PrincipalID, Friend);
+                success = m_remoteService.Delete(PrincipalID, Friend);
             return success;
         }
 

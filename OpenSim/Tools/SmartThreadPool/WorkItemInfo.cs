@@ -3,41 +3,42 @@
 
 namespace Amib.Threading
 {
+
     #region WorkItemInfo class
 
     /// <summary>
-    /// Summary description for WorkItemInfo.
+    ///   Summary description for WorkItemInfo.
     /// </summary>
     public class WorkItemInfo
     {
         /// <summary>
-        /// Use the caller's security context
-        /// </summary>
-        private bool _useCallerCallContext;
-
-        /// <summary>
-        /// Use the caller's security context
-        /// </summary>
-        private bool _useCallerHttpContext;
-
-        /// <summary>
-        /// Dispose of the state object of a work item
-        /// </summary>
-        private bool _disposeOfStateObjects;
-
-        /// <summary>
-        /// The option to run the post execute
+        ///   The option to run the post execute
         /// </summary>
         private CallToPostExecute _callToPostExecute;
 
         /// <summary>
-        /// A post execute callback to call when none is provided in 
-        /// the QueueWorkItem method.
+        ///   Dispose of the state object of a work item
+        /// </summary>
+        private bool _disposeOfStateObjects;
+
+        /// <summary>
+        ///   A post execute callback to call when none is provided in 
+        ///   the QueueWorkItem method.
         /// </summary>
         private PostExecuteWorkItemCallback _postExecuteWorkItemCallback;
-        
+
         /// <summary>
-        /// The priority of the work item
+        ///   Use the caller's security context
+        /// </summary>
+        private bool _useCallerCallContext;
+
+        /// <summary>
+        ///   Use the caller's security context
+        /// </summary>
+        private bool _useCallerHttpContext;
+
+        /// <summary>
+        ///   The priority of the work item
         /// </summary>
         private WorkItemPriority _workItemPriority;
 

@@ -26,24 +26,18 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Reflection;
-
-using Nwc.XmlRpc;
-
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
-
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Services.Interfaces;
-
-using Aurora.Simulation.Base;
+using log4net;
+using ChatSessionMember = OpenSim.Framework.ChatSessionMember;
 
 /***************************************************************************
  * Simian Data Map
@@ -103,196 +97,84 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {
     public class SimianGroupsServicesConnectorModule : ISharedRegionModule, IGroupsServicesConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public const GroupPowers m_DefaultEveryonePowers = GroupPowers.AllowSetHome | 
-            GroupPowers.Accountable | 
-            GroupPowers.JoinChat | 
-            GroupPowers.AllowVoiceChat | 
-            GroupPowers.ReceiveNotices | 
-            GroupPowers.StartProposal | 
-            GroupPowers.VoteOnProposal;
+        public const GroupPowers m_DefaultEveryonePowers = GroupPowers.AllowSetHome |
+                                                           GroupPowers.Accountable |
+                                                           GroupPowers.JoinChat |
+                                                           GroupPowers.AllowVoiceChat |
+                                                           GroupPowers.ReceiveNotices |
+                                                           GroupPowers.StartProposal |
+                                                           GroupPowers.VoteOnProposal;
 
         // Would this be cleaner as (GroupPowers)ulong.MaxValue;
         public const GroupPowers m_DefaultOwnerPowers = GroupPowers.Accountable
-                                | GroupPowers.AllowEditLand
-                                | GroupPowers.AllowFly
-                                | GroupPowers.AllowLandmark
-                                | GroupPowers.AllowRez
-                                | GroupPowers.AllowSetHome
-                                | GroupPowers.AllowVoiceChat
-                                | GroupPowers.AssignMember
-                                | GroupPowers.AssignMemberLimited
-                                | GroupPowers.ChangeActions
-                                | GroupPowers.ChangeIdentity
-                                | GroupPowers.ChangeMedia
-                                | GroupPowers.ChangeOptions
-                                | GroupPowers.CreateRole
-                                | GroupPowers.DeedObject
-                                | GroupPowers.DeleteRole
-                                | GroupPowers.Eject
-                                | GroupPowers.FindPlaces
-                                | GroupPowers.Invite
-                                | GroupPowers.JoinChat
-                                | GroupPowers.LandChangeIdentity
-                                | GroupPowers.LandDeed
-                                | GroupPowers.LandDivideJoin
-                                | GroupPowers.LandEdit
-                                | GroupPowers.LandEjectAndFreeze
-                                | GroupPowers.LandGardening
-                                | GroupPowers.LandManageAllowed
-                                | GroupPowers.LandManageBanned
-                                | GroupPowers.LandManagePasses
-                                | GroupPowers.LandOptions
-                                | GroupPowers.LandRelease
-                                | GroupPowers.LandSetSale
-                                | GroupPowers.ModerateChat
-                                | GroupPowers.ObjectManipulate
-                                | GroupPowers.ObjectSetForSale
-                                | GroupPowers.ReceiveNotices
-                                | GroupPowers.RemoveMember
-                                | GroupPowers.ReturnGroupOwned
-                                | GroupPowers.ReturnGroupSet
-                                | GroupPowers.ReturnNonGroup
-                                | GroupPowers.RoleProperties
-                                | GroupPowers.SendNotices
-                                | GroupPowers.SetLandingPoint
-                                | GroupPowers.StartProposal
-                                | GroupPowers.VoteOnProposal;
+                                                        | GroupPowers.AllowEditLand
+                                                        | GroupPowers.AllowFly
+                                                        | GroupPowers.AllowLandmark
+                                                        | GroupPowers.AllowRez
+                                                        | GroupPowers.AllowSetHome
+                                                        | GroupPowers.AllowVoiceChat
+                                                        | GroupPowers.AssignMember
+                                                        | GroupPowers.AssignMemberLimited
+                                                        | GroupPowers.ChangeActions
+                                                        | GroupPowers.ChangeIdentity
+                                                        | GroupPowers.ChangeMedia
+                                                        | GroupPowers.ChangeOptions
+                                                        | GroupPowers.CreateRole
+                                                        | GroupPowers.DeedObject
+                                                        | GroupPowers.DeleteRole
+                                                        | GroupPowers.Eject
+                                                        | GroupPowers.FindPlaces
+                                                        | GroupPowers.Invite
+                                                        | GroupPowers.JoinChat
+                                                        | GroupPowers.LandChangeIdentity
+                                                        | GroupPowers.LandDeed
+                                                        | GroupPowers.LandDivideJoin
+                                                        | GroupPowers.LandEdit
+                                                        | GroupPowers.LandEjectAndFreeze
+                                                        | GroupPowers.LandGardening
+                                                        | GroupPowers.LandManageAllowed
+                                                        | GroupPowers.LandManageBanned
+                                                        | GroupPowers.LandManagePasses
+                                                        | GroupPowers.LandOptions
+                                                        | GroupPowers.LandRelease
+                                                        | GroupPowers.LandSetSale
+                                                        | GroupPowers.ModerateChat
+                                                        | GroupPowers.ObjectManipulate
+                                                        | GroupPowers.ObjectSetForSale
+                                                        | GroupPowers.ReceiveNotices
+                                                        | GroupPowers.RemoveMember
+                                                        | GroupPowers.ReturnGroupOwned
+                                                        | GroupPowers.ReturnGroupSet
+                                                        | GroupPowers.ReturnNonGroup
+                                                        | GroupPowers.RoleProperties
+                                                        | GroupPowers.SendNotices
+                                                        | GroupPowers.SetLandingPoint
+                                                        | GroupPowers.StartProposal
+                                                        | GroupPowers.VoteOnProposal;
 
-        private bool m_connectorEnabled = false;
-
-        private string m_groupsServerURI = string.Empty;
-
-        private bool m_debugEnabled = false;
-
-        private ExpiringCache<string, OSDMap> m_memoryCache;
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private int m_cacheTimeout = 30;
 
-        // private IUserAccountService m_accountService = null;
-        
+        private bool m_connectorEnabled;
 
-        #region IRegionModuleBase Members
+        private bool m_debugEnabled;
+        private string m_groupsServerURI = string.Empty;
 
-        public string Name
-        {
-            get { return "SimianGroupsServicesConnector"; }
-        }
-
-        // this module is not intended to be replaced, but there should only be 1 of them.
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void Initialise(IConfigSource config)
-        {
-            IConfig groupsConfig = config.Configs["Groups"];
-
-            if (groupsConfig == null)
-            {
-                // Do not run this module by default.
-                return;
-            }
-            else
-            {
-                // if groups aren't enabled, we're not needed.
-                // if we're not specified as the connector to use, then we're not wanted
-                if ((groupsConfig.GetBoolean("Enabled", false) == false)
-                    || (groupsConfig.GetString("ServicesConnectorModule", "Default") != Name))
-                {
-                    m_connectorEnabled = false;
-                    return;
-                }
-
-                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
-
-                m_groupsServerURI = groupsConfig.GetString("GroupsServerURI", string.Empty);
-                if ((m_groupsServerURI == null) ||
-                    (m_groupsServerURI == string.Empty))
-                {
-                    m_log.ErrorFormat("Please specify a valid Simian Server for GroupsServerURI in Aurora.ini, [Groups]");
-                    m_connectorEnabled = false;
-                    return;
-                }
-
-
-                m_cacheTimeout = groupsConfig.GetInt("GroupsCacheTimeout", 30);
-                if (m_cacheTimeout == 0)
-                {
-                    m_log.WarnFormat("[SIMIAN-GROUPS-CONNECTOR] Groups Cache Disabled.");
-                }
-                else
-                {
-                    m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR] Groups Cache Timeout set to {0}.", m_cacheTimeout);
-                }
-
-                
-
-                m_memoryCache = new ExpiringCache<string,OSDMap>();
-                
-
-                // If we got all the config options we need, lets start'er'up
-                m_connectorEnabled = true;
-
-                m_debugEnabled = groupsConfig.GetBoolean("DebugEnabled", true);
-
-            }
-        }
-
-        public void Close()
-        {
-            m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]: Closing {0}", this.Name);
-        }
-
-        public void AddRegion (IScene scene)
-        {
-            if (m_connectorEnabled)
-            {
-                scene.RegisterModuleInterface<IGroupsServicesConnector>(this);
-            }
-        }
-
-        public void RemoveRegion (IScene scene)
-        {
-            if (scene.RequestModuleInterface<IGroupsServicesConnector>() == this)
-            {
-                scene.UnregisterModuleInterface<IGroupsServicesConnector>(this);
-            }
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-            // TODO: May want to consider listenning for Agent Connections so we can pre-cache group info
-            // scene.EventManager.OnNewClient += OnNewClient;
-        }
-
-        #endregion
-
-        #region ISharedRegionModule Members
-
-        public void PostInitialise()
-        {
-            // NoOp
-        }
-
-        #endregion
-
-
-
+        private ExpiringCache<string, OSDMap> m_memoryCache;
 
         #region IGroupsServicesConnector Members
 
         /// <summary>
-        /// Create a Group, including Everyone and Owners Role, place FounderID in both groups, select Owner as selected role, and newly created group as agent's active role.
+        ///   Create a Group, including Everyone and Owners Role, place FounderID in both groups, select Owner as selected role, and newly created group as agent's active role.
         /// </summary>
-        public UUID CreateGroup(UUID requestingAgentID, string name, string charter, bool showInList, UUID insigniaID, 
-                                int membershipFee, bool openEnrollment, bool allowPublish, 
+        public UUID CreateGroup(UUID requestingAgentID, string name, string charter, bool showInList, UUID insigniaID,
+                                int membershipFee, bool openEnrollment, bool allowPublish,
                                 bool maturePublish, UUID founderID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
-            UUID GroupID     = UUID.Random();
+            UUID GroupID = UUID.Random();
             UUID OwnerRoleID = UUID.Random();
 
             OSDMap GroupInfoMap = new OSDMap();
@@ -304,33 +186,35 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupInfoMap["AllowPublish"] = OSD.FromBoolean(allowPublish);
             GroupInfoMap["MaturePublish"] = OSD.FromBoolean(maturePublish);
             GroupInfoMap["FounderID"] = OSD.FromUUID(founderID);
-            GroupInfoMap["EveryonePowers"] = OSD.FromULong((ulong)m_DefaultEveryonePowers);
+            GroupInfoMap["EveryonePowers"] = OSD.FromULong((ulong) m_DefaultEveryonePowers);
             GroupInfoMap["OwnerRoleID"] = OSD.FromUUID(OwnerRoleID);
-            GroupInfoMap["OwnersPowers"] = OSD.FromULong((ulong)m_DefaultOwnerPowers);
+            GroupInfoMap["OwnersPowers"] = OSD.FromULong((ulong) m_DefaultOwnerPowers);
 
             if (SimianAddGeneric(GroupID, "Group", name, GroupInfoMap))
             {
-                AddGroupRole(requestingAgentID, GroupID, UUID.Zero, "Everyone", "Members of " + name, "Member of " + name, (ulong)m_DefaultEveryonePowers);
-                ulong groupPowers = 296868139497678;
-                AddGroupRole(requestingAgentID, GroupID, OwnerRoleID, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
-                AddGroupRole(requestingAgentID, GroupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, (ulong)m_DefaultOwnerPowers);
-                
+                AddGroupRole(requestingAgentID, GroupID, UUID.Zero, "Everyone", "Members of " + name,
+                             "Member of " + name, (ulong) m_DefaultEveryonePowers);
+                const ulong groupPowers = 296868139497678;
+                AddGroupRole(requestingAgentID, GroupID, OwnerRoleID, "Officers",
+                             "The officers of the group, with more powers than regular members.", "Officer of " + name,
+                             groupPowers);
+                AddGroupRole(requestingAgentID, GroupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name,
+                             (ulong) m_DefaultOwnerPowers);
+
                 AddAgentToGroup(requestingAgentID, requestingAgentID, GroupID, OwnerRoleID);
 
                 return GroupID;
             }
-            else
-            {
-                return UUID.Zero;
-            }
+            return UUID.Zero;
         }
 
 
-        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, bool showInList, 
-                                UUID insigniaID, int membershipFee, bool openEnrollment, 
+        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, bool showInList,
+                                UUID insigniaID, int membershipFee, bool openEnrollment,
                                 bool allowPublish, bool maturePublish)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
             // TODO: Check to make sure requestingAgentID has permission to update group
 
             string GroupName;
@@ -347,20 +231,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                 SimianAddGeneric(groupID, "Group", GroupName, GroupInfoMap);
             }
-
         }
 
 
-        public void AddGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description, 
+        public void AddGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description,
                                  string title, ulong powers)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap GroupRoleInfo = new OSDMap();
             GroupRoleInfo["Name"] = OSD.FromString(name);
             GroupRoleInfo["Description"] = OSD.FromString(description);
             GroupRoleInfo["Title"] = OSD.FromString(title);
-            GroupRoleInfo["Powers"] = OSD.FromULong((ulong)powers);
+            GroupRoleInfo["Powers"] = OSD.FromULong(powers);
 
             // TODO: Add security, make sure that requestingAgentID has permision to add roles
             SimianAddGeneric(groupID, "GroupRole", roleID.ToString(), GroupRoleInfo);
@@ -368,7 +252,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void RemoveGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             // TODO: Add security
 
@@ -394,10 +279,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         }
 
 
-        public void UpdateGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description, 
+        public void UpdateGroupRole(UUID requestingAgentID, UUID groupID, UUID roleID, string name, string description,
                                     string title, ulong powers)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             // TODO: Security, check that requestingAgentID is allowed to update group roles
 
@@ -416,8 +302,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     GroupRoleInfo["Title"] = OSD.FromString(title);
                 }
-                GroupRoleInfo["Powers"] = OSD.FromULong((ulong)powers);
-
+                GroupRoleInfo["Powers"] = OSD.FromULong(powers);
             }
 
 
@@ -426,7 +311,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID groupID, string groupName)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap GroupInfoMap = null;
             if (groupID != UUID.Zero)
@@ -435,8 +321,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 {
                     return null;
                 }
-            } 
-            else if ((groupName != null) && (groupName != string.Empty))
+            }
+            else if (!string.IsNullOrEmpty(groupName))
             {
                 if (!SimianGetFirstGenericEntry("Group", groupName, out groupID, out GroupInfoMap))
                 {
@@ -444,90 +330,39 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 }
             }
 
-            GroupRecord GroupInfo = new GroupRecord();
+            GroupRecord GroupInfo = new GroupRecord
+                                        {
+                                            GroupID = groupID,
+                                            GroupName = groupName,
+                                            Charter = GroupInfoMap["Charter"].AsString(),
+                                            ShowInList = GroupInfoMap["ShowInList"].AsBoolean(),
+                                            GroupPicture = GroupInfoMap["InsigniaID"].AsUUID(),
+                                            MembershipFee = GroupInfoMap["MembershipFee"].AsInteger(),
+                                            OpenEnrollment = GroupInfoMap["OpenEnrollment"].AsBoolean(),
+                                            AllowPublish = GroupInfoMap["AllowPublish"].AsBoolean(),
+                                            MaturePublish = GroupInfoMap["MaturePublish"].AsBoolean(),
+                                            FounderID = GroupInfoMap["FounderID"].AsUUID(),
+                                            OwnerRoleID = GroupInfoMap["OwnerRoleID"].AsUUID()
+                                        };
 
-            GroupInfo.GroupID = groupID;
-            GroupInfo.GroupName = groupName;
-            GroupInfo.Charter = GroupInfoMap["Charter"].AsString();
-            GroupInfo.ShowInList = GroupInfoMap["ShowInList"].AsBoolean();
-            GroupInfo.GroupPicture = GroupInfoMap["InsigniaID"].AsUUID();
-            GroupInfo.MembershipFee = GroupInfoMap["MembershipFee"].AsInteger();
-            GroupInfo.OpenEnrollment = GroupInfoMap["OpenEnrollment"].AsBoolean();
-            GroupInfo.AllowPublish = GroupInfoMap["AllowPublish"].AsBoolean();
-            GroupInfo.MaturePublish = GroupInfoMap["MaturePublish"].AsBoolean();
-            GroupInfo.FounderID = GroupInfoMap["FounderID"].AsUUID();
-            GroupInfo.OwnerRoleID = GroupInfoMap["OwnerRoleID"].AsUUID();
 
             return GroupInfo;
-
-        }
-
-        public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID groupID, UUID memberID)
-        {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
-
-            OSDMap groupProfile;
-            string groupName;
-            if (!SimianGetFirstGenericEntry(groupID, "Group", out groupName, out groupProfile))
-            {
-                // GroupProfileData is not nullable
-                return new GroupProfileData();
-            }
-
-            GroupProfileData MemberGroupProfile = new GroupProfileData();
-            MemberGroupProfile.GroupID = groupID;
-            MemberGroupProfile.Name = groupName;
-
-            if (groupProfile["Charter"] != null)
-            {
-                MemberGroupProfile.Charter = groupProfile["Charter"].AsString();
-            }
-            
-            MemberGroupProfile.ShowInList = groupProfile["ShowInList"].AsString() == "1";
-            MemberGroupProfile.InsigniaID = groupProfile["InsigniaID"].AsUUID();
-            MemberGroupProfile.MembershipFee = groupProfile["MembershipFee"].AsInteger();
-            MemberGroupProfile.OpenEnrollment = groupProfile["OpenEnrollment"].AsBoolean();
-            MemberGroupProfile.AllowPublish = groupProfile["AllowPublish"].AsBoolean();
-            MemberGroupProfile.MaturePublish = groupProfile["MaturePublish"].AsBoolean();
-            MemberGroupProfile.FounderID = groupProfile["FounderID"].AsUUID();;
-            MemberGroupProfile.OwnerRole = groupProfile["OwnerRoleID"].AsUUID(); 
-
-            Dictionary<UUID, OSDMap> Members;
-            if (SimianGetGenericEntries("GroupMember",groupID.ToString(), out Members))
-            {
-                MemberGroupProfile.GroupMembershipCount = Members.Count;
-            }
-
-            Dictionary<string, OSDMap> Roles;
-            if (SimianGetGenericEntries(groupID, "GroupRole", out Roles))
-            {
-                MemberGroupProfile.GroupRolesCount = Roles.Count;
-            }
-
-            // TODO: Get Group Money balance from somewhere
-            // group.Money = 0;
-
-            GroupMembershipData MemberInfo = GetAgentGroupMembership(requestingAgentID, memberID, groupID);
-
-            MemberGroupProfile.MemberTitle = MemberInfo.GroupTitle;
-            MemberGroupProfile.PowersMask = MemberInfo.GroupPowers;
-
-            return MemberGroupProfile;
         }
 
         public string SetAgentActiveGroup(UUID requestingAgentID, UUID agentID, UUID groupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
-            OSDMap ActiveGroup = new OSDMap();
-            ActiveGroup.Add("GroupID", OSD.FromUUID(groupID));
+            OSDMap ActiveGroup = new OSDMap {{"GroupID", OSD.FromUUID(groupID)}};
             SimianAddGeneric(agentID, "Group", "ActiveGroup", ActiveGroup);
             return GetAgentGroupMembership(requestingAgentID, agentID, groupID).GroupTitle;
         }
 
         public string SetAgentActiveGroupRole(UUID requestingAgentID, UUID agentID, UUID groupID, UUID roleID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap GroupMemberInfo;
             if (!SimianGetGenericEntry(agentID, "GroupMember", groupID.ToString(), out GroupMemberInfo))
@@ -540,16 +375,18 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             return GetAgentGroupMembership(requestingAgentID, agentID, groupID).GroupTitle;
         }
 
-        public void SetAgentGroupInfo(UUID requestingAgentID, UUID agentID, UUID groupID, bool acceptNotices, bool listInProfile)
+        public void SetAgentGroupInfo(UUID requestingAgentID, UUID agentID, UUID groupID, bool acceptNotices,
+                                      bool listInProfile)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap GroupMemberInfo;
             if (!SimianGetGenericEntry(agentID, "GroupMember", groupID.ToString(), out GroupMemberInfo))
             {
                 GroupMemberInfo = new OSDMap();
             }
-            
+
             GroupMemberInfo["AcceptNotices"] = OSD.FromBoolean(acceptNotices);
             GroupMemberInfo["ListInProfile"] = OSD.FromBoolean(listInProfile);
             GroupMemberInfo["Contribution"] = OSD.FromInteger(0);
@@ -557,9 +394,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             SimianAddGeneric(agentID, "GroupMember", groupID.ToString(), GroupMemberInfo);
         }
 
-        public void AddAgentToGroupInvite(UUID requestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID, string FromAgentName)
+        public void AddAgentToGroupInvite(UUID requestingAgentID, UUID inviteID, UUID groupID, UUID roleID, UUID agentID,
+                                          string FromAgentName)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap Invite = new OSDMap();
             Invite["AgentID"] = OSD.FromUUID(agentID);
@@ -570,27 +409,32 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public GroupInviteInfo GetAgentToGroupInvite(UUID requestingAgentID, UUID inviteID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap GroupMemberInvite;
             UUID GroupID;
-            if (!SimianGetFirstGenericEntry("GroupMemberInvite", inviteID.ToString(), out GroupID, out GroupMemberInvite))
+            if (
+                !SimianGetFirstGenericEntry("GroupMemberInvite", inviteID.ToString(), out GroupID, out GroupMemberInvite))
             {
                 return null;
             }
 
-            GroupInviteInfo inviteInfo = new GroupInviteInfo();
-            inviteInfo.InviteID = inviteID;
-            inviteInfo.GroupID = GroupID;
-            inviteInfo.AgentID = GroupMemberInvite["AgentID"].AsUUID();
-            inviteInfo.RoleID = GroupMemberInvite["RoleID"].AsUUID();
+            GroupInviteInfo inviteInfo = new GroupInviteInfo
+                                             {
+                                                 InviteID = inviteID,
+                                                 GroupID = GroupID,
+                                                 AgentID = GroupMemberInvite["AgentID"].AsUUID(),
+                                                 RoleID = GroupMemberInvite["RoleID"].AsUUID()
+                                             };
 
             return inviteInfo;
         }
 
         public void RemoveAgentToGroupInvite(UUID requestingAgentID, UUID inviteID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             GroupInviteInfo invite = GetAgentToGroupInvite(requestingAgentID, inviteID);
             SimianRemoveGenericEntry(invite.GroupID, "GroupMemberInvite", inviteID.ToString());
@@ -598,7 +442,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             // Setup Agent/Group information
             SetAgentGroupInfo(requestingAgentID, AgentID, GroupID, true, true);
@@ -615,7 +460,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID agentID, UUID groupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             // If current active group is the group the agent is being removed from, change their group to UUID.Zero
             GroupMembershipData memberActiveMembership = GetAgentActiveMembership(requestingAgentID, agentID);
@@ -647,14 +493,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void AddAgentToGroupRole(UUID requestingAgentID, UUID agentID, UUID groupID, UUID roleID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             SimianAddGeneric(agentID, "GroupRole" + groupID.ToString(), roleID.ToString(), new OSDMap());
         }
 
         public void RemoveAgentFromGroupRole(UUID requestingAgentID, UUID agentID, UUID groupID, UUID roleID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             // Cannot remove members from the Everyone Role
             if (roleID != UUID.Zero)
@@ -666,49 +514,44 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart, uint queryflags)
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart,
+                                                   uint queryflags)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<DirGroupsReplyData> findings = new List<DirGroupsReplyData>();
 
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "Type", "Group" },
-                { "Key", search },
-                { "Fuzzy", "1" }
-            };
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"Type", "Group"},
+                                                      {"Key", search},
+                                                      {"Fuzzy", "1"}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs);
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
-                OSDArray entryArray = (OSDArray)response["Entries"];
-                foreach (OSDMap entryMap in entryArray)
+                OSDArray entryArray = (OSDArray) response["Entries"];
+                foreach (OSDMap entryMap in entryArray.Cast<OSDMap>().Where(entryMap => entryMap["AllowPublish"].AsBoolean() != false))
                 {
-                    if (entryMap["AllowPublish"].AsBoolean() == false) //Respect AllowPublish
-                        continue;
-
-                    if ((queryflags & (uint)DirectoryManager.DirFindFlags.IncludeMature) != (uint)DirectoryManager.DirFindFlags.IncludeMature)
-                        if (entryMap["MaturePublish"].AsBoolean() == true)// Check for pg,mature
+                    if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) !=
+                        (uint) DirectoryManager.DirFindFlags.IncludeMature)
+                        if (entryMap["MaturePublish"].AsBoolean()) // Check for pg,mature
                             continue; //Block mature
 
-                    DirGroupsReplyData data = new DirGroupsReplyData();
-                    data.groupID = entryMap["OwnerID"].AsUUID();
-                    data.groupName = entryMap["Key"].AsString();
+                    DirGroupsReplyData data = new DirGroupsReplyData
+                                                  {
+                                                      groupID = entryMap["OwnerID"].AsUUID(),
+                                                      groupName = entryMap["Key"].AsString()
+                                                  };
 
                     // TODO: is there a better way to do this?
                     Dictionary<UUID, OSDMap> Members;
-                    if (SimianGetGenericEntries("GroupMember", data.groupID.ToString(), out Members))
-                    {
-                        data.members = Members.Count;
-                    }
-                    else
-                    {
-                        data.members = 0;
-                    }
-                    
+                    data.members = SimianGetGenericEntries("GroupMember", data.groupID.ToString(), out Members) ? Members.Count : 0;
+
                     // TODO: sort results?
                     // data.searchOrder = order;
 
@@ -722,7 +565,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public GroupMembershipData GetAgentGroupMembership(UUID requestingAgentID, UUID agentID, UUID groupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             GroupMembershipData data = new GroupMembershipData();
 
@@ -779,7 +623,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public GroupMembershipData GetAgentActiveMembership(UUID requestingAgentID, UUID agentID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             UUID GroupID = UUID.Zero;
             OSDMap UserActiveGroup;
@@ -794,25 +639,24 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public List<GroupMembershipData> GetAgentGroupMemberships(UUID requestingAgentID, UUID agentID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<GroupMembershipData> memberships = new List<GroupMembershipData>();
 
-            Dictionary<string,OSDMap> GroupMemberShips;
+            Dictionary<string, OSDMap> GroupMemberShips;
             if (SimianGetGenericEntries(agentID, "GroupMember", out GroupMemberShips))
             {
-                foreach (string key in GroupMemberShips.Keys)
-                {
-                    memberships.Add(GetAgentGroupMembership(requestingAgentID, agentID, UUID.Parse(key)));
-                }
+                memberships.AddRange(GroupMemberShips.Keys.Select(key => GetAgentGroupMembership(requestingAgentID, agentID, UUID.Parse(key))));
             }
-            
+
             return memberships;
         }
 
         public List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID agentID, UUID groupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<GroupRolesData> Roles = new List<GroupRolesData>();
 
@@ -822,17 +666,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 Dictionary<string, OSDMap> MemberRoles;
                 if (SimianGetGenericEntries(agentID, "GroupRole" + groupID.ToString(), out MemberRoles))
                 {
-                    foreach (KeyValuePair<string, OSDMap> kvp in MemberRoles)
-                    {
-                        GroupRolesData data = new GroupRolesData();
-                        data.RoleID = UUID.Parse(kvp.Key);
-                        data.Name = GroupRoles[kvp.Key]["Name"].AsString();
-                        data.Description = GroupRoles[kvp.Key]["Description"].AsString();
-                        data.Title = GroupRoles[kvp.Key]["Title"].AsString();
-                        data.Powers = GroupRoles[kvp.Key]["Powers"].AsULong();
-
-                        Roles.Add(data);
-                    }
+                    Roles.AddRange(MemberRoles.Select(kvp => new GroupRolesData
+                                                                 {
+                                                                     RoleID = UUID.Parse(kvp.Key),
+                                                                     Name = GroupRoles[kvp.Key]["Name"].AsString(),
+                                                                     Description =
+                                                                         GroupRoles[kvp.Key]["Description"].AsString(),
+                                                                     Title = GroupRoles[kvp.Key]["Title"].AsString(),
+                                                                     Powers = GroupRoles[kvp.Key]["Powers"].AsULong()
+                                                                 }));
                 }
             }
             return Roles;
@@ -840,7 +682,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID groupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<GroupRolesData> Roles = new List<GroupRolesData>();
 
@@ -849,38 +692,32 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 foreach (KeyValuePair<string, OSDMap> role in GroupRoles)
                 {
-                    GroupRolesData data = new GroupRolesData();
+                    GroupRolesData data = new GroupRolesData
+                                              {
+                                                  RoleID = UUID.Parse(role.Key),
+                                                  Name = role.Value["Name"].AsString(),
+                                                  Description = role.Value["Description"].AsString(),
+                                                  Title = role.Value["Title"].AsString(),
+                                                  Powers = role.Value["Powers"].AsULong()
+                                              };
 
-                    data.RoleID = UUID.Parse(role.Key);
 
-                    data.Name = role.Value["Name"].AsString();
-                    data.Description = role.Value["Description"].AsString();
-                    data.Title = role.Value["Title"].AsString();
-                    data.Powers = role.Value["Powers"].AsULong();
 
                     Dictionary<UUID, OSDMap> GroupRoleMembers;
-                    if (SimianGetGenericEntries("GroupRole" + groupID.ToString(), role.Key, out GroupRoleMembers))
-                    {
-                        data.Members = GroupRoleMembers.Count;
-                    }
-                    else
-                    {
-                        data.Members = 0;
-                    }
+                    data.Members = SimianGetGenericEntries("GroupRole" + groupID.ToString(), role.Key, out GroupRoleMembers) ? GroupRoleMembers.Count : 0;
 
                     Roles.Add(data);
                 }
             }
 
             return Roles;
-
         }
-
 
 
         public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<GroupMembersData> members = new List<GroupMembersData>();
 
@@ -894,7 +731,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupOwnerRoleID = GroupInfo["OwnerRoleID"].AsUUID();
 
             // Locally cache group roles, since we'll be needing this data for each member
-            Dictionary<string,OSDMap> GroupRoles;
+            Dictionary<string, OSDMap> GroupRoles;
             SimianGetGenericEntries(GroupID, "GroupRole", out GroupRoles);
 
             // Locally cache list of group owners
@@ -907,9 +744,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 foreach (KeyValuePair<UUID, OSDMap> member in GroupMembers)
                 {
-                    GroupMembersData data = new GroupMembersData();
+                    GroupMembersData data = new GroupMembersData {AgentID = member.Key};
 
-                    data.AgentID = member.Key;
 
                     UUID SelectedRoleID = member.Value["SelectedRoleID"].AsUUID();
 
@@ -928,12 +764,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
 
             return members;
-
         }
 
         public List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID groupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<GroupRoleMembersData> members = new List<GroupRoleMembersData>();
 
@@ -943,17 +779,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 foreach (KeyValuePair<string, OSDMap> Role in GroupRoles)
                 {
                     Dictionary<UUID, OSDMap> GroupRoleMembers;
-                    if (SimianGetGenericEntries("GroupRole"+groupID.ToString(), Role.Key, out GroupRoleMembers))
+                    if (SimianGetGenericEntries("GroupRole" + groupID.ToString(), Role.Key, out GroupRoleMembers))
                     {
-                        foreach (KeyValuePair<UUID, OSDMap> GroupRoleMember in GroupRoleMembers)
-                        {
-                            GroupRoleMembersData data = new GroupRoleMembersData();
-
-                            data.MemberID = GroupRoleMember.Key;
-                            data.RoleID = UUID.Parse(Role.Key);
-
-                            members.Add(data);
-                        }
+                        members.AddRange(GroupRoleMembers.Select(GroupRoleMember => new GroupRoleMembersData
+                                                                                        {
+                                                                                            MemberID =
+                                                                                                GroupRoleMember.Key,
+                                                                                            RoleID =
+                                                                                                UUID.Parse(Role.Key)
+                                                                                        }));
                     }
                 }
             }
@@ -963,7 +797,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             List<GroupNoticeData> values = new List<GroupNoticeData>();
 
@@ -972,47 +807,55 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 foreach (KeyValuePair<string, OSDMap> Notice in Notices)
                 {
-                    GroupNoticeData data = new GroupNoticeData();
-                    data.NoticeID = UUID.Parse(Notice.Key);
-                    data.Timestamp = Notice.Value["TimeStamp"].AsUInteger();
-                    data.FromName = Notice.Value["FromName"].AsString();
-                    data.Subject = Notice.Value["Subject"].AsString();
-                    data.HasAttachment = Notice.Value["BinaryBucket"].AsBinary().Length > 0;
+                    GroupNoticeData data = new GroupNoticeData
+                                               {
+                                                   NoticeID = UUID.Parse(Notice.Key),
+                                                   Timestamp = Notice.Value["TimeStamp"].AsUInteger(),
+                                                   FromName = Notice.Value["FromName"].AsString(),
+                                                   Subject = Notice.Value["Subject"].AsString(),
+                                                   HasAttachment = Notice.Value["BinaryBucket"].AsBinary().Length > 0
+                                               };
                     if (data.HasAttachment)
                     {
                         data.ItemID = Notice.Value["ItemID"].AsUUID();
-                        data.AssetType = (byte)Notice.Value["AssetType"].AsInteger();
+                        data.AssetType = (byte) Notice.Value["AssetType"].AsInteger();
                         data.ItemName = Notice.Value["ItemName"].AsString();
                     }
-                    
+
                     values.Add(data);
                 }
             }
 
             return values;
-
         }
+
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap GroupNotice;
             UUID GroupID;
             if (SimianGetFirstGenericEntry("GroupNotice", noticeID.ToString(), out GroupID, out GroupNotice))
             {
-                GroupNoticeInfo data = new GroupNoticeInfo();
-                data.GroupID = GroupID;
-                data.Message = GroupNotice["Message"].AsString();
-                data.BinaryBucket = GroupNotice["BinaryBucket"].AsBinary();
-                data.noticeData.NoticeID = noticeID;
-                data.noticeData.Timestamp = GroupNotice["TimeStamp"].AsUInteger();
-                data.noticeData.FromName = GroupNotice["FromName"].AsString();
-                data.noticeData.Subject = GroupNotice["Subject"].AsString();
-                data.noticeData.HasAttachment = GroupNotice["BinaryBucket"].AsBinary().Length > 0;
+                GroupNoticeInfo data = new GroupNoticeInfo
+                                           {
+                                               GroupID = GroupID,
+                                               Message = GroupNotice["Message"].AsString(),
+                                               BinaryBucket = GroupNotice["BinaryBucket"].AsBinary(),
+                                               noticeData =
+                                                   {
+                                                       NoticeID = noticeID,
+                                                       Timestamp = GroupNotice["TimeStamp"].AsUInteger(),
+                                                       FromName = GroupNotice["FromName"].AsString(),
+                                                       Subject = GroupNotice["Subject"].AsString(),
+                                                       HasAttachment = GroupNotice["BinaryBucket"].AsBinary().Length > 0
+                                                   }
+                                           };
                 if (data.noticeData.HasAttachment)
                 {
                     data.noticeData.ItemID = GroupNotice["ItemID"].AsUUID();
-                    data.noticeData.AssetType = (byte)GroupNotice["AssetType"].AsInteger();
+                    data.noticeData.AssetType = (byte) GroupNotice["AssetType"].AsInteger();
                     data.noticeData.ItemName = GroupNotice["ItemName"].AsString();
                 }
 
@@ -1025,12 +868,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             return null;
         }
-        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
+
+        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject,
+                                   string message, UUID ItemID, int AssetType, string ItemName)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDMap Notice = new OSDMap();
-            Notice["TimeStamp"] = OSD.FromUInteger((uint)Util.UnixTimeSinceEpoch());
+            Notice["TimeStamp"] = OSD.FromUInteger((uint) Util.UnixTimeSinceEpoch());
             Notice["FromName"] = OSD.FromString(fromName);
             Notice["Subject"] = OSD.FromString(subject);
             Notice["Message"] = OSD.FromString(message);
@@ -1040,13 +886,196 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             Notice["BinaryBucket"] = OSD.FromBinary(new byte[ItemID != UUID.Zero ? 1 : 0]);
 
             SimianAddGeneric(groupID, "GroupNotice", noticeID.ToString(), Notice);
-            
         }
+
+        public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
+        {
+            return new List<GroupInviteInfo>();
+        }
+
+        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+        }
+
+        public bool CreateSession(ChatSession chatSession)
+        {
+            return false;
+        }
+
+        public void AddMemberToGroup(ChatSessionMember chatSessionMember, UUID GroupID)
+        {
+        }
+
+        public ChatSession GetSession(UUID SessionID)
+        {
+            return null;
+        }
+
+        public ChatSessionMember FindMember(UUID sessionid, UUID Agent)
+        {
+            return null;
+        }
+
+        public void RemoveSession(UUID sessionid)
+        {
+        }
+
         #endregion
+
+        #region ISharedRegionModule Members
+
+        public string Name
+        {
+            get { return "SimianGroupsServicesConnector"; }
+        }
+
+        // this module is not intended to be replaced, but there should only be 1 of them.
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Initialise(IConfigSource config)
+        {
+            IConfig groupsConfig = config.Configs["Groups"];
+
+            if (groupsConfig == null)
+            {
+                // Do not run this module by default.
+                return;
+            }
+            else
+            {
+                // if groups aren't enabled, we're not needed.
+                // if we're not specified as the connector to use, then we're not wanted
+                if ((groupsConfig.GetBoolean("Enabled", false) == false)
+                    || (groupsConfig.GetString("ServicesConnectorModule", "Default") != Name))
+                {
+                    m_connectorEnabled = false;
+                    return;
+                }
+
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
+
+                m_groupsServerURI = groupsConfig.GetString("GroupsServerURI", string.Empty);
+                if (string.IsNullOrEmpty(m_groupsServerURI))
+                {
+                    m_log.ErrorFormat("Please specify a valid Simian Server for GroupsServerURI in Aurora.ini, [Groups]");
+                    m_connectorEnabled = false;
+                    return;
+                }
+
+
+                m_cacheTimeout = groupsConfig.GetInt("GroupsCacheTimeout", 30);
+                if (m_cacheTimeout == 0)
+                {
+                    m_log.WarnFormat("[SIMIAN-GROUPS-CONNECTOR] Groups Cache Disabled.");
+                }
+                else
+                {
+                    m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR] Groups Cache Timeout set to {0}.", m_cacheTimeout);
+                }
+
+
+                m_memoryCache = new ExpiringCache<string, OSDMap>();
+
+
+                // If we got all the config options we need, lets start'er'up
+                m_connectorEnabled = true;
+
+                m_debugEnabled = groupsConfig.GetBoolean("DebugEnabled", true);
+            }
+        }
+
+        public void Close()
+        {
+            m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]: Closing {0}", this.Name);
+        }
+
+        public void AddRegion(IScene scene)
+        {
+            if (m_connectorEnabled)
+            {
+                scene.RegisterModuleInterface<IGroupsServicesConnector>(this);
+            }
+        }
+
+        public void RemoveRegion(IScene scene)
+        {
+            if (scene.RequestModuleInterface<IGroupsServicesConnector>() == this)
+            {
+                scene.UnregisterModuleInterface<IGroupsServicesConnector>(this);
+            }
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+            // TODO: May want to consider listenning for Agent Connections so we can pre-cache group info
+            // scene.EventManager.OnNewClient += OnNewClient;
+        }
+
+        public void PostInitialise()
+        {
+            // NoOp
+        }
+
+        #endregion
+
+        public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID groupID, UUID memberID)
+        {
+            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+
+            OSDMap groupProfile;
+            string groupName;
+            if (!SimianGetFirstGenericEntry(groupID, "Group", out groupName, out groupProfile))
+            {
+                // GroupProfileData is not nullable
+                return new GroupProfileData();
+            }
+
+            GroupProfileData MemberGroupProfile = new GroupProfileData {GroupID = groupID, Name = groupName};
+
+            if (groupProfile["Charter"] != null)
+            {
+                MemberGroupProfile.Charter = groupProfile["Charter"].AsString();
+            }
+
+            MemberGroupProfile.ShowInList = groupProfile["ShowInList"].AsString() == "1";
+            MemberGroupProfile.InsigniaID = groupProfile["InsigniaID"].AsUUID();
+            MemberGroupProfile.MembershipFee = groupProfile["MembershipFee"].AsInteger();
+            MemberGroupProfile.OpenEnrollment = groupProfile["OpenEnrollment"].AsBoolean();
+            MemberGroupProfile.AllowPublish = groupProfile["AllowPublish"].AsBoolean();
+            MemberGroupProfile.MaturePublish = groupProfile["MaturePublish"].AsBoolean();
+            MemberGroupProfile.FounderID = groupProfile["FounderID"].AsUUID(); ;
+            MemberGroupProfile.OwnerRole = groupProfile["OwnerRoleID"].AsUUID();
+
+            Dictionary<UUID, OSDMap> Members;
+            if (SimianGetGenericEntries("GroupMember", groupID.ToString(), out Members))
+            {
+                MemberGroupProfile.GroupMembershipCount = Members.Count;
+            }
+
+            Dictionary<string, OSDMap> Roles;
+            if (SimianGetGenericEntries(groupID, "GroupRole", out Roles))
+            {
+                MemberGroupProfile.GroupRolesCount = Roles.Count;
+            }
+
+            // TODO: Get Group Money balance from somewhere
+            // group.Money = 0;
+
+            GroupMembershipData MemberInfo = GetAgentGroupMembership(requestingAgentID, memberID, groupID);
+
+            MemberGroupProfile.MemberTitle = MemberInfo.GroupTitle;
+            MemberGroupProfile.PowersMask = MemberInfo.GroupPowers;
+
+            return MemberGroupProfile;
+        }
 
         private void EnsureRoleNotSelectedByMember(UUID groupID, UUID roleID, UUID userID)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", MethodBase.GetCurrentMethod().Name);
 
             // If member's SelectedRole is roleID, change their selected role to Everyone
             // before removing them from the role
@@ -1061,24 +1090,26 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
         }
 
-
         #region Simian Util Methods
+
         private bool SimianAddGeneric(UUID ownerID, string type, string key, OSDMap map)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2},{3})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type, key);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2},{3})",
+                                 MethodBase.GetCurrentMethod().Name, ownerID, type, key);
 
             string value = OSDParser.SerializeJsonString(map);
 
             if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  value: {0}", value);
 
             NameValueCollection RequestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "AddGeneric" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type },
-                { "Key", key },
-                { "Value", value}
-            };
+                                                  {
+                                                      {"RequestMethod", "AddGeneric"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type},
+                                                      {"Key", key},
+                                                      {"Value", value}
+                                                  };
 
 
             OSDMap Response = CachedPostRequest(RequestArgs);
@@ -1088,37 +1119,41 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             else
             {
-                m_log.WarnFormat("[SIMIAN GROUPS CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key, Response["Message"]);
+                m_log.WarnFormat("[SIMIAN GROUPS CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key,
+                                 Response["Message"]);
                 return false;
             }
         }
 
         /// <summary>
-        /// Returns the first of possibly many entries for Owner/Type pair
+        ///   Returns the first of possibly many entries for Owner/Type pair
         /// </summary>
         private bool SimianGetFirstGenericEntry(UUID ownerID, string type, out string key, out OSDMap map)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", MethodBase.GetCurrentMethod().Name,
+                                 ownerID, type);
 
             NameValueCollection RequestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type }
-            };
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type}
+                                                  };
 
 
             OSDMap Response = CachedPostRequest(RequestArgs);
             if (Response["Success"].AsBoolean() && Response["Entries"] is OSDArray)
             {
-                OSDArray entryArray = (OSDArray)Response["Entries"];
+                OSDArray entryArray = (OSDArray) Response["Entries"];
                 if (entryArray.Count >= 1)
                 {
                     OSDMap entryMap = entryArray[0] as OSDMap;
                     key = entryMap["Key"].AsString();
-                    map = (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString());
+                    map = (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString());
 
-                    if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
+                    if (m_debugEnabled)
+                        m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
 
                     return true;
                 }
@@ -1135,30 +1170,34 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             map = null;
             return false;
         }
+
         private bool SimianGetFirstGenericEntry(string type, string key, out UUID ownerID, out OSDMap map)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", System.Reflection.MethodBase.GetCurrentMethod().Name, type, key);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", MethodBase.GetCurrentMethod().Name,
+                                 type, key);
 
 
             NameValueCollection RequestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "Type", type },
-                { "Key", key}
-            };
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap Response = CachedPostRequest(RequestArgs);
             if (Response["Success"].AsBoolean() && Response["Entries"] is OSDArray)
             {
-                OSDArray entryArray = (OSDArray)Response["Entries"];
+                OSDArray entryArray = (OSDArray) Response["Entries"];
                 if (entryArray.Count >= 1)
                 {
                     OSDMap entryMap = entryArray[0] as OSDMap;
                     ownerID = entryMap["OwnerID"].AsUUID();
-                    map = (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString());
+                    map = (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString());
 
-                    if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
+                    if (m_debugEnabled)
+                        m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
 
                     return true;
                 }
@@ -1178,28 +1217,31 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private bool SimianGetGenericEntry(UUID ownerID, string type, string key, out OSDMap map)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2},{3})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type, key);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2},{3})",
+                                 MethodBase.GetCurrentMethod().Name, ownerID, type, key);
 
             NameValueCollection RequestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type },
-                { "Key", key}
-            };
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap Response = CachedPostRequest(RequestArgs);
             if (Response["Success"].AsBoolean() && Response["Entries"] is OSDArray)
             {
-                OSDArray entryArray = (OSDArray)Response["Entries"];
+                OSDArray entryArray = (OSDArray) Response["Entries"];
                 if (entryArray.Count == 1)
                 {
                     OSDMap entryMap = entryArray[0] as OSDMap;
                     key = entryMap["Key"].AsString();
-                    map = (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString());
+                    map = (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString());
 
-                    if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
+                    if (m_debugEnabled)
+                        m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
 
                     return true;
                 }
@@ -1218,15 +1260,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private bool SimianGetGenericEntries(UUID ownerID, string type, out Dictionary<string, OSDMap> maps)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", System.Reflection.MethodBase.GetCurrentMethod().Name,ownerID, type);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", MethodBase.GetCurrentMethod().Name,
+                                 ownerID, type);
 
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type }
-            };
-            
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs);
@@ -1234,11 +1277,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 maps = new Dictionary<string, OSDMap>();
 
-                OSDArray entryArray = (OSDArray)response["Entries"];
+                OSDArray entryArray = (OSDArray) response["Entries"];
                 foreach (OSDMap entryMap in entryArray)
                 {
-                    if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
-                    maps.Add(entryMap["Key"].AsString(), (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString()));
+                    if (m_debugEnabled)
+                        m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
+                    maps.Add(entryMap["Key"].AsString(),
+                             (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString()));
                 }
                 if (maps.Count == 0)
                 {
@@ -1254,17 +1299,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             return false;
         }
+
         private bool SimianGetGenericEntries(string type, string key, out Dictionary<UUID, OSDMap> maps)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", System.Reflection.MethodBase.GetCurrentMethod().Name, type, key);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2})", MethodBase.GetCurrentMethod().Name,
+                                 type, key);
 
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "GetGenerics" },
-                { "Type", type },
-                { "Key", key }
-            };
-
+                                                  {
+                                                      {"RequestMethod", "GetGenerics"},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs);
@@ -1272,11 +1319,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 maps = new Dictionary<UUID, OSDMap>();
 
-                OSDArray entryArray = (OSDArray)response["Entries"];
+                OSDArray entryArray = (OSDArray) response["Entries"];
                 foreach (OSDMap entryMap in entryArray)
                 {
-                    if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
-                    maps.Add(entryMap["OwnerID"].AsUUID(), (OSDMap)OSDParser.DeserializeJson(entryMap["Value"].AsString()));
+                    if (m_debugEnabled)
+                        m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
+                    maps.Add(entryMap["OwnerID"].AsUUID(),
+                             (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString()));
                 }
                 if (maps.Count == 0)
                 {
@@ -1294,15 +1343,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private bool SimianRemoveGenericEntry(UUID ownerID, string type, string key)
         {
-            if (m_debugEnabled) m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2},{3})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type, key);
+            if (m_debugEnabled)
+                m_log.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called ({1},{2},{3})",
+                                 MethodBase.GetCurrentMethod().Name, ownerID, type, key);
 
             NameValueCollection requestArgs = new NameValueCollection
-            {
-                { "RequestMethod", "RemoveGeneric" },
-                { "OwnerID", ownerID.ToString() },
-                { "Type", type },
-                { "Key", key }
-            };
+                                                  {
+                                                      {"RequestMethod", "RemoveGeneric"},
+                                                      {"OwnerID", ownerID.ToString()},
+                                                      {"Type", type},
+                                                      {"Key", key}
+                                                  };
 
 
             OSDMap response = CachedPostRequest(requestArgs);
@@ -1312,14 +1363,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             }
             else
             {
-                m_log.WarnFormat("[SIMIAN GROUPS CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key, response["Message"]);
+                m_log.WarnFormat("[SIMIAN GROUPS CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key,
+                                 response["Message"]);
                 return false;
             }
         }
+
         #endregion
 
         #region CheesyCache
-        OSDMap CachedPostRequest(NameValueCollection requestArgs)
+
+        private OSDMap CachedPostRequest(NameValueCollection requestArgs)
         {
             // Immediately forward the request if the cache is disabled.
             if (m_cacheTimeout == 0)
@@ -1355,40 +1409,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             // return cached response
             return response;
         }
+
         #endregion
-
-        public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
-        {
-            return new List<GroupInviteInfo>();
-        }
-
-        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
-        {
-        }
-
-        public bool CreateSession (ChatSession chatSession)
-        {
-            return false;
-        }
-
-        public void AddMemberToGroup (OpenSim.Framework.ChatSessionMember chatSessionMember, UUID GroupID)
-        {
-        }
-
-        public ChatSession GetSession (UUID SessionID)
-        {
-            return null;
-        }
-
-        public OpenSim.Framework.ChatSessionMember FindMember (UUID sessionid, UUID Agent)
-        {
-            return null;
-        }
-
-        public void RemoveSession (UUID sessionid)
-        {
-        }
     }
-
 }
-

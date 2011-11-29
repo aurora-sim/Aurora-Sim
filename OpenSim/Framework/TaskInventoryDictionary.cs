@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -35,7 +36,7 @@ using OpenMetaverse;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// A dictionary for task inventory.
+    ///   A dictionary for task inventory.
     /// </summary>
     /// This class is not thread safe.  Callers must synchronize on Dictionary methods or Clone() this object before
     /// iterating over it.
@@ -44,7 +45,7 @@ namespace OpenSim.Framework
     {
         // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static XmlSerializer tiiSerializer = new XmlSerializer(typeof (TaskInventoryItem));
+        private static readonly XmlSerializer tiiSerializer = new XmlSerializer(typeof (TaskInventoryItem));
 
         #region ICloneable Members
 
@@ -56,22 +57,7 @@ namespace OpenSim.Framework
             {
                 foreach (UUID uuid in Keys)
                 {
-                    clone.Add(uuid, (TaskInventoryItem)this[uuid].Clone());
-                }
-            }
-
-            return clone;
-        }
-
-        public List<TaskInventoryItem> Clone2List()
-        {
-            List<TaskInventoryItem> clone = new List<TaskInventoryItem>();
-
-            lock (this)
-            {
-                foreach (UUID uuid in Keys)
-                {
-                    clone.Add((TaskInventoryItem)this[uuid].Clone());
+                    clone.Add(uuid, (TaskInventoryItem) this[uuid].Clone());
                 }
             }
 
@@ -116,7 +102,7 @@ namespace OpenSim.Framework
                     //m_log.DebugFormat("[TASK INVENTORY]: Instanted prim item {0}, {1} from xml", item.Name, item.ItemID);
                 }
 
-               // m_log.DebugFormat("[TASK INVENTORY]: Instantiated {0} prim items in total from xml", Count);
+                // m_log.DebugFormat("[TASK INVENTORY]: Instantiated {0} prim items in total from xml", Count);
             }
             // else
             // {
@@ -145,6 +131,18 @@ namespace OpenSim.Framework
         }
 
         #endregion
+
+        public List<TaskInventoryItem> Clone2List()
+        {
+            List<TaskInventoryItem> clone = new List<TaskInventoryItem>();
+
+            lock (this)
+            {
+                clone.AddRange(Keys.Select(uuid => (TaskInventoryItem) this[uuid].Clone()));
+            }
+
+            return clone;
+        }
 
         // see ICloneable
     }

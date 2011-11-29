@@ -26,121 +26,67 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.Dialog
 {
     public class DialogModule : INonSharedRegionModule, IDialogModule
-    { 
+    {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected IScene m_scene;
         protected bool m_enabled = true;
-        
-        public void Initialise(IConfigSource source)
+        protected IScene m_scene;
+
+        public bool IsSharedModule
         {
-            IConfig m_config = source.Configs["Dialog"];
-
-            if (null == m_config)
-            {
-                m_log.Info("[DIALOGMODULE]: no config found, plugin enabled");
-                return;
-            }
-
-            if (m_config.GetString("DialogModule", "DialogModule") != "DialogModule")
-            {
-                m_enabled = false;
-            }
+            get { return false; }
         }
 
-        public void AddRegion (IScene scene)
-        {
-            if (!m_enabled)
-                return;
-            m_scene = scene;
-            m_scene.RegisterModuleInterface<IDialogModule>(this);
+        #region IDialogModule Members
 
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand (
-                        "alert", "alert <first> <last> <message>",
-                    "Send an alert to a user",
-                    HandleAlertConsoleCommand);
-
-                MainConsole.Instance.Commands.AddCommand (
-                        "alert general", "alert [general] <message>",
-                    "Send an alert to everyone. " +
-                    "If keyword 'general' is omitted, then <message> must be surrounded by quotation marks.",
-                    HandleAlertConsoleCommand);
-            }
-        }
-
-        public void RemoveRegion (IScene scene)
-        {
-
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-        
-        public void PostInitialise() {}
-        public void Close() {}
-        public string Name { get { return "Dialog Module"; } }
-        public bool IsSharedModule { get { return false; } }
-        
         public void SendAlertToUser(IClientAPI client, string message)
         {
             SendAlertToUser(client, message, false);
         }
-        
+
         public void SendAlertToUser(IClientAPI client, string message, bool modal)
         {
             client.SendAgentAlertMessage(message, modal);
-        } 
-        
+        }
+
         public void SendAlertToUser(UUID agentID, string message)
         {
             SendAlertToUser(agentID, message, false);
         }
-        
+
         public void SendAlertToUser(UUID agentID, string message, bool modal)
         {
-            IScenePresence sp = m_scene.GetScenePresence (agentID);
-            
+            IScenePresence sp = m_scene.GetScenePresence(agentID);
+
             if (sp != null)
                 sp.ControllingClient.SendAgentAlertMessage(message, modal);
         }
-        
+
         public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
         {
-            IScenePresence presence = m_scene.SceneGraph.GetScenePresence (firstName, lastName);
+            IScenePresence presence = m_scene.SceneGraph.GetScenePresence(firstName, lastName);
             if (presence != null)
                 presence.ControllingClient.SendAgentAlertMessage(message, modal);
         }
-        
+
         public void SendGeneralAlert(string message)
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence presence)
-            {
-                if (!presence.IsChildAgent)
-                    presence.ControllingClient.SendAlertMessage(message);
-            });
+                                             {
+                                                 if (!presence.IsChildAgent)
+                                                     presence.ControllingClient.SendAlertMessage(message);
+                                             });
         }
 
         public void SendDialogToUser(
@@ -160,21 +106,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                 ownerLastName = "user)";
             }
 
-            IScenePresence sp = m_scene.GetScenePresence (avatarID);
+            IScenePresence sp = m_scene.GetScenePresence(avatarID);
             if (sp != null)
-                sp.ControllingClient.SendDialog (objectName, objectID, ownerID, ownerFirstName, ownerLastName, message, textureID, ch, buttonlabels);
+                sp.ControllingClient.SendDialog(objectName, objectID, ownerID, ownerFirstName, ownerLastName, message,
+                                                textureID, ch, buttonlabels);
         }
 
         public void SendUrlToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID, bool groupOwned, string message, string url)
         {
-            IScenePresence sp = m_scene.GetScenePresence (avatarID);
-            
+            IScenePresence sp = m_scene.GetScenePresence(avatarID);
+
             if (sp != null)
                 sp.ControllingClient.SendLoadURL(objectName, objectID, ownerID, groupOwned, message, url);
         }
-        
-        public void SendTextBoxToUser(UUID avatarid, string message, int chatChannel, string name, UUID objectid, UUID ownerid)
+
+        public void SendTextBoxToUser(UUID avatarid, string message, int chatChannel, string name, UUID objectid,
+                                      UUID ownerid)
         {
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerid);
             string ownerFirstName, ownerLastName;
@@ -189,32 +137,105 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                 ownerLastName = "user)";
             }
 
-            IScenePresence sp = m_scene.GetScenePresence (avatarid);
-            
+            IScenePresence sp = m_scene.GetScenePresence(avatarid);
+
             if (sp != null)
-                sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName, objectid);
+                sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName,
+                                                        objectid);
         }
 
         public void SendNotificationToUsersInRegion(
             UUID fromAvatarID, string fromAvatarName, string message)
         {
             m_scene.ForEachScenePresence(delegate(IScenePresence presence)
-            {
-                if (!presence.IsChildAgent)
-                    presence.ControllingClient.SendBlueBoxMessage(fromAvatarID, fromAvatarName, message);
-            });
+                                             {
+                                                 if (!presence.IsChildAgent)
+                                                     presence.ControllingClient.SendBlueBoxMessage(fromAvatarID,
+                                                                                                   fromAvatarName,
+                                                                                                   message);
+                                             });
         }
-        
+
+        #endregion
+
+        #region INonSharedRegionModule Members
+
+        public void Initialise(IConfigSource source)
+        {
+            IConfig m_config = source.Configs["Dialog"];
+
+            if (null == m_config)
+            {
+                m_log.Info("[DIALOGMODULE]: no config found, plugin enabled");
+                return;
+            }
+
+            if (m_config.GetString("DialogModule", "DialogModule") != "DialogModule")
+            {
+                m_enabled = false;
+            }
+        }
+
+        public void AddRegion(IScene scene)
+        {
+            if (!m_enabled)
+                return;
+            m_scene = scene;
+            m_scene.RegisterModuleInterface<IDialogModule>(this);
+
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand(
+                    "alert", "alert <first> <last> <message>",
+                    "Send an alert to a user",
+                    HandleAlertConsoleCommand);
+
+                MainConsole.Instance.Commands.AddCommand(
+                    "alert general", "alert [general] <message>",
+                    "Send an alert to everyone. " +
+                    "If keyword 'general' is omitted, then <message> must be surrounded by quotation marks.",
+                    HandleAlertConsoleCommand);
+            }
+        }
+
+        public void RemoveRegion(IScene scene)
+        {
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "Dialog Module"; }
+        }
+
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
+
         /// <summary>
-        /// Handle an alert command from the console.
+        ///   Handle an alert command from the console.
         /// </summary>
-        /// <param name="module"></param>
-        /// <param name="cmdparams"></param>
+        /// <param name = "module"></param>
+        /// <param name = "cmdparams"></param>
         public void HandleAlertConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
-            
+
             bool isGeneral = false;
             string firstName = string.Empty;
             string lastName = string.Empty;
@@ -244,10 +265,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             }
             else
             {
-                m_log.Info ("Usage: alert \"message\" | alert general <message> | alert <first> <last> <message>");
+                m_log.Info("Usage: alert \"message\" | alert general <message> | alert <first> <last> <message>");
                 return;
             }
-                
+
             if (isGeneral)
             {
                 m_log.InfoFormat(
@@ -258,7 +279,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             else
             {
                 m_log.InfoFormat(
-                    "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}", 
+                    "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
                 SendAlertToUser(firstName, lastName, message, false);
             }

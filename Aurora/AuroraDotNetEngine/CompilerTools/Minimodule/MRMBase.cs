@@ -25,25 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenMetaverse;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
+using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public abstract class MRMBase : IScript
     {
-        private IWorld m_world;
         private IHost m_host;
         private UUID m_id;
-
-        public void InitMiniModule(IWorld world, IHost host, UUID uniqueID)
-        {
-            m_world = world;
-            m_host = host;
-            m_id = uniqueID;
-        }
+        private IWorld m_world;
 
         protected IWorld World
         {
@@ -60,12 +55,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return m_id; }
         }
 
-        public abstract void Start();
-        public abstract void Stop();
-
         #region IScript Members
 
-        public void InitApi (IScriptApi data)
+        public void InitApi(IScriptApi data)
         {
         }
 
@@ -74,48 +66,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return null; }
         }
 
-        public void UpdateLease (System.TimeSpan time)
+        public void UpdateLease(TimeSpan time)
         {
         }
 
-        public long GetStateEventFlags (string state)
+        public long GetStateEventFlags(string state)
         {
             return 0;
         }
 
-        public EnumeratorInfo ExecuteEvent (string state, string FunctionName, object[] args, EnumeratorInfo Start, out System.Exception ex)
+        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start,
+                                           out Exception ex)
         {
             ex = null;
             return null;
         }
 
-        public Dictionary<string, object> GetVars ()
+        public Dictionary<string, object> GetVars()
         {
-            return new Dictionary<string, object> ();
+            return new Dictionary<string, object>();
         }
 
-        public void SetVars (Dictionary<string, object> vars)
-        {
-        }
-
-        public Dictionary<string, object> GetStoreVars ()
-        {
-            return new Dictionary<string, object> ();
-        }
-
-        public void SetStoreVars (Dictionary<string, object> vars)
+        public void SetVars(Dictionary<string, object> vars)
         {
         }
 
-        public void ResetVars ()
+        public Dictionary<string, object> GetStoreVars()
+        {
+            return new Dictionary<string, object>();
+        }
+
+        public void SetStoreVars(Dictionary<string, object> vars)
         {
         }
 
-        public void UpdateInitialValues ()
+        public void ResetVars()
         {
         }
 
-        public void Close ()
+        public void UpdateInitialValues()
+        {
+        }
+
+        public void Close()
         {
             Stop();
         }
@@ -125,26 +118,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return "MRMBase"; }
         }
 
-        public void Dispose ()
+        public void Dispose()
         {
         }
 
-        #endregion
-
-
-        public void SetSceneRefs(OpenSim.Framework.IScene iScene, OpenSim.Framework.ISceneChildEntity iSceneChildEntity, bool useStateSaves)
+        public void SetSceneRefs(IScene iScene, ISceneChildEntity iSceneChildEntity, bool useStateSaves)
         {
         }
 
         public bool NeedsStateSaved
         {
-            get { return false; } 
+            get { return false; }
             set { }
         }
 
-        public System.Collections.IEnumerator FireEvent (string evName, object[] parameters)
+        public IEnumerator FireEvent(string evName, object[] parameters)
         {
             yield break;
         }
+
+        #endregion
+
+        public void InitMiniModule(IWorld world, IHost host, UUID uniqueID)
+        {
+            m_world = world;
+            m_host = host;
+            m_id = uniqueID;
+        }
+
+        public abstract void Start();
+        public abstract void Stop();
     }
 }

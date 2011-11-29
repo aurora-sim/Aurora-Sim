@@ -31,17 +31,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public abstract class BaseRequestHandler
     {
-        public virtual string ContentType
-        {
-            get { return "application/xml"; }
-        }
-
         private readonly string m_httpMethod;
-
-        public virtual string HttpMethod
-        {
-            get { return m_httpMethod; }
-        }
 
         private readonly string m_path;
 
@@ -49,6 +39,16 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             m_httpMethod = httpMethod;
             m_path = path;
+        }
+
+        public virtual string ContentType
+        {
+            get { return "application/xml"; }
+        }
+
+        public virtual string HttpMethod
+        {
+            get { return m_httpMethod; }
         }
 
         public virtual string Path
@@ -80,7 +80,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             string param = GetParam(path);
 
-            return param.Split(new char[] { '/', '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+            return param.Split(new[] {'/', '?', '&'}, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

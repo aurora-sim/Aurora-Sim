@@ -41,18 +41,13 @@ namespace OpenSim.Framework
 
         private static readonly PacketPool instance = new PacketPool();
 
-        private bool packetPoolEnabled = true;
-        private bool dataBlockPoolEnabled = true;
+        private static readonly Dictionary<Type, Stack<Object>> DataBlocks =
+            new Dictionary<Type, Stack<Object>>();
 
         private readonly object m_poolLock = new object();
         private readonly Dictionary<int, Stack<Packet>> pool = new Dictionary<int, Stack<Packet>>();
-
-        private static Dictionary<Type, Stack<Object>> DataBlocks =
-                new Dictionary<Type, Stack<Object>>();
-
-        static PacketPool()
-        {
-        }
+        private bool dataBlockPoolEnabled = true;
+        private bool packetPoolEnabled = true;
 
         public static PacketPool Instance
         {
@@ -72,19 +67,19 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// For outgoing packets that just have the packet type
+        ///   For outgoing packets that just have the packet type
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name = "type"></param>
         /// <returns></returns>
         public Packet GetPacket(PacketType type)
         {
-            int t = (int)type;
+            int t = (int) type;
             Packet packet;
 
             if (!packetPoolEnabled)
                 return Packet.BuildPacket(type);
 
-            lock(m_poolLock)
+            lock (m_poolLock)
             {
                 if (!pool.ContainsKey(t) || (pool[t]).Count == 0)
                 {
@@ -142,17 +137,17 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// For incoming packets that are just types
+        ///   For incoming packets that are just types
         /// </summary>
-        /// <param name="bytes"></param>
-        /// <param name="packetEnd"></param>
-        /// <param name="zeroBuffer"></param>
+        /// <param name = "bytes"></param>
+        /// <param name = "packetEnd"></param>
+        /// <param name = "zeroBuffer"></param>
         /// <returns></returns>
         public Packet GetPacket(byte[] bytes, ref int packetEnd, byte[] zeroBuffer)
         {
             PacketType type = GetType(bytes);
 
-            if(zeroBuffer != null)
+            if (zeroBuffer != null)
                 Array.Clear(zeroBuffer, 0, zeroBuffer.Length);
 
             int i = 0;
@@ -165,9 +160,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Return a packet to the packet pool
+        ///   Return a packet to the packet pool
         /// </summary>
-        /// <param name="packet"></param>
+        /// <param name = "packet"></param>
         public bool ReturnPacket(Packet packet)
         {
             /*if (dataBlockPoolEnabled)
@@ -197,16 +192,16 @@ namespace OpenSim.Framework
             {
                 switch (packet.Type)
                 {
-                    // List pooling packets here
+                        // List pooling packets here
 
                     case PacketType.ObjectUpdate:
-                        lock(m_poolLock)
+                        lock (m_poolLock)
                         {
                             //Special case, this packet gets sent as a ObjectUpdate for both compressed and non compressed
-                            int t = (int)packet.Type;
-                            if(packet is ObjectUpdateCompressedPacket)
-                                t = (int)PacketType.ObjectUpdateCompressed;
-                            
+                            int t = (int) packet.Type;
+                            if (packet is ObjectUpdateCompressedPacket)
+                                t = (int) PacketType.ObjectUpdateCompressed;
+
 #if Debug
                             m_log.Info("[PacketPool]: Returning " + type);
 #endif
@@ -218,7 +213,7 @@ namespace OpenSim.Framework
                                 (pool[t]).Push(packet);
                         }
                         return true;
-                    //Outgoing packets:
+                        //Outgoing packets:
                     case PacketType.ObjectUpdateCompressed:
                     case PacketType.ObjectUpdateCached:
                     case PacketType.ImprovedTerseObjectUpdate:
@@ -242,10 +237,10 @@ namespace OpenSim.Framework
                     case PacketType.MapItemRequest:
                     case PacketType.SendXferPacket:
                     case PacketType.TransferPacket:
-                        lock(m_poolLock)
+                        lock (m_poolLock)
                         {
-                            int t = (int)packet.Type;
-                            
+                            int t = (int) packet.Type;
+
 #if Debug
                             m_log.Info("[PacketPool]: Returning " + type);
 #endif
@@ -257,8 +252,8 @@ namespace OpenSim.Framework
                                 (pool[t]).Push(packet);
                         }
                         return true;
-                    
-                    // Other packets wont pool
+
+                        // Other packets wont pool
                     default:
                         break;
                 }
@@ -266,37 +261,37 @@ namespace OpenSim.Framework
             return false;
         }
 
-        public static T GetDataBlock<T>() where T: new()
+        public static T GetDataBlock<T>() where T : new()
         {
             lock (DataBlocks)
             {
                 Stack<Object> s;
 
-                if (DataBlocks.TryGetValue(typeof(T), out s))
+                if (DataBlocks.TryGetValue(typeof (T), out s))
                 {
                     if (s.Count > 0)
-                        return (T)s.Pop();
+                        return (T) s.Pop();
                 }
                 else
                 {
-                    DataBlocks[typeof(T)] = new Stack<Object>();
+                    DataBlocks[typeof (T)] = new Stack<Object>();
                 }
                 return new T();
             }
         }
 
-        public static void ReturnDataBlock<T>(T block) where T: new()
+        public static void ReturnDataBlock<T>(T block) where T : new()
         {
             if (block == null)
                 return;
 
             lock (DataBlocks)
             {
-                if(!DataBlocks.ContainsKey(typeof(T)))
-                    DataBlocks[typeof(T)] = new Stack<Object>();
+                if (!DataBlocks.ContainsKey(typeof (T)))
+                    DataBlocks[typeof (T)] = new Stack<Object>();
 
-                if (DataBlocks[typeof(T)].Count < 50)
-                    DataBlocks[typeof(T)].Push(block);
+                if (DataBlocks[typeof (T)].Count < 50)
+                    DataBlocks[typeof (T)].Push(block);
             }
         }
     }

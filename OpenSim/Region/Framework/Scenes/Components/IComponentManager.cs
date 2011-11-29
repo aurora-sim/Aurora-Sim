@@ -25,86 +25,85 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using OpenMetaverse.StructuredData;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes.Components
 {
     /// <summary>
-    /// This interface deals with setting up Components and hooking up to the serialization process
+    ///   This interface deals with setting up Components and hooking up to the serialization process
     /// </summary>
     public interface IComponentManager
     {
         /// <summary>
-        /// Register a new Component base with the manager.
-        /// This hooks the Component up to serialization and deserialization and also allows it to be pulled from IComponents[] in the SceneObjectPart.
+        ///   Register a new Component base with the manager.
+        ///   This hooks the Component up to serialization and deserialization and also allows it to be pulled from IComponents[] in the SceneObjectPart.
         /// </summary>
-        /// <param name="component"></param>
+        /// <param name = "component"></param>
         void RegisterComponent(IComponent component);
 
         /// <summary>
-        /// Remove a known Component from the manager.
+        ///   Remove a known Component from the manager.
         /// </summary>
-        /// <param name="component"></param>
+        /// <param name = "component"></param>
         void DeregisterComponent(IComponent component);
 
         /// <summary>
-        /// Get all known registered Components
+        ///   Get all known registered Components
         /// </summary>
         /// <returns></returns>
         IComponent[] GetComponents();
 
         /// <summary>
-        /// Get the State of a Component with the given name
+        ///   Get the State of a Component with the given name
         /// </summary>
-        /// <param name="obj">The object being checked</param>
-        /// <param name="Name">Name of the Component</param>
+        /// <param name = "obj">The object being checked</param>
+        /// <param name = "Name">Name of the Component</param>
         /// <returns>The State of the Component</returns>
-        OSD GetComponentState (ISceneChildEntity obj, string Name);
+        OSD GetComponentState(ISceneChildEntity obj, string Name);
 
         /// <summary>
-        /// Set the State of the Component with the given name
+        ///   Set the State of the Component with the given name
         /// </summary>
-        /// <param name="obj">The object to update</param>
-        /// <param name="Name">Name of the Component</param>
-        /// <param name="State">State to set the Component to</param>
-        void SetComponentState (ISceneChildEntity obj, string Name, OSD State);
+        /// <param name = "obj">The object to update</param>
+        /// <param name = "Name">Name of the Component</param>
+        /// <param name = "State">State to set the Component to</param>
+        void SetComponentState(ISceneChildEntity obj, string Name, OSD State);
 
         /// <summary>
-        /// Take the serialized string and set up the Components for this object
+        ///   Take the serialized string and set up the Components for this object
         /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="serialized"></param>
-        void DeserializeComponents (ISceneChildEntity obj, string serialized);
+        /// <param name = "obj"></param>
+        /// <param name = "serialized"></param>
+        void DeserializeComponents(ISceneChildEntity obj, string serialized);
 
         /// <summary>
-        /// Serialize all the registered Components into a string to be saved later
+        ///   Serialize all the registered Components into a string to be saved later
         /// </summary>
-        /// <param name="obj">The object to serialize</param>
+        /// <param name = "obj">The object to serialize</param>
         /// <returns>The serialized string</returns>
-        string SerializeComponents (ISceneChildEntity obj);
+        string SerializeComponents(ISceneChildEntity obj);
 
         /// <summary>
-        /// Changes the UUIDs of one object to another
+        ///   Changes the UUIDs of one object to another
         /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="part"></param>
-        void ResetComponentIDsToNewObject (UUID oldID, ISceneChildEntity part);
+        /// <param name = "oldID"></param>
+        /// <param name = "part"></param>
+        void ResetComponentIDsToNewObject(UUID oldID, ISceneChildEntity part);
 
         /// <summary>
-        /// Remove the component for the given object with the given name, resets it to null
+        ///   Remove the component for the given object with the given name, resets it to null
         /// </summary>
-        /// <param name="UUID"></param>
-        /// <param name="name"></param>
-        void RemoveComponentState (UUID UUID, string name);
+        /// <param name = "UUID"></param>
+        /// <param name = "name"></param>
+        void RemoveComponentState(UUID UUID, string name);
 
         /// <summary>
-        /// Remove all components for the given object, resets it to null
+        ///   Remove all components for the given object, resets it to null
         /// </summary>
-        /// <param name="UUID"></param>
-        /// <param name="name"></param>
-        void RemoveComponents (UUID obj);
+        /// <param name = "UUID"></param>
+        /// <param name = "name"></param>
+        void RemoveComponents(UUID obj);
     }
 }

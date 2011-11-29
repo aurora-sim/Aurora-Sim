@@ -27,25 +27,19 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Net;
+using System.Linq;
 using System.Reflection;
 using System.Web;
 using log4net;
-using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework.Capabilities;
-
 using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Imaging;
 
@@ -59,7 +53,7 @@ namespace OpenSim.Services.CapsService
 
         public class StreamHandler : BaseStreamHandler
         {
-            StreamHandlerCallback m_callback;
+            readonly StreamHandlerCallback m_callback;
 
             public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
                 : base(httpMethod, path)
@@ -76,7 +70,7 @@ namespace OpenSim.Services.CapsService
         #endregion Stream Handler
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly string m_uploadBakedTexturePath = "0010";
+        private const string m_uploadBakedTexturePath = "0010";
         protected IAssetService m_assetService;
         protected IRegionClientCapsService m_service;
         public const string DefaultFormat = "x-j2c";
@@ -96,10 +90,7 @@ namespace OpenSim.Services.CapsService
                                                         UploadBakedTexture));
             service.AddStreamHandler("GetMesh",
                 new RestHTTPHandler("GET", service.CreateCAPS("GetMesh", ""),
-                                                       delegate(Hashtable m_dhttpMethod)
-                                                       {
-                                                           return ProcessGetMesh(m_dhttpMethod);
-                                                       }));
+                                                       ProcessGetMesh));
         }
 
         public void EnteringRegion()
@@ -134,15 +125,15 @@ namespace OpenSim.Services.CapsService
             if (!String.IsNullOrEmpty(textureStr) && UUID.TryParse(textureStr, out textureID))
             {
                 string[] formats;
-                if (format != null && format != string.Empty)
+                if (!string.IsNullOrEmpty(format))
                 {
-                    formats = new string[1] { format.ToLower() };
+                    formats = new[] { format.ToLower() };
                 }
                 else
                 {
                     formats = WebUtils.GetPreferredImageTypes(httpRequest.Headers.Get("Accept"));
                     if (formats.Length == 0)
-                        formats = new string[1] { DefaultFormat }; // default
+                        formats = new[] { DefaultFormat }; // default
                 }
                 // OK, we have an array with preferred formats, possibly with only one entry
                 httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
@@ -227,19 +218,17 @@ namespace OpenSim.Services.CapsService
                             texture = null;
                             return true;
                         }
-                        else
-                        {
-                            AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, AssetType.Texture, texture.CreatorID);
-                            newTexture.Data = ConvertTextureData(texture, format);
-                            if (newTexture.Data.Length == 0)
-                                return false; // !!! Caller try another codec, please!
+                        AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, AssetType.Texture,
+                                                             texture.CreatorID)
+                                                   {Data = ConvertTextureData(texture, format)};
+                        if (newTexture.Data.Length == 0)
+                            return false; // !!! Caller try another codec, please!
 
-                            newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temperary;
-                            newTexture.ID = m_assetService.Store(newTexture);
-                            WriteTextureData(httpRequest, httpResponse, newTexture, format);
-                            newTexture = null;
-                            return true;
-                        }
+                        newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temperary;
+                        newTexture.ID = m_assetService.Store(newTexture);
+                        WriteTextureData(httpRequest, httpResponse, newTexture, format);
+                        newTexture = null;
+                        return true;
                     }
                 }
                 else // it was on the cache
@@ -265,7 +254,8 @@ namespace OpenSim.Services.CapsService
 
         private void WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
         {
-            m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("AssetRequested", new object[3] { this.m_service.Registry, texture, m_service.AgentID });
+            m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                "AssetRequested", new object[] {m_service.Registry, texture, m_service.AgentID});
 
             string range = request.Headers.GetOne("Range");
             //m_log.DebugFormat("[GETTEXTURE]: Range {0}", range);
@@ -344,7 +334,7 @@ namespace OpenSim.Services.CapsService
             MemoryStream imgstream = new MemoryStream();
             Bitmap mTexture = new Bitmap(1, 1);
             ManagedImage managedImage;
-            Image image = (Image)mTexture;
+            Image image = mTexture;
 
             try
             {
@@ -382,8 +372,7 @@ namespace OpenSim.Services.CapsService
             {
                 // Reclaim memory, these are unmanaged resources
                 // If we encountered an exception, one or more of these will be null
-                if (mTexture != null)
-                    mTexture.Dispose();
+                mTexture.Dispose();
                 mTexture = null;
                 managedImage = null;
 
@@ -391,11 +380,8 @@ namespace OpenSim.Services.CapsService
                     image.Dispose();
                 image = null;
 
-                if (imgstream != null)
-                {
-                    imgstream.Close();
-                    imgstream = null;
-                }
+                imgstream.Close();
+                imgstream = null;
             }
 
             return data;
@@ -404,14 +390,8 @@ namespace OpenSim.Services.CapsService
         // From msdn
         private static ImageCodecInfo GetEncoderInfo(String mimeType)
         {
-            ImageCodecInfo[] encoders;
-            encoders = ImageCodecInfo.GetImageEncoders();
-            for (int j = 0; j < encoders.Length; ++j)
-            {
-                if (encoders[j].MimeType == mimeType)
-                    return encoders[j];
-            }
-            return null;
+            ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders();
+            return encoders.FirstOrDefault(t => t.MimeType == mimeType);
         }
 
         #endregion
@@ -446,7 +426,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception e)
             {
-                m_log.Error("[CAPS]: " + e.ToString());
+                m_log.Error("[CAPS]: " + e);
             }
 
             return null;
@@ -458,9 +438,9 @@ namespace OpenSim.Services.CapsService
             public event UploadedBakedTexture OnUpLoad;
             private UploadedBakedTexture handlerUpLoad = null;
 
-            private string uploaderPath = String.Empty;
-            private string uploadMethod = "";
-            private IRegionClientCapsService clientCaps;
+            private readonly string uploaderPath = String.Empty;
+            private readonly string uploadMethod = "";
+            private readonly IRegionClientCapsService clientCaps;
 
             public BakedTextureUploader(string path, string method, IRegionClientCapsService caps)
             {
@@ -497,10 +477,8 @@ namespace OpenSim.Services.CapsService
         public void BakedTextureUploaded(byte[] data, out UUID newAssetID)
         {
             //m_log.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
-            AssetBase asset;
-            asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID);
-            asset.Data = data;
-            asset.Flags = AssetFlags.Deletable | AssetFlags.Temperary;
+            AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID)
+                                  {Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temperary};
             newAssetID = m_assetService.Store(asset);
             m_log.DebugFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
             asset.ID = newAssetID;
@@ -533,9 +511,8 @@ namespace OpenSim.Services.CapsService
                     return responsedata;
                 }
 
-                AssetBase mesh;
                 // Only try to fetch locally cached textures. Misses are redirected
-                mesh = m_assetService.GetCached(meshID.ToString());
+                AssetBase mesh = m_assetService.GetCached(meshID.ToString());
                 if (mesh != null)
                 {
                     if (mesh.Type == (SByte)AssetType.Mesh)

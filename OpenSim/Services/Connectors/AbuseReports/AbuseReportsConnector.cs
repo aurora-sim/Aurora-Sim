@@ -25,24 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-using OpenMetaverse;
+using log4net;
 
 namespace OpenSim.Services.Connectors
 {
     public class AbuseReportsConnector : IAbuseReports, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
@@ -53,15 +52,16 @@ namespace OpenSim.Services.Connectors
         {
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     Dictionary<string, object> ar = abuse_report.ToKeyValuePairs();
                     ar.Add("METHOD", "AddAbuseReport");
 
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        WebUtils.BuildQueryString(ar));
+                                                              m_ServerURI,
+                                                              WebUtils.BuildQueryString(ar));
                 }
             }
             catch (Exception e)
@@ -74,13 +74,16 @@ namespace OpenSim.Services.Connectors
         {
             try
             {
-                Dictionary<string, object> send = new Dictionary<string, object>();
-                send.Add("Password", Password);
-                send.Add("METHOD", "GetAbuseReport");
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Dictionary<string, object> send = new Dictionary<string, object>
+                                                      {{"Password", Password}, {"METHOD", "GetAbuseReport"}};
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 return new AbuseReport(WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
-                    m_ServerURIs[0],
-                    WebUtils.BuildQueryString(send))));
+                                                                                                           m_ServerURIs[
+                                                                                                               0],
+                                                                                                           WebUtils.
+                                                                                                               BuildQueryString
+                                                                                                               (send))));
             }
             catch (Exception e)
             {
@@ -93,20 +96,20 @@ namespace OpenSim.Services.Connectors
         {
             try
             {
-                Dictionary<string, object> send = new Dictionary<string, object>();
-                send.Add("start", start);
-                send.Add("count", count);
-                send.Add("filter", filter);
-                send.Add("METHOD", "GetAbuseReports");
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                Dictionary<string, object> ars = WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
-                    m_ServerURIs[0],
-                    WebUtils.BuildQueryString(send)));
-                List<AbuseReport> returnvalue = new List<AbuseReport>();
-                foreach (object ar in ars)
-                    returnvalue.Add((AbuseReport)ar);
-                return returnvalue;
-                    
+                Dictionary<string, object> send = new Dictionary<string, object>
+                                                      {
+                                                          {"start", start},
+                                                          {"count", count},
+                                                          {"filter", filter},
+                                                          {"METHOD", "GetAbuseReports"}
+                                                      };
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Dictionary<string, object> ars =
+                    WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                        m_ServerURIs[0],
+                                                                                        WebUtils.BuildQueryString(send)));
+                return ars.Cast<AbuseReport>().ToList();
             }
             catch (Exception e)
             {
@@ -122,10 +125,11 @@ namespace OpenSim.Services.Connectors
                 Dictionary<string, object> send = report.ToKeyValuePairs();
                 send.Add("Password", Password);
                 send.Add("METHOD", "AddAbuseReport");
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 SynchronousRestFormsRequester.MakeRequest("POST",
-                    m_ServerURIs[0],
-                    WebUtils.BuildQueryString(send));
+                                                          m_ServerURIs[0],
+                                                          WebUtils.BuildQueryString(send));
             }
             catch (Exception e)
             {
@@ -135,12 +139,12 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-        #region IService Members
-
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -158,7 +162,6 @@ namespace OpenSim.Services.Connectors
 
         public void FinishedStartup()
         {
-
         }
 
         #endregion

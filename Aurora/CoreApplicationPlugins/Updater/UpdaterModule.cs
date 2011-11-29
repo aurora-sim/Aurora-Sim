@@ -26,15 +26,11 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Xml;
 using System.Windows.Forms;
 using log4net;
 using Nini.Config;
-using OpenSim;
 using OpenSim.Framework;
 using Aurora.Framework;
 
@@ -43,7 +39,7 @@ namespace OpenSim.CoreApplicationPlugins
     public class UpdaterPlugin : IApplicationPlugin
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
+        private const string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
 
         public void Initialize(ISimulationBase openSim)
         {
@@ -58,8 +54,8 @@ namespace OpenSim.CoreApplicationPlugins
                     return;
                 
                 m_log.Info("[AuroraUpdator]: Checking for updates...");
-                string CurrentVersion = OpenSim.Framework.VersionInfo.VERSION_NUMBER;
-                string LastestVersionToBlock = updateConfig.GetString ("LatestRelease", OpenSim.Framework.VersionInfo.VERSION_NUMBER);
+                const string CurrentVersion = VersionInfo.VERSION_NUMBER;
+                string LastestVersionToBlock = updateConfig.GetString ("LatestRelease", VersionInfo.VERSION_NUMBER);
 
                 string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
                 //Pull the xml from the website
@@ -88,7 +84,7 @@ namespace OpenSim.CoreApplicationPlugins
                         " released " + UpdaterNode.ChildNodes[3].InnerText +
                         ". Release notes: " + UpdaterNode.ChildNodes[4].InnerText +
                         ", do you want to download the update?", "Aurora Update",
-                        System.Windows.Forms.MessageBoxButtons.YesNo);
+                        MessageBoxButtons.YesNo);
 
                     //If so, download the new version
                     if (result == DialogResult.Yes)

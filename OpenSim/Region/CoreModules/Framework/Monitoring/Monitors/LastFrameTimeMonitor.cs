@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -41,6 +39,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #region Implementation of IMonitor
 
+        #region IMonitor Members
+
         public double GetValue()
         {
             return Util.EnvironmentTickCountSubtract(MonitorLastFrameTick);
@@ -53,17 +53,23 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms ago";
+            return (int) GetValue() + "ms ago";
         }
+
+        public void ResetStats()
+        {
+        }
+
+        #endregion
+
+        #region ISetMonitor Members
 
         public void SetValue(int value)
         {
             MonitorLastFrameTick = value;
         }
 
-        public void ResetStats ()
-        {
-        }
+        #endregion
 
         #endregion
     }

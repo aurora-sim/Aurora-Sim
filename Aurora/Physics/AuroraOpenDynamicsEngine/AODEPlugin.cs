@@ -28,38 +28,27 @@
 //#define USE_DRAWSTUFF
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.IO;
-using System.Diagnostics;
-using log4net;
-using Nini.Config;
-//using Ode.NET;
 using OdeAPI;
+using OpenSim.Framework;
+using OpenSim.Region.Physics.Manager;
+//using Ode.NET;
 //#if USE_DRAWSTUFF
 //using Drawstuff.NET;
 //#endif 
-using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
-using OpenMetaverse;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     /// <summary>
-    /// ODE plugin
+    ///   ODE plugin
     /// </summary>
     public class AuroraODEPlugin : IPhysicsPlugin
     {
         //private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        private static bool m_initialized;
         private AuroraODEPhysicsScene _mScene;
-        private static bool m_initialized = false;
 
-        public AuroraODEPlugin()
-        {
-        }
+        #region IPhysicsPlugin Members
 
         public bool Init()
         {
@@ -77,7 +66,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.InitODE();
                     m_initialized = true;
                 }
-                
+
                 _mScene = new AuroraODEPhysicsScene(sceneIdentifier);
             }
             return _mScene;
@@ -91,13 +80,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public void Dispose()
         {
         }
+
+        #endregion
     }
 
     /// <summary>
-    /// Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
+    ///   Various properties that ODE uses for AMotors but isn't exposed in ODE.NET so we must define them ourselves.
     /// </summary>
-
-    public enum dParam : int
+    public enum dParam
     {
         LowStop = 0,
         HiStop = 1,
@@ -123,10 +113,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    /// Collision flags
+    ///   Collision flags
     /// </summary>
     [Flags]
-    public enum CollisionCategories : int
+    public enum CollisionCategories
     {
         Disabled = 0,
         Geom = 0x00000001,
@@ -141,24 +131,36 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     }
 
     /// <summary>
-    /// Material type for a primitive
+    ///   Material type for a primitive
     /// </summary>
-    public enum Material : int
+    public enum Material
     {
-        /// <summary></summary>
+        /// <summary>
+        /// </summary>
         Stone = 0,
-        /// <summary></summary>
-        Metal = 1,
-        /// <summary></summary>
-        Glass = 2,
-        /// <summary></summary>
-        Wood = 3,
-        /// <summary></summary>
-        Flesh = 4,
-        /// <summary></summary>
-        Plastic = 5,
-        /// <summary></summary>
-        Rubber = 6
 
+        /// <summary>
+        /// </summary>
+        Metal = 1,
+
+        /// <summary>
+        /// </summary>
+        Glass = 2,
+
+        /// <summary>
+        /// </summary>
+        Wood = 3,
+
+        /// <summary>
+        /// </summary>
+        Flesh = 4,
+
+        /// <summary>
+        /// </summary>
+        Plastic = 5,
+
+        /// <summary>
+        /// </summary>
+        Rubber = 6
     }
 }

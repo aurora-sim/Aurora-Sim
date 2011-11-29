@@ -25,10 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
@@ -38,15 +35,17 @@ namespace Aurora.Framework
     public class MuteList : IDataTransferable
     {
         /// <summary>
-        /// Name of the person muted
-        /// </summary>
-        public string MuteName;
-        /// <summary>
-        /// UUID of the person muted
+        ///   UUID of the person muted
         /// </summary>
         public UUID MuteID;
+
         /// <summary>
-        /// Are they an object, person, group?
+        ///   Name of the person muted
+        /// </summary>
+        public string MuteName;
+
+        /// <summary>
+        ///   Are they an object, person, group?
         /// </summary>
         public string MuteType;
 
@@ -59,10 +58,7 @@ namespace Aurora.Framework
 
         public override OSDMap ToOSD()
         {
-            OSDMap map = new OSDMap();
-            map.Add("MuteName", MuteName);
-            map.Add("MuteID", MuteID);
-            map.Add("MuteType", MuteType);
+            OSDMap map = new OSDMap {{"MuteName", MuteName}, {"MuteID", MuteID}, {"MuteType", MuteType}};
             return map;
         }
 

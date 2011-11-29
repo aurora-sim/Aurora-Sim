@@ -26,7 +26,6 @@
  */
 
 using System;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -39,9 +38,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
     public class ChatEventArgs : EventArgs
     {
-        public string Text;
-        public IEntity Sender;
         public int Channel;
+        public IEntity Sender;
+        public string Text;
     }
 
     public delegate void OnChatDelegate(IWorld sender, ChatEventArgs e);

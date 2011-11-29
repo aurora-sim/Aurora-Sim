@@ -25,27 +25,57 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
+using log4net;
 
 namespace OpenSim.Services.Connectors
 {
     public class UserAccountServicesConnector : IUserAccountService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        private UserAccountCache m_cache = new UserAccountCache();
+
+        private readonly UserAccountCache m_cache = new UserAccountCache();
         private IRegistryCore m_registry;
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
+                return;
+
+            registry.RegisterModuleInterface<IUserAccountService>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        #region IUserAccountService Members
 
         public virtual IUserAccountService InnerService
         {
@@ -65,11 +95,11 @@ namespace OpenSim.Services.Connectors
             sendData["METHOD"] = "getaccount";
 
             sendData["ScopeID"] = scopeID;
-            sendData["FirstName"] = firstName.ToString();
-            sendData["LastName"] = lastName.ToString();
+            sendData["FirstName"] = firstName;
+            sendData["LastName"] = lastName;
 
             account = SendAndGetReply(UUID.Zero, sendData);
-            if(account != null)
+            if (account != null)
                 m_cache.Cache(account.PrincipalID, account);
             return account;
         }
@@ -88,14 +118,14 @@ namespace OpenSim.Services.Connectors
             //Leave these for compatibility with OpenSim!!!
             string[] names = name.Split(' ');
             sendData["FirstName"] = names[0];
-            if(names.Length >= 2)
+            if (names.Length >= 2)
             {
                 //Join all the names together
-                string lastName= string.Join(" ", names, 1, names.Length - 1);
-                sendData["LastName"] = lastName.ToString();
+                string lastName = string.Join(" ", names, 1, names.Length - 1);
+                sendData["LastName"] = lastName;
             }
             else
-                sendData["LastName"] = "";//No last name then
+                sendData["LastName"] = ""; //No last name then
 
             return SendAndGetReply(UUID.Zero, sendData);
         }
@@ -139,12 +169,13 @@ namespace OpenSim.Services.Connectors
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("UserAccountServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("UserAccountServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        reqString);
+                                                                      m_ServerURI,
+                                                                      reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
                         continue;
 
@@ -161,13 +192,14 @@ namespace OpenSim.Services.Connectors
                         {
                             if (acc is Dictionary<string, object>)
                             {
-                                UserAccount pinfo = new UserAccount((Dictionary<string, object>)acc);
+                                UserAccount pinfo = new UserAccount((Dictionary<string, object>) acc);
                                 m_cache.Cache(pinfo.PrincipalID, pinfo);
                                 pinfo.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/'));
                                 accounts.Add(pinfo);
                             }
                             else
-                                m_log.DebugFormat("[ACCOUNT CONNECTOR]: GetUserAccounts received invalid response type {0}",
+                                m_log.DebugFormat(
+                                    "[ACCOUNT CONNECTOR]: GetUserAccounts received invalid response type {0}",
                                     acc.GetType());
                         }
                     }
@@ -183,11 +215,11 @@ namespace OpenSim.Services.Connectors
             return accounts;
         }
 
-        public virtual void CreateUser (string name, string password, string email)
+        public virtual void CreateUser(string name, string password, string email)
         {
         }
 
-        public virtual void CreateUser (UUID userID, string name, string password, string email)
+        public virtual void CreateUser(UUID userID, string name, string password, string email)
         {
         }
 
@@ -214,43 +246,47 @@ namespace OpenSim.Services.Connectors
             return SendAndGetBoolReply(data.PrincipalID, sendData);
         }
 
+        #endregion
+
         private UserAccount SendAndGetReply(UUID avatarID, Dictionary<string, object> sendData)
         {
             string reply = string.Empty;
             string reqString = WebUtils.BuildQueryString(sendData);
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             UserAccount account = null;
-            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI", true);
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(),
+                                                                                       "UserAccountServerURI", true);
             foreach (string m_ServerURI in m_ServerURIs)
             {
                 try
                 {
-                    reply = SynchronousRestFormsRequester.MakeRequest ("POST",
-                        m_ServerURI,
-                        reqString);
+                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                      m_ServerURI,
+                                                                      reqString);
                     if (reply == string.Empty)
                         continue;
 
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse (reply);
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                    if ((replyData != null) && replyData.ContainsKey ("result") && (replyData["result"] != null))
+                    if ((replyData != null) && replyData.ContainsKey("result") && (replyData["result"] != null))
                     {
                         if (replyData["result"] is Dictionary<string, object>)
                         {
-                            account = new UserAccount ((Dictionary<string, object>)replyData["result"]);
-                            account.GenericData["GridURL"] = m_ServerURI.Remove (m_ServerURI.LastIndexOf ('/'));
+                            account = new UserAccount((Dictionary<string, object>) replyData["result"]);
+                            account.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/'));
                             return account;
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.InfoFormat ("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}", e.Message);
+                    m_log.InfoFormat("[ACCOUNT CONNECTOR]: Exception when contacting user account server: {0}",
+                                     e.Message);
                 }
             }
 
             return account;
-
         }
 
         private bool SendAndGetBoolReply(UUID avatarID, Dictionary<string, object> sendData)
@@ -259,12 +295,13 @@ namespace OpenSim.Services.Connectors
             // m_log.DebugFormat("[ACCOUNTS CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(), "UserAccountServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(),
+                                                                                           "UserAccountServerURI");
+                foreach (string reply in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                      m_ServerURI + "/accounts",
+                                                                                                                      reqString)))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/accounts",
-                            reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -275,8 +312,8 @@ namespace OpenSim.Services.Connectors
                                 return true;
                         }
                         else
-                            m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
-
+                            m_log.DebugFormat(
+                                "[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
                     }
                     else
                         m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount received empty reply");
@@ -289,32 +326,5 @@ namespace OpenSim.Services.Connectors
 
             return false;
         }
-
-        #region IService Members
-
-        public string Name
-        {
-            get { return GetType().Name; }
-        }
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("UserAccountHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IUserAccountService>(this);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        #endregion
     }
 }

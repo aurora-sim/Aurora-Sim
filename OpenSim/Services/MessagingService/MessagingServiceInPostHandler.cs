@@ -25,46 +25,42 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
 using System.IO;
-using System.Net;
+using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse.StructuredData;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IAsyncMessageRecievedService m_handler;
-        private string m_SessionID;
-        private ulong m_ourRegionHandle;
+        private readonly string m_SessionID;
+        private readonly IAsyncMessageRecievedService m_handler;
+        private readonly ulong m_ourRegionHandle;
 
-        public MessagingServiceInPostHandler (string url, IRegistryCore registry, IAsyncMessageRecievedService handler, string SessionID) :
-                base("POST", url)
+        public MessagingServiceInPostHandler(string url, IRegistryCore registry, IAsyncMessageRecievedService handler,
+                                             string SessionID) :
+                                                 base("POST", url)
         {
             m_handler = handler;
             m_SessionID = SessionID;
-            if (!ulong.TryParse (SessionID, out m_ourRegionHandle))
+            if (!ulong.TryParse(SessionID, out m_ourRegionHandle))
             {
-                string[] s = SessionID.Split ('|');
-                if(s.Length == 2)
-                    ulong.TryParse (s[1], out m_ourRegionHandle);
+                string[] s = SessionID.Split('|');
+                if (s.Length == 2)
+                    ulong.TryParse(s[1], out m_ourRegionHandle);
             }
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -89,9 +85,9 @@ namespace OpenSim.Services.MessagingService
 
         private byte[] NewMessage(OSDMap map)
         {
-            OSDMap message = (OSDMap)map["Message"];
-            if(m_ourRegionHandle != 0)
-                ((OSDMap)message)["RegionHandle"] = m_ourRegionHandle;
+            OSDMap message = (OSDMap) map["Message"];
+            if (m_ourRegionHandle != 0)
+                (message)["RegionHandle"] = m_ourRegionHandle;
             OSDMap result = m_handler.FireMessageReceived(m_SessionID, message);
             if (result != null)
                 return ReturnResult(result);

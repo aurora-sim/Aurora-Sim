@@ -25,47 +25,42 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections.Generic;
-using System.IO;
-using OpenMetaverse;
-using OpenSim.Framework;
-
 namespace OpenSim.Framework
 {
     public interface IRegionSerialiserModule
     {
         /// <summary>
-        /// Load prims from the xml2 format
+        ///   Load prims from the xml2 format
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="fileName"></param>
+        /// <param name = "scene"></param>
+        /// <param name = "fileName"></param>
         void LoadPrimsFromXml2(IScene scene, string fileName);
 
         /// <summary>
-        /// Save prims in the xml2 format
+        ///   Save prims in the xml2 format
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="fileName"></param>
-        void SavePrimsToXml2 (IScene scene, string fileName);
+        /// <param name = "scene"></param>
+        /// <param name = "fileName"></param>
+        void SavePrimsToXml2(IScene scene, string fileName);
 
         /// <summary>
-        /// Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
+        ///   Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
-        /// <param name="xmlString"></param>
+        /// <param name = "xmlString"></param>
         /// <returns>The scene object created</returns>
-        ISceneObject DeserializeGroupFromXml2 (string xmlString, IScene scene);
+        ISceneObject DeserializeGroupFromXml2(string xmlString, IScene scene);
 
         /// <summary>
-        /// Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
+        ///   Deserializes a scene object from its xml2 representation.  This does not load the object into the scene.
         /// </summary>
-        /// <param name="xml"></param>
+        /// <param name = "xml"></param>
         /// <returns>The scene object created</returns>
-        ISceneObject DeserializeGroupFromXml2 (byte[] xml, IScene scene);
+        ISceneObject DeserializeGroupFromXml2(byte[] xml, IScene scene);
 
         /// <summary>
-        /// Serialize an individual scene object into the xml2 format
+        ///   Serialize an individual scene object into the xml2 format
         /// </summary>
-        /// <param name="grp"></param>
+        /// <param name = "grp"></param>
         /// <returns></returns>
         string SerializeGroupToXml2(ISceneEntity grp);
     }

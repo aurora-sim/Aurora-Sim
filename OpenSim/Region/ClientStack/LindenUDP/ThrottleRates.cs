@@ -26,64 +26,122 @@
  */
 
 using System;
-using OpenSim.Framework;
 using Nini.Config;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
     /// <summary>
-    /// Holds drip rates and maximum burst rates for throttling with hierarchical
-    /// token buckets. The maximum burst rates set here are hard limits and can
-    /// not be overridden by client requests
+    ///   Holds drip rates and maximum burst rates for throttling with hierarchical
+    ///   token buckets. The maximum burst rates set here are hard limits and can
+    ///   not be overridden by client requests
     /// </summary>
     public sealed class ThrottleRates
     {
-        /// <summary>Drip rate for resent packets</summary>
-        public int Resend;
-        /// <summary>Drip rate for terrain packets</summary>
-        public int Land;
-        /// <summary>Drip rate for wind packets</summary>
-        public int Wind;
-        /// <summary>Drip rate for cloud packets</summary>
-        public int Cloud;
-        /// <summary>Drip rate for task packets</summary>
-        public int Task;
-        /// <summary>Drip rate for texture packets</summary>
-        public int Texture;
-        /// <summary>Drip rate for asset packets</summary>
+        /// <summary>
+        ///   Drip rate for asset packets
+        /// </summary>
         public int Asset;
-        /// <summary>Drip rate for state packets</summary>
-        public int State;
-        /// <summary>Drip rate for AvatarInfo packets</summary>
-        public int AvatarInfo;
-        /// <summary>Drip rate for the parent token bucket</summary>
-        public int Total;
 
-        /// <summary>Maximum burst rate for resent packets</summary>
-        public int ResendLimit;
-        /// <summary>Maximum burst rate for land packets</summary>
-        public int LandLimit;
-        /// <summary>Maximum burst rate for wind packets</summary>
-        public int WindLimit;
-        /// <summary>Maximum burst rate for cloud packets</summary>
-        public int CloudLimit;
-        /// <summary>Maximum burst rate for task (state and transaction) packets</summary>
-        public int TaskLimit;
-        /// <summary>Maximum burst rate for texture packets</summary>
-        public int TextureLimit;
-        /// <summary>Maximum burst rate for asset packets</summary>
+        /// <summary>
+        ///   Maximum burst rate for asset packets
+        /// </summary>
         public int AssetLimit;
-        /// <summary>Maximum burst rate for state packets</summary>
-        public int StateLimit;
-        /// <summary>Burst rate for the parent token bucket</summary>
-        public int TotalLimit;
-        /// <summary>Burst rate for the parent token bucket</summary>
+
+        /// <summary>
+        ///   Drip rate for AvatarInfo packets
+        /// </summary>
+        public int AvatarInfo;
+
+        /// <summary>
+        ///   Burst rate for the parent token bucket
+        /// </summary>
         public int AvatarInfoLimit;
 
         /// <summary>
-        /// Default constructor
+        ///   Drip rate for cloud packets
         /// </summary>
-        /// <param name="config">Config source to load defaults from</param>
+        public int Cloud;
+
+        /// <summary>
+        ///   Maximum burst rate for cloud packets
+        /// </summary>
+        public int CloudLimit;
+
+        /// <summary>
+        ///   Drip rate for terrain packets
+        /// </summary>
+        public int Land;
+
+        /// <summary>
+        ///   Maximum burst rate for land packets
+        /// </summary>
+        public int LandLimit;
+
+        /// <summary>
+        ///   Drip rate for resent packets
+        /// </summary>
+        public int Resend;
+
+        /// <summary>
+        ///   Maximum burst rate for resent packets
+        /// </summary>
+        public int ResendLimit;
+
+        /// <summary>
+        ///   Drip rate for state packets
+        /// </summary>
+        public int State;
+
+        /// <summary>
+        ///   Maximum burst rate for state packets
+        /// </summary>
+        public int StateLimit;
+
+        /// <summary>
+        ///   Drip rate for task packets
+        /// </summary>
+        public int Task;
+
+        /// <summary>
+        ///   Maximum burst rate for task (state and transaction) packets
+        /// </summary>
+        public int TaskLimit;
+
+        /// <summary>
+        ///   Drip rate for texture packets
+        /// </summary>
+        public int Texture;
+
+        /// <summary>
+        ///   Maximum burst rate for texture packets
+        /// </summary>
+        public int TextureLimit;
+
+        /// <summary>
+        ///   Drip rate for the parent token bucket
+        /// </summary>
+        public int Total;
+
+        /// <summary>
+        ///   Burst rate for the parent token bucket
+        /// </summary>
+        public int TotalLimit;
+
+        /// <summary>
+        ///   Drip rate for wind packets
+        /// </summary>
+        public int Wind;
+
+        /// <summary>
+        ///   Maximum burst rate for wind packets
+        /// </summary>
+        public int WindLimit;
+
+        /// <summary>
+        ///   Default constructor
+        /// </summary>
+        /// <param name = "config">Config source to load defaults from</param>
         public ThrottleRates(IConfigSource config)
         {
             try
@@ -113,7 +171,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 Total = throttleConfig.GetInt("client_throttle_max_bps", 0);
                 TotalLimit = Total;
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+            }
         }
 
         public int GetRate(ThrottleOutPacketType type)

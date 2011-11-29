@@ -1,8 +1,4 @@
 ﻿//#define ACURATE
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Aurora.Framework
 {
@@ -15,12 +11,12 @@ namespace Aurora.Framework
         private bool haveFilledBeatList = false;
 #else
 
-        private float total = 0;
-        private int capacity;
-        private int count = 0;
+        private float total;
+        private readonly int capacity;
+        private int count;
 #endif
 
-        public AveragingClass (int capacity)
+        public AveragingClass(int capacity)
         {
 #if ACURATE
             m_list = new List<float> (capacity);
@@ -29,7 +25,7 @@ namespace Aurora.Framework
 #endif
         }
 
-        public float GetAverage ()
+        public float GetAverage()
         {
 #if ACURATE
             float avg = 0;
@@ -38,11 +34,11 @@ namespace Aurora.Framework
             avg /= m_list.Count;
             return avg;
 #else
-            return total / (float)count;
+            return total/count;
 #endif
         }
 
-        public void Add (float value)
+        public void Add(float value)
         {
 #if ACURATE
             if (haveFilledBeatList)
@@ -59,7 +55,7 @@ namespace Aurora.Framework
             if (count < capacity)
                 count++;
             else
-                total -= GetAverage ();
+                total -= GetAverage();
             total += value;
 #endif
         }

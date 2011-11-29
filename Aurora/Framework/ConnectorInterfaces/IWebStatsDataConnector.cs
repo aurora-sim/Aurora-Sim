@@ -28,8 +28,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -38,28 +36,28 @@ namespace Aurora.Framework
     public interface IWebStatsDataConnector : IAuroraDataPlugin
     {
         /// <summary>
-        /// Add/Update a user's stats in the database
+        ///   Add/Update a user's stats in the database
         /// </summary>
-        /// <param name="uid"></param>
+        /// <param name = "uid"></param>
         void UpdateUserStats(UserSessionID uid);
 
         /// <summary>
-        /// Get info on the sim status
+        ///   Get info on the sim status
         /// </summary>
         /// <returns></returns>
         stats_default_page_values GetDefaultPageStats();
 
         /// <summary>
-        /// Get info on all clients that are in the region
+        ///   Get info on all clients that are in the region
         /// </summary>
         /// <returns></returns>
         List<ClientVersionData> GetClientVersions();
-        
+
         /// <summary>
-        /// Get a list of all the client sessions in the region
+        ///   Get a list of all the client sessions in the region
         /// </summary>
-        /// <param name="puserUUID"></param>
-        /// <param name="clientVersionString"></param>
+        /// <param name = "puserUUID"></param>
+        /// <param name = "clientVersionString"></param>
         /// <returns></returns>
         List<SessionList> GetSessionList(string puserUUID, string clientVersionString);
     }
@@ -68,82 +66,82 @@ namespace Aurora.Framework
 
     public struct UserSessionID
     {
-        public UUID session_id;
-        public UUID region_id;
         public string name_f;
         public string name_l;
+        public UUID region_id;
         public UserSessionData session_data;
+        public UUID session_id;
     }
 
     public struct UserSessionData
     {
-        public UUID session_id;
-        public UUID agent_id;
-        public UUID region_id;
-        public float last_updated;
-        public string remote_ip;
-        public string name_f;
-        public string name_l;
-        public float avg_agents_in_view;
-        public float min_agents_in_view;
-        public float max_agents_in_view;
-        public float mode_agents_in_view;
-        public float avg_fps;
-        public float min_fps;
-        public float max_fps;
-        public float mode_fps;
+        public List<int> _agents_in_view;
+        public List<float> _fps;
+        public List<float> _ping;
+        public List<float> _sim_fps;
         public string a_language;
-        public float mem_use;
-        public float meters_traveled;
+        public UUID agent_id;
+        public float avg_agents_in_view;
+        public float avg_fps;
         public float avg_ping;
-        public float min_ping;
-        public float max_ping;
-        public float mode_ping;
-        public int regions_visited;
-        public float run_time;
         public float avg_sim_fps;
-        public float min_sim_fps;
-        public float max_sim_fps;
-        public float mode_sim_fps;
-        public float start_time;
         public string client_version;
-        public string s_cpu;
-        public string s_gpu;
-        public string s_os;
-        public int s_ram;
         public float d_object_kb;
         public float d_texture_kb;
         public float d_world_kb;
-        public float n_in_kb;
-        public int n_in_pk;
-        public float n_out_kb;
-        public int n_out_pk;
         public int f_dropped;
         public int f_failed_resends;
         public int f_invalid;
         public int f_off_circuit;
         public int f_resent;
         public int f_send_packet;
-        public List<float> _ping;
-        public List<float> _fps;
-        public List<float> _sim_fps;
-        public List<int> _agents_in_view;
+        public float last_updated;
+        public float max_agents_in_view;
+        public float max_fps;
+        public float max_ping;
+        public float max_sim_fps;
+        public float mem_use;
+        public float meters_traveled;
+        public float min_agents_in_view;
+        public float min_fps;
+        public float min_ping;
+        public float min_sim_fps;
+        public float mode_agents_in_view;
+        public float mode_fps;
+        public float mode_ping;
+        public float mode_sim_fps;
+        public float n_in_kb;
+        public int n_in_pk;
+        public float n_out_kb;
+        public int n_out_pk;
+        public string name_f;
+        public string name_l;
+        public UUID region_id;
+        public int regions_visited;
+        public string remote_ip;
+        public float run_time;
+        public string s_cpu;
+        public string s_gpu;
+        public string s_os;
+        public int s_ram;
+        public UUID session_id;
+        public float start_time;
     }
 
     public struct stats_default_page_values
     {
-        public int total_num_users;
-        public int total_num_sessions;
+        public IScene[] all_scenes;
         public float avg_client_fps;
         public float avg_client_mem_use;
-        public float avg_sim_fps;
-        public float avg_ping;
-        public float total_kb_out;
-        public float total_kb_in;
         public float avg_client_resends;
-        public IScene[] all_scenes;
+        public float avg_ping;
+        public float avg_sim_fps;
         public Dictionary<UUID, USimStatsData> sim_stat_data;
         public Dictionary<string, IStatsController> stats_reports;
+        public float total_kb_in;
+        public float total_kb_out;
+        public int total_num_sessions;
+        public int total_num_users;
     }
 
     public interface IStatsController
@@ -155,57 +153,149 @@ namespace Aurora.Framework
 
     public class USimStatsData
     {
-        private UUID m_regionID = UUID.Zero;
-        private volatile int m_statcounter = 0;
-        private volatile float m_timeDilation;
-        private volatile float m_simFps;
-        private volatile float m_physicsFps;
-        private volatile float m_agentUpdates;
-        private volatile float m_rootAgents;
-        private volatile float m_childAgents;
-        private volatile float m_totalPrims;
         private volatile float m_activePrims;
-        private volatile float m_totalFrameTime;
-        private volatile float m_netFrameTime;
-        private volatile float m_physicsFrameTime;
-        private volatile float m_otherFrameTime;
+        private volatile float m_activeScripts;
+        private volatile float m_agentFrameTime;
+        private volatile float m_agentUpdates;
+        private volatile float m_childAgents;
         private volatile float m_imageFrameTime;
         private volatile float m_inPacketsPerSecond;
+        private volatile float m_netFrameTime;
+        private volatile float m_otherFrameTime;
         private volatile float m_outPacketsPerSecond;
-        private volatile float m_unackedBytes;
-        private volatile float m_agentFrameTime;
         private volatile float m_pendingDownloads;
         private volatile float m_pendingUploads;
-        private volatile float m_activeScripts;
+        private volatile float m_physicsFps;
+        private volatile float m_physicsFrameTime;
+        private UUID m_regionID = UUID.Zero;
+        private volatile float m_rootAgents;
         private volatile float m_scriptLinesPerSecond;
-
-        public UUID RegionId { get { return m_regionID; } }
-        public int StatsCounter { get { return m_statcounter; } set { m_statcounter = value; } }
-        public float TimeDilation { get { return m_timeDilation; } }
-        public float SimFps { get { return m_simFps; } }
-        public float PhysicsFps { get { return m_physicsFps; } }
-        public float AgentUpdates { get { return m_agentUpdates; } }
-        public float RootAgents { get { return m_rootAgents; } }
-        public float ChildAgents { get { return m_childAgents; } }
-        public float TotalPrims { get { return m_totalPrims; } }
-        public float ActivePrims { get { return m_activePrims; } }
-        public float TotalFrameTime { get { return m_totalFrameTime; } }
-        public float NetFrameTime { get { return m_netFrameTime; } }
-        public float PhysicsFrameTime { get { return m_physicsFrameTime; } }
-        public float OtherFrameTime { get { return m_otherFrameTime; } }
-        public float ImageFrameTime { get { return m_imageFrameTime; } }
-        public float InPacketsPerSecond { get { return m_inPacketsPerSecond; } }
-        public float OutPacketsPerSecond { get { return m_outPacketsPerSecond; } }
-        public float UnackedBytes { get { return m_unackedBytes; } }
-        public float AgentFrameTime { get { return m_agentFrameTime; } }
-        public float PendingDownloads { get { return m_pendingDownloads; } }
-        public float PendingUploads { get { return m_pendingUploads; } }
-        public float ActiveScripts { get { return m_activeScripts; } }
-        public float ScriptLinesPerSecond { get { return m_scriptLinesPerSecond; } }
+        private volatile float m_simFps;
+        private volatile int m_statcounter;
+        private volatile float m_timeDilation;
+        private volatile float m_totalFrameTime;
+        private volatile float m_totalPrims;
+        private volatile float m_unackedBytes;
 
         public USimStatsData(UUID pRegionID)
         {
             m_regionID = pRegionID;
+        }
+
+        public UUID RegionId
+        {
+            get { return m_regionID; }
+        }
+
+        public int StatsCounter
+        {
+            get { return m_statcounter; }
+            set { m_statcounter = value; }
+        }
+
+        public float TimeDilation
+        {
+            get { return m_timeDilation; }
+        }
+
+        public float SimFps
+        {
+            get { return m_simFps; }
+        }
+
+        public float PhysicsFps
+        {
+            get { return m_physicsFps; }
+        }
+
+        public float AgentUpdates
+        {
+            get { return m_agentUpdates; }
+        }
+
+        public float RootAgents
+        {
+            get { return m_rootAgents; }
+        }
+
+        public float ChildAgents
+        {
+            get { return m_childAgents; }
+        }
+
+        public float TotalPrims
+        {
+            get { return m_totalPrims; }
+        }
+
+        public float ActivePrims
+        {
+            get { return m_activePrims; }
+        }
+
+        public float TotalFrameTime
+        {
+            get { return m_totalFrameTime; }
+        }
+
+        public float NetFrameTime
+        {
+            get { return m_netFrameTime; }
+        }
+
+        public float PhysicsFrameTime
+        {
+            get { return m_physicsFrameTime; }
+        }
+
+        public float OtherFrameTime
+        {
+            get { return m_otherFrameTime; }
+        }
+
+        public float ImageFrameTime
+        {
+            get { return m_imageFrameTime; }
+        }
+
+        public float InPacketsPerSecond
+        {
+            get { return m_inPacketsPerSecond; }
+        }
+
+        public float OutPacketsPerSecond
+        {
+            get { return m_outPacketsPerSecond; }
+        }
+
+        public float UnackedBytes
+        {
+            get { return m_unackedBytes; }
+        }
+
+        public float AgentFrameTime
+        {
+            get { return m_agentFrameTime; }
+        }
+
+        public float PendingDownloads
+        {
+            get { return m_pendingDownloads; }
+        }
+
+        public float PendingUploads
+        {
+            get { return m_pendingUploads; }
+        }
+
+        public float ActiveScripts
+        {
+            get { return m_activeScripts; }
+        }
+
+        public float ScriptLinesPerSecond
+        {
+            get { return m_scriptLinesPerSecond; }
         }
 
         public void ConsumeSimStats(SimStats stats)
@@ -237,17 +327,17 @@ namespace Aurora.Framework
 
     public struct ClientVersionData
     {
-        public UUID region_id;
-        public string version;
         public int count;
         public float fps;
+        public UUID region_id;
+        public string version;
     }
 
     public struct ShortSessionData
     {
-        public UUID session_id;
         public string client_version;
         public DateTime last_update;
+        public UUID session_id;
         public DateTime start_time;
     }
 
@@ -255,10 +345,9 @@ namespace Aurora.Framework
     {
         public string firstname;
         public string lastname;
-        public UUID user_id;
         public List<ShortSessionData> sessions;
+        public UUID user_id;
     }
 
     #endregion
-
 }

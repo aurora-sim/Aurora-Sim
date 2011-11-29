@@ -25,23 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
@@ -49,11 +45,11 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAvatarService m_AvatarService;
+        private readonly IAvatarService m_AvatarService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public AvatarServerPostHandler (string url, IAvatarService service, string SessionID, IRegistryCore registry) :
+        public AvatarServerPostHandler(string url, IAvatarService service, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_AvatarService = service;
@@ -62,7 +58,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -74,7 +70,7 @@ namespace OpenSim.Services
             try
             {
                 Dictionary<string, object> request =
-                        WebUtils.ParseQueryString(body);
+                    WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -82,7 +78,7 @@ namespace OpenSim.Services
                 string method = request["METHOD"].ToString();
 
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
                     case "getavatar":
@@ -116,7 +112,7 @@ namespace OpenSim.Services
             return FailureResult();
         }
 
-        byte[] GetAvatar(Dictionary<string, object> request)
+        private byte[] GetAvatar(Dictionary<string, object> request)
         {
             UUID user = UUID.Zero;
 
@@ -144,7 +140,7 @@ namespace OpenSim.Services
             return FailureResult();
         }
 
-        byte[] SetAvatar(Dictionary<string, object> request)
+        private byte[] SetAvatar(Dictionary<string, object> request)
         {
             UUID user = UUID.Zero;
 
@@ -161,7 +157,7 @@ namespace OpenSim.Services
             return FailureResult();
         }
 
-        byte[] ResetAvatar(Dictionary<string, object> request)
+        private byte[] ResetAvatar(Dictionary<string, object> request)
         {
             UUID user = UUID.Zero;
             if (!request.ContainsKey("UserID"))
@@ -176,7 +172,7 @@ namespace OpenSim.Services
             return FailureResult();
         }
 
-        byte[] CacheWearableData(Dictionary<string, object> request)
+        private byte[] CacheWearableData(Dictionary<string, object> request)
         {
             UUID user = UUID.Zero;
 
@@ -187,24 +183,24 @@ namespace OpenSim.Services
                 return FailureResult();
 
             AvatarWearable w = new AvatarWearable();
-            OSDArray array = (OSDArray)OSDParser.DeserializeJson(request["WEARABLES"].ToString());
+            OSDArray array = (OSDArray) OSDParser.DeserializeJson(request["WEARABLES"].ToString());
             w.Unpack(array);
 
             m_AvatarService.CacheWearableData(user, w);
             return SuccessResult();
         }
-        
+
         private byte[] SuccessResult()
         {
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -221,12 +217,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -241,13 +237,11 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
             return ms.ToArray();
         }
-
     }
 }

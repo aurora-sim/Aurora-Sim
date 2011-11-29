@@ -29,26 +29,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
 using Nini.Config;
-using log4net;
 using log4net.Core;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim;
 using OpenSim.Framework;
-
-using OpenSim.Region.CoreModules;
-using OpenSim.Region.CoreModules.World.Land;
-using OpenSim.Region.CoreModules.World.Terrain;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Region.Framework.Scenes.Animation;
-using OpenSim.Region.Physics.Manager;
 using Aurora.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
@@ -65,7 +58,6 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using System.Reflection;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
@@ -172,7 +164,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             ILease lease = (ILease)base.InitializeLifetimeService();
 
-            if (lease.CurrentState == LeaseState.Initial)
+            if (lease != null && lease.CurrentState == LeaseState.Initial)
             {
                 lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
                 //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
@@ -184,11 +176,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
        protected virtual void ScriptSleep(int delay)
         {
-            delay = (int)((float)delay * m_ScriptDelayFactor);
+            delay = (int)(delay * m_ScriptDelayFactor);
             if (delay == 0)
                 return;
 
-            System.Threading.Thread.Sleep(delay);
+            Thread.Sleep(delay);
         }
 
         /// <summary>
@@ -198,7 +190,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         protected DateTime PScriptSleep(int delay)
         {
-            double dly = ((float)delay * m_ScriptDelayFactor);
+            double dly = (delay * m_ScriptDelayFactor);
             if (dly == 0.0)
                 return DateTime.Now;
 
@@ -282,8 +274,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public List<ISceneChildEntity> GetLinkParts(int linkType)
         {
-            List<ISceneChildEntity> ret = new List<ISceneChildEntity> ();
-            ret.Add(m_host);
+            List<ISceneChildEntity> ret = new List<ISceneChildEntity> {m_host};
 
             if (linkType == ScriptBaseClass.LINK_SET)
             {
@@ -296,8 +287,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentEntity != null)
                 {
-                    ret = new List<ISceneChildEntity> ();
-                    ret.Add(m_host.ParentEntity.RootChild);
+                    ret = new List<ISceneChildEntity> {m_host.ParentEntity.RootChild};
                     return ret;
                 }
                 return ret;
@@ -328,37 +318,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return ret;
             }
 
-            else
+            if (linkType < 0 || m_host.ParentEntity == null)
+                return new List<ISceneChildEntity> ();
+            IEntity target = m_host.ParentEntity.GetLinkNumPart (linkType);
+            if (target is ISceneChildEntity)
             {
-                if (linkType < 0 || m_host.ParentEntity == null)
-                    return new List<ISceneChildEntity> ();
-                IEntity target = m_host.ParentEntity.GetLinkNumPart (linkType);
-                if (target is ISceneChildEntity)
-                {
-                    if (target == null)
-                        return new List<ISceneChildEntity> ();
-                    ret = new List<ISceneChildEntity> ();
-                    ret.Add (target as ISceneChildEntity);
-                }
-                //No allowing scene presences to be found here
-                return ret;
+                ret = new List<ISceneChildEntity> {target as ISceneChildEntity};
             }
+            //No allowing scene presences to be found here
+            return ret;
         }
 
         public List<IEntity> GetLinkPartsAndEntities (int linkType)
         {
-            List<IEntity> ret = new List<IEntity> ();
-            ret.Add(m_host);
+            List<IEntity> ret = new List<IEntity> {m_host};
 
             if (linkType == ScriptBaseClass.LINK_SET)
             {
                 if (m_host.ParentEntity != null)
                 {
                     List<ISceneChildEntity> parts = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
-                    return parts.ConvertAll<IEntity> (new Converter<ISceneChildEntity, IEntity> (delegate (ISceneChildEntity part)
-                        {
-                            return (IEntity)part;
-                        }));
+                    return parts.ConvertAll (part => (IEntity) part);
                 }
                 return ret;
             }
@@ -367,8 +347,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (m_host.ParentEntity != null)
                 {
-                    ret = new List<IEntity> ();
-                    ret.Add (m_host.ParentEntity.RootChild);
+                    ret = new List<IEntity> {m_host.ParentEntity.RootChild};
                     return ret;
                 }
                 return ret;
@@ -379,10 +358,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity == null)
                     return new List<IEntity> ();
                 List<ISceneChildEntity> sceneobjectparts = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
-                ret = sceneobjectparts.ConvertAll<IEntity> (new Converter<ISceneChildEntity, IEntity> (delegate (ISceneChildEntity part)
-                        {
-                            return (IEntity)part;
-                        }));
+                ret = sceneobjectparts.ConvertAll (part => (IEntity) part);
                 if (ret.Contains(m_host))
                     ret.Remove(m_host);
                 return ret;
@@ -393,10 +369,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity == null)
                     return new List<IEntity> ();
                 List<ISceneChildEntity> children = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
-                ret = children.ConvertAll<IEntity> (new Converter<ISceneChildEntity, IEntity> (delegate (ISceneChildEntity part)
-                {
-                    return (IEntity)part;
-                }));
+                ret = children.ConvertAll (part => (IEntity) part);
                 if (ret.Contains (m_host.ParentEntity.RootChild))
                     ret.Remove (m_host.ParentEntity.RootChild);
                 return ret;
@@ -407,18 +380,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return ret;
             }
 
-            else
-            {
-                if (linkType < 0 || m_host.ParentEntity == null)
-                    return new List<IEntity> ();
-                IEntity target = m_host.ParentEntity.GetLinkNumPart (linkType);
-                if (target == null)
-                    return new List<IEntity> ();
-                ret = new List<IEntity> ();
-                ret.Add(target);
+            if (linkType < 0 || m_host.ParentEntity == null)
+                return new List<IEntity> ();
+            IEntity target = m_host.ParentEntity.GetLinkNumPart (linkType);
+            if (target == null)
+                return new List<IEntity> ();
+            ret = new List<IEntity> {target};
 
-                return ret;
-            }
+            return ret;
         }
 
         protected UUID InventorySelf()
@@ -491,6 +460,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// in prim inventory.
         /// </summary>
         /// <param name="k"></param>
+        /// <param name="throwExceptionIfDoesNotExist"></param>
         /// <returns></returns>
         protected UUID KeyOrName(string k, bool throwExceptionIfDoesNotExist)
         {
@@ -503,10 +473,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             // else try to locate the name in inventory of object. found returns key,
             // not found returns UUID.Zero which will translate to the default particle texture
-            else
-            {
-                return InventoryKey(k, throwExceptionIfDoesNotExist);
-            }
+            return InventoryKey(k, throwExceptionIfDoesNotExist);
         }
 
         // convert a LSL_Rotation to a Quaternion
@@ -567,8 +534,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             if (i == Int32.MinValue)
                 return i;
-            else
-                return (int)Math.Abs(i);
+            return (int)Math.Abs(i);
         }
 
         public LSL_Float llFabs(double f)
@@ -660,10 +626,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return new LSL_Vector(Math.Atan2(2.0 * (r.x * r.s - r.y * r.z), (-t.x - t.y + t.z + t.s)),
                                              Math.Atan2(n, Math.Sqrt(p)),
                                              Math.Atan2(2.0 * (r.z * r.s - r.x * r.y), (t.x - t.y - t.z + t.s)));
-            else if (n > 0)
+            if (n > 0)
                 return new LSL_Vector(0.0, Math.PI * 0.5, Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z));
-            else
-                return new LSL_Vector(0.0, -Math.PI * 0.5, Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z));
+            return new LSL_Vector(0.0, -Math.PI * 0.5, Math.Atan2((r.z * r.s + r.x * r.y), 0.5 - t.x - t.z));
         }
 
         /* From wiki:
@@ -714,9 +679,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llEuler2Rot(LSL_Vector v)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Rotation();
-            
 
-            double x,y,z,s;
 
             double c1 = Math.Cos(v.x * 0.5);
             double c2 = Math.Cos(v.y * 0.5);
@@ -725,10 +688,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             double s2 = Math.Sin(v.y * 0.5);
             double s3 = Math.Sin(v.z * 0.5);
 
-            x = s1 * c2 * c3 + c1 * s2 * s3;
-            y = c1 * s2 * c3 - s1 * c2 * s3;
-            z = s1 * s2 * c3 + c1 * c2 * s3;
-            s = c1 * c2 * c3 - s1 * s2 * s3;
+            double x = s1 * c2 * c3 + c1 * s2 * s3;
+            double y = c1 * s2 * c3 - s1 * c2 * s3;
+            double z = s1 * s2 * c3 + c1 * c2 * s3;
+            double s = c1 * c2 * c3 - s1 * s2 * s3;
 
             return new LSL_Rotation(x, y, z, s);
         }
@@ -749,55 +712,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         (fwd.y - left.x) * s,
                         0.25 / s);
             }
-            else
-            {
-                double max = (left.y > up.z) ? left.y : up.z;
+            double max = (left.y > up.z) ? left.y : up.z;
 
-                if (max < fwd.x)
-                {
-                    s = Math.Sqrt(fwd.x - (left.y + up.z) + 1.0);
-                    double x = s * 0.5;
-                    s = 0.5 / s;
-                    return new LSL_Rotation(
-                            x,
-                            (fwd.y + left.x) * s,
-                            (up.x + fwd.z) * s,
-                            (left.z - up.y) * s);
-                }
-                else if (max == left.y)
-                {
-                    s = Math.Sqrt(left.y - (up.z + fwd.x) + 1.0);
-                    double y = s * 0.5;
-                    s = 0.5 / s;
-                    return new LSL_Rotation(
-                            (fwd.y + left.x) * s,
-                            y,
-                            (left.z + up.y) * s,
-                            (up.x - fwd.z) * s);
-                }
-                else
-                {
-                    s = Math.Sqrt(up.z - (fwd.x + left.y) + 1.0);
-                    double z = s * 0.5;
-                    s = 0.5 / s;
-                    return new LSL_Rotation(
-                            (up.x + fwd.z) * s,
-                            (left.z + up.y) * s,
-                            z,
-                            (fwd.y - left.x) * s);
-                }
+            if (max < fwd.x)
+            {
+                s = Math.Sqrt(fwd.x - (left.y + up.z) + 1.0);
+                double x = s * 0.5;
+                s = 0.5 / s;
+                return new LSL_Rotation(
+                    x,
+                    (fwd.y + left.x) * s,
+                    (up.x + fwd.z) * s,
+                    (left.z - up.y) * s);
             }
+            if (max == left.y)
+            {
+                s = Math.Sqrt(left.y - (up.z + fwd.x) + 1.0);
+                double y = s * 0.5;
+                s = 0.5 / s;
+                return new LSL_Rotation(
+                    (fwd.y + left.x) * s,
+                    y,
+                    (left.z + up.y) * s,
+                    (up.x - fwd.z) * s);
+            }
+            s = Math.Sqrt(up.z - (fwd.x + left.y) + 1.0);
+            double z = s * 0.5;
+            s = 0.5 / s;
+            return new LSL_Rotation(
+                (up.x + fwd.z) * s,
+                (left.z + up.y) * s,
+                z,
+                (fwd.y - left.x) * s);
         }
 
         public LSL_Vector llRot2Fwd(LSL_Rotation r)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
                 return new LSL_Vector();
-            
 
-            double x, y, z, m;
 
-            m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
+            double m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
             // m is always greater than zero
             // if m is not equal to 1 then Rotation needs to be normalized
             if (Math.Abs(1.0 - m) > 0.000001) // allow a little slop here for calculation precision
@@ -810,20 +765,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // Fast Algebric Calculations instead of Vectors & Quaternions Product
-            x = r.x * r.x - r.y * r.y - r.z * r.z + r.s * r.s;
-            y = 2 * (r.x * r.y + r.z * r.s);
-            z = 2 * (r.x * r.z - r.y * r.s);
+            double x = r.x * r.x - r.y * r.y - r.z * r.z + r.s * r.s;
+            double y = 2 * (r.x * r.y + r.z * r.s);
+            double z = 2 * (r.x * r.z - r.y * r.s);
             return (new LSL_Vector(x, y, z));
         }
 
         public LSL_Vector llRot2Left(LSL_Rotation r)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Vector();
-            
 
-            double x, y, z, m;
 
-            m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
+            double m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
             // m is always greater than zero
             // if m is not equal to 1 then Rotation needs to be normalized
             if (Math.Abs(1.0 - m) > 0.000001) // allow a little slop here for calculation precision
@@ -836,19 +789,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // Fast Algebric Calculations instead of Vectors & Quaternions Product
-            x = 2 * (r.x * r.y - r.z * r.s);
-            y = -r.x * r.x + r.y * r.y - r.z * r.z + r.s * r.s;
-            z = 2 * (r.x * r.s + r.y * r.z);
+            double x = 2 * (r.x * r.y - r.z * r.s);
+            double y = -r.x * r.x + r.y * r.y - r.z * r.z + r.s * r.s;
+            double z = 2 * (r.x * r.s + r.y * r.z);
             return (new LSL_Vector(x, y, z));
         }
 
         public LSL_Vector llRot2Up(LSL_Rotation r)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Vector();
-            
-            double x, y, z, m;
 
-            m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
+            double m = r.x * r.x + r.y * r.y + r.z * r.z + r.s * r.s;
             // m is always greater than zero
             // if m is not equal to 1 then Rotation needs to be normalized
             if (Math.Abs(1.0 - m) > 0.000001) // allow a little slop here for calculation precision
@@ -861,9 +812,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // Fast Algebric Calculations instead of Vectors & Quaternions Product
-            x = 2 * (r.x * r.z + r.y * r.s);
-            y = 2 * (-r.x * r.s + r.y * r.z);
-            z = -r.x * r.x - r.y * r.y + r.z * r.z + r.s * r.s;
+            double x = 2 * (r.x * r.z + r.y * r.s);
+            double y = 2 * (-r.x * r.s + r.y * r.z);
+            double z = -r.x * r.x - r.y * r.y + r.z * r.z + r.s * r.s;
             return (new LSL_Vector(x, y, z));
         }
 
@@ -896,17 +847,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     orthoVector = orthoVector - a * (a.x / LSL_Vector.Dot(a, a));
                     // Check for near zero vector. A very small non-zero number here will create
                     // a rotation in an undesired direction.
-                    if (LSL_Vector.Mag(orthoVector) > 0.0001)
-                    {
-                        rotBetween = new LSL_Rotation(orthoVector.x, orthoVector.y, orthoVector.z, 0.0f);
-                    }
-                    // If the magnitude of the vector was near zero, then assume the X axis is not
-                    // orthogonal and use the Z axis instead.
-                    else
-                    {
-                        // Set 180 z rotation.
-                        rotBetween = new LSL_Rotation(0.0f, 0.0f, 1.0f, 0.0f);
-                    }
+                    rotBetween = LSL_Vector.Mag(orthoVector) > 0.0001 ? new LSL_Rotation(orthoVector.x, orthoVector.y, orthoVector.z, 0.0f) : new LSL_Rotation(0.0f, 0.0f, 1.0f, 0.0f);
                 }
                 // Check for parallel vectors.
                 // A dot product of 1 would mean the angle between vectors is 0 degrees.
@@ -1045,8 +986,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID.TryParse(ID, out keyID);
             if (m_comms != null)
                 return m_comms.Listen(m_itemID, m_host.UUID, channelID, name, keyID, msg);
-            else
-                return -1;
+            return -1;
         }
 
         public void llListenControl(int number, int active)
@@ -1425,10 +1365,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((status & ScriptBaseClass.STATUS_PHANTOM) == ScriptBaseClass.STATUS_PHANTOM)
             {
-                if (value != 0)
-                    m_host.ScriptSetPhantomStatus(true);
-                else
-                    m_host.ScriptSetPhantomStatus(false);
+                m_host.ScriptSetPhantomStatus(value != 0);
             }
 
             if ((status & ScriptBaseClass.STATUS_CAST_SHADOWS) == ScriptBaseClass.STATUS_CAST_SHADOWS)
@@ -1453,42 +1390,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((status & ScriptBaseClass.STATUS_BLOCK_GRAB) == ScriptBaseClass.STATUS_BLOCK_GRAB)
             {
-                if (value != 0)
-                    m_host.SetBlockGrab (true, false);
-                else
-                    m_host.SetBlockGrab (false, false);
+                m_host.SetBlockGrab(value != 0, false);
             }
 
             if ((status & ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT) == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
             {
-                if (value != 0)
-                    m_host.SetBlockGrab (true, true);
-                else
-                    m_host.SetBlockGrab (false, true);
+                m_host.SetBlockGrab(value != 0, true);
             }
 
             if ((status & ScriptBaseClass.STATUS_DIE_AT_EDGE) == ScriptBaseClass.STATUS_DIE_AT_EDGE)
             {
-                if (value != 0)
-                    m_host.SetDieAtEdge(true);
-                else
-                    m_host.SetDieAtEdge(false);
+                m_host.SetDieAtEdge(value != 0);
             }
 
             if ((status & ScriptBaseClass.STATUS_RETURN_AT_EDGE) == ScriptBaseClass.STATUS_RETURN_AT_EDGE)
             {
-                if (value != 0)
-                    m_host.SetReturnAtEdge(true);
-                else
-                    m_host.SetReturnAtEdge(false);
+                m_host.SetReturnAtEdge(value != 0);
             }
 
             if ((status & ScriptBaseClass.STATUS_SANDBOX) == ScriptBaseClass.STATUS_SANDBOX)
             {
-                if (value != 0)
-                    m_host.SetStatusSandbox(true);
-                else
-                    m_host.SetStatusSandbox(false);
+                m_host.SetStatusSandbox(value != 0);
             }
 
             if (statusrotationaxis != 0)
@@ -1504,87 +1426,58 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // m_log.Debug(m_host.ToString() + " status is " + m_host.GetEffectiveObjectFlags().ToString());
             if (status == ScriptBaseClass.STATUS_PHYSICS)
             {
-                if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics)
-                    return new LSL_Integer (1);
-                return new LSL_Integer (0);
+                return (m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_PHANTOM)
+            if (status == ScriptBaseClass.STATUS_PHANTOM)
             {
-                if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) == (uint)PrimFlags.Phantom)
-                    return new LSL_Integer (1);
-                return new LSL_Integer (0);
+                return (m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) == (uint)PrimFlags.Phantom ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_CAST_SHADOWS)
+            if (status == ScriptBaseClass.STATUS_CAST_SHADOWS)
             {
                 if ((m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.CastShadows) == (uint)PrimFlags.CastShadows)
                     return new LSL_Integer (1);
                 return new LSL_Integer (0);
             }
-
-            else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB)
+            if (status == ScriptBaseClass.STATUS_BLOCK_GRAB)
             {
-                if (m_host.GetBlockGrab (false))
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetBlockGrab (false) ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
+            if (status == ScriptBaseClass.STATUS_BLOCK_GRAB_OBJECT)
             {
-                if (m_host.GetBlockGrab (true))
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetBlockGrab (true) ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_DIE_AT_EDGE)
+            if (status == ScriptBaseClass.STATUS_DIE_AT_EDGE)
             {
-                if (m_host.GetDieAtEdge())
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetDieAtEdge() ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_RETURN_AT_EDGE)
+            if (status == ScriptBaseClass.STATUS_RETURN_AT_EDGE)
             {
-                if (m_host.GetReturnAtEdge())
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetReturnAtEdge() ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_ROTATE_X)
+            if (status == ScriptBaseClass.STATUS_ROTATE_X)
             {
-                if (m_host.GetAxisRotation(2) == 2)
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetAxisRotation(2) == 2 ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_ROTATE_Y)
+            if (status == ScriptBaseClass.STATUS_ROTATE_Y)
             {
-                if (m_host.GetAxisRotation(4) == 4)
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetAxisRotation(4) == 4 ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_ROTATE_Z)
+            if (status == ScriptBaseClass.STATUS_ROTATE_Z)
             {
-                if (m_host.GetAxisRotation(8) == 8)
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetAxisRotation(8) == 8 ? new LSL_Integer (1) : new LSL_Integer (0);
             }
 
-            else if (status == ScriptBaseClass.STATUS_SANDBOX)
+            if (status == ScriptBaseClass.STATUS_SANDBOX)
             {
-                if (m_host.GetStatusSandbox())
-                    return new LSL_Integer (1);
-                else
-                    return new LSL_Integer (0);
+                return m_host.GetStatusSandbox() ? new LSL_Integer (1) : new LSL_Integer (0);
             }
             return new LSL_Integer (0);
         }
@@ -1673,8 +1566,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void SetTexGen (ISceneChildEntity part, int face, int style)
         {
             Primitive.TextureEntry tex = part.Shape.Textures;
-            MappingType textype;
-            textype = MappingType.Default;
+            MappingType textype = MappingType.Default;
             if (style == (int)ScriptBaseClass.PRIM_TEXGEN_PLANAR)
                 textype = MappingType.Planar;
 
@@ -1685,7 +1577,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.UpdateTexture(tex);
                 return;
             }
-            else if (face == ScriptBaseClass.ALL_SIDES)
+            if (face == ScriptBaseClass.ALL_SIDES)
             {
                 for (uint i = 0; i < GetNumberOfSides(part); i++)
                 {
@@ -1710,7 +1602,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.UpdateTexture(tex);
                 return;
             }
-            else if (face == ScriptBaseClass.ALL_SIDES)
+            if (face == ScriptBaseClass.ALL_SIDES)
             {
                 for (uint i = 0; i < GetNumberOfSides(part); i++)
                 {
@@ -1758,14 +1650,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.UpdateTexture(tex);
                 return;
             }
-            else if (face == ScriptBaseClass.ALL_SIDES)
+            if (face == ScriptBaseClass.ALL_SIDES)
             {
                 for (uint i = 0; i < GetNumberOfSides(part); i++)
                 {
                     if (tex.FaceTextures[i] != null)
                     {
                         tex.FaceTextures[i].Shiny = sval;
-                        tex.FaceTextures[i].Bump = bump;;
+                        tex.FaceTextures[i].Bump = bump;
                     }
                     tex.DefaultTexture.Shiny = sval;
                     tex.DefaultTexture.Bump = bump;
@@ -1785,20 +1677,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                  part.UpdateTexture(tex);
                  return;
              }
-             else if (face == ScriptBaseClass.ALL_SIDES)
-             {
-                 for (uint i = 0; i < GetNumberOfSides(part); i++)
-                 {
-                     if (tex.FaceTextures[i] != null)
-                     {
-                         tex.FaceTextures[i].Fullbright = bright;
-                     }
-                 }
-                 tex.DefaultTexture.Fullbright = bright;
-                 part.UpdateTexture(tex);
-                 return;
-             }
-         }
+            if (face == ScriptBaseClass.ALL_SIDES)
+            {
+                for (uint i = 0; i < GetNumberOfSides(part); i++)
+                {
+                    if (tex.FaceTextures[i] != null)
+                    {
+                        tex.FaceTextures[i].Fullbright = bright;
+                    }
+                }
+                tex.DefaultTexture.Fullbright = bright;
+                part.UpdateTexture(tex);
+                return;
+            }
+        }
 
         public LSL_Float llGetAlpha(int face)
         {
@@ -1974,7 +1866,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             else
             {
-                if (part.Shape.LightEntry != false)
+                if (part.Shape.LightEntry)
                     same = false;
                 part.Shape.LightEntry = false;
             }
@@ -2026,10 +1918,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 rgb.z = texcolor.B;
                 return rgb;
             }
-            else
-            {
-                return new LSL_Vector();
-            }
+            return new LSL_Vector();
         }
 
         public DateTime llSetTexture(string texture, int face)
@@ -2075,7 +1964,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 part.UpdateTexture(tex);
                 return;
             }
-            else if (face == ScriptBaseClass.ALL_SIDES)
+            if (face == ScriptBaseClass.ALL_SIDES)
             {
                 for (uint i = 0; i < ns; i++)
                 {
@@ -2219,8 +2108,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             if (face >= 0 && face < GetNumberOfSides(part))
             {
-                Primitive.TextureEntryFace texface;
-                texface = tex.GetFace((uint)face);
+                Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
                 TaskInventoryItem item = null;
                 m_host.TaskInventory.TryGetValue(texface.TextureID, out item);
                 if (item != null)
@@ -2301,23 +2189,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                       tmp.Y,
                                       tmp.Z);
             }
-            else
+            if (m_host.IsRoot)
             {
-                if (m_host.IsRoot)
-                {
-                    tmp = m_host.AttachedPos;
-                    return new LSL_Vector(tmp.X,
-                                          tmp.Y,
-                                          tmp.Z);
-                }
-                else
-                {
-                    tmp = part.OffsetPosition;
-                    return new LSL_Vector(tmp.X,
-                                          tmp.Y,
-                                          tmp.Z);
-                }
+                tmp = m_host.AttachedPos;
+                return new LSL_Vector(tmp.X,
+                                      tmp.Y,
+                                      tmp.Z);
             }
+            tmp = part.OffsetPosition;
+            return new LSL_Vector(tmp.X,
+                                  tmp.Y,
+                                  tmp.Z);
         }
 
         public LSL_Vector llGetPos()
@@ -2344,13 +2226,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                       tmp.Y,
                                       tmp.Z);
             }
-            else
-            {
-                tmp = entity.AbsolutePosition;
-                return new LSL_Vector(tmp.X,
-                                      tmp.Y,
-                                      tmp.Z);
-            }
+            tmp = entity.AbsolutePosition;
+            return new LSL_Vector(tmp.X,
+                                  tmp.Y,
+                                  tmp.Z);
         }
 
         public DateTime llSetRot(LSL_Rotation rot)
@@ -2437,10 +2316,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     IScenePresence avatar = World.GetScenePresence(part.AttachedAvatar);
                     if (avatar != null)
                     {
-                        if ((avatar.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0)
-                            q = avatar.CameraRotation; // Mouselook
-                        else
-                            q = avatar.Rotation; // Currently infrequently updated so may be inaccurate
+                        q = (avatar.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0 ? avatar.CameraRotation : avatar.Rotation;
                     }
                     else
                         q = part.ParentEntity.GroupRotation; // Likely never get here but just in case
@@ -2883,54 +2759,38 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             // Inverted substring (end < start)
-            else
+            // Implies both indices are below the
+            // lower bound. In the inverted case, that
+            // means the entire string will be returned
+            // unchanged.
+            if (start < 0)
             {
-                // Implies both indices are below the
-                // lower bound. In the inverted case, that
-                // means the entire string will be returned
-                // unchanged.
-                if (start < 0)
-                {
-                    return src;
-                }
-                // If both indices are greater than the upper
-                // bound the result may seem initially counter
-                // intuitive.
-                if (end >= src.Length)
-                {
-                    return src;
-                }
-
-                if (end < 0)
-                {
-                    if (start < src.Length)
-                    {
-                        return src.Substring(start);
-                    }
-                    else
-                    {
-                        return String.Empty;
-                    }
-                }
-                else
-                {
-                    if (start < src.Length)
-                    {
-                        return src.Substring(0,end+1) + src.Substring(start);
-                    }
-                    else
-                    {
-                        return src.Substring(0,end+1);
-                    }
-                }
+                return src;
             }
-         }
+            // If both indices are greater than the upper
+            // bound the result may seem initially counter
+            // intuitive.
+            if (end >= src.Length)
+            {
+                return src;
+            }
+
+            if (end < 0)
+            {
+                return start < src.Length ? src.Substring(start) : String.Empty;
+            }
+            if (start < src.Length)
+            {
+                return src.Substring(0,end+1) + src.Substring(start);
+            }
+            return src.Substring(0,end+1);
+        }
 
         /// <summary>
         /// Delete substring removes the specified substring bounded
         /// by the inclusive indices start and end. Indices may be
         /// negative (indicating end-relative) and may be inverted,
-        /// i.e. end < start.
+        /// i.e. end < start./>
         /// </summary>
 
         public LSL_String llDeleteSubString(string src, int start, int end)
@@ -2976,38 +2836,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return src.Remove(start,end-start+1);
             }
             // Inverted substring
-            else
+            // In this case, out of bounds means that
+            // the existing string is part of the cut.
+            if (start < 0 || end >= src.Length)
             {
-                // In this case, out of bounds means that
-                // the existing string is part of the cut.
-                if (start < 0 || end >= src.Length)
-                {
-                    return String.Empty;
-                }
-
-                if (end > 0)
-                {
-                    if (start < src.Length)
-                    {
-                        return src.Remove(start).Remove(0,end+1);
-                    }
-                    else
-                    {
-                        return src.Remove(0,end+1);
-                    }
-                }
-                else
-                {
-                    if (start < src.Length)
-                    {
-                        return src.Remove(start);
-                    }
-                    else
-                    {
-                        return src;
-                    }
-                }
+                return String.Empty;
             }
+
+            if (end > 0)
+            {
+                if (start < src.Length)
+                {
+                    return src.Remove(start).Remove(0,end+1);
+                }
+                return src.Remove(0,end+1);
+            }
+            if (start < src.Length)
+            {
+                return src.Remove(start);
+            }
+            return src;
         }
 
         /// <summary>
@@ -3148,47 +2996,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
         ]);*/
 
-            List<object> list = new List<object>();
-            list.Add(ScriptBaseClass.PSYS_PART_FLAGS);
-            list.Add(ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
-            list.Add(ScriptBaseClass.PSYS_PART_START_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_END_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_START_ALPHA);
-            list.Add(new LSL_Float(0.50));
-            list.Add(ScriptBaseClass.PSYS_PART_END_ALPHA);
-            list.Add(new LSL_Float(0.25));
-            list.Add(ScriptBaseClass.PSYS_PART_START_SCALE);
-            list.Add(new LSL_Vector(scale, scale, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_END_SCALE);
-            list.Add(new LSL_Vector(scale * 2 + lifetime, scale * 2 + lifetime, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_MAX_AGE);
-            list.Add(new LSL_Float(lifetime));
-            list.Add(ScriptBaseClass.PSYS_SRC_ACCEL);
-            list.Add(new LSL_Vector(0, 0, 0));
-            list.Add(ScriptBaseClass.PSYS_SRC_TEXTURE);
-            list.Add(new LSL_String(texture));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RATE);
-            list.Add(new LSL_Float(1));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
-            list.Add(new LSL_Float(arc * Math.PI));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Integer(particles / 2));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
-            list.Add(new LSL_Float(vel / 3));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
-            list.Add(new LSL_Float(vel * 2 / 3));
-            list.Add(ScriptBaseClass.PSYS_SRC_MAX_AGE);
-            list.Add(new LSL_Float(lifetime / 2));
-            list.Add(ScriptBaseClass.PSYS_SRC_OMEGA);
-            list.Add(new LSL_Vector(0, 0, 0));
+            List<object> list = new List<object>
+                                    {
+                                        ScriptBaseClass.PSYS_PART_FLAGS,
+                                        ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK |
+                                        ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK |
+                                        ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE,
+                                        ScriptBaseClass.PSYS_PART_START_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_END_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_START_ALPHA,
+                                        new LSL_Float(0.50),
+                                        ScriptBaseClass.PSYS_PART_END_ALPHA,
+                                        new LSL_Float(0.25),
+                                        ScriptBaseClass.PSYS_PART_START_SCALE,
+                                        new LSL_Vector(scale, scale, 0),
+                                        ScriptBaseClass.PSYS_PART_END_SCALE,
+                                        new LSL_Vector(scale*2 + lifetime, scale*2 + lifetime, 0),
+                                        ScriptBaseClass.PSYS_PART_MAX_AGE,
+                                        new LSL_Float(lifetime),
+                                        ScriptBaseClass.PSYS_SRC_ACCEL,
+                                        new LSL_Vector(0, 0, 0),
+                                        ScriptBaseClass.PSYS_SRC_TEXTURE,
+                                        new LSL_String(texture),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RATE,
+                                        new LSL_Float(1),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_END,
+                                        new LSL_Float(arc*Math.PI),
+                                        ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT,
+                                        new LSL_Integer(particles/2),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RADIUS,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN,
+                                        new LSL_Float(vel/3),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX,
+                                        new LSL_Float(vel*2/3),
+                                        ScriptBaseClass.PSYS_SRC_MAX_AGE,
+                                        new LSL_Float(lifetime/2),
+                                        ScriptBaseClass.PSYS_SRC_OMEGA,
+                                        new LSL_Vector(0, 0, 0)
+                                    };
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
 
@@ -3223,47 +3075,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
     ]);*/
 
-            List<object> list = new List<object>();
-            list.Add(ScriptBaseClass.PSYS_PART_FLAGS);
-            list.Add(ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK | ScriptBaseClass.PSYS_PART_BOUNCE_MASK | ScriptBaseClass.PSYS_PART_EMISSIVE_MASK);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
-            list.Add(ScriptBaseClass.PSYS_PART_START_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_END_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_START_ALPHA);
-            list.Add(new LSL_Float(0.50));
-            list.Add(ScriptBaseClass.PSYS_PART_END_ALPHA);
-            list.Add(new LSL_Float(0.25));
-            list.Add(ScriptBaseClass.PSYS_PART_START_SCALE);
-            list.Add(new LSL_Vector(scale / 1.5, scale / 1.5, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_END_SCALE);
-            list.Add(new LSL_Vector(0, 0, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_MAX_AGE);
-            list.Add(new LSL_Float(3));
-            list.Add(ScriptBaseClass.PSYS_SRC_ACCEL);
-            list.Add(new LSL_Vector(1, 0, -4));
-            list.Add(ScriptBaseClass.PSYS_SRC_TEXTURE);
-            list.Add(new LSL_String(texture));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RATE);
-            list.Add(new LSL_Float(5 / particles));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
-            list.Add(new LSL_Float(arc * Math.PI));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Integer(1));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
-            list.Add(new LSL_Float(vel));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
-            list.Add(new LSL_Float(vel));
-            list.Add(ScriptBaseClass.PSYS_SRC_MAX_AGE);
-            list.Add(new LSL_Float(lifetime / 2));
-            list.Add(ScriptBaseClass.PSYS_SRC_OMEGA);
-            list.Add(new LSL_Vector(0, 0, 0));
+            List<object> list = new List<object>
+                                    {
+                                        ScriptBaseClass.PSYS_PART_FLAGS,
+                                        ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK |
+                                        ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK |
+                                        ScriptBaseClass.PSYS_PART_BOUNCE_MASK | ScriptBaseClass.PSYS_PART_EMISSIVE_MASK,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE,
+                                        ScriptBaseClass.PSYS_PART_START_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_END_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_START_ALPHA,
+                                        new LSL_Float(0.50),
+                                        ScriptBaseClass.PSYS_PART_END_ALPHA,
+                                        new LSL_Float(0.25),
+                                        ScriptBaseClass.PSYS_PART_START_SCALE,
+                                        new LSL_Vector(scale/1.5, scale/1.5, 0),
+                                        ScriptBaseClass.PSYS_PART_END_SCALE,
+                                        new LSL_Vector(0, 0, 0),
+                                        ScriptBaseClass.PSYS_PART_MAX_AGE,
+                                        new LSL_Float(3),
+                                        ScriptBaseClass.PSYS_SRC_ACCEL,
+                                        new LSL_Vector(1, 0, -4),
+                                        ScriptBaseClass.PSYS_SRC_TEXTURE,
+                                        new LSL_String(texture),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RATE,
+                                        new LSL_Float(5/particles),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_END,
+                                        new LSL_Float(arc*Math.PI),
+                                        ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT,
+                                        new LSL_Integer(1),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RADIUS,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN,
+                                        new LSL_Float(vel),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX,
+                                        new LSL_Float(vel),
+                                        ScriptBaseClass.PSYS_SRC_MAX_AGE,
+                                        new LSL_Float(lifetime/2),
+                                        ScriptBaseClass.PSYS_SRC_OMEGA,
+                                        new LSL_Vector(0, 0, 0)
+                                    };
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
 
@@ -3296,47 +3152,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
        PSYS_SRC_MAX_AGE,           particle_lifetime / 2,
        PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
        ]);*/
-            List<object> list = new List<object>();
-            list.Add(ScriptBaseClass.PSYS_PART_FLAGS);
-            list.Add(ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
-            list.Add(ScriptBaseClass.PSYS_PART_START_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_END_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_START_ALPHA);
-            list.Add(new LSL_Float(1));
-            list.Add(ScriptBaseClass.PSYS_PART_END_ALPHA);
-            list.Add(new LSL_Float(0.05));
-            list.Add(ScriptBaseClass.PSYS_PART_START_SCALE);
-            list.Add(new LSL_Vector(scale, scale, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_END_SCALE);
-            list.Add(new LSL_Vector(10, 10, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_MAX_AGE);
-            list.Add(new LSL_Float(3));
-            list.Add(ScriptBaseClass.PSYS_SRC_ACCEL);
-            list.Add(new LSL_Vector(0, 0, 0));
-            list.Add(ScriptBaseClass.PSYS_SRC_TEXTURE);
-            list.Add(new LSL_String(texture));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RATE);
-            list.Add(new LSL_Float(10 / particles));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
-            list.Add(new LSL_Float(arc * Math.PI));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Integer(1));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
-            list.Add(new LSL_Float(vel));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
-            list.Add(new LSL_Float(vel));
-            list.Add(ScriptBaseClass.PSYS_SRC_MAX_AGE);
-            list.Add(new LSL_Float(lifetime / 2));
-            list.Add(ScriptBaseClass.PSYS_SRC_OMEGA);
-            list.Add(new LSL_Vector(0, 0, 0));
+            List<object> list = new List<object>
+                                    {
+                                        ScriptBaseClass.PSYS_PART_FLAGS,
+                                        ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK |
+                                        ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK |
+                                        ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE,
+                                        ScriptBaseClass.PSYS_PART_START_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_END_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_START_ALPHA,
+                                        new LSL_Float(1),
+                                        ScriptBaseClass.PSYS_PART_END_ALPHA,
+                                        new LSL_Float(0.05),
+                                        ScriptBaseClass.PSYS_PART_START_SCALE,
+                                        new LSL_Vector(scale, scale, 0),
+                                        ScriptBaseClass.PSYS_PART_END_SCALE,
+                                        new LSL_Vector(10, 10, 0),
+                                        ScriptBaseClass.PSYS_PART_MAX_AGE,
+                                        new LSL_Float(3),
+                                        ScriptBaseClass.PSYS_SRC_ACCEL,
+                                        new LSL_Vector(0, 0, 0),
+                                        ScriptBaseClass.PSYS_SRC_TEXTURE,
+                                        new LSL_String(texture),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RATE,
+                                        new LSL_Float(10/particles),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_END,
+                                        new LSL_Float(arc*Math.PI),
+                                        ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT,
+                                        new LSL_Integer(1),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RADIUS,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN,
+                                        new LSL_Float(vel),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX,
+                                        new LSL_Float(vel),
+                                        ScriptBaseClass.PSYS_SRC_MAX_AGE,
+                                        new LSL_Float(lifetime/2),
+                                        ScriptBaseClass.PSYS_SRC_OMEGA,
+                                        new LSL_Vector(0, 0, 0)
+                                    };
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
             return PScriptSleep(100);
@@ -3370,47 +3230,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         PSYS_SRC_OMEGA,             <0.0, 0.0, 0.0>
         ]);*/
 
-            List<object> list = new List<object>();
-            list.Add(ScriptBaseClass.PSYS_PART_FLAGS);
-            list.Add(ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK | ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK | ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN);
-            list.Add(ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE);
-            list.Add(ScriptBaseClass.PSYS_PART_START_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_END_COLOR);
-            list.Add(new LSL_Vector(1, 1, 1));
-            list.Add(ScriptBaseClass.PSYS_PART_START_ALPHA);
-            list.Add(new LSL_Float(0.50));
-            list.Add(ScriptBaseClass.PSYS_PART_END_ALPHA);
-            list.Add(new LSL_Float(0.10));
-            list.Add(ScriptBaseClass.PSYS_PART_START_SCALE);
-            list.Add(new LSL_Vector(scale / 2, scale / 2, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_END_SCALE);
-            list.Add(new LSL_Vector(scale, scale, 0));
-            list.Add(ScriptBaseClass.PSYS_PART_MAX_AGE);
-            list.Add(new LSL_Float(0.50));
-            list.Add(ScriptBaseClass.PSYS_SRC_ACCEL);
-            list.Add(new LSL_Vector(0, 0, 0));
-            list.Add(ScriptBaseClass.PSYS_SRC_TEXTURE);
-            list.Add(new LSL_String(texture));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RATE);
-            list.Add(new LSL_Float(5 / particles));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_ANGLE_END);
-            list.Add(new LSL_Float(arc * Math.PI));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT);
-            list.Add(new LSL_Integer(1));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_RADIUS);
-            list.Add(new LSL_Float(0.0));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN);
-            list.Add(new LSL_Float(vel));
-            list.Add(ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX);
-            list.Add(new LSL_Float(vel));
-            list.Add(ScriptBaseClass.PSYS_SRC_MAX_AGE);
-            list.Add(new LSL_Float(lifetime / 2));
-            list.Add(ScriptBaseClass.PSYS_SRC_OMEGA);
-            list.Add(new LSL_Vector(0, 0, 0));
+            List<object> list = new List<object>
+                                    {
+                                        ScriptBaseClass.PSYS_PART_FLAGS,
+                                        ScriptBaseClass.PSYS_PART_INTERP_COLOR_MASK |
+                                        ScriptBaseClass.PSYS_PART_INTERP_SCALE_MASK |
+                                        ScriptBaseClass.PSYS_PART_EMISSIVE_MASK | ScriptBaseClass.PSYS_PART_WIND_MASK,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN,
+                                        ScriptBaseClass.PSYS_SRC_PATTERN_ANGLE_CONE,
+                                        ScriptBaseClass.PSYS_PART_START_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_END_COLOR,
+                                        new LSL_Vector(1, 1, 1),
+                                        ScriptBaseClass.PSYS_PART_START_ALPHA,
+                                        new LSL_Float(0.50),
+                                        ScriptBaseClass.PSYS_PART_END_ALPHA,
+                                        new LSL_Float(0.10),
+                                        ScriptBaseClass.PSYS_PART_START_SCALE,
+                                        new LSL_Vector(scale/2, scale/2, 0),
+                                        ScriptBaseClass.PSYS_PART_END_SCALE,
+                                        new LSL_Vector(scale, scale, 0),
+                                        ScriptBaseClass.PSYS_PART_MAX_AGE,
+                                        new LSL_Float(0.50),
+                                        ScriptBaseClass.PSYS_SRC_ACCEL,
+                                        new LSL_Vector(0, 0, 0),
+                                        ScriptBaseClass.PSYS_SRC_TEXTURE,
+                                        new LSL_String(texture),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RATE,
+                                        new LSL_Float(5/particles),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_ANGLE_END,
+                                        new LSL_Float(arc*Math.PI),
+                                        ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT,
+                                        new LSL_Integer(1),
+                                        ScriptBaseClass.PSYS_SRC_BURST_RADIUS,
+                                        new LSL_Float(0.0),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN,
+                                        new LSL_Float(vel),
+                                        ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX,
+                                        new LSL_Float(vel),
+                                        ScriptBaseClass.PSYS_SRC_MAX_AGE,
+                                        new LSL_Float(lifetime/2),
+                                        ScriptBaseClass.PSYS_SRC_OMEGA,
+                                        new LSL_Vector(0, 0, 0)
+                                    };
 
             llParticleSystem(new LSL_Types.list(list.ToArray()));
             return PScriptSleep(100);
@@ -3430,6 +3294,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="rot"></param>
         /// <param name="param"></param>
         /// <param name="isRezAtRoot"></param>
+        /// <param name="SetDieAtEdge"></param>
+        /// <param name="CheckPos"></param>
+        /// <returns></returns>
+        public DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool SetDieAtEdge, bool CheckPos)
+        {
+            return llRezPrim(inventory, pos, vel, rot, param, isRezAtRoot, false, SetDieAtEdge, CheckPos);
+        }
+
+        /// <summary>
+        /// This isn't really an LSL function, just a way to merge llRezAtRoot and llRezObject into one
+        /// </summary>
+        /// <param name="inventory"></param>
+        /// <param name="pos"></param>
+        /// <param name="vel"></param>
+        /// <param name="rot"></param>
+        /// <param name="param"></param>
+        /// <param name="isRezAtRoot"></param>
+        /// <param name="doRecoil"></param>
+        /// <param name="SetDieAtEdge"></param>
+        /// <param name="CheckPos"></param>
         /// <returns></returns>
         public DateTime llRezPrim(string inventory, LSL_Types.Vector3 pos, LSL_Types.Vector3 vel, LSL_Types.Quaternion rot, int param, bool isRezAtRoot, bool doRecoil, bool SetDieAtEdge, bool CheckPos)
         {
@@ -3510,6 +3394,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <param name="rot"></param>
         /// <param name="vel"></param>
         /// <param name="param"></param>
+        /// <param name="RezzedFrom"></param>
+        /// <param name="RezObjectAtRoot"></param>
         /// <returns>The SceneObjectGroup rezzed or null if rez was unsuccessful</returns>
         public ISceneEntity RezObject(
             ISceneChildEntity sourcePart, TaskInventoryItem item,
@@ -3549,11 +3435,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // center is on average of all positions
                         // less root prim position
 
-                        Vector3 offset = Vector3.Zero;
-                        foreach(ISceneChildEntity child in partList)
-                        {
-                            offset += child.AbsolutePosition;
-                        }
+                        Vector3 offset = partList.Aggregate(Vector3.Zero, (current, child) => current + child.AbsolutePosition);
                         offset /= partList.Count;
                         offset -= group.AbsolutePosition;
                         offset += pos;
@@ -3614,8 +3496,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     World.SceneGraph.AddPrimToScene(group);
                     if((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                     {
-                        group.RootPart.PhysActor.OnPhysicalRepresentationChanged += delegate()
-                        {
+                        group.RootPart.PhysActor.OnPhysicalRepresentationChanged += delegate
+                                                                                        {
                             float groupmass = group.GetMass();
                             //Apply the velocity to the object
                             //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
@@ -3660,14 +3542,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             // Work out the normalised vector from the source to the target
             LSL_Vector delta = llVecNorm(target - from);
-            LSL_Vector angle = new LSL_Vector(0,0,0);
+            LSL_Vector angle = new LSL_Vector(0, 0, 0)
+                                   {
+                                       x = llAtan2(delta.z, delta.y) - ScriptBaseClass.PI_BY_TWO,
+                                       y = llAtan2(delta.x, llSqrt((delta.y*delta.y) + (delta.z*delta.z)))
+                                   };
 
             // Calculate the yaw
             // subtracting PI_BY_TWO is required to compensate for the odd SL co-ordinate system
-            angle.x = llAtan2(delta.z, delta.y) - ScriptBaseClass.PI_BY_TWO;
 
             // Calculate pitch
-            angle.y = llAtan2(delta.x, llSqrt((delta.y * delta.y) + (delta.z * delta.z)));
 
             // we need to convert from a vector describing
             // the angles of rotation in radians into rotation value
@@ -3753,13 +3637,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_host.IsAttachment)
             {
                 IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence(m_host.OwnerID);
-                if (SP != null)
-                    return SP.PhysicsActor.Mass;
-                else
-                    return 0.0;
+                return SP != null ? SP.PhysicsActor.Mass : 0.0;
             }
-            else
-                return m_host.GetMass();
+            return m_host.GetMass();
         }
 
         public void llCollisionFilter(string name, string id, int accept)
@@ -3767,14 +3647,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
             m_host.CollisionFilter.Clear();
-            if (id != null)
-            {
-                m_host.CollisionFilter.Add(accept,id);
-            }
-            else
-            {
-                m_host.CollisionFilter.Add(accept,name);
-            }
+            m_host.CollisionFilter.Add(accept, id ?? name);
         }
 
         public void llTakeControls(int controls, int accept, int pass_on)
@@ -3786,8 +3659,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
                     return;
-                else
-                    item = m_host.TaskInventory[InventorySelf()];
+                item = m_host.TaskInventory[InventorySelf()];
             }
 
             if (item.PermsGranter != UUID.Zero)
@@ -3817,11 +3689,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
                     return;
-                else
-                    item = m_host.TaskInventory[InventorySelf()];
+                item = m_host.TaskInventory[InventorySelf()];
             }
 
-            
 
             if (item.PermsGranter != UUID.Zero)
             {
@@ -3864,8 +3734,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
                     return;
-                else
-                    item = m_host.TaskInventory[InventorySelf()];
+                item = m_host.TaskInventory[InventorySelf()];
             }
 
             if (item.PermsGranter != m_host.OwnerID)
@@ -3898,8 +3767,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
                     return;
-                else
-                    item = m_host.TaskInventory[InventorySelf()];
+                item = m_host.TaskInventory[InventorySelf()];
             }
 
             if (item.PermsGranter != m_host.OwnerID)
@@ -3957,12 +3825,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             UUID friendTransactionID = UUID.Random();
 
-            GridInstantMessage msg = new GridInstantMessage();
-            msg.fromAgentID = m_host.UUID;
-            msg.toAgentID = UUID.Parse(user); 
-            msg.imSessionID = friendTransactionID; // This is the item we're mucking with here
-            msg.fromAgentName = m_host.Name;
-            
+            GridInstantMessage msg = new GridInstantMessage
+                                         {
+                                             fromAgentID = m_host.UUID,
+                                             toAgentID = UUID.Parse(user),
+                                             imSessionID = friendTransactionID,
+                                             fromAgentName = m_host.Name
+                                         };
+
+            // This is the item we're mucking with here
+
             // Cap the message length at 1024.
             if (message != null && message.Length > 1024)
                 msg.message = message.Substring(0, 1024);
@@ -3985,7 +3857,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (m_TransferModule != null)
             {
-                m_TransferModule.SendInstantMessage(msg, delegate(bool success) {});
+                m_TransferModule.SendInstantMessage(msg, delegate {});
             }
             return PScriptSleep(2000);
       }
@@ -4015,15 +3887,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ShoutError("llGetNextEmail: email module not configured");
                 return;
             }
-            Email email;
 
-            email = emailModule.GetNextEmail(m_host.UUID, address, subject);
+            Email email = emailModule.GetNextEmail(m_host.UUID, address, subject);
 
             if (email == null)
                 return;
 
             m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "email",
-                    new Object[5] {
+                    new Object[] {
                         new LSL_String(email.time),
                         new LSL_String(email.sender),
                         new LSL_String(email.subject),
@@ -4110,10 +3981,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return str.Length;
             }
-            else
-            {
-                return 0;
-            }
+            return 0;
         }
 
         public void llStartAnimation(string anim)
@@ -4131,8 +3999,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
                     return;
-                else
-                    item = m_host.TaskInventory[InventorySelf()];
+                item = m_host.TaskInventory[InventorySelf()];
             }
 
             if (item.PermsGranter == UUID.Zero)
@@ -4184,8 +4051,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
                     return;
-                else
-                    item = m_host.TaskInventory[InventorySelf()];
+                item = m_host.TaskInventory[InventorySelf()];
             }
 
             if (item.PermsGranter == UUID.Zero)
@@ -4244,7 +4110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             m_host.OmegaSpinRate = spinrate;
 
             m_host.GenerateRotationalVelocityFromOmega ();
-            ScriptData script = ScriptProtection.GetScript(this.m_itemID);
+            ScriptData script = ScriptProtection.GetScript(m_itemID);
             if (script != null)
                 script.TargetOmegaWasSet = true;
             m_host.ScheduleTerseUpdate();
@@ -4404,10 +4270,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 string ownerName = "";
                 IScenePresence ownerPresence = World.GetScenePresence (m_host.ParentEntity.RootChild.OwnerID);
-                if (ownerPresence == null)
-                    ownerName = resolveName(m_host.OwnerID);
-                else
-                    ownerName = ownerPresence.Name;
+                ownerName = ownerPresence == null ? resolveName(m_host.OwnerID) : ownerPresence.Name;
 
                 if (ownerName == String.Empty)
                     ownerName = "(hippos)";
@@ -4511,10 +4374,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return m_host.LinkNum;
             }
-            else
-            {
-                return 0;
-            }
+            return 0;
         }
 
         public void llSetLinkColor(int linknumber, LSL_Vector color, int face)
@@ -4529,8 +4389,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public DateTime llCreateLink(string target, int parent)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
+                return DateTime.Now;
+
             UUID invItemID = InventorySelf();
             UUID targetID;
 
@@ -4555,32 +4416,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (sp != null)
                 client = sp.ControllingClient;
 
-            ISceneChildEntity targetPart = World.GetSceneObjectPart (targetID);
+            ISceneChildEntity targetPart = World.GetSceneObjectPart(targetID);
 
             if (targetPart.ParentEntity.RootChild.AttachmentPoint != 0)
-                return DateTime.Now; ; // Fail silently if attached
-            ISceneEntity parentPrim = null, childPrim = null;
-
-            if (targetPart != null)
+                return DateTime.Now;
+            // Fail silently if attached
+            ISceneEntity parentPrim = null;
+            ISceneEntity childPrim = null;
+            if (parent != 0)
             {
-                if (parent != 0) {
-                    parentPrim = m_host.ParentEntity;
-                    childPrim = targetPart.ParentEntity;
-                }
-                else
-                {
-                    parentPrim = targetPart.ParentEntity;
-                    childPrim = m_host.ParentEntity;
-                }
+                parentPrim = m_host.ParentEntity;
+                childPrim = targetPart.ParentEntity;
+            }
+            else
+            {
+                parentPrim = targetPart.ParentEntity;
+                childPrim = m_host.ParentEntity;
+            }
 //                byte uf = childPrim.RootPart.UpdateFlag;
-                parentPrim.LinkToGroup(childPrim);
+            parentPrim.LinkToGroup(childPrim);
 //                if (uf != (Byte)0)
 //                    parent.RootPart.UpdateFlag = uf;
-            }
 
             parentPrim.TriggerScriptChangedEvent(Changed.LINK);
             parentPrim.RootChild.CreateSelected = true;
-            parentPrim.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+            parentPrim.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             if (client != null)
                 parentPrim.GetProperties(client);
@@ -4707,10 +4567,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return target.UUID.ToString();
             }
-            else
-            {
-                return UUID.Zero.ToString();
-            }
+            return UUID.Zero.ToString();
         }
 
         /// <summary>
@@ -4756,43 +4613,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (linknum == 1)
                     return m_host.Name;
-                else
-                {
-                    IEntity entity = m_host.ParentEntity.GetLinkNumPart (linknum);
-                    if (entity != null)
-                        return entity.Name;
-                    else
-                        return UUID.Zero.ToString();
-                }
+                IEntity entity = m_host.ParentEntity.GetLinkNumPart (linknum);
+                if (entity != null)
+                    return entity.Name;
+                return UUID.Zero.ToString();
             }
             // Link set
             IEntity part = null;
-            if (m_host.LinkNum == 1) // this is the Root prim
-            {
-                if (linknum < 0)
-                {
-                    part = m_host.ParentEntity.GetLinkNumPart (2);
-                }
-                else
-                {
-                    part = m_host.ParentEntity.GetLinkNumPart (linknum);
-                }
-            }
-            else // this is a child prim
-            {
-                if (linknum < 2)
-                {
-                    part = m_host.ParentEntity.GetLinkNumPart (1);
-                }
-                else
-                {
-                    part = m_host.ParentEntity.GetLinkNumPart (linknum);
-                }
-            }
+            part = m_host.LinkNum == 1 ? m_host.ParentEntity.GetLinkNumPart(linknum < 0 ? 2 : linknum) : m_host.ParentEntity.GetLinkNumPart(linknum < 2 ? 1 : linknum);
             if (part != null)
                 return part.Name;
-            else
-                return UUID.Zero.ToString();
+            return UUID.Zero.ToString();
         }
 
         public LSL_Integer llGetInventoryNumber(int type)
@@ -4803,13 +4634,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.TaskInventory)
             {
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
-                {
-                    if (inv.Value.Type == type || type == -1)
-                    {
-                        count++;
-                    }
-                }
+                count += m_host.TaskInventory.Count(inv => inv.Value.Type == type || type == -1);
             }
 
             return count;
@@ -4941,8 +4766,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         if (item.ItemID == m_itemID)
                             throw new ScriptDeleteException();
-                        else
-                            m_host.Inventory.RemoveInventoryItem(item.ItemID);
+                        m_host.Inventory.RemoveInventoryItem(item.ItemID);
                         return;
                     }
                 }
@@ -4993,9 +4817,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return UUID.Zero.ToString();
                 }
 
-                ce = new UserInfoCacheEntry();
-                ce.time = Util.EnvironmentTickCount();
-                ce.account = account;
+                ce = new UserInfoCacheEntry {time = Util.EnvironmentTickCount(), account = account};
                 pinfo = World.RequestModuleInterface<IAgentInfoService>().GetUserInfo(uuid.ToString());
                 ce.pinfo = pinfo;
                 m_userInfoCache[uuid] = ce;
@@ -5228,16 +5050,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_host.ParentEntity.Scene.RegionInfo.RegionHandle == presence.Scene.RegionInfo.RegionHandle)
             {
                 Dictionary<UUID, string> animationstateNames = AnimationSet.Animations.AnimStateNames;
-
-                if (presence != null)
-                {
-                    AnimationSet currentAnims = presence.Animator.Animations;
-                    string currentAnimationState = String.Empty;
-                    if (animationstateNames.TryGetValue(currentAnims.DefaultAnimation.AnimID, out currentAnimationState))
-                        return currentAnimationState;
-                }
+                AnimationSet currentAnims = presence.Animator.Animations;
+                string currentAnimationState = String.Empty;
+                if (animationstateNames.TryGetValue(currentAnims.DefaultAnimation.AnimID, out currentAnimationState))
+                    return currentAnimationState;
             }
-            
+
             return String.Empty;
         }
 
@@ -5248,7 +5066,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             List<ISceneChildEntity> parts = GetLinkParts (linknumber);
 
-            UUID partItemID;
             foreach (ISceneChildEntity part in parts)
             {
                 TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)((ICloneable)part.TaskInventory).Clone();
@@ -5256,7 +5073,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (item.Type == ScriptBaseClass.INVENTORY_SCRIPT)
                     {
-                        partItemID = item.ItemID;
+                        UUID partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
                         if (m_host.ParentEntity.ChildrenEntities().Count == 1)
                             linkNumber = 0;
@@ -5306,14 +5123,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (pusheeav.ParentID != UUID.Zero)
                 {
                     ISceneChildEntity parentobj = World.GetSceneObjectPart (pusheeav.ParentID);
-                    if (parentobj != null)
-                    {
-                        PusheePos = parentobj.AbsolutePosition;
-                    }
-                    else
-                    {
-                        PusheePos = pusheeav.AbsolutePosition;
-                    }
+                    PusheePos = parentobj != null ? parentobj.AbsolutePosition : pusheeav.AbsolutePosition;
                 }
                 else
                 {
@@ -5342,10 +5152,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                 if (World.RegionInfo.RegionSettings.RestrictPushing)
                 {
-                    if (m_host.OwnerID == targetID) //People can push themselves
-                        pushAllowed = true;
-                    else
-                        pushAllowed = m_host.ParentEntity.Scene.Permissions.IsGod (m_host.OwnerID);
+                    pushAllowed = m_host.OwnerID == targetID || m_host.ParentEntity.Scene.Permissions.IsGod (m_host.OwnerID);
                 }
                 else
                 {
@@ -5358,16 +5165,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else
                         {
                             // Parcel push restriction
-                            if ((targetlandObj.LandData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
-                            {
-                                //This takes care of everything
-                                pushAllowed = m_host.ParentEntity.Scene.Permissions.CanPushObject (m_host.OwnerID, targetlandObj);
-                            }
-                            else
-                            {
-                                // Parcel isn't push restricted
-                                pushAllowed = true;
-                            }
+                            pushAllowed = (targetlandObj.LandData.Flags & (uint) ParcelFlags.RestrictPushObject) !=
+                                          (uint) ParcelFlags.RestrictPushObject ||
+                                          m_host.ParentEntity.Scene.Permissions.CanPushObject(m_host.OwnerID,
+                                                                                              targetlandObj);
                         }
                     }
                 }
@@ -5378,8 +5179,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 float distance_term = distance * distance * distance; // Script Energy
                 float pusher_mass = m_host.GetMass();
 
-                float PUSH_ATTENUATION_DISTANCE = 17f;
-                float PUSH_ATTENUATION_SCALE = 5f;
+                const float PUSH_ATTENUATION_DISTANCE = 17f;
+                const float PUSH_ATTENUATION_SCALE = 5f;
                 float distance_attenuation = 1f;
                 if (distance > PUSH_ATTENUATION_DISTANCE)
                 {
@@ -5402,50 +5203,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 if (pusheeIsAvatar)
                 {
-                    if (pusheeav != null)
+                    if (pusheeav.PhysicsActor != null)
                     {
-                        if (pusheeav.PhysicsActor != null)
+                        if (local != 0)
                         {
-                            if (local != 0)
-                            {
-                                applied_linear_impulse *= m_host.GetWorldRotation();
-                            }
-                            //Put a limit on it...
-                            int MaxPush = (int)pusheeav.PhysicsActor.Mass * 25;
-
-                            if (applied_linear_impulse.X > 0 &&
-                                Math.Abs(applied_linear_impulse.X) > MaxPush)
-                                applied_linear_impulse.X = MaxPush;
-                            if (applied_linear_impulse.X < 0 &&
-                                Math.Abs(applied_linear_impulse.X) > MaxPush)
-                                applied_linear_impulse.X = -MaxPush;
-
-                            if (applied_linear_impulse.Y > 0 &&
-                                Math.Abs(applied_linear_impulse.X) > MaxPush)
-                                applied_linear_impulse.Y = MaxPush;
-                            if (applied_linear_impulse.Y < 0 &&
-                                Math.Abs(applied_linear_impulse.X) > MaxPush)
-                                applied_linear_impulse.Y = -MaxPush;
-
-                            if (applied_linear_impulse.Z > 0 &&
-                                Math.Abs(applied_linear_impulse.X) > MaxPush)
-                                applied_linear_impulse.Z = MaxPush;
-                            if (applied_linear_impulse.Z < 0 &&
-                                Math.Abs(applied_linear_impulse.Z) > MaxPush)
-                                applied_linear_impulse.Z = -MaxPush;
-
-                            pusheeav.PhysicsActor.AddForce(applied_linear_impulse, true);
+                            applied_linear_impulse *= m_host.GetWorldRotation();
                         }
+                        //Put a limit on it...
+                        int MaxPush = (int)pusheeav.PhysicsActor.Mass * 25;
+
+                        if (applied_linear_impulse.X > 0 &&
+                            Math.Abs(applied_linear_impulse.X) > MaxPush)
+                            applied_linear_impulse.X = MaxPush;
+                        if (applied_linear_impulse.X < 0 &&
+                            Math.Abs(applied_linear_impulse.X) > MaxPush)
+                            applied_linear_impulse.X = -MaxPush;
+
+                        if (applied_linear_impulse.Y > 0 &&
+                            Math.Abs(applied_linear_impulse.X) > MaxPush)
+                            applied_linear_impulse.Y = MaxPush;
+                        if (applied_linear_impulse.Y < 0 &&
+                            Math.Abs(applied_linear_impulse.X) > MaxPush)
+                            applied_linear_impulse.Y = -MaxPush;
+
+                        if (applied_linear_impulse.Z > 0 &&
+                            Math.Abs(applied_linear_impulse.X) > MaxPush)
+                            applied_linear_impulse.Z = MaxPush;
+                        if (applied_linear_impulse.Z < 0 &&
+                            Math.Abs(applied_linear_impulse.Z) > MaxPush)
+                            applied_linear_impulse.Z = -MaxPush;
+
+                        pusheeav.PhysicsActor.AddForce(applied_linear_impulse, true);
                     }
                 }
                 else
                 {
-                    if (pusheeob != null)
+                    if (pusheeob.PhysActor != null)
                     {
-                        if (pusheeob.PhysActor != null)
-                        {
-                            pusheeob.ApplyImpulse(applied_linear_impulse, local != 0);
-                        }
+                        pusheeob.ApplyImpulse(applied_linear_impulse, local != 0);
                     }
                 }
             }
@@ -5471,7 +5266,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (item.Type == 10 && item.ItemID == m_itemID)
                     {
-                        result = item.Name != null ? item.Name : String.Empty;
+                        result = item.Name ?? String.Empty;
                         break;
                     }
                 }
@@ -5531,15 +5326,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, double angle)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Rotation();
-            
 
-            double x, y, z, s, t;
 
-            s = Math.Cos(angle * 0.5);
-            t = Math.Sin(angle * 0.5); // temp value to avoid 2 more sin() calcs
-            x = axis.x * t;
-            y = axis.y * t;
-            z = axis.z * t;
+            double s = Math.Cos(angle * 0.5);
+            double t = Math.Sin(angle * 0.5);
+            double x = axis.x * t;
+            double y = axis.y * t;
+            double z = axis.z * t;
 
             return new LSL_Rotation(x,y,z,s);
         }
@@ -5646,14 +5439,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (inv.Value.Name == name)
                     {
-                        if ((inv.Value.CurrentPermissions & (uint)(PermissionMask.Copy | PermissionMask.Transfer | PermissionMask.Modify)) == (uint)(PermissionMask.Copy | PermissionMask.Transfer | PermissionMask.Modify))
-                        {
-                            return inv.Value.AssetID.ToString();
-                        }
-                        else
-                        {
-                            return UUID.Zero.ToString();
-                        }
+                        return (inv.Value.CurrentPermissions &
+                                (uint) (PermissionMask.Copy | PermissionMask.Transfer | PermissionMask.Modify)) ==
+                               (uint) (PermissionMask.Copy | PermissionMask.Transfer | PermissionMask.Modify)
+                                   ? inv.Value.AssetID.ToString()
+                                   : UUID.Zero.ToString();
                     }
                 }
             }
@@ -5666,10 +5456,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
 
-            if (add != 0)
-                m_host.ParentEntity.RootChild.AllowedDrop = true;
-            else
-                m_host.ParentEntity.RootChild.AllowedDrop = false;
+            m_host.ParentEntity.RootChild.AllowedDrop = add != 0;
 
             // Update the object flags
             m_host.ParentEntity.RootChild.aggregateScriptEvents ();
@@ -5681,11 +5468,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
 
             LSL_Vector SunDoubleVector3;
-            Vector3 SunFloatVector3;
 
             // sunPosition estate setting is set in OpenSim.Region.CoreModules.SunModule
             // have to convert from Vector3 (float) to LSL_Vector (double)
-            SunFloatVector3 = World.RegionInfo.RegionSettings.SunVector;
+            Vector3 SunFloatVector3 = World.RegionInfo.RegionSettings.SunVector;
             SunDoubleVector3.x = (double)SunFloatVector3.X;
             SunDoubleVector3.y = (double)SunFloatVector3.Y;
             SunDoubleVector3.z = (double)SunFloatVector3.Z;
@@ -5715,10 +5501,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 offset.z = 0.0;
                 return offset;
             }
-            else
-            {
-                return offset;
-            }
+            return offset;
         }
 
         public LSL_Vector llGetTextureScale(int side)
@@ -5755,10 +5538,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return tex.GetFace((uint)face).Rotation;
             }
-            else
-            {
-                return 0.0;
-            }
+            return 0.0;
         }
 
         public LSL_Integer llSubStringIndex(string source, string pattern)
@@ -5780,18 +5560,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ISceneChildEntity obj = World.GetSceneObjectPart (key);
                     if (obj == null)
                         return id; // the key is for an agent so just return the key
-                    else
-                        return obj.OwnerID.ToString();
+                    return obj.OwnerID.ToString();
                 }
                 catch (KeyNotFoundException)
                 {
                     return id; // The Object/Agent not in the region so just return the key
                 }
             }
-            else
-            {
-                return UUID.Zero.ToString();
-            }
+            return UUID.Zero.ToString();
         }
 
         public LSL_Vector llGetCenterOfMass()
@@ -5823,10 +5599,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return 0;
             }
-            else
-            {
-                return src.Length;
-            }
+            return src.Length;
         }
 
         public LSL_Integer llList2Integer(LSL_List src, int index)
@@ -5845,7 +5618,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (src.Data[index] is LSL_Integer)
                     return (LSL_Integer) src.Data[index];
-                else if (src.Data[index] is LSL_Float)
+                if (src.Data[index] is LSL_Float)
                     return Convert.ToInt32(((LSL_Float) src.Data[index]).value);
                 return new LSL_Integer(src.Data[index].ToString());
             }
@@ -5875,9 +5648,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (src.Data[index] is LSL_Integer)
                     return Convert.ToDouble(((LSL_Integer)src.Data[index]).value);
-                else if (src.Data[index] is LSL_Float)
+                if (src.Data[index] is LSL_Float)
                     return Convert.ToDouble(((LSL_Float)src.Data[index]).value);
-                else if (src.Data[index] is LSL_String)
+                if (src.Data[index] is LSL_String)
                     return Convert.ToDouble(((LSL_String)src.Data[index]).m_string);
                 return Convert.ToDouble(src.Data[index]);
             }
@@ -5933,14 +5706,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return new LSL_Vector(0, 0, 0);
             }
-            if (src.Data[index].GetType() == typeof(LSL_Vector))
+            if (src.Data[index] is LSL_Vector)
             {
                 return (LSL_Vector)src.Data[index];
             }
-            else
-            {
-                return new LSL_Vector(src.Data[index].ToString());
-            }
+            return new LSL_Vector(src.Data[index].ToString());
         }
 
         public LSL_Rotation llList2Rot(LSL_List src, int index)
@@ -5955,14 +5725,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return new LSL_Rotation(0, 0, 0, 1);
             }
-            if (src.Data[index].GetType() == typeof(LSL_Rotation))
+            if (src.Data[index] is LSL_Rotation)
             {
                 return (LSL_Rotation)src.Data[index];
             }
-            else
-            {
-                return new LSL_Rotation(src.Data[index].ToString());
-            }
+            return new LSL_Rotation(src.Data[index].ToString());
         }
 
         public LSL_List llList2List(LSL_List src, int start, int end)
@@ -6001,10 +5768,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     return ScriptBaseClass.TYPE_KEY;
                 }
-                else
-                {
-                    return ScriptBaseClass.TYPE_STRING;
-                }
+                return ScriptBaseClass.TYPE_STRING;
             }
             if (src.Data[index] is LSL_Vector)
                 return ScriptBaseClass.TYPE_VECTOR;
@@ -6115,9 +5879,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List result;
             Random rand           = new Random();
 
-            int   chunkk;
-            int[] chunks;
-
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_List();
             
 
@@ -6132,9 +5893,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (src.Length != stride && src.Length%stride == 0)
             {
-                chunkk = src.Length/stride;
+                int   chunkk = src.Length/stride;
 
-                chunks = new int[chunkk];
+                int[] chunks = new int[chunkk];
 
                 for (int i = 0; i < chunkk; i++)
                     chunks[i] = i;
@@ -6144,10 +5905,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     // Elect an unrandomized chunk to swap
                     int index = rand.Next(i + 1);
-                    int tmp;
 
                     // and swap position with first unrandomized chunk
-                    tmp = chunks[i];
+                    int tmp = chunks[i];
                     chunks[i] = chunks[index];
                     chunks[index] = tmp;
                 }
@@ -6318,24 +6078,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     suff = dest.GetSublist(index,-1);
                     return pref + src + suff;
                 }
-                else
-                {
-                    return pref + src;
-                }
+                return pref + src;
             }
-            else
+            if (index < dest.Length)
             {
-                if (index < dest.Length)
-                {
-                    suff = dest.GetSublist(index,-1);
-                    return src + suff;
-                }
-                else
-                {
-                    return src;
-                }
+                suff = dest.GetSublist(index,-1);
+                return src + suff;
             }
-
+            return src;
         }
 
         /// <summary>
@@ -6381,14 +6131,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
             
-            return m_host.Name!=null?m_host.Name:String.Empty;
+            return m_host.Name ?? String.Empty;
         }
 
         public void llSetObjectName(string name)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
-            m_host.Name = name!=null?name:String.Empty;
+            m_host.Name = name ?? String.Empty;
         }
 
         public LSL_String llGetDate()
@@ -6417,11 +6167,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // false since we're staying in the sim
                     return 0;
                 }
-                else
-                {
-                    // Y is the only valid direction
-                    edge.y = dir.y / Math.Abs(dir.y);
-                }
+                // Y is the only valid direction
+                edge.y = dir.y / Math.Abs(dir.y);
             }
             else
             {
@@ -6459,13 +6206,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int neighborX = World.RegionInfo.RegionLocX + (int)dir.x;
             int neighborY = World.RegionInfo.RegionLocY + (int)dir.y;
 
-            foreach (GridRegion sri in neighbors)
-            {
-                if (sri.RegionLocX == neighborX && sri.RegionLocY == neighborY)
-                    return 0;
-            }
-
-            return 1;
+            return neighbors.Any(sri => sri.RegionLocX == neighborX && sri.RegionLocY == neighborY) ? 0 : 1;
         }
 
         /// <summary>
@@ -6505,16 +6246,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (att.Length > 0)
                 {
                     flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
-                    foreach (ISceneEntity gobj in att)
+                    if (att.Where(gobj => gobj != null).Any(gobj => gobj.RootChild.Inventory.ContainsScripts()))
                     {
-                        if (gobj != null)
-                        {
-                            if (gobj.RootChild.Inventory.ContainsScripts())
-                            {
-                                flags |= ScriptBaseClass.AGENT_SCRIPTED;
-                                break;
-                            }
-                        }
+                        flags |= ScriptBaseClass.AGENT_SCRIPTED;
                     }
                 }
             }
@@ -6638,7 +6372,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (presence != null)
                 {
-                    IProfileConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                    IProfileConnector connector = DataManager.DataManager.RequestPlugin<IProfileConnector>();
                     if (connector != null)
                         return connector.GetUserProfile(presence.UUID).DisplayName;
                 }
@@ -6706,8 +6440,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         private void SetTextureAnim (ISceneChildEntity part, int mode, int face, int sizex, int sizey, double start, double length, double rate)
         {
 
-            Primitive.TextureAnimation pTexAnim = new Primitive.TextureAnimation();
-            pTexAnim.Flags = (Primitive.TextureAnimMode)mode;
+            Primitive.TextureAnimation pTexAnim = new Primitive.TextureAnimation
+                                                      {Flags = (Primitive.TextureAnimMode) mode};
 
             //ALL_SIDES
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -6834,10 +6568,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 IAvatarAppearanceModule appearance = avatar.RequestModuleInterface<IAvatarAppearanceModule> ();
-                if (appearance != null)
-                    agentSize = new LSL_Vector (0.45, 0.6, appearance.Appearance.AvatarHeight);
-                else
-                    agentSize = ScriptBaseClass.ZERO_VECTOR;
+                agentSize = appearance != null ? new LSL_Vector (0.45, 0.6, appearance.Appearance.AvatarHeight) : ScriptBaseClass.ZERO_VECTOR;
             }
             return agentSize;
         }
@@ -6855,8 +6586,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IClientAPI client = presence.ControllingClient;
             if (m_host.GroupID == client.ActiveGroupId)
                 return new LSL_Integer(1);
-            else
-                return new LSL_Integer(0);
+            return new LSL_Integer(0);
         }
 
         public void llUnSit(string id)
@@ -6916,10 +6646,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             //Plug the x,y coordinates of the slope normal into the equation of the plane to get
             //the height of that point on the plane.  The resulting vector gives the slope.
-            Vector3 vsl = new Vector3();
-            vsl.X = (float)vsn.x;
-            vsl.Y = (float)vsn.y;
-            vsl.Z = (float)(((vsn.x * vsn.x) + (vsn.y * vsn.y)) / (-1 * vsn.z));
+            Vector3 vsl = new Vector3
+                              {
+                                  X = (float) vsn.x,
+                                  Y = (float) vsn.y,
+                                  Z = (float) (((vsn.x*vsn.x) + (vsn.y*vsn.y))/(-1*vsn.z))
+                              };
             vsl.Normalize();
             //Normalization might be overkill here
 
@@ -6969,10 +6701,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 //            v1.Normalize();
 
             //Find the cross product of the vectors (the slope normal).
-            Vector3 vsn = new Vector3();
-            vsn.X = (v0.Y * v1.Z) - (v0.Z * v1.Y);
-            vsn.Y = (v0.Z * v1.X) - (v0.X * v1.Z);
-            vsn.Z = (v0.X * v1.Y) - (v0.Y * v1.X);
+            Vector3 vsn = new Vector3
+                              {
+                                  X = (v0.Y*v1.Z) - (v0.Z*v1.Y),
+                                  Y = (v0.Z*v1.X) - (v0.X*v1.Z),
+                                  Z = (v0.X*v1.Y) - (v0.Y*v1.X)
+                              };
             vsn.Normalize();
             //I believe the crossproduct of two normalized vectors is a normalized vector so
             //this normalization may be overkill
@@ -7085,7 +6819,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         iteration and set the members of Primitive.ParticleSystem, one at a time.
         */
 
-        public enum PrimitiveRule : int
+        public enum PrimitiveRule
         {
             PSYS_PART_FLAGS = 0,
             PSYS_PART_START_COLOR = 1,
@@ -7114,27 +6848,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         internal Primitive.ParticleSystem.ParticleDataFlags ConvertUINTtoFlags(uint flags)
         {
-            Primitive.ParticleSystem.ParticleDataFlags returnval = Primitive.ParticleSystem.ParticleDataFlags.None;
+            const Primitive.ParticleSystem.ParticleDataFlags returnval = Primitive.ParticleSystem.ParticleDataFlags.None;
 
             return returnval;
         }
 
         protected Primitive.ParticleSystem getNewParticleSystemWithSLDefaultValues()
         {
-            Primitive.ParticleSystem ps = new Primitive.ParticleSystem();
+            Primitive.ParticleSystem ps = new Primitive.ParticleSystem
+                                              {
+                                                  PartStartColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f),
+                                                  PartEndColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f),
+                                                  PartStartScaleX = 1.0f,
+                                                  PartStartScaleY = 1.0f,
+                                                  PartEndScaleX = 1.0f,
+                                                  PartEndScaleY = 1.0f,
+                                                  BurstSpeedMin = 1.0f,
+                                                  BurstSpeedMax = 1.0f,
+                                                  BurstRate = 0.1f,
+                                                  PartMaxAge = 10.0f,
+                                                  BurstPartCount = 10
+                                              };
 
             // TODO find out about the other defaults and add them here
-            ps.PartStartColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-            ps.PartEndColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-            ps.PartStartScaleX = 1.0f;
-            ps.PartStartScaleY = 1.0f;
-            ps.PartEndScaleX = 1.0f;
-            ps.PartEndScaleY = 1.0f;
-            ps.BurstSpeedMin = 1.0f;
-            ps.BurstSpeedMax = 1.0f;
-            ps.BurstRate = 0.1f;
-            ps.PartMaxAge = 10.0f;
-            ps.BurstPartCount = 10;
             return ps;
         }
 
@@ -7169,8 +6905,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Primitive.ParticleSystem prules = getNewParticleSystemWithSLDefaultValues();
                 LSL_Vector tempv = new LSL_Vector();
 
-                float tempf = 0;
-
                 for (int i = 0; i < rules.Length; i += 2)
                 {
                     LSL_Integer rule = rules.GetLSLIntegerItem(i);
@@ -7187,152 +6921,149 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         prules.PartStartColor.B = (float)tempv.z;
                     }
 
-                    else if (rule == (int)ScriptBaseClass.PSYS_PART_START_ALPHA)
+                    else
                     {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.PartStartColor.A = tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_PART_END_COLOR)
-                    {
-                        tempv = rules.GetVector3Item(i + 1);
-                        prules.PartEndColor.R = (float)tempv.x;
-                        prules.PartEndColor.G = (float)tempv.y;
-                        prules.PartEndColor.B = (float)tempv.z;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_PART_END_ALPHA)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.PartEndColor.A = tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_PART_START_SCALE)
-                    {
-                        tempv = rules.GetVector3Item(i + 1);
-                        prules.PartStartScaleX = (float)tempv.x;
-                        prules.PartStartScaleY = (float)tempv.y;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_PART_END_SCALE)
-                    {
-                        tempv = rules.GetVector3Item(i + 1);
-                        prules.PartEndScaleX = (float)tempv.x;
-                        prules.PartEndScaleY = (float)tempv.y;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_PART_MAX_AGE)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.PartMaxAge = tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_ACCEL)
-                    {
-                        tempv = rules.GetVector3Item(i + 1);
-                        prules.PartAcceleration.X = (float)tempv.x;
-                        prules.PartAcceleration.Y = (float)tempv.y;
-                        prules.PartAcceleration.Z = (float)tempv.z;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_PATTERN)
-                    {
-                        int tmpi = (int)rules.GetLSLIntegerItem(i + 1);
-                        prules.Pattern = (Primitive.ParticleSystem.SourcePattern)tmpi;
-                    }
-
-                    // PSYS_SRC_INNERANGLE and PSYS_SRC_ANGLE_BEGIN use the same variables. The
-                    // PSYS_SRC_OUTERANGLE and PSYS_SRC_ANGLE_END also use the same variable. The
-                    // client tells the difference between the two by looking at the 0x02 bit in
-                    // the PartFlags variable.
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_INNERANGLE)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.InnerAngle = (float)tempf;
-                        prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_OUTERANGLE)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.OuterAngle = (float)tempf;
-                        prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_TEXTURE)
-                    {
-                        prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1), false);
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RATE)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.BurstRate = (float)tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT)
-                    {
-                        prules.BurstPartCount = (byte)(int)rules.GetLSLIntegerItem(i + 1);
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RADIUS)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.BurstRadius = (float)tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.BurstSpeedMin = (float)tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.BurstSpeedMax = (float)tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_MAX_AGE)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.MaxAge = (float)tempf;
-                    }
-
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_TARGET_KEY)
-                    {
-                        UUID key = UUID.Zero;
-                        if (UUID.TryParse(rules.Data[i + 1].ToString(), out key))
+                        float tempf = 0;
+                        if (rule == (int)ScriptBaseClass.PSYS_PART_START_ALPHA)
                         {
-                            prules.Target = key;
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.PartStartColor.A = tempf;
                         }
-                        else
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_PART_END_COLOR)
                         {
-                            prules.Target = part.UUID;
+                            tempv = rules.GetVector3Item(i + 1);
+                            prules.PartEndColor.R = (float)tempv.x;
+                            prules.PartEndColor.G = (float)tempv.y;
+                            prules.PartEndColor.B = (float)tempv.z;
                         }
-                    }
 
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_OMEGA)
-                    {
-                        // AL: This is an assumption, since it is the only thing that would match.
-                        tempv = rules.GetVector3Item(i + 1);
-                        prules.AngularVelocity.X = (float)tempv.x;
-                        prules.AngularVelocity.Y = (float)tempv.y;
-                        prules.AngularVelocity.Z = (float)tempv.z;
-                    }
+                        else if (rule == (int)ScriptBaseClass.PSYS_PART_END_ALPHA)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.PartEndColor.A = tempf;
+                        }
 
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.InnerAngle = (float)tempf;
-                        prules.PartFlags |= 0x02; // Set new angle format.
-                    }
+                        else if (rule == (int)ScriptBaseClass.PSYS_PART_START_SCALE)
+                        {
+                            tempv = rules.GetVector3Item(i + 1);
+                            prules.PartStartScaleX = (float)tempv.x;
+                            prules.PartStartScaleY = (float)tempv.y;
+                        }
 
-                    else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_END)
-                    {
-                        tempf = (float)rules.GetLSLFloatItem(i + 1);
-                        prules.OuterAngle = (float)tempf;
-                        prules.PartFlags |= 0x02; // Set new angle format.
+                        else if (rule == (int)ScriptBaseClass.PSYS_PART_END_SCALE)
+                        {
+                            tempv = rules.GetVector3Item(i + 1);
+                            prules.PartEndScaleX = (float)tempv.x;
+                            prules.PartEndScaleY = (float)tempv.y;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_PART_MAX_AGE)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.PartMaxAge = tempf;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_ACCEL)
+                        {
+                            tempv = rules.GetVector3Item(i + 1);
+                            prules.PartAcceleration.X = (float)tempv.x;
+                            prules.PartAcceleration.Y = (float)tempv.y;
+                            prules.PartAcceleration.Z = (float)tempv.z;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_PATTERN)
+                        {
+                            int tmpi = (int)rules.GetLSLIntegerItem(i + 1);
+                            prules.Pattern = (Primitive.ParticleSystem.SourcePattern)tmpi;
+                        }
+
+                            // PSYS_SRC_INNERANGLE and PSYS_SRC_ANGLE_BEGIN use the same variables. The
+                            // PSYS_SRC_OUTERANGLE and PSYS_SRC_ANGLE_END also use the same variable. The
+                            // client tells the difference between the two by looking at the 0x02 bit in
+                            // the PartFlags variable.
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_INNERANGLE)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.InnerAngle = (float)tempf;
+                            prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_OUTERANGLE)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.OuterAngle = (float)tempf;
+                            prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_TEXTURE)
+                        {
+                            prules.Texture = KeyOrName(rules.GetLSLStringItem(i + 1), false);
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RATE)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.BurstRate = (float)tempf;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT)
+                        {
+                            prules.BurstPartCount = (byte)(int)rules.GetLSLIntegerItem(i + 1);
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RADIUS)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.BurstRadius = (float)tempf;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.BurstSpeedMin = (float)tempf;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.BurstSpeedMax = (float)tempf;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_MAX_AGE)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.MaxAge = (float)tempf;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_TARGET_KEY)
+                        {
+                            UUID key = UUID.Zero;
+                            prules.Target = UUID.TryParse(rules.Data[i + 1].ToString(), out key) ? key : part.UUID;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_OMEGA)
+                        {
+                            // AL: This is an assumption, since it is the only thing that would match.
+                            tempv = rules.GetVector3Item(i + 1);
+                            prules.AngularVelocity.X = (float)tempv.x;
+                            prules.AngularVelocity.Y = (float)tempv.y;
+                            prules.AngularVelocity.Z = (float)tempv.z;
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.InnerAngle = (float)tempf;
+                            prules.PartFlags |= 0x02; // Set new angle format.
+                        }
+
+                        else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_END)
+                        {
+                            tempf = (float)rules.GetLSLFloatItem(i + 1);
+                            prules.OuterAngle = (float)tempf;
+                            prules.PartFlags |= 0x02; // Set new angle format.
+                        }
                     }
                 }
                 prules.CRC = 1;
@@ -7555,27 +7286,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
 
-            if(m_host.ParentEntity.RootChild.GetAvatarOnSitTarget().Count != 0)
-                return new LSL_String(m_host.ParentEntity.RootChild.GetAvatarOnSitTarget()[0].ToString());
-            else
-                return ScriptBaseClass.NULL_KEY;
+            return m_host.ParentEntity.RootChild.GetAvatarOnSitTarget().Count != 0
+                       ? new LSL_String(m_host.ParentEntity.RootChild.GetAvatarOnSitTarget()[0].ToString())
+                       : ScriptBaseClass.NULL_KEY;
         }
 
         public LSL_Key llAvatarOnLinkSitTarget ()
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Key();
 
-            if(m_host.GetAvatarOnSitTarget().Count != 0)
-                return new LSL_String(m_host.GetAvatarOnSitTarget()[0].ToString());
-            else
-                return ScriptBaseClass.NULL_KEY;
+            return m_host.GetAvatarOnSitTarget().Count != 0
+                       ? new LSL_String(m_host.GetAvatarOnSitTarget()[0].ToString())
+                       : ScriptBaseClass.NULL_KEY;
         }
 
         public DateTime llAddToLandPassList(string avatar, double hours)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
-            UUID key;
+
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
@@ -7583,6 +7311,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (land.OwnerID == m_host.OwnerID)
                 {
                     ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                    UUID key;
                     if (UUID.TryParse(avatar, out key))
                     {
                         entry.AgentID = key;
@@ -7643,11 +7372,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return String.Empty;
             }
-            string ret = String.Empty;
-            foreach (object o in src.Data)
-            {
-                ret = ret + o.ToString() + seperator;
-            }
+            string ret = src.Data.Aggregate(String.Empty, (current, o) => current + o.ToString() + seperator);
             ret = ret.Substring(0, ret.Length - seperator.Length);
             return ret;
         }
@@ -7704,7 +7429,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 buts[i] = buttons.Data[i].ToString();
             }
             if (buts.Length == 0)
-                buts = new string[1] { "OK" };
+                buts = new[] { "OK" };
 
             dm.SendDialogToUser(
                 av, m_host.Name, m_host.UUID, m_host.OwnerID,
@@ -7874,7 +7599,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected ObjectShapePacket.ObjectDataBlock SetPrimitiveBlockShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist)
         {
-            float tempFloat;// Use in float expressions below to avoid byte cast precision issues.
             ObjectShapePacket.ObjectDataBlock shapeBlock = new ObjectShapePacket.ObjectDataBlock();
 
             if (holeshape != (int)ScriptBaseClass.PRIM_HOLE_DEFAULT &&
@@ -7947,7 +7671,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // sbyte, works for both .Net and Mono. These types of
             // assignments occur in SetPrimtiveBlockShapeParams and
             // SetPrimitiveShapeParams in support of llSetPrimitiveParams.
-            tempFloat = (float)(100.0d * twist.x);
+            float tempFloat = (float)(100.0d * twist.x);
             shapeBlock.PathTwistBegin = (sbyte)tempFloat;
             tempFloat = (float)(100.0d * twist.y);
             shapeBlock.PathTwist = (sbyte)tempFloat;
@@ -7963,10 +7687,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector taper_b, LSL_Vector topshear, byte fudge)
         {
-            float tempFloat; // Use in float expressions below to avoid byte cast precision issues.
-            ObjectShapePacket.ObjectDataBlock shapeBlock;
-
-            shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
+            ObjectShapePacket.ObjectDataBlock shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
 
             shapeBlock.ProfileCurve += fudge;
 
@@ -7986,7 +7707,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 taper_b.y = 2f;
             }
-            tempFloat = (float)(100.0d * (2.0d - taper_b.x));
+            float tempFloat = (float)(100.0d * (2.0d - taper_b.x));
             shapeBlock.PathScaleX = (byte)tempFloat;
             tempFloat = (float)(100.0d * (2.0d - taper_b.y));
             shapeBlock.PathScaleY = (byte)tempFloat;
@@ -8017,9 +7738,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector dimple, byte fudge)
         {
-            ObjectShapePacket.ObjectDataBlock shapeBlock;
-
-            shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
+            ObjectShapePacket.ObjectDataBlock shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
 
             // profile/path swapped for a sphere
             shapeBlock.PathBegin = shapeBlock.ProfileBegin;
@@ -8059,10 +7778,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         protected void SetPrimitiveShapeParams (ISceneChildEntity part, int holeshape, LSL_Vector cut, float hollow, LSL_Vector twist, LSL_Vector holesize, LSL_Vector topshear, LSL_Vector profilecut, LSL_Vector taper_a, float revolutions, float radiusoffset, float skew, byte fudge)
         {
-            float tempFloat;// Use in float expressions below to avoid byte cast precision issues.
-            ObjectShapePacket.ObjectDataBlock shapeBlock;
-
-            shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
+            ObjectShapePacket.ObjectDataBlock shapeBlock = SetPrimitiveBlockShapeParams(part, holeshape, cut, hollow, twist);
 
             shapeBlock.ProfileCurve += fudge;
 
@@ -8086,7 +7802,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 holesize.y = 0.5f;
             }
-            tempFloat = (float)(100.0d * (2.0d - holesize.x));
+            float tempFloat = (float)(100.0d * (2.0d - holesize.x));
             shapeBlock.PathScaleX = (byte)tempFloat;
             tempFloat = (float)(100.0d * (2.0d - holesize.y));
             shapeBlock.PathScaleY = (byte)tempFloat;
@@ -8256,12 +7972,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
         {
-            int faces = 0;
             List<ISceneChildEntity> Parts = GetLinkParts (LinkNum);
-            foreach (ISceneChildEntity part in Parts)
-            {
-                faces += GetNumberOfSides(part);
-            }
+            int faces = Parts.Sum(part => GetNumberOfSides(part));
             return new LSL_Integer(faces);
         }
 
@@ -8675,12 +8387,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(!(part is ISceneChildEntity))
                         return;
                     string ph = rules.Data[idx++].ToString();
-                    bool phantom;
 
-                    if (ph.Equals("1"))
-                        phantom = true;
-                    else
-                        phantom = false;
+                    bool phantom = ph.Equals("1");
 
                     (part as ISceneChildEntity).ScriptSetPhantomStatus(phantom);
                 }
@@ -8692,10 +8400,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
                     string phy = rules.Data[idx++].ToString();
 
-                    if (phy.Equals ("1"))
-                        ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus (true);
-                    else
-                        ((SceneObjectGroup)m_host.ParentEntity).ScriptSetPhysicsStatus (false);
+                    ((SceneObjectGroup) m_host.ParentEntity).ScriptSetPhysicsStatus(phy.Equals("1"));
                 }
                 else if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
                 {
@@ -8704,12 +8409,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(!(part is ISceneChildEntity))
                         return;
                     string temp = rules.Data[idx++].ToString();
-                    bool tempOnRez;
 
-                    if (temp.Equals("1"))
-                        tempOnRez = true;
-                    else
-                        tempOnRez = false;
+                    bool tempOnRez = temp.Equals("1");
 
                     (part as ISceneChildEntity).ScriptSetTemporaryStatus(tempOnRez);
                 }
@@ -8756,10 +8457,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     bool IsPhantom = ((m_host.Flags & PrimFlags.Phantom) != 0);
                     bool IsVolumeDetect = m_host.VolumeDetectActive;
                     ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks = new ObjectFlagUpdatePacket.ExtraPhysicsBlock[1];
-                    blocks[0] = new ObjectFlagUpdatePacket.ExtraPhysicsBlock();
-                    blocks[0].Density = m_host.Density;
-                    blocks[0].Friction = m_host.Friction;
-                    blocks[0].GravityMultiplier = m_host.GravityMultiplier;
+                    blocks[0] = new ObjectFlagUpdatePacket.ExtraPhysicsBlock
+                                    {
+                                        Density = m_host.Density,
+                                        Friction = m_host.Friction,
+                                        GravityMultiplier = m_host.GravityMultiplier
+                                    };
                     LSL_Integer shapeType = rules.GetLSLIntegerItem (idx++);
                     if(shapeType == ScriptBaseClass.PRIM_PHYSICS_SHAPE_PRIM)
                         blocks[0].PhysicsShapeType = (byte)shapeType.value;
@@ -8798,7 +8501,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception e)
             {
-                throw new Exception("Error in base64Encode" + e.ToString());
+                throw new Exception("Error in base64Encode" + e);
             }
         }
 
@@ -8812,7 +8515,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception e)
             {
-                throw new Exception("Error in base64Decode" + e.ToString());
+                throw new Exception("Error in base64Decode" + e);
             }
         }
 
@@ -8855,8 +8558,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IScenePresence av = World.GetScenePresence((UUID)id);
             if (av == null || av.IsChildAgent) // only if in the region
                 return l;
-            UUID[] anims;
-            anims = av.Animator.GetAnimationArray();
+            UUID[] anims = av.Animator.GetAnimationArray();
             foreach (UUID foo in anims)
                 l.Add (new LSL_Key (foo.ToString ()));
             return l;
@@ -8909,10 +8611,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 IScenePresence avatar = World.GetScenePresence (m_host.AttachedAvatar);
                 if (avatar != null)
-                    if ((avatar.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0)
-                        q = avatar.CameraRotation; // Mouselook
-                    else
-                        q = avatar.Rotation; // Currently infrequently updated so may be inaccurate
+                    q = (avatar.AgentControlFlags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0
+                            ? avatar.CameraRotation
+                            : avatar.Rotation;
                 else
                     q = m_host.ParentEntity.GroupRotation; // Likely never get here but just in case
             }
@@ -8925,14 +8626,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
             
-            return m_host.Description != null ? m_host.Description : String.Empty;
+            return m_host.Description ?? String.Empty;
         }
 
         public void llSetObjectDesc(string desc)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
-            m_host.Description = desc != null ? desc : String.Empty;
+            m_host.Description = desc ?? String.Empty;
         }
 
         public LSL_String llGetCreator()
@@ -9011,15 +8712,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     result.Add(upper);
                     return result;
                 }
-                else
-                {
-                    // sitting on an object so we need the bounding box of that
-                    // which should include the avatar so set the UUID to the
-                    // UUID of the object the avatar is sat on and allow it to fall through
-                    // to processing an object
-                    ISceneChildEntity p = World.GetSceneObjectPart (presence.ParentID);
-                    objID = p.UUID;
-                }
+                // sitting on an object so we need the bounding box of that
+                // which should include the avatar so set the UUID to the
+                // UUID of the object the avatar is sat on and allow it to fall through
+                // to processing an object
+                ISceneChildEntity p = World.GetSceneObjectPart (presence.ParentID);
+                objID = p.UUID;
             }
             ISceneChildEntity part = World.GetSceneObjectPart (objID);
             // Currently only works for single prims without a sitting avatar
@@ -9085,13 +8783,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List res = new LSL_List();
 
-            foreach (var part in parts)
-            {
-                LSL_List partRes = GetLinkPrimitiveParams(part, rules);
-                res += partRes;
-            }
-
-            return res;
+            return parts.Select(part => GetLinkPrimitiveParams(part, rules)).Aggregate(res, (current, partRes) => current + partRes);
         }
 
         public LSL_List GetLinkPrimitiveParams (ISceneChildEntity part, LSL_List rules)
@@ -9122,26 +8814,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 else if (code == (int)ScriptBaseClass.PRIM_PHYSICS)
                 {
-                    if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) != 0)
-                        res.Add(new LSL_Integer(1));
-                    else
-                        res.Add(new LSL_Integer(0));
+                    res.Add((part.GetEffectiveObjectFlags() & (uint) PrimFlags.Physics) != 0
+                                ? new LSL_Integer(1)
+                                : new LSL_Integer(0));
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_TEMP_ON_REZ)
                 {
-                    if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.TemporaryOnRez) != 0)
-                        res.Add(new LSL_Integer(1));
-                    else
-                        res.Add(new LSL_Integer(0));
+                    res.Add((part.GetEffectiveObjectFlags() & (uint) PrimFlags.TemporaryOnRez) != 0
+                                ? new LSL_Integer(1)
+                                : new LSL_Integer(0));
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_PHANTOM)
                 {
-                    if ((part.GetEffectiveObjectFlags() & (uint)PrimFlags.Phantom) != 0)
-                        res.Add(new LSL_Integer(1));
-                    else
-                        res.Add(new LSL_Integer(0));
+                    res.Add((part.GetEffectiveObjectFlags() & (uint) PrimFlags.Phantom) != 0
+                                ? new LSL_Integer(1)
+                                : new LSL_Integer(0));
                 }
 
                 else if (code == (int)ScriptBaseClass.PRIM_POSITION)
@@ -9393,10 +9082,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     PrimitiveBaseShape shape = part.Shape;
 
-                    if(shape.FlexiEntry)
-                        res.Add(new LSL_Integer(1));              // active
-                    else
-                        res.Add(new LSL_Integer(0));
+                    res.Add(shape.FlexiEntry ? new LSL_Integer(1) : new LSL_Integer(0));
                     res.Add(new LSL_Integer(shape.FlexiSoftness));// softness
                     res.Add(new LSL_Float(shape.FlexiGravity));   // gravity
                     res.Add(new LSL_Float(shape.FlexiDrag));      // friction
@@ -9436,10 +9122,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     PrimitiveBaseShape shape = part.Shape;
 
-                    if(shape.LightEntry)
-                        res.Add(new LSL_Integer(1));              // active
-                    else
-                        res.Add(new LSL_Integer(0));
+                    res.Add(shape.LightEntry ? new LSL_Integer(1) : new LSL_Integer(0));
                     res.Add(new LSL_Vector(shape.LightColorR,       // color
                                            shape.LightColorG,
                                            shape.LightColorB));
@@ -9825,7 +9508,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
             
-            return System.Environment.MachineName;
+            return Environment.MachineName;
         }
 
         //  <summary>
@@ -9889,9 +9572,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int[] offset = new int[mlen + 1];
             bool[] active = new bool[mlen];
 
-            int best;
-            int j;
-
             //    Initial capacity reduces resize cost
 
             LSL_List tokens = new LSL_List();
@@ -9906,10 +9586,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             while (beginning < srclen)
             {
 
-                best = mlen;    // as bad as it gets
+                int best = mlen;
 
                 //    Scan for separators
 
+                int j;
                 for (j = 0; j < seplen; j++)
                 {
                     if (separray[j].ToString() == String.Empty)
@@ -9973,14 +9654,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     // no markers were found on this pass
                     // so we're pretty much done
-                    if ((keepNulls) || ((!keepNulls) && (srclen - beginning) > 0))
+                    if ((keepNulls) || ((srclen - beginning) > 0))
                         tokens.Add(new LSL_String(src.Substring(beginning, srclen - beginning)));
                     break;
                 }
 
                 //    Otherwise we just add the newly delimited token
                 //    and recalculate where the search should continue.
-                if ((keepNulls) || ((!keepNulls) && (offset[best] - beginning) > 0))
+                if ((keepNulls) || ((offset[best] - beginning) > 0))
                     tokens.Add(new LSL_String(src.Substring(beginning, offset[best] - beginning)));
 
                 if (best < seplen)
@@ -9991,7 +9672,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     beginning = offset[best] + (spcarray[best - seplen].ToString()).Length;
                     string str = spcarray[best - seplen].ToString();
-                    if ((keepNulls) || ((!keepNulls) && (str.Length > 0)))
+                    if ((keepNulls) || ((str.Length > 0)))
                         tokens.Add(new LSL_String(str));
                 }
             }
@@ -10211,7 +9892,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (name == "sim_channel")
                 return "Aurora-Sim Server";
-            else if (name == "sim_version")
+            if (name == "sim_version")
                 return World.RequestModuleInterface<ISimulationBase>().Version;
             return "";
         }
@@ -10226,12 +9907,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 string reply = String.Empty;
 
-                GridRegion info;
+                GridRegion info = World.RegionInfo.RegionName == simulator
+                                      ? new GridRegion(World.RegionInfo)
+                                      : World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
 
-                if (World.RegionInfo.RegionName == simulator)
-                    info = new GridRegion(World.RegionInfo);
-                else
-                    info = World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
 
                 switch (data)
                 {
@@ -10247,10 +9926,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     case 6: // DATA_SIM_STATUS
                         if (info != null)
                         {
-                            if ((info.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) != 0)
-                                reply = "up";
-                            else
-                                reply = "down";
+                            reply = (info.Flags & (int)Framework.RegionFlags.RegionOnline) != 0 ? "up" : "down";
                         }
                         //if() starting
                         //if() stopping
@@ -10282,8 +9958,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             reply = "";
                         }
-                        break;
-                    default:
                         break;
                 }
                 if(reply != "")
@@ -10337,8 +10011,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List llListReplaceList(LSL_List dest, LSL_List src, int start, int end)
         {
-            LSL_List pref = null;
-
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_List();
             
             
@@ -10364,46 +10036,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // source list as a prefix.
                 if (start > 0)
                 {
-                    pref = dest.GetSublist(0,start-1);
+                    LSL_List pref = dest.GetSublist(0,start-1);
                     // Only add a suffix if there is something
                     // beyond the end index (it's inclusive too).
                     if (end + 1 < dest.Length)
                     {
                         return pref + src + dest.GetSublist(end + 1, -1);
                     }
-                    else
-                    {
-                        return pref + src;
-                    }
+                    return pref + src;
                 }
-                // If start is less than or equal to zero, then
+                    // If start is less than or equal to zero, then
                 // the new list is simply a prefix. We still need to
                 // figure out any necessary surgery to the destination
                 // based upon end. Note that if end exceeds the upper
                 // bound in this case, the entire destination list
                 // is removed.
-                else
+                if (end + 1 < dest.Length)
                 {
-                    if (end + 1 < dest.Length)
-                    {
-                        return src + dest.GetSublist(end + 1, -1);
-                    }
-                    else
-                    {
-                        return src;
-                    }
+                    return src + dest.GetSublist(end + 1, -1);
                 }
+                return src;
             }
-            // Finally, if start > end, we strip away a prefix and
+                // Finally, if start > end, we strip away a prefix and
             // a suffix, to leave the list that sits <between> ens
             // and start, and then tag on the src list. AT least
             // that's my interpretation. We can get sublist to do
             // this for us. Note that one, or both of the indices
             // might have been negative.
-            else
-            {
-                return dest.GetSublist(end + 1, start - 1) + src;
-            }
+            return dest.GetSublist(end + 1, start - 1) + src;
         }
 
         public DateTime llLoadURL(string avatar_id, string message, string url)
@@ -10604,7 +10264,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             break;
 
                         default:
-                            NotImplemented("llParcelMediaCommandList parameter not supported yet: " + Enum.Parse(typeof(ParcelMediaCommandEnum), commandList.Data[i].ToString()).ToString());
+                            NotImplemented("llParcelMediaCommandList parameter not supported yet: " + Enum.Parse(typeof(ParcelMediaCommandEnum), commandList.Data[i].ToString()));
                             break;
                     }//end switch
                 }//end for
@@ -10694,14 +10354,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_List();
             
             LSL_List list = new LSL_List();
-            for (int i = 0; i < aList.Data.Length; i++)
+            foreach (object t in aList.Data)
             {
-                if (aList.Data[i] != null)
+                if (t != null)
                 {
                     IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                     if (parcelManagement != null)
                     {
-                        LSL_Integer tmp = (LSL_Integer)aList.Data[i];
+                        LSL_Integer tmp = (LSL_Integer)t;
                         switch ((ParcelMediaCommandEnum)tmp.value)
                         {
                             case ParcelMediaCommandEnum.Url:
@@ -10727,8 +10387,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                 list.Add(new LSL_String(parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData.MediaWidth));
                                 break;
                             default:
-                                ParcelMediaCommandEnum mediaCommandEnum = ParcelMediaCommandEnum.Url;
-                                NotImplemented("llParcelMediaQuery parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), aList.Data[i].ToString()).ToString());
+                                const ParcelMediaCommandEnum mediaCommandEnum = ParcelMediaCommandEnum.Url;
+                                NotImplemented("llParcelMediaQuery parameter do not supported yet: " + Enum.Parse(mediaCommandEnum.GetType(), t.ToString()));
                                 break;
                         }
                     }
@@ -10748,8 +10408,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Assuming silently fail means give back an empty list.  Ideally, need to check this.
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
                 return new LSL_List();
-            else
-                return GetPrimMediaParams(m_host, face, rules);
+            return GetPrimMediaParams(m_host, face, rules);
         }
 
         public LSL_List llGetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules)
@@ -10759,18 +10418,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<ISceneChildEntity> entities = GetLinkParts(link);
             if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
                 return new LSL_List();
-            else
-            {
-                LSL_List res = new LSL_List();
+            LSL_List res = new LSL_List();
 
-                foreach(ISceneChildEntity part in entities)
-                {
-                    LSL_List partRes = GetPrimMediaParams(part, face, rules);
-                    res += partRes;
-                }
-
-                return res;
-            }
+            return entities.Select(part => GetPrimMediaParams(part, face, rules)).Aggregate(res,
+                                                                                            (current, partRes) =>
+                                                                                            current + partRes);
         }
 
         private LSL_List GetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
@@ -10799,10 +10451,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 else if (code == ScriptBaseClass.PRIM_MEDIA_CONTROLS)
                 {
-                    if (me.Controls == MediaControls.Standard)
-                        res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD));
-                    else
-                        res.Add(new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_MINI));
+                    res.Add(me.Controls == MediaControls.Standard
+                                ? new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD)
+                                : new LSL_Integer(ScriptBaseClass.PRIM_MEDIA_CONTROLS_MINI));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_CURRENT_URL)
                 {
@@ -10915,8 +10566,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Don't perform the media check directly
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
                 return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
-            else
-                return (LSL_Integer)SetPrimMediaParams(m_host, face, rules);
+            return (LSL_Integer)SetPrimMediaParams(m_host, face, rules);
         }
 
         public LSL_Integer llSetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules)
@@ -10940,9 +10590,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (null == module)
                 throw new Exception("Media on a prim functions not available");
 
-            MediaEntry me = module.GetMediaEntry(obj, face);
-            if (null == me)
-                me = new MediaEntry();
+            MediaEntry me = module.GetMediaEntry(obj, face) ?? new MediaEntry();
 
             int i = 0;
 
@@ -10952,15 +10600,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if (code == ScriptBaseClass.PRIM_MEDIA_ALT_IMAGE_ENABLE)
                 {
-                    me.EnableAlterntiveImage = (rules.GetLSLIntegerItem(i++) != 0 ? true : false);
+                    me.EnableAlterntiveImage = (rules.GetLSLIntegerItem(i++) != 0);
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_CONTROLS)
                 {
                     int v = rules.GetLSLIntegerItem(i++);
-                    if (ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD == v)
-                        me.Controls = MediaControls.Standard;
-                    else
-                        me.Controls = MediaControls.Mini;
+                    me.Controls = ScriptBaseClass.PRIM_MEDIA_CONTROLS_STANDARD == v
+                                      ? MediaControls.Standard
+                                      : MediaControls.Mini;
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_CURRENT_URL)
                 {
@@ -10972,23 +10619,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP)
                 {
-                    me.AutoLoop = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                    me.AutoLoop = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY)
                 {
-                    me.AutoPlay = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                    me.AutoPlay = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE)
                 {
-                    me.AutoScale = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                    me.AutoScale = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM)
                 {
-                    me.AutoZoom = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                    me.AutoZoom = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_FIRST_CLICK_INTERACT)
                 {
-                    me.InteractOnFirstClick = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                    me.InteractOnFirstClick = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS)
                 {
@@ -11000,14 +10647,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE)
                 {
-                    me.EnableWhiteList = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++) ? true : false);
+                    me.EnableWhiteList = (ScriptBaseClass.TRUE == rules.GetLSLIntegerItem(i++));
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST)
                 {
-                    string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new char[] { ',' });
+                    string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new[] { ',' });
                     List<string> whiteListUrls = new List<string>();
                     Array.ForEach(
-                        rawWhiteListUrls, delegate(string rawUrl) { whiteListUrls.Add(rawUrl.Trim()); });
+                        rawWhiteListUrls, rawUrl => whiteListUrls.Add(rawUrl.Trim()));
                     me.WhiteList = whiteListUrls.ToArray();
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT)
@@ -11169,7 +10816,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception ex)
             {
-                return "llEscapeURL: " + ex.ToString();
+                return "llEscapeURL: " + ex;
             }
         }
 
@@ -11183,7 +10830,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception ex)
             {
-                return "llUnescapeURL: " + ex.ToString();
+                return "llUnescapeURL: " + ex;
             }
         }
 
@@ -11203,14 +10850,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IScenePresence avatar = World.GetScenePresence (avatarID);
             if (avatar != null)
             {
-                Aurora.Framework.IMuteListModule module = m_host.ParentEntity.Scene.RequestModuleInterface<Aurora.Framework.IMuteListModule> ();
+                IMuteListModule module = m_host.ParentEntity.Scene.RequestModuleInterface<IMuteListModule> ();
                 if (module != null)
                 {
                     bool cached = false; //Unneeded
-                    foreach (Aurora.Framework.MuteList mute in module.GetMutes(avatar.UUID, out cached))
+                    if (module.GetMutes(avatar.UUID, out cached).Any(mute => mute.MuteID == m_host.OwnerID))
                     {
-                        if (mute.MuteID == m_host.OwnerID)
-                            return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
+                        return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
                     }
                 }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
@@ -11223,8 +10869,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llAddToLandBanList(string avatar, double hours)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
-            UUID key;
+
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
@@ -11232,6 +10877,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (land.OwnerID == m_host.OwnerID)
                 {
                     ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                    UUID key;
                     if (UUID.TryParse(avatar, out key))
                     {
                         entry.AgentID = key;
@@ -11247,14 +10893,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llRemoveFromLandPassList(string avatar)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
-            UUID key;
+
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
                 LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
                 if (land.OwnerID == m_host.OwnerID)
                 {
+                    UUID key;
                     if (UUID.TryParse(avatar, out key))
                     {
                         foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
@@ -11274,14 +10920,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llRemoveFromLandBanList(string avatar)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
-            UUID key;
+
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
                 LandData land = parcelManagement.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).LandData;
                 if (land.OwnerID == m_host.OwnerID)
                 {
+                    UUID key;
                     if (UUID.TryParse(avatar, out key))
                     {
                         foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
@@ -11392,28 +11038,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             LSL_List nums = LSL_List.ToDoubleList(src);
             if (operation == ScriptBaseClass.LIST_STAT_RANGE)
                 return nums.Range();
-            else if (operation == ScriptBaseClass.LIST_STAT_MIN)
+            if (operation == ScriptBaseClass.LIST_STAT_MIN)
                 return nums.Min();
-            else if (operation == ScriptBaseClass.LIST_STAT_MAX)
+            if (operation == ScriptBaseClass.LIST_STAT_MAX)
                 return nums.Max();
-            else if (operation == ScriptBaseClass.LIST_STAT_MEAN)
+            if (operation == ScriptBaseClass.LIST_STAT_MEAN)
                 return nums.Mean();
-            else if (operation == ScriptBaseClass.LIST_STAT_MEDIAN)
+            if (operation == ScriptBaseClass.LIST_STAT_MEDIAN)
                 return nums.Median();
-            else if (operation == ScriptBaseClass.LIST_STAT_NUM_COUNT)
+            if (operation == ScriptBaseClass.LIST_STAT_NUM_COUNT)
                 return nums.NumericLength();
-            else if (operation == ScriptBaseClass.LIST_STAT_STD_DEV)
+            if (operation == ScriptBaseClass.LIST_STAT_STD_DEV)
                 return nums.StdDev();
-            else if (operation == ScriptBaseClass.LIST_STAT_SUM)
+            if (operation == ScriptBaseClass.LIST_STAT_SUM)
                 return nums.Sum();
-            else if (operation == ScriptBaseClass.LIST_STAT_SUM_SQUARES)
+            if (operation == ScriptBaseClass.LIST_STAT_SUM_SQUARES)
                 return nums.SumSqrs();
-            else if (operation == ScriptBaseClass.LIST_STAT_GEOMETRIC_MEAN)
+            if (operation == ScriptBaseClass.LIST_STAT_GEOMETRIC_MEAN)
                 return nums.GeometricMean();
-            else if (operation == ScriptBaseClass.LIST_STAT_HARMONIC_MEAN)
+            if (operation == ScriptBaseClass.LIST_STAT_HARMONIC_MEAN)
                 return nums.HarmonicMean();
-            else
-                return 0.0;
+            return 0.0;
         }
 
         public LSL_Integer llGetUnixTime()
@@ -11452,9 +11097,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             string src1 = llBase64ToString(str1);
             string src2 = llBase64ToString(str2);
             int c = 0;
-            for (int i = 0; i < src1.Length; i++)
+            foreach (char t in src1)
             {
-                ret += (char) (src1[i] ^ src2[c]);
+                ret += (char) (t ^ src2[c]);
 
                 c++;
                 if (c >= src2.Length)
@@ -11474,21 +11119,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             IHttpRequestModule httpScriptMod =
                 World.RequestModuleInterface<IHttpRequestModule>();
-            List<string> param = new List<string>();
-            foreach (object o in parameters.Data)
-            {
-                param.Add(o.ToString());
-            }
+            List<string> param = parameters.Data.Select(o => o.ToString()).ToList();
 
             Vector3 position = m_host.AbsolutePosition;
             Vector3 velocity = m_host.Velocity;
             Quaternion rotation = m_host.RotationOffset;
             string ownerName = String.Empty;
             IScenePresence scenePresence = World.GetScenePresence (m_host.OwnerID);
-            if (scenePresence == null)
-                ownerName = resolveName(m_host.OwnerID);
-            else
-                ownerName = scenePresence.Name;
+            ownerName = scenePresence == null ? resolveName(m_host.OwnerID) : scenePresence.Name;
 
             RegionInfo regionInfo = World.RegionInfo;
 
@@ -11515,18 +11153,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (userAgent != null)
                 httpHeaders["User-Agent"] = userAgent;
 
-            string authregex = @"^(https?:\/\/)(\w+):(\w+)@(.*)$";
+            const string authregex = @"^(https?:\/\/)(\w+):(\w+)@(.*)$";
             Regex r = new Regex(authregex);
             int[] gnums = r.GetGroupNumbers();
             Match m = r.Match(url);
             if (m.Success) {
-                for (int i = 1; i < gnums.Length; i++) {
-                    //System.Text.RegularExpressions.Group g = m.Groups[gnums[i]];
-                    //CaptureCollection cc = g.Captures;
-                }
+                //for (int i = 1; i < gnums.Length; i++) {
+                //    //System.Text.RegularExpressions.Group g = m.Groups[gnums[i]];
+                //    //CaptureCollection cc = g.Captures;
+                //}
                 if (m.Groups.Count == 5) {
-                    httpHeaders["Authorization"] = String.Format("Basic {0}", Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(m.Groups[2].ToString() + ":" + m.Groups[3].ToString())));
-                    url = m.Groups[1].ToString() + m.Groups[4].ToString();
+                    httpHeaders["Authorization"] = String.Format("Basic {0}", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(m.Groups[2].ToString() + ":" + m.Groups[3].ToString())));
+                    url = m.Groups[1].ToString() + m.Groups[4];
                 }
             }
 
@@ -11622,50 +11260,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     return 0;
                 }
-                else
+                IPrimCountModule primCountsModule = World.RequestModuleInterface<IPrimCountModule>();
+                if (primCountsModule != null)
                 {
-                    IPrimCountModule primCountsModule = World.RequestModuleInterface<IPrimCountModule>();
-                    if (primCountsModule != null)
+                    IPrimCounts primCounts = primCountsModule.GetPrimCounts(land.GlobalID);
+                    if (sim_wide != 0)
                     {
-                        IPrimCounts primCounts = primCountsModule.GetPrimCounts(land.GlobalID);
-                        if (sim_wide != 0)
+                        if (category == 0)
                         {
-                            if (category == 0)
-                            {
-                                return primCounts.Simulator;
-                            }
-                            else
-                            {
-                                return 0;
-                            }
+                            return primCounts.Simulator;
                         }
-                        else
-                        {
-                            if (category == 0)//Total Prims
-                            {
-                                return primCounts.Total;//land.
-                            }
-                            else if (category == 1)//Owner Prims
-                            {
-                                return primCounts.Owner;
-                            }
-                            else if (category == 2)//Group Prims
-                            {
-                                return primCounts.Group;
-                            }
-                            else if (category == 3)//Other Prims
-                            {
-                                return primCounts.Others;
-                            }
-                            else if (category == 4)//Selected
-                            {
-                                return primCounts.Selected;
-                            }
-                            else if (category == 5)//Temp
-                            {
-                                return primCounts.Temporary;//land.
-                            }
-                        }
+                        return 0;
+                    }
+                    switch (category)
+                    {
+                        case 0:
+                            return primCounts.Total;//land.
+                        case 1:
+                            return primCounts.Owner;
+                        case 2:
+                            return primCounts.Group;
+                        case 3:
+                            return primCounts.Others;
+                        case 4:
+                            return primCounts.Selected;
+                        case 5:
+                            return primCounts.Temporary;//land.
                     }
                 }
             }
@@ -11708,10 +11328,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return 0;
             }
-            else
-            {
-                return part.ParentEntity.PrimCount;
-            }
+            return part.ParentEntity.PrimCount;
         }
 
         public LSL_Integer llGetParcelMaxPrims(LSL_Vector pos, int sim_wide)
@@ -11828,21 +11445,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int activeScripts = 0;
-                            foreach (IScriptModule module in modules)
-                            {
-                                activeScripts += module.GetActiveScripts(av);
-                            }
+                            int activeScripts = modules.Sum(module => module.GetActiveScripts(av));
                             ret.Add(activeScripts);
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int totalScripts = 0;
-                            foreach (IScriptModule module in modules)
-                            {
-                                totalScripts += module.GetTotalScripts(av);
-                            }
+                            int totalScripts = modules.Sum(module => module.GetTotalScripts(av));
                             ret.Add(totalScripts);
                         }
                         else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -11852,11 +11461,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_TIME)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int scriptTime = 0;
-                            foreach(IScriptModule module in modules)
-                            {
-                                scriptTime += module.GetScriptTime(m_itemID);
-                            }
+                            int scriptTime = modules.Sum(module => module.GetScriptTime(m_itemID));
                             ret.Add(scriptTime);
                         }
                         else
@@ -11909,21 +11514,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int activeScripts = 0;
-                            foreach(IScriptModule module in modules)
-                            {
-                                activeScripts += module.GetActiveScripts(obj);
-                            }
+                            int activeScripts = modules.Sum(module => module.GetActiveScripts(obj));
                             ret.Add(new LSL_Integer(activeScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int totalScripts = 0;
-                            foreach (IScriptModule module in modules)
-                            {
-                                totalScripts += module.GetTotalScripts(obj);
-                            }
+                            int totalScripts = modules.Sum(module => module.GetTotalScripts(obj));
                             ret.Add(new LSL_Integer(totalScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -12039,11 +11636,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 float groundHeight = channel[(int)(posToCheck.X + startvector.X), (int)(posToCheck.Y + startvector.Y)];
                 if (checkTerrain && groundHeight > posToCheck.Z)
                 {
-                    ContactResult result = new ContactResult();
-                    result.ConsumerID = 0;
-                    result.Depth = 0;
-                    result.Normal = Vector3.Zero;
-                    result.Pos = posToCheck;
+                    ContactResult result = new ContactResult
+                                               {ConsumerID = 0, Depth = 0, Normal = Vector3.Zero, Pos = posToCheck};
                     results.Add(result);
                     checkTerrain = false;
                 }
@@ -12054,11 +11648,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IScenePresence sp = presences[presenceCount];
                         if (sp.AbsolutePosition.ApproxEquals (posToCheck, sp.PhysicsActor.Size.X))
                         {
-                            ContactResult result = new ContactResult ();
-                            result.ConsumerID = sp.LocalId;
-                            result.Depth = 0;
-                            result.Normal = Vector3.Zero;
-                            result.Pos = posToCheck;
+                            ContactResult result = new ContactResult
+                                                       {
+                                                           ConsumerID = sp.LocalId,
+                                                           Depth = 0,
+                                                           Normal = Vector3.Zero,
+                                                           Pos = posToCheck
+                                                       };
                             results.Add (result);
                             presences.RemoveAt (presenceCount);
                             if (presenceCount > 0)
@@ -12071,15 +11667,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<ContactResult> newResults = new List<ContactResult> ();
             foreach (ContactResult result in results)
             {
-                bool found = false;
-                foreach (ContactResult r in newResults)
-                {
-                    if (r.ConsumerID == result.ConsumerID)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                bool found = newResults.Any(r => r.ConsumerID == result.ConsumerID);
                 if (!found)
                     newResults.Add (result);
             }
@@ -12142,10 +11730,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private void castRaySort (Vector3 pos, ref List<ContactResult> list)
         {
-            list.Sort (delegate (ContactResult a, ContactResult b)
-            {
-                return Vector3.DistanceSquared (a.Pos, pos).CompareTo (Vector3.DistanceSquared (b.Pos, pos));
-            });
+            list.Sort ((a, b) => Vector3.DistanceSquared(a.Pos, pos).CompareTo(Vector3.DistanceSquared(b.Pos, pos)));
         }
 
         public LSL_Key llGetNumberOfNotecardLines(string name)
@@ -12199,8 +11784,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
                     else
                         {
-                        System.Text.UTF8Encoding enc =
-                            new System.Text.UTF8Encoding();
+                        UTF8Encoding enc =
+                            new UTF8Encoding();
                         string data = enc.GetString(a.Data);
                         //m_log.Debug(data);
                         NotecardCache.Cache(id, data);
@@ -12228,8 +11813,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
             UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, uuid.ToString());
 
-            Util.FireAndForget(delegate(object o)
-            {
+            Util.FireAndForget(delegate
+                                   {
                 string name = "";
                 UserAccount info = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, userID);
                 if (info != null)
@@ -12257,10 +11842,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
             UUID tid = dataserverPlugin.RegisterRequest(m_host.UUID, m_itemID, uuid.ToString());
 
-            Util.FireAndForget(delegate(object o)
-            {
+            Util.FireAndForget(delegate
+                                   {
                 string name = "";
-                IProfileConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+                IProfileConnector connector = DataManager.DataManager.RequestPlugin<IProfileConnector>();
                 if (connector != null)
                 {
                     IUserProfileInfo info = connector.GetUserProfile(userID);
@@ -12325,8 +11910,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                      }
                      else
                      {
-                         System.Text.UTF8Encoding enc =
-                             new System.Text.UTF8Encoding();
+                         UTF8Encoding enc =
+                             new UTF8Encoding();
                          string data = enc.GetString(a.Data);
                          //m_log.Debug(data);
                          NotecardCache.Cache(id, data);
@@ -12399,9 +11984,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_Notecards.ContainsKey(assetID))
                     return;
 
-                Notecard nc = new Notecard();
-                nc.lastRef = DateTime.Now;
-                nc.text = SLUtil.ParseNotecardToList(text).ToArray();
+                Notecard nc = new Notecard {lastRef = DateTime.Now, text = SLUtil.ParseNotecardToList(text).ToArray()};
                 m_Notecards[assetID] = nc;
             }
         }
@@ -12431,8 +12014,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (line < 0)
                 return "";
 
-            string data;
-
             if (!IsCached(assetID))
                 return "";
 
@@ -12443,7 +12024,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (line >= m_Notecards[assetID].text.Length)
                     return "\n\n\n";
 
-                data = m_Notecards[assetID].text[line];
+                string data = m_Notecards[assetID].text[line];
                 if (data.Length > maxLength)
                     data = data.Substring(0, maxLength);
 

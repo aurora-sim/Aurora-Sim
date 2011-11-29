@@ -25,7 +25,6 @@
  * THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -33,11 +32,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class HullTriangle : int3
     {
-        public int3 n = new int3();
+        private readonly List<HullTriangle> tris;
         public int id;
-        public int vmax;
+        public int3 n = new int3();
         public float rise;
-        private List<HullTriangle> tris;
+        public int vmax;
 
         public HullTriangle(int a, int b, int c, List<HullTriangle> tris)
             : base(a, b, c)
@@ -63,8 +62,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
             for (i = 0; i < 3; i++)
             {
-                int i1 = (i + 1) % 3;
-                int i2 = (i + 2) % 3;
+                int i1 = (i + 1)%3;
+                int i2 = (i + 2)%3;
                 if ((this)[i] == a && (this)[i1] == b)
                     return n[i2];
                 if ((this)[i] == b && (this)[i1] == a)
@@ -81,8 +80,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
             for (i = 0; i < 3; i++)
             {
-                int i1 = (i + 1) % 3;
-                int i2 = (i + 2) % 3;
+                int i1 = (i + 1)%3;
+                int i2 = (i + 2)%3;
                 if ((this)[i] == a && (this)[i1] == b)
                 {
                     n[i2] = value;

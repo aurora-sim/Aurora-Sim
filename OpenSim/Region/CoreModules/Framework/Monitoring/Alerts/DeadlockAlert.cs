@@ -30,9 +30,9 @@ using OpenSim.Region.CoreModules.Framework.Monitoring.Monitors;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Alerts
 {
-    class DeadlockAlert : IAlert
+    internal class DeadlockAlert : IAlert
     {
-        private LastFrameTimeMonitor m_monitor;
+        private readonly LastFrameTimeMonitor m_monitor;
 
         public DeadlockAlert(LastFrameTimeMonitor m_monitor)
         {
@@ -48,7 +48,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Alerts
 
         public void Test()
         {
-            if (m_monitor.GetValue() > 60 * 1000)
+            if (m_monitor.GetValue() > 60*1000)
             {
                 if (OnTriggerAlert != null)
                 {

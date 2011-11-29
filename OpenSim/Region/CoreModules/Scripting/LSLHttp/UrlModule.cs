@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.Threading;
 using System.Collections.Generic;
 using System.Collections;
 using System.Reflection;
@@ -36,7 +35,6 @@ using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 {
@@ -70,14 +68,14 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Dictionary<UUID, UrlData> m_RequestMap =
+        private readonly Dictionary<UUID, UrlData> m_RequestMap =
                 new Dictionary<UUID, UrlData>();
 
-        private Dictionary<string, UrlData> m_UrlMap =
+        private readonly Dictionary<string, UrlData> m_UrlMap =
                 new Dictionary<string, UrlData>();
 
 
-        private int m_TotalUrls = 100;
+        private const int m_TotalUrls = 100;
 
         private IHttpServer m_HttpServer = null;
 
@@ -140,15 +138,17 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 }
                 string url = m_HttpServer.ServerURI + "/lslhttp/" + urlcode.ToString() + "/";
 
-                UrlData urlData = new UrlData();
-                urlData.hostID = host.UUID;
-                urlData.itemID = itemID;
-                urlData.engine = engine;
-                urlData.url = url;
-                urlData.urlcode = urlcode;
-                urlData.requests = new Dictionary<UUID, RequestData>();
+                UrlData urlData = new UrlData
+                                      {
+                                          hostID = host.UUID,
+                                          itemID = itemID,
+                                          engine = engine,
+                                          url = url,
+                                          urlcode = urlcode,
+                                          requests = new Dictionary<UUID, RequestData>()
+                                      };
 
-                
+
                 m_UrlMap[url] = urlData;
                 
                 string uri = "/lslhttp/" + urlcode.ToString() + "/";
@@ -298,7 +298,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 url = m_RequestMap[requestID];
             }
 
-            if (System.Environment.TickCount - url.requests[requestID].startTime > 25000)
+            if (Environment.TickCount - url.requests[requestID].startTime > 25000)
             {
                 response["int_response_code"] = 500;
                 response["str_response_string"] = "Script timeout";
@@ -337,16 +337,14 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 }
             }
 
-            if (System.Environment.TickCount-url.requests[requestID].startTime>25000)
+            if (Environment.TickCount-url.requests[requestID].startTime>25000)
             {
                 return true;
             }
 
             if (url.requests[requestID].requestDone)
                 return true;
-            else
-                return false;
-
+            return false;
         }
         private Hashtable GetEvents(UUID requestID, UUID sessionID, string request)
         {
@@ -366,7 +364,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             
             Hashtable response = new Hashtable();
 
-            if (System.Environment.TickCount - requestData.startTime > 25000)
+            if (Environment.TickCount - requestData.startTime > 25000)
             {
                 response["int_response_code"] = 500;
                 response["str_response_string"] = "Script timeout";
@@ -406,11 +404,9 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                     int pos3 = uri.IndexOf("/", pos2 + 1);// /lslhttp/<UUID>/
                     string uri_tmp = uri.Substring(0, pos3 + 1);
                     //HTTP server code doesn't provide us with QueryStrings
-                    string pathInfo;
-                    string queryString;
-                    queryString = "";
+                    string queryString = "";
 
-                    pathInfo = uri.Substring(pos3);
+                    string pathInfo = uri.Substring(pos3);
 
                     UrlData url = m_UrlMap[m_HttpServer.ServerURI + uri_tmp];
 
@@ -418,11 +414,13 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                     //to make x-path-info / x-query-string / x-script-url / x-remote-ip headers 
                     //as per http://wiki.secondlife.com/wiki/LlGetHTTPHeader
 
-                    RequestData requestData = new RequestData();
-                    requestData.requestID = requestID;
-                    requestData.requestDone = false;
-                    requestData.startTime = System.Environment.TickCount;
-                    requestData.uri = uri;
+                    RequestData requestData = new RequestData
+                                                  {
+                                                      requestID = requestID,
+                                                      requestDone = false,
+                                                      startTime = Environment.TickCount,
+                                                      uri = uri
+                                                  };
                     if (requestData.headers == null)
                         requestData.headers = new Dictionary<string, string>();
 
@@ -436,7 +434,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                     {
                         if (de.Key.ToString() == "querystringkeys")
                         {
-                            System.String[] keys = (System.String[])de.Value;
+                            String[] keys = (String[])de.Value;
                             foreach (String key in keys)
                             {
                                 if (request.ContainsKey(key))

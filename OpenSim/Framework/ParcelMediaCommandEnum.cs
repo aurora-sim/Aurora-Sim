@@ -44,6 +44,7 @@ namespace OpenSim.Framework
         Desc = 12,
         LoopSet = 13
     }
+
     public enum PrimMediaCommandEnum
     {
         AltImageEnable = 0,
@@ -62,7 +63,8 @@ namespace OpenSim.Framework
         PermsInteract = 13,
         PermsControl = 14
     }
-    public enum PrimMediaUpdate : int
+
+    public enum PrimMediaUpdate
     {
         OK = 0,
         MALFORMED_PARAMS = 1000,

@@ -29,18 +29,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
+using System.Linq;
 using System.Reflection;
-using System.Text;
 using OpenMetaverse;
 using log4net;
-using log4net.Core;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Physics.Manager;
 using Nini.Config;
-using OpenSim;
-using Aurora.Simulation.Base;
 using Aurora.Framework;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -97,7 +92,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_config; }
         }
 
-        private List<IScene> m_localScenes = new List<IScene> ();
+        private readonly List<IScene> m_localScenes = new List<IScene> ();
         public List<IScene> Scenes
         {
             get { return m_localScenes; }
@@ -113,15 +108,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         return m_localScenes[0];
                     }
-                    else
-                    {
-                        return null;
-                    }
+                    return null;
                 }
-                else
-                {
-                    return MainConsole.Instance.ConsoleScene;
-                }
+                return MainConsole.Instance.ConsoleScene;
             }
         }
 
@@ -215,10 +204,10 @@ namespace OpenSim.Region.Framework.Scenes
             IScene[] scenes = new IScene[m_localScenes.Count];
             m_localScenes.CopyTo(scenes, 0);
             // collect known shared modules in sharedModules
-            for (int i = 0; i < scenes.Length; i++)
+            foreach (IScene t in scenes)
             {
                 // close scene/region
-                CloseRegion (scenes[i], ShutdownType.Immediate, 0);
+                CloseRegion (t, ShutdownType.Immediate, 0);
             }
         }
 
@@ -244,15 +233,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_OpenSimBase.RunStartupCommands();
 
             // For now, start at the 'root' level by default
-            if (Scenes.Count == 1)
-            {
-                // If there is only one region, select it
-                ChangeConsoleRegion(Scenes[0].RegionInfo.RegionName);
-            }
-            else
-            {
-                ChangeConsoleRegion("root");
-            }
+            ChangeConsoleRegion(Scenes.Count == 1 ? Scenes[0].RegionInfo.RegionName : "root");
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
@@ -301,19 +282,13 @@ namespace OpenSim.Region.Framework.Scenes
                 MainConsole.Instance.ConsoleScene = null;
                 return true;
             }
-            else
+            foreach (IScene scene in m_localScenes.Where(scene => String.Compare(scene.RegionInfo.RegionName, regionName, true) == 0))
             {
-                foreach (IScene scene in m_localScenes)
-                {
-                    if (String.Compare(scene.RegionInfo.RegionName, regionName, true) == 0)
-                    {
-                        MainConsole.Instance.ConsoleScene = scene;
-                        return true;
-                    }
-                }
-
-                return false;
+                MainConsole.Instance.ConsoleScene = scene;
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -431,10 +406,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Get the new scene from the interface
             IScene scene = sceneLoader.CreateScene (regionInfo);
-            foreach (IScene loadedScene in m_localScenes)
-                if (loadedScene.RegionInfo.RegionName == regionInfo.RegionName &&
-                    loadedScene.RegionInfo.RegionHandle == regionInfo.RegionHandle)
-                    throw new Exception("Duplicate region!");
+            if (m_localScenes.Any(loadedScene => loadedScene.RegionInfo.RegionName == regionInfo.RegionName &&
+                                                 loadedScene.RegionInfo.RegionHandle == regionInfo.RegionHandle))
+            {
+                throw new Exception("Duplicate region!");
+            }
             StartNewRegion (scene);
             return scene;
         }
@@ -442,9 +418,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Execute the region creation process.  This includes setting up scene infrastructure.
         /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="portadd_flag"></param>
-        /// <param name="do_post_init"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public void StartNewRegion(IScene scene)
         {
@@ -550,10 +524,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Timer t = new Timer (seconds * 1000);//Millisecond conversion
                 t.Elapsed +=
-                    delegate (object sender, ElapsedEventArgs e)
-                    {
-                        CloseRegion (scene, ShutdownType.Immediate, 0);
-                    };
+                    (sender, e) => CloseRegion(scene, ShutdownType.Immediate, 0);
                 t.AutoReset = false;
                 t.Start ();
             }
@@ -666,7 +637,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected void CloseModules (IScene scene)
         {
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface<IRegionModulesController> (out controller))
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface (out controller))
                 controller.RemoveRegionFromModules (scene);
 
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
@@ -736,7 +707,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Kicks users off the region
         /// </summary>
-        /// <param name="module"></param>
         /// <param name="cmdparams">name of avatar to kick</param>
         private void KickUserCommand(string[] cmdparams)
         {

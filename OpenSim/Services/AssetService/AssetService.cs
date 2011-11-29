@@ -26,46 +26,39 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using Aurora.DataManager;
+using Aurora.Simulation.Base;
 using Nini.Config;
-using log4net;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace OpenSim.Services.AssetService
 {
     public class AssetService : IAssetService, IService
     {
         private static readonly ILog m_Log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-        protected IRegistryCore m_registry;
+
         protected IAssetDataPlugin m_database;
+        protected IRegistryCore m_registry;
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
+        #region IAssetService Members
+
         public IAssetService InnerService
         {
             get { return this; }
         }
 
-        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-            Configure(config, registry);
-        }
-
-        public virtual void Configure (IConfigSource config, IRegistryCore registry)
+        public virtual void Configure(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
 
@@ -78,26 +71,26 @@ namespace OpenSim.Services.AssetService
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("show digest",
-                        "show digest <ID>",
-                        "Show asset digest", HandleShowDigest);
+                                                         "show digest <ID>",
+                                                         "Show asset digest", HandleShowDigest);
 
                 MainConsole.Instance.Commands.AddCommand("delete asset",
-                        "delete asset <ID>",
-                        "Delete asset from database", HandleDeleteAsset);
+                                                         "delete asset <ID>",
+                                                         "Delete asset from database", HandleDeleteAsset);
             }
 
             m_Log.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
-        public virtual void Start (IConfigSource config, IRegistryCore registry)
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public virtual void FinishedStartup ()
+        public virtual void FinishedStartup()
         {
         }
 
-        public virtual AssetBase Get (string id)
+        public virtual AssetBase Get(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
@@ -112,7 +105,7 @@ namespace OpenSim.Services.AssetService
             return asset;
         }
 
-        public virtual AssetBase GetCached (string id)
+        public virtual AssetBase GetCached(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
@@ -120,34 +113,34 @@ namespace OpenSim.Services.AssetService
             return null;
         }
 
-        public virtual byte[] GetData (string id)
+        public virtual byte[] GetData(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
                 AssetBase cachedAsset = cache.Get(id);
-                if(cachedAsset != null && cachedAsset.Data.Length != 0)
+                if (cachedAsset != null && cachedAsset.Data.Length != 0)
                     return cachedAsset.Data;
             }
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             if (cache != null && asset != null)
                 cache.Cache(asset);
             if (asset != null) return asset.Data;
-            return new byte[] { };
+            return new byte[] {};
         }
 
-        public virtual bool GetExists (string id)
+        public virtual bool GetExists(string id)
         {
             return m_database.ExistsAsset(UUID.Parse(id));
         }
 
-        public virtual bool Get (String id, Object sender, AssetRetrieved handler)
+        public virtual bool Get(String id, Object sender, AssetRetrieved handler)
         {
             //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if(cache != null && asset != null && asset.Data.Length != 0)
+            if (cache != null && asset != null && asset.Data.Length != 0)
                 cache.Cache(asset);
 
             //m_log.DebugFormat("[AssetService]: Got asset {0}", asset);
@@ -157,12 +150,12 @@ namespace OpenSim.Services.AssetService
             return true;
         }
 
-        public virtual UUID Store (AssetBase asset)
+        public virtual UUID Store(AssetBase asset)
         {
             //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if(cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
+            if (cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
                 cache.Expire(asset.ID.ToString());
                 cache.Cache(asset);
@@ -171,19 +164,33 @@ namespace OpenSim.Services.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        public virtual bool UpdateContent (UUID id, byte[] data)
+        public virtual bool UpdateContent(UUID id, byte[] data)
         {
             m_database.UpdateContent(id, data);
             return true;
         }
 
-        public virtual bool Delete (UUID id)
+        public virtual bool Delete(UUID id)
         {
             m_Log.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             return m_database.Delete(id);
         }
 
-        void HandleShowDigest(string[] args)
+        #endregion
+
+        #region IService Members
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+            Configure(config, registry);
+        }
+
+        #endregion
+
+        private void HandleShowDigest(string[] args)
         {
             if (args.Length < 3)
             {
@@ -209,7 +216,7 @@ namespace OpenSim.Services.AssetService
 
             for (i = 0; i < 5; i++)
             {
-                int off = i * 16;
+                int off = i*16;
                 if (asset.Data.Length <= off)
                     break;
                 int len = 16;
@@ -224,7 +231,7 @@ namespace OpenSim.Services.AssetService
             }
         }
 
-        void HandleDeleteAsset(string[] args)
+        private void HandleDeleteAsset(string[] args)
         {
             if (args.Length < 3)
             {

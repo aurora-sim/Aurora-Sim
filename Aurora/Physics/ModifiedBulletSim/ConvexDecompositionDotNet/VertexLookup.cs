@@ -25,15 +25,14 @@
  * THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 
 namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class VertexPool
     {
-        private List<float3> mVertices = new List<float3>();
-        private Dictionary<float3, int> mIndices = new Dictionary<float3, int>();
+        private readonly Dictionary<float3, int> mIndices = new Dictionary<float3, int>();
+        private readonly List<float3> mVertices = new List<float3>();
 
         public int getIndex(float3 vtx)
         {

@@ -27,8 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -38,14 +36,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-
-        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
+                                float duration, float BrushSize, List<IScene> scene)
         {
             int x;
-            int xFrom = (int)(rx - BrushSize + 0.5);
-            int xTo = (int)(rx + BrushSize + 0.5) + 1;
-            int yFrom = (int)(ry - BrushSize + 0.5);
-            int yTo = (int)(ry + BrushSize + 0.5) + 1;
+            int xFrom = (int) (rx - BrushSize + 0.5);
+            int xTo = (int) (rx + BrushSize + 0.5) + 1;
+            int yFrom = (int) (ry - BrushSize + 0.5);
+            int yTo = (int) (ry + BrushSize + 0.5) + 1;
 
             if (xFrom < 0)
                 xFrom = 0;
@@ -68,10 +66,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         continue;
 
                     // Calculate a cos-sphere and add it to the heighmap
-                    double r = Math.Sqrt((x - rx) * (x - rx) + ((y - ry) * (y - ry)));
-                    double z = Math.Cos(r * Math.PI / (BrushSize * 2));
+                    double r = Math.Sqrt((x - rx)*(x - rx) + ((y - ry)*(y - ry)));
+                    double z = Math.Cos(r*Math.PI/(BrushSize*2));
                     if (z > 0.0)
-                        map[x, y] += (float)(z * duration);
+                        map[x, y] += (float) (z*duration);
                 }
             }
         }

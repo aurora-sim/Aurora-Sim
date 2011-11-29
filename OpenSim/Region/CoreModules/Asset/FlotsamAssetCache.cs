@@ -29,23 +29,20 @@
 // #define WAIT_ON_INPROGRESS_REQUESTS
 
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using System.Timers;
-
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Flotsam.RegionModules.AssetCache
 {
@@ -54,7 +51,7 @@ namespace Flotsam.RegionModules.AssetCache
         #region Declares
 
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private const string m_ModuleName = "FlotsamAssetCache";
@@ -63,7 +60,7 @@ namespace Flotsam.RegionModules.AssetCache
 
         private readonly List<char> m_InvalidChars = new List<char>();
 
-        private int m_LogLevel = 0;
+        private int m_LogLevel;
         private ulong m_HitRateDisplay = 1; // How often to display hit statistics, given in requests
 
         private static ulong m_Requests;
@@ -77,25 +74,25 @@ namespace Flotsam.RegionModules.AssetCache
         private Dictionary<string, ManualResetEvent> m_CurrentlyWriting = new Dictionary<string, ManualResetEvent>();
         private int m_WaitOnInprogressTimeout = 3000;
 #else
-        private List<string> m_CurrentlyWriting = new List<string>();
+        private readonly List<string> m_CurrentlyWriting = new List<string>();
 #endif
 
         private ExpiringCache<string, AssetBase> m_MemoryCache;
         private bool m_MemoryCacheEnabled = true;
 
         // Expiration is expressed in hours.
-        private const double m_DefaultMemoryExpiration = 1.0; 
+        private const double m_DefaultMemoryExpiration = 1.0;
         private const double m_DefaultFileExpiration = 48;
         private TimeSpan m_MemoryExpiration = TimeSpan.Zero;
         private TimeSpan m_FileExpiration = TimeSpan.Zero;
         private TimeSpan m_FileExpirationCleanupTimer = TimeSpan.Zero;
-        private object m_fileCacheLock = new Object();
+        private readonly object m_fileCacheLock = new Object();
 
         private static int m_CacheDirectoryTiers = 1;
         private static int m_CacheDirectoryTierLen = 3;
         private static int m_CacheWarnAt = 30000;
 
-        private System.Timers.Timer m_CacheCleanTimer;
+        private Timer m_CacheCleanTimer;
 
         private IAssetService m_AssetService;
         private ISimulationBase m_simulationBase;
@@ -128,7 +125,7 @@ namespace Flotsam.RegionModules.AssetCache
                 if (name == Name)
                 {
                     m_MemoryCache = new ExpiringCache<string, AssetBase>();
-                    
+
                     //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} enabled", this.Name);
 
                     IConfig assetConfig = config.Configs["AssetCache"];
@@ -143,21 +140,23 @@ namespace Flotsam.RegionModules.AssetCache
                     //m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Directory", m_DefaultCacheDirectory);
 
                     m_MemoryCacheEnabled = assetConfig.GetBoolean("MemoryCacheEnabled", false);
-                    m_MemoryExpiration = TimeSpan.FromHours(assetConfig.GetDouble("MemoryCacheTimeout", m_DefaultMemoryExpiration));
+                    m_MemoryExpiration =
+                        TimeSpan.FromHours(assetConfig.GetDouble("MemoryCacheTimeout", m_DefaultMemoryExpiration));
 
 #if WAIT_ON_INPROGRESS_REQUESTS
                     m_WaitOnInprogressTimeout = assetConfig.GetInt("WaitOnInprogressTimeout", 3000);
 #endif
 
                     m_LogLevel = assetConfig.GetInt("LogLevel", 0);
-                    m_HitRateDisplay = (ulong)assetConfig.GetInt("HitRateDisplay", 1000);
+                    m_HitRateDisplay = (ulong) assetConfig.GetInt("HitRateDisplay", 1000);
 
-                    m_FileExpiration = TimeSpan.FromHours(assetConfig.GetDouble("FileCacheTimeout", m_DefaultFileExpiration));
-                    m_FileExpirationCleanupTimer = TimeSpan.FromHours(assetConfig.GetDouble("FileCleanupTimer", m_DefaultFileExpiration));
+                    m_FileExpiration =
+                        TimeSpan.FromHours(assetConfig.GetDouble("FileCacheTimeout", m_DefaultFileExpiration));
+                    m_FileExpirationCleanupTimer =
+                        TimeSpan.FromHours(assetConfig.GetDouble("FileCleanupTimer", m_DefaultFileExpiration));
                     if ((m_FileExpiration > TimeSpan.Zero) && (m_FileExpirationCleanupTimer > TimeSpan.Zero))
                     {
-                        m_CacheCleanTimer = new System.Timers.Timer(m_FileExpirationCleanupTimer.TotalMilliseconds);
-                        m_CacheCleanTimer.AutoReset = true;
+                        m_CacheCleanTimer = new Timer(m_FileExpirationCleanupTimer.TotalMilliseconds) {AutoReset = true};
                         m_CacheCleanTimer.Elapsed += CleanupExpiredFiles;
                         lock (m_CacheCleanTimer)
                             m_CacheCleanTimer.Start();
@@ -189,17 +188,24 @@ namespace Flotsam.RegionModules.AssetCache
 
                     if (MainConsole.Instance != null)
                     {
-                        MainConsole.Instance.Commands.AddCommand ("fcache status", "fcache status", "Display cache status", HandleConsoleCommand);
-                        MainConsole.Instance.Commands.AddCommand ("fcache clear", "fcache clear [file] [memory]", "Remove all assets in the file and/or memory cache", HandleConsoleCommand);
-                        MainConsole.Instance.Commands.AddCommand ("fcache assets", "fcache assets", "Attempt a deep scan and cache of all assets in all scenes", HandleConsoleCommand);
-                        MainConsole.Instance.Commands.AddCommand ("fcache expire", "fcache expire <datetime>", "Purge cached assets older then the specified date/time", HandleConsoleCommand);
+                        MainConsole.Instance.Commands.AddCommand("fcache status", "fcache status",
+                                                                 "Display cache status", HandleConsoleCommand);
+                        MainConsole.Instance.Commands.AddCommand("fcache clear", "fcache clear [file] [memory]",
+                                                                 "Remove all assets in the file and/or memory cache",
+                                                                 HandleConsoleCommand);
+                        MainConsole.Instance.Commands.AddCommand("fcache assets", "fcache assets",
+                                                                 "Attempt a deep scan and cache of all assets in all scenes",
+                                                                 HandleConsoleCommand);
+                        MainConsole.Instance.Commands.AddCommand("fcache expire", "fcache expire <datetime>",
+                                                                 "Purge cached assets older then the specified date/time",
+                                                                 HandleConsoleCommand);
                     }
                     registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
         }
 
-        public void Configure (IConfigSource config, IRegistryCore registry)
+        public void Configure(IConfigSource config, IRegistryCore registry)
         {
         }
 
@@ -266,7 +272,6 @@ namespace Flotsam.RegionModules.AssetCache
                         }
                         else
                         {
-
                             // Once we start writing, make sure we flag that we're writing
                             // that object to the cache so that we don't try to write the 
                             // same file multiple times.
@@ -292,7 +297,6 @@ namespace Flotsam.RegionModules.AssetCache
                                     m_CurrentlyWriting.Add(filename);
                                 }
 #endif
-
                             }
 
                             Util.FireAndForget(
@@ -330,11 +334,11 @@ namespace Flotsam.RegionModules.AssetCache
                             stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
                             BinaryFormatter bformatter = new BinaryFormatter();
 
-                            asset = (AssetBase)bformatter.Deserialize(stream);
+                            asset = (AssetBase) bformatter.Deserialize(stream);
 
-                            if(asset.ID == UUID.Zero)//Bad request
+                            if (asset.ID == UUID.Zero) //Bad request
                             {
-                                if(stream != null)
+                                if (stream != null)
                                     stream.Close();
                                 File.Delete(filename);
                                 return null;
@@ -343,7 +347,7 @@ namespace Flotsam.RegionModules.AssetCache
 
                             m_DiskHits++;
                         }
-                        catch (System.Runtime.Serialization.SerializationException e)
+                        catch (SerializationException e)
                         {
                             LogException(e);
 
@@ -367,8 +371,8 @@ namespace Flotsam.RegionModules.AssetCache
 
 
 #if WAIT_ON_INPROGRESS_REQUESTS
-                // Check if we're already downloading this asset.  If so, try to wait for it to 
-                // download.
+    // Check if we're already downloading this asset.  If so, try to wait for it to 
+    // download.
                 if (m_WaitOnInprogressTimeout > 0)
                 {
                     m_RequestsForInprogress++;
@@ -390,23 +394,31 @@ namespace Flotsam.RegionModules.AssetCache
 #endif
             }
 
-            if (((m_LogLevel >= 1)) && (m_HitRateDisplay != 0) && (m_Requests % m_HitRateDisplay == 0))
+            if (((m_LogLevel >= 1)) && (m_HitRateDisplay != 0) && (m_Requests%m_HitRateDisplay == 0))
             {
-                m_HitRateFile = (double)m_DiskHits / m_Requests * 100.0;
+                m_HitRateFile = (double) m_DiskHits/m_Requests*100.0;
 
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Get :: {0} :: {1}", id, asset == null ? "Miss" : "Hit");
-                m_log.InfoFormat("[FLOTSAM ASSET CACHE]: File Hit Rate {0}% for {1} requests", m_HitRateFile.ToString("0.00"), m_Requests);
+                m_log.InfoFormat("[FLOTSAM ASSET CACHE]: File Hit Rate {0}% for {1} requests",
+                                 m_HitRateFile.ToString("0.00"), m_Requests);
 
                 if (m_MemoryCacheEnabled)
                 {
-                    m_HitRateMemory = (double)m_MemoryHits / m_Requests * 100.0;
-                    m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Memory Hit Rate {0}% for {1} requests", m_HitRateMemory.ToString("0.00"), m_Requests);
+                    m_HitRateMemory = (double) m_MemoryHits/m_Requests*100.0;
+                    m_log.InfoFormat("[FLOTSAM ASSET CACHE]: Memory Hit Rate {0}% for {1} requests",
+                                     m_HitRateMemory.ToString("0.00"), m_Requests);
                 }
 
-                m_log.InfoFormat("[FLOTSAM ASSET CACHE]: {0} unnessesary requests due to requests for assets that are currently downloading.", m_RequestsForInprogress);
-                
+                m_log.InfoFormat(
+                    "[FLOTSAM ASSET CACHE]: {0} unnessesary requests due to requests for assets that are currently downloading.",
+                    m_RequestsForInprogress);
             }
-            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.AssetMonitor);
+            IAssetMonitor monitor =
+                (IAssetMonitor)
+                m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("",
+                                                                                                         MonitorModuleHelper
+                                                                                                             .
+                                                                                                             AssetMonitor);
             if (monitor != null)
                 monitor.AddAsset(asset);
 
@@ -464,7 +476,12 @@ namespace Flotsam.RegionModules.AssetCache
             if (m_MemoryCacheEnabled)
                 m_MemoryCache.Clear();
 
-            IAssetMonitor monitor = (IAssetMonitor)m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.AssetMonitor);
+            IAssetMonitor monitor =
+                (IAssetMonitor)
+                m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("",
+                                                                                                         MonitorModuleHelper
+                                                                                                             .
+                                                                                                             AssetMonitor);
             if (monitor != null)
             {
                 monitor.ClearAssetCacheStatistics();
@@ -474,7 +491,8 @@ namespace Flotsam.RegionModules.AssetCache
         private void CleanupExpiredFiles(object source, ElapsedEventArgs e)
         {
             if (m_LogLevel >= 2)
-                m_log.DebugFormat("[FLOTSAM ASSET CACHE]: Checking for expired files older then {0}.", m_FileExpiration.ToString());
+                m_log.DebugFormat("[FLOTSAM ASSET CACHE]: Checking for expired files older then {0}.",
+                                  m_FileExpiration.ToString());
 
             // Purge all files last accessed prior to this point
             DateTime purgeLine = DateTime.Now - m_FileExpiration;
@@ -494,11 +512,11 @@ namespace Flotsam.RegionModules.AssetCache
         }
 
         /// <summary>
-        /// Recurses through specified directory checking for asset files last 
-        /// accessed prior to the specified purge line and deletes them.  Also 
-        /// removes empty tier directories.
+        ///   Recurses through specified directory checking for asset files last 
+        ///   accessed prior to the specified purge line and deletes them.  Also 
+        ///   removes empty tier directories.
         /// </summary>
-        /// <param name="dir"></param>
+        /// <param name = "dir"></param>
         private void CleanExpiredFiles(string dir, DateTime purgeLine)
         {
             foreach (string file in Directory.GetFiles(dir))
@@ -528,28 +546,27 @@ namespace Flotsam.RegionModules.AssetCache
                 }
                 else if (dirSize >= m_CacheWarnAt)
                 {
-                    m_log.WarnFormat("[FLOTSAM ASSET CACHE]: Cache folder exceeded CacheWarnAt limit {0} {1}.  Suggest increasing tiers, tier length, or reducing cache expiration", dir, dirSize);
+                    m_log.WarnFormat(
+                        "[FLOTSAM ASSET CACHE]: Cache folder exceeded CacheWarnAt limit {0} {1}.  Suggest increasing tiers, tier length, or reducing cache expiration",
+                        dir, dirSize);
                 }
             }
         }
 
         /// <summary>
-        /// Determines the filename for an AssetID stored in the file cache
+        ///   Determines the filename for an AssetID stored in the file cache
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name = "id"></param>
         /// <returns></returns>
         private string GetFileName(string id)
         {
             // Would it be faster to just hash the darn thing?
-            foreach (char c in m_InvalidChars)
-            {
-                id = id.Replace(c, '_');
-            }
+            id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
 
             string path = m_CacheDirectory;
             for (int p = 1; p <= m_CacheDirectoryTiers; p++)
             {
-                string pathPart = id.Substring((p - 1) * m_CacheDirectoryTierLen, m_CacheDirectoryTierLen);
+                string pathPart = id.Substring((p - 1)*m_CacheDirectoryTierLen, m_CacheDirectoryTierLen);
                 path = Path.Combine(path, pathPart);
             }
 
@@ -557,11 +574,11 @@ namespace Flotsam.RegionModules.AssetCache
         }
 
         /// <summary>
-        /// Writes a file to the file cache, creating any nessesary 
-        /// tier directories along the way
+        ///   Writes a file to the file cache, creating any nessesary 
+        ///   tier directories along the way
         /// </summary>
-        /// <param name="filename"></param>
-        /// <param name="asset"></param>
+        /// <param name = "filename"></param>
+        /// <param name = "asset"></param>
         private void WriteFileCache(string filename, AssetBase asset)
         {
             Stream stream = null;
@@ -571,45 +588,47 @@ namespace Flotsam.RegionModules.AssetCache
 
             // Write file first to a temp name, so that it doesn't look 
             // like it's already cached while it's still writing.
-            string tempname = Path.Combine(directory, Path.GetRandomFileName());
-
-            try
+            if (directory != null)
             {
-                lock (m_fileCacheLock)
+                string tempname = Path.Combine(directory, Path.GetRandomFileName());
+
+                try
                 {
-                    if (!Directory.Exists(directory))
+                    lock (m_fileCacheLock)
                     {
-                        Directory.CreateDirectory(directory);
+                        if (!Directory.Exists(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+
+                        stream = File.Open(tempname, FileMode.Create);
+                        BinaryFormatter bformatter = new BinaryFormatter();
+                        bformatter.Serialize(stream, asset);
+                        stream.Close();
+
+                        // Now that it's written, rename it so that it can be found.
+                        if (File.Exists(filename))
+                            File.Delete(filename);
+                        File.Move(tempname, filename);
                     }
 
-                    stream = File.Open(tempname, FileMode.Create);
-                    BinaryFormatter bformatter = new BinaryFormatter();
-                    bformatter.Serialize(stream, asset);
-                    stream.Close();
-
-                    // Now that it's written, rename it so that it can be found.
-                    if (File.Exists(filename))
-                        File.Delete(filename);
-                    File.Move(tempname, filename);
+                    if (m_LogLevel >= 2)
+                        m_log.DebugFormat("[FLOTSAM ASSET CACHE]: Cache Stored :: {0}", asset.ID);
                 }
-
-                if (m_LogLevel >= 2)
-                    m_log.DebugFormat("[FLOTSAM ASSET CACHE]: Cache Stored :: {0}", asset.ID);
-            }
-            catch (Exception e)
-            {
-                LogException(e);
-            }
-            finally
-            {
-                if (stream != null)
-                    stream.Close();
-
-                // Even if the write fails with an exception, we need to make sure
-                // that we release the lock on that file, otherwise it'll never get
-                // cached
-                lock (m_CurrentlyWriting)
+                catch (Exception e)
                 {
+                    LogException(e);
+                }
+                finally
+                {
+                    if (stream != null)
+                        stream.Close();
+
+                    // Even if the write fails with an exception, we need to make sure
+                    // that we release the lock on that file, otherwise it'll never get
+                    // cached
+                    lock (m_CurrentlyWriting)
+                    {
 #if WAIT_ON_INPROGRESS_REQUESTS
                     ManualResetEvent waitEvent;
                     if (m_CurrentlyWriting.TryGetValue(filename, out waitEvent))
@@ -618,19 +637,19 @@ namespace Flotsam.RegionModules.AssetCache
                         waitEvent.Set();
                     }
 #else
-                    if (m_CurrentlyWriting.Contains(filename))
-                    {
-                        m_CurrentlyWriting.Remove(filename);
-                    }
+                        if (m_CurrentlyWriting.Contains(filename))
+                        {
+                            m_CurrentlyWriting.Remove(filename);
+                        }
 #endif
+                    }
                 }
-
             }
         }
 
         private static void LogException(Exception e)
         {
-            string[] text = e.ToString().Split(new char[] { '\n' });
+            string[] text = e.ToString().Split(new[] {'\n'});
             foreach (string t in text)
             {
                 m_log.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
@@ -638,26 +657,19 @@ namespace Flotsam.RegionModules.AssetCache
         }
 
         /// <summary>
-        /// Scan through the file cache, and return number of assets currently cached.
+        ///   Scan through the file cache, and return number of assets currently cached.
         /// </summary>
-        /// <param name="dir"></param>
+        /// <param name = "dir"></param>
         /// <returns></returns>
         private int GetFileCacheCount(string dir)
         {
-            int count = Directory.GetFiles(dir).Length;
-
-            foreach (string subdir in Directory.GetDirectories(dir))
-            {
-                count += GetFileCacheCount(subdir);
-            }
-
-            return count;
+            return Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Sum(subdir => GetFileCacheCount(subdir));
         }
 
         /// <summary>
-        /// This notes the last time the Region had a deep asset scan performed on it.
+        ///   This notes the last time the Region had a deep asset scan performed on it.
         /// </summary>
-        /// <param name="RegionID"></param>
+        /// <param name = "RegionID"></param>
         private void StampRegionStatusFile(UUID RegionID)
         {
             string RegionCacheStatusFile = Path.Combine(m_CacheDirectory, "RegionStatus_" + RegionID.ToString() + ".fac");
@@ -671,15 +683,16 @@ namespace Flotsam.RegionModules.AssetCache
                 }
                 else
                 {
-                    File.WriteAllText(RegionCacheStatusFile, "Please do not delete this file unless you are manually clearing your Flotsam Asset Cache.");
+                    File.WriteAllText(RegionCacheStatusFile,
+                                      "Please do not delete this file unless you are manually clearing your Flotsam Asset Cache.");
                 }
             }
         }
 
         /// <summary>
-        /// Iterates through all Scenes, doing a deep scan through assets 
-        /// to cache all assets present in the scene or referenced by assets 
-        /// in the scene
+        ///   Iterates through all Scenes, doing a deep scan through assets 
+        ///   to cache all assets present in the scene or referenced by assets 
+        ///   in the scene
         /// </summary>
         /// <returns></returns>
         private int CacheScenes()
@@ -698,11 +711,9 @@ namespace Flotsam.RegionModules.AssetCache
                 {
                     StampRegionStatusFile(s.RegionInfo.RegionID);
 
-                    s.ForEachSceneEntity (delegate (ISceneEntity e)
-                    {
-                        gatherer.GatherAssetUuids(e, assets, s);
-                    }
-                    );
+                    IScene s1 = s;
+                    s.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets, s1)
+                        );
                 }
 
                 foreach (UUID assetID in assets.Keys)
@@ -724,7 +735,7 @@ namespace Flotsam.RegionModules.AssetCache
         }
 
         /// <summary>
-        /// Deletes all cache contents
+        ///   Deletes all cache contents
         /// </summary>
         private void ClearFileCache()
         {
@@ -757,6 +768,7 @@ namespace Flotsam.RegionModules.AssetCache
         }
 
         #region Console Commands
+
         private void HandleConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length >= 2)
@@ -774,9 +786,10 @@ namespace Flotsam.RegionModules.AssetCache
                         {
                             m_log.Info("[FLOTSAM ASSET CACHE] Deep Scans were performed on the following regions:");
 
-                            string RegionID = s.Remove(0,s.IndexOf("_")).Replace(".fac","");
+                            string RegionID = s.Remove(0, s.IndexOf("_")).Replace(".fac", "");
                             DateTime RegionDeepScanTMStamp = File.GetLastWriteTime(s);
-                            m_log.InfoFormat("[FLOTSAM ASSET CACHE] Region: {0}, {1}", RegionID, RegionDeepScanTMStamp.ToString("MM/dd/yyyy hh:mm:ss"));
+                            m_log.InfoFormat("[FLOTSAM ASSET CACHE] Region: {0}, {1}", RegionID,
+                                             RegionDeepScanTMStamp.ToString("MM/dd/yyyy hh:mm:ss"));
                         }
 
                         break;
@@ -806,11 +819,13 @@ namespace Flotsam.RegionModules.AssetCache
                     case "assets":
                         m_log.Info("[FLOTSAM ASSET CACHE] Caching all assets, in all scenes.");
 
-                        Util.FireAndForget(delegate {
-                            int assetsCached = CacheScenes();
-                            m_log.InfoFormat("[FLOTSAM ASSET CACHE] Completed Scene Caching, {0} assets found.", assetsCached);
-
-                        });
+                        Util.FireAndForget(delegate
+                                               {
+                                                   int assetsCached = CacheScenes();
+                                                   m_log.InfoFormat(
+                                                       "[FLOTSAM ASSET CACHE] Completed Scene Caching, {0} assets found.",
+                                                       assetsCached);
+                                               });
 
                         break;
 
@@ -819,21 +834,18 @@ namespace Flotsam.RegionModules.AssetCache
 
                         if (cmdparams.Length < 3)
                         {
-                            m_log.InfoFormat("[FLOTSAM ASSET CACHE] Invalid parameters for Expire, please specify a valid date & time", cmd);
+                            m_log.InfoFormat(
+                                "[FLOTSAM ASSET CACHE] Invalid parameters for Expire, please specify a valid date & time",
+                                cmd);
                             break;
                         }
 
                         string s_expirationDate = "";
                         DateTime expirationDate;
 
-                        if (cmdparams.Length > 3)
-                        {
-                            s_expirationDate = string.Join(" ", cmdparams, 2, cmdparams.Length - 2);
-                        }
-                        else
-                        {
-                            s_expirationDate = cmdparams[2];
-                        }
+                        s_expirationDate = cmdparams.Length > 3
+                                               ? string.Join(" ", cmdparams, 2, cmdparams.Length - 2)
+                                               : cmdparams[2];
 
                         if (!DateTime.TryParse(s_expirationDate, out expirationDate))
                         {
@@ -854,9 +866,10 @@ namespace Flotsam.RegionModules.AssetCache
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache status - Display cache status");
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache clearmem - Remove all assets cached in memory");
                 m_log.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache clearfile - Remove all assets cached on disk");
-                m_log.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache cachescenes - Attempt a deep cache of all assets in all scenes");
-                m_log.InfoFormat("[FLOTSAM ASSET CACHE] flotsamcache <datetime> - Purge assets older then the specified date & time");
-
+                m_log.InfoFormat(
+                    "[FLOTSAM ASSET CACHE] flotsamcache cachescenes - Attempt a deep cache of all assets in all scenes");
+                m_log.InfoFormat(
+                    "[FLOTSAM ASSET CACHE] flotsamcache <datetime> - Purge assets older then the specified date & time");
             }
         }
 

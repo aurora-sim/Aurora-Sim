@@ -26,38 +26,40 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
-using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using log4net;
 
 namespace OpenSim.Framework
 {
     [Flags]
     public enum AssetFlags
     {
-        Normal = 0,         // Immutable asset
-        Maptile = 1,        // Depriated, use Deletable instead: What it says
-        Rewritable = 2,     // Content can be rewritten
-        Collectable = 4,    // Can be GC'ed after some time
-        Deletable = 8,       // The asset can be deleted
-        Local = 16,                // Region-only asset, never stored in the database
-        Temperary = 32,            // Is this asset going to exist permanently in the database, or can it be purged after a set amount of time?
-        RemotelyAccessable = 64  // Regions outside of this grid can access this asset
+        Normal = 0, // Immutable asset
+        Maptile = 1, // Depriated, use Deletable instead: What it says
+        Rewritable = 2, // Content can be rewritten
+        Collectable = 4, // Can be GC'ed after some time
+        Deletable = 8, // The asset can be deleted
+        Local = 16, // Region-only asset, never stored in the database
+        Temperary = 32,
+        // Is this asset going to exist permanently in the database, or can it be purged after a set amount of time?
+        RemotelyAccessable = 64 // Regions outside of this grid can access this asset
     }
 
     /// <summary>
-    /// Asset class.   All Assets are reference by this class or a class derived from this class
+    ///   Asset class.   All Assets are reference by this class or a class derived from this class
     /// </summary>
     [Serializable]
     public class AssetBase : IDisposable
     {
-        private static SHA256Managed SHA256Managed = new SHA256Managed();
+        private static readonly SHA256Managed SHA256Managed = new SHA256Managed();
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private byte[] myData = new byte[] { };
-        private string myHashCode = "";
         private string idString = "";
+        private byte[] myData = new byte[] {};
+        private string myHashCode = "";
 
         #region Initiation
 
@@ -105,7 +107,7 @@ namespace OpenSim.Framework
             LastHashCode = "";
             ParentID = UUID.Zero;
             MetaOnly = true;
-            Data = new byte[] { };
+            Data = new byte[] {};
             Flags = AssetFlags.Normal;
         }
 
@@ -114,7 +116,7 @@ namespace OpenSim.Framework
             SimpleInitialize();
             if (assetType == AssetType.Unknown)
             {
-                System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(true);
+                StackTrace trace = new StackTrace(true);
                 m_Log.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
                                   name, assetID, trace);
             }
@@ -131,15 +133,11 @@ namespace OpenSim.Framework
 
         public bool IsTextualAsset
         {
-            get
-            {
-                return !IsBinaryAsset;
-            }
-
+            get { return !IsBinaryAsset; }
         }
 
         /// <summary>
-        /// Checks if this asset is a binary or text asset
+        ///   Checks if this asset is a binary or text asset
         /// </summary>
         public bool IsBinaryAsset
         {
@@ -172,10 +170,10 @@ namespace OpenSim.Framework
             {
                 return
                     IsTextualAsset && (
-                    TypeAsset != AssetType.Notecard
-                    && TypeAsset != AssetType.CallingCard
-                    && TypeAsset != AssetType.LSLText
-                    && TypeAsset != AssetType.Landmark);
+                                          TypeAsset != AssetType.Notecard
+                                          && TypeAsset != AssetType.CallingCard
+                                          && TypeAsset != AssetType.LSLText
+                                          && TypeAsset != AssetType.Landmark);
             }
         }
 
@@ -185,8 +183,8 @@ namespace OpenSim.Framework
 
         public string TypeString
         {
-            get { return SLUtil.SLAssetTypeToContentType((int)TypeAsset); }
-            set { TypeAsset = (AssetType)SLUtil.ContentTypeToSLAssetType(value); }
+            get { return SLUtil.SLAssetTypeToContentType((int) TypeAsset); }
+            set { TypeAsset = (AssetType) SLUtil.ContentTypeToSLAssetType(value); }
         }
 
         public virtual byte[] Data
@@ -195,10 +193,10 @@ namespace OpenSim.Framework
             set
             {
                 myData = value;
-                if(myData != null)
+                if (myData != null)
                 {
                     MetaOnly = (myData.Length == 0);
-                    if(!MetaOnly)
+                    if (!MetaOnly)
                         FillHash();
                 }
                 else
@@ -243,7 +241,13 @@ namespace OpenSim.Framework
         public string Name { get; set; }
         public string Description { get; set; }
         public AssetType TypeAsset { get; set; }
-        public int Type { get { return (int)TypeAsset; } set { TypeAsset = (AssetType)value; } }
+
+        public int Type
+        {
+            get { return (int) TypeAsset; }
+            set { TypeAsset = (AssetType) value; }
+        }
+
         public AssetFlags Flags { get; set; }
         public string DatabaseTable { get; set; }
         public string HostUri { get; set; }
@@ -267,8 +271,6 @@ namespace OpenSim.Framework
             return ID.ToString();
         }
 
-
-
         #endregion
 
         #region IDisposable Members
@@ -283,7 +285,7 @@ namespace OpenSim.Framework
         #region Packing/Unpacking
 
         /// <summary>
-        /// Pack this asset into an OSDMap
+        ///   Pack this asset into an OSDMap
         /// </summary>
         /// <returns></returns>
         public OSDMap Pack()
@@ -306,17 +308,17 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Unpack the asset from an OSDMap
+        ///   Unpack the asset from an OSDMap
         /// </summary>
-        /// <param name="osd"></param>
+        /// <param name = "osd"></param>
         public AssetBase Unpack(OSD osd)
         {
             if (!(osd is OSDMap))
                 return null;
-            OSDMap assetMap = (OSDMap)osd;
+            OSDMap assetMap = (OSDMap) osd;
 
             if (assetMap.ContainsKey("AssetFlags"))
-                Flags = (AssetFlags)assetMap["AssetFlags"].AsInteger();
+                Flags = (AssetFlags) assetMap["AssetFlags"].AsInteger();
 
             if (assetMap.ContainsKey("AssetID"))
                 ID = assetMap["AssetID"].AsUUID();
@@ -340,7 +342,7 @@ namespace OpenSim.Framework
                 Name = assetMap["Name"].AsString();
 
             if (assetMap.ContainsKey("TypeAsset"))
-                TypeAsset = (AssetType)assetMap["TypeAsset"].AsInteger();
+                TypeAsset = (AssetType) assetMap["TypeAsset"].AsInteger();
 
             if (assetMap.ContainsKey("Description"))
                 Description = assetMap["Description"].AsString();
@@ -355,7 +357,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Make an OSDMap (json) with only the needed parts for the database and then compress it
+        ///   Make an OSDMap (json) with only the needed parts for the database and then compress it
         /// </summary>
         /// <returns>A compressed (gzip) string of the data needed for the database</returns>
         public string CompressedPack()
@@ -375,7 +377,7 @@ namespace OpenSim.Framework
             //Decompress the info back to json format
             string jsonString = Util.Decompress(compressedString);
             //Build the OSDMap 
-            OSDMap assetMap = (OSDMap)OSDParser.DeserializeJson(jsonString);
+            OSDMap assetMap = (OSDMap) OSDParser.DeserializeJson(jsonString);
             //Now unpack the contents
             Unpack(assetMap);
         }

@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using OpenSim.Framework;
-using Aurora.Framework;
 using Nini.Config;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using log4net;
 
 namespace Aurora.Modules.World.Assets
 {
     public class BlackholeRegionCommands : ISharedRegionModule
     {
-        private bool initialized = false;
         private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private bool initialized;
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
@@ -36,8 +34,11 @@ namespace Aurora.Modules.World.Assets
         {
             if (MainConsole.Instance != null && !initialized)
             {
-                MainConsole.Instance.Commands.AddCommand("assets optimise", "assets optimise", "Reduces the number of assets a region displays", OptimiseWorld);
-                MainConsole.Instance.Commands.AddCommand("assets details", "assets details", "Learn about the details of the assets used on this region", AssetDetails);
+                MainConsole.Instance.Commands.AddCommand("assets optimise", "assets optimise",
+                                                         "Reduces the number of assets a region displays", OptimiseWorld);
+                MainConsole.Instance.Commands.AddCommand("assets details", "assets details",
+                                                         "Learn about the details of the assets used on this region",
+                                                         AssetDetails);
             }
             initialized = true;
         }
@@ -52,10 +53,7 @@ namespace Aurora.Modules.World.Assets
 
         public string Name
         {
-            get
-            {
-                return "BlackholeRegionCommands";
-            }
+            get { return "BlackholeRegionCommands"; }
         }
 
         public Type ReplaceableInterface
@@ -63,6 +61,7 @@ namespace Aurora.Modules.World.Assets
             get { return null; }
         }
 
+        #endregion
 
         public void AssetDetails(string[] cmd)
         {
@@ -90,69 +89,62 @@ namespace Aurora.Modules.World.Assets
             int counter = 0;
 
             ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
-            foreach (ISceneEntity entity in entities)
+            foreach (ISceneChildEntity child in entities.SelectMany(entity => entity.ChildrenEntities()))
             {
-
-                foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                objectCount++;
+                IEnumerable<UUID> textures = GetTextures(child.Shape.Textures);
+                foreach (UUID t in textures)
                 {
-                    objectCount++;
-                    IEnumerable<UUID> textures = GetTextures(child.Shape.Textures);
-                    foreach (UUID t in textures)
+                    AssetBase ass = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
+                    if (ass != null)
                     {
-
-                        AssetBase ass = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
-                        if (ass != null)
+                        if (!allAssetIDLookup.Contains(ass.ID))
                         {
-
-                            if (!allAssetIDLookup.Contains(ass.ID))
-                            {
-                                totalTextures++;
-                                totalBytes += ass.Data.Length;
-                                allAssetIDLookup.Add(ass.ID);
-                                ass.Description = ass.Data.Length.ToString();
-                                ass.Data = new byte[] { };
-                                allAssets.Add(ass);
-                                allAssetCount.Add(ass.ID.ToString(), "1");
-                                counter++;
-                            }
-                            else
-                            {
-                                allAssetCount[ass.ID.ToString()] =
-                                    (int.Parse(allAssetCount[ass.ID.ToString()]) + 1).ToString();
-                            }
-                            if ((ass.ParentID != UUID.Zero) && (ass.ParentID != ass.ID))
-                            {
-
-                                if (converted.Contains(ass.ParentID))
-                                    couldSave += ass.Data.Length;
-                                else
-                                    converted.Add(ass.ParentID);
-                                totalChagnesTextures++;
-                            }
+                            totalTextures++;
+                            totalBytes += ass.Data.Length;
+                            allAssetIDLookup.Add(ass.ID);
+                            ass.Description = ass.Data.Length.ToString();
+                            ass.Data = new byte[] {};
+                            allAssets.Add(ass);
+                            allAssetCount.Add(ass.ID.ToString(), "1");
+                            counter++;
                         }
-                    }
-                    foreach (TaskInventoryItem inventoryItem in child.Inventory.GetInventoryItems())
-                    {
-                        totalInventory++;
-                        AssetBase ass2 = MainConsole.Instance.ConsoleScene.AssetService.Get(inventoryItem.AssetID.ToString());
-                        if (ass2 != null)
+                        else
                         {
-                            if ((ass2 != null) && (ass2.ParentID != UUID.Zero) && (ass2.ParentID != ass2.ID))
-                                totalChangesInventory++;
-                            if ((ass2.TypeAsset == AssetType.LSLText) || (ass2.TypeAsset == AssetType.LSLBytecode))
-                                scriptCount++;
+                            allAssetCount[ass.ID.ToString()] =
+                                (int.Parse(allAssetCount[ass.ID.ToString()]) + 1).ToString();
+                        }
+                        if ((ass.ParentID != UUID.Zero) && (ass.ParentID != ass.ID))
+                        {
+                            if (converted.Contains(ass.ParentID))
+                                couldSave += ass.Data.Length;
+                            else
+                                converted.Add(ass.ParentID);
+                            totalChagnesTextures++;
                         }
                     }
                 }
-
+                foreach (TaskInventoryItem inventoryItem in child.Inventory.GetInventoryItems())
+                {
+                    totalInventory++;
+                    AssetBase ass2 =
+                        MainConsole.Instance.ConsoleScene.AssetService.Get(inventoryItem.AssetID.ToString());
+                    if (ass2 != null)
+                    {
+                        if ((ass2 != null) && (ass2.ParentID != UUID.Zero) && (ass2.ParentID != ass2.ID))
+                            totalChangesInventory++;
+                        if ((ass2.TypeAsset == AssetType.LSLText) || (ass2.TypeAsset == AssetType.LSLBytecode))
+                            scriptCount++;
+                    }
+                }
             }
 
-            AssetBase[] SortResults = new AssetBase[] { };
+            AssetBase[] SortResults = new AssetBase[] {};
             SortResults = SortAssetArray(allAssets.ToArray(), SortResults, 0);
 
             m_Log.Info("[BlkHolAssets] Total Texture Bytes " + totalBytes);
-            m_Log.Info("[BlkHolAssets] Total Texture Kilobyte " + (totalBytes / 1024.0));
-            m_Log.Info("[BlkHolAssets] Total Texture Megabyte " + (totalBytes / 1048576.0));
+            m_Log.Info("[BlkHolAssets] Total Texture Kilobyte " + (totalBytes/1024.0));
+            m_Log.Info("[BlkHolAssets] Total Texture Megabyte " + (totalBytes/1048576.0));
             m_Log.Info("[BlkHolAssets] " + totalTextures + " textures on region");
             m_Log.Info("[BlkHolAssets] " + totalChagnesTextures + " textures could be optimised");
             m_Log.Info("[BlkHolAssets] " + totalInventory + " item in object inventory");
@@ -166,7 +158,7 @@ namespace Aurora.Modules.World.Assets
                 loopTo = SortResults.Count();
             for (int looper = 0; looper <= loopTo; looper++)
             {
-                double mbsize = Math.Round((int.Parse(SortResults[looper].Description) / 1048576.0) * 100.0) / 100.0;
+                double mbsize = Math.Round((int.Parse(SortResults[looper].Description)/1048576.0)*100.0)/100.0;
 
                 m_Log.Info(SortResults[looper].ID + " " + mbsize + "MB");
             }
@@ -186,7 +178,6 @@ namespace Aurora.Modules.World.Assets
 
         private AssetBase[] SortAssetArray(AssetBase[] toArray, AssetBase[] results, int onNow)
         {
-
             if (onNow == 0)
             {
                 results = new AssetBase[toArray.Length];
@@ -228,7 +219,6 @@ namespace Aurora.Modules.World.Assets
             ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
             foreach (ISceneEntity entity in entities)
             {
-
                 foreach (ISceneChildEntity child in entity.ChildrenEntities())
                 {
                     IEnumerable<UUID> textures = GetTextures(child.Shape.Textures);
@@ -238,7 +228,6 @@ namespace Aurora.Modules.World.Assets
                         AssetBase ass = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
                         if ((ass != null) && (ass.ParentID != UUID.Zero) && (ass.ParentID != ass.ID))
                         {
-
                             if (converted.Contains(ass.ParentID))
                                 savedBytes += ass.Data.Length;
                             else
@@ -251,7 +240,8 @@ namespace Aurora.Modules.World.Assets
                     foreach (TaskInventoryItem inventoryItem in child.Inventory.GetInventoryItems())
                     {
                         totalInventory++;
-                        AssetBase ass2 = MainConsole.Instance.ConsoleScene.AssetService.Get(inventoryItem.AssetID.ToString());
+                        AssetBase ass2 =
+                            MainConsole.Instance.ConsoleScene.AssetService.Get(inventoryItem.AssetID.ToString());
                         if ((ass2 != null) && (ass2.ParentID != UUID.Zero) && (ass2.ParentID != ass2.ID))
                         {
                             totalChangesInventory++;
@@ -259,23 +249,19 @@ namespace Aurora.Modules.World.Assets
                             child.Inventory.UpdateInventoryItem(inventoryItem);
                             entity.HasGroupChanged = true;
                         }
-                        if (inventoryItem.InvType == (int)InventoryType.LSL)
+                        if (inventoryItem.InvType == (int) InventoryType.LSL)
                         {
                             // search for assets keys and replace if needed ??
                         }
                     }
-
-
-
                 }
-
-
             }
             m_Log.Info("[BlkHolAssets] Bytes Saved " + savedBytes);
-            m_Log.Info("[BlkHolAssets] Kilobyte Saved " + ((float)savedBytes / 1024.0f));
-            m_Log.Info("[BlkHolAssets] Megabyte Saved " + ((float)savedBytes / 1048576.0f));
+            m_Log.Info("[BlkHolAssets] Kilobyte Saved " + (savedBytes/1024.0f));
+            m_Log.Info("[BlkHolAssets] Megabyte Saved " + (savedBytes/1048576.0f));
             m_Log.Info("[BlkHolAssets] " + totalChagnesTextures + " out of " + totalTextures + " textures changed");
-            m_Log.Info("[BlkHolAssets] " + totalChangesInventory + " out of " + totalInventory + " inventory items changed");
+            m_Log.Info("[BlkHolAssets] " + totalChangesInventory + " out of " + totalInventory +
+                       " inventory items changed");
             m_Log.Info("[BlkHolAssets] Your are optimised.. Nothing escapes the BlackHole!");
         }
 
@@ -283,7 +269,10 @@ namespace Aurora.Modules.World.Assets
         {
             Primitive.TextureEntry oldShape = shape.Textures;
             Primitive.TextureEntry newShape;
-            newShape = Copy(shape.Textures, shape.Textures.DefaultTexture.TextureID == oldID ? newID : shape.Textures.DefaultTexture.TextureID);
+            newShape = Copy(shape.Textures,
+                            shape.Textures.DefaultTexture.TextureID == oldID
+                                ? newID
+                                : shape.Textures.DefaultTexture.TextureID);
 
             int i = 0;
             foreach (Primitive.TextureEntryFace face in shape.Textures.FaceTextures)
@@ -291,14 +280,14 @@ namespace Aurora.Modules.World.Assets
                 if (face != null)
                     if (face.TextureID == oldID)
                     {
-                        Primitive.TextureEntryFace f = newShape.CreateFace((uint)i);
+                        Primitive.TextureEntryFace f = newShape.CreateFace((uint) i);
                         CopyFace(oldShape.FaceTextures[i], f);
                         f.TextureID = newID;
                         newShape.FaceTextures[i] = f;
                     }
                     else
                     {
-                        Primitive.TextureEntryFace f = newShape.CreateFace((uint)i);
+                        Primitive.TextureEntryFace f = newShape.CreateFace((uint) i);
                         CopyFace(oldShape.FaceTextures[i], f);
                         f.TextureID = oldShape.FaceTextures[i].TextureID;
                         newShape.FaceTextures[i] = f;
@@ -338,11 +327,10 @@ namespace Aurora.Modules.World.Assets
 
         private IEnumerable<UUID> GetTextures(Primitive.TextureEntry textureEntry)
         {
-            List<UUID> textures = (from face in textureEntry.FaceTextures where face != null select face.TextureID).ToList();
+            List<UUID> textures =
+                (from face in textureEntry.FaceTextures where face != null select face.TextureID).ToList();
             textures.Add(textureEntry.DefaultTexture.TextureID);
             return textures.ToArray();
         }
-
     }
-
 }
