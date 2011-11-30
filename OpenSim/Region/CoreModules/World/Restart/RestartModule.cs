@@ -26,17 +26,15 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Timers;
-using System.Threading;
-using System.Collections.Generic;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Timer = System.Timers.Timer;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Region
 {
@@ -45,42 +43,44 @@ namespace OpenSim.Region.CoreModules.World.Region
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected IScene m_scene;
-        protected Timer m_CountdownTimer = null;
-        protected DateTime m_RestartBegin;
         protected List<int> m_Alerts;
-        protected string m_Message;
+        protected Timer m_CountdownTimer;
+        protected IDialogModule m_DialogModule;
         protected UUID m_Initiator;
-        protected bool m_Notice = false;
-        protected IDialogModule m_DialogModule = null;
+        protected string m_Message;
+        protected bool m_Notice;
+        protected DateTime m_RestartBegin;
+        protected IScene m_scene;
+
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             scene.RegisterModuleInterface<IRestartModule>(this);
             if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand (
-                       "region restart",
-                       "region restart <message> <time (in seconds)>",
-                       "Restart the region", HandleRegionRestart);
-                MainConsole.Instance.Commands.AddCommand (
-                        "region restart abort",
-                        "region restart abort [<message>]",
-                        "Restart the region", HandleRegionRestart);
+                MainConsole.Instance.Commands.AddCommand(
+                    "region restart",
+                    "region restart <message> <time (in seconds)>",
+                    "Restart the region", HandleRegionRestart);
+                MainConsole.Instance.Commands.AddCommand(
+                    "region restart abort",
+                    "region restart abort [<message>]",
+                    "Restart the region", HandleRegionRestart);
             }
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             m_DialogModule = m_scene.RequestModuleInterface<IDialogModule>();
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
@@ -95,8 +95,12 @@ namespace OpenSim.Region.CoreModules.World.Region
 
         public Type ReplaceableInterface
         {
-            get { return typeof(IRestartModule); }
+            get { return typeof (IRestartModule); }
         }
+
+        #endregion
+
+        #region IRestartModule Members
 
         public TimeSpan TimeUntilRestart
         {
@@ -142,6 +146,40 @@ namespace OpenSim.Region.CoreModules.World.Region
             SetTimer(nextInterval);
         }
 
+        public void AbortRestart(string message)
+        {
+            if (m_CountdownTimer != null)
+            {
+                m_CountdownTimer.Stop();
+                m_CountdownTimer = null;
+                if (m_DialogModule != null && message != String.Empty)
+                    m_DialogModule.SendGeneralAlert(message);
+
+                m_log.Warn("[Region]: Region restart aborted");
+            }
+        }
+
+        /// <summary>
+        ///   This causes the region to restart immediatley.
+        /// </summary>
+        public void RestartScene()
+        {
+            IConfig startupConfig = m_scene.Config.Configs["Startup"];
+            if (startupConfig != null)
+            {
+                if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
+                {
+                    //This will kill it asyncly
+                    MainConsole.Instance.EndConsoleProcessing();
+                    return;
+                }
+            }
+            m_log.Error("[Scene]: Restaring Now");
+            m_scene.RequestModuleInterface<SceneManager>().RestartRegion(m_scene);
+        }
+
+        #endregion
+
         public int DoOneNotice()
         {
             if (m_Alerts.Count == 0 || m_Alerts[0] == 0)
@@ -166,7 +204,7 @@ namespace OpenSim.Region.CoreModules.World.Region
 
             m_Alerts.RemoveAt(0);
 
-            int minutes = currentAlert / 60;
+            int minutes = currentAlert/60;
             string currentAlertString = String.Empty;
             if (minutes > 0)
             {
@@ -174,12 +212,12 @@ namespace OpenSim.Region.CoreModules.World.Region
                     currentAlertString += "1 minute";
                 else
                     currentAlertString += String.Format("{0} minutes", minutes);
-                if ((currentAlert % 60) != 0)
+                if ((currentAlert%60) != 0)
                     currentAlertString += " and ";
             }
-            if ((currentAlert % 60) != 0)
+            if ((currentAlert%60) != 0)
             {
-                int seconds = currentAlert % 60;
+                int seconds = currentAlert%60;
                 if (seconds == 1)
                     currentAlertString += "1 second";
                 else
@@ -204,9 +242,7 @@ namespace OpenSim.Region.CoreModules.World.Region
         {
             if (intervalSeconds == 0)
                 return;
-            m_CountdownTimer = new Timer();
-            m_CountdownTimer.AutoReset = false;
-            m_CountdownTimer.Interval = intervalSeconds * 1000;
+            m_CountdownTimer = new Timer {AutoReset = false, Interval = intervalSeconds*1000};
             m_CountdownTimer.Elapsed += OnTimer;
             m_CountdownTimer.Start();
         }
@@ -216,19 +252,6 @@ namespace OpenSim.Region.CoreModules.World.Region
             int nextInterval = DoOneNotice();
 
             SetTimer(nextInterval);
-        }
-
-        public void AbortRestart(string message)
-        {
-            if (m_CountdownTimer != null)
-            {
-                m_CountdownTimer.Stop();
-                m_CountdownTimer = null;
-                if (m_DialogModule != null && message != String.Empty)
-                    m_DialogModule.SendGeneralAlert(message);
-
-                m_log.Warn("[Region]: Region restart aborted");
-            }
         }
 
         private void HandleRegionRestart(string[] args)
@@ -258,7 +281,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                         List<int> times = new List<int>();
                         while (seconds > 0)
                         {
-                            times.Add((int)seconds);
+                            times.Add(seconds);
                             if (seconds > 300)
                                 seconds -= 120;
                             else if (seconds > 30)
@@ -274,28 +297,9 @@ namespace OpenSim.Region.CoreModules.World.Region
                         return;
                     }
                 }
-                m_log.Info ("Error: restart region <mode> <name> <time> ...");
+                m_log.Info("Error: restart region <mode> <name> <time> ...");
                 return;
             }
-        }
-
-        /// <summary>
-        /// This causes the region to restart immediatley.
-        /// </summary>
-        public void RestartScene()
-        {
-            IConfig startupConfig = m_scene.Config.Configs["Startup"];
-            if (startupConfig != null)
-            {
-                if (startupConfig.GetBoolean("InworldRestartShutsDown", false))
-                {
-                    //This will kill it asyncly
-                    MainConsole.Instance.EndConsoleProcessing();
-                    return;
-                }
-            }
-            m_log.Error("[Scene]: Restaring Now");
-            m_scene.RequestModuleInterface<SceneManager>().RestartRegion (m_scene);
         }
     }
 }

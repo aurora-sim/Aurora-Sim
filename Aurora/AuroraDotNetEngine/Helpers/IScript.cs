@@ -26,8 +26,8 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Runtime.Remoting.Lifetime;
 using OpenSim.Framework;
 
@@ -42,43 +42,48 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
     public interface IScript : IDisposable
     {
+        ISponsor Sponsor { get; }
+        string Name { get; }
+
+        /// <summary>
+        ///   Whether this script needs a state save performed
+        /// </summary>
+        bool NeedsStateSaved { get; set; }
+
         void InitApi(IScriptApi data);
 
-        ISponsor Sponsor { get; }
         void UpdateLease(TimeSpan time);
         long GetStateEventFlags(string state);
-        EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex);
+
+        EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start,
+                                    out Exception ex);
+
         Dictionary<string, Object> GetVars();
         void SetVars(Dictionary<string, Object> vars);
         Dictionary<string, Object> GetStoreVars();
         void SetStoreVars(Dictionary<string, Object> vars);
         void ResetVars();
+
         /// <summary>
-        /// Find the initial variables so that we can reset the state later if needed
+        ///   Find the initial variables so that we can reset the state later if needed
         /// </summary>
         void UpdateInitialValues();
-        
+
         void Close();
-        string Name { get; }
 
         /// <summary>
-        /// Gives a ref to the scene the script is in and its parent object
+        ///   Gives a ref to the scene the script is in and its parent object
         /// </summary>
-        /// <param name="iScene"></param>
-        /// <param name="iSceneChildEntity"></param>
-        /// <param name="useStateSaves"></param>
-        void SetSceneRefs (IScene iScene, ISceneChildEntity iSceneChildEntity, bool useStateSaves);
+        /// <param name = "iScene"></param>
+        /// <param name = "iSceneChildEntity"></param>
+        /// <param name = "useStateSaves"></param>
+        void SetSceneRefs(IScene iScene, ISceneChildEntity iSceneChildEntity, bool useStateSaves);
 
         /// <summary>
-        /// Whether this script needs a state save performed
+        ///   Fires a generic event by the given name
         /// </summary>
-        bool NeedsStateSaved { get; set; }
-
-        /// <summary>
-        /// Fires a generic event by the given name
-        /// </summary>
-        /// <param name="evName"></param>
-        /// <param name="parameters"></param>
-        System.Collections.IEnumerator FireEvent (string evName, object[] parameters);
+        /// <param name = "evName"></param>
+        /// <param name = "parameters"></param>
+        IEnumerator FireEvent(string evName, object[] parameters);
     }
 }

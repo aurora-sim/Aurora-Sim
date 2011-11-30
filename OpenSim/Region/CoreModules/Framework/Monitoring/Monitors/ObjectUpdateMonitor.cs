@@ -26,7 +26,6 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -34,10 +33,13 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         #region Declares
 
+        private float LastPrimsLimited;
         private volatile float primsLimited;
-        private float LastPrimsLimited = 0;
 
-        public float PrimsLimited { get { return LastPrimsLimited; } }
+        public float PrimsLimited
+        {
+            get { return LastPrimsLimited; }
+        }
 
         #endregion
 
@@ -53,7 +55,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return LastPrimsLimited / 10;
+            return LastPrimsLimited/10;
         }
 
         public string GetName()
@@ -70,16 +72,24 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #region Other Methods
 
-        public void AddLimitedPrims(int prims)
-        {
-            primsLimited += prims;
-        }
+        #region IMonitor Members
 
         public void ResetStats()
         {
             LastPrimsLimited = primsLimited;
             primsLimited = 0;
         }
+
+        #endregion
+
+        #region IObjectUpdateMonitor Members
+
+        public void AddLimitedPrims(int prims)
+        {
+            primsLimited += prims;
+        }
+
+        #endregion
 
         #endregion
     }

@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nwc.XmlRpc;
 using System.Security.Authentication;
 
 namespace OpenSim.Framework.Servers.HttpServer
@@ -64,8 +63,8 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <param name="path"></param>
         /// <param name="password"></param>
         /// <param name="protocol"></param>
-        void SetSecureParams (string path, string password, SslProtocols protocol);
-        
+        void SetSecureParams(string path, string password, SslProtocols protocol);
+
         /// <summary>
         /// Add a handler for an HTTP request.
         /// </summary>
@@ -97,7 +96,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// true if the handler was successfully registered, false if a handler with the same name already existed.
         /// </returns>
         bool AddHTTPHandler(string methodName, GenericHTTPMethod handler);
-         
+
         bool AddPollServiceHTTPHandler(string methodName, GenericHTTPMethod handler, PollServiceEventArgs args);
 
         /// <summary>
@@ -107,7 +106,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <param name="handler">handle the LLSD response</param>
         /// <returns></returns>
         bool AddLLSDHandler(string path, LLSDMethod handler);
-        
+
         /// <summary>
         /// Add a stream handler to the http server.  If the handler already exists, then nothing happens.
         /// </summary>
@@ -123,7 +122,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <param name="method">Name of the method</param>
         /// <returns>Returns null if not found</returns>
         XmlRpcMethod GetXmlRPCHandler(string method);
-        
+
         /// <summary>
         /// Remove an HTTP handler
         /// </summary>
@@ -132,13 +131,13 @@ namespace OpenSim.Framework.Servers.HttpServer
         void RemoveHTTPHandler(string httpMethod, string path);
 
         void RemovePollServiceHTTPHandler(string httpMethod, string path);
-        
+
         bool RemoveLLSDHandler(string path, LLSDMethod handler);
-        
+
         void RemoveStreamHandler(string httpMethod, string path);
 
         void RemoveXmlRPCHandler(string method);
-        
+
         string GetHTTP404(string host);
 
         string GetHTTP500();

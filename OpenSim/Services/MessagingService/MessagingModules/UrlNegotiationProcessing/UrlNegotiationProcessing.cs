@@ -25,18 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Framework;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 {
@@ -64,7 +59,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
@@ -125,7 +120,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 IConfigurationService service = m_registry.RequestModuleInterface<IConfigurationService>();
                 if (service != null)
-                    service.AddNewUrls("default", (OSDMap)OSDParser.DeserializeJson(value));
+                    service.AddNewUrls("default", (OSDMap) OSDParser.DeserializeJson(value));
             }
             return null;
         }

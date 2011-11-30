@@ -26,35 +26,71 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Text;
-using log4net;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Services.DataService;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class EventQueueHandler : IService, IGridRegistrationUrlModule
     {
-        #region IService Members
-
         private IRegistryCore m_registry;
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "EventQueueServiceURI"; }
+        }
+
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new EQMEventPoster(url,
+                                                       m_registry.RequestModuleInterface<IEventQueueService>().
+                                                           InnerService,
+                                                       m_registry.RequestModuleInterface<ICapsService>(), SessionID,
+                                                       m_registry));
+        }
+
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
+        {
+            string url = "/CAPS/EQMPOSTER" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            server.AddStreamHandler(new EQMEventPoster(url,
+                                                       m_registry.RequestModuleInterface<IEventQueueService>().
+                                                           InnerService,
+                                                       m_registry.RequestModuleInterface<ICapsService>(), SessionID,
+                                                       m_registry));
+            return url;
+        }
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -76,69 +112,36 @@ namespace OpenSim.Services
         }
 
         #endregion
-
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "EventQueueServiceURI"; }
-        }
-
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
-                    m_registry.RequestModuleInterface<ICapsService> (), SessionID, m_registry));
-        }
-
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
-        {
-            string url = "/CAPS/EQMPOSTER" + UUID.Random();
-
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler (new EQMEventPoster (url, m_registry.RequestModuleInterface<IEventQueueService> ().InnerService,
-                    m_registry.RequestModuleInterface<ICapsService> (), SessionID, m_registry));
-            return url;
-        }
-
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
-        }
-
-        #endregion
     }
 
     public class EQMEventPoster : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IEventQueueService m_eventQueueService;
-        private ICapsService m_capsService;
-        private string m_SessionID;
-        private ulong m_ourRegionHandle;
+        private readonly string m_SessionID;
+        private readonly ICapsService m_capsService;
+        private readonly IEventQueueService m_eventQueueService;
+        private readonly ulong m_ourRegionHandle;
         protected IRegistryCore m_registry;
 
-        public EQMEventPoster (string url, IEventQueueService handler, ICapsService capsService, string SessionID, IRegistryCore registry) :
-            base("POST", url)
+        public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService, string SessionID,
+                              IRegistryCore registry) :
+                                  base("POST", url)
         {
             m_eventQueueService = handler;
             m_capsService = capsService;
             m_SessionID = SessionID;
-            if (!ulong.TryParse (SessionID, out m_ourRegionHandle))
+            if (!ulong.TryParse(SessionID, out m_ourRegionHandle))
             {
-                string[] split = SessionID.Split ('|');
+                string[] split = SessionID.Split('|');
                 if (split.Length == 2)
-                    ulong.TryParse (split[1], out m_ourRegionHandle);
+                    ulong.TryParse(split[1], out m_ourRegionHandle);
             }
             m_registry = registry;
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -146,11 +149,11 @@ namespace OpenSim.Services
             body = body.Trim();
 
             IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (urlModule != null)
-                if (!urlModule.CheckThreatLevel (m_SessionID, "EQM_Post", ThreatLevel.None))
+                if (!urlModule.CheckThreatLevel(m_SessionID, "EQM_Post", ThreatLevel.None))
                     return new byte[0];
-            
+
             OSDMap request = WebUtils.GetOSDMap(body);
             if (request == null)
                 return null;
@@ -168,50 +171,44 @@ namespace OpenSim.Services
                 ulong regionHandle = m_ourRegionHandle == 0 ? request["RegionHandle"].AsULong() : m_ourRegionHandle;
                 OSDArray events = new OSDArray();
                 if (request.ContainsKey("Events") && request["Events"].Type == OSDType.Array)
-                    events = (OSDArray)request["Events"];
+                    events = (OSDArray) request["Events"];
 
-                List<OSD> OSDEvents = new List<OSD>();
-
-                foreach (OSD ev in events)
-                {
-                    OSD Event = OSDParser.DeserializeLLSDXml(ev.AsString());
-                    OSDEvents.Add(Event);
-                }
+                List<OSD> OSDEvents = events.Select(ev => OSDParser.DeserializeLLSDXml(ev.AsString())).ToList();
 
                 IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
                 if (clientCaps != null)
                 {
-                    IRegionClientCapsService regionClient = clientCaps.GetCapsService (regionHandle);
+                    IRegionClientCapsService regionClient = clientCaps.GetCapsService(regionHandle);
                     if (regionClient != null)
                     {
                         bool enqueueResult = false;
                         foreach (OSD ev in OSDEvents)
                         {
-                            enqueueResult = m_eventQueueService.Enqueue (ev, agentID, regionHandle);
+                            enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
                             if (!enqueueResult) //Break if one fails
                                 break;
                         }
                         response["success"] = enqueueResult;
                     }
                     else
-                        m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT'S REGION");
+                        m_log.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT'S REGION");
                 }
                 else
                 {
-                    m_log.Error ("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC?");
+                    m_log.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC?");
                     bool enqueueResult = false;
                     foreach (OSD ev in OSDEvents)
                     {
-                        enqueueResult = m_eventQueueService.Enqueue (ev, agentID, regionHandle);
+                        enqueueResult = m_eventQueueService.Enqueue(ev, agentID, regionHandle);
                         if (!enqueueResult) //Break if one fails
                             break;
                     }
                     response["success"] = enqueueResult;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                m_log.Error("[EQMHandler]: ERROR IN THE HANDLER: " + ex.ToString());
+                m_log.Error("[EQMHandler]: ERROR IN THE HANDLER: " + ex);
                 response = new OSDMap();
                 response["success"] = false;
             }

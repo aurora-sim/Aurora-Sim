@@ -27,34 +27,30 @@
 
 using System;
 using System.Collections;
-using System.IO;
-using System.Reflection;
 using System.Net;
-using System.Text;
-
+using System.Reflection;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services
 {
     public class AgentHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private ISimulationService m_SimulationService;
+        private readonly ISimulationService m_SimulationService;
 
-        protected bool m_Proxy = false;
-        protected bool m_secure = true;
+        protected bool m_Proxy;
         protected IRegistryCore m_registry;
+        protected bool m_secure = true;
 
-        public AgentHandler() { }
+        public AgentHandler()
+        {
+        }
 
         public AgentHandler(ISimulationService sim, IRegistryCore registry, bool secure)
         {
@@ -84,8 +80,8 @@ namespace OpenSim.Services
             UUID regionID;
             string action;
             string other;
-            string uri = ((string)request["uri"]);
-            if(m_secure)
+            string uri = ((string) request["uri"]);
+            if (m_secure)
                 uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
             if (!WebUtils.GetParams(uri, out agentID, out regionID, out action, out other))
             {
@@ -97,7 +93,7 @@ namespace OpenSim.Services
             }
 
             // Next, let's parse the verb
-            string method = (string)request["http-method"];
+            string method = (string) request["http-method"];
             if (method.Equals("PUT"))
             {
                 DoAgentPut(request, responsedata);
@@ -109,13 +105,13 @@ namespace OpenSim.Services
                 try
                 {
                     string data = request["body"].ToString();
-                    map = (OSDMap)OSDParser.DeserializeJson(data);
+                    map = (OSDMap) OSDParser.DeserializeJson(data);
                 }
                 catch
                 {
                     map = null;
                 }
-                if(map != null)
+                if (map != null)
                 {
                     if (map["Method"] == "MakeChildAgent")
                         DoMakeChildAgent(agentID, regionID);
@@ -135,17 +131,17 @@ namespace OpenSim.Services
             {
                 DoAgentDelete(request, responsedata, agentID, action, regionID);
                 return responsedata;
-            } 
-            else if (method.Equals ("QUERYACCESS"))
+            }
+            else if (method.Equals("QUERYACCESS"))
             {
                 responsedata["int_response_code"] = HttpStatusCode.OK;
 
-                OSDMap resp = new OSDMap (2);
+                OSDMap resp = new OSDMap(2);
 
-                resp["success"] = OSD.FromBoolean (true);
-                resp["reason"] = OSD.FromString ("");
+                resp["success"] = OSD.FromBoolean(true);
+                resp["reason"] = OSD.FromString("");
 
-                responsedata["str_response_string"] = OSDParser.SerializeJsonString (resp);
+                responsedata["str_response_string"] = OSDParser.SerializeJsonString(resp);
                 return responsedata;
             }
             else
@@ -158,9 +154,9 @@ namespace OpenSim.Services
             }
         }
 
-        private void DoMakeChildAgent (UUID agentID, UUID regionID)
+        private void DoMakeChildAgent(UUID agentID, UUID regionID)
         {
-            m_SimulationService.MakeChildAgent(agentID, new GridRegion() { RegionID = regionID });
+            m_SimulationService.MakeChildAgent(agentID, new GridRegion {RegionID = regionID});
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
@@ -170,7 +166,7 @@ namespace OpenSim.Services
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
         {
-            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
@@ -197,27 +193,24 @@ namespace OpenSim.Services
                 regionname = args["destination_name"].ToString();
             if (args.ContainsKey("teleport_flags") && args["teleport_flags"] != null)
                 teleportFlags = args["teleport_flags"].AsUInteger();
-            
+
             AgentData agent = null;
             if (args.ContainsKey("agent_data") && args["agent_data"] != null)
             {
                 try
                 {
-                    OSDMap agentDataMap = (OSDMap)args["agent_data"];
+                    OSDMap agentDataMap = (OSDMap) args["agent_data"];
                     agent = new AgentData();
                     agent.Unpack(agentDataMap);
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.ToString());
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
                 }
             }
 
-            GridRegion destination = new GridRegion();
-            destination.RegionID = uuid;
-            destination.RegionLocX = x;
-            destination.RegionLocY = y;
-            destination.RegionName = regionname;
+            GridRegion destination = new GridRegion
+                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
 
             AgentCircuitData aCircuit = new AgentCircuitData();
             try
@@ -226,7 +219,7 @@ namespace OpenSim.Services
             }
             catch (Exception ex)
             {
-                m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex.ToString());
+                m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
@@ -237,7 +230,7 @@ namespace OpenSim.Services
 
             int requestedUDPPort = 0;
             // This is the meaning of POST agent
-            bool result = CreateAgent (destination, ref aCircuit, teleportFlags, agent, out requestedUDPPort, out reason);
+            bool result = CreateAgent(destination, ref aCircuit, teleportFlags, agent, out requestedUDPPort, out reason);
 
             resp["reason"] = reason;
             resp["requestedUDPPort"] = requestedUDPPort;
@@ -256,10 +249,10 @@ namespace OpenSim.Services
                 return NetworkUtils.GetCallerIP(request);
 
             // We're behind a proxy
-            Hashtable headers = (Hashtable)request["headers"];
+            Hashtable headers = (Hashtable) request["headers"];
             if (headers.ContainsKey("X-Forwarded-For") && headers["X-Forwarded-For"] != null)
             {
-                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string)headers["X-Forwarded-For"]);
+                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string) headers["X-Forwarded-For"]);
                 if (ep != null)
                     return ep.Address.ToString();
             }
@@ -269,14 +262,16 @@ namespace OpenSim.Services
         }
 
         // subclasses can override this
-        protected virtual bool CreateAgent (GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData agent, out int requestedUDPPort, out string reason)
+        protected virtual bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags,
+                                           AgentData agent, out int requestedUDPPort, out string reason)
         {
-            return m_SimulationService.CreateAgent(destination, ref aCircuit, teleportFlags, agent, out requestedUDPPort, out reason);
+            return m_SimulationService.CreateAgent(destination, ref aCircuit, teleportFlags, agent, out requestedUDPPort,
+                                                   out reason);
         }
 
         protected void DoAgentPut(Hashtable request, Hashtable responsedata)
         {
-            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
@@ -297,11 +292,8 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
                 regionname = args["destination_name"].ToString();
 
-            GridRegion destination = new GridRegion();
-            destination.RegionID = uuid;
-            destination.RegionLocX = x;
-            destination.RegionLocY = y;
-            destination.RegionName = regionname;
+            GridRegion destination = new GridRegion
+                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
 
             string messageType;
             if (args["message_type"] != null)
@@ -322,7 +314,7 @@ namespace OpenSim.Services
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.ToString());
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
                     responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                     responsedata["str_response_string"] = "Bad request";
                     return;
@@ -331,7 +323,6 @@ namespace OpenSim.Services
                 //agent.Dump();
                 // This is one of the meanings of PUT agent
                 result = UpdateAgent(destination, agent);
-
             }
             else if ("AgentPosition".Equals(messageType))
             {
@@ -342,13 +333,12 @@ namespace OpenSim.Services
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex.ToString());
+                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
                     return;
                 }
                 //agent.Dump();
                 // This is one of the meanings of PUT agent
                 result = m_SimulationService.UpdateAgent(destination, agent);
-
             }
             OSDMap resp = new OSDMap();
             resp["Updated"] = result;
@@ -362,7 +352,8 @@ namespace OpenSim.Services
             return m_SimulationService.UpdateAgent(destination, agent);
         }
 
-        protected virtual void DoAgentGet(Hashtable request, Hashtable responsedata, UUID id, UUID regionID, bool agentIsLeaving)
+        protected virtual void DoAgentGet(Hashtable request, Hashtable responsedata, UUID id, UUID regionID,
+                                          bool agentIsLeaving)
         {
             if (m_SimulationService == null)
             {
@@ -374,8 +365,7 @@ namespace OpenSim.Services
                 return;
             }
 
-            GridRegion destination = new GridRegion();
-            destination.RegionID = regionID;
+            GridRegion destination = new GridRegion {RegionID = regionID};
 
             AgentData agent = null;
             AgentCircuitData circuitData;
@@ -394,7 +384,7 @@ namespace OpenSim.Services
                     }
                     catch (Exception e)
                     {
-                        m_log.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e.ToString());
+                        m_log.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e);
                         responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
                         // ignore. buffer will be empty, caller should check.
                     }
@@ -421,8 +411,7 @@ namespace OpenSim.Services
         {
             m_log.Debug(" >>> DoDelete action:" + action + "; RegionID:" + regionID);
 
-            GridRegion destination = new GridRegion();
-            destination.RegionID = regionID;
+            GridRegion destination = new GridRegion {RegionID = regionID};
 
             if (action.Equals("release"))
             {
@@ -430,7 +419,8 @@ namespace OpenSim.Services
                 o[0] = id;
                 o[1] = destination;
                 //This is an OpenSim event... fire an event so that the OpenSim compat handlers can grab it
-                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("ReleaseAgent", o);
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                    "ReleaseAgent", o);
             }
             else
                 m_SimulationService.CloseAgent(destination, id);

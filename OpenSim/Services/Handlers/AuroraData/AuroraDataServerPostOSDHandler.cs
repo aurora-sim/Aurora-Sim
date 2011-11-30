@@ -25,168 +25,177 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Services.DataService;
+using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class AuroraDataServerPostOSDHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private ProfileInfoHandler ProfileHandler = new ProfileInfoHandler ();
-        private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler ();
-        private DirectoryInfoOSDHandler DirectoryHandler = null;
-        
+        private readonly DirectoryInfoOSDHandler DirectoryHandler;
+        private readonly OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
+        private readonly ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
+
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
         public AuroraDataServerPostOSDHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
-            DirectoryHandler = new DirectoryInfoOSDHandler (registry.RequestModuleInterface<ISimulationBase>().ConfigSource);
+            DirectoryHandler =
+                new DirectoryInfoOSDHandler(registry.RequestModuleInterface<ISimulationBase>().ConfigSource);
             m_SessionID = SessionID;
             m_registry = registry;
         }
 
-        public override byte[] Handle (string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public override byte[] Handle(string path, Stream requestData,
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            StreamReader sr = new StreamReader (requestData);
-            string body = sr.ReadToEnd ();
-            sr.Close ();
-            body = body.Trim ();
+            StreamReader sr = new StreamReader(requestData);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
 
-            OSDMap args = WebUtils.GetOSDMap (body);
-            if (args.ContainsKey ("Method"))
+            OSDMap args = WebUtils.GetOSDMap(body);
+            if (args.ContainsKey("Method"))
             {
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService> ();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
                 string method = args["Method"].AsString();
                 ulong handle;
                 switch (method)
                 {
-                    #region Profile
+                        #region Profile
+
                     case "getprofile":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.None))
-                                return FailureResult ();
-                        return ProfileHandler.GetProfile (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.None))
+                                return FailureResult();
+                        return ProfileHandler.GetProfile(args);
                     case "updateprofile":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.UpdateProfile (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.UpdateProfile(args);
                     case "getclassified":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.GetClassifed (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.GetClassifed(args);
                     case "getclassifieds":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.GetClassifieds (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.GetClassifieds(args);
                     case "getpick":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.GetPick (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.GetPick(args);
                     case "getpicks":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.GetPicks (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.GetPicks(args);
                     case "removepick":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.RemovePick (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.RemovePick(args);
                     case "removeclassified":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.RemoveClassified (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.RemoveClassified(args);
                     case "addclassified":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.AddClassified (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.AddClassified(args);
                     case "addpick":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.High))
-                                return FailureResult ();
-                        return ProfileHandler.AddPick (args);
-                    #endregion
-                    #region Offline Messages
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.AddPick(args);
+
+                        #endregion
+
+                        #region Offline Messages
+
                     case "addofflinemessage":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
-                                return FailureResult ();
-                        return OfflineMessagesHandler.AddOfflineMessage (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
+                                return FailureResult();
+                        return OfflineMessagesHandler.AddOfflineMessage(args);
                     case "getofflinemessages":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
-                                return FailureResult ();
-                        return OfflineMessagesHandler.GetOfflineMessages (args);
-                    #endregion
-                    #region Directory Messages
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
+                                return FailureResult();
+                        return OfflineMessagesHandler.GetOfflineMessages(args);
+
+                        #endregion
+
+                        #region Directory Messages
+
                     case "addregion":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
-                                return FailureResult ();
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
+                                return FailureResult();
                         if (ulong.TryParse(m_SessionID, out handle))
                         {
                             int x, y;
                             Util.UlongToInts(handle, out x, out y);
-                            UUID regionID = this.m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y).RegionID;
+                            UUID regionID =
+                                this.m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x,
+                                                                                                           y).RegionID;
                             return DirectoryHandler.AddRegion(args, regionID);
                         }
                         break;
                     case "clearregion":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
-                                return FailureResult ();
-                        if (ulong.TryParse (m_SessionID, out handle))
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
+                                return FailureResult();
+                        if (ulong.TryParse(m_SessionID, out handle))
                         {
                             int x, y;
-                            Util.UlongToInts (handle, out x, out y);
-                            UUID regionID = this.m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y).RegionID;
-                            return DirectoryHandler.ClearRegion (regionID, args);
+                            Util.UlongToInts(handle, out x, out y);
+                            UUID regionID =
+                                this.m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x,
+                                                                                                           y).RegionID;
+                            return DirectoryHandler.ClearRegion(regionID, args);
                         }
                         break;
                     case "getparcelinfo":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Low))
-                                return FailureResult ();
-                        return DirectoryHandler.GetParcelInfo (args);
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
+                                return FailureResult();
+                        return DirectoryHandler.GetParcelInfo(args);
                     case "getparcelbyowner":
                         if (urlModule != null)
-                            if (!urlModule.CheckThreatLevel (m_SessionID, method, ThreatLevel.Medium))
-                                return FailureResult ();
-                        return DirectoryHandler.GetParcelByOwner (args);
-                    #endregion
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
+                                return FailureResult();
+                        return DirectoryHandler.GetParcelByOwner(args);
+
+                        #endregion
                 }
             }
 
-            return FailureResult ();
+            return FailureResult();
         }
 
         #region Misc
@@ -201,12 +210,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -226,8 +235,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -239,21 +247,22 @@ namespace OpenSim.Services
 
     public class ProfileInfoHandler
     {
-        IProfileConnector ProfileConnector;
+        private readonly IProfileConnector ProfileConnector;
+
         public ProfileInfoHandler()
         {
             ProfileConnector = DataManager.RequestPlugin<IProfileConnector>("IProfileConnectorLocal");
         }
 
-        public byte[] GetProfile (OSDMap request)
+        public byte[] GetProfile(OSDMap request)
         {
-            UUID principalID = request["PrincipalID"].AsUUID ();
+            UUID principalID = request["PrincipalID"].AsUUID();
 
             IUserProfileInfo UserProfile = ProfileConnector.GetUserProfile(principalID);
-			if (UserProfile != null) UserProfile.PrincipalID = principalID;
-            OSDMap result = UserProfile != null ? UserProfile.ToOSD () : new OSDMap ();
+            if (UserProfile != null) UserProfile.PrincipalID = principalID;
+            OSDMap result = UserProfile != null ? UserProfile.ToOSD() : new OSDMap();
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -262,129 +271,129 @@ namespace OpenSim.Services
         public byte[] UpdateProfile(OSDMap request)
         {
             IUserProfileInfo UserProfile = new IUserProfileInfo();
-            UserProfile.FromOSD((OSDMap)request["Profile"]);
+            UserProfile.FromOSD((OSDMap) request["Profile"]);
             ProfileConnector.UpdateUserProfile(UserProfile);
-            OSDMap result = new OSDMap ();
+            OSDMap result = new OSDMap();
             result["result"] = "Successful";
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
 
-        public byte[] GetClassifed (OSDMap request)
+        public byte[] GetClassifed(OSDMap request)
         {
-            UUID principalID = request["ClassifiedUUID"].AsUUID ();
+            UUID principalID = request["ClassifiedUUID"].AsUUID();
 
-            Classified Classified = ProfileConnector.GetClassified (principalID);
-            OSDMap result = Classified != null ? Classified.ToOSD () : new OSDMap ();
+            Classified Classified = ProfileConnector.GetClassified(principalID);
+            OSDMap result = Classified != null ? Classified.ToOSD() : new OSDMap();
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] GetClassifieds (OSDMap request)
+        public byte[] GetClassifieds(OSDMap request)
         {
-            UUID principalID = request["PrincipalID"].AsUUID ();
+            UUID principalID = request["PrincipalID"].AsUUID();
 
-            List<Classified> Classified = ProfileConnector.GetClassifieds (principalID);
-            OSDMap result = new OSDMap ();
-            OSDArray array = new OSDArray ();
+            List<Classified> Classified = ProfileConnector.GetClassifieds(principalID);
+            OSDMap result = new OSDMap();
+            OSDArray array = new OSDArray();
             foreach (Classified info in Classified)
             {
-                array.Add (info.ToOSD ());
+                array.Add(info.ToOSD());
             }
             result["Result"] = array;
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] GetPick (OSDMap request)
+        public byte[] GetPick(OSDMap request)
         {
-            UUID principalID = request["PickUUID"].AsUUID ();
+            UUID principalID = request["PickUUID"].AsUUID();
 
-            ProfilePickInfo Pick = ProfileConnector.GetPick (principalID);
-            OSDMap result = Pick != null ? Pick.ToOSD () : new OSDMap ();
+            ProfilePickInfo Pick = ProfileConnector.GetPick(principalID);
+            OSDMap result = Pick != null ? Pick.ToOSD() : new OSDMap();
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] GetPicks (OSDMap request)
+        public byte[] GetPicks(OSDMap request)
         {
-            UUID principalID = request["PrincipalID"].AsUUID ();
+            UUID principalID = request["PrincipalID"].AsUUID();
 
-            List<ProfilePickInfo> Pick = ProfileConnector.GetPicks (principalID);
-            OSDMap result = new OSDMap ();
-            OSDArray array = new OSDArray ();
+            List<ProfilePickInfo> Pick = ProfileConnector.GetPicks(principalID);
+            OSDMap result = new OSDMap();
+            OSDArray array = new OSDArray();
             foreach (ProfilePickInfo info in Pick)
             {
-                array.Add (info.ToOSD ());
+                array.Add(info.ToOSD());
             }
             result["Result"] = array;
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] RemovePick (OSDMap request)
+        public byte[] RemovePick(OSDMap request)
         {
-            UUID principalID = request["PickUUID"].AsUUID ();
+            UUID principalID = request["PickUUID"].AsUUID();
 
-            ProfileConnector.RemovePick (principalID);
+            ProfileConnector.RemovePick(principalID);
 
-            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            string xmlString = OSDParser.SerializeJsonString(new OSDMap());
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] RemoveClassified (OSDMap request)
+        public byte[] RemoveClassified(OSDMap request)
         {
-            UUID principalID = request["ClassifiedUUID"].AsUUID ();
+            UUID principalID = request["ClassifiedUUID"].AsUUID();
 
-            ProfileConnector.RemoveClassified (principalID);
+            ProfileConnector.RemoveClassified(principalID);
 
-            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            string xmlString = OSDParser.SerializeJsonString(new OSDMap());
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] AddPick (OSDMap request)
+        public byte[] AddPick(OSDMap request)
         {
-            ProfilePickInfo info = new ProfilePickInfo ();
-            info.FromOSD ((OSDMap)request["Pick"]);
+            ProfilePickInfo info = new ProfilePickInfo();
+            info.FromOSD((OSDMap) request["Pick"]);
 
-            ProfileConnector.AddPick (info);
+            ProfileConnector.AddPick(info);
 
-            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            string xmlString = OSDParser.SerializeJsonString(new OSDMap());
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] AddClassified (OSDMap request)
+        public byte[] AddClassified(OSDMap request)
         {
-            Classified info = new Classified ();
-            info.FromOSD ((OSDMap)request["Classified"]);
+            Classified info = new Classified();
+            info.FromOSD((OSDMap) request["Classified"]);
 
-            ProfileConnector.AddClassified (info);
+            ProfileConnector.AddClassified(info);
 
-            string xmlString = OSDParser.SerializeJsonString (new OSDMap ());
+            string xmlString = OSDParser.SerializeJsonString(new OSDMap());
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
         private byte[] SuccessResult()
@@ -392,12 +401,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -412,8 +421,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -423,154 +431,152 @@ namespace OpenSim.Services
 
     public class OfflineMessagesInfoHandler
     {
-        IOfflineMessagesConnector OfflineMessagesConnector;
-        public OfflineMessagesInfoHandler ()
+        private readonly IOfflineMessagesConnector OfflineMessagesConnector;
+
+        public OfflineMessagesInfoHandler()
         {
-            OfflineMessagesConnector = DataManager.RequestPlugin<IOfflineMessagesConnector> ("IOfflineMessagesConnectorLocal");
+            OfflineMessagesConnector =
+                DataManager.RequestPlugin<IOfflineMessagesConnector>("IOfflineMessagesConnectorLocal");
         }
 
-        public byte[] GetOfflineMessages (OSDMap request)
+        public byte[] GetOfflineMessages(OSDMap request)
         {
-            OSDArray result = new OSDArray ();
+            OSDArray result = new OSDArray();
 
-            UUID PrincipalID = request["PrincipalID"].AsUUID ();
-            GridInstantMessage[] Messages = OfflineMessagesConnector.GetOfflineMessages (PrincipalID);
+            UUID PrincipalID = request["PrincipalID"].AsUUID();
+            GridInstantMessage[] Messages = OfflineMessagesConnector.GetOfflineMessages(PrincipalID);
 
             int i = 0;
             foreach (GridInstantMessage Message in Messages)
             {
-                result.Add (Message.ToOSD ());
+                result.Add(Message.ToOSD());
                 i++;
             }
 
-            string xmlString = OSDParser.SerializeJsonString (result);
+            string xmlString = OSDParser.SerializeJsonString(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        public byte[] AddOfflineMessage (OSDMap request)
+        public byte[] AddOfflineMessage(OSDMap request)
         {
-            GridInstantMessage message = new GridInstantMessage ();
-            message.FromOSD (request);
-            OSDMap map = new OSDMap ();
-            map["Result"] = OfflineMessagesConnector.AddOfflineMessage (message);
+            GridInstantMessage message = new GridInstantMessage();
+            message.FromOSD(request);
+            OSDMap map = new OSDMap();
+            map["Result"] = OfflineMessagesConnector.AddOfflineMessage(message);
 
-            string xmlString = OSDParser.SerializeJsonString (map);
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (xmlString);
+            string xmlString = OSDParser.SerializeJsonString(map);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
         }
 
-        private byte[] SuccessResult ()
+        private byte[] SuccessResult()
         {
-            XmlDocument doc = new XmlDocument ();
+            XmlDocument doc = new XmlDocument();
 
-            XmlNode xmlnode = doc.CreateNode (XmlNodeType.XmlDeclaration,
-                    "", "");
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                                             "", "");
 
-            doc.AppendChild (xmlnode);
+            doc.AppendChild(xmlnode);
 
-            XmlElement rootElement = doc.CreateElement ("", "ServerResponse",
-                    "");
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                                                       "");
 
-            doc.AppendChild (rootElement);
+            doc.AppendChild(rootElement);
 
-            XmlElement result = doc.CreateElement ("", "Result", "");
-            result.AppendChild (doc.CreateTextNode ("Success"));
+            XmlElement result = doc.CreateElement("", "Result", "");
+            result.AppendChild(doc.CreateTextNode("Success"));
 
-            rootElement.AppendChild (result);
+            rootElement.AppendChild(result);
 
-            return DocToBytes (doc);
+            return DocToBytes(doc);
         }
 
-        private byte[] DocToBytes (XmlDocument doc)
+        private byte[] DocToBytes(XmlDocument doc)
         {
-            MemoryStream ms = new MemoryStream ();
-            XmlTextWriter xw = new XmlTextWriter (ms, null);
-            xw.Formatting = Formatting.Indented;
-            doc.WriteTo (xw);
-            xw.Flush ();
+            MemoryStream ms = new MemoryStream();
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
+            doc.WriteTo(xw);
+            xw.Flush();
 
-            return ms.ToArray ();
+            return ms.ToArray();
         }
 
         // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
         // By: A Million Lemmings
-        public string ConvertDecString (int dvalue)
+        public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
 
-            double value = Convert.ToDouble (dvalue);
+            double value = Convert.ToDouble(dvalue);
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate (value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring ((int)remainder, 1);
-
-                value = Math.Truncate (value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
     }
 
 
     public class DirectoryInfoOSDHandler
     {
-        IDirectoryServiceConnector DirectoryServiceConnector;
-        private int minTimeBeforeNextParcelUpdate = 60;
-        private Dictionary<UUID, int> timeBeforeNextUpdate = new Dictionary<UUID, int>();
+        private readonly IDirectoryServiceConnector DirectoryServiceConnector;
+        private readonly int minTimeBeforeNextParcelUpdate = 60;
+        private readonly Dictionary<UUID, int> timeBeforeNextUpdate = new Dictionary<UUID, int>();
 
-        public DirectoryInfoOSDHandler (IConfigSource source)
+        public DirectoryInfoOSDHandler(IConfigSource source)
         {
-            if(source.Configs["IDirectoryServiceConnector"] != null)
-                minTimeBeforeNextParcelUpdate = source.Configs["IDirectoryServiceConnector"].GetInt("MinUpdateTimeForParcels", minTimeBeforeNextParcelUpdate);
-            DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector> ("IDirectoryServiceConnectorLocal");
+            if (source.Configs["IDirectoryServiceConnector"] != null)
+                minTimeBeforeNextParcelUpdate =
+                    source.Configs["IDirectoryServiceConnector"].GetInt("MinUpdateTimeForParcels",
+                                                                        minTimeBeforeNextParcelUpdate);
+            DirectoryServiceConnector =
+                DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnectorLocal");
         }
 
-        public byte[] GetParcelInfo (OSDMap request)
+        public byte[] GetParcelInfo(OSDMap request)
         {
-            UUID infoID = request["InfoUUID"].AsUUID ();
-            LandData parcel = DirectoryServiceConnector.GetParcelInfo (infoID);
-            OSDMap result = parcel == null ? new OSDMap() : parcel.ToOSD ();
+            UUID infoID = request["InfoUUID"].AsUUID();
+            LandData parcel = DirectoryServiceConnector.GetParcelInfo(infoID);
+            OSDMap result = parcel == null ? new OSDMap() : parcel.ToOSD();
             request["Success"] = parcel != null;
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (OSDParser.SerializeJsonString (request));
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(OSDParser.SerializeJsonString(request));
         }
 
-        public byte[] GetParcelByOwner (OSDMap request)
+        public byte[] GetParcelByOwner(OSDMap request)
         {
-            UUID OwnerID = request["OwnerID"].AsUUID ();
-            LandData[] parcels = DirectoryServiceConnector.GetParcelByOwner (OwnerID);
-            OSDMap result = new OSDMap ();
-            OSDArray array = new OSDArray ();
+            UUID OwnerID = request["OwnerID"].AsUUID();
+            LandData[] parcels = DirectoryServiceConnector.GetParcelByOwner(OwnerID);
+            OSDMap result = new OSDMap();
+            OSDArray array = new OSDArray();
             foreach (LandData land in parcels)
             {
-                array.Add (land.ToOSD ());
+                array.Add(land.ToOSD());
             }
             result["Parcels"] = array;
-            UTF8Encoding encoding = new UTF8Encoding ();
-            return encoding.GetBytes (OSDParser.SerializeJsonString (request));
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(OSDParser.SerializeJsonString(request));
         }
 
-        public byte[] AddRegion (OSDMap request, UUID regionID)
+        public byte[] AddRegion(OSDMap request, UUID regionID)
         {
-            OSDArray requests = (OSDArray)request["Requests"];
+            OSDArray requests = (OSDArray) request["Requests"];
             List<LandData> parcels = new List<LandData>();
             foreach (OSD o in requests)
             {
                 LandData land = new LandData();
-                land.FromOSD((OSDMap)o);
+                land.FromOSD((OSDMap) o);
                 land.RegionID = regionID;
                 parcels.Add(land);
             }
@@ -582,17 +588,16 @@ namespace OpenSim.Services
                 return new byte[1]; //Too soon to update
 
             //Update the time with now + the time to wait for the next update
-            timeBeforeNextUpdate[parcels[0].RegionID] = Util.UnixTimeSinceEpoch() + (60 * minTimeBeforeNextParcelUpdate);
+            timeBeforeNextUpdate[parcels[0].RegionID] = Util.UnixTimeSinceEpoch() + (60*minTimeBeforeNextParcelUpdate);
 
             DirectoryServiceConnector.AddRegion(parcels);
             return new byte[1];
         }
 
-        public byte[] ClearRegion (UUID regionID, OSDMap request)
+        public byte[] ClearRegion(UUID regionID, OSDMap request)
         {
-            DirectoryServiceConnector.ClearRegion (regionID);
+            DirectoryServiceConnector.ClearRegion(regionID);
             return new byte[1];
         }
     }
-
 }

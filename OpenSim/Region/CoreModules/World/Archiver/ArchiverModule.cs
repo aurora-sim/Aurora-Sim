@@ -28,37 +28,39 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using log4net;
 using Nini.Config;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {
     /// <summary>
-    /// This module loads and saves OpenSimulator region archives
+    ///   This module loads and saves OpenSimulator region archives
     /// </summary>
     public class ArchiverModule : INonSharedRegionModule, IRegionArchiverModule
     {
-        private static readonly ILog m_log = 
+        /// <value>
+        ///   The file used to load and save an opensimulator archive if no filename has been specified
+        /// </value>
+        protected const string DEFAULT_OAR_BACKUP_FILENAME = "region.oar";
+
+        private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IScene m_scene;
 
-        /// <value>
-        /// The file used to load and save an opensimulator archive if no filename has been specified
-        /// </value>
-        protected const string DEFAULT_OAR_BACKUP_FILENAME = "region.oar";
+        #region INonSharedRegionModule Members
 
-        public string Name 
-        { 
-            get { return "RegionArchiverModule"; } 
+        public string Name
+        {
+            get { return "RegionArchiverModule"; }
         }
 
-        public Type ReplaceableInterface 
-        { 
+        public Type ReplaceableInterface
+        {
             get { return null; }
         }
 
@@ -68,18 +70,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             //m_log.Debug("[ARCHIVER] Initialising");
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IRegionArchiverModule>(this);
             //m_log.DebugFormat("[ARCHIVER]: Enabled for region {0}", scene.RegionInfo.RegionName);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
@@ -87,10 +89,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
         }
 
+        #endregion
+
+        #region IRegionArchiverModule Members
+
         /// <summary>
-        /// Load a whole region from an opensimulator archive.
+        ///   Load a whole region from an opensimulator archive.
         /// </summary>
-        /// <param name="cmdparams"></param>
+        /// <param name = "cmdparams"></param>
         public void HandleLoadOarConsoleCommand(string module, string[] cmdparams)
         {
             bool mergeOar = false;
@@ -105,7 +111,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             int i = 0;
             List<string> newParams = new List<string>(cmdparams);
-            foreach(string param in cmdparams)
+            foreach (string param in cmdparams)
             {
                 if (param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -158,33 +164,25 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 i++;
             }
 
-            if (newParams.Count > 2)
-            {
-                DearchiveRegion(newParams[2], mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
-            }
-            else
-            {
-                DearchiveRegion(DEFAULT_OAR_BACKUP_FILENAME, mergeOar, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
-            }
+            DearchiveRegion(newParams.Count > 2 ? newParams[2] : DEFAULT_OAR_BACKUP_FILENAME, mergeOar, skipAssets,
+                            offsetX, offsetY, offsetZ, flipX, flipY,
+                            useParcelOwnership, checkOwnership);
         }
 
         /// <summary>
-        /// Save a region to a file, including all the assets needed to restore it.
+        ///   Save a region to a file, including all the assets needed to restore it.
         /// </summary>
-        /// <param name="cmdparams"></param>
+        /// <param name = "cmdparams"></param>
         public void HandleSaveOarConsoleCommand(string module, string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {
                 string permissions = null;
                 List<string> newParams = new List<string>(cmdparams);
-                foreach (string param in cmdparams)
+                foreach (string param in cmdparams.Where(param => param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase)))
                 {
-                    if (param.StartsWith("--perm=", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        permissions = param.Remove(0, 7);
-                        newParams.Remove(param);
-                    }
+                    permissions = param.Remove(0, 7);
+                    newParams.Remove(param);
                 }
                 ArchiveRegion(newParams[2], Guid.Empty, permissions);
             }
@@ -193,25 +191,20 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 ArchiveRegion(DEFAULT_OAR_BACKUP_FILENAME);
             }
         }
-        
+
         public void ArchiveRegion(string savePath)
         {
             ArchiveRegion(savePath, Guid.Empty, null);
         }
-        
+
         public void ArchiveRegion(string savePath, Guid requestId, string permissions)
         {
             m_log.InfoFormat(
                 "[ARCHIVER]: Writing archive for region {0} to {1}", m_scene.RegionInfo.RegionName, savePath);
-            
+
             new ArchiveWriteRequestPreparation(m_scene, savePath, requestId, permissions).ArchiveRegion();
         }
-        
-        public void ArchiveRegion(Stream saveStream)
-        {
-            ArchiveRegion(saveStream, Guid.Empty);
-        }
-        
+
         public void ArchiveRegion(Stream saveStream, Guid requestId)
         {
             new ArchiveWriteRequestPreparation(m_scene, saveStream, requestId).ArchiveRegion();
@@ -223,23 +216,32 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         }
 
         public void DearchiveRegion(string loadPath, bool merge,
-            bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
+                                    bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY,
+                                    bool useParcelOwnership, bool checkOwnership)
         {
             m_log.InfoFormat(
                 "[ARCHIVER]: Loading archive to region {0} from {1}", m_scene.RegionInfo.RegionName, loadPath);
 
-            new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, offsetX, 
-                offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership).DearchiveRegion();
+            new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, offsetX,
+                                   offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership).DearchiveRegion();
         }
-        
+
         public void DearchiveRegion(Stream loadStream)
         {
             DearchiveRegion(loadStream, false, false, 0, 0, 0);
         }
 
-        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
+        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY,
+                                    int offsetZ)
         {
             new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, offsetX, offsetY, offsetZ).DearchiveRegion();
+        }
+
+        #endregion
+
+        public void ArchiveRegion(Stream saveStream)
+        {
+            ArchiveRegion(saveStream, Guid.Empty);
         }
     }
 }

@@ -30,31 +30,45 @@ using System;
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
     /// <summary>
-    /// A hierarchical token bucket for bandwidth throttling. See
-    /// http://en.wikipedia.org/wiki/Token_bucket for more information
+    ///   A hierarchical token bucket for bandwidth throttling. See
+    ///   http://en.wikipedia.org/wiki/Token_bucket for more information
     /// </summary>
     public class TokenBucket
     {
-        /// <summary>Parent bucket to this bucket, or null if this is a root
-        /// bucket</summary>
-        TokenBucket parent;
-        /// <summary>Size of the bucket in bytes. If zero, the bucket has 
-        /// infinite capacity</summary>
-        int maxBurst;
-        /// <summary>Rate that the bucket fills, in bytes per millisecond. If
-        /// zero, the bucket always remains full</summary>
-        float tokensPerMS;
-        /// <summary>Number of tokens currently in the bucket</summary>
-        int content;
-        /// <summary>Time of the last drip, in system ticks</summary>
-        int lastDrip;
+        /// <summary>
+        ///   Parent bucket to this bucket, or null if this is a root
+        ///   bucket
+        /// </summary>
+        private readonly TokenBucket parent;
+
+        /// <summary>
+        ///   Number of tokens currently in the bucket
+        /// </summary>
+        private int content;
+
+        /// <summary>
+        ///   Time of the last drip, in system ticks
+        /// </summary>
+        private int lastDrip;
+
+        /// <summary>
+        ///   Size of the bucket in bytes. If zero, the bucket has 
+        ///   infinite capacity
+        /// </summary>
+        private int maxBurst;
+
+        /// <summary>
+        ///   Rate that the bucket fills, in bytes per millisecond. If
+        ///   zero, the bucket always remains full
+        /// </summary>
+        private float tokensPerMS;
 
         #region Properties
 
         /// <summary>
-        /// The parent bucket of this bucket, or null if this bucket has no
-        /// parent. The parent bucket will limit the aggregate bandwidth of all
-        /// of its children buckets
+        ///   The parent bucket of this bucket, or null if this bucket has no
+        ///   parent. The parent bucket will limit the aggregate bandwidth of all
+        ///   of its children buckets
         /// </summary>
         public TokenBucket Parent
         {
@@ -62,8 +76,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// Maximum burst rate in bytes per second. This is the maximum number
-        /// of tokens that can accumulate in the bucket at any one time
+        ///   Maximum burst rate in bytes per second. This is the maximum number
+        ///   of tokens that can accumulate in the bucket at any one time
         /// </summary>
         public int MaxBurst
         {
@@ -72,33 +86,33 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// The speed limit of this bucket in bytes per second. This is the
-        /// number of tokens that are added to the bucket per second
+        ///   The speed limit of this bucket in bytes per second. This is the
+        ///   number of tokens that are added to the bucket per second
         /// </summary>
-        /// <remarks>Tokens are added to the bucket any time 
-        /// <seealso cref="RemoveTokens"/> is called, at the granularity of
-        /// the system tick interval (typically around 15-22ms)</remarks>
+        /// <remarks>
+        ///   Tokens are added to the bucket any time 
+        ///   <seealso cref = "RemoveTokens" />
+        ///   is called, at the granularity of
+        ///   the system tick interval (typically around 15-22ms)
+        /// </remarks>
         public float DripRate
         {
-            get { return tokensPerMS * 1000; }
+            get { return tokensPerMS*1000; }
             set
             {
                 if (value == 0)
                     tokensPerMS = 0;
                 else
                 {
-                    float bpms = (int)((float)value / 1000.0f);
+                    float bpms = (int) (value/1000.0f);
 
-                    if (bpms <= 0.5f)
-                        tokensPerMS = .5f; // .5 byte/ms is the minimum granularity
-                    else
-                        tokensPerMS = bpms;
+                    tokensPerMS = bpms <= 0.5f ? .5f : bpms;
                 }
             }
         }
 
         /// <summary>
-        /// The speed limit of this bucket in bytes per millisecond
+        ///   The speed limit of this bucket in bytes per millisecond
         /// </summary>
         public float DripPerMS
         {
@@ -106,11 +120,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// The number of bytes that can be sent at this moment. This is the
-        /// current number of tokens in the bucket
-        /// <remarks>If this bucket has a parent bucket that does not have
-        /// enough tokens for a request, <seealso cref="RemoveTokens"/> will 
-        /// return false regardless of the content of this bucket</remarks>
+        ///   The number of bytes that can be sent at this moment. This is the
+        ///   current number of tokens in the bucket
+        ///   <remarks>
+        ///     If this bucket has a parent bucket that does not have
+        ///     enough tokens for a request, <seealso cref = "RemoveTokens" /> will 
+        ///     return false regardless of the content of this bucket
+        ///   </remarks>
         /// </summary>
         public int Content
         {
@@ -120,14 +136,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         #endregion Properties
 
         /// <summary>
-        /// Default constructor
+        ///   Default constructor
         /// </summary>
-        /// <param name="parent">Parent bucket if this is a child bucket, or
-        /// null if this is a root bucket</param>
-        /// <param name="maxBurst">Maximum size of the bucket in bytes, or
-        /// zero if this bucket has no maximum capacity</param>
-        /// <param name="dripRate">Rate that the bucket fills, in bytes per
-        /// second. If zero, the bucket always remains full</param>
+        /// <param name = "parent">Parent bucket if this is a child bucket, or
+        ///   null if this is a root bucket</param>
+        /// <param name = "maxBurst">Maximum size of the bucket in bytes, or
+        ///   zero if this bucket has no maximum capacity</param>
+        /// <param name = "dripRate">Rate that the bucket fills, in bytes per
+        ///   second. If zero, the bucket always remains full</param>
         public TokenBucket(TokenBucket parent, int maxBurst, int dripRate)
         {
             this.parent = parent;
@@ -137,11 +153,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// Remove a given number of tokens from the bucket
+        ///   Remove a given number of tokens from the bucket
         /// </summary>
-        /// <param name="amount">Number of tokens to remove from the bucket</param>
+        /// <param name = "amount">Number of tokens to remove from the bucket</param>
         /// <returns>True if the requested number of tokens were removed from
-        /// the bucket, otherwise false</returns>
+        ///   the bucket, otherwise false</returns>
         public bool RemoveTokens(int amount)
         {
             bool dummy;
@@ -149,13 +165,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         /// <summary>
-        /// Remove a given number of tokens from the bucket
+        ///   Remove a given number of tokens from the bucket
         /// </summary>
-        /// <param name="amount">Number of tokens to remove from the bucket</param>
-        /// <param name="dripSucceeded">True if tokens were added to the bucket
-        /// during this call, otherwise false</param>
+        /// <param name = "amount">Number of tokens to remove from the bucket</param>
+        /// <param name = "dripSucceeded">True if tokens were added to the bucket
+        ///   during this call, otherwise false</param>
         /// <returns>True if the requested number of tokens were removed from
-        /// the bucket, otherwise false</returns>
+        ///   the bucket, otherwise false</returns>
         public bool RemoveTokens(int amount, out bool dripSucceeded)
         {
             if (maxBurst == 0)
@@ -174,16 +190,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 content -= amount;
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
-        /// Add tokens to the bucket over time. The number of tokens added each
-        /// call depends on the length of time that has passed since the last 
-        /// call to Drip
+        ///   Add tokens to the bucket over time. The number of tokens added each
+        ///   call depends on the length of time that has passed since the last 
+        ///   call to Drip
         /// </summary>
         /// <returns>True if tokens were added to the bucket, otherwise false</returns>
         public bool Drip()
@@ -193,30 +206,27 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 content = maxBurst;
                 return true;
             }
-            else
+            int now = Environment.TickCount & Int32.MaxValue;
+            int deltaMS = now - lastDrip;
+
+            if (deltaMS <= 0)
             {
-                int now = Environment.TickCount & Int32.MaxValue;
-                int deltaMS = now - lastDrip;
+                if (deltaMS < 0)
+                    lastDrip = now;
+                return false;
+            }
 
-                if (deltaMS <= 0)
-                {
-                    if (deltaMS < 0)
-                        lastDrip = now;
-                    return false;
-                }
+            int dripAmount = (int) (deltaMS*tokensPerMS);
 
-                int dripAmount = (int)(deltaMS * tokensPerMS);
-
-                content = Math.Min(content + dripAmount, maxBurst);
-                lastDrip = now;
+            content = Math.Min(content + dripAmount, maxBurst);
+            lastDrip = now;
 /*
                 if (dripAmount < 0 || content < 0)
                     // sim has been idle for too long, integer has overflown
                     // previous calculation is meaningless, let's put it at correct max
                     content = maxBurst;
 */
-                return true;
-            }
+            return true;
         }
     }
 }

@@ -31,11 +31,11 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public class Email
     {
-        public string time;
-        public string sender;
-        public string subject;
         public string message;
         public int numLeft;
+        public string sender;
+        public string subject;
+        public string time;
     }
 
     public interface IEmailModule : ISharedRegionModule

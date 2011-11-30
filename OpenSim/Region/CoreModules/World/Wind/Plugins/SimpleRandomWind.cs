@@ -27,26 +27,25 @@
 
 using System;
 using System.Collections.Generic;
-
+using Nini.Config;
 using OpenMetaverse;
-
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 {
     public class SimpleRandomWind : IWindModelPlugin
     {
-        private Vector2[] m_windSpeeds = new Vector2[16 * 16];
+        private readonly Random m_rndnums = new Random(Environment.TickCount);
         private float m_strength = 1.0f;
-        private Random m_rndnums = new Random(Environment.TickCount);
-
-        #region IPlugin Members
+        private Vector2[] m_windSpeeds = new Vector2[16*16];
 
         public string Version
         {
             get { return "1.0.0.0"; }
         }
+
+        #region IWindModelPlugin Members
 
         public string Name
         {
@@ -57,20 +56,7 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
         {
         }
 
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            m_windSpeeds = null;
-        }
-
-        #endregion
-
-        #region IWindModelPlugin Members
-
-        public void WindConfig (IScene scene, Nini.Config.IConfig windConfig)
+        public void WindConfig(IScene scene, IConfig windConfig)
         {
             if (windConfig != null)
             {
@@ -90,10 +76,10 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
                 {
                     for (int x = 0; x < 16; x++)
                     {
-                        m_windSpeeds[y * 16 + x].X = (float)(m_rndnums.NextDouble() * 2d - 1d); // -1 to 1
-                        m_windSpeeds[y * 16 + x].Y = (float)(m_rndnums.NextDouble() * 2d - 1d); // -1 to 1
-                        m_windSpeeds[y * 16 + x].X *= m_strength;
-                        m_windSpeeds[y * 16 + x].Y *= m_strength;
+                        m_windSpeeds[y*16 + x].X = (float) (m_rndnums.NextDouble()*2d - 1d); // -1 to 1
+                        m_windSpeeds[y*16 + x].Y = (float) (m_rndnums.NextDouble()*2d - 1d); // -1 to 1
+                        m_windSpeeds[y*16 + x].X *= m_strength;
+                        m_windSpeeds[y*16 + x].Y *= m_strength;
                     }
                 }
             }
@@ -103,8 +89,8 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
         {
             Vector3 windVector = new Vector3(0.0f, 0.0f, 0.0f);
 
-            int x = (int)fX / 16;
-            int y = (int)fY / 16;
+            int x = (int) fX/16;
+            int y = (int) fY/16;
 
             if (x < 0) x = 0;
             if (x > 15) x = 15;
@@ -113,8 +99,8 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 
             if (m_windSpeeds != null)
             {
-                windVector.X = m_windSpeeds[y * 16 + x].X;
-                windVector.Y = m_windSpeeds[y * 16 + x].Y;
+                windVector.X = m_windSpeeds[y*16 + x].X;
+                windVector.Y = m_windSpeeds[y*16 + x].Y;
             }
 
             return windVector;
@@ -127,17 +113,12 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 
         public string Description
         {
-            get
-            {
-                return "Provides a simple wind model that creates random wind of a given strength in 16m x 16m patches.";
-            }
+            get { return "Provides a simple wind model that creates random wind of a given strength in 16m x 16m patches."; }
         }
 
-        public System.Collections.Generic.Dictionary<string, string> WindParams()
+        public Dictionary<string, string> WindParams()
         {
-            Dictionary<string, string> Params = new Dictionary<string, string>();
-
-            Params.Add("strength", "wind strength");
+            Dictionary<string, string> Params = new Dictionary<string, string> {{"strength", "wind strength"}};
 
             return Params;
         }
@@ -165,5 +146,9 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 
         #endregion
 
+        public void Dispose()
+        {
+            m_windSpeeds = null;
+        }
     }
 }

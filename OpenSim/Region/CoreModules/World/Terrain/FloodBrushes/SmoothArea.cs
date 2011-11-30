@@ -25,10 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 {
@@ -37,18 +37,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
         #region ITerrainFloodEffect Members
 
         public void FloodEffect(ITerrainChannel map, UUID userID, float north,
-            float west, float south, float east, float strength)
+                                float west, float south, float east, float strength)
         {
             float area = strength;
-            float step = strength / 4;
+            float step = strength/4;
 
-            for (int x = (int)west; x < (int)east; x++)
+            for (int x = (int) west; x < (int) east; x++)
             {
-                for (int y = (int)south; y < (int)north; y++)
+                for (int y = (int) south; y < (int) north; y++)
                 {
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
-                    
+
                     float average = 0;
                     int avgsteps = 0;
 
@@ -59,17 +59,15 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
                         for (l = 0 - area; l < area; l += step)
                         {
                             avgsteps++;
-                            average += TerrainUtil.GetBilinearInterpolate (x + n, y + l, map, new System.Collections.Generic.List<IScene> ());
+                            average += TerrainUtil.GetBilinearInterpolate(x + n, y + l, map, new List<IScene>());
                         }
                     }
 
-                    map[x, y] = average / avgsteps;
+                    map[x, y] = average/avgsteps;
                 }
             }
         }
 
         #endregion
-
-        
     }
 }

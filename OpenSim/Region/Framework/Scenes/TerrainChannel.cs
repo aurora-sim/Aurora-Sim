@@ -25,29 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using System;
-using System.Text;
-using System.Xml;
-using System.IO;
-using System.Xml.Serialization;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
     /// <summary>
-    /// A new version of the old Channel class, simplified
+    ///   A new version of the old Channel class, simplified
     /// </summary>
     public class TerrainChannel : ITerrainChannel
     {
-        private bool[,] taint;
+        private int m_Width;
+
         /// <summary>
-        /// NOTE: This is NOT a normal map, it has a resolution of 10x
+        ///   NOTE: This is NOT a normal map, it has a resolution of 10x
         /// </summary>
         private short[] m_map;
+
         private IScene m_scene;
-        private int m_Width = 0;
+        private bool[,] taint;
 
         public TerrainChannel(IScene scene)
         {
@@ -56,33 +53,14 @@ namespace OpenSim.Region.Framework.Scenes
             CreateDefaultTerrain();
         }
 
-        private void CreateDefaultTerrain()
-        {
-            m_map = null;
-            taint = null;
-            m_map = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
-            taint = new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
-            m_Width = m_scene.RegionInfo.RegionSizeX;
-
-            int x;
-            for (x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
-            {
-                int y;
-                for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
-                {
-                    this[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight + 1;
-                }
-            }
-        }
-
         public TerrainChannel(short[] import, IScene scene)
         {
             m_scene = scene;
             m_map = import;
-            m_Width = (int)Math.Sqrt(import.Length);
-            taint = new bool[m_Width, m_Width];
+            m_Width = (int) Math.Sqrt(import.Length);
+            taint = new bool[m_Width,m_Width];
             if ((m_Width != scene.RegionInfo.RegionSizeX ||
-                m_Width != scene.RegionInfo.RegionSizeY) &&
+                 m_Width != scene.RegionInfo.RegionSizeY) &&
                 (scene.RegionInfo.RegionSizeX != int.MaxValue) && //Child regions of a mega-region
                 (scene.RegionInfo.RegionSizeY != int.MaxValue))
             {
@@ -97,12 +75,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_Width = Constants.RegionSize;
             if (scene != null)
             {
-                m_Width = (int)scene.RegionInfo.RegionSizeX;
+                m_Width = scene.RegionInfo.RegionSizeX;
             }
             if (createMap)
             {
-                m_map = new short[m_Width * m_Width];
-                taint = new bool[m_Width / Constants.TerrainPatchSize, m_Width / Constants.TerrainPatchSize];
+                m_map = new short[m_Width*m_Width];
+                taint = new bool[m_Width/Constants.TerrainPatchSize,m_Width/Constants.TerrainPatchSize];
             }
         }
 
@@ -110,8 +88,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_Width = w;
-            m_map = new short[w * h];
-            taint = new bool[w / Constants.TerrainPatchSize, h / Constants.TerrainPatchSize];
+            m_map = new short[w*h];
+            taint = new bool[w/Constants.TerrainPatchSize,h/Constants.TerrainPatchSize];
         }
 
         #region ITerrainChannel Members
@@ -142,56 +120,53 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (x >= 0 && x < m_Width && y >= 0 && y < m_Width)
-                    return ((float)m_map[y * m_Width + x]) / Constants.TerrainCompression;
+                    return (m_map[y*m_Width + x])/Constants.TerrainCompression;
                 else
                 {
                     //Get the nearest one so that things don't get screwed up near borders
                     int betterX = x < 0 ? 0 : x >= m_Width ? m_Width - 1 : x;
                     int betterY = y < 0 ? 0 : y >= m_Width ? m_Width - 1 : y;
-                    return ((float)m_map[betterY * m_Width + betterX]) / Constants.TerrainCompression;
+                    return (m_map[betterY*m_Width + betterX])/Constants.TerrainCompression;
                 }
             }
             set
             {
                 // Will "fix" terrain hole problems. Although not fantastically.
-                if (value * Constants.TerrainCompression > short.MaxValue)
+                if (value*Constants.TerrainCompression > short.MaxValue)
                     value = short.MaxValue;
-                if (value * Constants.TerrainCompression < short.MinValue)
+                if (value*Constants.TerrainCompression < short.MinValue)
                     value = short.MinValue;
 
-                if (m_map[y * m_Width + x] != value * Constants.TerrainCompression)
+                if (m_map[y*m_Width + x] != value*Constants.TerrainCompression)
                 {
-                    taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
-                    m_map[y * m_Width + x] = (short)(value * Constants.TerrainCompression);
+                    taint[x/Constants.TerrainPatchSize, y/Constants.TerrainPatchSize] = true;
+                    m_map[y*m_Width + x] = (short) (value*Constants.TerrainCompression);
                 }
             }
         }
 
         public bool Tainted(int x, int y)
         {
-            if (taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize])
+            if (taint[x/Constants.TerrainPatchSize, y/Constants.TerrainPatchSize])
             {
-                taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = false;
+                taint[x/Constants.TerrainPatchSize, y/Constants.TerrainPatchSize] = false;
                 return true;
             }
             return false;
         }
 
-        #endregion
-
         public ITerrainChannel MakeCopy()
         {
-            TerrainChannel copy = new TerrainChannel(false, m_scene);
-            copy.m_map = (short[])m_map.Clone();
-            copy.taint = (bool[,])taint.Clone();
+            TerrainChannel copy = new TerrainChannel(false, m_scene)
+                                      {m_map = (short[]) m_map.Clone(), taint = (bool[,]) taint.Clone()};
             return copy;
         }
 
         /// <summary>
-        /// Gets the average height of the area +2 in both the X and Y directions from the given position
+        ///   Gets the average height of the area +2 in both the X and Y directions from the given position
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name = "x"></param>
+        /// <param name = "y"></param>
         /// <returns></returns>
         public float GetNormalizedGroundHeight(int x, int y)
         {
@@ -204,17 +179,17 @@ namespace OpenSim.Region.Framework.Scenes
             if (y >= m_Width)
                 y = m_Width - 1;
 
-            Vector3 p0 = new Vector3(x, y, (float)this[x, y]);
+            Vector3 p0 = new Vector3(x, y, this[x, y]);
             Vector3 p1 = new Vector3(p0);
             Vector3 p2 = new Vector3(p0);
 
             p1.X += 1.0f;
             if (p1.X < m_Width)
-                p1.Z = (float)this[(int)p1.X, (int)p1.Y];
+                p1.Z = this[(int) p1.X, (int) p1.Y];
 
             p2.Y += 1.0f;
             if (p2.Y < m_Width)
-                p2.Z = (float)this[(int)p2.X, (int)p2.Y];
+                p2.Z = this[(int) p2.X, (int) p2.Y];
 
             Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
             Vector3 v1 = new Vector3(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
@@ -222,13 +197,38 @@ namespace OpenSim.Region.Framework.Scenes
             v0.Normalize();
             v1.Normalize();
 
-            Vector3 vsn = new Vector3();
-            vsn.X = (v0.Y * v1.Z) - (v0.Z * v1.Y);
-            vsn.Y = (v0.Z * v1.X) - (v0.X * v1.Z);
-            vsn.Z = (v0.X * v1.Y) - (v0.Y * v1.X);
+            Vector3 vsn = new Vector3
+                              {
+                                  X = (v0.Y*v1.Z) - (v0.Z*v1.Y),
+                                  Y = (v0.Z*v1.X) - (v0.X*v1.Z),
+                                  Z = (v0.X*v1.Y) - (v0.Y*v1.X)
+                              };
             vsn.Normalize();
 
-            return ((vsn.X + vsn.Y) / (-1 * vsn.Z)) + p0.Z;
+            return ((vsn.X + vsn.Y)/(-1*vsn.Z)) + p0.Z;
+        }
+
+        #endregion
+
+        private void CreateDefaultTerrain()
+        {
+            m_map = null;
+            taint = null;
+            m_map = new short[m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeX];
+            taint =
+                new bool[m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize,
+                    m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize];
+            m_Width = m_scene.RegionInfo.RegionSizeX;
+
+            int x;
+            for (x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+            {
+                int y;
+                for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+                {
+                    this[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight + 1;
+                }
+            }
         }
     }
 }

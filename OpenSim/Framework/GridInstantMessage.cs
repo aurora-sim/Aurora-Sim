@@ -26,43 +26,40 @@
  */
 
 using System;
-using System.Collections.Generic;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace OpenSim.Framework
 {
     [Serializable]
     public class GridInstantMessage : IDataTransferable
     {
+        public uint ParentEstateID;
+        public Vector3 Position;
+        public UUID RegionID;
+        public byte[] binaryBucket;
+        public byte dialog;
         public UUID fromAgentID;
         public string fromAgentName;
-        public UUID toAgentID;
-        public byte dialog;
         public bool fromGroup;
-        public string message;
         public UUID imSessionID;
+        public string message;
         public byte offline;
-        public Vector3 Position;
-        public byte[] binaryBucket;
-
-
-        public uint ParentEstateID;
-        public UUID RegionID;
         public uint timestamp;
+        public UUID toAgentID;
 
         public GridInstantMessage()
         {
             binaryBucket = new byte[0];
-            timestamp = (uint)Util.UnixTimeSinceEpoch();
+            timestamp = (uint) Util.UnixTimeSinceEpoch();
         }
 
         public GridInstantMessage(IScene scene, UUID _fromAgentID,
-                string _fromAgentName, UUID _toAgentID,
-                byte _dialog, bool _fromGroup, string _message,
-                UUID _imSessionID, bool _offline, Vector3 _position,
-                byte[] _binaryBucket)
+                                  string _fromAgentName, UUID _toAgentID,
+                                  byte _dialog, bool _fromGroup, string _message,
+                                  UUID _imSessionID, bool _offline, Vector3 _position,
+                                  byte[] _binaryBucket)
         {
             fromAgentID = _fromAgentID;
             fromAgentName = _fromAgentName;
@@ -71,10 +68,7 @@ namespace OpenSim.Framework
             fromGroup = _fromGroup;
             message = _message;
             imSessionID = _imSessionID;
-            if (_offline)
-                offline = 1;
-            else
-                offline = 0;
+            offline = _offline ? (Byte)1 : (Byte)0;
             Position = _position;
             binaryBucket = _binaryBucket;
 
@@ -83,34 +77,36 @@ namespace OpenSim.Framework
                 ParentEstateID = scene.RegionInfo.EstateSettings.ParentEstateID;
                 RegionID = scene.RegionInfo.RegionSettings.RegionUUID;
             }
-            timestamp = (uint)Util.UnixTimeSinceEpoch();
+            timestamp = (uint) Util.UnixTimeSinceEpoch();
         }
 
         public GridInstantMessage(IScene scene, UUID _fromAgentID,
-                string _fromAgentName, UUID _toAgentID, byte _dialog,
-                string _message, bool _offline,
-                Vector3 _position) : this(scene, _fromAgentID, _fromAgentName,
-                _toAgentID, _dialog, false, _message,
-                _fromAgentID ^ _toAgentID, _offline, _position, new byte[0])
+                                  string _fromAgentName, UUID _toAgentID, byte _dialog,
+                                  string _message, bool _offline,
+                                  Vector3 _position) : this(scene, _fromAgentID, _fromAgentName,
+                                                            _toAgentID, _dialog, false, _message,
+                                                            _fromAgentID ^ _toAgentID, _offline, _position, new byte[0])
         {
         }
 
         public override OSDMap ToOSD()
         {
-            OSDMap map = new OSDMap();
-            map.Add("fromAgentID", OSD.FromUUID(fromAgentID));
-            map.Add("fromAgentName", OSD.FromString(fromAgentName));
-            map.Add("toAgentID", OSD.FromUUID(toAgentID));
-            map.Add("dialog", OSD.FromInteger(dialog));
-            map.Add("fromGroup", OSD.FromBoolean(fromGroup));
-            map.Add("message", OSD.FromString(message));
-            map.Add("imSessionID", OSD.FromUUID(imSessionID));
-            map.Add("offline", OSD.FromInteger(offline));
-            map.Add("Position", OSD.FromVector3(Position));
-            map.Add("binaryBucket", OSD.FromBinary(binaryBucket));
-            map.Add("ParentEstateID", OSD.FromUInteger(ParentEstateID));
-            map.Add("RegionID", OSD.FromUUID(RegionID));
-            map.Add("timestamp", OSD.FromUInteger(timestamp));
+            OSDMap map = new OSDMap
+                             {
+                                 {"fromAgentID", OSD.FromUUID(fromAgentID)},
+                                 {"fromAgentName", OSD.FromString(fromAgentName)},
+                                 {"toAgentID", OSD.FromUUID(toAgentID)},
+                                 {"dialog", OSD.FromInteger(dialog)},
+                                 {"fromGroup", OSD.FromBoolean(fromGroup)},
+                                 {"message", OSD.FromString(message)},
+                                 {"imSessionID", OSD.FromUUID(imSessionID)},
+                                 {"offline", OSD.FromInteger(offline)},
+                                 {"Position", OSD.FromVector3(Position)},
+                                 {"binaryBucket", OSD.FromBinary(binaryBucket)},
+                                 {"ParentEstateID", OSD.FromUInteger(ParentEstateID)},
+                                 {"RegionID", OSD.FromUUID(RegionID)},
+                                 {"timestamp", OSD.FromUInteger(timestamp)}
+                             };
             return map;
         }
 
@@ -119,10 +115,10 @@ namespace OpenSim.Framework
             fromAgentID = map["fromAgentID"].AsUUID();
             fromAgentName = map["fromAgentName"].AsString();
             toAgentID = map["toAgentID"].AsUUID();
-            dialog = (byte)map["dialog"].AsInteger();
+            dialog = (byte) map["dialog"].AsInteger();
             fromGroup = map["fromGroup"].AsBoolean();
             message = map["message"].ToString();
-            offline = (byte)map["offline"].AsInteger();
+            offline = (byte) map["offline"].AsInteger();
             Position = map["Position"].AsVector3();
             binaryBucket = map["binaryBucket"].AsBinary();
             ParentEstateID = map["ParentEstateID"].AsUInteger();

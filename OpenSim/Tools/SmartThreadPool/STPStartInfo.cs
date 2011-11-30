@@ -6,41 +6,41 @@ using System.Threading;
 namespace Amib.Threading
 {
     /// <summary>
-    /// Summary description for STPStartInfo.
+    ///   Summary description for STPStartInfo.
     /// </summary>
     public class STPStartInfo : WIGStartInfo
     {
         /// <summary>
-        /// Idle timeout in milliseconds.
-        /// If a thread is idle for _idleTimeout milliseconds then 
-        /// it may quit.
+        ///   Idle timeout in milliseconds.
+        ///   If a thread is idle for _idleTimeout milliseconds then 
+        ///   it may quit.
         /// </summary>
         private int _idleTimeout;
 
         /// <summary>
-        /// The lower limit of threads in the pool.
-        /// </summary>
-        private int _minWorkerThreads;
-
-        /// <summary>
-        /// The upper limit of threads in the pool.
+        ///   The upper limit of threads in the pool.
         /// </summary>
         private int _maxWorkerThreads;
 
         /// <summary>
-        /// The priority of the threads in the pool
+        ///   The lower limit of threads in the pool.
         /// </summary>
-        private ThreadPriority _threadPriority;
+        private int _minWorkerThreads;
 
         /// <summary>
-        /// If this field is not null then the performance counters are enabled
-        /// and use the string as the name of the instance.
+        ///   If this field is not null then the performance counters are enabled
+        ///   and use the string as the name of the instance.
         /// </summary>
         private string _pcInstanceName;
 
         private int _stackSize;
 
-        public STPStartInfo() : base()
+        /// <summary>
+        ///   The priority of the threads in the pool
+        /// </summary>
+        private ThreadPriority _threadPriority;
+
+        public STPStartInfo()
         {
             _idleTimeout = SmartThreadPool.DefaultIdleTimeout;
             _minWorkerThreads = SmartThreadPool.DefaultMinWorkerThreads;

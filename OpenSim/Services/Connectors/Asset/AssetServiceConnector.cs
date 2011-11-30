@@ -25,29 +25,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Linq;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace OpenSim.Services.Connectors
 {
     public class AssetServicesConnector : IAssetServiceConnector, IService
     {
         protected static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
+        protected IImprovedAssetCache m_Cache;
         protected IRegistryCore m_registry;
-        protected IImprovedAssetCache m_Cache = null;
         protected string m_serverURL = "";
 
         public AssetServicesConnector()
@@ -59,14 +59,16 @@ namespace OpenSim.Services.Connectors
             m_serverURL = url;
         }
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #region IAssetServiceConnector Members
+
         public IAssetService InnerService
         {
             get { return this; }
-        }
-
-        protected void SetCache(IImprovedAssetCache cache)
-        {
-            m_Cache = cache;
         }
 
         public virtual bool GetExists(string id)
@@ -78,20 +80,11 @@ namespace OpenSim.Services.Connectors
             if (asset != null)
                 return true;
 
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
-            {
-                string uri = m_ServerURI + "/" + id + "/exists";
-
-                bool exists = SynchronousRestObjectRequester.
-                        MakeRequest<int, bool>("GET", uri, 0);
-                if (exists)
-                    return exists;
-            }
-
-            return false;
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            return serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id + "/exists").Select(uri => SynchronousRestObjectRequester.MakeRequest<int, bool>("GET", uri, 0)).FirstOrDefault(exists => exists);
         }
 
         public virtual AssetBase Get(string id)
@@ -105,9 +98,12 @@ namespace OpenSim.Services.Connectors
                     return asset;
             }
 
-            List<string> serverURIs = m_registry == null ? null : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs = m_registry == null
+                                          ? null
+                                          : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                                              "AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] {m_serverURL});
             if (serverURIs != null)
                 foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
                 {
@@ -140,12 +136,12 @@ namespace OpenSim.Services.Connectors
                     return fullAsset.Data;
             }
 
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            foreach (RestClient rc in serverURIs.Select(m_ServerURI => new RestClient(m_ServerURI)))
             {
-                RestClient rc = new RestClient(m_ServerURI);
                 rc.AddResourcePath("assets");
                 rc.AddResourcePath(id);
                 rc.AddResourcePath("data");
@@ -160,7 +156,7 @@ namespace OpenSim.Services.Connectors
                 if (s.Length > 0)
                 {
                     byte[] ret = new byte[s.Length];
-                    s.Read(ret, 0, (int)s.Length);
+                    s.Read(ret, 0, (int) s.Length);
 
                     return ret;
                 }
@@ -171,9 +167,10 @@ namespace OpenSim.Services.Connectors
 
         public virtual bool Get(string id, Object sender, AssetRetrieved handler)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
+                serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -187,14 +184,14 @@ namespace OpenSim.Services.Connectors
                     bool result = false;
 
                     AsynchronousRestObjectRequester.
-                            MakeRequest<int, AssetBase>("GET", uri, 0,
-                            delegate(AssetBase a)
-                            {
-                                if (m_Cache != null)
-                                    m_Cache.Cache(a);
-                                handler(id, sender, a);
-                                result = true;
-                            });
+                        MakeRequest("GET", uri, 0,
+                                    delegate(AssetBase a)
+                                        {
+                                            if (m_Cache != null)
+                                                m_Cache.Cache(a);
+                                            handler(id, sender, a);
+                                            result = true;
+                                        });
 
                     if (result)
                         return result;
@@ -220,21 +217,21 @@ namespace OpenSim.Services.Connectors
             }
 
             UUID newID = UUID.Zero;
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/"))
             {
-                string uri = m_ServerURI + "/";
-
                 try
                 {
                     UUID.TryParse(SynchronousRestObjectRequester.
-                            MakeRequest<AssetBase, string>("POST", uri, asset), out newID);
+                                      MakeRequest<AssetBase, string>("POST", uri, asset), out newID);
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
+                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}",
+                                     asset.ID, e.Message);
                 }
 
                 if (newID != UUID.Zero)
@@ -265,41 +262,77 @@ namespace OpenSim.Services.Connectors
             }
             asset.Data = data;
 
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            if (serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id).Any(uri => SynchronousRestObjectRequester.
+                                                                                        MakeRequest<AssetBase, bool>("POST", uri, asset)))
             {
-                string uri = m_ServerURI + "/" + id;
+                if (m_Cache != null)
+                    m_Cache.Cache(asset);
 
-                if (SynchronousRestObjectRequester.
-                        MakeRequest<AssetBase, bool>("POST", uri, asset))
-                {
-                    if (m_Cache != null)
-                        m_Cache.Cache(asset);
-
-                    return true;
-                }
+                return true;
             }
             return false;
         }
 
         public virtual bool Delete(UUID id)
         {
-            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            List<string> serverURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] { m_serverURL });
-            foreach (string m_ServerURI in serverURIs)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
+            foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
             {
-                string uri = m_ServerURI + "/" + id;
-
                 SynchronousRestObjectRequester.
-                        MakeRequest<int, bool>("DELETE", uri, 0);
+                    MakeRequest<int, bool>("DELETE", uri, 0);
             }
             if (m_Cache != null)
                 m_Cache.Expire(id.ToString());
 
             return true;
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+            SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+            registry.RegisterModuleInterface<IAssetServiceConnector>(this);
+
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand("dump asset",
+                                                         "dump asset <id> <file>",
+                                                         "dump one cached asset", HandleDumpAsset);
+
+            registry.RegisterModuleInterface<IAssetService>(this);
+        }
+
+        #endregion
+
+        protected void SetCache(IImprovedAssetCache cache)
+        {
+            m_Cache = cache;
         }
 
         protected virtual void HandleDumpAsset(string[] args)
@@ -339,46 +372,5 @@ namespace OpenSim.Services.Connectors
 
             fs.Close();
         }
-
-        #region IService Members
-
-        public virtual string Name
-        {
-            get { return GetType().Name; }
-        }
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-            registry.RegisterModuleInterface<IAssetServiceConnector>(this);
-
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-
-            if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("dump asset",
-                                          "dump asset <id> <file>",
-                                          "dump one cached asset", HandleDumpAsset);
-
-            registry.RegisterModuleInterface<IAssetService>(this);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
-            SetCache(registry.RequestModuleInterface<IImprovedAssetCache>());
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        public void Configure (IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        #endregion
-
-
     }
 }

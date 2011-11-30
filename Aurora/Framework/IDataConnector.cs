@@ -27,87 +27,82 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using OpenMetaverse;
-using OpenSim.Framework;
-using Nini.Config;
 
 namespace Aurora.Framework
 {
     /// <summary>
-    /// Connector that links Aurora IDataPlugins to a database backend
+    ///   Connector that links Aurora IDataPlugins to a database backend
     /// </summary>
     public interface IDataConnector : IGenericData
     {
         /// <summary>
-        /// Checks to see if table 'table' exists
+        ///   Name of the module
         /// </summary>
-        /// <param name="table"></param>
+        string Identifier { get; }
+
+        /// <summary>
+        ///   Checks to see if table 'table' exists
+        /// </summary>
+        /// <param name = "table"></param>
         /// <returns></returns>
         bool TableExists(string table);
 
         /// <summary>
-        /// Create a generic table
+        ///   Create a generic table
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="columns"></param>
+        /// <param name = "table"></param>
+        /// <param name = "columns"></param>
         void CreateTable(string table, ColumnDefinition[] columns);
 
         /// <summary>
-        /// Get the latest version of the database
+        ///   Get the latest version of the database
         /// </summary>
         /// <returns></returns>
         Version GetAuroraVersion(string migratorName);
 
         /// <summary>
-        /// Set the version of the database
+        ///   Set the version of the database
         /// </summary>
-        /// <param name="version"></param>
+        /// <param name = "version"></param>
         void WriteAuroraVersion(Version version, string MigrationName);
 
         /// <summary>
-        /// Copy tables
+        ///   Copy tables
         /// </summary>
-        /// <param name="sourceTableName"></param>
-        /// <param name="destinationTableName"></param>
-        /// <param name="columnDefinitions"></param>
+        /// <param name = "sourceTableName"></param>
+        /// <param name = "destinationTableName"></param>
+        /// <param name = "columnDefinitions"></param>
         void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
-        
+
         /// <summary>
-        /// Check whether the data table exists and that the columns are correct
+        ///   Check whether the data table exists and that the columns are correct
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="columnDefinitions"></param>
+        /// <param name = "tableName"></param>
+        /// <param name = "columnDefinitions"></param>
         /// <returns></returns>
         bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
-        
-        /// <summary>
-        /// Check whether the data table exists and that the columns are correct
-        /// Then create the table if it is not created
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="columnDefinitions"></param>
-        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, Dictionary<string, string> renameColumns);
 
         /// <summary>
-        /// Rename the table from oldTableName to newTableName
+        ///   Check whether the data table exists and that the columns are correct
+        ///   Then create the table if it is not created
         /// </summary>
-        /// <param name="oldTableName"></param>
-        /// <param name="newTableName"></param>
+        /// <param name = "tableName"></param>
+        /// <param name = "columnDefinitions"></param>
+        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions,
+                               Dictionary<string, string> renameColumns);
+
+        /// <summary>
+        ///   Rename the table from oldTableName to newTableName
+        /// </summary>
+        /// <param name = "oldTableName"></param>
+        /// <param name = "newTableName"></param>
         void RenameTable(string oldTableName, string newTableName);
-        
-        /// <summary>
-        /// Drop a table
-        /// </summary>
-        /// <param name="tableName"></param>
-        void DropTable(string tableName);
 
         /// <summary>
-        /// Name of the module
+        ///   Drop a table
         /// </summary>
-        string Identifier { get; }
+        /// <param name = "tableName"></param>
+        void DropTable(string tableName);
     }
 
     public enum DataManagerTechnology
@@ -151,6 +146,7 @@ namespace Aurora.Framework
         TinyInt4,
         Unknown
     }
+
     public class ColumnDefinition
     {
         public string Name { get; set; }

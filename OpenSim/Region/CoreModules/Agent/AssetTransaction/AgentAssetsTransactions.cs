@@ -26,25 +26,24 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
-
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
     /// <summary>
-    /// Manage asset transactions for a single agent.
+    ///   Manage asset transactions for a single agent.
     /// </summary>
     public class AgentAssetTransactions
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // Fields
-        private bool m_dumpAssetsToFile;
+        private readonly bool m_dumpAssetsToFile;
         public AssetTransactionModule Manager;
         public UUID UserID;
         public Dictionary<UUID, AssetXferUploader> XferUploaders = new Dictionary<UUID, AssetXferUploader>();
@@ -77,13 +76,10 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
             lock (XferUploaders)
             {
-                foreach (AssetXferUploader uploader in XferUploaders.Values)
+                foreach (AssetXferUploader uploader in XferUploaders.Values.Where(uploader => uploader.XferID == xferID))
                 {
-                    if (uploader.XferID == xferID)
-                    {
-                        uploader.HandleXferPacket(remoteClient, xferID, packetID, data);
-                        break;
-                    }
+                    uploader.HandleXferPacket(remoteClient, xferID, packetID, data);
+                    break;
                 }
             }
         }
@@ -101,11 +97,10 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         }
 
 
-
         /// <summary>
-        /// Get an uploaded asset.  If the data is successfully retrieved, the transaction will be removed.
+        ///   Get an uploaded asset.  If the data is successfully retrieved, the transaction will be removed.
         /// </summary>
-        /// <param name="transactionID"></param>
+        /// <param name = "transactionID"></param>
         /// <returns>The asset if the upload has completed, null if it has not.</returns>
         public AssetBase GetTransactionAsset(UUID transactionID)
         {
@@ -162,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         //}
 
         public void RequestUpdateTaskInventoryItem(
-           IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item)
+            IClientAPI remoteClient, ISceneChildEntity part, UUID transactionID, TaskInventoryItem item)
         {
             if (XferUploaders.ContainsKey(transactionID))
             {
@@ -175,13 +170,16 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                     asset.Name = item.Name;
                     asset.Description = item.Description;
-                    asset.Type = (sbyte)item.Type;
+                    asset.Type = (sbyte) item.Type;
                     item.AssetID = asset.ID;
 
                     IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
                     if (monitorModule != null)
                     {
-                        INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                        INetworkMonitor networkMonitor =
+                            (INetworkMonitor)
+                            monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(),
+                                                     MonitorModuleHelper.NetworkMonitor);
                         networkMonitor.AddPendingUploads(-1);
                     }
 
@@ -190,9 +188,9 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
                     if (part.Inventory.UpdateInventoryItem(item))
                     {
-                        if ((InventoryType)item.InvType == InventoryType.Notecard)
+                        if ((InventoryType) item.InvType == InventoryType.Notecard)
                             remoteClient.SendAgentAlertMessage("Notecard saved", false);
-                        else if ((InventoryType)item.InvType == InventoryType.LSL)
+                        else if ((InventoryType) item.InvType == InventoryType.LSL)
                             remoteClient.SendAgentAlertMessage("Script saved", false);
                         else
                             remoteClient.SendAgentAlertMessage("Item saved", false);
@@ -207,7 +205,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         public void RequestUpdateInventoryItem(IClientAPI remoteClient, UUID transactionID,
                                                InventoryItemBase item)
         {
-             if (XferUploaders.ContainsKey(transactionID))
+            if (XferUploaders.ContainsKey(transactionID))
             {
                 UUID assetID = UUID.Combine(transactionID, remoteClient.SecureSessionId);
 
@@ -224,7 +222,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                     asset.ID = UUID.Random();
                     asset.Name = item.Name;
                     asset.Description = item.Description;
-                    asset.Type = (sbyte)item.AssetType;
+                    asset.Type = (sbyte) item.AssetType;
                     item.AssetID = asset.ID;
 
                     asset.ID = Manager.MyScene.AssetService.Store(asset);
@@ -234,9 +232,12 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
                 if (monitorModule != null)
                 {
-                    INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                    INetworkMonitor networkMonitor =
+                        (INetworkMonitor)
+                        monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(),
+                                                 MonitorModuleHelper.NetworkMonitor);
                     networkMonitor.AddPendingUploads(-1);
-                } 
+                }
 
                 IInventoryService invService = Manager.MyScene.InventoryService;
                 invService.UpdateItem(item);

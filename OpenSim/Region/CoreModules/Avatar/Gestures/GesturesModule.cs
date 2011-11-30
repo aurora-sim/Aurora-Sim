@@ -27,28 +27,33 @@
 
 using System;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.Gestures
 {
     public class GesturesModule : INonSharedRegionModule
-    { 
+    {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IScene m_scene;
-        
+
+        public bool IsSharedModule
+        {
+            get { return false; }
+        }
+
+        #region INonSharedRegionModule Members
+
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
 
@@ -56,26 +61,35 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
             m_scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
         }
-        
-        public void PostInitialise() {}
-        public void Close() {}
-        public string Name { get { return "Gestures Module"; } }
-        public bool IsSharedModule { get { return false; } }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "Gestures Module"; }
+        }
+
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
 
         private void OnNewClient(IClientAPI client)
         {
@@ -88,7 +102,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
             client.OnActivateGesture -= ActivateGesture;
             client.OnDeactivateGesture -= DeactivateGesture;
         }
-        
+
         public virtual void ActivateGesture(IClientAPI client, UUID assetId, UUID gestureId)
         {
             IInventoryService invService = m_scene.InventoryService;
@@ -97,10 +111,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
             item = invService.GetItem(item);
             if (item != null)
             {
-                item.Flags &= ~(uint)1;
+                item.Flags &= ~(uint) 1;
                 invService.UpdateItem(item);
             }
-            else 
+            else
                 m_log.WarnFormat(
                     "[GESTURES]: Unable to find gesture {0} to activate for {1}", gestureId, client.Name);
         }
@@ -116,7 +130,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
                 item.Flags = 0;
                 invService.UpdateItem(item);
             }
-            else 
+            else
                 m_log.ErrorFormat(
                     "[GESTURES]: Unable to find gesture to deactivate {0} for {1}", gestureId, client.Name);
         }

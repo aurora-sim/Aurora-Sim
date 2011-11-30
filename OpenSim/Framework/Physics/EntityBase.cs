@@ -25,17 +25,38 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
     public abstract class EntityBase : RegistryCore, IEntity
     {
-        protected IScene m_scene;
         /// <summary>
-        /// The scene to which this entity belongs
+        ///   Signal whether the non-inventory attributes of any prims in the group have changed
+        ///   since the group's last persistent backup
+        /// </summary>
+        protected bool m_hasGroupChanged;
+
+        protected bool m_isDeleted;
+        protected uint m_localId;
+        protected string m_name;
+        protected Vector3 m_pos;
+        protected Quaternion m_rot;
+
+        protected IScene m_scene;
+
+        protected UUID m_uuid;
+
+        /// <summary>
+        ///   Creates a new Entity (should not occur on it's own)
+        /// </summary>
+        public EntityBase()
+        {
+            m_name = "(basic entity)";
+        }
+
+        /// <summary>
+        ///   The scene to which this entity belongs
         /// </summary>
         public IScene Scene
         {
@@ -43,7 +64,22 @@ namespace OpenSim.Framework
             set { m_scene = value; }
         }
 
-        protected UUID m_uuid;
+        /// <summary>
+        ///   Signals whether this entity was in a scene but has since been removed from it.
+        /// </summary>
+        public bool IsDeleted
+        {
+            get { return m_isDeleted; }
+            set { m_isDeleted = value; }
+        }
+
+        public virtual bool HasGroupChanged
+        {
+            get { return m_hasGroupChanged; }
+            set { m_hasGroupChanged = value; }
+        }
+
+        #region IEntity Members
 
         public virtual UUID UUID
         {
@@ -51,10 +87,8 @@ namespace OpenSim.Framework
             set { m_uuid = value; }
         }
 
-        protected string m_name;
-
         /// <summary>
-        /// The name of this entity
+        ///   The name of this entity
         /// </summary>
         public virtual string Name
         {
@@ -62,56 +96,18 @@ namespace OpenSim.Framework
             set { m_name = value; }
         }
 
-        /// <summary>
-        /// Signals whether this entity was in a scene but has since been removed from it.
-        /// </summary>
-        public bool IsDeleted
-        {
-            get { return m_isDeleted; }
-            set { m_isDeleted = value; }
-        }
-        protected bool m_isDeleted;
+        public int LinkNum { get; set; }
 
-        public int LinkNum
-        {
-            get
-            {
-                return m_linkNum;
-            }
-            set
-            {
-                m_linkNum = value;
-            }
-        }
-        private int m_linkNum;
-
-        public virtual bool HasGroupChanged
-        {
-            get { return m_hasGroupChanged; }
-            set { m_hasGroupChanged = value; }
-        }
-        /// <summary>
-        /// Signal whether the non-inventory attributes of any prims in the group have changed
-        /// since the group's last persistent backup
-        /// </summary>
-        protected bool m_hasGroupChanged = false;
-
-        protected Vector3 m_pos;
-
-        /// <summary>
-        ///
-        /// </summary>
+        ///<summary>
+        ///</summary>
         public virtual Vector3 AbsolutePosition
         {
             get { return m_pos; }
             set { m_pos = value; }
         }
-        
-        protected Quaternion m_rot;
 
-        /// <summary>
-        ///
-        /// </summary>
+        ///<summary>
+        ///</summary>
         public virtual Quaternion Rotation
         {
             get { return m_rot; }
@@ -119,7 +115,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Current velocity of the entity.
+        ///   Current velocity of the entity.
         /// </summary>
         public virtual Vector3 Velocity
         {
@@ -127,33 +123,25 @@ namespace OpenSim.Framework
             set { }
         }
 
-        protected uint m_localId;
-
         public virtual uint LocalId
         {
             get { return m_localId; }
             set { m_localId = value; }
         }
 
-        /// <summary>
-        /// Creates a new Entity (should not occur on it's own)
-        /// </summary>
-        public EntityBase()
-        {
-            m_name = "(basic entity)";
-        }
+        #endregion
     }
 
     //Nested Classes
     public class EntityIntersection
     {
+        public Vector3 AAfaceNormal = new Vector3(0, 0, 0);
+        public bool HitTF;
+        public float distance;
+        public int face = -1;
         public Vector3 ipoint = new Vector3(0, 0, 0);
         public Vector3 normal = new Vector3(0, 0, 0);
-        public Vector3 AAfaceNormal = new Vector3(0, 0, 0);
-        public int face = -1;
-        public bool HitTF = false;
         public IEntity obj;
-        public float distance = 0;
 
         public EntityIntersection()
         {

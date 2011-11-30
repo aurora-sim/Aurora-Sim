@@ -25,39 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Threading;
-using log4net;
 using OpenSim.Framework;
-using Aurora.Framework;
 
 namespace Aurora.Framework
 {
     public class AuroraThreadPoolStartInfo
     {
-        public ThreadPriority priority;
-        public int Threads = 0;
         public int InitialSleepTime = 10;
+        public bool KillThreadAfterQueueClear;
         public int MaxSleepTime = 100;
-        public int SleepIncrementTime = 10;
-        public bool KillThreadAfterQueueClear = false;
         public string Name = "";
+        public int SleepIncrementTime = 10;
+        public int Threads;
+        public ThreadPriority priority;
     }
 
     public class AuroraThreadPool
     {
-        public delegate void QueueItem ();
-        
-        AuroraThreadPoolStartInfo m_info = null;
-        Thread[] Threads = null;
-        int[] Sleeping;
-        Queue<QueueItem> queue = new Queue<QueueItem> ();
-        public long nthreads;
+        #region Delegates
+
+        public delegate void QueueItem();
+
+        #endregion
+
+        private readonly int[] Sleeping;
+        private readonly Thread[] Threads;
+        private readonly AuroraThreadPoolStartInfo m_info;
+        private readonly Queue<QueueItem> queue = new Queue<QueueItem>();
         public long nSleepingthreads;
+        public long nthreads;
 
         public AuroraThreadPool(AuroraThreadPoolStartInfo info)
         {
@@ -71,7 +69,7 @@ namespace Aurora.Framework
 
         private void ThreadStart(object number)
         {
-            Culture.SetCurrentCulture ();
+            Culture.SetCurrentCulture();
             int OurSleepTime = 0;
 
             int[] numbers = number as int[];
@@ -85,7 +83,7 @@ namespace Aurora.Framework
                     lock (queue)
                     {
                         if (queue.Count != 0)
-                            item = queue.Dequeue ();
+                            item = queue.Dequeue();
                     }
 
                     if (item == null)
@@ -101,8 +99,13 @@ namespace Aurora.Framework
                         {
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 1);
                             Interlocked.Increment(ref nSleepingthreads);
-                            try { Thread.Sleep (OurSleepTime); }
-                            catch (ThreadInterruptedException) { }
+                            try
+                            {
+                                Thread.Sleep(OurSleepTime);
+                            }
+                            catch (ThreadInterruptedException)
+                            {
+                            }
                             Interlocked.Decrement(ref nSleepingthreads);
                             Interlocked.Exchange(ref Sleeping[ThreadNumber], 0);
                             continue;
@@ -122,7 +125,9 @@ namespace Aurora.Framework
                         item.Invoke();
                     }
                 }
-                catch { }
+                catch
+                {
+                }
                 Thread.Sleep(OurSleepTime);
             }
         }
@@ -144,13 +149,17 @@ namespace Aurora.Framework
                     {
                         if (Threads[i] == null)
                         {
-                            Thread thread = new Thread (ThreadStart);
-                            thread.Priority = m_info.priority;
-                            thread.Name = (m_info.Name == "" ? "AuroraThreadPool" : m_info.Name) + "#" + i.ToString ();
-                            thread.IsBackground = true;
+                            Thread thread = new Thread(ThreadStart)
+                                                {
+                                                    Priority = m_info.priority,
+                                                    Name =
+                                                        (m_info.Name == "" ? "AuroraThreadPool" : m_info.Name) + "#" +
+                                                        i.ToString(),
+                                                    IsBackground = true
+                                                };
                             try
                             {
-                                thread.Start (new int[] { i });
+                                thread.Start(new[] {i});
                                 Threads[i] = thread;
                                 Sleeping[i] = 0;
                                 nthreads++;
@@ -171,7 +180,7 @@ namespace Aurora.Framework
                     {
                         if (Sleeping[i] == 1 && Threads[i].ThreadState == ThreadState.WaitSleepJoin)
                         {
-                            Threads[i].Interrupt (); // if we have a sleeping one awake it
+                            Threads[i].Interrupt(); // if we have a sleeping one awake it
                             return;
                         }
                     }
@@ -179,7 +188,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void AbortThread (Thread thread)
+        public void AbortThread(Thread thread)
         {
             int i;
             lock (Threads)
@@ -197,17 +206,17 @@ namespace Aurora.Framework
             }
             try
             {
-                thread.Abort ("Shutdown");
+                thread.Abort("Shutdown");
             }
             catch
             {
             }
         }
 
-        public void ClearEvents ()
+        public void ClearEvents()
         {
             lock (queue)
-                queue.Clear ();
+                queue.Clear();
         }
     }
 }

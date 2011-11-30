@@ -4,41 +4,41 @@
 namespace Amib.Threading
 {
     /// <summary>
-    /// Summary description for WIGStartInfo.
+    ///   Summary description for WIGStartInfo.
     /// </summary>
     public class WIGStartInfo
     {
         /// <summary>
-        /// Use the caller's security context
-        /// </summary>
-        private bool _useCallerCallContext;
-
-        /// <summary>
-        /// Use the caller's HTTP context
-        /// </summary>
-        private bool _useCallerHttpContext;
-
-        /// <summary>
-        /// Dispose of the state object of a work item
-        /// </summary>
-        private bool _disposeOfStateObjects;
-
-        /// <summary>
-        /// The option to run the post execute
+        ///   The option to run the post execute
         /// </summary>
         private CallToPostExecute _callToPostExecute;
 
         /// <summary>
-        /// A post execute callback to call when none is provided in 
-        /// the QueueWorkItem method.
+        ///   Dispose of the state object of a work item
+        /// </summary>
+        private bool _disposeOfStateObjects;
+
+        /// <summary>
+        ///   A post execute callback to call when none is provided in 
+        ///   the QueueWorkItem method.
         /// </summary>
         private PostExecuteWorkItemCallback _postExecuteWorkItemCallback;
 
         /// <summary>
-        /// Indicate the WorkItemsGroup to suspend the handling of the work items
-        /// until the Start() method is called.
+        ///   Indicate the WorkItemsGroup to suspend the handling of the work items
+        ///   until the Start() method is called.
         /// </summary>
         private bool _startSuspended;
+
+        /// <summary>
+        ///   Use the caller's security context
+        /// </summary>
+        private bool _useCallerCallContext;
+
+        /// <summary>
+        ///   Use the caller's HTTP context
+        /// </summary>
+        private bool _useCallerHttpContext;
 
         public WIGStartInfo()
         {

@@ -32,25 +32,28 @@ namespace OpenSim.Framework
 {
     internal class SimpleAsyncResult : IAsyncResult
     {
+        private readonly object m_asyncState;
         private readonly AsyncCallback m_callback;
 
         /// <summary>
-        /// Is process completed?
+        ///   Is process completed?
         /// </summary>
-        /// <remarks>Should really be boolean, but VolatileRead has no boolean method</remarks>
+        /// <remarks>
+        ///   Should really be boolean, but VolatileRead has no boolean method
+        /// </remarks>
         private byte m_completed;
 
         /// <summary>
-        /// Did process complete synchronously?
+        ///   Did process complete synchronously?
         /// </summary>
-        /// <remarks>I have a hard time imagining a scenario where this is the case, again, same issue about
-        /// booleans and VolatileRead as m_completed
+        /// <remarks>
+        ///   I have a hard time imagining a scenario where this is the case, again, same issue about
+        ///   booleans and VolatileRead as m_completed
         /// </remarks>
         private byte m_completedSynchronously;
 
-        private readonly object m_asyncState;
-        private ManualResetEvent m_waitHandle;
         private Exception m_exception;
+        private ManualResetEvent m_waitHandle;
 
         internal SimpleAsyncResult(AsyncCallback cb, object state)
         {
@@ -87,7 +90,7 @@ namespace OpenSim.Framework
                         }
                     }
                 }
-                
+
                 return m_waitHandle;
             }
         }
@@ -111,10 +114,7 @@ namespace OpenSim.Framework
         internal void SetAsCompleted(bool completedSynchronously)
         {
             m_completed = 1;
-            if (completedSynchronously)
-                m_completedSynchronously = 1;
-            else
-                m_completedSynchronously = 0;
+            m_completedSynchronously = completedSynchronously ? (byte)1 : (byte)0;
 
             SignalCompletion();
         }
@@ -122,10 +122,7 @@ namespace OpenSim.Framework
         internal void HandleException(Exception e, bool completedSynchronously)
         {
             m_completed = 1;
-            if (completedSynchronously)
-                m_completedSynchronously = 1;
-            else
-                m_completedSynchronously = 0;
+            m_completedSynchronously = completedSynchronously ? (byte)1 : (byte)0;
             m_exception = e;
 
             SignalCompletion();
@@ -159,7 +156,7 @@ namespace OpenSim.Framework
 
     internal class AsyncResult<T> : SimpleAsyncResult
     {
-        private T m_result = default(T);
+        private T m_result;
 
         public AsyncResult(AsyncCallback asyncCallback, Object state) :
             base(asyncCallback, state)

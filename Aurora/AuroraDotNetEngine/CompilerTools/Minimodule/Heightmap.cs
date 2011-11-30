@@ -25,21 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    public class Heightmap : System.MarshalByRefObject, IHeightmap
+    public class Heightmap : MarshalByRefObject, IHeightmap
     {
         private readonly IScene m_scene;
 
-        public Heightmap (IScene scene)
+        public Heightmap(IScene scene)
         {
             m_scene = scene;
         }
+
+        #region IHeightmap Members
 
         public float this[int x, int y]
         {
@@ -56,6 +56,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get { return m_scene.RequestModuleInterface<ITerrainChannel>().Width; }
         }
+
+        #endregion
 
         protected float Get(int x, int y)
         {

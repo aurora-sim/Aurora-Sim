@@ -28,23 +28,21 @@
 using System;
 using System.IO;
 using System.Net;
-using OpenMetaverse;
-using OpenSim.Framework.Serialization;
 
 namespace OpenSim.Framework.Serialization
 {
     /// <summary>
-    /// Helper methods for archive manipulation
+    ///   Helper methods for archive manipulation
     /// </summary>
     /// This is a separate class from ArchiveConstants because we need to bring in very OpenSim specific classes.
     public static class ArchiveHelpers
     {
         /// <summary>
-        /// Create the filename used for objects in OpenSim Archives.
+        ///   Create the filename used for objects in OpenSim Archives.
         /// </summary>
-        /// <param name="objectName"></param>
-        /// <param name="uuid"></param>
-        /// <param name="pos"></param>
+        /// <param name = "objectName"></param>
+        /// <param name = "uuid"></param>
+        /// <param name = "pos"></param>
         /// <returns></returns>
         public static string CreateObjectFilename(ISceneEntity sog)
         {
@@ -52,11 +50,11 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Create the path used to store an object in an OpenSim Archive.
+        ///   Create the path used to store an object in an OpenSim Archive.
         /// </summary>
-        /// <param name="objectName"></param>
-        /// <param name="uuid"></param>
-        /// <param name="pos"></param>
+        /// <param name = "objectName"></param>
+        /// <param name = "uuid"></param>
+        /// <param name = "pos"></param>
         /// <returns></returns>
         public static string CreateObjectPath(ISceneEntity sog)
         {
@@ -64,9 +62,9 @@ namespace OpenSim.Framework.Serialization
         }
 
         /// <summary>
-        /// Resolve path to a working FileStream
+        ///   Resolve path to a working FileStream
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name = "path"></param>
         /// <returns></returns>
         public static Stream GetStream(string path)
         {
@@ -103,12 +101,12 @@ namespace OpenSim.Framework.Serialization
 
         public static Stream URIFetch(Uri uri)
         {
-            HttpWebRequest request  = (HttpWebRequest)WebRequest.Create(uri);
+            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(uri);
 
             // request.Credentials = credentials;
 
             request.ContentLength = 0;
-            request.KeepAlive     = false;
+            request.KeepAlive = false;
 
             WebResponse response = request.GetResponse();
             Stream file = response.GetResponseStream();
@@ -118,7 +116,7 @@ namespace OpenSim.Framework.Serialization
             //    throw new Exception(String.Format("{0} does not identify an OAR file", uri.ToString()));
 
             if (response.ContentLength == 0)
-                throw new Exception(String.Format("{0} returned an empty file", uri.ToString()));
+                throw new Exception(String.Format("{0} returned an empty file", uri));
 
             // return new BufferedStream(file, (int) response.ContentLength);
             return new BufferedStream(file, 1000000);

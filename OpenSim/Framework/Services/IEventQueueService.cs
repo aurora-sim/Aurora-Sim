@@ -26,71 +26,88 @@
  */
 
 using System.Net;
-using OpenSim.Framework;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 using OpenMetaverse.Messages.Linden;
+using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
     public interface IEventQueueService
     {
         /// <summary>
-        /// This adds a EventQueueMessage to the user's CAPS handler at the given region handle
+        ///   The local service (if possible)
         /// </summary>
-        /// <param name="o"></param>
-        /// <param name="avatarID"></param>
-        /// <param name="RegionHandle"></param>
+        IEventQueueService InnerService { get; }
+
+        /// <summary>
+        ///   This adds a EventQueueMessage to the user's CAPS handler at the given region handle
+        /// </summary>
+        /// <param name = "o"></param>
+        /// <param name = "avatarID"></param>
+        /// <param name = "RegionHandle"></param>
         /// <returns>Whether it was added successfully</returns>
         bool Enqueue(OSD o, UUID avatarID, ulong RegionHandle);
 
         /// <summary>
-        /// This adds a EventQueueMessage to the user's CAPS handler at the given region handle
-        /// Returns the result of the enqueue of the event, not just whether it was posted to the service
+        ///   This adds a EventQueueMessage to the user's CAPS handler at the given region handle
+        ///   Returns the result of the enqueue of the event, not just whether it was posted to the service
         /// </summary>
-        /// <param name="ev"></param>
-        /// <param name="avatarID"></param>
-        /// <param name="regionHandle"></param>
+        /// <param name = "ev"></param>
+        /// <param name = "avatarID"></param>
+        /// <param name = "regionHandle"></param>
         /// <returns></returns>
         bool TryEnqueue(OSD ev, UUID avatarID, ulong regionHandle);
 
         // These are required to decouple Scenes from EventQueueHelper
 
         /// <summary>
-        /// Disables the simulator in the client
+        ///   Disables the simulator in the client
         /// </summary>
-        /// <param name="avatarID"></param>
-        /// <param name="RegionHandle"></param>
+        /// <param name = "avatarID"></param>
+        /// <param name = "RegionHandle"></param>
         void DisableSimulator(UUID avatarID, ulong RegionHandle);
-        void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
-        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
-        void TeleportFinishEvent(ulong regionHandle, byte simAccess, 
+
+        void EnableSimulator(ulong handle, byte[] IPAddress, int Port, UUID avatarID, int RegionSizeX, int RegionSizeY,
+                             ulong RegionHandle);
+
+        void EstablishAgentCommunication(UUID avatarID, ulong regionHandle, byte[] IPAddress, int Port, string CapsUrl,
+                                         int RegionSizeX, int RegionSizeY, ulong RegionHandle);
+
+        void TeleportFinishEvent(ulong regionHandle, byte simAccess,
                                  IPAddress address, int port, string capsURL,
-                                 uint locationID, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
+                                 uint locationID, UUID agentID, uint teleportFlags, int RegionSizeX, int RegionSizeY,
+                                 ulong RegionHandle);
+
         void CrossRegion(ulong handle, Vector3 pos, Vector3 lookAt,
                          IPAddress address, int port, string capsURL,
                          UUID avatarID, UUID sessionID, int RegionSizeX, int RegionSizeY, ulong RegionHandle);
+
         void ChatterBoxSessionStartReply(string groupName, UUID groupID, UUID AgentID, ulong RegionHandle);
+
         void ChatterboxInvitation(UUID sessionID, string sessionName,
                                   UUID fromAgent, string message, UUID toAgent, string fromName, byte dialog,
                                   uint timeStamp, bool offline, int parentEstateID, Vector3 position,
                                   uint ttl, UUID transactionID, bool fromGroup, byte[] binaryBucket, ulong RegionHandle);
+
         void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent, bool canVoiceChat,
                                                bool isModerator, bool textMute, ulong RegionHandle);
+
         void ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage, UUID avatarID, ulong RegionHandle);
         void ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelMessage, UUID avatarID, ulong RegionHandle);
         void LandStatReply(LandStatReplyMessage message, UUID avatarID, ulong RegionHandle);
-        void ChatterBoxSessionAgentListUpdates(UUID sessionID, OpenMetaverse.Messages.Linden.ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message, UUID toAgent, string Transition, ulong RegionHandle);
+
+        void ChatterBoxSessionAgentListUpdates(UUID sessionID,
+                                               ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock[] message,
+                                               UUID toAgent, string Transition, ulong RegionHandle);
+
         void GroupMembership(AgentGroupDataUpdatePacket groupUpdate, UUID avatarID, ulong RegionHandle);
         void QueryReply(PlacesReplyPacket placesReply, UUID avatarID, string[] RegionTypes, ulong RegionHandle);
-        void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
-            UUID avatarID, ulong RegionHandle);
-        void ObjectPhysicsProperties (ISceneChildEntity[] entities, UUID avatarID, ulong RegionHandle);
 
-        /// <summary>
-        /// The local service (if possible)
-        /// </summary>
-        IEventQueueService InnerService { get; }
+        void ScriptRunningReply(UUID objectID, UUID itemID, bool running, bool mono,
+                                UUID avatarID, ulong RegionHandle);
+
+        void ObjectPhysicsProperties(ISceneChildEntity[] entities, UUID avatarID, ulong RegionHandle);
     }
 }

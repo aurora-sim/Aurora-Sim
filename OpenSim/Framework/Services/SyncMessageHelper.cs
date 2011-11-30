@@ -25,176 +25,181 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Net;
-using OpenSim.Framework;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using OpenMetaverse.Messages.Linden;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Framework
 {
     public class SyncMessageHelper
     {
-        public static OSDMap ArrivedAtDestination(UUID AgentID, int DrawDistance, AgentCircuitData circuit, ulong requestingRegion)
+        public static OSDMap ArrivedAtDestination(UUID AgentID, int DrawDistance, AgentCircuitData circuit,
+                                                  ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
-
-            llsdBody.Add("AgentID", AgentID);
-
-            llsdBody.Add("DrawDistance", DrawDistance);
-            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"AgentID", AgentID},
+                                      {"DrawDistance", DrawDistance},
+                                      {"Circuit", circuit.PackAgentCircuitData()}
+                                  };
 
             return buildEvent("ArrivedAtDestination", llsdBody, AgentID, requestingRegion);
         }
 
         /// <summary>
-        /// Tells the region to tell the given agent that the other agent is online
+        ///   Tells the region to tell the given agent that the other agent is online
         /// </summary>
-        /// <param name="AgentID">Agent that is either logging in or logging out</param>
-        /// <param name="FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
-        /// <param name="newStatus">Whether they are logged in or out</param>
+        /// <param name = "AgentID">Agent that is either logging in or logging out</param>
+        /// <param name = "FriendToInformID">Friend that will be told of the incoming/outgoing user</param>
+        /// <param name = "newStatus">Whether they are logged in or out</param>
         /// <returns></returns>
         public static OSDMap AgentStatusChange(UUID AgentID, UUID FriendToInformID, bool newStatus)
         {
-            OSDMap llsdBody = new OSDMap();
-
-            llsdBody.Add("AgentID", AgentID);
-
-            llsdBody.Add("FriendToInformID", FriendToInformID);
-            llsdBody.Add("NewStatus", newStatus);
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"AgentID", AgentID},
+                                      {"FriendToInformID", FriendToInformID},
+                                      {"NewStatus", newStatus}
+                                  };
 
             return buildEvent("AgentStatusChange", llsdBody, AgentID, 0);
         }
 
-        public static OSDMap UpdateEstateInfo (uint EstateID, UUID RegionID)
+        public static OSDMap UpdateEstateInfo(uint EstateID, UUID RegionID)
         {
-            OSDMap llsdBody = new OSDMap ();
+            OSDMap llsdBody = new OSDMap {{"EstateID", EstateID}, {"RegionID", RegionID}};
 
-            llsdBody.Add ("EstateID", EstateID);
-            llsdBody.Add ("RegionID", RegionID);
-
-            return buildEvent ("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
+            return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
         }
 
-        public static OSDMap NeighborChange (UUID TargetRegionID, UUID RegionID, bool down)
+        public static OSDMap NeighborChange(UUID TargetRegionID, UUID RegionID, bool down)
         {
-            OSDMap llsdBody = new OSDMap ();
+            OSDMap llsdBody = new OSDMap();
 
             llsdBody["TargetRegion"] = TargetRegionID;
             llsdBody["Region"] = RegionID;
             llsdBody["Down"] = down;
 
-            return buildEvent ("NeighborChange", llsdBody, UUID.Zero, 0);
+            return buildEvent("NeighborChange", llsdBody, UUID.Zero, 0);
         }
 
         public static OSDMap CrossAgent(GridRegion crossingRegion, Vector3 pos,
-            Vector3 velocity, AgentCircuitData circuit, AgentData cAgent, ulong RequestingRegion)
+                                        Vector3 velocity, AgentCircuitData circuit, AgentData cAgent,
+                                        ulong RequestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"Pos", pos},
+                                      {"Vel", velocity},
+                                      {"Region", crossingRegion.ToOSD()},
+                                      {"Circuit", circuit.PackAgentCircuitData()},
+                                      {"AgentData", cAgent.Pack()}
+                                  };
 
-            llsdBody.Add("Pos", pos);
-            llsdBody.Add("Vel", velocity);
-            llsdBody.Add("Region", crossingRegion.ToOSD());
-            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
-            llsdBody.Add("AgentData", cAgent.Pack());
             return buildEvent("CrossAgent", llsdBody, circuit.AgentID, RequestingRegion);
         }
 
         public static OSDMap TeleportAgent(int DrawDistance, AgentCircuitData circuit,
-            AgentData data, uint TeleportFlags,
-            GridRegion destination, ulong requestingRegion)
+                                           AgentData data, uint TeleportFlags,
+                                           GridRegion destination, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"DrawDistance", DrawDistance},
+                                      {"Circuit", circuit.PackAgentCircuitData()},
+                                      {"TeleportFlags", TeleportFlags},
+                                      {"AgentData", data.Pack()},
+                                      {"Region", destination.ToOSD()}
+                                  };
 
-            llsdBody.Add("DrawDistance", DrawDistance);
-            llsdBody.Add("Circuit", circuit.PackAgentCircuitData());
-            llsdBody.Add("TeleportFlags", TeleportFlags);
-            llsdBody.Add("AgentData", data.Pack());
-            llsdBody.Add("Region", destination.ToOSD());
             return buildEvent("TeleportAgent", llsdBody, circuit.AgentID, requestingRegion);
         }
 
         public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap {{"AgentPos", agentpos.Pack()}};
 
-            llsdBody.Add("AgentPos", agentpos.Pack());
             return buildEvent("SendChildAgentUpdate", llsdBody, agentpos.AgentID, requestingRegion);
         }
 
         public static OSDMap CancelTeleport(UUID AgentID, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
 
-            llsdBody.Add("AgentID", AgentID);
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
         }
 
         public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
 
-            llsdBody.Add("AgentID", AgentID);
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
         }
 
-        public static OSDMap FriendGrantRights(UUID requester, UUID target, int myFlags, int rights, ulong requestingRegion)
+        public static OSDMap FriendGrantRights(UUID requester, UUID target, int myFlags, int rights,
+                                               ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"Requester", requester},
+                                      {"Target", target},
+                                      {"MyFlags", myFlags},
+                                      {"Rights", rights},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
-            llsdBody.Add("Requester", requester);
-            llsdBody.Add("Target", target);
-            llsdBody.Add("MyFlags", myFlags);
-            llsdBody.Add("Rights", rights);
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("FriendGrantRights", llsdBody, requester, requestingRegion);
         }
 
         public static OSDMap FriendTerminated(UUID requester, UUID exfriend, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"Requester", requester},
+                                      {"ExFriend", exfriend},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
-            llsdBody.Add("Requester", requester);
-            llsdBody.Add("ExFriend", exfriend);
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("FriendTerminated", llsdBody, requester, requestingRegion);
         }
 
-        public static OSDMap FriendshipOffered(UUID requester, UUID friend, GridInstantMessage im, ulong requestingRegion)
+        public static OSDMap FriendshipOffered(UUID requester, UUID friend, GridInstantMessage im,
+                                               ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"Requester", requester},
+                                      {"Friend", friend},
+                                      {"IM", im.ToOSD()},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
-            llsdBody.Add("Requester", requester);
-            llsdBody.Add("Friend", friend);
-            llsdBody.Add("IM", im.ToOSD());
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("FriendshipOffered", llsdBody, requester, requestingRegion);
         }
 
         public static OSDMap FriendshipDenied(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"Requester", requester},
+                                      {"ClientName", clientName},
+                                      {"FriendID", friendID},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
-            llsdBody.Add("Requester", requester);
-            llsdBody.Add("ClientName", clientName);
-            llsdBody.Add("FriendID", friendID);
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("FriendshipDenied", llsdBody, requester, requestingRegion);
         }
 
         public static OSDMap FriendshipApproved(UUID requester, string clientName, UUID friendID, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap();
+            OSDMap llsdBody = new OSDMap
+                                  {
+                                      {"Requester", requester},
+                                      {"ClientName", clientName},
+                                      {"FriendID", friendID},
+                                      {"RequestingRegion", requestingRegion}
+                                  };
 
-            llsdBody.Add("Requester", requester);
-            llsdBody.Add("ClientName", clientName);
-            llsdBody.Add("FriendID", friendID);
-            llsdBody.Add("RequestingRegion", requestingRegion);
             return buildEvent("FriendshipApproved", llsdBody, requester, requestingRegion);
         }
 
@@ -218,11 +223,13 @@ namespace OpenSim.Framework
 
         public static OSDMap buildEvent(string eventName, OSD eventBody, UUID AgentID, ulong requestingRegion)
         {
-            OSDMap llsdEvent = new OSDMap(2);
-            llsdEvent.Add("Message", eventBody);
-            llsdEvent.Add("Method", new OSDString(eventName));
-            llsdEvent.Add("AgentID", AgentID);
-            llsdEvent.Add("RequestingRegion", requestingRegion);
+            OSDMap llsdEvent = new OSDMap(2)
+                                   {
+                                       {"Message", eventBody},
+                                       {"Method", new OSDString(eventName)},
+                                       {"AgentID", AgentID},
+                                       {"RequestingRegion", requestingRegion}
+                                   };
 
             return llsdEvent;
         }

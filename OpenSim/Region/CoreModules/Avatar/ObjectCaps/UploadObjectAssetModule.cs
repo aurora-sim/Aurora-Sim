@@ -27,22 +27,17 @@
 
 using System;
 using System.Collections;
-using System.Collections.Specialized;
 using System.Reflection;
-using System.IO;
-using System.Web;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using OpenMetaverse.Messages.Linden;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
+using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Capabilities;
+using log4net;
 using ExtraParamType = OpenMetaverse.ExtraParamType;
 
 namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
@@ -51,10 +46,10 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
     {
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private IScene m_scene;
 
-        #region IRegionModuleBase Members
-
+        #region INonSharedRegionModule Members
 
         public Type ReplaceableInterface
         {
@@ -63,55 +58,50 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
         public void Initialise(IConfigSource source)
         {
-
         }
 
-        public void AddRegion (IScene pScene)
+        public void AddRegion(IScene pScene)
         {
             m_scene = pScene;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps -= RegisterCaps;
             m_scene = null;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "UploadObjectAssetModuleModule"; }
+        }
+
         #endregion
-
-        #region INonSharedRegionModule Members
-
-        public void Close() { }
-
-        public string Name { get { return "UploadObjectAssetModuleModule"; } }
-
 
         public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
             OSDMap retVal = new OSDMap();
             retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
-                                                       delegate(Hashtable m_dhttpMethod)
-                                                       {
-                                                           return ProcessAdd(m_dhttpMethod, agentID);
-                                                       }));
+                                                        m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
             return retVal;
         }
 
-        #endregion
-
-
         /// <summary>
-        /// Parses ad request
+        ///   Parses ad request
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="AgentId"></param>
-        /// <param name="cap"></param>
+        /// <param name = "request"></param>
+        /// <param name = "AgentId"></param>
+        /// <param name = "cap"></param>
         /// <returns></returns>
         public Hashtable ProcessAdd(Hashtable request, UUID AgentId)
         {
@@ -125,16 +115,15 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
                 return responsedata;
 
-            OSDMap r = (OSDMap)OSDParser.Deserialize((string)request["requestbody"]);
+            OSDMap r = (OSDMap) OSDParser.Deserialize((string) request["requestbody"]);
             UploadObjectAssetMessage message = new UploadObjectAssetMessage();
             try
             {
                 message.Deserialize(r);
-
             }
             catch (Exception ex)
             {
-                m_log.Error("[UploadObjectAssetModule]: Error deserializing message " + ex.ToString());
+                m_log.Error("[UploadObjectAssetModule]: Error deserializing message " + ex);
                 message = null;
             }
 
@@ -149,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 return responsedata;
             }
 
-            Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX * avatar.Rotation);
+            Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX*avatar.Rotation);
             Quaternion rot = Quaternion.Identity;
             Vector3 rootpos = Vector3.Zero;
 
@@ -176,7 +165,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 //int position = 0;
 
 
-
                 //for (int extparams = 0; extparams < obj.ExtraParams.Length; extparams++)
                 //{
                 //    Buffer.BlockCopy(obj.ExtraParams[extparams].ExtraParamData, 0, extraparams, position,
@@ -186,21 +174,20 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 // }
 
                 //pbs.ExtraParams = extraparams;
-                for (int extparams = 0; extparams < obj.ExtraParams.Length; extparams++)
+                foreach (UploadObjectAssetMessage.Object.ExtraParam extraParam in obj.ExtraParams)
                 {
-                    UploadObjectAssetMessage.Object.ExtraParam extraParam = obj.ExtraParams[extparams];
-                    switch ((ushort)extraParam.Type)
+                    switch ((ushort) extraParam.Type)
                     {
-                        case (ushort)ExtraParamType.Sculpt:
+                        case (ushort) ExtraParamType.Sculpt:
                             Primitive.SculptData sculpt = new Primitive.SculptData(extraParam.ExtraParamData, 0);
 
                             pbs.SculptEntry = true;
 
                             pbs.SculptTexture = obj.SculptID;
-                            pbs.SculptType = (byte)sculpt.Type;
+                            pbs.SculptType = (byte) sculpt.Type;
 
                             break;
-                        case (ushort)ExtraParamType.Flexible:
+                        case (ushort) ExtraParamType.Flexible:
                             Primitive.FlexibleData flex = new Primitive.FlexibleData(extraParam.ExtraParamData, 0);
                             pbs.FlexiEntry = true;
                             pbs.FlexiDrag = flex.Drag;
@@ -212,7 +199,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                             pbs.FlexiTension = flex.Tension;
                             pbs.FlexiWind = flex.Wind;
                             break;
-                        case (ushort)ExtraParamType.Light:
+                        case (ushort) ExtraParamType.Light:
                             Primitive.LightData light = new Primitive.LightData(extraParam.ExtraParamData, 0);
                             pbs.LightColorA = light.Color.A;
                             pbs.LightColorB = light.Color.B;
@@ -227,38 +214,37 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                         case 0x40:
                             pbs.ReadProjectionData(extraParam.ExtraParamData, 0);
                             break;
-
                     }
-
-
                 }
-                pbs.PathBegin = (ushort)obj.PathBegin;
-                pbs.PathCurve = (byte)obj.PathCurve;
-                pbs.PathEnd = (ushort)obj.PathEnd;
-                pbs.PathRadiusOffset = (sbyte)obj.RadiusOffset;
-                pbs.PathRevolutions = (byte)obj.Revolutions;
-                pbs.PathScaleX = (byte)obj.ScaleX;
-                pbs.PathScaleY = (byte)obj.ScaleY;
-                pbs.PathShearX = (byte)obj.ShearX;
-                pbs.PathShearY = (byte)obj.ShearY;
-                pbs.PathSkew = (sbyte)obj.Skew;
-                pbs.PathTaperX = (sbyte)obj.TaperX;
-                pbs.PathTaperY = (sbyte)obj.TaperY;
-                pbs.PathTwist = (sbyte)obj.Twist;
-                pbs.PathTwistBegin = (sbyte)obj.TwistBegin;
-                pbs.HollowShape = (HollowShape)obj.ProfileHollow;
-                pbs.PCode = (byte)PCode.Prim;
-                pbs.ProfileBegin = (ushort)obj.ProfileBegin;
-                pbs.ProfileCurve = (byte)obj.ProfileCurve;
-                pbs.ProfileEnd = (ushort)obj.ProfileEnd;
+                pbs.PathBegin = (ushort) obj.PathBegin;
+                pbs.PathCurve = (byte) obj.PathCurve;
+                pbs.PathEnd = (ushort) obj.PathEnd;
+                pbs.PathRadiusOffset = (sbyte) obj.RadiusOffset;
+                pbs.PathRevolutions = (byte) obj.Revolutions;
+                pbs.PathScaleX = (byte) obj.ScaleX;
+                pbs.PathScaleY = (byte) obj.ScaleY;
+                pbs.PathShearX = (byte) obj.ShearX;
+                pbs.PathShearY = (byte) obj.ShearY;
+                pbs.PathSkew = (sbyte) obj.Skew;
+                pbs.PathTaperX = (sbyte) obj.TaperX;
+                pbs.PathTaperY = (sbyte) obj.TaperY;
+                pbs.PathTwist = (sbyte) obj.Twist;
+                pbs.PathTwistBegin = (sbyte) obj.TwistBegin;
+                pbs.HollowShape = (HollowShape) obj.ProfileHollow;
+                pbs.PCode = (byte) PCode.Prim;
+                pbs.ProfileBegin = (ushort) obj.ProfileBegin;
+                pbs.ProfileCurve = (byte) obj.ProfileCurve;
+                pbs.ProfileEnd = (ushort) obj.ProfileEnd;
                 pbs.Scale = obj.Scale;
-                pbs.State = (byte)0;
+                pbs.State = 0;
                 SceneObjectPart prim = new SceneObjectPart(AgentId, pbs, obj.Position, obj.Rotation,
-                    Vector3.Zero, obj.Name, m_scene);
-                prim.UUID = UUID.Random();
-                prim.CreatorID = AgentId;
-                prim.OwnerID = AgentId;
-                prim.GroupID = obj.GroupID;
+                                                           Vector3.Zero, obj.Name, m_scene)
+                                           {
+                                               UUID = UUID.Random(),
+                                               CreatorID = AgentId,
+                                               OwnerID = AgentId,
+                                               GroupID = obj.GroupID
+                                           };
                 prim.LastOwnerID = prim.OwnerID;
                 prim.CreationDate = Util.UnixTimeSinceEpoch();
                 prim.Name = obj.Name;
@@ -276,7 +262,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 {
                     UploadObjectAssetMessage.Object.Face face = obj.Faces[j];
 
-                    Primitive.TextureEntryFace primFace = tmp.CreateFace((uint)j);
+                    Primitive.TextureEntryFace primFace = tmp.CreateFace((uint) j);
 
                     primFace.Bump = face.Bump;
                     primFace.RGBA = face.Color;
@@ -290,7 +276,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                     primFace.OffsetV = face.OffsetT;
                     primFace.RepeatU = face.ScaleS;
                     primFace.RepeatV = face.ScaleT;
-                    primFace.TexMapType = (MappingType)(face.MediaFlags & 6);
+                    primFace.TexMapType = (MappingType) (face.MediaFlags & 6);
                 }
                 pbs.TextureEntry = tmp.GetBytes();
                 prim.Shape = pbs;
@@ -301,7 +287,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 prim.ParentID = 0;
                 if (i == 0)
                     rootGroup = grp;
-                 
+
                 grp.AbsolutePosition = obj.Position;
                 prim.RotationOffset = obj.Rotation;
 
@@ -318,7 +304,8 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 else
                 {
                     //Stop now then
-                    avatar.ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " + reason);
+                    avatar.ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " +
+                                                              reason);
                     return responsedata;
                 }
                 allparts[i] = grp;
@@ -331,18 +318,19 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 rootGroup.LinkToGroup(allparts[j]);
             }
 
-            rootGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
-            pos = m_scene.SceneGraph.GetNewRezLocation(Vector3.Zero, rootpos, UUID.Zero, rot, (byte)1, 1, true, allparts[0].GroupScale(), false);
+            rootGroup.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+            pos = m_scene.SceneGraph.GetNewRezLocation(Vector3.Zero, rootpos, UUID.Zero, rot, 1, 1, true,
+                                                       allparts[0].GroupScale(), false);
 
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = String.Format("<llsd><map><key>local_id</key>{0}</map></llsd>", ConvertUintToBytes(allparts[0].LocalId));
+            responsedata["str_response_string"] = String.Format("<llsd><map><key>local_id</key>{0}</map></llsd>",
+                                                                ConvertUintToBytes(allparts[0].LocalId));
 
             return responsedata;
-
-
         }
+
         private string ConvertUintToBytes(uint val)
         {
             byte[] resultbytes = Utils.UIntToBytes(val);

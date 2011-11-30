@@ -31,11 +31,15 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public abstract class BaseHTTPHandler : BaseRequestHandler, IGenericHTTPHandler
     {
-        public abstract Hashtable Handle(string path, Hashtable Request);
-
         protected BaseHTTPHandler(string httpMethod, string path)
             : base(httpMethod, path)
         {
         }
+
+        #region IGenericHTTPHandler Members
+
+        public abstract Hashtable Handle(string path, Hashtable Request);
+
+        #endregion
     }
 }

@@ -25,24 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Nini.Config;
-using log4net;
+using Aurora.DataManager;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.DataManager;
 using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.MessagingService
 {
@@ -71,26 +66,29 @@ namespace OpenSim.Services.MessagingService
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
+
+        #endregion
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
             //We need to check and see if this is an GroupSessionAgentUpdate
-            if(message.ContainsKey("Method") && message["Method"] == "GroupSessionAgentUpdate")
+            if (message.ContainsKey("Method") && message["Method"] == "GroupSessionAgentUpdate")
             {
                 //COMES IN ON AURORA.SERVER SIDE
                 //Send it on to whomever it concerns
-                OSDMap innerMessage = (OSDMap)message["Message"];
-                if(innerMessage["message"] == "ChatterBoxSessionAgentListUpdates")//ONLY forward on this type of message
+                OSDMap innerMessage = (OSDMap) message["Message"];
+                if (innerMessage["message"] == "ChatterBoxSessionAgentListUpdates")
+                    //ONLY forward on this type of message
                 {
                     UUID agentID = message["AgentID"];
                     IEventQueueService eqs = m_registry.RequestModuleInterface<IEventQueueService>();
                     ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
-                    if(caps != null)
+                    if (caps != null)
                     {
                         IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
-                        if(clientCaps != null && clientCaps.GetRootCapsService() != null)
+                        if (clientCaps != null && clientCaps.GetRootCapsService() != null)
                             eqs.Enqueue(innerMessage, agentID, clientCaps.GetRootCapsService().RegionHandle);
                     }
                 }
@@ -101,45 +99,41 @@ namespace OpenSim.Services.MessagingService
                 UUID groupID = message["GroupID"].AsUUID();
                 UUID agentID = message["AgentID"].AsUUID();
                 UUID roleID = message["RoleID"].AsUUID();
-                byte type = (byte)message["Type"].AsInteger();
-                IGroupsServiceConnector con = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+                byte type = (byte) message["Type"].AsInteger();
+                IGroupsServiceConnector con = DataManager.RequestPlugin<IGroupsServiceConnector>();
                 List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
                 List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
                 GroupRolesData everyone = null;
-                foreach(GroupRolesData role in roles)
-                    if(role.Name == "Everyone") 
-                        everyone = role;
+                foreach (GroupRolesData role in roles.Where(role => role.Name == "Everyone"))
+                    everyone = role;
 
                 List<ulong> regionsToBeUpdated = new List<ulong>();
-                foreach (GroupRoleMembersData data in members)
+                foreach (GroupRoleMembersData data in members.Where(data => data.RoleID == roleID))
                 {
-                    if (data.RoleID == roleID)
+                    //They were affected by the change
+                    switch ((GroupRoleUpdate) type)
                     {
-                        //They were affected by the change
-                        switch ((OpenMetaverse.GroupRoleUpdate)type)
-                        {
-                            case OpenMetaverse.GroupRoleUpdate.Create:
-                            case OpenMetaverse.GroupRoleUpdate.NoUpdate:
-                                //No changes...
-                                break;
+                        case GroupRoleUpdate.Create:
+                        case GroupRoleUpdate.NoUpdate:
+                            //No changes...
+                            break;
 
-                            case OpenMetaverse.GroupRoleUpdate.UpdatePowers://Possible we don't need to send this?
-                            case OpenMetaverse.GroupRoleUpdate.UpdateAll:
-                            case OpenMetaverse.GroupRoleUpdate.UpdateData:
-                            case OpenMetaverse.GroupRoleUpdate.Delete:
-                                if(type == (byte)OpenMetaverse.GroupRoleUpdate.Delete)
-                                    //Set them to the most limited role since their role is gone
-                                    con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
-                                //Need to update their title inworld
-                                ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
-                                if (caps != null)
-                                {
-                                    IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
-                                    if (clientCaps != null && clientCaps.GetRootCapsService() != null)
-                                        regionsToBeUpdated.Add(clientCaps.GetRootCapsService().RegionHandle);
-                                }
-                                break;
-                        }
+                        case GroupRoleUpdate.UpdatePowers: //Possible we don't need to send this?
+                        case GroupRoleUpdate.UpdateAll:
+                        case GroupRoleUpdate.UpdateData:
+                        case GroupRoleUpdate.Delete:
+                            if (type == (byte) GroupRoleUpdate.Delete)
+                                //Set them to the most limited role since their role is gone
+                                con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
+                            //Need to update their title inworld
+                            ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
+                            if (caps != null)
+                            {
+                                IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
+                                if (clientCaps != null && clientCaps.GetRootCapsService() != null)
+                                    regionsToBeUpdated.Add(clientCaps.GetRootCapsService().RegionHandle);
+                            }
+                            break;
                     }
                 }
                 if (regionsToBeUpdated.Count != 0)
@@ -171,7 +165,5 @@ namespace OpenSim.Services.MessagingService
             }
             return null;
         }
-
-        #endregion
     }
 }

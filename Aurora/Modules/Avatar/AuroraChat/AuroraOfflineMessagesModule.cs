@@ -27,15 +27,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 
@@ -46,7 +44,7 @@ namespace Aurora.Modules
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool enabled = true;
-        private List<IScene> m_SceneList = new List<IScene> ();
+        private readonly List<IScene> m_SceneList = new List<IScene> ();
         IMessageTransferModule m_TransferModule = null;
         private bool m_ForwardOfflineGroupMessages = true;
         private IOfflineMessagesConnector OfflineMessagesConnector;
@@ -60,8 +58,8 @@ namespace Aurora.Modules
                 enabled = false;
                 return;
             }
-            if (cnf != null && cnf.GetString("OfflineMessageModule", "AuroraOfflineMessageModule") !=
-                    "AuroraOfflineMessageModule")
+            if (cnf.GetString("OfflineMessageModule", "AuroraOfflineMessageModule") !=
+                "AuroraOfflineMessageModule")
             {
                 enabled = false;
                 return;
@@ -92,7 +90,7 @@ namespace Aurora.Modules
 
             if (m_TransferModule == null)
             {
-                OfflineMessagesConnector = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
+                OfflineMessagesConnector = DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
                 m_TransferModule = scene.RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null || OfflineMessagesConnector == null)
                 {
@@ -149,24 +147,15 @@ namespace Aurora.Modules
 
         private IScene FindScene(UUID agentID)
         {
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence presence = s.GetScenePresence (agentID);
-                if (presence != null && !presence.IsChildAgent)
-                    return s;
-            }
-            return null;
+            return (from s in m_SceneList let presence = s.GetScenePresence(agentID) where presence != null && !presence.IsChildAgent select s).FirstOrDefault();
         }
 
         private IClientAPI FindClient(UUID agentID)
         {
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence presence = s.GetScenePresence (agentID);
-                if (presence != null && !presence.IsChildAgent)
-                    return presence.ControllingClient;
-            }
-            return null;
+            return (from s in m_SceneList
+                    select s.GetScenePresence(agentID)
+                    into presence where presence != null && !presence.IsChildAgent select presence.ControllingClient).
+                FirstOrDefault();
         }
 
         private void OnNewClient(IClientAPI client)
@@ -232,11 +221,11 @@ namespace Aurora.Modules
                 IEmailModule emailModule = m_SceneList[0].RequestModuleInterface<IEmailModule> ();
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
-                    IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (im.toAgentID);
+                    IUserProfileInfo profile = DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (im.toAgentID);
                     if (profile != null && profile.IMViaEmail)
                     {
                         UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount (UUID.Zero, im.toAgentID.ToString ());
-                        if (account != null && account.Email != "" && account.Email != null)
+                        if (account != null && !string.IsNullOrEmpty(account.Email))
                         {
                             emailModule.SendEmail (UUID.Zero, account.Email, string.Format ("Offline Message from {0}", im.fromAgentName),
                                 string.Format ("Time: {0}\n", Util.ToDateTime (im.timestamp).ToShortDateString ()) +

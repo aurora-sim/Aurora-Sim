@@ -26,15 +26,10 @@
  */
 
 using System;
-using System.IO;
-using System.Threading;
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules;
-using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -46,8 +41,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         protected EventAbortException(
-                SerializationInfo info, 
-                StreamingContext context)
+            SerializationInfo info,
+            StreamingContext context)
         {
         }
     }
@@ -60,8 +55,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         protected MinEventDelayException(
-                SerializationInfo info,
-                StreamingContext context)
+            SerializationInfo info,
+            StreamingContext context)
         {
         }
     }
@@ -74,8 +69,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         protected SelfDeleteException(
-                SerializationInfo info, 
-                StreamingContext context)
+            SerializationInfo info,
+            StreamingContext context)
         {
         }
     }
@@ -88,8 +83,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         protected ScriptDeleteException(
-                SerializationInfo info,
-                StreamingContext context)
+            SerializationInfo info,
+            StreamingContext context)
         {
         }
     }
@@ -97,19 +92,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     [Serializable]
     public class ScriptPermissionsException : Exception
     {
-        public ScriptPermissionsException(string message) : base (message)
+        public ScriptPermissionsException(string message) : base(message)
         {
         }
 
         protected ScriptPermissionsException(
-                SerializationInfo info,
-                StreamingContext context)
+            SerializationInfo info,
+            StreamingContext context)
         {
         }
     }
 
     public class DetectParams
     {
+        public UUID Group;
+        public UUID Key;
+        public int LinkNum;
+        public string Name;
+        public LSL_Types.Vector3 OffsetPos;
+        public UUID Owner;
+        public LSL_Types.Vector3 Position;
+        public LSL_Types.Quaternion Rotation;
+        public int Type;
+        public LSL_Types.Vector3 Velocity;
+        private LSL_Types.Vector3 touchBinormal;
+        private int touchFace;
+        private LSL_Types.Vector3 touchNormal;
+        private LSL_Types.Vector3 touchPos;
+
+        private LSL_Types.Vector3 touchST;
+        private LSL_Types.Vector3 touchUV;
+
         public DetectParams()
         {
             Key = UUID.Zero;
@@ -125,50 +138,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             initializeSurfaceTouch();
         }
 
-        public UUID Key;
-        public LSL_Types.Vector3 OffsetPos;
-        public int LinkNum;
-        public UUID Group;
-        public string Name;
-        public UUID Owner;
-        public LSL_Types.Vector3 Position;
-        public LSL_Types.Quaternion Rotation;
-        public int Type;
-        public LSL_Types.Vector3 Velocity;
+        public LSL_Types.Vector3 TouchST
+        {
+            get { return touchST; }
+        }
 
-        private LSL_Types.Vector3 touchST;
-        public LSL_Types.Vector3 TouchST { get { return touchST; } }
+        public LSL_Types.Vector3 TouchNormal
+        {
+            get { return touchNormal; }
+        }
 
-        private LSL_Types.Vector3 touchNormal;
-        public LSL_Types.Vector3 TouchNormal { get { return touchNormal; } }
+        public LSL_Types.Vector3 TouchBinormal
+        {
+            get { return touchBinormal; }
+        }
 
-        private LSL_Types.Vector3 touchBinormal;
-        public LSL_Types.Vector3 TouchBinormal { get { return touchBinormal; } }
+        public LSL_Types.Vector3 TouchPos
+        {
+            get { return touchPos; }
+        }
 
-        private LSL_Types.Vector3 touchPos;
-        public LSL_Types.Vector3 TouchPos { get { return touchPos; } }
+        public LSL_Types.Vector3 TouchUV
+        {
+            get { return touchUV; }
+        }
 
-        private LSL_Types.Vector3 touchUV;
-        public LSL_Types.Vector3 TouchUV { get { return touchUV; } }
-
-        private int touchFace;
-        public int TouchFace { get { return touchFace; } }
+        public int TouchFace
+        {
+            get { return touchFace; }
+        }
 
         // This can be done in two places including the constructor
         // so be carefull what gets added here
-        private void initializeSurfaceTouch()
-        {
-            touchST = new LSL_Types.Vector3(-1.0, -1.0, 0.0);
-            touchNormal = new LSL_Types.Vector3();
-            touchBinormal = new LSL_Types.Vector3();
-            touchPos = new LSL_Types.Vector3();
-            touchUV = new LSL_Types.Vector3(-1.0, -1.0, 0.0);
-            touchFace = -1;
-        }
 
         /*
          * Set up the surface touch detected values
          */
+
         public SurfaceTouchEventArgs SurfaceTouchArgs
         {
             set
@@ -191,9 +197,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
+        private void initializeSurfaceTouch()
+        {
+            touchST = new LSL_Types.Vector3(-1.0, -1.0, 0.0);
+            touchNormal = new LSL_Types.Vector3();
+            touchBinormal = new LSL_Types.Vector3();
+            touchPos = new LSL_Types.Vector3();
+            touchUV = new LSL_Types.Vector3(-1.0, -1.0, 0.0);
+            touchFace = -1;
+        }
+
         public void Populate(IScene scene)
         {
-            ISceneChildEntity part = scene.GetSceneObjectPart (Key);
+            ISceneChildEntity part = scene.GetSceneObjectPart(Key);
             Vector3 tmp;
             if (part == null) // Avatar, maybe?
             {
@@ -206,20 +222,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 tmp = presence.AbsolutePosition;
                 Position = new LSL_Types.Vector3(
-                        tmp.X,
-                        tmp.Y,
-                        tmp.Z);
+                    tmp.X,
+                    tmp.Y,
+                    tmp.Z);
                 Quaternion rtmp = presence.Rotation;
                 Rotation = new LSL_Types.Quaternion(
-                        rtmp.X,
-                        rtmp.Y,
-                        rtmp.Z,
-                        rtmp.W);
+                    rtmp.X,
+                    rtmp.Y,
+                    rtmp.Z,
+                    rtmp.W);
                 tmp = presence.Velocity;
                 Velocity = new LSL_Types.Vector3(
-                        tmp.X,
-                        tmp.Y,
-                        tmp.Z);
+                    tmp.X,
+                    tmp.Y,
+                    tmp.Z);
 
                 Type = 0x01; // Avatar
                 if (presence.Velocity != Vector3.Zero)
@@ -230,25 +246,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             }
 
-            part=part.ParentEntity.RootChild; // We detect objects only
+            part = part.ParentEntity.RootChild; // We detect objects only
 
             LinkNum = 0; // Not relevant
 
             Group = part.GroupID;
             Name = part.Name;
             Owner = part.OwnerID;
-            if (part.Velocity == Vector3.Zero)
-                Type = 0x04; // Passive
-            else
-                Type = 0x02; // Passive
+            Type = part.Velocity == Vector3.Zero ? 0x04 : 0x02;
 
-            foreach (ISceneChildEntity p in part.ParentEntity.ChildrenEntities ())
+            if (part.ParentEntity.ChildrenEntities().Any(p => p.Inventory.ContainsScripts()))
             {
-                if (p.Inventory.ContainsScripts())
-                {
-                    Type |= 0x08; // Scripted
-                    break;
-                }
+                Type |= 0x08; // Scripted
             }
             tmp = part.AbsolutePosition;
             Position = new LSL_Types.Vector3(tmp.X,
@@ -266,28 +275,34 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     }
 
     /// <summary>
-    /// Holds all the data required to execute a scripting event.
+    ///   Holds all the data required to execute a scripting event.
     /// </summary>
     public class EventParams
     {
+        public DetectParams[] DetectParams;
+        public string EventName;
+        public Object[] Params;
+
         public EventParams(string eventName, Object[] eventParams, DetectParams[] detectParams)
         {
             EventName = eventName;
             Params = eventParams;
             DetectParams = detectParams;
         }
-
-        public string EventName;
-        public Object[] Params;
-        public DetectParams[] DetectParams;
     }
 
     /// <summary>
-    /// Queue item structure
+    ///   Queue item structure
     /// </summary>
     public class QueueItemStruct
     {
+        public EnumeratorInfo CurrentlyAt;
+        public ScriptEventsProcData EventsProcData;
         public ScriptData ID;
+        public int RunningNumber;
+        //The currently running state that this event will be fired under
+        public string State;
+        public long VersionID;
         //Name of the method to fire
         public string functionName;
         //Params to give the script event
@@ -295,28 +310,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //Parameters to fire the function
         public object[] param;
         //This is the current spot that the event is at in processing
-        public EnumeratorInfo CurrentlyAt;
-        //This is used to check whether the script has been updated since the last attempt to start
-        public long VersionID;
-        //The times this event has been run through the scheduler
-        public int RunningNumber;
-        //The currently running state that this event will be fired under
-        public string State;
-        //Event data
-        public ScriptEventsProcData EventsProcData;
     }
 
     public struct StateQueueItem
     {
-        public ScriptData ID;
         public bool Create;
+        public ScriptData ID;
     }
 
     // Load/Unload structure
     public struct LUStruct
     {
-        public ScriptData ID;
         public LUType Action;
+        public ScriptData ID;
     }
 
     public enum LUType
@@ -327,14 +333,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Reupload = 3
     }
 
-    public enum EventPriority : int
+    public enum EventPriority
     {
         FirstStart = 0,
         Suspended = 1,
         Continued = 2
     }
 
-    public enum ScriptEventsState : int
+    public enum ScriptEventsState
     {
         Idle = 0,
         Sleep = 1,
@@ -352,7 +358,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public DateTime TimeCheck;
     }
 
-    public enum LoadPriority : int
+    public enum LoadPriority
     {
         FirstStart = 0,
         Restart = 1,

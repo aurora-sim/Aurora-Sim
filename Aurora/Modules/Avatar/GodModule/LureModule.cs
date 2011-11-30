@@ -33,7 +33,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
@@ -48,12 +47,12 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private List<IScene> m_scenes = new List<IScene> ();
+        private readonly List<IScene> m_scenes = new List<IScene> ();
 
-		private IMessageTransferModule m_TransferModule = null;
+		private IMessageTransferModule m_TransferModule;
         private bool m_Enabled = true;
         private bool m_allowGodTeleports = true;
-        private ExpiringCache<UUID, GridInstantMessage> m_PendingLures = new ExpiringCache<UUID, GridInstantMessage> ();
+        private readonly ExpiringCache<UUID, GridInstantMessage> m_PendingLures = new ExpiringCache<UUID, GridInstantMessage> ();
 
         #endregion
 
@@ -191,33 +190,35 @@ namespace Aurora.Modules
 
         public void OnTeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client)
         {
-            ulong handle = 0;
-            uint x = 128;
-            uint y = 128;
-            uint z = 70;
+            ulong handle;
+            uint x;
+            uint y;
+            uint z;
 
             Util.ParseFakeParcelID(lureID, out handle, out x, out y, out z);
 
-            Vector3 position = new Vector3();
-            position.X = (float)x;
-            position.Y = (float)y;
-            position.Z = (float)z;
+            Vector3 position = new Vector3 {X = x, Y = y, Z = z};
             IEntityTransferModule entityTransfer = client.Scene.RequestModuleInterface<IEntityTransferModule> ();
             if (entityTransfer != null)
             {
                 GridInstantMessage im;
                 if (m_PendingLures.TryGetValue (lureID, out im))
                 {
-                    string[] parts = im.message.Split (new char[] { '@' });
+                    string[] parts = im.message.Split (new[] { '@' });
                     if (parts.Length > 1)
                     {
                         string url = parts[parts.Length - 1]; // the last part
-                        if (url.Trim (new char[] { '/' }) != GetMainGridURL ().Trim (new char[] { '/' }))
+                        if (url.Trim (new[] { '/' }) != GetMainGridURL ().Trim (new[] { '/' }))
                         {
-                            GridRegion gatekeeper = new GridRegion ();
-                            gatekeeper.ServerURI = url;
-                            gatekeeper.RegionID = im.RegionID;
-                            gatekeeper.Flags = (int)(Aurora.Framework.RegionFlags.Foreign | Aurora.Framework.RegionFlags.Hyperlink);
+                            GridRegion gatekeeper = new GridRegion
+                                                        {
+                                                            ServerURI = url,
+                                                            RegionID = im.RegionID,
+                                                            Flags =
+                                                                (int)
+                                                                (Framework.RegionFlags.Foreign |
+                                                                 Framework.RegionFlags.Hyperlink)
+                                                        };
                             entityTransfer.RequestTeleportLocation (client, gatekeeper, position,
                                 Vector3.Zero, teleportFlags);
                             return;

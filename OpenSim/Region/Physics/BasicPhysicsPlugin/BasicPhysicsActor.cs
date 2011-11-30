@@ -25,39 +25,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
 
 namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
     public class BasicCharacterActor : PhysicsCharacter
     {
+        private Vector3 _size;
+
         public override bool IsJumping
         {
             get { return false; }
         }
+
         public override bool IsPreJumping
         {
             get { return false; }
         }
+
         public override float SpeedModifier
         {
             get { return 1.0f; }
             set { }
-        }
-        private Vector3 _position;
-        private Vector3 _velocity;
-        private Vector3 _size;
-        private Vector3 m_rotationalVelocity;
-        private bool flying;
-        private bool iscolliding;
-
-        public BasicCharacterActor()
-        {
         }
 
         public override int PhysicsActorType
@@ -65,11 +55,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get { return (int) ActorTypes.Agent; }
         }
 
-        public override Vector3 RotationalVelocity
-        {
-            get { return m_rotationalVelocity; }
-            set { m_rotationalVelocity = value; }
-        }
+        public override Vector3 RotationalVelocity { get; set; }
 
         public override bool SetAlwaysRun
         {
@@ -106,31 +92,20 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override bool Flying
-        {
-            get { return flying; }
-            set { flying = value; }
-        }
+        public override bool Flying { get; set; }
 
-        public override bool IsColliding
-        {
-            get { return iscolliding; }
-            set { iscolliding = value; }
-        }
+        public override bool IsColliding { get; set; }
 
-        public override Vector3 Position
-        {
-            get { return _position; }
-            set { _position = value; }
-        }
+        public override Vector3 Position { get; set; }
 
         public override Vector3 Size
         {
             get { return _size; }
-            set {
-                  _size = value;
-                  _size.Z = _size.Z / 2.0f;
-                }
+            set
+            {
+                _size = value;
+                _size.Z = _size.Z/2.0f;
+            }
         }
 
         public override float Mass
@@ -149,11 +124,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get { return Vector3.Zero; }
         }
 
-        public override Vector3 Velocity
-        {
-            get { return _velocity; }
-            set { _velocity = value; }
-        }
+        public override Vector3 Velocity { get; set; }
 
         public override Vector3 Torque
         {
@@ -190,27 +161,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return false;
         }
 
-        public override void SendCollisions ()
+        public override void SendCollisions()
         {
         }
 
-        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
         }
     }
 
     public class BasicObjectActor : PhysicsObject
     {
-        private Vector3 _position;
-        private Vector3 _velocity;
         private Vector3 _size;
-        private Vector3 m_rotationalVelocity;
-        private bool flying;
-        private bool iscolliding;
-
-        public BasicObjectActor()
-        {
-        }
 
         public override bool Selected
         {
@@ -219,14 +181,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override int PhysicsActorType
         {
-            get { return (int)ActorTypes.Agent; }
+            get { return (int) ActorTypes.Agent; }
         }
 
-        public override Vector3 RotationalVelocity
-        {
-            get { return m_rotationalVelocity; }
-            set { m_rotationalVelocity = value; }
-        }
+        public override Vector3 RotationalVelocity { get; set; }
 
         public override bool SetAlwaysRun
         {
@@ -263,23 +221,11 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override bool Flying
-        {
-            get { return flying; }
-            set { flying = value; }
-        }
+        public override bool Flying { get; set; }
 
-        public override bool IsColliding
-        {
-            get { return iscolliding; }
-            set { iscolliding = value; }
-        }
+        public override bool IsColliding { get; set; }
 
-        public override Vector3 Position
-        {
-            get { return _position; }
-            set { _position = value; }
-        }
+        public override Vector3 Position { get; set; }
 
         public override Vector3 Size
         {
@@ -287,7 +233,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set
             {
                 _size = value;
-                _size.Z = _size.Z / 2.0f;
+                _size.Z = _size.Z/2.0f;
             }
         }
 
@@ -307,11 +253,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get { return Vector3.Zero; }
         }
 
-        public override Vector3 Velocity
-        {
-            get { return _velocity; }
-            set { _velocity = value; }
-        }
+        public override Vector3 Velocity { get; set; }
 
         public override Vector3 Torque
         {
@@ -361,11 +303,11 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return false;
         }
 
-        public override void SendCollisions ()
+        public override void SendCollisions()
         {
         }
 
-        public override void AddCollisionEvent (uint CollidedWith, ContactPoint contact)
+        public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
         }
     }

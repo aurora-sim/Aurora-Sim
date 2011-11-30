@@ -28,36 +28,33 @@
 using System;
 using System.IO;
 using System.Reflection;
-using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-
-using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
     public class AssetXferUploader
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly bool m_dumpAssetToFile;
+        private readonly AgentAssetTransactions m_userTransactions;
 
-        private AssetBase m_asset;
         private UUID InventFolder = UUID.Zero;
-        private sbyte invType = 0;
-        private bool m_createItem = false;
-        private uint m_createItemCallback = 0;
+        private UUID TransactionID = UUID.Zero;
+        public ulong XferID;
+        private sbyte invType;
+        private AssetBase m_asset;
+        private bool m_createItem;
+        private uint m_createItemCallback;
         private string m_description = String.Empty;
-        private bool m_dumpAssetToFile;
-        private bool m_finished = false;
+        private bool m_finished;
         private string m_name = String.Empty;
         private bool m_storeLocal;
-        private AgentAssetTransactions m_userTransactions;
-        private uint nextPerm = 0;
-        private UUID TransactionID = UUID.Zero;
-        private sbyte type = 0;
-        private byte wearableType = 0;
-        public ulong XferID;
+        private uint nextPerm;
+        private sbyte type;
+        private byte wearableType;
 
         public AssetXferUploader(AgentAssetTransactions transactions, bool dumpAssetToFile)
         {
@@ -66,11 +63,11 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Process transfer data received from the client.
+        ///   Process transfer data received from the client.
         /// </summary>
-        /// <param name="xferID"></param>
-        /// <param name="packetID"></param>
-        /// <param name="data"></param>
+        /// <param name = "xferID"></param>
+        /// <param name = "packetID"></param>
+        /// <param name = "data"></param>
         /// <returns>True if the transfer is complete, false otherwise or if the xferID was not valid</returns>
         public bool HandleXferPacket(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
@@ -103,11 +100,11 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Initialise asset transfer from the client
+        ///   Initialise asset transfer from the client
         /// </summary>
-        /// <param name="xferID"></param>
-        /// <param name="packetID"></param>
-        /// <param name="data"></param>
+        /// <param name = "xferID"></param>
+        /// <param name = "packetID"></param>
+        /// <param name = "data"></param>
         /// <returns>True if the transfer is complete, false otherwise</returns>
         public bool Initialise(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data,
                                bool storeLocal, bool tempFile)
@@ -150,12 +147,15 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             {
                 m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
             }
-            remoteClient.SendAssetUploadCompleteMessage((sbyte)m_asset.Type, true, m_asset.ID);
+            remoteClient.SendAssetUploadCompleteMessage((sbyte) m_asset.Type, true, m_asset.ID);
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor =
+                    (INetworkMonitor)
+                    monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(),
+                                             MonitorModuleHelper.NetworkMonitor);
                 networkMonitor.AddPendingUploads(-1);
             }
 
@@ -222,37 +222,43 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = (INetworkMonitor)monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.NetworkMonitor);
+                INetworkMonitor networkMonitor =
+                    (INetworkMonitor)
+                    monitorModule.GetMonitor(m_userTransactions.Manager.MyScene.RegionInfo.RegionID.ToString(),
+                                             MonitorModuleHelper.NetworkMonitor);
                 networkMonitor.AddPendingUploads(-1);
             }
 
-            InventoryItemBase item = new InventoryItemBase();
-            item.Owner = remoteClient.AgentId;
-            item.CreatorId = remoteClient.AgentId.ToString();
-            item.ID = UUID.Random();
-            item.AssetID = m_asset.ID;
-            item.Description = m_description;
-            item.Name = m_name;
-            item.AssetType = type;
-            item.InvType = invType;
-            item.Folder = InventFolder;
-            item.BasePermissions = 0x7fffffff;
-            item.CurrentPermissions = 0x7fffffff;
-            item.GroupPermissions=0;
-            item.EveryOnePermissions=0;
-            item.NextPermissions = nextPerm;
-            item.Flags = (uint) wearableType;
-            item.CreationDate = Util.UnixTimeSinceEpoch();
+            InventoryItemBase item = new InventoryItemBase
+                                         {
+                                             Owner = remoteClient.AgentId,
+                                             CreatorId = remoteClient.AgentId.ToString(),
+                                             ID = UUID.Random(),
+                                             AssetID = m_asset.ID,
+                                             Description = m_description,
+                                             Name = m_name,
+                                             AssetType = type,
+                                             InvType = invType,
+                                             Folder = InventFolder,
+                                             BasePermissions = 0x7fffffff,
+                                             CurrentPermissions = 0x7fffffff,
+                                             GroupPermissions = 0,
+                                             EveryOnePermissions = 0,
+                                             NextPermissions = nextPerm,
+                                             Flags = wearableType,
+                                             CreationDate = Util.UnixTimeSinceEpoch()
+                                         };
 
-            ILLClientInventory inventoryModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<ILLClientInventory>();
-            if(inventoryModule != null && inventoryModule.AddInventoryItem(item))
+            ILLClientInventory inventoryModule =
+                m_userTransactions.Manager.MyScene.RequestModuleInterface<ILLClientInventory>();
+            if (inventoryModule != null && inventoryModule.AddInventoryItem(item))
                 remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
             else
                 remoteClient.SendAlertMessage("Unable to create inventory item");
         }
 
         /// <summary>
-        /// Get the asset data uploaded in this transfer.
+        ///   Get the asset data uploaded in this transfer.
         /// </summary>
         /// <returns>null if the asset has not finished uploading</returns>
         public AssetBase GetAssetData()

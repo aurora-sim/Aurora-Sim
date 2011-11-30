@@ -25,28 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
+using System.Linq;
 using System.Reflection;
-using System.Text;
 using log4net;
 using Nini.Config;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework.Capabilities;
-using OpenSim.Region.Framework.Scenes;
-
 using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Services.DataService;
-using OpenMetaverse.StructuredData;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.CapsService
 {
@@ -121,18 +109,10 @@ namespace OpenSim.Services.CapsService
         protected void ShowUsers(string[] cmd)
         {
             //Check for all or full to show child agents
-            bool showChildAgents = cmd.Length == 3 ? cmd[2] == "all" ? true : cmd[2] == "full" ? true : false : false;
-            int count = 0;
-            foreach (IRegionCapsService regionCaps in m_RegionCapsServices.Values)
-            {
-                foreach (IRegionClientCapsService clientCaps in regionCaps.GetClients ())
-                {
-                    if ((clientCaps.RootAgent || showChildAgents))
-                        count++;
-                }
-            }
+            bool showChildAgents = cmd.Length == 3 && (cmd[2] == "all" || (cmd[2] == "full"));
+            int count = m_RegionCapsServices.Values.SelectMany(regionCaps => regionCaps.GetClients()).Count(clientCaps => (clientCaps.RootAgent || showChildAgents));
             m_log.WarnFormat ("{0} agents found: ", count);
-            foreach (IClientCapsService clientCaps in this.m_ClientCapsServices.Values)
+            foreach (IClientCapsService clientCaps in m_ClientCapsServices.Values)
             {
                 foreach(IRegionClientCapsService caps in clientCaps.GetCapsServices())
                 {
@@ -172,10 +152,10 @@ namespace OpenSim.Services.CapsService
         /// Create a Caps URL for the given user/region. Called normally by the EventQueueService or the LLLoginService on login
         /// </summary>
         /// <param name="AgentID"></param>
-        /// <param name="SimCAPS"></param>
-        /// <param name="CAPS"></param>
+        /// <param name="CAPSBase"></param>
         /// <param name="regionHandle"></param>
         /// <param name="IsRootAgent">Will this child be a root agent</param>
+        /// <param name="circuitData"></param>
         /// <returns></returns>
         public string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
         {

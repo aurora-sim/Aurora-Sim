@@ -6,15 +6,16 @@ using System.Runtime.Serialization;
 
 namespace Amib.Threading
 {
+
     #region Exceptions
 
     /// <summary>
-    /// Represents an exception in case IWorkItemResult.GetResult has been canceled
+    ///   Represents an exception in case IWorkItemResult.GetResult has been canceled
     /// </summary>
     [Serializable]
     public sealed class WorkItemCancelException : ApplicationException
     {
-        public WorkItemCancelException() : base()
+        public WorkItemCancelException()
         {
         }
 
@@ -32,12 +33,12 @@ namespace Amib.Threading
     }
 
     /// <summary>
-    /// Represents an exception in case IWorkItemResult.GetResult has been timed out
+    ///   Represents an exception in case IWorkItemResult.GetResult has been timed out
     /// </summary>
     [Serializable]
     public sealed class WorkItemTimeoutException : ApplicationException
     {
-        public WorkItemTimeoutException() : base()
+        public WorkItemTimeoutException()
         {
         }
 
@@ -55,12 +56,12 @@ namespace Amib.Threading
     }
 
     /// <summary>
-    /// Represents an exception in case IWorkItemResult.GetResult has been timed out
+    ///   Represents an exception in case IWorkItemResult.GetResult has been timed out
     /// </summary>
     [Serializable]
     public sealed class WorkItemResultException : ApplicationException
     {
-        public WorkItemResultException() : base()
+        public WorkItemResultException()
         {
         }
 

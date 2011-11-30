@@ -26,20 +26,13 @@
  */
 
 using System;
-using System.Reflection;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
-using System.Xml;
 using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
-using Nini.Config;
-using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -47,22 +40,44 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
     [Serializable]
     public class MOD_Api : MarshalByRefObject, IMOD_Api, IScriptApi
     {
-        internal IScriptModulePlugin m_ScriptEngine;
-        internal ISceneChildEntity m_host;
-        internal uint m_localID;
-        internal UUID m_itemID;
-        internal IScriptModuleComms m_comms = null;
         internal ScriptProtectionModule ScriptProtection;
+        internal IScriptModulePlugin m_ScriptEngine;
+        internal IScriptModuleComms m_comms;
+        internal ISceneChildEntity m_host;
+        internal UUID m_itemID;
+        internal uint m_localID;
 
-        public void Initialize (IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
+        public IScene World
+        {
+            get { return m_host.ParentEntity.Scene; }
+        }
+
+        #region IMOD_Api Members
+
+        public string modSendCommand(string module, string command, string k)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "modSendCommand", m_host, "MOD", m_itemID))
+                return "";
+
+            UUID req = UUID.Random();
+
+            m_comms.RaiseEvent(m_itemID, req.ToString(), module, command, k);
+
+            return req.ToString();
+        }
+
+        #endregion
+
+        #region IScriptApi Members
+
+        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID,
+                               ScriptProtectionModule module)
         {
             m_ScriptEngine = ScriptEngine;
             m_host = host;
@@ -89,7 +104,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        /// We don't have to add any assemblies here
+        ///   We don't have to add any assemblies here
         /// </summary>
         public string[] ReferencedAssemblies
         {
@@ -97,12 +112,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         }
 
         /// <summary>
-        /// We use the default namespace, so we don't have any to add
+        ///   We use the default namespace, so we don't have any to add
         /// </summary>
         public string[] NamespaceAdditions
         {
             get { return new string[0]; }
         }
+
+        #endregion
 
         public void Dispose()
         {
@@ -110,7 +127,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease)base.InitializeLifetimeService();
+            ILease lease = (ILease) base.InitializeLifetimeService();
 
             if (lease.CurrentState == LeaseState.Initial)
             {
@@ -119,12 +136,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
             }
             return lease;
-
-        }
-
-        public IScene World
-        {
-            get { return m_host.ParentEntity.Scene; }
         }
 
         internal void modError(string msg)
@@ -136,7 +147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         //Dumps an error message on the debug console.
         //
 
-        internal void modShoutError(string message) 
+        internal void modShoutError(string message)
         {
             if (message.Length > 1023)
                 message = message.Substring(0, 1023);
@@ -144,21 +155,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
                 chatModule.SimChat(message, ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL,
-                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
+                                   m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
-        }
-
-        public string modSendCommand(string module, string command, string k)
-        {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "modSendCommand", m_host, "MOD", m_itemID)) return "";
-            
-            UUID req = UUID.Random();
-
-            m_comms.RaiseEvent(m_itemID, req.ToString(), module, command, k);
-
-            return req.ToString();
         }
     }
 }

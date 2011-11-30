@@ -1,22 +1,25 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Net;
 using System.Reflection;
-using Nini.Config;
-using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class HeloServiceConnector : IHeloServiceConnector, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region IHeloServiceConnector Members
 
         public virtual string Helo(string serverURI)
         {
-            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create (serverURI + "/helo");
+            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(serverURI + "/helo");
 
             try
             {
@@ -27,24 +30,30 @@ namespace OpenSim.Services
             }
             catch (Exception e)
             {
-                m_log.DebugFormat ("[HELO SERVICE]: Unable to perform HELO request to {0}: {1}", serverURI, e.Message);
+                m_log.DebugFormat("[HELO SERVICE]: Unable to perform HELO request to {0}: {1}", serverURI, e.Message);
             }
 
             // fail
             return string.Empty;
         }
 
-        public void Initialize (IConfigSource config, Framework.IRegistryCore registry)
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            registry.RegisterModuleInterface<IHeloServiceConnector> (this);
+            registry.RegisterModuleInterface<IHeloServiceConnector>(this);
         }
 
-        public void Start (IConfigSource config, Framework.IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup ()
+        public void FinishedStartup()
         {
         }
+
+        #endregion
     }
 }

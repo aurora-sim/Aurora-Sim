@@ -26,34 +26,33 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteAgentConnector : IAgentConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private ExpiringCache<UUID, IAgentInfo> m_cache = new ExpiringCache<UUID, IAgentInfo>();
+        private readonly ExpiringCache<UUID, IAgentInfo> m_cache = new ExpiringCache<UUID, IAgentInfo>();
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IAgentConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "RemoteConnector")
             {
@@ -67,18 +66,12 @@ namespace Aurora.Services.DataService
             get { return "IAgentConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IAgentConnector Members
-
         public IAgentInfo GetAgent(UUID PrincipalID)
         {
             IAgentInfo agent;
             if (!m_cache.TryGetValue(PrincipalID, out agent))
                 return agent;
-                        
+
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["PRINCIPALID"] = PrincipalID.ToString();
@@ -88,47 +81,44 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "RemoteServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                           "RemoteServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI + "/auroradata",
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI + "/auroradata",
-                            reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (!replyData.ContainsKey("result"))
+                            return null;
 
-                        if (replyData != null)
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        foreach (object f in replyvalues)
                         {
-                            if (!replyData.ContainsKey("result"))
-                                return null;
-
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            foreach (object f in replyvalues)
+                            if (f is Dictionary<string, object>)
                             {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    agent = new IAgentInfo();
-                                    agent.FromKVP((Dictionary<string, object>)f);
-                                    m_cache.AddOrUpdate(PrincipalID, agent, new TimeSpan(0, 30, 0));
-                                }
-                                else
-                                    m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received invalid response type {1}",
-                                        PrincipalID, f.GetType());
+                                agent = new IAgentInfo();
+                                agent.FromKVP((Dictionary<string, object>) f);
+                                m_cache.AddOrUpdate(PrincipalID, agent, new TimeSpan(0, 30, 0));
                             }
-                            // Success
-                            return agent;
+                            else
+                                m_log.DebugFormat(
+                                    "[AuroraRemoteAgentConnector]: GetAgent {0} received invalid response type {1}",
+                                    PrincipalID, f.GetType());
                         }
-
-                        else
-                            m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
-                                PrincipalID);
+                        // Success
+                        return agent;
                     }
+
+                    else
+                        m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
+                                          PrincipalID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -153,5 +143,9 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

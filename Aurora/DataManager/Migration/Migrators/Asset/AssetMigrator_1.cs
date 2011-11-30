@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -42,8 +42,8 @@ namespace Aurora.DataManager.Migration.Migrators
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
             AddSchema("lslgenericdata", ColDefs(ColDef("Token", ColumnTypes.String50, true),
-                ColDef("KeySetting", ColumnTypes.String50, true),
-                ColDef("ValueSetting", ColumnTypes.String50)));
+                                                ColDef("KeySetting", ColumnTypes.String50, true),
+                                                ColDef("ValueSetting", ColumnTypes.String50)));
 
             renameColumns.Add("UUID", "id");
             renameColumns.Add("Name", "name");

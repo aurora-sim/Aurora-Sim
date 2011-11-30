@@ -25,19 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
-using System.IO;
-using System.Text;
-using Microsoft.CSharp;
 //using Microsoft.JScript;
-using Microsoft.VisualBasic;
-using log4net;
-using OpenSim.Region.Framework.Interfaces;
-using OpenMetaverse;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {

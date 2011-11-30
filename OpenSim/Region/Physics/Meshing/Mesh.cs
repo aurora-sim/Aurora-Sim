@@ -28,9 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
-using OpenSim.Region.Physics.Manager;
-using PrimMesher;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -38,43 +37,20 @@ namespace OpenSim.Region.Physics.Meshing
 {
     public class Mesh : IMesh
     {
-        private Dictionary<Vertex, int> m_vertices;
-        private List<Triangle> m_triangles;
-        GCHandle m_pinnedVertexes;
-        GCHandle m_pinnedIndex;
-        IntPtr m_verticesPtr = IntPtr.Zero;
-        int m_vertexCount = 0;
-        IntPtr m_indicesPtr = IntPtr.Zero;
-        int m_indexCount = 0;
+        private readonly ulong m_key;
+
+        private Vector3 _centroid;
+        private int _centroidDiv;
+        private int m_indexCount;
+        private IntPtr m_indicesPtr = IntPtr.Zero;
         public float[] m_normals;
-        private ulong m_key;
+        private GCHandle m_pinnedIndex;
+        private GCHandle m_pinnedVertexes;
+        private List<Triangle> m_triangles;
+        private int m_vertexCount;
+        private Dictionary<Vertex, int> m_vertices;
+        private IntPtr m_verticesPtr = IntPtr.Zero;
 
-        Vector3 _centroid;
-        int _centroidDiv;
-
-        public ulong Key
-        {
-            get { return m_key; }
-        }
-
-        private class vertexcomp : IEqualityComparer<Vertex>
-        {
-            public bool Equals(Vertex v1, Vertex v2)
-            {
-                if (v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z)
-                    return true;
-                else
-                    return false;
-            }
-            public int GetHashCode(Vertex v)
-            {
-                int a = v.X.GetHashCode();
-                int b = v.Y.GetHashCode();
-                int c = v.Z.GetHashCode();
-                return (a << 16) ^ (b << 8) ^ c;
-            }
-
-        }
         public Mesh(ulong key)
         {
             m_key = key;
@@ -83,6 +59,180 @@ namespace OpenSim.Region.Physics.Meshing
             _centroid = Vector3.Zero;
             _centroidDiv = 0;
         }
+
+        #region IMesh Members
+
+        public ulong Key
+        {
+            get { return m_key; }
+        }
+
+        public Vector3 GetCentroid()
+        {
+            if (_centroidDiv > 0)
+            {
+                float tmp = 1.0f/_centroidDiv;
+                return new Vector3(_centroid.X*tmp, _centroid.Y*tmp, _centroid.Z*tmp);
+            }
+            else
+                return Vector3.Zero;
+        }
+
+        public List<Vector3> getVertexList()
+        {
+            return m_vertices.Keys.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+        }
+
+        public float[] getVertexListAsFloatLocked()
+        {
+            if (m_pinnedVertexes.IsAllocated)
+                return (float[]) (m_pinnedVertexes.Target);
+
+            float[] result = getVertexListAsFloat();
+            m_pinnedVertexes = GCHandle.Alloc(result, GCHandleType.Pinned);
+            // Inform the garbage collector of this unmanaged allocation so it can schedule
+            // the next GC round more intelligently
+            GC.AddMemoryPressure(Buffer.ByteLength(result));
+
+            return result;
+        }
+
+        public void getVertexListAsPtrToFloatArray(out IntPtr vertices, out int vertexStride, out int vertexCount)
+        {
+            // A vertex is 3 floats
+            vertexStride = 3*sizeof (float);
+
+            // If there isn't an unmanaged array allocated yet, do it now
+            if (m_verticesPtr == IntPtr.Zero)
+            {
+                float[] vertexList = getVertexListAsFloat();
+                // Each vertex is 3 elements (floats)
+                m_vertexCount = vertexList.Length/3;
+                int byteCount = m_vertexCount*vertexStride;
+                m_verticesPtr = Marshal.AllocHGlobal(byteCount);
+                Marshal.Copy(vertexList, 0, m_verticesPtr, m_vertexCount*3);
+                if (m_vertexCount > 0)
+                    GC.AddMemoryPressure((long) m_vertexCount*3);
+            }
+            vertices = m_verticesPtr;
+            vertexCount = m_vertexCount;
+        }
+
+        public int[] getIndexListAsInt()
+        {
+            if (m_triangles == null)
+                throw new NotSupportedException();
+            int[] result = new int[m_triangles.Count*3];
+            for (int i = 0; i < m_triangles.Count; i++)
+            {
+                Triangle t = m_triangles[i];
+                result[3*i + 0] = m_vertices[t.v1];
+                result[3*i + 1] = m_vertices[t.v2];
+                result[3*i + 2] = m_vertices[t.v3];
+            }
+            return result;
+        }
+
+        /// <summary>
+        ///   creates a list of index values that defines triangle faces. THIS METHOD FREES ALL NON-PINNED MESH DATA
+        /// </summary>
+        /// <returns></returns>
+        public int[] getIndexListAsIntLocked()
+        {
+            if (m_pinnedIndex.IsAllocated)
+                return (int[]) (m_pinnedIndex.Target);
+
+            int[] result = getIndexListAsInt();
+            m_pinnedIndex = GCHandle.Alloc(result, GCHandleType.Pinned);
+            // Inform the garbage collector of this unmanaged allocation so it can schedule
+            // the next GC round more intelligently
+            GC.AddMemoryPressure(Buffer.ByteLength(result));
+
+            return result;
+        }
+
+        public void getIndexListAsPtrToIntArray(out IntPtr indices, out int triStride, out int indexCount)
+        {
+            // If there isn't an unmanaged array allocated yet, do it now
+            if (m_indicesPtr == IntPtr.Zero)
+            {
+                int[] indexList = getIndexListAsInt();
+                m_indexCount = indexList.Length;
+                int byteCount = m_indexCount*sizeof (int);
+                m_indicesPtr = Marshal.AllocHGlobal(byteCount);
+                Marshal.Copy(indexList, 0, m_indicesPtr, m_indexCount);
+                if (byteCount > 0)
+                    GC.AddMemoryPressure(byteCount);
+            }
+            // A triangle is 3 ints (indices)
+            triStride = 3*sizeof (int);
+            indices = m_indicesPtr;
+            indexCount = m_indexCount;
+        }
+
+        public void releasePinned()
+        {
+            if (m_pinnedVertexes.IsAllocated)
+                m_pinnedVertexes.Free();
+            if (m_pinnedIndex.IsAllocated)
+                m_pinnedIndex.Free();
+            if (m_verticesPtr != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(m_verticesPtr);
+                m_verticesPtr = IntPtr.Zero;
+            }
+            if (m_indicesPtr != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(m_indicesPtr);
+                m_indicesPtr = IntPtr.Zero;
+            }
+        }
+
+        /// <summary>
+        ///   frees up the source mesh data to minimize memory - call this method after calling get*Locked() functions
+        /// </summary>
+        public void releaseSourceMeshData()
+        {
+            if (m_triangles != null)
+                m_triangles.Clear();
+            if (m_vertices != null)
+                m_vertices.Clear();
+            m_triangles = null;
+            m_vertices = null;
+        }
+
+        public void Append(IMesh newMesh)
+        {
+            if (m_pinnedIndex.IsAllocated || m_pinnedVertexes.IsAllocated || m_indicesPtr != IntPtr.Zero ||
+                m_verticesPtr != IntPtr.Zero)
+                throw new NotSupportedException("Attempt to Append to a pinned Mesh");
+
+            if (!(newMesh is Mesh))
+                return;
+
+            foreach (Triangle t in ((Mesh) newMesh).m_triangles)
+                Add(t);
+        }
+
+        // Do a linear transformation of  mesh.
+        public void TransformLinear(float[,] matrix, float[] offset)
+        {
+            if (m_pinnedIndex.IsAllocated || m_pinnedVertexes.IsAllocated || m_indicesPtr != IntPtr.Zero ||
+                m_verticesPtr != IntPtr.Zero)
+                throw new NotSupportedException("Attempt to TransformLinear a pinned Mesh");
+
+            foreach (Vertex v in m_vertices.Keys.Where(v => v != null))
+            {
+                float x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
+                float y = v.X*matrix[0, 1] + v.Y*matrix[1, 1] + v.Z*matrix[2, 1];
+                float z = v.X*matrix[0, 2] + v.Y*matrix[1, 2] + v.Z*matrix[2, 2];
+                v.X = x + offset[0];
+                v.Y = y + offset[1];
+                v.Z = z + offset[2];
+            }
+        }
+
+        #endregion
 
         public Mesh Clone()
         {
@@ -101,7 +251,8 @@ namespace OpenSim.Region.Physics.Meshing
 
         public void Add(Triangle triangle)
         {
-            if (m_pinnedIndex.IsAllocated || m_pinnedVertexes.IsAllocated || m_indicesPtr != IntPtr.Zero || m_verticesPtr != IntPtr.Zero)
+            if (m_pinnedIndex.IsAllocated || m_pinnedVertexes.IsAllocated || m_indicesPtr != IntPtr.Zero ||
+                m_verticesPtr != IntPtr.Zero)
                 throw new NotSupportedException("Attempt to Add to a pinned Mesh");
             // If a vertex of the triangle is not yet in the vertices list,
             // add it and set its index to the current index count
@@ -148,22 +299,11 @@ namespace OpenSim.Region.Physics.Meshing
             m_triangles.Add(triangle);
         }
 
-        public Vector3 GetCentroid()
-        {
-            if (_centroidDiv > 0)
-            {
-                float tmp = 1.0f / _centroidDiv;
-                return new Vector3(_centroid.X * tmp, _centroid.Y * tmp, _centroid.Z * tmp);
-            }
-            else
-                return Vector3.Zero;
-        }
-
         public void CalcNormals()
         {
             int iTriangles = m_triangles.Count;
 
-            this.m_normals = new float[iTriangles * 3];
+            this.m_normals = new float[iTriangles*3];
 
             int i = 0;
             foreach (Triangle t in m_triangles)
@@ -200,201 +340,41 @@ namespace OpenSim.Region.Physics.Meshing
 
                 // Cross product for normal
                 float nx, ny, nz;
-                nx = e1y * e2z - e1z * e2y;
-                ny = e1z * e2x - e1x * e2z;
-                nz = e1x * e2y - e1y * e2x;
+                nx = e1y*e2z - e1z*e2y;
+                ny = e1z*e2x - e1x*e2z;
+                nz = e1x*e2y - e1y*e2x;
 
                 // Length
-                float l = (float)Math.Sqrt(nx * nx + ny * ny + nz * nz);
-                float lReciprocal = 1.0f / l;
+                float l = (float) Math.Sqrt(nx*nx + ny*ny + nz*nz);
+                float lReciprocal = 1.0f/l;
 
                 // Normalized "normal"
                 //nx /= l;
                 //ny /= l;
                 //nz /= l;
 
-                m_normals[i] = nx * lReciprocal;
-                m_normals[i + 1] = ny * lReciprocal;
-                m_normals[i + 2] = nz * lReciprocal;
+                m_normals[i] = nx*lReciprocal;
+                m_normals[i + 1] = ny*lReciprocal;
+                m_normals[i + 2] = nz*lReciprocal;
 
                 i += 3;
             }
-        }
-
-        public List<Vector3> getVertexList()
-        {
-            List<Vector3> result = new List<Vector3>();
-            foreach (Vertex v in m_vertices.Keys)
-            {
-                result.Add(new Vector3(v.X, v.Y, v.Z));
-            }
-            return result;
         }
 
         private float[] getVertexListAsFloat()
         {
             if (m_vertices == null)
                 throw new NotSupportedException();
-            float[] result = new float[m_vertices.Count * 3];
+            float[] result = new float[m_vertices.Count*3];
             foreach (KeyValuePair<Vertex, int> kvp in m_vertices)
             {
                 Vertex v = kvp.Key;
                 int i = kvp.Value;
-                result[3 * i + 0] = v.X;
-                result[3 * i + 1] = v.Y;
-                result[3 * i + 2] = v.Z;
+                result[3*i + 0] = v.X;
+                result[3*i + 1] = v.Y;
+                result[3*i + 2] = v.Z;
             }
             return result;
-        }
-
-        public float[] getVertexListAsFloatLocked()
-        {
-            if (m_pinnedVertexes.IsAllocated)
-                return (float[])(m_pinnedVertexes.Target);
-
-            float[] result = getVertexListAsFloat();
-            m_pinnedVertexes = GCHandle.Alloc(result, GCHandleType.Pinned);
-            // Inform the garbage collector of this unmanaged allocation so it can schedule
-            // the next GC round more intelligently
-            GC.AddMemoryPressure(Buffer.ByteLength(result));
-
-            return result;
-        }
-
-        public void getVertexListAsPtrToFloatArray(out IntPtr vertices, out int vertexStride, out int vertexCount)
-        {
-            // A vertex is 3 floats
-            vertexStride = 3 * sizeof(float);
-
-            // If there isn't an unmanaged array allocated yet, do it now
-            if (m_verticesPtr == IntPtr.Zero)
-            {
-                float[] vertexList = getVertexListAsFloat();
-                // Each vertex is 3 elements (floats)
-                m_vertexCount = vertexList.Length / 3;
-                int byteCount = m_vertexCount * vertexStride;
-                m_verticesPtr = System.Runtime.InteropServices.Marshal.AllocHGlobal(byteCount);
-                System.Runtime.InteropServices.Marshal.Copy (vertexList, 0, m_verticesPtr, m_vertexCount * 3);
-                if(m_vertexCount > 0)
-                    GC.AddMemoryPressure ((long)m_vertexCount * 3);
-            }
-            vertices = m_verticesPtr;
-            vertexCount = m_vertexCount;
-        }
-
-        public int[] getIndexListAsInt()
-        {
-            if (m_triangles == null)
-                throw new NotSupportedException();
-            int[] result = new int[m_triangles.Count * 3];
-            for (int i = 0; i < m_triangles.Count; i++)
-            {
-                Triangle t = m_triangles[i];
-                result[3 * i + 0] = m_vertices[t.v1];
-                result[3 * i + 1] = m_vertices[t.v2];
-                result[3 * i + 2] = m_vertices[t.v3];
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// creates a list of index values that defines triangle faces. THIS METHOD FREES ALL NON-PINNED MESH DATA
-        /// </summary>
-        /// <returns></returns>
-        public int[] getIndexListAsIntLocked()
-        {
-            if (m_pinnedIndex.IsAllocated)
-                return (int[])(m_pinnedIndex.Target);
-        
-            int[] result = getIndexListAsInt();
-            m_pinnedIndex = GCHandle.Alloc(result, GCHandleType.Pinned);
-            // Inform the garbage collector of this unmanaged allocation so it can schedule
-            // the next GC round more intelligently
-            GC.AddMemoryPressure(Buffer.ByteLength(result));
-
-            return result;
-        }
-
-        public void getIndexListAsPtrToIntArray(out IntPtr indices, out int triStride, out int indexCount)
-        {
-            // If there isn't an unmanaged array allocated yet, do it now
-            if (m_indicesPtr == IntPtr.Zero)
-            {
-                int[] indexList = getIndexListAsInt();
-                m_indexCount = indexList.Length;
-                int byteCount = m_indexCount * sizeof(int);
-                m_indicesPtr = System.Runtime.InteropServices.Marshal.AllocHGlobal(byteCount);
-                System.Runtime.InteropServices.Marshal.Copy(indexList, 0, m_indicesPtr, m_indexCount);
-                if(byteCount > 0)
-                    GC.AddMemoryPressure ((long)byteCount);
-            }
-            // A triangle is 3 ints (indices)
-            triStride = 3 * sizeof(int);
-            indices = m_indicesPtr;
-            indexCount = m_indexCount;
-        }
-
-        public void releasePinned()
-        {
-            if (m_pinnedVertexes.IsAllocated)
-                m_pinnedVertexes.Free();
-            if (m_pinnedIndex.IsAllocated)
-                m_pinnedIndex.Free();
-            if (m_verticesPtr != IntPtr.Zero)
-            {
-                System.Runtime.InteropServices.Marshal.FreeHGlobal(m_verticesPtr);
-                m_verticesPtr = IntPtr.Zero;
-            }
-            if (m_indicesPtr != IntPtr.Zero)
-            {
-                System.Runtime.InteropServices.Marshal.FreeHGlobal(m_indicesPtr);
-                m_indicesPtr = IntPtr.Zero;
-            }
-        }
-
-        /// <summary>
-        /// frees up the source mesh data to minimize memory - call this method after calling get*Locked() functions
-        /// </summary>
-        public void releaseSourceMeshData()
-        {
-            if(m_triangles != null)
-                m_triangles.Clear ();
-            if(m_vertices != null)
-                m_vertices.Clear ();
-            m_triangles = null;
-            m_vertices = null;
-        }
-
-        public void Append(IMesh newMesh)
-        {
-            if (m_pinnedIndex.IsAllocated || m_pinnedVertexes.IsAllocated || m_indicesPtr != IntPtr.Zero || m_verticesPtr != IntPtr.Zero)
-                throw new NotSupportedException("Attempt to Append to a pinned Mesh");
-        
-            if (!(newMesh is Mesh))
-                return;
-
-            foreach (Triangle t in ((Mesh)newMesh).m_triangles)
-                Add(t);
-        }
-
-        // Do a linear transformation of  mesh.
-        public void TransformLinear(float[,] matrix, float[] offset)
-        {
-            if (m_pinnedIndex.IsAllocated || m_pinnedVertexes.IsAllocated || m_indicesPtr != IntPtr.Zero || m_verticesPtr != IntPtr.Zero)
-                throw new NotSupportedException("Attempt to TransformLinear a pinned Mesh");
-        
-            foreach (Vertex v in m_vertices.Keys)
-            {
-                if (v == null)
-                    continue;
-                float x, y, z;
-                x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
-                y = v.X*matrix[0, 1] + v.Y*matrix[1, 1] + v.Z*matrix[2, 1];
-                z = v.X*matrix[0, 2] + v.Y*matrix[1, 2] + v.Z*matrix[2, 2];
-                v.X = x + offset[0];
-                v.Y = y + offset[1];
-                v.Z = z + offset[2];
-            }
         }
 
         public void DumpRaw(String path, String name, String title)
@@ -402,11 +382,10 @@ namespace OpenSim.Region.Physics.Meshing
             if (path == null)
                 return;
             String fileName = name + "_" + title + ".raw";
-            String completePath = System.IO.Path.Combine(path, fileName);
+            String completePath = Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
-            foreach (Triangle t in m_triangles)
+            foreach (string s in m_triangles.Select(t => t.ToStringRaw()))
             {
-                String s = t.ToStringRaw();
                 sw.WriteLine(s);
             }
             sw.Close();
@@ -416,5 +395,32 @@ namespace OpenSim.Region.Physics.Meshing
         {
             m_triangles.TrimExcess();
         }
+
+        #region Nested type: vertexcomp
+
+        private class vertexcomp : IEqualityComparer<Vertex>
+        {
+            #region IEqualityComparer<Vertex> Members
+
+            public bool Equals(Vertex v1, Vertex v2)
+            {
+                if (v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z)
+                    return true;
+                else
+                    return false;
+            }
+
+            public int GetHashCode(Vertex v)
+            {
+                int a = v.X.GetHashCode();
+                int b = v.Y.GetHashCode();
+                int c = v.Z.GetHashCode();
+                return (a << 16) ^ (b << 8) ^ c;
+            }
+
+            #endregion
+        }
+
+        #endregion
     }
 }

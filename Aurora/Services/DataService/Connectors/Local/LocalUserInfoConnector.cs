@@ -29,31 +29,32 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Aurora.Framework;
-using Aurora.DataManager;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using Nini.Config;
-using log4net;
 using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using RegionFlags = Aurora.Framework.RegionFlags;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class LocalUserInfoConnector : IAgentInfoConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
-		private IGenericData GD = null;
-        private string m_realm = "userinfo";
+
+        private IGenericData GD;
         protected bool m_allowDuplicatePresences = true;
         protected bool m_checkLastSeen = true;
+        private string m_realm = "userinfo";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IAgentInfoConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if(source.Configs["AuroraConnectors"].GetString("UserInfoConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("UserInfoConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
@@ -63,13 +64,14 @@ namespace Aurora.Services.DataService
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
                     m_allowDuplicatePresences =
-                           source.Configs[Name].GetBoolean("AllowDuplicatePresences",
-                                                     m_allowDuplicatePresences);
+                        source.Configs[Name].GetBoolean("AllowDuplicatePresences",
+                                                        m_allowDuplicatePresences);
                     m_checkLastSeen =
-                           source.Configs[Name].GetBoolean("CheckLastSeen",
-                                                     m_checkLastSeen);
+                        source.Configs[Name].GetBoolean("CheckLastSeen",
+                                                        m_checkLastSeen);
                 }
-                GD.ConnectToDatabase(connectionString, "UserInfo", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(connectionString, "UserInfo",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -80,35 +82,30 @@ namespace Aurora.Services.DataService
             get { return "IAgentInfoConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IUserInfoConnector Members
-
-        public bool Set (UserInfo info)
+        public bool Set(UserInfo info)
         {
             object[] values = new object[13];
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
-            values[2] = Util.ToUnixTime (DateTime.Now.ToUniversalTime ()); //Convert to binary so that it can be converted easily
+            values[2] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+                //Convert to binary so that it can be converted easily
             values[3] = info.IsOnline ? 1 : 0;
-            values[4] = Util.ToUnixTime (info.LastLogin);
-            values[5] = Util.ToUnixTime (info.LastLogout);
-            values[6] = OSDParser.SerializeJsonString (info.Info);
-            values[7] = info.CurrentRegionID.ToString ();
-            values[8] = info.CurrentPosition.ToString ();
-            values[9] = info.CurrentLookAt.ToString ();
-            values[10] = info.HomeRegionID.ToString ();
-            values[11] = info.HomePosition.ToString ();
-            values[12] = info.HomeLookAt.ToString ();
-            GD.Delete (m_realm, new string[1] { "UserID" }, new object[1] { info.UserID });
-            return GD.Insert (m_realm, values);
+            values[4] = Util.ToUnixTime(info.LastLogin);
+            values[5] = Util.ToUnixTime(info.LastLogout);
+            values[6] = OSDParser.SerializeJsonString(info.Info);
+            values[7] = info.CurrentRegionID.ToString();
+            values[8] = info.CurrentPosition.ToString();
+            values[9] = info.CurrentLookAt.ToString();
+            values[10] = info.HomeRegionID.ToString();
+            values[11] = info.HomePosition.ToString();
+            values[12] = info.HomeLookAt.ToString();
+            GD.Delete(m_realm, new string[1] {"UserID"}, new object[1] {info.UserID});
+            return GD.Insert(m_realm, values);
         }
 
-        public void Update (string userID, string[] keys, object[] values)
+        public void Update(string userID, string[] keys, object[] values)
         {
-            GD.Update (m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
+            GD.Update(m_realm, values, keys, new string[1] {"UserID"}, new object[1] {userID});
         }
 
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
@@ -117,15 +114,17 @@ namespace Aurora.Services.DataService
             keys[0] = "CurrentRegionID";
             keys[1] = "CurrentPosition";
             keys[2] = "CurrentLookat";
-            keys[3] = "LastSeen";//Set the last seen and is online since if the user is moving, they are sending updates
+            keys[3] = "LastSeen";
+                //Set the last seen and is online since if the user is moving, they are sending updates
             keys[4] = "IsOnline";
             object[] values = new object[5];
             values[0] = regionID;
             values[1] = lastPosition;
             values[2] = lastLookAt;
-            values[3] = Util.ToUnixTime (DateTime.Now.ToUniversalTime ()); //Convert to binary so that it can be converted easily
+            values[3] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+                //Convert to binary so that it can be converted easily
             values[4] = 1;
-            GD.Update (m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
+            GD.Update(m_realm, values, keys, new string[1] {"UserID"}, new object[1] {userID});
         }
 
         public void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt)
@@ -137,29 +136,32 @@ namespace Aurora.Services.DataService
             keys[3] = "HomeLookat";
             object[] values = new object[4];
             values[0] = regionID;
-            values[1] = Util.ToUnixTime (DateTime.Now.ToUniversalTime()); //Convert to binary so that it can be converted easily
+            values[1] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+                //Convert to binary so that it can be converted easily
             values[2] = Position;
             values[3] = LookAt;
-            GD.Update(m_realm, values, keys, new string[1] { "UserID" }, new object[1] { userID });
+            GD.Update(m_realm, values, keys, new string[1] {"UserID"}, new object[1] {userID});
         }
 
-        public UserInfo Get (string userID, bool checkOnlineStatus, out bool onlineStatusChanged)
+        public UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged)
         {
             onlineStatusChanged = false;
             List<string> query = GD.Query("UserID", userID, m_realm, "*");
             if (query.Count == 0)
                 return null;
-            UserInfo user = new UserInfo();
-            user.UserID = query[0];
-            user.CurrentRegionID = UUID.Parse(query[1]);
-            user.IsOnline = query[3] == "1" ? true : false;
-            user.LastLogin = Util.ToDateTime(int.Parse(query[4]));
-            user.LastLogout = Util.ToDateTime(int.Parse(query[5]));
-            user.Info = (OSDMap)OSDParser.DeserializeJson(query[6]);
+            UserInfo user = new UserInfo
+                                {
+                                    UserID = query[0],
+                                    CurrentRegionID = UUID.Parse(query[1]),
+                                    IsOnline = query[3] == "1" ? true : false,
+                                    LastLogin = Util.ToDateTime(int.Parse(query[4])),
+                                    LastLogout = Util.ToDateTime(int.Parse(query[5])),
+                                    Info = (OSDMap) OSDParser.DeserializeJson(query[6])
+                                };
             try
             {
                 user.CurrentRegionID = UUID.Parse(query[7]);
-                if(query[8] != "")
+                if (query[8] != "")
                     user.CurrentPosition = Vector3.Parse(query[8]);
                 if (query[9] != "")
                     user.CurrentLookAt = Vector3.Parse(query[9]);
@@ -174,16 +176,20 @@ namespace Aurora.Services.DataService
             }
 
             //Check LastSeen
-            DateTime timeLastSeen = Util.ToDateTime (int.Parse (query[2]));
-            DateTime timeNow = DateTime.Now.ToUniversalTime ();
-            if (checkOnlineStatus && m_checkLastSeen && user.IsOnline && (timeLastSeen.AddHours (1) < timeNow))
+            DateTime timeLastSeen = Util.ToDateTime(int.Parse(query[2]));
+            DateTime timeNow = DateTime.Now.ToUniversalTime();
+            if (checkOnlineStatus && m_checkLastSeen && user.IsOnline && (timeLastSeen.AddHours(1) < timeNow))
             {
-                if (user.CurrentRegionID != AgentInfoHelpers.LOGIN_STATUS_LOCKED)//The login status can be locked with this so that it cannot be changed with this method
+                if (user.CurrentRegionID != AgentInfoHelpers.LOGIN_STATUS_LOCKED)
+                    //The login status can be locked with this so that it cannot be changed with this method
                 {
-                    m_log.Warn ("[UserInfoService]: Found a user (" + user.UserID + ") that was not seen within the last hour " +
-                        "(since " + timeLastSeen.ToLocalTime ().ToString () + ", time elapsed " + (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours + " hours)! Logging them out.");
+                    m_log.Warn("[UserInfoService]: Found a user (" + user.UserID +
+                               ") that was not seen within the last hour " +
+                               "(since " + timeLastSeen.ToLocalTime().ToString() + ", time elapsed " +
+                               (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours +
+                               " hours)! Logging them out.");
                     user.IsOnline = false;
-                    Set (user);
+                    Set(user);
                     onlineStatusChanged = true;
                 }
             }
@@ -191,5 +197,9 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

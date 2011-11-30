@@ -25,18 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
@@ -48,6 +42,8 @@ namespace OpenSim.Services.MessagingService
         {
             get { return GetType().Name; }
         }
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -67,17 +63,24 @@ namespace OpenSim.Services.MessagingService
         {
         }
 
+        #endregion
+
         #region ISyncMessagePosterService Members
 
         public void Post(OSDMap request, ulong RegionHandle)
         {
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(RegionHandle.ToString(), request);
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(
+                RegionHandle.ToString(), request);
         }
 
-        public OSDMap Get (OSDMap request, UUID userID, ulong RegionHandle)
+        public OSDMap Get(OSDMap request, UUID userID, ulong RegionHandle)
         {
-            return m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().FireMessageReceived (RegionHandle.ToString(), request);
+            return
+                m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().FireMessageReceived(
+                    RegionHandle.ToString(), request);
         }
+
+        #endregion
 
         private OSDMap CreateWebRequest(OSDMap request)
         {
@@ -88,7 +91,5 @@ namespace OpenSim.Services.MessagingService
 
             return message;
         }
-
-        #endregion
     }
 }

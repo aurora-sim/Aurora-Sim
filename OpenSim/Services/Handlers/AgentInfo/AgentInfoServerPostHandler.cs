@@ -25,26 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.DataManager;
-using Aurora.Framework;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services
 {
@@ -52,12 +47,13 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAgentInfoService m_AgentInfoService;
-        private IRegistryCore m_registry;
-        private string m_SessionID;
+        private readonly IAgentInfoService m_AgentInfoService;
+        private readonly string m_SessionID;
+        private readonly IRegistryCore m_registry;
 
-        public AgentInfoServerPostHandler (string url, IRegistryCore registry, IAgentInfoService service, string SessionID) :
-                base("POST", url)
+        public AgentInfoServerPostHandler(string url, IRegistryCore registry, IAgentInfoService service,
+                                          string SessionID) :
+                                              base("POST", url)
         {
             m_AgentInfoService = service;
             m_registry = registry;
@@ -65,7 +61,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -77,7 +73,7 @@ namespace OpenSim.Services
             try
             {
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
                 OSDMap map = WebUtils.GetOSDMap(body);
                 if (map != null)
                 {
@@ -133,7 +129,7 @@ namespace OpenSim.Services
 
         private byte[] GetUserInfos(OSDMap request)
         {
-            OSDArray userIDs = (OSDArray)request["userIDs"];
+            OSDArray userIDs = (OSDArray) request["userIDs"];
             string[] users = new string[userIDs.Count];
             for (int i = 0; i < userIDs.Count; i++)
             {
@@ -145,10 +141,7 @@ namespace OpenSim.Services
             OSDArray resultArray = new OSDArray();
             foreach (UserInfo info in result)
             {
-                if(info != null)
-                    resultArray.Add(info.ToOSD());
-                else
-                    resultArray.Add(new OSD());
+                resultArray.Add(info != null ? info.ToOSD() : new OSD());
             }
 
             OSDMap resultMap = new OSDMap();
@@ -158,8 +151,8 @@ namespace OpenSim.Services
 
         private byte[] GetAgentsLocations(OSDMap request)
         {
-            OSDArray userIDs = (OSDArray)request["userIDs"];
-            string requestor = request["requestor"].AsString ();
+            OSDArray userIDs = (OSDArray) request["userIDs"];
+            string requestor = request["requestor"].AsString();
             string[] users = new string[userIDs.Count];
             for (int i = 0; i < userIDs.Count; i++)
             {
@@ -182,28 +175,24 @@ namespace OpenSim.Services
         #endregion
 
         #region Misc
-        
+
         /// <summary>
-        /// Clean secure info out of the regions so that they do not get sent away from the grid service
-        /// This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
+        ///   Clean secure info out of the regions so that they do not get sent away from the grid service
+        ///   This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
         /// </summary>
-        /// <param name="regions"></param>
+        /// <param name = "regions"></param>
         /// <returns></returns>
         private List<GridRegion> CleanRegions(List<GridRegion> regions)
         {
-            List<GridRegion> regionsToReturn = new List<GridRegion>();
-            foreach (GridRegion region in regions)
-            {
-                regionsToReturn.Add(CleanRegion(region));
-            }
+            List<GridRegion> regionsToReturn = regions.Select(CleanRegion).ToList();
             return regions;
         }
 
         /// <summary>
-        /// Clean secure info out of the regions so that they do not get sent away from the grid service
-        /// This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
+        ///   Clean secure info out of the regions so that they do not get sent away from the grid service
+        ///   This makes sure that the SessionID and other info is secure and cannot be retrieved remotely
         /// </summary>
-        /// <param name="region"></param>
+        /// <param name = "region"></param>
         /// <returns></returns>
         private GridRegion CleanRegion(GridRegion region)
         {
@@ -221,12 +210,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -240,7 +229,7 @@ namespace OpenSim.Services
 
         private byte[] SuccessResult(string result)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["Result"] = "Success";
             sendData["Message"] = result;
@@ -260,12 +249,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -285,8 +274,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 

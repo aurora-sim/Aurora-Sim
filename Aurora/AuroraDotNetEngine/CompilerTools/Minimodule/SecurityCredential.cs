@@ -25,26 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class SecurityCredential : ISecurityCredential
+    internal class SecurityCredential : ISecurityCredential
     {
         private readonly ISocialEntity m_owner;
         private readonly IScene m_scene;
 
-        public SecurityCredential (ISocialEntity m_owner, IScene m_scene)
+        public SecurityCredential(ISocialEntity m_owner, IScene m_scene)
         {
             this.m_owner = m_owner;
             this.m_scene = m_scene;
         }
+
+        #region ISecurityCredential Members
 
         public ISocialEntity owner
         {
@@ -60,5 +57,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             return m_scene.Permissions.CanTerraformLand(m_owner.GlobalID, new Vector3(x, y, 0));
         }
+
+        #endregion
     }
 }

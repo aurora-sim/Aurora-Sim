@@ -25,37 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Globalization;
-using OpenMetaverse;
-using log4net;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
+
     #region StartPerformanceQueue
 
     public class StartPerformanceQueue
     {
-        Queue FirstStartQueue = new Queue (10000);
-        Queue SuspendedQueue = new Queue (100); //Smaller, we don't get this very often
-        Queue ContinuedQueue = new Queue (10000);
+        private readonly Queue ContinuedQueue = new Queue(10000);
+        private readonly Queue FirstStartQueue = new Queue(10000);
+        private readonly Queue SuspendedQueue = new Queue(100); //Smaller, we don't get this very often
+        private int ContinuedQueueCount;
 
-        int FirstStartQueueCount = 0;
-        int SuspendedQueueCount = 0;
-        int ContinuedQueueCount = 0;
+        private int FirstStartQueueCount;
+        private int SuspendedQueueCount;
 
         public bool GetNext(out object Item)
         {
@@ -65,7 +50,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (FirstStartQueue.Count != 0)
                 {
                     FirstStartQueueCount--;
-                    Item = FirstStartQueue.Dequeue ();
+                    Item = FirstStartQueue.Dequeue();
                     return true;
                 }
             }
@@ -74,7 +59,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (SuspendedQueue.Count != 0)
                 {
                     SuspendedQueueCount--;
-                    Item = SuspendedQueue.Dequeue ();
+                    Item = SuspendedQueue.Dequeue();
                     return true;
                 }
             }
@@ -83,7 +68,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (ContinuedQueue.Count != 0)
                 {
                     ContinuedQueueCount--;
-                    Item = ContinuedQueue.Dequeue ();
+                    Item = ContinuedQueue.Dequeue();
                     return true;
                 }
             }
@@ -101,19 +86,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 lock (FirstStartQueue)
                 {
                     FirstStartQueueCount++;
-                    FirstStartQueue.Enqueue (item);
+                    FirstStartQueue.Enqueue(item);
                 }
             if (priority == LoadPriority.Restart)
                 lock (SuspendedQueue)
                 {
                     SuspendedQueueCount++;
-                    SuspendedQueue.Enqueue (item);
+                    SuspendedQueue.Enqueue(item);
                 }
             if (priority == LoadPriority.Stop)
                 lock (ContinuedQueue)
                 {
                     ContinuedQueueCount++;
-                    ContinuedQueue.Enqueue (item);
+                    ContinuedQueue.Enqueue(item);
                 }
         }
     }

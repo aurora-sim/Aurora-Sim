@@ -28,19 +28,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
-using System.Xml;
-
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
-
-using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 using OpenSim.Region.CoreModules.Avatar.Inventory.Archiver;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace Aurora.Modules.World.DefaultInventoryIARLoader
 {
@@ -48,9 +44,11 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ILibraryService m_service;
-        protected IRegistryCore m_registry;
         protected Dictionary<string, AssetType> m_assetTypes = new Dictionary<string, AssetType>();
+        protected IRegistryCore m_registry;
+        protected ILibraryService m_service;
+
+        #region IDefaultLibraryLoader Members
 
         public void LoadLibrary(ILibraryService service, IConfigSource source, IRegistryCore registry)
         {
@@ -58,7 +56,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             m_registry = registry;
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
-            string pLibrariesLocation = "DefaultInventory/";
+            const string pLibrariesLocation = "DefaultInventory/";
             AddDefaultAssetTypes();
             if (libConfig != null)
             {
@@ -70,6 +68,8 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 }
             }
         }
+
+        #endregion
 
         private void AddDefaultAssetTypes()
         {
@@ -96,21 +96,21 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
         }
 
         /// <summary>
-        /// Use the asset set information at path to load assets
+        ///   Use the asset set information at path to load assets
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="assets"></param>
+        /// <param name = "path"></param>
+        /// <param name = "assets"></param>
         protected void LoadLibraries(string iarFileName)
         {
             RegionInfo regInfo = new RegionInfo();
             IScene m_MockScene = null;
             //Make the scene for the IAR loader
             if (m_registry is IScene)
-                m_MockScene = (IScene)m_registry;
+                m_MockScene = (IScene) m_registry;
             else
             {
                 m_MockScene = new Scene();
-                m_MockScene.Initialize (regInfo);
+                m_MockScene.Initialize(regInfo);
                 m_MockScene.AddModuleInterfaces(m_registry.GetInterfaces());
             }
 
@@ -119,23 +119,16 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             if (uinfo == null)
             {
                 m_log.Warn("Creating user " + m_service.LibraryOwnerName);
-                m_MockScene.UserAccountService.CreateUser (m_service.LibraryOwner, m_service.LibraryOwnerName, "", "");
-                uinfo = m_MockScene.UserAccountService.GetUserAccount (UUID.Zero, m_service.LibraryOwner);
+                m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwner, m_service.LibraryOwnerName, "", "");
+                uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwner);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
             }
             if (m_MockScene.InventoryService.GetRootFolder(m_service.LibraryOwner) == null)
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
 
-            List<InventoryFolderBase> rootFolders = m_MockScene.InventoryService.GetFolderFolders(uinfo.PrincipalID, UUID.Zero);
-            bool alreadyExists = false;
-            foreach (InventoryFolderBase folder in rootFolders)
-            {
-                if (folder.Name == iarFileName)
-                {
-                    alreadyExists = true;
-                    break;
-                }
-            }
+            List<InventoryFolderBase> rootFolders = m_MockScene.InventoryService.GetFolderFolders(uinfo.PrincipalID,
+                                                                                                  UUID.Zero);
+            bool alreadyExists = rootFolders.Any(folder => folder.Name == iarFileName);
             if (alreadyExists)
             {
                 m_log.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);
@@ -151,14 +144,15 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
             }
 
-            InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName, false);
+            InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName,
+                                                                                   false);
 
             try
             {
                 List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
                 if (nodes.Count == 0)
                     return;
-                InventoryFolderBase f = (InventoryFolderBase)nodes[0];
+                InventoryFolderBase f = (InventoryFolderBase) nodes[0];
 
                 TraverseFolders(nodes[0].ID, m_MockScene);
                 //This is our loaded folder
@@ -170,7 +164,8 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[LIBRARY MODULE]: Exception when processing archive {0}: {1}", iarFileName, e.StackTrace);
+                m_log.DebugFormat("[LIBRARY MODULE]: Exception when processing archive {0}: {1}", iarFileName,
+                                  e.StackTrace);
             }
             finally
             {
@@ -183,16 +178,12 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             List<InventoryFolderBase> folders = m_MockScene.InventoryService.GetFolderFolders(m_service.LibraryOwner, ID);
             foreach (InventoryFolderBase folder in folders)
             {
-                foreach (KeyValuePair<String, AssetType> type in m_assetTypes)
+                InventoryFolderBase folder1 = folder;
+                foreach (KeyValuePair<string, AssetType> type in m_assetTypes.Where(type => folder1.Name.ToLower().StartsWith(type.Key.ToLower())).TakeWhile(type => folder.Type != (short) type.Value))
                 {
-                    if (folder.Name.ToLower ().StartsWith (type.Key.ToLower ()))
-                    {
-                        if (folder.Type == (short)type.Value)
-                            break;
-                        folder.Type = (short)type.Value;
-                        m_MockScene.InventoryService.UpdateFolder (folder);
-                        break;
-                    }
+                    folder.Type = (short) type.Value;
+                    m_MockScene.InventoryService.UpdateFolder(folder);
+                    break;
                 }
                 TraverseFolders(folder.ID, m_MockScene);
             }
@@ -202,7 +193,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
         {
             if (node is InventoryItemBase)
             {
-                InventoryItemBase item = (InventoryItemBase)node;
+                InventoryItemBase item = (InventoryItemBase) node;
                 item.BasePermissions = 0x7FFFFFFF;
                 item.EveryOnePermissions = 0x7FFFFFFF;
                 item.CurrentPermissions = 0x7FFFFFFF;
@@ -212,7 +203,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
         private string GetInventoryPathFromName(string name)
         {
-            string[] parts = name.Split(new char[] { ' ' });
+            string[] parts = name.Split(new[] {' '});
             if (parts.Length == 3)
             {
                 name = string.Empty;

@@ -25,97 +25,83 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
-using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using Aurora.Simulation.Base;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Connectors;
+using OpenSim.Services.Interfaces;
+using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.RobustCompat
 {
     public class RobustGridServicesConnector : GridServicesConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         #region IGridService
 
-        public override GridRegion GetRegionByUUID (UUID scopeID, UUID regionID)
+        public override GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
-            return FixGridRegion (base.GetRegionByUUID (scopeID, regionID));
+            return FixGridRegion(base.GetRegionByUUID(scopeID, regionID));
         }
 
-        public override GridRegion GetRegionByPosition (UUID scopeID, int x, int y)
+        public override GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
-            return FixGridRegion (base.GetRegionByPosition (scopeID, x, y));
+            return FixGridRegion(base.GetRegionByPosition(scopeID, x, y));
         }
 
-        public override GridRegion GetRegionByName (UUID scopeID, string regionName)
+        public override GridRegion GetRegionByName(UUID scopeID, string regionName)
         {
-            return FixGridRegion (base.GetRegionByName (scopeID, regionName));
+            return FixGridRegion(base.GetRegionByName(scopeID, regionName));
         }
 
-        public override List<GridRegion> GetRegionsByName (UUID scopeID, string name, int maxNumber)
+        public override List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
-            return FixGridRegions (base.GetRegionsByName (scopeID, name, maxNumber));
+            return FixGridRegions(base.GetRegionsByName(scopeID, name, maxNumber));
         }
 
-        public override List<GridRegion> GetRegionRange (UUID scopeID, int xmin, int xmax, int ymin, int ymax)
+        public override List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
-            return FixGridRegions (base.GetRegionRange (scopeID, xmin, xmax, ymin, ymax));
+            return FixGridRegions(base.GetRegionRange(scopeID, xmin, xmax, ymin, ymax));
         }
 
         #endregion
-
-        private GridRegion FixGridRegion (GridRegion gridRegion)
-        {
-            if (gridRegion == null)
-                return null;
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager> ();
-            if (manager != null)
-            {
-                foreach (IScene scene in manager.Scenes)
-                {
-                    if (scene.RegionInfo.RegionID == gridRegion.RegionID)
-                    {
-                        gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
-                        gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
-                        return gridRegion;
-                    }
-                }
-            }
-            return gridRegion;
-        }
-
-        private List<GridRegion> FixGridRegions (List<GridRegion> list)
-        {
-            List<GridRegion> rs = new List<GridRegion> ();
-            foreach (GridRegion r in list)
-            {
-                rs.Add (FixGridRegion(r));
-            }
-            return rs;
-        }
-
-        #region IService Members
 
         public override string Name
         {
             get { return GetType().Name; }
         }
 
-        public override void Initialize (IConfigSource config, IRegistryCore registry)
+        private GridRegion FixGridRegion(GridRegion gridRegion)
+        {
+            if (gridRegion == null)
+                return null;
+            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (IScene scene in manager.Scenes.Where(scene => scene.RegionInfo.RegionID == gridRegion.RegionID))
+                {
+                    gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
+                    gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
+                    return gridRegion;
+                }
+            }
+            return gridRegion;
+        }
+
+        private List<GridRegion> FixGridRegions(List<GridRegion> list)
+        {
+            return list.Select(FixGridRegion).ToList();
+        }
+
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             IConfig handlerConfig = config.Configs["Handlers"];
@@ -124,7 +110,5 @@ namespace OpenSim.Services.RobustCompat
 
             registry.RegisterModuleInterface<IGridService>(this);
         }
-
-        #endregion
     }
 }

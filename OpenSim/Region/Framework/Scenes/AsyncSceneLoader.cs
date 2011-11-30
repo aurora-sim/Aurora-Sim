@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using OpenSim.Framework;
-using Nini.Config;
+﻿using System.Collections.Generic;
 using Aurora.Framework;
+using Nini.Config;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -14,12 +10,9 @@ namespace OpenSim.Region.Framework.Scenes
         private IConfigSource m_configSource;
         private ISimulationBase m_openSimBase;
 
-        public string Name
-        {
-            get { return "AsyncSceneLoader"; }
-        }
+        #region IApplicationPlugin Members
 
-        public void Initialize (ISimulationBase openSim)
+        public void Initialize(ISimulationBase openSim)
         {
             m_openSimBase = openSim;
             m_configSource = openSim.ConfigSource;
@@ -29,60 +22,71 @@ namespace OpenSim.Region.Framework.Scenes
                 enabled = m_openSimBase.ConfigSource.Configs["SceneLoader"].GetBoolean("AsyncSceneLoader", false);
 
             if (enabled)
-                m_openSimBase.ApplicationRegistry.RegisterModuleInterface<ISceneLoader> (this);
+                m_openSimBase.ApplicationRegistry.RegisterModuleInterface<ISceneLoader>(this);
         }
 
-        public void PostInitialise ()
+        public void PostInitialise()
         {
         }
 
-        public void Start ()
+        public void Start()
         {
         }
 
-        public void PostStart ()
+        public void PostStart()
         {
         }
 
-        public void Close ()
+        public void Close()
         {
         }
 
-        public void ReloadConfiguration (IConfigSource m_config)
+        public void ReloadConfiguration(IConfigSource m_config)
         {
         }
 
-        public IScene CreateScene (RegionInfo regionInfo)
+        #endregion
+
+        #region ISceneLoader Members
+
+        public string Name
         {
-            return SetupScene (regionInfo, m_configSource);
+            get { return "AsyncSceneLoader"; }
         }
+
+        public IScene CreateScene(RegionInfo regionInfo)
+        {
+            return SetupScene(regionInfo, m_configSource);
+        }
+
+        #endregion
 
         /// <summary>
-        /// Create a scene and its initial base structures.
+        ///   Create a scene and its initial base structures.
         /// </summary>
-        /// <param name="regionInfo"></param>
-        /// <param name="proxyOffset"></param>
-        /// <param name="configSource"></param>
-        /// <param name="clientServer"> </param>
+        /// <param name = "regionInfo"></param>
+        /// <param name = "proxyOffset"></param>
+        /// <param name = "configSource"></param>
+        /// <param name = "clientServer"> </param>
         /// <returns></returns>
-        protected IScene SetupScene (RegionInfo regionInfo, IConfigSource configSource)
+        protected IScene SetupScene(RegionInfo regionInfo, IConfigSource configSource)
         {
-            AgentCircuitManager circuitManager = new AgentCircuitManager ();
-            List<IClientNetworkServer> clientServers = AuroraModuleLoader.PickupModules<IClientNetworkServer> ();
-            List<IClientNetworkServer> allClientServers = new List<IClientNetworkServer> ();
+            AgentCircuitManager circuitManager = new AgentCircuitManager();
+            List<IClientNetworkServer> clientServers = AuroraModuleLoader.PickupModules<IClientNetworkServer>();
+            List<IClientNetworkServer> allClientServers = new List<IClientNetworkServer>();
             foreach (IClientNetworkServer clientServer in clientServers)
             {
                 foreach (int port in regionInfo.UDPPorts)
                 {
-                    IClientNetworkServer copy = clientServer.Copy ();
-                    copy.Initialise (port, m_configSource, circuitManager);
-                    allClientServers.Add (copy);
+                    IClientNetworkServer copy = clientServer.Copy();
+                    copy.Initialise(port, m_configSource, circuitManager);
+                    allClientServers.Add(copy);
                 }
             }
 
             AsyncScene scene = new AsyncScene();
-            scene.AddModuleInterfaces (m_openSimBase.ApplicationRegistry.GetInterfaces ());
-            scene.Initialize (regionInfo, circuitManager, allClientServers);
+            scene.AddModuleInterfaces(m_openSimBase.ApplicationRegistry.GetInterfaces());
+            scene.Initialize(regionInfo, circuitManager, allClientServers);
 
             return scene;
         }

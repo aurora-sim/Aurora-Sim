@@ -32,76 +32,50 @@ using Tanis.Collections;
 namespace Games.Pathfinding
 {
     /// <summary>
-    /// Base class for pathfinding nodes, it holds no actual information about the map. 
-    /// An inherited class must be constructed from this class and all virtual methods must be 
-    /// implemented. Note, that calling base() in the overridden methods is not needed.
+    ///   Base class for pathfinding nodes, it holds no actual information about the map. 
+    ///   An inherited class must be constructed from this class and all virtual methods must be 
+    ///   implemented. Note, that calling base() in the overridden methods is not needed.
     /// </summary>
     public class AStarNode : IComparable
     {
         #region Properties
 
-        private AStarNode FParent;
-        /// <summary>
-        /// The parent of the node.
-        /// </summary>
-        public AStarNode Parent
-        {
-            get
-            {
-                return FParent;
-            }
-            set
-            {
-                FParent = value;
-            }
-        }
+        private double FGoalEstimate;
+        private AStarNode FGoalNode;
 
         /// <summary>
-        /// The accumulative cost of the path until now.
+        ///   The parent of the node.
         /// </summary>
-        public double Cost
-        {
-            set
-            {
-                FCost = value;
-            }
-            get
-            {
-                return FCost;
-            }
-        }
-        private double FCost;
+        public AStarNode Parent { get; set; }
 
         /// <summary>
-        /// The estimated cost to the goal from here.
+        ///   The accumulative cost of the path until now.
+        /// </summary>
+        public double Cost { set; get; }
+
+        /// <summary>
+        ///   The estimated cost to the goal from here.
         /// </summary>
         public double GoalEstimate
         {
-            set
-            {
-                FGoalEstimate = value;
-            }
+            set { FGoalEstimate = value; }
             get
             {
                 Calculate();
                 return (FGoalEstimate);
             }
         }
-        private double FGoalEstimate;
 
         /// <summary>
-        /// The cost plus the estimated cost to the goal from here.
+        ///   The cost plus the estimated cost to the goal from here.
         /// </summary>
         public double TotalCost
         {
-            get
-            {
-                return (Cost + GoalEstimate);
-            }
+            get { return (Cost + GoalEstimate); }
         }
 
         /// <summary>
-        /// The goal node.
+        ///   The goal node.
         /// </summary>
         public AStarNode GoalNode
         {
@@ -110,35 +84,32 @@ namespace Games.Pathfinding
                 FGoalNode = value;
                 Calculate();
             }
-            get
-            {
-                return FGoalNode;
-            }
+            get { return FGoalNode; }
         }
-        private AStarNode FGoalNode;
 
         #endregion
 
         #region Constructors
 
         /// <summary>
-        /// Constructor.
+        ///   Constructor.
         /// </summary>
-        /// <param name="AParent">The node's parent</param>
-        /// <param name="AGoalNode">The goal node</param>
-        /// <param name="ACost">The accumulative cost until now</param>
+        /// <param name = "AParent">The node's parent</param>
+        /// <param name = "AGoalNode">The goal node</param>
+        /// <param name = "ACost">The accumulative cost until now</param>
         public AStarNode(AStarNode AParent, AStarNode AGoalNode, double ACost)
         {
-            FParent = AParent;
-            FCost = ACost;
+            Parent = AParent;
+            Cost = ACost;
             GoalNode = AGoalNode;
         }
+
         #endregion
 
         #region Public Methods
 
         /// <summary>
-        /// Determines wheather the current node is the goal.
+        ///   Determines wheather the current node is the goal.
         /// </summary>
         /// <returns>Returns true if current node is the goal</returns>
         public bool IsGoal()
@@ -151,9 +122,9 @@ namespace Games.Pathfinding
         #region Virtual Methods
 
         /// <summary>
-        /// Determines wheather the current node is the same state as the on passed.
+        ///   Determines wheather the current node is the same state as the on passed.
         /// </summary>
-        /// <param name="ANode">AStarNode to compare the current node to</param>
+        /// <param name = "ANode">AStarNode to compare the current node to</param>
         /// <returns>Returns true if they are the same state</returns>
         public virtual bool IsSameState(AStarNode ANode)
         {
@@ -161,7 +132,7 @@ namespace Games.Pathfinding
         }
 
         /// <summary>
-        /// Calculates the estimated cost for the remaining trip to the goal.
+        ///   Calculates the estimated cost for the remaining trip to the goal.
         /// </summary>
         public virtual void Calculate()
         {
@@ -169,9 +140,9 @@ namespace Games.Pathfinding
         }
 
         /// <summary>
-        /// Gets all successors nodes from the current node and adds them to the successor list
+        ///   Gets all successors nodes from the current node and adds them to the successor list
         /// </summary>
-        /// <param name="ASuccessors">List in which the successors will be added</param>
+        /// <param name = "ASuccessors">List in which the successors will be added</param>
         public virtual void GetSuccessors(ArrayList ASuccessors)
         {
         }
@@ -182,7 +153,7 @@ namespace Games.Pathfinding
 
         public override bool Equals(object obj)
         {
-            return IsSameState((AStarNode)obj);
+            return IsSameState((AStarNode) obj);
         }
 
         public override int GetHashCode()
@@ -196,46 +167,45 @@ namespace Games.Pathfinding
 
         public int CompareTo(object obj)
         {
-            return (-TotalCost.CompareTo(((AStarNode)obj).TotalCost));
+            return (-TotalCost.CompareTo(((AStarNode) obj).TotalCost));
         }
 
         #endregion
     }
 
     /// <summary>
-    /// Class for performing A* pathfinding
+    ///   Class for performing A* pathfinding
     /// </summary>
     public sealed class AStar
     {
         #region Private Fields
 
-        private AStarNode FStartNode;
+        private readonly Heap FClosedList;
+        private readonly Heap FOpenList;
+        private readonly ArrayList FSuccessors;
         private AStarNode FGoalNode;
-        private Heap FOpenList;
-        private Heap FClosedList;
-        private ArrayList FSuccessors;
+        private AStarNode FStartNode;
 
         #endregion
 
         #region Properties
 
+        private readonly ArrayList FSolution;
+
+        private bool m_pathPossible = true;
+
         /// <summary>
-        /// Holds the solution after pathfinding is done. <see>FindPath()</see>
+        ///   Holds the solution after pathfinding is done. <see>FindPath()</see>
         /// </summary>
         public ArrayList Solution
         {
-            get
-            {
-                return FSolution;
-            }
+            get { return FSolution; }
         }
-        private ArrayList FSolution;
 
         public bool pathPossible
         {
             get { return m_pathPossible; }
         }
-        private bool m_pathPossible = true;
 
         #endregion
 
@@ -254,9 +224,9 @@ namespace Games.Pathfinding
         #region Private Methods
 
         /// <summary>
-        /// Prints all the nodes in a list
+        ///   Prints all the nodes in a list
         /// </summary>
-        /// <param name="ANodeList">List to print</param>
+        /// <param name = "ANodeList">List to print</param>
         private void PrintNodeList(object ANodeList)
         {
             Console.WriteLine("Node list:");
@@ -272,10 +242,10 @@ namespace Games.Pathfinding
         #region Public Methods
 
         /// <summary>
-        /// Finds the shortest path from the start node to the goal node
+        ///   Finds the shortest path from the start node to the goal node
         /// </summary>
-        /// <param name="AStartNode">Start node</param>
-        /// <param name="AGoalNode">Goal node</param>
+        /// <param name = "AStartNode">Start node</param>
+        /// <param name = "AGoalNode">Goal node</param>
         public void FindPath(AStarNode AStartNode, AStarNode AGoalNode)
         {
             FStartNode = AStartNode;
@@ -286,7 +256,7 @@ namespace Games.Pathfinding
             while (FOpenList.Count > 0 && i < 2000)
             {
                 // Get the node with the lowest TotalCost
-                AStarNode NodeCurrent = (AStarNode)FOpenList.Pop();
+                AStarNode NodeCurrent = (AStarNode) FOpenList.Pop();
 
                 // If the node is the goal copy the path to the solution array
                 if (NodeCurrent.IsGoal())
@@ -307,7 +277,7 @@ namespace Games.Pathfinding
                     // the TotalCost is higher, we will throw away the current successor.
                     AStarNode NodeOpen = null;
                     if (FOpenList.Contains(NodeSuccessor))
-                        NodeOpen = (AStarNode)FOpenList[FOpenList.IndexOf(NodeSuccessor)];
+                        NodeOpen = (AStarNode) FOpenList[FOpenList.IndexOf(NodeSuccessor)];
                     if ((NodeOpen != null) && (NodeSuccessor.TotalCost > NodeOpen.TotalCost))
                         continue;
 
@@ -315,7 +285,7 @@ namespace Games.Pathfinding
                     // the TotalCost is higher, we will throw away the current successor.
                     AStarNode NodeClosed = null;
                     if (FClosedList.Contains(NodeSuccessor))
-                        NodeClosed = (AStarNode)FClosedList[FClosedList.IndexOf(NodeSuccessor)];
+                        NodeClosed = (AStarNode) FClosedList[FClosedList.IndexOf(NodeSuccessor)];
                     if ((NodeClosed != null) && (NodeSuccessor.TotalCost > NodeClosed.TotalCost))
                         continue;
 

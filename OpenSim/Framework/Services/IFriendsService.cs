@@ -26,30 +26,32 @@
  */
 
 using System;
+using System.Collections.Generic;
+using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using System.Collections.Generic;
 
 namespace OpenSim.Services.Interfaces
 {
     public class FriendInfo
     {
         /// <summary>
-        /// The user who is a friend of "Friend"
-        /// </summary>
-        public UUID PrincipalID;
-        /// <summary>
-        /// The friend of PrincipalID
+        ///   The friend of PrincipalID
         /// </summary>
         public string Friend;
 
         /// <summary>
-        /// The flags that PrincipalID has given to Friend
+        ///   The flags that PrincipalID has given to Friend
         /// </summary>
         public int MyFlags;
 
         /// <summary>
-        /// The flags Friend has given to PrincipalID
+        ///   The user who is a friend of "Friend"
+        /// </summary>
+        public UUID PrincipalID;
+
+        /// <summary>
+        ///   The flags Friend has given to PrincipalID
         /// </summary>
         public int TheirFlags;
 
@@ -88,38 +90,38 @@ namespace OpenSim.Services.Interfaces
     public interface IFriendsService
     {
         /// <summary>
-        /// Get all friends of the given user
+        ///   The local service (if possible)
         /// </summary>
-        /// <param name="PrincipalID"></param>
+        IFriendsService InnerService { get; }
+
+        /// <summary>
+        ///   Get all friends of the given user
+        /// </summary>
+        /// <param name = "PrincipalID"></param>
         /// <returns></returns>
         FriendInfo[] GetFriends(UUID PrincipalID);
 
         /// <summary>
-        /// Store the changes of the friend of PrincipalID
+        ///   Store the changes of the friend of PrincipalID
         /// </summary>
-        /// <param name="PrincipalID"></param>
-        /// <param name="Friend"></param>
-        /// <param name="flags"></param>
+        /// <param name = "PrincipalID"></param>
+        /// <param name = "Friend"></param>
+        /// <param name = "flags"></param>
         /// <returns></returns>
         bool StoreFriend(UUID PrincipalID, string Friend, int flags);
 
         /// <summary>
-        /// Delete the friendship between the two users
+        ///   Delete the friendship between the two users
         /// </summary>
-        /// <param name="PrincipalID"></param>
-        /// <param name="Friend"></param>
+        /// <param name = "PrincipalID"></param>
+        /// <param name = "Friend"></param>
         /// <returns></returns>
         bool Delete(UUID PrincipalID, string Friend);
 
-        /// <summary>
-        /// The local service (if possible)
-        /// </summary>
-        IFriendsService InnerService { get; }
+        void Initialize(IConfigSource config, IRegistryCore registry);
 
-        void Initialize (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void FinishedStartup();
 
-        void FinishedStartup ();
-
-        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void Start(IConfigSource config, IRegistryCore registry);
     }
 }

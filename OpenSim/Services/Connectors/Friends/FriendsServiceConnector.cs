@@ -25,25 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using Aurora.Simulation.Base;
-using OpenMetaverse;
 
 namespace OpenSim.Services.Connectors
 {
     public class FriendsServicesConnector : IFriendsService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
@@ -59,44 +59,39 @@ namespace OpenSim.Services.Connectors
 
             string reqString = WebUtils.BuildQueryString(sendData);
 
-            List<FriendInfo> finfos = new List<FriendInfo> ();
+            List<FriendInfo> finfos = new List<FriendInfo>();
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
-                foreach (string m_ServerURI in serverURIs)
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in serverURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                 m_ServerURI,
+                                                                                                                                 reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
+                            continue;
 
-                        if (replyData != null)
+                        Dictionary<string, object>.ValueCollection finfosList = replyData.Values;
+                        //m_log.DebugFormat("[FRIENDS CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
+                        foreach (object f in finfosList)
                         {
-                            if (replyData.ContainsKey("result") && (replyData["result"].ToString().ToLower() == "null"))
-                                continue;
-
-                            Dictionary<string, object>.ValueCollection finfosList = replyData.Values;
-                            //m_log.DebugFormat("[FRIENDS CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
-                            foreach (object f in finfosList)
+                            if (f is Dictionary<string, object>)
                             {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    FriendInfo finfo = new FriendInfo((Dictionary<string, object>)f);
-                                    finfos.Add(finfo);
-                                }
-                                else
-                                    m_log.DebugFormat("[FRIENDS CONNECTOR]: GetFriends {0} received invalid response type {1}",
-                                        PrincipalID, f.GetType());
+                                FriendInfo finfo = new FriendInfo((Dictionary<string, object>) f);
+                                finfos.Add(finfo);
                             }
-
+                            else
+                                m_log.DebugFormat(
+                                    "[FRIENDS CONNECTOR]: GetFriends {0} received invalid response type {1}",
+                                    PrincipalID, f.GetType());
                         }
-
-                        else
-                            m_log.DebugFormat("[FRIENDS CONNECTOR]: GetFriends {0} received null response",
-                                PrincipalID);
                     }
+
+                    else
+                        m_log.DebugFormat("[FRIENDS CONNECTOR]: GetFriends {0} received null response",
+                                          PrincipalID);
                 }
             }
             catch (Exception e)
@@ -105,15 +100,12 @@ namespace OpenSim.Services.Connectors
             }
 
             // Success
-            return finfos.ToArray ();
+            return finfos.ToArray();
         }
 
         public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
-            FriendInfo finfo = new FriendInfo();
-            finfo.PrincipalID = PrincipalID;
-            finfo.Friend = Friend;
-            finfo.MyFlags = flags;
+            FriendInfo finfo = new FriendInfo {PrincipalID = PrincipalID, Friend = Friend, MyFlags = flags};
 
             Dictionary<string, object> sendData = finfo.ToKeyValuePairs();
 
@@ -122,31 +114,33 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(), "FriendsServerURI");
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(PrincipalID.ToString(),
+                                                                                           "FriendsServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            WebUtils.BuildQueryString(sendData));
+                                                                      m_ServerURI,
+                                                                      WebUtils.BuildQueryString(sendData));
                     if (reply != string.Empty)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse (reply);
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                        if ((replyData != null) && replyData.ContainsKey ("Result") && (replyData["Result"] != null))
+                        if ((replyData != null) && replyData.ContainsKey("Result") && (replyData["Result"] != null))
                         {
                             bool success = false;
-                            Boolean.TryParse (replyData["Result"].ToString (), out success);
-                            if (replyData["Result"].ToString () == "Success")
+                            Boolean.TryParse(replyData["Result"].ToString(), out success);
+                            if (replyData["Result"].ToString() == "Success")
                                 return true;
-                            if(success)
+                            if (success)
                                 return success;
                         }
                         else
-                            m_log.DebugFormat ("[FRIENDS CONNECTOR]: StoreFriend {0} {1} received null response",
-                                PrincipalID, Friend);
+                            m_log.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend {0} {1} received null response",
+                                              PrincipalID, Friend);
                     }
                     else
-                        m_log.DebugFormat ("[FRIENDS CONNECTOR]: StoreFriend received null reply");
+                        m_log.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend received null reply");
                 }
             }
             catch (Exception e)
@@ -156,7 +150,6 @@ namespace OpenSim.Services.Connectors
             }
 
             return false;
-
         }
 
         public bool Delete(UUID PrincipalID, string Friend)
@@ -169,12 +162,13 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             try
             {
-                List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("FriendsServerURI");
                 foreach (string m_ServerURI in serverURIs)
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            m_ServerURI,
-                            WebUtils.BuildQueryString(sendData));
+                                                                      m_ServerURI,
+                                                                      WebUtils.BuildQueryString(sendData));
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -182,15 +176,15 @@ namespace OpenSim.Services.Connectors
                         if ((replyData != null) && replyData.ContainsKey("Result") && (replyData["Result"] != null))
                         {
                             bool success = false;
-                            Boolean.TryParse (replyData["Result"].ToString (), out success);
-                            if (replyData["Result"].ToString () == "Success")
+                            Boolean.TryParse(replyData["Result"].ToString(), out success);
+                            if (replyData["Result"].ToString() == "Success")
                                 return true;
-                            if(success)
+                            if (success)
                                 return success;
                         }
                         else
                             m_log.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend {0} {1} received null response",
-                                PrincipalID, Friend);
+                                              PrincipalID, Friend);
                     }
                     else
                         m_log.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend received null reply");
@@ -206,12 +200,12 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
-        #region IService Members
-
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IFriendsService Members
 
         public virtual IFriendsService InnerService
         {

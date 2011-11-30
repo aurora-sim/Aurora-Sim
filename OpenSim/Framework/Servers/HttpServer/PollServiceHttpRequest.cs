@@ -31,20 +31,21 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
-
     public class PollServiceHttpRequest
     {
-        public readonly PollServiceEventArgs PollServiceArgs;
         public readonly IHttpClientContext HttpContext;
+        public readonly PollServiceEventArgs PollServiceArgs;
         public readonly IHttpRequest Request;
-        public readonly int RequestTime;
         public readonly UUID RequestID;
-        public PollServiceHttpRequest(PollServiceEventArgs pPollServiceArgs, IHttpClientContext pHttpContext, IHttpRequest pRequest)
+        public readonly int RequestTime;
+
+        public PollServiceHttpRequest(PollServiceEventArgs pPollServiceArgs, IHttpClientContext pHttpContext,
+                                      IHttpRequest pRequest)
         {
             PollServiceArgs = pPollServiceArgs;
             HttpContext = pHttpContext;
             Request = pRequest;
-            RequestTime = System.Environment.TickCount;
+            RequestTime = Environment.TickCount;
             RequestID = UUID.Random();
         }
     }

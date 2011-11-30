@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using OpenSim.Framework;
 
@@ -33,8 +32,8 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IRegionModulesController
     {
-        void AddRegionToModules(IScene scene);
-        void RemoveRegionFromModules (IScene scene);
         List<IRegionModuleBase> AllModules { get; }
+        void AddRegionToModules(IScene scene);
+        void RemoveRegionFromModules(IScene scene);
     }
 }

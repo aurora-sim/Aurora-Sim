@@ -36,10 +36,7 @@ using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
-using log4net;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
-using Aurora.DataManager;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
@@ -124,10 +121,10 @@ namespace OpenSim.Services.Handlers.Map
                 int regionY = int.Parse (splitUri[3]);
 
                 List<GridRegion> regions = m_registry.RequestModuleInterface<IGridService> ().GetRegionRange (UUID.Zero,
-                        (int)((regionX * (int)Constants.RegionSize) - (mapView * (int)Constants.RegionSize)),
-                        (int)((regionX * (int)Constants.RegionSize) + (mapView * (int)Constants.RegionSize)),
-                        (int)((regionY * (int)Constants.RegionSize) - (mapView * (int)Constants.RegionSize)),
-                        (int)((regionY * (int)Constants.RegionSize) + (mapView * (int)Constants.RegionSize)));
+                        (regionX * Constants.RegionSize) - (mapView * Constants.RegionSize),
+                        (regionX * Constants.RegionSize) + (mapView * Constants.RegionSize),
+                        (regionY * Constants.RegionSize) - (mapView * Constants.RegionSize),
+                        (regionY * Constants.RegionSize) + (mapView * Constants.RegionSize));
                 List<AssetBase> textures = new List<AssetBase> ();
                 List<Image> bitImages = new List<Image> ();
                 List<GridRegion> badRegions = new List<GridRegion> ();
@@ -151,7 +148,7 @@ namespace OpenSim.Services.Handlers.Map
                         bitImages.Add (image);
                 }
 
-                int SizeOfImage = 256;
+                const int SizeOfImage = 256;
 
                 Bitmap mapTexture = new Bitmap (SizeOfImage, SizeOfImage);
                 Graphics g = Graphics.FromImage (mapTexture);
@@ -161,13 +158,13 @@ namespace OpenSim.Services.Handlers.Map
                 for (int i = 0; i < regions.Count; i++)
                 {
                     //Find the offsets first
-                    float x = (float)((regions[i].RegionLocX - (regionX * (float)Constants.RegionSize)) / (float)Constants.RegionSize);
-                    float y = (float)((regions[i].RegionLocY - (regionY * (float)Constants.RegionSize)) / (float)Constants.RegionSize);
+                    float x = (regions[i].RegionLocX - (regionX * (float)Constants.RegionSize)) / Constants.RegionSize;
+                    float y = (regions[i].RegionLocY - (regionY * (float)Constants.RegionSize)) / Constants.RegionSize;
                     y += (regions[i].RegionSizeX - Constants.RegionSize) / Constants.RegionSize;
                     float xx = (float)(x * (SizeOfImage / mapView));
                     float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
                     g.DrawImage (bitImages[i], xx, yy,
-                        (int)((float)SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / (float)Constants.RegionSize)), (int)((float)SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
+                        (int)(SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / Constants.RegionSize)), (int)(SizeOfImage / (float)mapView * (regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
                 }
 
                 EncoderParameters myEncoderParameters = new EncoderParameters ();
@@ -186,32 +183,33 @@ namespace OpenSim.Services.Handlers.Map
             }
             if (jpeg.Length == 0 && splitUri.Length > 1 && splitUri[1].Length > 1)
             {
-                MemoryStream imgstream = new MemoryStream ();
-                GridRegion region = m_registry.RequestModuleInterface<IGridService> ().GetRegionByName (UUID.Zero, splitUri[1].Remove(4));
+                MemoryStream imgstream = new MemoryStream();
+                GridRegion region = m_registry.RequestModuleInterface<IGridService>().GetRegionByName(UUID.Zero,
+                                                                                                      splitUri[1].Remove
+                                                                                                          (4));
                 if (region == null)
                     return null;
                 // non-async because we know we have the asset immediately.
-                AssetBase mapasset = m_registry.RequestModuleInterface<IAssetService> ().Get (region.TerrainMapImage.ToString ());
+                AssetBase mapasset =
+                    m_registry.RequestModuleInterface<IAssetService>().Get(region.TerrainMapImage.ToString());
                 Image image;
                 ManagedImage mImage;
-                if (!(OpenJPEG.DecodeToImage (mapasset.Data, out mImage, out image)) || image == null)
+                if (!(OpenJPEG.DecodeToImage(mapasset.Data, out mImage, out image)) || image == null)
                     return null;
                 // Decode image to System.Drawing.Image
-                if (image != null)
-                {
-                    // Save to bitmap
-                    Bitmap mapTexture = new Bitmap (image);
 
-                    EncoderParameters myEncoderParameters = new EncoderParameters ();
-                    myEncoderParameters.Param[0] = new EncoderParameter (Encoder.Quality, 95L);
+                // Save to bitmap
+                Bitmap mapTexture = new Bitmap(image);
 
-                    // Save bitmap to stream
-                    mapTexture.Save (imgstream, GetEncoderInfo ("image/jpeg"), myEncoderParameters);
+                EncoderParameters myEncoderParameters = new EncoderParameters();
+                myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
 
-                    // Write the stream to a byte array for output
-                    jpeg = imgstream.ToArray ();
-                    SaveCachedImage (uri, jpeg);
-                }
+                // Save bitmap to stream
+                mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
+
+                // Write the stream to a byte array for output
+                jpeg = imgstream.ToArray();
+                SaveCachedImage(uri, jpeg);
             }
             reply["str_response_string"] = Convert.ToBase64String (jpeg);
             reply["int_response_code"] = 200;
@@ -223,14 +221,8 @@ namespace OpenSim.Services.Handlers.Map
         // From msdn
         private static ImageCodecInfo GetEncoderInfo (String mimeType)
         {
-            ImageCodecInfo[] encoders;
-            encoders = ImageCodecInfo.GetImageEncoders ();
-            for (int j = 0; j < encoders.Length; ++j)
-            {
-                if (encoders[j].MimeType == mimeType)
-                    return encoders[j];
-            }
-            return null;
+            ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders ();
+            return encoders.FirstOrDefault(t => t.MimeType == mimeType);
         }
 
         private byte[] FindCachedImage (string name)

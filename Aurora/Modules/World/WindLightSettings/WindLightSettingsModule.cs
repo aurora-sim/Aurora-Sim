@@ -28,22 +28,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using log4net;
-using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Serialization;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using Aurora.DataManager;
-using Aurora.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace Aurora.Modules
 {
@@ -52,16 +49,58 @@ namespace Aurora.Modules
         #region Declarations
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IScene m_scene;
-        private bool m_enableWindlight = true;
-        private Dictionary<float, RegionLightShareData> m_WindlightSettings = new Dictionary<float, RegionLightShareData>();
-        private Dictionary<UUID, UUID> m_preivouslySentWindLight = new Dictionary<UUID, UUID>();
         //ONLY create this once so that the UUID stays constant so that it isn't repeatedly sent to the client
-        private RegionLightShareData m_defaultWindLight = new RegionLightShareData();
+        private readonly RegionLightShareData m_defaultWindLight = new RegionLightShareData();
+        private readonly Dictionary<UUID, UUID> m_preivouslySentWindLight = new Dictionary<UUID, UUID>();
+
+        private Dictionary<float, RegionLightShareData> m_WindlightSettings =
+            new Dictionary<float, RegionLightShareData>();
+
+        private bool m_enableWindlight = true;
+        private IScene m_scene;
 
         public bool EnableWindLight
         {
             get { return m_enableWindlight; }
+        }
+
+        #endregion
+
+        #region IAuroraBackupModule Members
+
+        public bool IsArchiving
+        {
+            get { return false; }
+        }
+
+        public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
+        {
+            writer.WriteDir("windlight");
+
+            foreach (RegionLightShareData lsd in m_WindlightSettings.Values)
+            {
+                OSDMap map = lsd.ToOSD();
+                writer.WriteFile("windlight/" + lsd.UUID.ToString(), OSDParser.SerializeLLSDBinary(map));
+            }
+        }
+
+        public void BeginLoadModuleFromArchive(IScene scene)
+        {
+        }
+
+        public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
+        {
+            if (filePath.StartsWith("windlight/"))
+            {
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDBinary(data);
+                RegionLightShareData lsd = new RegionLightShareData();
+                lsd.FromOSD(map);
+                SaveWindLightSettings(lsd.minEffectiveAltitude, lsd);
+            }
+        }
+
+        public void EndLoadModuleFromArchive(IScene scene)
+        {
         }
 
         #endregion
@@ -71,11 +110,11 @@ namespace Aurora.Modules
         public void Initialise(IConfigSource config)
         {
             IConfig LightShareConfig = config.Configs["WindLightSettings"];
-            if(LightShareConfig != null)
+            if (LightShareConfig != null)
                 m_enableWindlight = LightShareConfig.GetBoolean("Enable", true);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_enableWindlight)
                 return;
@@ -83,7 +122,7 @@ namespace Aurora.Modules
             m_scene = scene;
             m_scene.RegisterModuleInterface<IWindLightSettingsModule>(this);
             m_scene.StackModuleInterface<IAuroraBackupModule>(this);
-            IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            IRegionInfoConnector RegionInfoConnector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (RegionInfoConnector != null)
                 m_WindlightSettings = RegionInfoConnector.LoadRegionWindlightSettings(m_scene.RegionInfo.RegionID);
 
@@ -94,13 +133,7 @@ namespace Aurora.Modules
             scene.EventManager.OnAvatarEnteringNewParcel += AvatarEnteringNewParcel;
         }
 
-        void OnRemovePresence (IScenePresence sp)
-        {
-            //They are leaving, clear it out
-            m_preivouslySentWindLight.Remove(sp.UUID);
-        }
-
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.UnregisterModuleInterface<IWindLightSettingsModule>(this);
 
@@ -111,13 +144,18 @@ namespace Aurora.Modules
             scene.EventManager.OnAvatarEnteringNewParcel -= AvatarEnteringNewParcel;
         }
 
-        public void RegionLoaded (IScene scene) { }
+        public void RegionLoaded(IScene scene)
+        {
+        }
 
-        public Type ReplaceableInterface{get { return null; }}
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
 
-        public void PostInitialise(){}
-
-        public void Close(){}
+        public void Close()
+        {
+        }
 
         public string Name
         {
@@ -126,7 +164,7 @@ namespace Aurora.Modules
 
         #endregion
 
-        #region IWindLightModule Members
+        #region IWindLightSettingsModule Members
 
         public void SendWindlightProfileTargeted(RegionLightShareData wl, UUID pUUID)
         {
@@ -140,19 +178,38 @@ namespace Aurora.Modules
         public void SaveWindLightSettings(float MinEffectiveHeight, RegionLightShareData wl)
         {
             UUID oldUUID = UUID.Random();
-            if(m_WindlightSettings.ContainsKey(wl.minEffectiveAltitude))
+            if (m_WindlightSettings.ContainsKey(wl.minEffectiveAltitude))
                 oldUUID = m_WindlightSettings[wl.minEffectiveAltitude].UUID;
 
             m_WindlightSettings[wl.minEffectiveAltitude] = wl;
             wl.UUID = oldUUID;
-            IRegionInfoConnector RegionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            IRegionInfoConnector RegionInfoConnector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             if (RegionInfoConnector != null)
                 RegionInfoConnector.StoreRegionWindlightSettings(wl.regionID, oldUUID, wl);
 
-            m_scene.ForEachScenePresence (OnMakeRootAgent);
+            m_scene.ForEachScenePresence(OnMakeRootAgent);
+        }
+
+        public RegionLightShareData FindRegionWindLight()
+        {
+            foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
+            {
+                return parcelLSD;
+            }
+            return m_defaultWindLight;
         }
 
         #endregion
+
+        private void OnRemovePresence(IScenePresence sp)
+        {
+            //They are leaving, clear it out
+            m_preivouslySentWindLight.Remove(sp.UUID);
+        }
+
+        public void PostInitialise()
+        {
+        }
 
         public OSDMap OnRegisterCaps(UUID agentID, IHttpServer server)
         {
@@ -160,18 +217,14 @@ namespace Aurora.Modules
             retVal["DispatchWindLightSettings"] = CapsUtil.CreateCAPS("DispatchWindLightSettings", "");
             //Sets the windlight settings
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return DispatchWindLightSettings(m_dhttpMethod, agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        DispatchWindLightSettings(m_dhttpMethod, agentID)));
 
             retVal["RetrieveWindLightSettings"] = CapsUtil.CreateCAPS("RetrieveWindLightSettings", "");
             //Retrieves the windlight settings for a specifc parcel or region
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["RetrieveWindLightSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return RetrieveWindLightSettings(m_dhttpMethod, agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        RetrieveWindLightSettings(m_dhttpMethod, agentID)));
             return retVal;
         }
 
@@ -187,8 +240,8 @@ namespace Aurora.Modules
             if (SP == null)
                 return responsedata; //They don't exist
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
-                        
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
             OSDMap retVal = new OSDMap();
             if (rm.ContainsKey("RegionID"))
             {
@@ -197,7 +250,9 @@ namespace Aurora.Modules
                 foreach (RegionLightShareData rlsd in m_WindlightSettings.Values)
                 {
                     OSDMap m = rlsd.ToOSD();
-                    m.Add("Name", OSD.FromString("(Region Settings), Min: " + rlsd.minEffectiveAltitude + ", Max: " + rlsd.maxEffectiveAltitude));
+                    m.Add("Name",
+                          OSD.FromString("(Region Settings), Min: " + rlsd.minEffectiveAltitude + ", Max: " +
+                                         rlsd.maxEffectiveAltitude));
                     array.Add(m);
                 }
                 retVal.Add("WindLight", array);
@@ -217,14 +272,16 @@ namespace Aurora.Modules
                             OSDMap map = land.LandData.GenericDataMap;
                             if (map.ContainsKey("WindLight"))
                             {
-                                OSDMap parcelWindLight = (OSDMap)map["WindLight"];
+                                OSDMap parcelWindLight = (OSDMap) map["WindLight"];
                                 foreach (OSD innerMap in parcelWindLight.Values)
                                 {
                                     RegionLightShareData rlsd = new RegionLightShareData();
-                                    rlsd.FromOSD((OSDMap)innerMap);
+                                    rlsd.FromOSD((OSDMap) innerMap);
                                     OSDMap imap = new OSDMap();
                                     imap = rlsd.ToOSD();
-                                    imap.Add("Name", OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude + ", Max: " + rlsd.maxEffectiveAltitude));
+                                    imap.Add("Name",
+                                             OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude +
+                                                            ", Max: " + rlsd.maxEffectiveAltitude));
                                     retVals.Add(imap);
                                 }
                             }
@@ -240,14 +297,16 @@ namespace Aurora.Modules
                         OSDMap map = land.LandData.GenericDataMap;
                         if (map.ContainsKey("WindLight"))
                         {
-                            OSDMap parcelWindLight = (OSDMap)map["WindLight"];
+                            OSDMap parcelWindLight = (OSDMap) map["WindLight"];
                             foreach (OSD innerMap in parcelWindLight.Values)
                             {
                                 RegionLightShareData rlsd = new RegionLightShareData();
-                                rlsd.FromOSD((OSDMap)innerMap);
+                                rlsd.FromOSD((OSDMap) innerMap);
                                 OSDMap imap = new OSDMap();
                                 imap = rlsd.ToOSD();
-                                imap.Add("Name", OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude + ", Max: " + rlsd.maxEffectiveAltitude));
+                                imap.Add("Name",
+                                         OSD.FromString(land.LandData.Name + ", Min: " + rlsd.minEffectiveAltitude +
+                                                        ", Max: " + rlsd.maxEffectiveAltitude));
                                 retVals.Add(imap);
                             }
                         }
@@ -270,12 +329,12 @@ namespace Aurora.Modules
             responsedata["str_response_string"] = "";
 
             IScenePresence SP = m_scene.GetScenePresence(agentID);
-            if(SP == null)
+            if (SP == null)
                 return responsedata; //They don't exist
 
             m_log.Info("[WindLightSettings]: Got a request to update WindLight from " + SP.Name);
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
 
             RegionLightShareData lsd = new RegionLightShareData();
             lsd.FromOSD(rm);
@@ -290,29 +349,22 @@ namespace Aurora.Modules
                 {
                     if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
                         return responsedata; // No permissions
-                    bool found = false;
-                    foreach (RegionLightShareData regionLSD in m_WindlightSettings.Values)
-                    {
-                        if (lsd.minEffectiveAltitude == regionLSD.minEffectiveAltitude &&
-                            lsd.maxEffectiveAltitude == regionLSD.maxEffectiveAltitude)
-                        {
-                            //it exists
-                            found = true;
-                            break;
-                        }
-                    }
+                    bool found = m_WindlightSettings.Values.Any(regionLSD => lsd.minEffectiveAltitude == regionLSD.minEffectiveAltitude && lsd.maxEffectiveAltitude == regionLSD.maxEffectiveAltitude);
 
                     //Set to default
-                    if(found)
+                    if (found)
                         SaveWindLightSettings(lsd.minEffectiveAltitude, new RegionLightShareData());
                 }
                 else if (lsd.type == 1) //Parcel
                 {
-                    IParcelManagementModule parcelManagement = SP.Scene.RequestModuleInterface<IParcelManagementModule>();
+                    IParcelManagementModule parcelManagement =
+                        SP.Scene.RequestModuleInterface<IParcelManagementModule>();
                     if (parcelManagement != null)
                     {
-                        ILandObject land = parcelManagement.GetLandObject((int)SP.AbsolutePosition.X, (int)SP.AbsolutePosition.Y);
-                        if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong)GroupPowers.LandOptions))
+                        ILandObject land = parcelManagement.GetLandObject((int) SP.AbsolutePosition.X,
+                                                                          (int) SP.AbsolutePosition.Y);
+                        if (
+                            !SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong) GroupPowers.LandOptions))
                             return responsedata; // No permissions
                         IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                         if (ORSM == null || !ORSM.AllowParcelWindLight)
@@ -325,7 +377,7 @@ namespace Aurora.Modules
 
                         OSDMap innerMap = new OSDMap();
                         if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
-                            innerMap = (OSDMap)map["WindLight"];
+                            innerMap = (OSDMap) map["WindLight"];
 
                         if (innerMap.ContainsKey(lsd.minEffectiveAltitude.ToString()))
                         {
@@ -358,11 +410,14 @@ namespace Aurora.Modules
                 }
                 else if (lsd.type == 1) //Parcel
                 {
-                    IParcelManagementModule parcelManagement = SP.Scene.RequestModuleInterface<IParcelManagementModule>();
+                    IParcelManagementModule parcelManagement =
+                        SP.Scene.RequestModuleInterface<IParcelManagementModule>();
                     if (parcelManagement != null)
                     {
-                        ILandObject land = parcelManagement.GetLandObject((int)SP.AbsolutePosition.X, (int)SP.AbsolutePosition.Y);
-                        if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong)GroupPowers.LandOptions))
+                        ILandObject land = parcelManagement.GetLandObject((int) SP.AbsolutePosition.X,
+                                                                          (int) SP.AbsolutePosition.Y);
+                        if (
+                            !SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong) GroupPowers.LandOptions))
                             return responsedata; // No permissions
                         IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                         if (ORSM == null || !ORSM.AllowParcelWindLight)
@@ -375,13 +430,13 @@ namespace Aurora.Modules
 
                         OSDMap innerMap = new OSDMap();
                         if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
-                            innerMap = (OSDMap)map["WindLight"];
+                            innerMap = (OSDMap) map["WindLight"];
 
-                        string removeThisMap = "";
+                        const string removeThisMap = "";
 
                         foreach (KeyValuePair<string, OSD> kvp in innerMap)
                         {
-                            OSDMap lsdMap = (OSDMap)kvp.Value;
+                            OSDMap lsdMap = (OSDMap) kvp.Value;
                             RegionLightShareData parcelLSD = new RegionLightShareData();
                             parcelLSD.FromOSD(lsdMap);
 
@@ -412,7 +467,7 @@ namespace Aurora.Modules
         {
             message = "";
             if (lsd.minEffectiveAltitude == regionLSD.minEffectiveAltitude &&
-                            lsd.maxEffectiveAltitude == regionLSD.maxEffectiveAltitude)
+                lsd.maxEffectiveAltitude == regionLSD.maxEffectiveAltitude)
             {
                 //Updating, break
                 return false;
@@ -433,7 +488,7 @@ namespace Aurora.Modules
                     message = "Altitudes collide. Set maximum height lower than " + regionLSD.minEffectiveAltitude + ".";
                     return true;
                 }
-            }// Ex. lsd.min = 200, regionLSD.min = 100
+            } // Ex. lsd.min = 200, regionLSD.min = 100
             else if (lsd.minEffectiveAltitude > regionLSD.minEffectiveAltitude)
             {
                 //Check against max
@@ -457,93 +512,94 @@ namespace Aurora.Modules
             }
         }
 
-        private void AvatarEnteringNewParcel (IScenePresence SP, ILandObject oldParcel)
+        private void AvatarEnteringNewParcel(IScenePresence SP, ILandObject oldParcel)
         {
             //Send on new parcel
-            IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+            IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (ORSM != null && ORSM.AllowParcelWindLight)
                 SendProfileToClient(SP, false);
         }
 
-        private void OnMakeRootAgent (IScenePresence sp)
+        private void OnMakeRootAgent(IScenePresence sp)
         {
             //Look for full, so send true
-            SendProfileToClient (sp, true);
+            SendProfileToClient(sp, true);
         }
 
-        void OnSignificantClientMovement(IScenePresence sp)
+        private void OnSignificantClientMovement(IScenePresence sp)
         {
             //Send on movement as this checks for altitude
             SendProfileToClient(sp, true);
         }
 
         //Find the correct WL settings to send to the client
-        public void SendProfileToClient (IScenePresence presence, bool checkAltitudesOnly)
+        public void SendProfileToClient(IScenePresence presence, bool checkAltitudesOnly)
         {
             if (presence == null)
                 return;
             ILandObject land = null;
             if (!checkAltitudesOnly)
             {
-                IParcelManagementModule parcelManagement = presence.Scene.RequestModuleInterface<IParcelManagementModule> ();
+                IParcelManagementModule parcelManagement =
+                    presence.Scene.RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagement != null)
                 {
-                    land = parcelManagement.GetLandObject (presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
+                    land = parcelManagement.GetLandObject(presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
                 }
-                OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap ();
-                if (map.ContainsKey ("WindLight"))
+                OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap();
+                if (map.ContainsKey("WindLight"))
                 {
-                    IOpenRegionSettingsModule ORSM = presence.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
+                    IOpenRegionSettingsModule ORSM = presence.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                     if (ORSM != null && ORSM.AllowParcelWindLight)
                     {
-                        if (CheckOverRideParcels (presence))
+                        if (CheckOverRideParcels(presence))
                         {
                             //Overrides all
-                            SendProfileToClient (presence, FindRegionWindLight (presence));
+                            SendProfileToClient(presence, FindRegionWindLight(presence));
                         }
                         else
                         {
-                            OSDMap innerMap = (OSDMap)map["WindLight"];
+                            OSDMap innerMap = (OSDMap) map["WindLight"];
                             foreach (KeyValuePair<string, OSD> kvp in innerMap)
                             {
-                                int minEffectiveAltitude = int.Parse (kvp.Key);
+                                int minEffectiveAltitude = int.Parse(kvp.Key);
                                 if (presence.AbsolutePosition.Z > minEffectiveAltitude)
                                 {
-                                    OSDMap lsdMap = (OSDMap)kvp.Value;
-                                    RegionLightShareData parcelLSD = new RegionLightShareData ();
-                                    parcelLSD.FromOSD (lsdMap);
+                                    OSDMap lsdMap = (OSDMap) kvp.Value;
+                                    RegionLightShareData parcelLSD = new RegionLightShareData();
+                                    parcelLSD.FromOSD(lsdMap);
                                     if (presence.AbsolutePosition.Z < parcelLSD.maxEffectiveAltitude)
                                     {
                                         //They are between both altitudes
-                                        SendProfileToClient (presence, parcelLSD);
+                                        SendProfileToClient(presence, parcelLSD);
                                         return; //End it
                                     }
                                 }
                             }
                             //Send region since no parcel claimed the user
-                            SendProfileToClient (presence, FindRegionWindLight (presence));
+                            SendProfileToClient(presence, FindRegionWindLight(presence));
                         }
                     }
                     else
                     {
                         //Only region allowed 
-                        SendProfileToClient (presence, FindRegionWindLight (presence));
+                        SendProfileToClient(presence, FindRegionWindLight(presence));
                     }
                 }
                 else
                 {
                     //Send the region by default to override any previous settings
-                    SendProfileToClient (presence, FindRegionWindLight (presence));
+                    SendProfileToClient(presence, FindRegionWindLight(presence));
                 }
             }
             else
             {
                 //Send the region by default to override any previous settings
-                SendProfileToClient (presence, FindRegionWindLight (presence));
+                SendProfileToClient(presence, FindRegionWindLight(presence));
             }
         }
 
-        public bool CheckOverRideParcels (IScenePresence presence)
+        public bool CheckOverRideParcels(IScenePresence presence)
         {
             foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
             {
@@ -559,16 +615,7 @@ namespace Aurora.Modules
             return false;
         }
 
-        public RegionLightShareData FindRegionWindLight ()
-        {
-            foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
-            {
-                return parcelLSD;
-            }
-            return m_defaultWindLight;
-        }
-
-        public RegionLightShareData FindRegionWindLight (IScenePresence presence)
+        public RegionLightShareData FindRegionWindLight(IScenePresence presence)
         {
             foreach (RegionLightShareData parcelLSD in m_WindlightSettings.Values)
             {
@@ -584,7 +631,7 @@ namespace Aurora.Modules
             return m_defaultWindLight;
         }
 
-        public void SendProfileToClient (IScenePresence presence, RegionLightShareData wl)
+        public void SendProfileToClient(IScenePresence presence, RegionLightShareData wl)
         {
             if (m_enableWindlight)
             {
@@ -603,7 +650,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void SendProfileToClientEQ (IScenePresence presence, RegionLightShareData wl)
+        public void SendProfileToClientEQ(IScenePresence presence, RegionLightShareData wl)
         {
             OSD item = BuildSendEQMessage(wl.ToOSD());
             IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
@@ -613,50 +660,8 @@ namespace Aurora.Modules
 
         private OSD BuildSendEQMessage(OSDMap body)
         {
-            OSDMap map = new OSDMap();
-            map.Add("body", body);
-            map.Add("message", OSD.FromString("WindLightSettingsUpdate"));
+            OSDMap map = new OSDMap {{"body", body}, {"message", OSD.FromString("WindLightSettingsUpdate")}};
             return map;
         }
-
-        #region IAuroraBackupModule Members
-
-        public bool IsArchiving
-        {
-            get { return false; }
-        }
-
-        public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
-        {
-            writer.WriteDir("windlight");
-
-            foreach (RegionLightShareData lsd in m_WindlightSettings.Values)
-            {
-                OSDMap map = lsd.ToOSD();
-                writer.WriteFile("windlight/" + lsd.UUID.ToString(), OSDParser.SerializeLLSDBinary(map));
-            }
-        }
-
-        public void BeginLoadModuleFromArchive(IScene scene)
-        {
-        }
-
-        public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
-        {
-            if (filePath.StartsWith("windlight/"))
-            {
-                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDBinary(data);
-                RegionLightShareData lsd = new RegionLightShareData();
-                lsd.FromOSD(map);
-                SaveWindLightSettings(lsd.minEffectiveAltitude, lsd);
-            }
-        }
-
-        public void EndLoadModuleFromArchive(IScene scene)
-        {
-        }
-
-        #endregion
     }
 }
-

@@ -25,25 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Drawing;
+using BitmapProcessing;
+using OpenMetaverse;
+using OpenMetaverse.Imaging;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenMetaverse;
-using OpenMetaverse.Imaging;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
     public class PaintSphere : ITerrainPaintableEffect
     {
+        private volatile bool locked;
+        private UUID m_textureToPaint = RegionSettings.DEFAULT_TERRAIN_TEXTURE_1;
+
         #region ITerrainPaintableEffect Members
 
-        private UUID m_textureToPaint = RegionSettings.DEFAULT_TERRAIN_TEXTURE_1;
-        private volatile bool locked = false;
-
-        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
+                                float duration, float BrushSize, List<IScene> scene)
         {
             if (locked)
                 return;
@@ -52,10 +53,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
             int x, y;
 
-            int xFrom = (int)(rx - BrushSize + 0.5);
-            int xTo = (int)(rx + BrushSize + 0.5) + 1;
-            int yFrom = (int)(ry - BrushSize + 0.5);
-            int yTo = (int)(ry + BrushSize + 0.5) + 1;
+            int xFrom = (int) (rx - BrushSize + 0.5);
+            int xTo = (int) (rx + BrushSize + 0.5) + 1;
+            int yFrom = (int) (ry - BrushSize + 0.5);
+            int yTo = (int) (ry + BrushSize + 0.5) + 1;
 
             if (xFrom < 0)
                 xFrom = 0;
@@ -70,36 +71,42 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                 yTo = map.Height;
 
             //ONLY get cached assets, since this is a local asset ONLY
-            AssetBase paintAsset = map.Scene.AssetService.Get(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
+            AssetBase paintAsset =
+                map.Scene.AssetService.Get(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
             if (paintAsset == null)
             {
-                paintAsset = new AssetBase(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + map.Scene.RegionInfo.RegionID, AssetType.Texture, UUID.Zero);
-                paintAsset.Flags = AssetFlags.Deletable;
-                AssetBase defaultTexture = map.Scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
+                paintAsset = new AssetBase(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture,
+                                           "PaintableTerrainTexture-" + map.Scene.RegionInfo.RegionID, AssetType.Texture,
+                                           UUID.Zero) {Flags = AssetFlags.Deletable};
+                AssetBase defaultTexture =
+                    map.Scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString()); //Nice grass
                 if (defaultTexture == null)
                     //Erm... what to do!
                     return;
 
-                paintAsset.Data = defaultTexture.Data;//Eventually we need to replace this with an interpolation of the existing textures!
+                paintAsset.Data = defaultTexture.Data;
+                    //Eventually we need to replace this with an interpolation of the existing textures!
             }
 
-            AssetBase textureToApply = map.Scene.AssetService.Get(m_textureToPaint.ToString()); //The texture the client wants to paint
+            AssetBase textureToApply = map.Scene.AssetService.Get(m_textureToPaint.ToString());
+                //The texture the client wants to paint
             if (textureToApply == null)
                 return;
 
-            Image paintiTexture = map.Scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (paintAsset.Data);
+            Image paintiTexture = map.Scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(paintAsset.Data);
             if (paintiTexture == null)
                 return;
 
-            Image textureToAddiTexture = map.Scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (textureToApply.Data);
+            Image textureToAddiTexture =
+                map.Scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(textureToApply.Data);
             if (textureToAddiTexture == null)
             {
                 paintiTexture.Dispose();
                 return;
             }
 
-            BitmapProcessing.FastBitmap paintTexture = new BitmapProcessing.FastBitmap((Bitmap)paintiTexture);
-            BitmapProcessing.FastBitmap textureToAddTexture = new BitmapProcessing.FastBitmap((Bitmap)textureToAddiTexture);
+            FastBitmap paintTexture = new FastBitmap((Bitmap) paintiTexture);
+            FastBitmap textureToAddTexture = new FastBitmap((Bitmap) textureToAddiTexture);
 
             paintTexture.LockBitmap();
             textureToAddTexture.LockBitmap();
@@ -112,14 +119,20 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
 
-                    Color c = textureToAddTexture.GetPixel((int)(((float)x / (float)map.Scene.RegionInfo.RegionSizeX * (float)textureToAddiTexture.Width)),
-                        (int)(((float)y / (float)map.Scene.RegionInfo.RegionSizeX) * (float)textureToAddiTexture.Height));
-                    Color cc = paintTexture.GetPixel((int)(((float)x / (float)map.Scene.RegionInfo.RegionSizeX) * (float)textureToAddiTexture.Width),
-                        (int)(((float)y / (float)map.Scene.RegionInfo.RegionSizeX) * (float)textureToAddiTexture.Height));
-                    paintTexture.SetPixel((int)(((float)x / (float)map.Scene.RegionInfo.RegionSizeX) * (float)paintiTexture.Width),
-                        (int)(((float)y / (float)map.Scene.RegionInfo.RegionSizeX) * (float)paintiTexture.Height), c);
-                    cc = paintTexture.GetPixel((int)(((float)x / (float)map.Scene.RegionInfo.RegionSizeX * (float)textureToAddiTexture.Width)),
-                        (int)(((float)y / (float)map.Scene.RegionInfo.RegionSizeX) * (float)textureToAddiTexture.Height));
+                    Color c =
+                        textureToAddTexture.GetPixel(
+                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX*textureToAddiTexture.Width)),
+                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
+                    Color cc =
+                        paintTexture.GetPixel(
+                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Width),
+                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
+                    paintTexture.SetPixel((int) ((x/(float) map.Scene.RegionInfo.RegionSizeX)*paintiTexture.Width),
+                                          (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*paintiTexture.Height), c);
+                    cc =
+                        paintTexture.GetPixel(
+                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX*textureToAddiTexture.Width)),
+                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
                 }
             }
             map.Scene.AssetService.Delete(paintAsset.ID);

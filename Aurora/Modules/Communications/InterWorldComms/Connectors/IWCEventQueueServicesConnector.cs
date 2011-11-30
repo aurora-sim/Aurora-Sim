@@ -25,35 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Services.Connectors;
-using OpenSim.Services.MessagingService;
-using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Nini.Config;
-using Aurora.Simulation.Base;
 using OpenSim.Framework;
 using OpenSim.Services.CapsService;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCEventQueueServicesConnector : EventQueueMasterService, IEventQueueService, IService
     {
         protected EventQueueMasterService m_localService;
-        protected EventQueueServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected EventQueueServicesConnector m_remoteService;
 
         public override string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IEventQueueService Members
 
         public override IEventQueueService InnerService
         {
@@ -61,60 +54,60 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
             }
         }
 
-        public override void Initialize (IConfigSource config, IRegistryCore registry)
+        public override bool Enqueue(OSD o, UUID avatarID, ulong RegionHandle)
+        {
+            if (!base.Enqueue(o, avatarID, RegionHandle))
+                if (!m_remoteService.Enqueue(o, avatarID, RegionHandle))
+                    return false;
+            return true;
+        }
+
+        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong RegionHandle)
+        {
+            if (!base.TryEnqueue(ev, avatarID, RegionHandle))
+                if (!m_remoteService.TryEnqueue(ev, avatarID, RegionHandle))
+                    return false;
+            return true;
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString ("EventQueueHandler", "") != Name)
+            if (handlerConfig.GetString("EventQueueHandler", "") != Name)
                 return;
 
             base.Initialize(config, registry);
-            m_localService = new EventQueueMasterService ();
-            m_localService.Initialize (config, registry);
-            m_remoteService = new EventQueueServicesConnector ();
+            m_localService = new EventQueueMasterService();
+            m_localService.Initialize(config, registry);
+            m_remoteService = new EventQueueServicesConnector();
             m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IEventQueueService> (this);
+            registry.RegisterModuleInterface<IEventQueueService>(this);
             m_registry = registry;
         }
 
-        public override void Start (IConfigSource config, IRegistryCore registry)
+        public override void Start(IConfigSource config, IRegistryCore registry)
         {
             if (m_remoteService != null)
             {
-                base.Start (config, registry);
-                m_localService.Start (config, registry);
-                m_remoteService.Start (config, registry);
+                base.Start(config, registry);
+                m_localService.Start(config, registry);
+                m_remoteService.Start(config, registry);
             }
         }
 
         public override void FinishedStartup()
         {
-        }
-
-        #endregion
-
-        #region IEventQueueService Members
-
-        public override bool Enqueue (OSD o, UUID avatarID, ulong RegionHandle)
-        {
-            if (!base.Enqueue (o, avatarID, RegionHandle))
-                if (!m_remoteService.Enqueue (o, avatarID, RegionHandle))
-                    return false;
-            return true;
-        }
-
-        public override bool TryEnqueue (OSD ev, UUID avatarID, ulong RegionHandle)
-        {
-            if (!base.TryEnqueue (ev, avatarID, RegionHandle))
-                if (!m_remoteService.TryEnqueue (ev, avatarID, RegionHandle))
-                    return false;
-            return true;
         }
 
         #endregion

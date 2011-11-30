@@ -26,15 +26,8 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Xml;
-
-using log4net;
 using Nini.Config;
-
-using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -44,6 +37,37 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
 {
     public class SerialiserModule : ISharedRegionModule, IRegionSerialiserModule
     {
+        #region IRegionSerialiserModule Members
+
+        public void LoadPrimsFromXml2(IScene scene, string fileName)
+        {
+            SceneXmlLoader.LoadPrimsFromXml2(scene, new XmlTextReader(fileName), true);
+        }
+
+        public void SavePrimsToXml2(IScene scene, string fileName)
+        {
+            SceneXmlLoader.SavePrimsToXml2(scene, fileName);
+        }
+
+        public ISceneObject DeserializeGroupFromXml2(string xmlString, IScene scene)
+        {
+            return SceneXmlLoader.DeserializeGroupFromXml2(xmlString, scene);
+        }
+
+        public ISceneObject DeserializeGroupFromXml2(byte[] xml, IScene scene)
+        {
+            return SceneXmlLoader.DeserializeGroupFromXml2(xml, scene);
+        }
+
+        public string SerializeGroupToXml2(ISceneEntity grp)
+        {
+            if (grp is SceneObjectGroup)
+                return SceneXmlLoader.SaveGroupToXml2((SceneObjectGroup) grp);
+            return "";
+        }
+
+        #endregion
+
         #region ISharedRegionModule Members
 
         public Type ReplaceableInterface
@@ -60,16 +84,16 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
         }
 
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             scene.RegisterModuleInterface<IRegionSerialiserModule>(this);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             scene.UnregisterModuleInterface<IRegionSerialiserModule>(this);
         }
@@ -81,37 +105,6 @@ namespace OpenSim.Region.CoreModules.World.Serialiser
         public string Name
         {
             get { return "ExportSerialisationModule"; }
-        }
-
-        #endregion 
-
-        #region IRegionSerialiser Members
-
-        public void LoadPrimsFromXml2(IScene scene, string fileName)
-        {
-            SceneXmlLoader.LoadPrimsFromXml2(scene, new XmlTextReader(fileName), true);
-        }
-
-        public void SavePrimsToXml2(IScene scene, string fileName)
-        {
-            SceneXmlLoader.SavePrimsToXml2(scene, fileName);
-        }
-
-        public ISceneObject DeserializeGroupFromXml2 (string xmlString, IScene scene)
-        {
-            return SceneXmlLoader.DeserializeGroupFromXml2 (xmlString, scene);
-        }
-
-        public ISceneObject DeserializeGroupFromXml2 (byte[] xml, IScene scene)
-        {
-            return SceneXmlLoader.DeserializeGroupFromXml2 (xml, scene);
-        }
-
-        public string SerializeGroupToXml2(ISceneEntity grp)
-        {
-            if(grp is SceneObjectGroup)
-                return SceneXmlLoader.SaveGroupToXml2((SceneObjectGroup)grp);
-            return "";
         }
 
         #endregion

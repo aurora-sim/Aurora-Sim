@@ -26,13 +26,12 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class TotalFrameMonitor : ITotalFrameTimeMonitor
     {
-        private int MonitorFrameTime = 0;
+        private int MonitorFrameTime;
 
         public TotalFrameMonitor(IScene scene)
         {
@@ -52,10 +51,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms";
+            return (int) GetValue() + "ms";
         }
 
         #endregion
+
+        #region ITotalFrameTimeMonitor Members
 
         public void AddFrameTime(int time)
         {
@@ -66,5 +67,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         {
             MonitorFrameTime = 0;
         }
+
+        #endregion
     }
 }

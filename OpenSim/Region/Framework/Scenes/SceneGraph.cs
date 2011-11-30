@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.Reflection;
@@ -34,7 +35,6 @@ using OpenMetaverse.Packets;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Components;
 
@@ -69,7 +69,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal PhysicsScene _PhyScene;
 
-        private Object m_updateLock = new Object();
+        private readonly Object m_updateLock = new Object();
 
         public PhysicsScene PhysicsScene
         {
@@ -87,7 +87,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal SceneGraph(IScene parent, RegionInfo regInfo)
         {
             Random random = new Random();
-            m_lastAllocatedLocalId = (uint)(random.NextDouble() * (double)(uint.MaxValue / 2)) + (uint)(uint.MaxValue / 4);
+            m_lastAllocatedLocalId = (uint)(random.NextDouble() * (uint.MaxValue / 2)) + uint.MaxValue / 4;
             m_parentScene = parent;
             m_regInfo = regInfo;
 
@@ -129,8 +129,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private object m_taintedPresencesLock = new object ();
-        private List<IScenePresence> m_taintedPresences = new List<IScenePresence> ();
+        private readonly object m_taintedPresencesLock = new object ();
+        private readonly List<IScenePresence> m_taintedPresences = new List<IScenePresence> ();
         public void TaintPresenceForUpdate(IScenePresence presence, PresenceTaint taint)
         {
             lock (m_taintedPresencesLock)
@@ -229,9 +229,9 @@ namespace OpenSim.Region.Framework.Scenes
             if(m_oldCoarseLocations.Count == coarseLocations.Count)
             {
                 List<UUID> foundAvies = new List<UUID>(m_oldAvatarUUIDs);
-                for (int i = 0; i < avatarUUIDs.Count; i++)
+                foreach (UUID t in avatarUUIDs)
                 {
-                    foundAvies.Remove(avatarUUIDs[i]);
+                    foundAvies.Remove(t);
                 }
                 if (foundAvies.Count == 0)
                 {
@@ -291,7 +291,7 @@ namespace OpenSim.Region.Framework.Scenes
                 IEntity entity;
                 if (TryGetEntity(LocalID, out entity))
                 {
-                    if(m_parentScene.Permissions.CanEditObject(((ISceneEntity)entity).UUID, remoteClient.AgentId))
+                    if(m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                         if(((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
                             ((ISceneEntity)entity).SetGroup(GroupID, remoteClient);
                 }
@@ -359,12 +359,7 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (string firstName, string lastName)
         {
             List<IScenePresence> presences = GetScenePresences ();
-            foreach (IScenePresence presence in presences)
-            {
-                if (presence.Firstname == firstName && presence.Lastname == lastName)
-                    return presence;
-            }
-            return null;
+            return presences.FirstOrDefault(presence => presence.Firstname == firstName && presence.Lastname == lastName);
         }
 
         /// <summary>
@@ -375,10 +370,7 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (uint localID)
         {
             List<IScenePresence> presences = GetScenePresences ();
-            foreach (IScenePresence presence in presences)
-                if (presence.LocalId == localID)
-                    return presence;
-            return null;
+            return presences.FirstOrDefault(presence => presence.LocalId == localID);
         }
 
         protected internal bool TryGetScenePresence (UUID agentID, out IScenePresence avatar)
@@ -388,22 +380,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal bool TryGetAvatarByName (string name, out IScenePresence avatar)
         {
-            avatar = null;
-            foreach (IScenePresence presence in GetScenePresences ())
-            {
-                if (String.Compare(name, presence.ControllingClient.Name, true) == 0)
-                {
-                    avatar = presence;
-                    break;
-                }
-            }
+            avatar = GetScenePresences().FirstOrDefault(presence => String.Compare(name, presence.ControllingClient.Name, true) == 0);
             return (avatar != null);
         }
 
         /// <summary>
         /// Get a scene object group that contains the prim with the given uuid
         /// </summary>
-        /// <param name="fullID"></param>
+        /// <param name="hray"></param>
+        /// <param name="frontFacesOnly"></param>
+        /// <param name="faceCenters"></param>
         /// <returns>null if no scene object group containing that prim is found</returns>
         protected internal EntityIntersection GetClosestIntersectingPrim(Ray hray, bool frontFacesOnly, bool faceCenters)
         {
@@ -438,16 +424,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (getPrims)
             {
                 ISceneEntity[] EntityList = Entities.GetEntities(hray.Origin, length);
-                foreach (ISceneEntity ent in EntityList)
-                {
-                    if (ent is SceneObjectGroup)
-                    {
-                        SceneObjectGroup reportingG = (SceneObjectGroup)ent;
-                        EntityIntersection inter = reportingG.TestIntersection(hray, frontFacesOnly, faceCenters);
-                        if (inter.HitTF)
-                            result.Add(inter);
-                    }
-                }
+                result.AddRange(EntityList.OfType<SceneObjectGroup>().Select(reportingG => reportingG.TestIntersection(hray, frontFacesOnly, faceCenters)).Where(inter => inter.HitTF));
             }
             if (getAvatars)
             {
@@ -478,10 +455,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //TODO
             }
-            result.Sort(delegate(EntityIntersection a, EntityIntersection b)
-            {
-                return a.distance.CompareTo(b.distance);
-            });
+            result.Sort((a, b) => a.distance.CompareTo(b.distance));
             if(result.Count > count)
                 result.RemoveRange(count, result.Count - count);
             return result;
@@ -640,38 +614,40 @@ namespace OpenSim.Region.Framework.Scenes
             if (surfaceArgs != null && surfaceArgs.Count > 0)
                 surfaceArg = surfaceArgs[0];
             ISceneChildEntity childPrim;
-            SceneObjectPart part;
             if (TryGetPart(localID, out childPrim))
             {
-                part = childPrim as SceneObjectPart;
-                SceneObjectGroup obj = part.ParentGroup;
-                if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
-                    return;
-                // Currently only grab/touch for the single prim
-                // the client handles rez correctly
-                obj.ObjectGrabHandler(localID, offsetPos, remoteClient);
-
-                // If the touched prim handles touches, deliver it
-                // If not, deliver to root prim
-                m_parentScene.EventManager.TriggerObjectGrab(part, part, part.OffsetPosition, remoteClient, surfaceArg);
-                // Deliver to the root prim if the touched prim doesn't handle touches
-                // or if we're meant to pass on touches anyway. Don't send to root prim
-                // if prim touched is the root prim as we just did it
-                if ((part.LocalId != obj.RootPart.LocalId))
+                SceneObjectPart part = childPrim as SceneObjectPart;
+                if (part != null)
                 {
-                    const int PASS_IF_NOT_HANDLED = 0;
-                    const int PASS_ALWAYS = 1;
-                    const int PASS_NEVER = 2;
-                    if (part.PassTouch == PASS_NEVER)
+                    SceneObjectGroup obj = part.ParentGroup;
+                    if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
+                        return;
+                    // Currently only grab/touch for the single prim
+                    // the client handles rez correctly
+                    obj.ObjectGrabHandler(localID, offsetPos, remoteClient);
+
+                    // If the touched prim handles touches, deliver it
+                    // If not, deliver to root prim
+                    m_parentScene.EventManager.TriggerObjectGrab(part, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    // Deliver to the root prim if the touched prim doesn't handle touches
+                    // or if we're meant to pass on touches anyway. Don't send to root prim
+                    // if prim touched is the root prim as we just did it
+                    if ((part.LocalId != obj.RootPart.LocalId))
                     {
-                    }
-                    if (part.PassTouch == PASS_ALWAYS)
-                    {
-                        m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
-                    }
-                    else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
-                    {
-                        m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                        const int PASS_IF_NOT_HANDLED = 0;
+                        const int PASS_ALWAYS = 1;
+                        const int PASS_NEVER = 2;
+                        if (part.PassTouch == PASS_NEVER)
+                        {
+                        }
+                        if (part.PassTouch == PASS_ALWAYS)
+                        {
+                            m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                        }
+                        else if (((part.ScriptEvents & scriptEvents.touch_start) == 0) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                        {
+                            m_parentScene.EventManager.TriggerObjectGrab(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                        }
                     }
                 }
             }
@@ -684,37 +660,39 @@ namespace OpenSim.Region.Framework.Scenes
                 surfaceArg = surfaceArgs[0];
 
             ISceneChildEntity childPrim;
-            SceneObjectPart part;
 
             if (TryGetPart(objectID, out childPrim))
             {
-                part = childPrim as SceneObjectPart;
-                SceneObjectGroup obj = part.ParentGroup;
-                if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
-                    return;
-
-                // If the touched prim handles touches, deliver it
-                // If not, deliver to root prim
-                m_parentScene.EventManager.TriggerObjectGrabbing(part, part, part.OffsetPosition, remoteClient, surfaceArg);
-                // Deliver to the root prim if the touched prim doesn't handle touches
-                // or if we're meant to pass on touches anyway. Don't send to root prim
-                // if prim touched is the root prim as we just did it
-
-                if ((part.LocalId != obj.RootPart.LocalId))
+                SceneObjectPart part = childPrim as SceneObjectPart;
+                if (part != null)
                 {
-                    const int PASS_IF_NOT_HANDLED = 0;
-                    const int PASS_ALWAYS = 1;
-                    const int PASS_NEVER = 2;
-                    if (part.PassTouch == PASS_NEVER)
+                    SceneObjectGroup obj = part.ParentGroup;
+                    if (obj.RootPart.BlockGrab || obj.RootPart.BlockGrabObject)
+                        return;
+
+                    // If the touched prim handles touches, deliver it
+                    // If not, deliver to root prim
+                    m_parentScene.EventManager.TriggerObjectGrabbing(part, part, part.OffsetPosition, remoteClient, surfaceArg);
+                    // Deliver to the root prim if the touched prim doesn't handle touches
+                    // or if we're meant to pass on touches anyway. Don't send to root prim
+                    // if prim touched is the root prim as we just did it
+
+                    if ((part.LocalId != obj.RootPart.LocalId))
                     {
-                    }
-                    if (part.PassTouch == PASS_ALWAYS)
-                    {
-                        m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
-                    }
-                    else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
-                    {
-                        m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                        const int PASS_IF_NOT_HANDLED = 0;
+                        const int PASS_ALWAYS = 1;
+                        const int PASS_NEVER = 2;
+                        if (part.PassTouch == PASS_NEVER)
+                        {
+                        }
+                        if (part.PassTouch == PASS_ALWAYS)
+                        {
+                            m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                        }
+                        else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                        {
+                            m_parentScene.EventManager.TriggerObjectGrabbing(obj.RootPart, part, part.OffsetPosition, remoteClient, surfaceArg);
+                        }
                     }
                 }
             }
@@ -727,30 +705,32 @@ namespace OpenSim.Region.Framework.Scenes
                 surfaceArg = surfaceArgs[0];
 
             ISceneChildEntity childPrim;
-            SceneObjectPart part;
             if (TryGetPart(localID, out childPrim))
             {
-                part = childPrim as SceneObjectPart;
-                SceneObjectGroup obj = part.ParentGroup;
-                // If the touched prim handles touches, deliver it
-                // If not, deliver to root prim
-                m_parentScene.EventManager.TriggerObjectDeGrab(part, part, remoteClient, surfaceArg);
-
-                if ((part.LocalId != obj.RootPart.LocalId))
+                SceneObjectPart part = childPrim as SceneObjectPart;
+                if (part != null)
                 {
-                    const int PASS_IF_NOT_HANDLED = 0;
-                    const int PASS_ALWAYS = 1;
-                    const int PASS_NEVER = 2;
-                    if (part.PassTouch == PASS_NEVER)
+                    SceneObjectGroup obj = part.ParentGroup;
+                    // If the touched prim handles touches, deliver it
+                    // If not, deliver to root prim
+                    m_parentScene.EventManager.TriggerObjectDeGrab(part, part, remoteClient, surfaceArg);
+
+                    if ((part.LocalId != obj.RootPart.LocalId))
                     {
-                    }
-                    if (part.PassTouch == PASS_ALWAYS)
-                    {
-                        m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
-                    }
-                    else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch_end) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
-                    {
-                        m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
+                        const int PASS_IF_NOT_HANDLED = 0;
+                        const int PASS_ALWAYS = 1;
+                        const int PASS_NEVER = 2;
+                        if (part.PassTouch == PASS_NEVER)
+                        {
+                        }
+                        if (part.PassTouch == PASS_ALWAYS)
+                        {
+                            m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
+                        }
+                        else if ((((part.ScriptEvents & scriptEvents.touch_start) == 0) || ((part.ScriptEvents & scriptEvents.touch_end) == 0)) && part.PassTouch == PASS_IF_NOT_HANDLED) //If no event in this prim, pass to parent
+                        {
+                            m_parentScene.EventManager.TriggerObjectDeGrab(obj.RootPart, part, remoteClient, surfaceArg);
+                        }
                     }
                 }
             }
@@ -772,7 +752,7 @@ namespace OpenSim.Region.Framework.Scenes
         public Vector3 GetNewRezLocation(Vector3 RayStart, Vector3 RayEnd, UUID RayTargetID, Quaternion rot, byte bypassRayCast, byte RayEndIsIntersection, bool frontFacesOnly, Vector3 scale, bool FaceCenter)
         {
             Vector3 pos = Vector3.Zero;
-            if (RayEndIsIntersection == (byte)1)
+            if (RayEndIsIntersection == 1)
             {
                 pos = RayEnd;
                 return pos;
@@ -835,29 +815,18 @@ namespace OpenSim.Region.Framework.Scenes
                     // Un-comment the following line to print the raytrace results to the console.
                     //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
 
-                    if (ei.HitTF)
-                    {
-                        pos = new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z);
-                    }
-                    else
-                    {
-                        // fall back to our stupid functionality
-                        pos = RayEnd;
-                    }
+                    pos = ei.HitTF ? new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z) : RayEnd;
 
                     return pos;
                 }
             }
-            else
-            {
-                // fall back to our stupid functionality
-                pos = RayEnd;
+            // fall back to our stupid functionality
+            pos = RayEnd;
 
-                //increase height so its above the ground.
-                //should be getting the normal of the ground at the rez point and using that?
-                pos.Z += scale.Z / 2f;
-                return pos;
-            }
+            //increase height so its above the ground.
+            //should be getting the normal of the ground at the rez point and using that?
+            pos.Z += scale.Z / 2f;
+            return pos;
         }
 
         public virtual void AddNewPrim(UUID ownerID, UUID groupID, Vector3 RayEnd, Quaternion rot, PrimitiveBaseShape shape,
@@ -882,13 +851,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="ownerID"></param>
         /// <param name="groupID"></param>
-        /// <param name="RayEnd"></param>
+        /// <param name="pos"></param>
         /// <param name="rot"></param>
         /// <param name="shape"></param>
-        /// <param name="bypassRaycast"></param>
-        /// <param name="RayStart"></param>
-        /// <param name="RayTargetID"></param>
-        /// <param name="RayEndIsIntersection"></param>
         public virtual ISceneEntity AddNewPrim(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
@@ -934,7 +899,6 @@ namespace OpenSim.Region.Framework.Scenes
                                            UUID RayTargetObj, Vector3 RayEnd, Vector3 RayStart,
                                            bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates)
         {
-            Vector3 pos;
             const bool frontFacesOnly = true;
             //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
             ISceneChildEntity target = m_parentScene.GetSceneObjectPart (localID);
@@ -942,6 +906,7 @@ namespace OpenSim.Region.Framework.Scenes
             IScenePresence Sp = GetScenePresence (AgentID);
             if (target != null && target2 != null)
             {
+                Vector3 pos;
                 if (EnableFakeRaycasting)
                 {
                     RayStart = Sp.CameraPosition;
@@ -1025,7 +990,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Unregister a module commander and all its commands
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="entityCreator"></param>
         public void UnregisterEntityCreatorCommander(IEntityCreator entityCreator)
         {
             lock (m_entityCreators)
@@ -1099,7 +1064,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="localID"></param>
+        /// <param name="LocalID"></param>
         /// <param name="scale"></param>
         /// <param name="remoteClient"></param>
         protected internal void UpdatePrimScale(uint LocalID, Vector3 scale, IClientAPI remoteClient)
@@ -1166,7 +1131,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="localID"></param>
+        /// <param name="LocalID"></param>
         /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
         protected internal void UpdatePrimSingleRotation(uint LocalID, Quaternion rot, IClientAPI remoteClient)
@@ -1184,9 +1149,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="rot"></param>
-        /// <param name="remoteClient"></param>
+        ///<param name="LocalID"></param>
+        ///<param name="rot"></param>
+        ///<param name="pos"></param>
+        ///<param name="remoteClient"></param>
         protected internal void UpdatePrimSingleRotationPosition(uint LocalID, Quaternion rot, Vector3 pos, IClientAPI remoteClient)
         {
             IEntity entity;
@@ -1202,8 +1168,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="rot"></param>
+        ///<param name="LocalID"></param>
+        ///<param name="rot"></param>
         /// <param name="remoteClient"></param>
         protected internal void UpdatePrimRotation(uint LocalID, Quaternion rot, IClientAPI remoteClient)
         {
@@ -1220,7 +1186,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="localID"></param>
+        /// <param name="LocalID"></param>
         /// <param name="pos"></param>
         /// <param name="rot"></param>
         /// <param name="remoteClient"></param>
@@ -1239,9 +1205,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Update the position of the given part
         /// </summary>
-        /// <param name="localID"></param>
+        /// <param name="LocalID"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
+        /// <param name="SaveUpdate"></param>
         protected internal void UpdatePrimSinglePosition(uint LocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
             IEntity entity;
@@ -1257,9 +1224,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Update the position of the given part
         /// </summary>
-        /// <param name="localID"></param>
+        /// <param name="LocalID"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
+        /// <param name="SaveUpdate"></param>
         protected internal void UpdatePrimPosition(uint LocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
             IEntity entity;
@@ -1292,7 +1260,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// A texture entry is an object that contains details of all the textures of the prim's face.  In this case,
         /// the texture is given in its byte serialized form.
         /// 
-        /// <param name="localID"></param>
+        /// <param name="LocalID"></param>
         /// <param name="texture"></param>
         /// <param name="remoteClient"></param>
         protected internal void UpdatePrimTexture(uint LocalID, byte[] texture, IClientAPI remoteClient)
@@ -1310,9 +1278,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// A user has changed an object setting
         /// </summary>
-        /// <param name="localID"></param>
-        /// <param name="packet"></param>
+        /// <param name="LocalID"></param>
+        /// <param name="blocks"></param>
         /// <param name="remoteClient"></param>
+        /// <param name="UsePhysics"></param>
+        /// <param name="IsTemporary"></param>
+        /// <param name="IsPhantom"></param>
         protected internal void UpdatePrimFlags (uint LocalID, bool UsePhysics, bool IsTemporary, bool IsPhantom, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks, IClientAPI remoteClient)
         {
             IEntity entity;
@@ -1328,10 +1299,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Move the given object
         /// </summary>
-        /// <param name="objectID"></param>
+        /// <param name="ObjectID"></param>
         /// <param name="offset"></param>
         /// <param name="pos"></param>
         /// <param name="remoteClient"></param>
+        /// <param name="surfaceArgs"></param>
         protected internal void MoveObject(UUID ObjectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
             IEntity group;
@@ -1347,8 +1319,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start spinning the given object
         /// </summary>
-        /// <param name="objectID"></param>
-        /// <param name="rotation"></param>
+        /// <param name="ObjectID"></param>
         /// <param name="remoteClient"></param>
         protected internal void SpinStart(UUID ObjectID, IClientAPI remoteClient)
         {
@@ -1365,7 +1336,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Spin the given object
         /// </summary>
-        /// <param name="objectID"></param>
+        /// <param name="ObjectID"></param>
         /// <param name="rotation"></param>
         /// <param name="remoteClient"></param>
         protected internal void SpinObject(UUID ObjectID, Quaternion rotation, IClientAPI remoteClient)
@@ -1388,8 +1359,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="primLocalID"></param>
-        /// <param name="description"></param>
+        ///<param name="remoteClient"></param>
+        ///<param name="LocalID"></param>
+        ///<param name="name"></param>
         protected internal void PrimName(IClientAPI remoteClient, uint LocalID, string name)
         {
             IEntity group;
@@ -1406,8 +1378,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="primLocalID"></param>
-        /// <param name="description"></param>
+        ///<param name="LocalID"></param>
+        ///<param name="description"></param>
+        ///<param name="remoteClient"></param>
         protected internal void PrimDescription(IClientAPI remoteClient, uint LocalID, string description)
         {
             IEntity group;
@@ -1445,9 +1418,9 @@ namespace OpenSim.Region.Framework.Scenes
                     ISceneChildEntity part = m_parentScene.GetSceneObjectPart (LocalID);
                     part.Material = Convert.ToByte(material);
                     //Update the client here as well... we changed restitution and friction in the physics engine probably
-                    OpenSim.Services.Interfaces.IEventQueueService eqs = m_parentScene.RequestModuleInterface<OpenSim.Services.Interfaces.IEventQueueService> ();
+                    Services.Interfaces.IEventQueueService eqs = m_parentScene.RequestModuleInterface<Services.Interfaces.IEventQueueService> ();
                     if (eqs != null)
-                        eqs.ObjectPhysicsProperties (new ISceneChildEntity[1] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionHandle);
+                        eqs.ObjectPhysicsProperties (new[] { part }, remoteClient.AgentId, m_parentScene.RegionInfo.RegionHandle);
 
                     ((ISceneEntity)group).ScheduleGroupUpdate (PrimUpdateFlags.ClickAction);
                 }
@@ -1469,8 +1442,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        /// <param name="primLocalID"></param>
-        /// <param name="shapeBlock"></param>
+        ///<param name="LocalID"></param>
+        ///<param name="shapeBlock"></param>
+        ///<param name="agentID"></param>
         protected internal void UpdatePrimShape(UUID agentID, uint LocalID, UpdateShapeArgs shapeBlock)
         {
             ISceneChildEntity part;
@@ -1478,26 +1452,28 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanEditObject(part.UUID, agentID))
                 {
-                    ObjectShapePacket.ObjectDataBlock shapeData = new ObjectShapePacket.ObjectDataBlock();
-                    shapeData.ObjectLocalID = shapeBlock.ObjectLocalID;
-                    shapeData.PathBegin = shapeBlock.PathBegin;
-                    shapeData.PathCurve = shapeBlock.PathCurve;
-                    shapeData.PathEnd = shapeBlock.PathEnd;
-                    shapeData.PathRadiusOffset = shapeBlock.PathRadiusOffset;
-                    shapeData.PathRevolutions = shapeBlock.PathRevolutions;
-                    shapeData.PathScaleX = shapeBlock.PathScaleX;
-                    shapeData.PathScaleY = shapeBlock.PathScaleY;
-                    shapeData.PathShearX = shapeBlock.PathShearX;
-                    shapeData.PathShearY = shapeBlock.PathShearY;
-                    shapeData.PathSkew = shapeBlock.PathSkew;
-                    shapeData.PathTaperX = shapeBlock.PathTaperX;
-                    shapeData.PathTaperY = shapeBlock.PathTaperY;
-                    shapeData.PathTwist = shapeBlock.PathTwist;
-                    shapeData.PathTwistBegin = shapeBlock.PathTwistBegin;
-                    shapeData.ProfileBegin = shapeBlock.ProfileBegin;
-                    shapeData.ProfileCurve = shapeBlock.ProfileCurve;
-                    shapeData.ProfileEnd = shapeBlock.ProfileEnd;
-                    shapeData.ProfileHollow = shapeBlock.ProfileHollow;
+                    ObjectShapePacket.ObjectDataBlock shapeData = new ObjectShapePacket.ObjectDataBlock
+                                                                      {
+                                                                          ObjectLocalID = shapeBlock.ObjectLocalID,
+                                                                          PathBegin = shapeBlock.PathBegin,
+                                                                          PathCurve = shapeBlock.PathCurve,
+                                                                          PathEnd = shapeBlock.PathEnd,
+                                                                          PathRadiusOffset = shapeBlock.PathRadiusOffset,
+                                                                          PathRevolutions = shapeBlock.PathRevolutions,
+                                                                          PathScaleX = shapeBlock.PathScaleX,
+                                                                          PathScaleY = shapeBlock.PathScaleY,
+                                                                          PathShearX = shapeBlock.PathShearX,
+                                                                          PathShearY = shapeBlock.PathShearY,
+                                                                          PathSkew = shapeBlock.PathSkew,
+                                                                          PathTaperX = shapeBlock.PathTaperX,
+                                                                          PathTaperY = shapeBlock.PathTaperY,
+                                                                          PathTwist = shapeBlock.PathTwist,
+                                                                          PathTwistBegin = shapeBlock.PathTwistBegin,
+                                                                          ProfileBegin = shapeBlock.ProfileBegin,
+                                                                          ProfileCurve = shapeBlock.ProfileCurve,
+                                                                          ProfileEnd = shapeBlock.ProfileEnd,
+                                                                          ProfileHollow = shapeBlock.ProfileHollow
+                                                                      };
 
                     ((SceneObjectPart)part).UpdateShape(shapeData);
                 }
@@ -1515,10 +1491,9 @@ namespace OpenSim.Region.Framework.Scenes
             UUID user = remoteClient.AgentId;
             UUID objid = UUID.Zero;
             IEntity entity;
-            SceneObjectGroup grp;
             if (!TryGetEntity(LocalID, out entity))
                 return;
-            grp = (SceneObjectGroup)entity;
+            SceneObjectGroup grp = (SceneObjectGroup)entity;
             //Protip: In my day, we didn't call them searchable objects, we called them limited point-to-point joints
             //aka ObjectFlags.JointWheel = IncludeInSearch
 
@@ -1558,12 +1533,11 @@ namespace OpenSim.Region.Framework.Scenes
         public bool DuplicateObject(uint LocalID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
         {
             //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
-            SceneObjectGroup original;
             IEntity entity;
 
             if (TryGetEntity(LocalID, out entity))
             {
-                original = (SceneObjectGroup)entity;
+                SceneObjectGroup original = (SceneObjectGroup)entity;
                 if (m_parentScene.Permissions.CanDuplicateObject(original.ChildrenList.Count, original.UUID, AgentID, original.AbsolutePosition))
                 {
                     ISceneEntity duplicatedEntity = DuplicateEntity (original);
@@ -1622,18 +1596,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DelinkObjects(List<uint> primIds, IClientAPI client)
         {
-            List<ISceneChildEntity> parts = new List<ISceneChildEntity> ();
-
-            foreach (uint localID in primIds)
-            {
-                ISceneChildEntity part = m_parentScene.GetSceneObjectPart (localID);
-
-                if (part == null)
-                    continue;
-
-                if (m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID))
-                    parts.Add(part);
-            }
+            List<ISceneChildEntity> parts =
+                primIds.Select(localID => m_parentScene.GetSceneObjectPart(localID)).Where(part => part != null).Where(
+                    part => m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID)).ToList();
 
             DelinkObjects(parts);
         }
@@ -1686,11 +1651,7 @@ namespace OpenSim.Region.Framework.Scenes
                 client.SendAlertMessage("Permissions: Cannot link, not enough permissions.");
                 return;
             }
-            int LinkCount = 0;
-            foreach (SceneObjectPart part in children)
-            {
-                LinkCount += part.ParentGroup.ChildrenList.Count;
-            }
+            int LinkCount = children.Cast<SceneObjectPart>().Sum(part => part.ParentGroup.ChildrenList.Count);
 
             IOpenRegionSettingsModule module = m_parentScene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
@@ -1719,9 +1680,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Initial method invoked when we receive a link objects request from the client.
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="parentPrim"></param>
-        /// <param name="childPrims"></param>
+        /// <param name="root"></param>
+        /// <param name="children"></param>
         protected internal void LinkObjects (ISceneChildEntity root, List<ISceneChildEntity> children)
         {
             Monitor.Enter(m_updateLock);
@@ -2224,10 +2184,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>A brand new local ID</returns>
         public uint AllocateLocalId()
         {
-            uint myID;
-
             _primAllocateMutex.WaitOne();
-            myID = ++m_lastAllocatedLocalId;
+            uint myID = ++m_lastAllocatedLocalId;
             _primAllocateMutex.ReleaseMutex();
 
             return myID;

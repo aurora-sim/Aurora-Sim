@@ -25,23 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse;
+using OpenSim.Services.Interfaces;
+using log4net;
+using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace OpenSim.Services
 {
@@ -49,12 +46,12 @@ namespace OpenSim.Services
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IFriendsService m_FriendsService;
+        private readonly IFriendsService m_FriendsService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public FriendsServerPostHandler (string url, IFriendsService service, string SessionID, IRegistryCore registry) :
-                base("POST", url)
+        public FriendsServerPostHandler(string url, IFriendsService service, string SessionID, IRegistryCore registry) :
+            base("POST", url)
         {
             m_FriendsService = service;
             m_SessionID = SessionID;
@@ -62,7 +59,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -74,7 +71,7 @@ namespace OpenSim.Services
             try
             {
                 Dictionary<string, object> request =
-                        WebUtils.ParseQueryString(body);
+                    WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -82,7 +79,7 @@ namespace OpenSim.Services
                 string method = request["METHOD"].ToString();
 
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
 
                 switch (method)
                 {
@@ -103,7 +100,6 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return DeleteFriend(request);
-
                 }
                 m_log.DebugFormat("[FRIENDS HANDLER]: unknown method {0} request {1}", method.Length, method);
             }
@@ -113,12 +109,11 @@ namespace OpenSim.Services
             }
 
             return FailureResult();
-
         }
 
         #region Method-specific handlers
 
-        byte[] GetFriends(Dictionary<string, object> request)
+        private byte[] GetFriends(Dictionary<string, object> request)
         {
             UUID principalID = UUID.Zero;
             if (request.ContainsKey("PRINCIPALID"))
@@ -135,9 +130,8 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
-                foreach (FriendInfo finfo in finfos)
+                foreach (Dictionary<string, object> rinfoDict in finfos.Select(finfo => finfo.ToKeyValuePairs()))
                 {
-                    Dictionary<string, object> rinfoDict = finfo.ToKeyValuePairs();
                     result["friend" + i] = rinfoDict;
                     i++;
                 }
@@ -147,10 +141,9 @@ namespace OpenSim.Services
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
-
         }
 
-        byte[] StoreFriend(Dictionary<string, object> request)
+        private byte[] StoreFriend(Dictionary<string, object> request)
         {
             FriendInfo friend = new FriendInfo(request);
 
@@ -162,7 +155,7 @@ namespace OpenSim.Services
                 return FailureResult();
         }
 
-        byte[] DeleteFriend(Dictionary<string, object> request)
+        private byte[] DeleteFriend(Dictionary<string, object> request)
         {
             UUID principalID = UUID.Zero;
             if (request.ContainsKey("PRINCIPALID"))
@@ -179,7 +172,7 @@ namespace OpenSim.Services
             else
                 return FailureResult();
         }
-        
+
         #endregion
 
         #region Misc
@@ -189,12 +182,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -216,12 +209,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -241,8 +234,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 

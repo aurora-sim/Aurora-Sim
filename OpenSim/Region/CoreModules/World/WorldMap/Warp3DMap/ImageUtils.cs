@@ -25,41 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Reflection;
-using CSJ2K;
-using Nini.Config;
-using log4net;
-using Rednettle.Warp3D;
+using System.Drawing.Drawing2D;
 using OpenMetaverse;
-using OpenMetaverse.Imaging;
-using OpenMetaverse.Rendering;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Physics.Manager;
-using OpenSim.Services.Interfaces;
-
-using WarpRenderer = global::Warp3D.Warp3D;
+using WarpRenderer = Warp3D.Warp3D;
 
 namespace OpenSim.Region.CoreModules.World.Warp3DMap
 {
     public static class ImageUtils
     {
         /// <summary>
-        /// Performs bilinear interpolation between four values
+        ///   Performs bilinear interpolation between four values
         /// </summary>
-        /// <param name="v00">First, or top left value</param>
-        /// <param name="v01">Second, or top right value</param>
-        /// <param name="v10">Third, or bottom left value</param>
-        /// <param name="v11">Fourth, or bottom right value</param>
-        /// <param name="xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
-        /// <param name="yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
+        /// <param name = "v00">First, or top left value</param>
+        /// <param name = "v01">Second, or top right value</param>
+        /// <param name = "v10">Third, or bottom left value</param>
+        /// <param name = "v11">Fourth, or bottom right value</param>
+        /// <param name = "xPercent">Interpolation value on the X axis, between 0.0 and 1.0</param>
+        /// <param name = "yPercent">Interpolation value on fht Y axis, between 0.0 and 1.0</param>
         /// <returns>The bilinearly interpolated result</returns>
         public static float Bilinear(float v00, float v01, float v10, float v11, float xPercent, float yPercent)
         {
@@ -67,11 +50,11 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
         }
 
         /// <summary>
-        /// Performs a high quality image resize
+        ///   Performs a high quality image resize
         /// </summary>
-        /// <param name="image">Image to resize</param>
-        /// <param name="width">New width</param>
-        /// <param name="height">New height</param>
+        /// <param name = "image">Image to resize</param>
+        /// <param name = "width">New width</param>
+        /// <param name = "height">New height</param>
         /// <returns>Resized image</returns>
         public static Bitmap ResizeImage(Image image, int width, int height)
         {
@@ -79,10 +62,10 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             using (Graphics graphics = Graphics.FromImage(result))
             {
-                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
                 graphics.DrawImage(image, 0, 0, result.Width, result.Height);
             }

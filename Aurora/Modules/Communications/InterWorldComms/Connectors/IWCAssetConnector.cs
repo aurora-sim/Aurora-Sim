@@ -25,33 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OpenSim.Services.Connectors;
-using OpenSim.Services.AssetService;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Nini.Config;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services.AssetService;
+using OpenSim.Services.Connectors;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
     public class IWCAssetConnector : IAssetService, IService
     {
         protected IAssetService m_localService;
-        protected AssetServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected AssetServicesConnector m_remoteService;
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IAssetService Members
 
         public IAssetService InnerService
         {
@@ -66,28 +64,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-            
-            string localAssetHandler = handlerConfig.GetString("LocalAssetHandler", "AssetService");
-            List<IAssetService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IAssetService>();
-            foreach(IAssetService s in services)
-                if(s.GetType().Name == localAssetHandler)
-                    m_localService = s;
-
-            if(m_localService == null)
-                m_localService = new AssetService();
-            m_localService.Configure(config, registry);
-            m_remoteService = new AssetServicesConnector();
-            m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IAssetService>(this);
-            m_registry = registry;
-        }
-
-        public void Configure (IConfigSource config, IRegistryCore registry)
+        public void Configure(IConfigSource config, IRegistryCore registry)
         {
         }
 
@@ -102,10 +79,6 @@ namespace Aurora.Modules
             if (m_localService != null)
                 m_localService.FinishedStartup();
         }
-
-        #endregion
-
-        #region IAssetService Members
 
         public AssetBase Get(string id)
         {
@@ -168,6 +141,30 @@ namespace Aurora.Modules
             if (!asset)
                 asset = m_remoteService.Delete(id);
             return asset;
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+
+            string localAssetHandler = handlerConfig.GetString("LocalAssetHandler", "AssetService");
+            List<IAssetService> services = AuroraModuleLoader.PickupModules<IAssetService>();
+            foreach (IAssetService s in services.Where(s => s.GetType().Name == localAssetHandler))
+                m_localService = s;
+
+            if (m_localService == null)
+                m_localService = new AssetService();
+            m_localService.Configure(config, registry);
+            m_remoteService = new AssetServicesConnector();
+            m_remoteService.Initialize(config, registry);
+            registry.RegisterModuleInterface<IAssetService>(this);
+            m_registry = registry;
         }
 
         #endregion

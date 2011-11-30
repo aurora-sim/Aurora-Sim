@@ -30,22 +30,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Xml;
-using log4net;
 using Nini.Config;
+using Nini.Ini;
 using OpenSim.Framework;
+using log4net;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
     public class RegionLoaderWebServer : IRegionLoader
     {
-        private bool m_enabled = false;
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private IConfigSource m_configSource;
+        private bool m_enabled;
+
+        #region IRegionLoader Members
+
         public string Name
         {
-            get
-            {
-                return "RegionLoaderWebServer";
-            }
+            get { return "RegionLoaderWebServer"; }
         }
 
         public bool Enabled
@@ -58,17 +61,13 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             get { return false; }
         }
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        private IConfigSource m_configSource;
-
         public void Initialise(IConfigSource configSource, ISimulationBase openSim)
         {
             m_configSource = configSource;
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
                 m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
-            if(m_enabled)
+            if (m_enabled)
                 openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
@@ -83,35 +82,33 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     //m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
                     return null;
                 }
-                else
+                HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(url);
+                webRequest.Timeout = 30000; //30 Second Timeout
+
+                m_log.Debug("[WEBLOADER]: Sending Download Request...");
+                HttpWebResponse webResponse = (HttpWebResponse) webRequest.GetResponse();
+
+                m_log.Info("[WEBLOADER]: Downloading Region Information From Remote Server...");
+                StreamReader reader = new StreamReader(webResponse.GetResponseStream());
+
+                m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
+
+                List<RegionInfo> regionInfos = new List<RegionInfo>();
+
+                IConfigSource source =
+                    new IniConfigSource(new IniDocument(reader.BaseStream, IniFileType.AuroraStyle));
+
+                int i = 0;
+                foreach (IConfig config in source.Configs)
                 {
-                    HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
-                    webRequest.Timeout = 30000; //30 Second Timeout
-
-                    m_log.Debug("[WEBLOADER]: Sending Download Request...");
-                    HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
-
-                    m_log.Info("[WEBLOADER]: Downloading Region Information From Remote Server...");
-                    StreamReader reader = new StreamReader(webResponse.GetResponseStream());
-
-                    m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
-
-                    List<RegionInfo> regionInfos = new List<RegionInfo>();
-
-                    IConfigSource source = new IniConfigSource(new Nini.Ini.IniDocument(reader.BaseStream, Nini.Ini.IniFileType.AuroraStyle));
-
-                    int i = 0;
-                    foreach (IConfig config in source.Configs)
-                    {
-                        RegionInfo region = new RegionInfo();
-                        //Use this to load the config from the file
-                        RegionLoaderFileSystem system = new RegionLoaderFileSystem();
-                        system.LoadRegionFromFile("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
-                        regionInfos.Add(region);
-                        i++;
-                    }
-                    return regionInfos.ToArray();
+                    RegionInfo region = new RegionInfo();
+                    //Use this to load the config from the file
+                    RegionLoaderFileSystem system = new RegionLoaderFileSystem();
+                    system.LoadRegionFromFile("REGION CONFIG #" + (i + 1), "", false, m_configSource, config.Name);
+                    regionInfos.Add(region);
+                    i++;
                 }
+                return regionInfos.ToArray();
             }
             return null;
         }
@@ -125,14 +122,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
         }
 
-        public void Dispose()
-        {
-        }
-
         public bool FailedToStartRegions(string reason)
         {
             //Can't deal with it
             return false;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -27,33 +27,31 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Reflection;
-using System.Xml;
-
+using Aurora.Framework;
+using Aurora.Simulation.Base;
+using Nini.Config;
+using Nini.Ini;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-
-using log4net;
-using Nini.Config;
-using OpenMetaverse;
-using Aurora.Simulation.Base;
+using log4net.Core;
 
 namespace OpenSim.Services.InventoryService
 {
     /// <summary>
-    /// Basically a hack to give us a Inventory library while we don't have a inventory server
-    /// once the server is fully implemented then should read the data from that
+    ///   Basically a hack to give us a Inventory library while we don't have a inventory server
+    ///   once the server is fully implemented then should read the data from that
     /// </summary>
     public class LibraryService : ILibraryService, IService
     {
-        private UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
+        private readonly UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
 
         private string libOwnerName = "Library Owner";
+        private bool m_enabled;
         private IRegistryCore m_registry;
         private string pLibName = "Aurora Library";
-        private bool m_enabled = false;
+
+        #region ILibraryService Members
 
         public UUID LibraryOwner
         {
@@ -69,6 +67,10 @@ namespace OpenSim.Services.InventoryService
         {
             get { return pLibName; }
         }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -93,8 +95,9 @@ namespace OpenSim.Services.InventoryService
             if (m_enabled)
             {
                 if (MainConsole.Instance != null)
-                    MainConsole.Instance.Commands.AddCommand ("clear default inventory", "clear default inventory",
-                        "Clears the Default Inventory stored for this grid", ClearDefaultInventory);
+                    MainConsole.Instance.Commands.AddCommand("clear default inventory", "clear default inventory",
+                                                             "Clears the Default Inventory stored for this grid",
+                                                             ClearDefaultInventory);
             }
         }
 
@@ -103,14 +106,17 @@ namespace OpenSim.Services.InventoryService
             LoadLibraries(m_registry);
         }
 
+        #endregion
+
         public void LoadLibraries(IRegistryCore registry)
         {
             if (!m_enabled)
                 return;
-            List<IDefaultLibraryLoader> Loaders = Aurora.Framework.AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
+            List<IDefaultLibraryLoader> Loaders = AuroraModuleLoader.PickupModules<IDefaultLibraryLoader>();
             try
             {
-                IniConfigSource iniSource = new IniConfigSource("DefaultInventory/Inventory.ini", Nini.Ini.IniFileType.AuroraStyle);
+                IniConfigSource iniSource = new IniConfigSource("DefaultInventory/Inventory.ini",
+                                                                IniFileType.AuroraStyle);
                 if (iniSource != null)
                 {
                     foreach (IDefaultLibraryLoader loader in Loaders)
@@ -134,17 +140,17 @@ namespace OpenSim.Services.InventoryService
             InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);
             while (root != null)
             {
-                MainConsole.Instance.Output ("Removing folder " + root.Name, log4net.Core.Level.Info);
+                MainConsole.Instance.Output("Removing folder " + root.Name, Level.Info);
                 InventoryService.ForcePurgeFolder(root);
                 root = InventoryService.GetRootFolder(LibraryOwner);
             }
             List<InventoryFolderBase> rootFolders = InventoryService.GetRootFolders(LibraryOwner);
-            foreach(InventoryFolderBase rFolder in rootFolders)
+            foreach (InventoryFolderBase rFolder in rootFolders)
             {
-                MainConsole.Instance.Output ("Removing folder " + rFolder.Name, log4net.Core.Level.Info);
+                MainConsole.Instance.Output("Removing folder " + rFolder.Name, Level.Info);
                 InventoryService.ForcePurgeFolder(rFolder);
             }
-            MainConsole.Instance.Output ("Finished removing default inventory", log4net.Core.Level.Info);
+            MainConsole.Instance.Output("Finished removing default inventory", Level.Info);
         }
     }
 }

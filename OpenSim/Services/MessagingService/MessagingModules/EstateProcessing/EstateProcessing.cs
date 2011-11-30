@@ -25,23 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using Nini.Config;
-using log4net;
+using Aurora.DataManager;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.DataManager;
 using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using OpenSim.Services.Interfaces;
+using log4net;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.MessagingService
@@ -66,27 +61,30 @@ namespace OpenSim.Services.MessagingService
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("EstateUpdated", OnGenericEvent);
+            registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("EstateUpdated",
+                                                                                                 OnGenericEvent);
         }
 
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
+        #endregion
+
         /// <summary>
-        /// Server side
+        ///   Server side
         /// </summary>
-        /// <param name="FunctionName"></param>
-        /// <param name="parameters"></param>
+        /// <param name = "FunctionName"></param>
+        /// <param name = "parameters"></param>
         /// <returns></returns>
         protected object OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName == "EstateUpdated")
             {
-                EstateSettings es = (EstateSettings)parameters;
-                IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                EstateSettings es = (EstateSettings) parameters;
+                IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
                 if (estateConnector != null)
                 {
                     List<UUID> regions = estateConnector.GetRegions(es.EstateID);
@@ -95,13 +93,15 @@ namespace OpenSim.Services.MessagingService
                         foreach (UUID region in regions)
                         {
                             //Send the message to update all regions that are in this estate, as a setting changed
-                            IAsyncMessagePostService asyncPoster = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+                            IAsyncMessagePostService asyncPoster =
+                                m_registry.RequestModuleInterface<IAsyncMessagePostService>();
                             IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                             if (gridService != null && asyncPoster != null)
                             {
                                 GridRegion r = gridService.GetRegionByUUID(UUID.Zero, region);
                                 if (r != null)
-                                    asyncPoster.Post(r.RegionHandle, SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
+                                    asyncPoster.Post(r.RegionHandle,
+                                                     SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));
                             }
                         }
                     }
@@ -111,16 +111,16 @@ namespace OpenSim.Services.MessagingService
         }
 
         /// <summary>
-        /// Region side
+        ///   Region side
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name = "message"></param>
         /// <returns></returns>
         protected OSDMap OnMessageReceived(OSDMap message)
         {
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "EstateUpdated")
             {
-                OSDMap innerMessage = (OSDMap)message["Message"];
+                OSDMap innerMessage = (OSDMap) message["Message"];
                 //We got a message, deal with it
                 uint estateID = innerMessage["EstateID"].AsUInteger();
                 UUID regionID = innerMessage["RegionID"].AsUUID();
@@ -132,7 +132,7 @@ namespace OpenSim.Services.MessagingService
                     {
                         if (s.RegionInfo.EstateSettings.EstateID == estateID)
                         {
-                            IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+                            IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
                             if (estateConnector != null)
                             {
                                 EstateSettings es = null;
@@ -148,7 +148,5 @@ namespace OpenSim.Services.MessagingService
             }
             return null;
         }
-
-        #endregion
     }
 }

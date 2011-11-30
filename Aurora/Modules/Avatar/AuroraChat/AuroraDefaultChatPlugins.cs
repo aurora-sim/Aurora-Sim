@@ -27,31 +27,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Nini.Config;
+using Aurora.Framework;
+using Google.API.Translate;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using log4net;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Google.API.Translate;
+using Language = Aurora.GoogleAPIs.Language;
 
 namespace Aurora.Modules.Avatar.AuroraChat
 {
     /// <summary>
-    /// This allows you to use a calculator inworld via chat
-    /// Example would be to type: 
-    /// calc.Add 1 1 
-    /// which would return 2
-    /// or 
-    /// calc.Divide 4 2
-    /// which returns 2
+    ///   This allows you to use a calculator inworld via chat
+    ///   Example would be to type: 
+    ///   calc.Add 1 1 
+    ///   which would return 2
+    ///   or 
+    ///   calc.Divide 4 2
+    ///   which returns 2
     /// </summary>
     public class CalcChatPlugin : IChatPlugin
     {
+        #region IChatPlugin Members
+
         public void Initialize(IChatModule module)
         {
             module.RegisterChatPlugin("calc", this);
@@ -86,7 +83,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 {
                     float Num1 = float.Parse(operators[1]);
                     float Num2 = float.Parse(operators[2]);
-                    float RetVal = Num1 * Num2;
+                    float RetVal = Num1*Num2;
                     BuildAndSendResult(RetVal, c.Scene, c.Position);
                 }
             }
@@ -96,7 +93,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 {
                     float Num1 = float.Parse(operators[1]);
                     float Num2 = float.Parse(operators[2]);
-                    float RetVal = Num1 / Num2;
+                    float RetVal = Num1/Num2;
                     BuildAndSendResult(RetVal, c.Scene, c.Position);
                 }
             }
@@ -105,31 +102,11 @@ namespace Aurora.Modules.Avatar.AuroraChat
             return true;
         }
 
-        /// <summary>
-        /// Tell the client what the result is
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="scene"></param>
-        /// <param name="position"></param>
-        private void BuildAndSendResult(float result, IScene scene, Vector3 position)
-        {
-            OSChatMessage message = new OSChatMessage();
-            message.From = "Server";
-            message.Message = "Result: " + result;
-            message.Channel = 0;
-            message.Type = ChatTypeEnum.Region;
-            message.Position = position;
-            message.Sender = null;
-            message.SenderUUID = UUID.Zero;
-            message.Scene = scene;
-            scene.EventManager.TriggerOnChatBroadcast(null, message);
-        }
-
         public void OnNewClient(IClientAPI client)
         {
         }
 
-        public void OnClosingClient (UUID clientID, IScene scene)
+        public void OnClosingClient(UUID clientID, IScene scene)
         {
         }
 
@@ -138,35 +115,49 @@ namespace Aurora.Modules.Avatar.AuroraChat
             get { return "CalcChatPlugin"; }
         }
 
+        #endregion
+
+        /// <summary>
+        ///   Tell the client what the result is
+        /// </summary>
+        /// <param name = "result"></param>
+        /// <param name = "scene"></param>
+        /// <param name = "position"></param>
+        private void BuildAndSendResult(float result, IScene scene, Vector3 position)
+        {
+            OSChatMessage message = new OSChatMessage
+                                        {
+                                            From = "Server",
+                                            Message = "Result: " + result,
+                                            Channel = 0,
+                                            Type = ChatTypeEnum.Region,
+                                            Position = position,
+                                            Sender = null,
+                                            SenderUUID = UUID.Zero,
+                                            Scene = scene
+                                        };
+            scene.EventManager.TriggerOnChatBroadcast(null, message);
+        }
+
         public void Dispose()
         {
         }
     }
 
     /// <summary>
-    /// Translate chat from X language to Y language from chat
-    ///  Example to turn on translator
-    /// translator en >> fr         translator en > fr
-    /// translator fr << en         translator fr < en
-    ///  Example to enable/disable the translator
-    /// translator settings enabled true/false
-    ///  Example to show the old text previous to translating
-    /// translator settings showold = true/false
-    ///  Help for the translator
-    /// translator help
+    ///   Translate chat from X language to Y language from chat
+    ///   Example to turn on translator
+    ///   translator en >> fr         translator en > fr
+    ///   translator fr << en translator fr < en Example to enable/disable the translator translator settings enabled true/false
+    ///    Example to show the old text previous to translating translator settings showold =  true/false Help for the translator
+    ///    translator help
     /// </summary>
     public class TranslatorPlugin : IChatPlugin
     {
-        public class TranslatorUserInfo
-        {
-            public bool enabled = false;
-            public Aurora.GoogleAPIs.Language To = Aurora.GoogleAPIs.Language.English;
-            public Aurora.GoogleAPIs.Language From = Aurora.GoogleAPIs.Language.Unknown;
-            public bool ShowNonTranslated = false;
-        }
+        private readonly Dictionary<UUID, TranslatorUserInfo> UserInfos = new Dictionary<UUID, TranslatorUserInfo>();
 
-        Dictionary<UUID, TranslatorUserInfo> UserInfos = new Dictionary<UUID, TranslatorUserInfo>();
-        
+        #region IChatPlugin Members
+
         public void Initialize(IChatModule module)
         {
             //We register all so that we can hook up to all chat when they enable us
@@ -178,7 +169,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
             string[] operators = c.Message.Split(' ');
             TranslatorUserInfo UInfo = null;
 
-            if (operators[0].StartsWith("translate",StringComparison.CurrentCultureIgnoreCase))
+            if (operators[0].StartsWith("translate", StringComparison.CurrentCultureIgnoreCase))
             {
                 // Example to turn on translator
                 // translator en >> fr         translator en > fr
@@ -186,21 +177,21 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
                 if (operators[2].Contains(">")) //Covers > and >>, 
                 {
-                    UserInfos[c.SenderUUID] = new TranslatorUserInfo()
-                    {
-                        enabled = true,
-                        From = Aurora.GoogleAPIs.Language.GetValue(operators[1]),
-                        To = Aurora.GoogleAPIs.Language.GetValue(operators[3])
-                    };
+                    UserInfos[c.SenderUUID] = new TranslatorUserInfo
+                                                  {
+                                                      enabled = true,
+                                                      From = Language.GetValue(operators[1]),
+                                                      To = Language.GetValue(operators[3])
+                                                  };
                 }
                 else if (operators[2].Contains("<")) //Covers < and <<, 
                 {
-                    UserInfos[c.SenderUUID] = new TranslatorUserInfo()
-                    {
-                        enabled = true,
-                        From = Aurora.GoogleAPIs.Language.GetValue(operators[3]),
-                        To = Aurora.GoogleAPIs.Language.GetValue(operators[1])
-                    };
+                    UserInfos[c.SenderUUID] = new TranslatorUserInfo
+                                                  {
+                                                      enabled = true,
+                                                      From = Language.GetValue(operators[3]),
+                                                      To = Language.GetValue(operators[1])
+                                                  };
                 }
             }
             else if (c.Message.StartsWith("translator settings", StringComparison.CurrentCultureIgnoreCase))
@@ -216,23 +207,23 @@ namespace Aurora.Modules.Avatar.AuroraChat
             else if (c.Message.StartsWith("translator help", StringComparison.CurrentCultureIgnoreCase))
             {
                 c.Message = "Translate: \n" +
-                    "translate from >> to  - translates from language 'from' into language 'to'\n" +
-                    "Settings:\n" +
-                    "translator settings enabled true/false - enables the translator\n" +
-                    "translator settings showold true/false - shows the original chat\n" +
-                    "Languages\n";
-                foreach (Aurora.GoogleAPIs.Language lang in Aurora.GoogleAPIs.Language.TranslatableList)
+                            "translate from >> to  - translates from language 'from' into language 'to'\n" +
+                            "Settings:\n" +
+                            "translator settings enabled true/false - enables the translator\n" +
+                            "translator settings showold true/false - shows the original chat\n" +
+                            "Languages\n";
+                foreach (Language lang in Language.TranslatableList)
                 {
                     c.Message += lang.Name + " - " + lang.Value + "\n";
                 }
-
             }
             else if (UserInfos.TryGetValue(c.SenderUUID, out UInfo))
             {
                 //If enabled, ask google translator about it
                 if (UInfo.enabled)
                 {
-                    TranslateClient tc = new TranslateClient("http://ajax.googleapis.com/ajax/services/language/translate");
+                    TranslateClient tc =
+                        new TranslateClient("http://ajax.googleapis.com/ajax/services/language/translate");
                     string translated = "";
                     try
                     {
@@ -240,7 +231,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("[Aurora Translator]: Error in requesting translation, " + ex.ToString());
+                        Console.WriteLine("[Aurora Translator]: Error in requesting translation, " + ex);
                     }
                     if (!UInfo.ShowNonTranslated)
                         c.Message = translated;
@@ -256,7 +247,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
         {
         }
 
-        public void OnClosingClient (UUID clientID, IScene scene)
+        public void OnClosingClient(UUID clientID, IScene scene)
         {
             UserInfos.Remove(clientID);
         }
@@ -266,27 +257,43 @@ namespace Aurora.Modules.Avatar.AuroraChat
             get { return "TranslatorPlugin"; }
         }
 
+        #endregion
+
         public void Dispose()
         {
         }
+
+        #region Nested type: TranslatorUserInfo
+
+        public class TranslatorUserInfo
+        {
+            public Language From = Language.Unknown;
+            public bool ShowNonTranslated;
+            public Language To = Language.English;
+            public bool enabled;
+        }
+
+        #endregion
     }
 
     /// <summary>
-    /// Set some default settings for users entering the sim
+    ///   Set some default settings for users entering the sim
     /// </summary>
     public class AdminChatPlugin : IChatPlugin
     {
-        IChatModule chatModule;
-        private bool m_useAuth = true;
-        private bool m_blockChat = false;
-        private List<UUID> m_authList = new List<UUID>();
-        private List<UUID> m_authorizedSpeakers = new List<UUID>();
-        private bool m_announceNewAgents;
+        private readonly List<UUID> m_authList = new List<UUID>();
+        private readonly List<UUID> m_authorizedSpeakers = new List<UUID>();
+        private IChatModule chatModule;
         private bool m_announceClosedAgents;
+        private bool m_announceNewAgents;
+        private bool m_blockChat;
+        private string m_godPrefix;
+        private bool m_indicategod;
+        private bool m_useAuth = true;
         private bool m_useWelcomeMessage;
         private string m_welcomeMessage;
-        private bool m_indicategod;
-        private string m_godPrefix;
+
+        #region IChatPlugin Members
 
         public void Initialize(IChatModule module)
         {
@@ -307,7 +314,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
         public bool OnNewChatMessageFromWorld(OSChatMessage c, out OSChatMessage newc)
         {
-            IScenePresence SP = c.Scene.GetScenePresence (c.SenderUUID);
+            IScenePresence SP = c.Scene.GetScenePresence(c.SenderUUID);
             if (SP != null)
             {
                 if (!SP.IsChildAgent)
@@ -338,20 +345,26 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     if (message[1] == "SayDistance")
                     {
                         chatModule.SayDistance = Convert.ToInt32(message[2]);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[1] + " changed.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[1] + " changed.", ChatSourceType.System, -1);
                     }
                     if (message[1] == "WhisperDistance")
                     {
                         chatModule.WhisperDistance = Convert.ToInt32(message[2]);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[1] + " changed.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[1] + " changed.", ChatSourceType.System, -1);
                     }
                     if (message[1] == "ShoutDistance")
                     {
                         chatModule.ShoutDistance = Convert.ToInt32(message[2]);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[1] + " changed.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[1] + " changed.", ChatSourceType.System, -1);
                     }
                     //Add the user to the list of allowed speakers and 'chat' admins
                     if (message[1] == "AddToAuth")
@@ -359,30 +372,38 @@ namespace Aurora.Modules.Avatar.AuroraChat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Add(NewSP.UUID);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " added.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[2] + " added.", ChatSourceType.System, -1);
                     }
                     if (message[1] == "RemoveFromAuth")
                     {
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Remove(NewSP.UUID);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " added.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[2] + " added.", ChatSourceType.System, -1);
                     }
                     //Block chat from those not in the auth list
                     if (message[1] == "BlockChat")
                     {
                         m_blockChat = true;
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat blocked.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat blocked.",
+                                                      ChatSourceType.System, -1);
                     }
                     //Allow chat from all again
                     if (message[1] == "AllowChat")
                     {
                         m_blockChat = false;
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat allowed.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat allowed.",
+                                                      ChatSourceType.System, -1);
                     }
                     //Remove speaking priviledges from an individual
                     if (message[1] == "RevokeSpeakingRights")
@@ -390,8 +411,10 @@ namespace Aurora.Modules.Avatar.AuroraChat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authorizedSpeakers.Remove(NewSP.UUID);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " - revoked.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[2] + " - revoked.", ChatSourceType.System, -1);
                     }
                     //Allow an individual to speak again
                     if (message[1] == "GiveSpeakingRights")
@@ -399,8 +422,10 @@ namespace Aurora.Modules.Avatar.AuroraChat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authorizedSpeakers.Add(NewSP.UUID);
-                        chatModule.TrySendChatMessage (senderSP, c.Position, new Vector3 (c.Scene.RegionInfo.RegionLocX,
-                                                c.Scene.RegionInfo.RegionLocY, 0), UUID.Zero, "AuroraChat", ChatTypeEnum.Region, message[2] + " - revoked.", ChatSourceType.System, -1);
+                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
+                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                                                      UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
+                                                      message[2] + " - revoked.", ChatSourceType.System, -1);
                     }
                 }
                 newc = c;
@@ -421,7 +446,7 @@ namespace Aurora.Modules.Avatar.AuroraChat
 
         public void OnNewClient(IClientAPI client)
         {
-            IScenePresence SP = client.Scene.GetScenePresence (client.AgentId);
+            IScenePresence SP = client.Scene.GetScenePresence(client.AgentId);
             if (!SP.IsChildAgent)
             {
                 //If chat is not blocked for now, add to the not blocked list
@@ -435,16 +460,24 @@ namespace Aurora.Modules.Avatar.AuroraChat
                 if (m_announceNewAgents)
                 {
                     client.Scene.ForEachScenePresence(delegate(IScenePresence presence)
-                    {
-                        if (presence.UUID != client.AgentId && !presence.IsChildAgent)
-                        {
-                            IEntityCountModule entityCountModule = client.Scene.RequestModuleInterface<IEntityCountModule>();
-                            if (entityCountModule != null)
-                                presence.ControllingClient.SendChatMessage(client.Name + " has joined the region. Total Agents: " + (entityCountModule.RootAgents + 1), 1, SP.AbsolutePosition, "System",
-                                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                        }
-                    }
-                    );
+                                                          {
+                                                              if (presence.UUID != client.AgentId &&
+                                                                  !presence.IsChildAgent)
+                                                              {
+                                                                  IEntityCountModule entityCountModule =
+                                                                      client.Scene.RequestModuleInterface
+                                                                          <IEntityCountModule>();
+                                                                  if (entityCountModule != null)
+                                                                      presence.ControllingClient.SendChatMessage(
+                                                                          client.Name +
+                                                                          " has joined the region. Total Agents: " +
+                                                                          (entityCountModule.RootAgents + 1), 1,
+                                                                          SP.AbsolutePosition, "System",
+                                                                          UUID.Zero, (byte) ChatSourceType.System,
+                                                                          (byte) ChatAudibleLevel.Fully);
+                                                              }
+                                                          }
+                        );
                 }
 
                 //Send the new user a welcome message
@@ -453,39 +486,45 @@ namespace Aurora.Modules.Avatar.AuroraChat
                     if (m_welcomeMessage != "")
                     {
                         client.SendChatMessage(m_welcomeMessage, 1, SP.AbsolutePosition, "System",
-                                                       UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+                                               UUID.Zero, (byte) ChatSourceType.System, (byte) ChatAudibleLevel.Fully);
                     }
                 }
             }
         }
 
-        public void OnClosingClient (UUID clientID, IScene scene)
+        public void OnClosingClient(UUID clientID, IScene scene)
         {
-            IScenePresence client = scene.GetScenePresence (clientID);
+            IScenePresence client = scene.GetScenePresence(clientID);
             if (client != null && !client.IsChildAgent)
             {
                 //Clear out the auth speakers list
                 lock (m_authorizedSpeakers)
                 {
-                    if (m_authorizedSpeakers.Contains (clientID))
-                        m_authorizedSpeakers.Remove (clientID);
+                    if (m_authorizedSpeakers.Contains(clientID))
+                        m_authorizedSpeakers.Remove(clientID);
                 }
 
-                IScenePresence presence = scene.GetScenePresence (clientID);
+                IScenePresence presence = scene.GetScenePresence(clientID);
                 //Announce the closing agent if enabled
                 if (m_announceClosedAgents)
                 {
-                    scene.ForEachScenePresence (delegate (IScenePresence SP)
-                    {
-                        if (SP.UUID != clientID && !SP.IsChildAgent)
-                        {
-                            IEntityCountModule entityCountModule = scene.RequestModuleInterface<IEntityCountModule> ();
-                            if (entityCountModule != null)
-                                SP.ControllingClient.SendChatMessage (presence.Name + " has left the region. Total Agents: " + (entityCountModule.RootAgents - 1), 1, SP.AbsolutePosition, "System",
-                                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
-                        }
-                    }
-                    );
+                    scene.ForEachScenePresence(delegate(IScenePresence SP)
+                                                   {
+                                                       if (SP.UUID != clientID && !SP.IsChildAgent)
+                                                       {
+                                                           IEntityCountModule entityCountModule =
+                                                               scene.RequestModuleInterface<IEntityCountModule>();
+                                                           if (entityCountModule != null)
+                                                               SP.ControllingClient.SendChatMessage(
+                                                                   presence.Name +
+                                                                   " has left the region. Total Agents: " +
+                                                                   (entityCountModule.RootAgents - 1), 1,
+                                                                   SP.AbsolutePosition, "System",
+                                                                   UUID.Zero, (byte) ChatSourceType.System,
+                                                                   (byte) ChatAudibleLevel.Fully);
+                                                       }
+                                                   }
+                        );
                 }
             }
         }
@@ -494,6 +533,8 @@ namespace Aurora.Modules.Avatar.AuroraChat
         {
             get { return "AdminChatPlugin"; }
         }
+
+        #endregion
 
         public void Dispose()
         {

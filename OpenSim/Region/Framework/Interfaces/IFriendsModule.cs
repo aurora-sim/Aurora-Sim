@@ -26,34 +26,33 @@
  */
 
 using OpenMetaverse;
-using OpenSim.Framework;
-using System.Collections.Generic;
+using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IFriendsModule
     {
         /// <summary>
-        /// Get the permissions that PrincipalID has for FriendID
+        ///   Get the permissions that PrincipalID has for FriendID
         /// </summary>
-        /// <param name="PrincipalID"></param>
-        /// <param name="FriendID"></param>
+        /// <param name = "PrincipalID"></param>
+        /// <param name = "FriendID"></param>
         /// <returns></returns>
         int GetFriendPerms(UUID PrincipalID, UUID FriendID);
 
         /// <summary>
-        /// Send a 'user is on/offline' message to the given FriendToInformID about UserID
+        ///   Send a 'user is on/offline' message to the given FriendToInformID about UserID
         /// </summary>
-        /// <param name="FriendToInformID"></param>
-        /// <param name="UserID"></param>
-        /// <param name="NewStatus">On/Offline</param>
+        /// <param name = "FriendToInformID"></param>
+        /// <param name = "UserID"></param>
+        /// <param name = "NewStatus">On/Offline</param>
         void SendFriendsStatusMessage(UUID FriendToInformID, UUID UserID, bool NewStatus);
 
         /// <summary>
-        /// Gets all the given friends of the user (only if the user is in the region)
+        ///   Gets all the given friends of the user (only if the user is in the region)
         /// </summary>
-        /// <param name="agentID"></param>
+        /// <param name = "agentID"></param>
         /// <returns></returns>
-        OpenSim.Services.Interfaces.FriendInfo[] GetFriends(UUID agentID);
+        FriendInfo[] GetFriends(UUID agentID);
     }
 }

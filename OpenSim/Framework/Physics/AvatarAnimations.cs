@@ -33,8 +33,8 @@ namespace OpenSim.Framework
 {
     public class AvatarAnimations
     {
-        public Dictionary<string, UUID> AnimsUUID = new Dictionary<string, UUID>();
         public Dictionary<UUID, string> AnimStateNames = new Dictionary<UUID, string>();
+        public Dictionary<string, UUID> AnimsUUID = new Dictionary<string, UUID>();
 
         public AvatarAnimations()
         {
@@ -46,9 +46,9 @@ namespace OpenSim.Framework
                 {
                     if (nod.Attributes["name"] != null)
                     {
-                        string name = (string)nod.Attributes["name"].Value;
-                        UUID id = (UUID)nod.InnerText;
-                        string animState = (string)nod.Attributes["state"].Value;
+                        string name = nod.Attributes["name"].Value;
+                        UUID id = (UUID) nod.InnerText;
+                        string animState = nod.Attributes["state"].Value;
 
                         try
                         {

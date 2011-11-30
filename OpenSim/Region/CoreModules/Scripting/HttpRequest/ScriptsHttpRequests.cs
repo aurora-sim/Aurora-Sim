@@ -28,18 +28,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
-using System.Security.Cryptography.X509Certificates;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 /*****************************************************
  *
@@ -85,27 +84,22 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 {
     public class HttpRequestModule : INonSharedRegionModule, IHttpRequestModule
     {
-        private object HttpListLock = new object();
+        private readonly object HttpListLock = new object();
+        private readonly Dictionary<UUID, HTTPMax> m_numberOfPrimHTTPRequests = new Dictionary<UUID, HTTPMax>();
+        private readonly Dictionary<UUID, UUID> m_reqID2itemID = new Dictionary<UUID, UUID>();
+        private int DEFAULT_BODY_MAXLENGTH = 2048;
+        private int MaxNumberOfHTTPRequestsPerSecond = 1;
         private int httpTimeout = 30000;
         private string m_name = "HttpScriptRequests";
-        private int DEFAULT_BODY_MAXLENGTH = 2048;
-
-        private string m_proxyurl = "";
-        private string m_proxyexcepts = "";
 
         // <itemID, HttpRequestClasss>
         private Dictionary<UUID, List<HttpRequestClass>> m_pendingRequests;
+        private string m_proxyexcepts = "";
+        private string m_proxyurl = "";
         // <reqID, itemID>
-        private Dictionary<UUID, UUID> m_reqID2itemID = new Dictionary<UUID, UUID>();
         private IScene m_scene;
         private IScriptModule m_scriptModule;
-        public class HTTPMax
-        {
-            public int Number = 0;
-            public long LastTicks = 0;
-        }
-        private Dictionary<UUID, HTTPMax> m_numberOfPrimHTTPRequests = new Dictionary<UUID, HTTPMax>();
-        private int MaxNumberOfHTTPRequestsPerSecond = 1;
+
         // private Queue<HttpRequestClass> rpcQueue = new Queue<HttpRequestClass>();
 
         public HttpRequestModule()
@@ -113,28 +107,9 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             ServicePointManager.ServerCertificateValidationCallback += ValidateServerCertificate;
         }
 
-        public static bool ValidateServerCertificate(
-            object sender,
-            X509Certificate  certificate,
-            X509Chain  chain,
-            SslPolicyErrors  sslPolicyErrors)
+        public bool IsSharedModule
         {
-            HttpWebRequest Request = (HttpWebRequest)sender;
-
-            if(Request.Headers.Get("NoVerifyCert") != null)
-            {
-                return true;
-            }
-            if ((((int)sslPolicyErrors) & ~4) != 0)
-                return false;
-#pragma warning disable 618
-            if (ServicePointManager.CertificatePolicy != null)
-            {
-                ServicePoint sp = Request.ServicePoint;
-                return ServicePointManager.CertificatePolicy.CheckValidationResult (sp, certificate, Request, 0);
-            }
-#pragma warning restore 618
-            return true;
+            get { return true; }
         }
 
         #region IHttpRequestModule Members
@@ -146,7 +121,8 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             return UUID.Zero;
         }
 
-        public UUID StartHttpRequest(UUID primID, UUID itemID, string url, List<string> parameters, Dictionary<string, string> headers, string body)
+        public UUID StartHttpRequest(UUID primID, UUID itemID, string url, List<string> parameters,
+                                     Dictionary<string, string> headers, string body)
         {
             UUID reqID = UUID.Random();
             HttpRequestClass htc = new HttpRequestClass();
@@ -165,24 +141,24 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 {
                     switch (Int32.Parse(parms[i]))
                     {
-                        case (int)HttpRequestConstants.HTTP_METHOD:
+                        case (int) HttpRequestConstants.HTTP_METHOD:
 
                             htc.HttpMethod = parms[i + 1];
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_MIMETYPE:
+                        case (int) HttpRequestConstants.HTTP_MIMETYPE:
 
                             htc.HttpMIMEType = parms[i + 1];
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_BODY_MAXLENGTH:
+                        case (int) HttpRequestConstants.HTTP_BODY_MAXLENGTH:
 
                             BODY_MAXLENGTH = int.Parse(parms[i + 1]);
                             break;
 
-                        case (int)HttpRequestConstants.HTTP_VERIFY_CERT:
+                        case (int) HttpRequestConstants.HTTP_VERIFY_CERT:
 
-                            htc.HttpVerifyCert = (int.Parse (parms[i + 1]) != 0);
+                            htc.HttpVerifyCert = (int.Parse(parms[i + 1]) != 0);
                             break;
                     }
                 }
@@ -200,7 +176,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             if (r.Number++ > MaxNumberOfHTTPRequestsPerSecond)
             {
                 ShouldProcess = false; //Too many for this prim, return status 499
-                htc.Status = (int)OSHttpStatusCode.ClientErrorJoker;
+                htc.Status = (int) OSHttpStatusCode.ClientErrorJoker;
                 htc.Finished = true;
             }
 
@@ -222,14 +198,14 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 else
                 {
                     m_reqID2itemID.Add(reqID, itemID);
-                    m_pendingRequests.Add(itemID, new List<HttpRequestClass>() { htc });
+                    m_pendingRequests.Add(itemID, new List<HttpRequestClass> {htc});
                 }
             }
 
-            if(ShouldProcess)
-                htc.Process ();
+            if (ShouldProcess)
+                htc.Process();
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads (itemID);
+            m_scriptModule.PokeThreads(itemID);
 
             return reqID;
         }
@@ -237,7 +213,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         public void StopHttpRequest(UUID primID, UUID m_itemID)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads (m_itemID);
+            m_scriptModule.PokeThreads(m_itemID);
             //Kill all requests and return
             if (m_pendingRequests != null)
             {
@@ -256,7 +232,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             }
         }
 
-        public int GetRequestCount ()
+        public int GetRequestCount()
         {
             return m_pendingRequests.Count;
         }
@@ -267,13 +243,9 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 return null;
             lock (HttpListLock)
             {
-                foreach (List<HttpRequestClass> luids in m_pendingRequests.Values)
+                foreach (HttpRequestClass luid in from luids in m_pendingRequests.Values from luid in luids where luid.Finished select luid)
                 {
-                    foreach (HttpRequestClass luid in luids)
-                    {
-                        if (luid.Finished)
-                            return luid;
-                    }
+                    return luid;
                 }
             }
             return null;
@@ -281,7 +253,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         public void RemoveCompletedRequest(IServiceRequest reqid)
         {
-            HttpRequestClass req = (HttpRequestClass)reqid;
+            HttpRequestClass req = (HttpRequestClass) reqid;
             lock (HttpListLock)
             {
                 List<HttpRequestClass> tmpReqs;
@@ -305,7 +277,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         #endregion
 
-        #region IRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -315,31 +287,25 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             m_pendingRequests = new Dictionary<UUID, List<HttpRequestClass>>();
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
 
-            m_scriptModule = scene.RequestModuleInterface<IScriptModule> ();
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -351,74 +317,92 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             get { return m_name; }
         }
 
-        public bool IsSharedModule
+        #endregion
+
+        public static bool ValidateServerCertificate(
+            object sender,
+            X509Certificate certificate,
+            X509Chain chain,
+            SslPolicyErrors sslPolicyErrors)
         {
-            get { return true; }
+            HttpWebRequest Request = (HttpWebRequest) sender;
+
+            if (Request.Headers.Get("NoVerifyCert") != null)
+            {
+                return true;
+            }
+            if ((((int) sslPolicyErrors) & ~4) != 0)
+                return false;
+#pragma warning disable 618
+            if (ServicePointManager.CertificatePolicy != null)
+            {
+                ServicePoint sp = Request.ServicePoint;
+                return ServicePointManager.CertificatePolicy.CheckValidationResult(sp, certificate, Request, 0);
+            }
+#pragma warning restore 618
+            return true;
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        #region Nested type: HTTPMax
+
+        public class HTTPMax
+        {
+            public long LastTicks;
+            public int Number;
         }
 
         #endregion
     }
 
-    public class HttpRequestClass: IServiceRequest
+    public class HttpRequestClass : IServiceRequest
     {
         // Constants for parameters
         // public const int HTTP_BODY_MAXLENGTH = 2;
         // public const int HTTP_METHOD = 0;
         // public const int HTTP_MIMETYPE = 1;
         // public const int HTTP_VERIFY_CERT = 3;
+        public string HttpMIMEType = "text/plain;charset=utf-8";
+        public string HttpMethod = "GET";
+        public int HttpTimeout;
+        public bool HttpVerifyCert = true;
+        public int MaxLength;
+        public object[] Metadata = new object[0];
+
+        public DateTime Next;
+        public string OutboundBody;
+
+        public HttpWebRequest Request;
+        public string ResponseBody;
+        public Dictionary<string, string> ResponseHeaders;
+        public List<string> ResponseMetadata;
+        public int Status;
+        public string Url;
         private bool _finished;
+        private Thread httpThread;
+        public string proxyexcepts;
+        public string proxyurl;
+
+        #region IServiceRequest Members
+
         public bool Finished
         {
             get { return _finished; }
             set { _finished = value; }
         }
-        // public int HttpBodyMaxLen = 2048; // not implemented
 
-        // Parameter members and default values
-        public string HttpMethod  = "GET";
-        public string HttpMIMEType = "text/plain;charset=utf-8";
-        public int HttpTimeout;
-        public bool HttpVerifyCert = true;
-        private Thread httpThread;
+        public UUID ItemID { get; set; }
 
-        // Request info
-        private UUID _itemID;
-        public UUID ItemID 
-        {
-            get { return _itemID; }
-            set { _itemID = value; }
-        }
-        private UUID _primID;
-        public UUID PrimID
-        {
-            get { return _primID; }
-            set { _primID = value; }
-        }
-        public DateTime Next;
-        public string proxyurl;
-        public string proxyexcepts;
-        public string OutboundBody;
-        private UUID _reqID;
-        public UUID ReqID 
-        {
-            get { return _reqID; }
-            set { _reqID = value; }
-        }
-        public HttpWebRequest Request;
-        public string ResponseBody;
-        public List<string> ResponseMetadata;
-        public Dictionary<string, string> ResponseHeaders;
-        public int Status;
-        public object[] Metadata = new object[0];
-        public string Url;
-        public int MaxLength = 0;
+        public UUID PrimID { get; set; }
+        public UUID ReqID { get; set; }
 
         public void Process()
         {
-            httpThread = new Thread(SendRequest);
-            httpThread.Name = "HttpRequestThread";
-            httpThread.Priority = ThreadPriority.Lowest;
-            httpThread.IsBackground = true;
+            httpThread = new Thread(SendRequest)
+                             {Name = "HttpRequestThread", Priority = ThreadPriority.Lowest, IsBackground = true};
             _finished = false;
             httpThread.Start();
         }
@@ -430,7 +414,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         public void SendRequest()
         {
-            Culture.SetCurrentCulture ();
+            Culture.SetCurrentCulture();
             HttpWebResponse response = null;
             StringBuilder sb = new StringBuilder();
             byte[] buf = new byte[8192];
@@ -444,26 +428,26 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 Request.Method = HttpMethod;
                 Request.ContentType = HttpMIMEType;
 
-                if(!HttpVerifyCert)
+                if (!HttpVerifyCert)
                 {
                     // Connection Group Name is probably not used so we hijack it to identify
                     // a desired security exception
 //                  Request.ConnectionGroupName="NoVerify";
-                    Request.Headers.Add("NoVerifyCert" , "true");
+                    Request.Headers.Add("NoVerifyCert", "true");
                 }
 //              else
 //              {
 //                  Request.ConnectionGroupName="Verify";
 //              }
 
-                if (proxyurl != null && proxyurl.Length > 0) 
+                if (!string.IsNullOrEmpty(proxyurl))
                 {
-                    if (proxyexcepts != null && proxyexcepts.Length > 0) 
+                    if (!string.IsNullOrEmpty(proxyexcepts))
                     {
                         string[] elist = proxyexcepts.Split(';');
                         Request.Proxy = new WebProxy(proxyurl, true, elist);
-                    } 
-                    else 
+                    }
+                    else
                     {
                         Request.Proxy = new WebProxy(proxyurl, true);
                     }
@@ -476,7 +460,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                         Request.Headers[entry.Key] = entry.Value;
 
                 // Encode outbound data
-                if (OutboundBody.Length > 0) 
+                if (OutboundBody.Length > 0)
                 {
                     byte[] data = Util.UTF8.GetBytes(OutboundBody);
 
@@ -514,20 +498,20 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 {
                     ResponseBody = ResponseBody.Remove(MaxLength);
                     //Add the metaData
-                    Metadata = new object[2] { 0, MaxLength };
+                    Metadata = new object[2] {0, MaxLength};
                 }
             }
             catch (Exception e)
             {
-                if (e is WebException && ((WebException)e).Status == WebExceptionStatus.ProtocolError)
+                if (e is WebException && ((WebException) e).Status == WebExceptionStatus.ProtocolError)
                 {
-                    HttpWebResponse webRsp = (HttpWebResponse)((WebException)e).Response;
-                    Status = (int)webRsp.StatusCode;
+                    HttpWebResponse webRsp = (HttpWebResponse) ((WebException) e).Response;
+                    Status = (int) webRsp.StatusCode;
                     ResponseBody = webRsp.StatusDescription;
                 }
                 else
                 {
-                    Status = (int)OSHttpStatusCode.ClientErrorJoker;
+                    Status = (int) OSHttpStatusCode.ClientErrorJoker;
                     ResponseBody = e.Message;
                 }
 
@@ -540,7 +524,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                     response.Close();
             }
 
-            Status = (int)OSHttpStatusCode.SuccessOk;
+            Status = (int) OSHttpStatusCode.SuccessOk;
             _finished = true;
         }
 
@@ -554,5 +538,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             {
             }
         }
+
+        #endregion
     }
 }

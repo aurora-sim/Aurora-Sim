@@ -25,14 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Currently unused, but left as it is a useful enum
+    ///   Currently unused, but left as it is a useful enum
     /// </summary>
     public enum Cardinals
     {

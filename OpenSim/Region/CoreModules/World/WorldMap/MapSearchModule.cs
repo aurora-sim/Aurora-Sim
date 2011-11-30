@@ -28,13 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
+using log4net;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
@@ -44,19 +42,24 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IScene m_scene = null; // only need one for communication with GridService
-        private List<IScene> m_scenes = new List<IScene> ();
+        private readonly List<IScene> m_scenes = new List<IScene>();
         private bool Enabled = true;
-        
-        #region IRegionModule Members
+        private IScene m_scene; // only need one for communication with GridService
+
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
+
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
             if (source.Configs["MapModule"] != null)
             {
                 if (source.Configs["MapModule"].GetString(
-                        "WorldMapModule", "AuroraWorldMapModule") !=
-                        "WorldMapModule")
+                    "WorldMapModule", "AuroraWorldMapModule") !=
+                    "WorldMapModule")
                 {
                     Enabled = false;
                 }
@@ -67,7 +70,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!Enabled)
                 return;
@@ -80,14 +83,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scenes.Remove(scene);
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -111,11 +114,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             get { return "MapSearchModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
         #endregion
 
         private void OnNewClient(IClientAPI client)
@@ -135,7 +133,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 remoteClient.SendAlertMessage("Use a search string with at least 3 characters");
                 return;
             }
-            
+
             // try to fetch from GridServer
             List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
             List<MapBlockData> blocks = new List<MapBlockData>();
@@ -145,33 +143,39 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 foreach (GridRegion info in regionInfos)
                 {
-                    data = new MapBlockData();
-                    data.Agents = 0;
-                    data.Access = info.Access;
-                    data.MapImageID = info.TerrainImage;
-                    data.Name = info.RegionName;
-                    data.RegionFlags = 0;
-                    data.WaterHeight = 0; // not used
-                    data.X = (ushort)(info.RegionLocX / Constants.RegionSize);
-                    data.Y = (ushort)(info.RegionLocY / Constants.RegionSize);
-                    data.SizeX = (ushort)(info.RegionSizeX);
-                    data.SizeY = (ushort)(info.RegionSizeY);
+                    data = new MapBlockData
+                               {
+                                   Agents = 0,
+                                   Access = info.Access,
+                                   MapImageID = info.TerrainImage,
+                                   Name = info.RegionName,
+                                   RegionFlags = 0,
+                                   WaterHeight = 0,
+                                   X = (ushort) (info.RegionLocX/Constants.RegionSize),
+                                   Y = (ushort) (info.RegionLocY/Constants.RegionSize),
+                                   SizeX = (ushort) (info.RegionSizeX),
+                                   SizeY = (ushort) (info.RegionSizeY)
+                               };
+                    // not used
                     blocks.Add(data);
                 }
             }
 
             // final block, closing the search result
-            data = new MapBlockData();
-            data.Agents = 0;
-            data.Access = 255;
-            data.MapImageID = UUID.Zero;
-            data.Name = mapName;
-            data.RegionFlags = 0;
-            data.WaterHeight = 0; // not used
-            data.X = 0;
-            data.Y = 0;
-            data.SizeX = 256;
-            data.SizeY = 256;
+            data = new MapBlockData
+                       {
+                           Agents = 0,
+                           Access = 255,
+                           MapImageID = UUID.Zero,
+                           Name = mapName,
+                           RegionFlags = 0,
+                           WaterHeight = 0,
+                           X = 0,
+                           Y = 0,
+                           SizeX = 256,
+                           SizeY = 256
+                       };
+            // not used
             blocks.Add(data);
 
             remoteClient.SendMapBlock(blocks, 2);

@@ -33,10 +33,10 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public struct ReturnInfo
     {
+        public List<ISceneEntity> Groups;
         public int count;
         public Vector3 location;
         public string objectName;
         public string reason;
-        public List<ISceneEntity> Groups;
     }
 }

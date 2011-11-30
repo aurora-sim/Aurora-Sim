@@ -27,37 +27,35 @@
 
 using System;
 using System.Collections;
-using System.IO;
-using System.Reflection;
 using System.Net;
-using System.Text;
-
+using System.Reflection;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services
 {
     public class ObjectHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private ISimulationService m_SimulationService;
-        private bool m_allowForeignIncomingObjects = false;
+        private readonly ISimulationService m_SimulationService;
+        private readonly bool m_allowForeignIncomingObjects;
 
-        public ObjectHandler() { }
+        public ObjectHandler()
+        {
+        }
 
         public ObjectHandler(ISimulationService sim, IConfigSource source)
         {
             IConfig simulationConfig = source.Configs["Handlers"];
-            if(simulationConfig != null)
-                 m_allowForeignIncomingObjects = simulationConfig.GetBoolean("AllowIncomingForeignObjects", m_allowForeignIncomingObjects );
+            if (simulationConfig != null)
+                m_allowForeignIncomingObjects = simulationConfig.GetBoolean("AllowIncomingForeignObjects",
+                                                                            m_allowForeignIncomingObjects);
             m_SimulationService = sim;
         }
 
@@ -77,7 +75,8 @@ namespace OpenSim.Services
             UUID objectID;
             UUID regionID;
             string action;
-            if (!WebUtils.GetParams((string)request["uri"], out objectID, out regionID, out action) || m_allowForeignIncomingObjects )
+            if (!WebUtils.GetParams((string) request["uri"], out objectID, out regionID, out action) ||
+                m_allowForeignIncomingObjects)
             {
                 //m_log.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
@@ -87,7 +86,7 @@ namespace OpenSim.Services
             }
 
             // Next, let's parse the verb
-            string method = (string)request["http-method"];
+            string method = (string) request["http-method"];
             if (method.Equals("POST"))
             {
                 DoObjectPost(request, responsedata, regionID);
@@ -98,11 +97,11 @@ namespace OpenSim.Services
                 DoObjectPut(request, responsedata, regionID);
                 return responsedata;
             }
-            //else if (method.Equals("DELETE"))
-            //{
-            //    DoObjectDelete(request, responsedata, agentID, action, regionHandle);
-            //    return responsedata;
-            //}
+                //else if (method.Equals("DELETE"))
+                //{
+                //    DoObjectDelete(request, responsedata, agentID, action, regionHandle);
+                //    return responsedata;
+                //}
             else
             {
                 m_log.InfoFormat("[OBJECT HANDLER]: method {0} not supported in object message", method);
@@ -111,12 +110,11 @@ namespace OpenSim.Services
 
                 return responsedata;
             }
-
         }
 
         protected virtual void DoObjectPost(Hashtable request, Hashtable responsedata, UUID regionID)
         {
-            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = 400;
@@ -136,11 +134,8 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
                 regionname = args["destination_name"].ToString();
 
-            GridRegion destination = new GridRegion();
-            destination.RegionID = uuid;
-            destination.RegionLocX = x;
-            destination.RegionLocY = y;
-            destination.RegionName = regionname;
+            GridRegion destination = new GridRegion
+                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
 
             string sogXmlStr = "", extraStr = "";
             if (args.ContainsKey("sog") && args["sog"] != null)
@@ -155,20 +150,20 @@ namespace OpenSim.Services
                 if (mod != null)
                 {
                     sog = mod.DeserializeGroupFromXml2(sogXmlStr, s);
-                    if(sog != null)
+                    if (sog != null)
                         sog.ExtraFromXmlString(extraStr);
                 }
             }
             catch (Exception ex)
             {
-                m_log.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex.ToString());
+                m_log.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex);
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
             }
 
             bool result = false;
-            
+
             if (sog == null)
             {
                 m_log.ErrorFormat("[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
@@ -193,7 +188,7 @@ namespace OpenSim.Services
 
         protected virtual void DoObjectPut(Hashtable request, Hashtable responsedata, UUID regionID)
         {
-            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = 400;
@@ -214,11 +209,8 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
                 regionname = args["destination_name"].ToString();
 
-            GridRegion destination = new GridRegion();
-            destination.RegionID = uuid;
-            destination.RegionLocX = x;
-            destination.RegionLocY = y;
-            destination.RegionName = regionname;
+            GridRegion destination = new GridRegion
+                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
 
             UUID userID = UUID.Zero, itemID = UUID.Zero;
             if (args.ContainsKey("userid") && args["userid"] != null)

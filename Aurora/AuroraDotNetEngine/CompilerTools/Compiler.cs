@@ -27,18 +27,16 @@
 
 using System;
 using System.CodeDom.Compiler;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Reflection;
 using System.IO;
-using System.Text;
-using Microsoft.CSharp;
-//using Microsoft.JScript;
-using Microsoft.VisualBasic;
-using log4net;
-using OpenSim.Region.Framework.Interfaces;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using Aurora.Framework;
 using OpenMetaverse;
+using log4net;
+//using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -47,6 +45,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         #region Declares
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static UInt64 scriptCompileCounter; // And a counter
+        private readonly List<string> m_errors = new List<string>();
+
+        private readonly List<string> m_referencedFiles = new List<string>();
+        private readonly ScriptEngine m_scriptEngine;
+        private readonly List<string> m_warnings = new List<string>();
+
+        public Dictionary<string, IScriptConverter> AllowedCompilers =
+            new Dictionary<string, IScriptConverter>(StringComparer.CurrentCultureIgnoreCase);
+
+        private bool CompileWithDebugInformation;
 
         // * Uses "LSL2Converter" to convert LSL to C# if necessary.
         // * Compiles C#-code into an assembly
@@ -56,29 +65,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         //
 
         private string DefaultCompileLanguage;
-        private bool WriteScriptSourceToDebugFile;
-        private bool CompileWithDebugInformation;
-        public Dictionary<string, IScriptConverter> AllowedCompilers = new Dictionary<string, IScriptConverter>(StringComparer.CurrentCultureIgnoreCase);
-        List<IScriptConverter> converters = new List<IScriptConverter>();
+        private string FilePrefix;
         private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap;
+        private bool WriteScriptSourceToDebugFile;
+
+        private List<IScriptConverter> converters = new List<IScriptConverter>();
 
         public bool firstStartup = true;
-        private string FilePrefix;
-
-        private List<string> m_warnings = new List<string>();
-
-        private List<string> m_errors = new List<string>();
-
-        private List<string> m_referencedFiles = new List<string>();
-
-        private static UInt64 scriptCompileCounter = 0; // And a counter
 
         public UInt64 ScriptCompileCounter
         {
             get { return scriptCompileCounter; }
         }
-
-        private ScriptEngine m_scriptEngine;
 
         public ScriptEngine ScriptEngine
         {
@@ -132,30 +130,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (string strl in allowComp.Split(','))
             {
                 string strlan = strl.Trim(" \t".ToCharArray()).ToLower();
-                foreach (IScriptConverter converter in converters)
+                foreach (IScriptConverter converter in converters.Where(converter => converter.Name == strlan))
                 {
-                    if (converter.Name == strlan)
+                    AllowedCompilers.Add(strlan, converter);
+                    if (converter.Name == DefaultCompileLanguage)
                     {
-                        AllowedCompilers.Add(strlan, converter);
-                        if (converter.Name == DefaultCompileLanguage)
-                        {
-                            found = true;
-                        }
+                        found = true;
                     }
                 }
             }
             if (AllowedCompilers.Count == 0)
-                m_log.Error("[Compiler]: Config error. Compiler could not recognize any language in \"AllowedCompilers\". Scripts will not be executed!");
-            
+                m_log.Error(
+                    "[Compiler]: Config error. Compiler could not recognize any language in \"AllowedCompilers\". Scripts will not be executed!");
+
             if (!found)
                 m_log.Error("[Compiler]: " +
-                                            "Config error. Default language \"" + DefaultCompileLanguage + "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
+                            "Config error. Default language \"" + DefaultCompileLanguage +
+                            "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
 
             // Is this language in allow-list?
             if (!AllowedCompilers.ContainsKey(DefaultCompileLanguage))
             {
                 m_log.Error("[Compiler]: " +
-                            "Config error. Default language \"" + DefaultCompileLanguage + "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
+                            "Config error. Default language \"" + DefaultCompileLanguage +
+                            "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
             }
 
             // We now have an allow-list, a mapping list, and a default language
@@ -163,7 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private void SetupCompilers()
         {
-            converters = Aurora.Framework.AuroraModuleLoader.PickupModules<IScriptConverter>();
+            converters = AuroraModuleLoader.PickupModules<IScriptConverter>();
             foreach (IScriptConverter convert in converters)
             {
                 convert.Initialise(this);
@@ -186,14 +184,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         #region Compile script
 
         /// <summary>
-        /// Converts script (if needed) and compiles
+        ///   Converts script (if needed) and compiles
         /// </summary>
-        /// <param name="Script">LSL script</param>
+        /// <param name = "Script">LSL script</param>
         /// <returns>Filename to .dll assembly</returns>
         public void PerformScriptCompile(string Script, UUID itemID, UUID ownerUUID, out string assembly)
         {
             assembly = "";
-            
+
             if (Script == String.Empty)
             {
                 AddError("No script text present");
@@ -207,7 +205,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
 //            assembly = CheckDirectories(FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll", itemID);
 
-            assembly = CheckDirectories(assemblyGuid.ToString() + ".dll", assemblyGuid);          
+            assembly = CheckDirectories(assemblyGuid.ToString() + ".dll", assemblyGuid);
 
             IScriptConverter converter;
             string compileScript;
@@ -224,10 +222,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        /// Converts script (if needed) and compiles into memory
+        ///   Converts script (if needed) and compiles into memory
         /// </summary>
-        /// <param name="Script"></param>
-        /// <param name="itemID"></param>
+        /// <param name = "Script"></param>
+        /// <param name = "itemID"></param>
         /// <returns></returns>
         public void PerformInMemoryScriptCompile(string Script, UUID itemID)
         {
@@ -235,7 +233,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 AddError("No script text present");
                 return;
-            } 
+            }
 
             m_warnings.Clear();
             m_errors.Clear();
@@ -249,52 +247,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 AddError("No Compiler found for this type of script.");
                 return;
-            } 
+            }
 
             CompileFromDotNetText(compileScript, converter, "", Script, true);
         }
 
-        public string FindDefaultStateForScript (string Script)
+        public string FindDefaultStateForScript(string Script)
         {
             return FindConverterForScript(Script).DefaultState;
         }
 
         public IScriptConverter FindConverterForScript(string Script)
         {
-            IScriptConverter language = null;
-            foreach (IScriptConverter convert in converters)
+            IScriptConverter language = converters.FirstOrDefault(convert => convert.Name == DefaultCompileLanguage);
+            foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
-                if (convert.Name == DefaultCompileLanguage)
-                {
-                    language = convert;
-                    break;
-                }
-            }
-            foreach (IScriptConverter convert in converters)
-            {
-                if (Script.StartsWith ("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                    language = convert;
+                language = convert;
             }
 
             return language;
         }
 
-        private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter, out string compileScript)
+        private void CheckLanguageAndConvert(string Script, UUID ownerID, out IScriptConverter converter,
+                                             out string compileScript)
         {
             compileScript = Script;
             converter = null;
             string language = DefaultCompileLanguage;
 
-            foreach (IScriptConverter convert in converters)
+            foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
-                if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                    language = convert.Name;
+                language = convert.Name;
             }
 
             if (!AllowedCompilers.ContainsKey(language))
             {
                 // Not allowed to compile to this language!
-                AddError("The compiler for language \"" + language.ToString() + "\" is not in list of allowed compilers. Script will not be executed!");
+                AddError("The compiler for language \"" + language +
+                         "\" is not in list of allowed compilers. Script will not be executed!");
 
                 return;
             }
@@ -302,7 +292,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (m_scriptEngine.Worlds[0].Permissions.CanCompileScript(ownerID, language) == false)
             {
                 // Not allowed to compile to this language!
-                AddError(ownerID + " is not in list of allowed users for this scripting language. Script will not be executed!");
+                AddError(ownerID +
+                         " is not in list of allowed users for this scripting language. Script will not be executed!");
                 return;
             }
 
@@ -322,7 +313,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     {
                         Directory.Delete(dir, true);
                     }
-                    catch (Exception) { }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
             if (!Directory.Exists(m_scriptEngine.ScriptEnginesPath))
@@ -331,10 +324,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     Directory.CreateDirectory(m_scriptEngine.ScriptEnginesPath);
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                }
             }
         }
-        
+
         private string CheckDirectories(string assembly, UUID itemID)
         {
             string dirName = itemID.ToString().Substring(0, 3);
@@ -410,11 +405,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         /// <summary>
-        /// Compile .NET script to .Net assembly (.dll)
+        ///   Compile .NET script to .Net assembly (.dll)
         /// </summary>
-        /// <param name="Script">CS script</param>
+        /// <param name = "Script">CS script</param>
         /// <returns>Filename to .dll assembly</returns>
-        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly, string originalScript, bool inMemory)
+        internal void CompileFromDotNetText(string Script, IScriptConverter converter, string assembly,
+                                            string originalScript, bool inMemory)
         {
             string ext = "." + converter.Name;
 
@@ -429,49 +425,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 catch (Exception e) // NOTLEGIT - Should be just FileIOException
                 {
                     AddError("Unable to delete old existing " +
-                            "script-file before writing new. Compile aborted: " +
-                            e.ToString());
+                             "script-file before writing new. Compile aborted: " +
+                             e);
                     return;
                 }
             }
 
             // DEBUG - write source to disk
-            string srcFileName = Path.Combine (m_scriptEngine.ScriptEnginesPath,
-                        Path.GetFileNameWithoutExtension (assembly) + ext);
+            string srcFileName = Path.Combine(m_scriptEngine.ScriptEnginesPath,
+                                              Path.GetFileNameWithoutExtension(assembly) + ext);
             if (WriteScriptSourceToDebugFile)
             {
                 try
                 {
-                    File.WriteAllText (srcFileName, Script);
+                    File.WriteAllText(srcFileName, Script);
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
-                    m_log.Error ("[Compiler]: Exception while " +
+                    m_log.Error("[Compiler]: Exception while " +
                                 "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex.ToString ());
+                                srcFileName + "\": " + ex);
                 }
             }
 
             // Do actual compile
-            CompilerParameters parameters = new CompilerParameters();
+            CompilerParameters parameters = new CompilerParameters {IncludeDebugInformation = true};
 
-            parameters.IncludeDebugInformation = true;
 
             string rootPath =
-                            Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+                Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
 
-            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.dll"));
+            if (rootPath != null)
+                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                                                                 "Aurora.ScriptEngine.AuroraDotNetEngine.dll"));
             parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                    "OpenSim.Framework.dll"));
-			parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                    "OpenMetaverseTypes.dll"));
-
-            if (converter.Name == "yp")
+            if (rootPath != null)
             {
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                        "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
+                                                                 "OpenSim.Framework.dll"));
+                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                                                                 "OpenMetaverseTypes.dll"));
+
+                if (converter.Name == "yp")
+                {
+                    parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                                                                     "OpenSim.Region.ScriptEngine.Shared.YieldProlog.dll"));
+                }
             }
 
             parameters.ReferencedAssemblies.AddRange(m_referencedFiles.ToArray());
@@ -483,7 +482,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //parameters.WarningLevel = 1; // Should be 4?
             parameters.TreatWarningsAsErrors = false;
 
-            CompilerResults results = converter.Compile (parameters, WriteScriptSourceToDebugFile, WriteScriptSourceToDebugFile ? srcFileName : Script);
+            CompilerResults results = converter.Compile(parameters, WriteScriptSourceToDebugFile,
+                                                        WriteScriptSourceToDebugFile ? srcFileName : Script);
             parameters = null;
             //
             // WARNINGS AND ERRORS
@@ -499,13 +499,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     m_log.Error("[Compiler]: Exception while " +
                                 "trying to write script source to file \"" +
-                                srcFileName + "\": " + ex.ToString());
+                                srcFileName + "\": " + ex);
                 }
 
                 foreach (CompilerError CompErr in results.Errors)
                 {
                     string severity = CompErr.IsWarning ? "Warning" : "Error";
-                
+
                     KeyValuePair<int, int> lslPos;
 
                     // Show 5 errors max, but check entire list for errors
@@ -530,7 +530,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 string[] lines = originalScript.Split('\n');
                                 int charCntr = 0;
                                 int lineCntr = 0;
-                                foreach(string line in lines)
+                                foreach (string line in lines)
                                 {
                                     if (charCntr + line.Length > CharN)
                                     {
@@ -556,12 +556,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             CharN = 1;
                             LineN = 1;
                         }
-                            
+
 
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
                         errtext += String.Format("({0},{1}): {3}: {2}\n",
-                                LineN, CharN, text, severity);
+                                                 LineN, CharN, text, severity);
                         AddError(errtext);
                     }
                     else
@@ -582,7 +582,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 string[] lines = originalScript.Split('\n');
                                 int charCntr = 0;
                                 int lineCntr = 0;
-                                foreach(string line in lines)
+                                foreach (string line in lines)
                                 {
                                     if (charCntr + line.Length > CharN)
                                     {
@@ -612,7 +612,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         // The Second Life viewer's script editor begins
                         // countingn lines and columns at 0, so we subtract 1.
                         errtext += String.Format("({0},{1}): {3}: {2}\n",
-                                LineN, CharN, text, severity);
+                                                 LineN, CharN, text, severity);
                         AddWarning(errtext);
                     }
                 }
@@ -631,42 +631,33 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     for (int i = 0; i < 500 && !File.Exists(assembly); i++)
                     {
-                        System.Threading.Thread.Sleep(10);
+                        Thread.Sleep(10);
                     }
                     AddError("No compile error. But not able to locate compiled file.");
                 }
             }
         }
 
-        internal void FinishCompile (ScriptData scriptData, IScript Script)
+        internal void FinishCompile(ScriptData scriptData, IScript Script)
         {
-            FindConverterForScript (scriptData.Source).FinishCompile (m_scriptEngine, scriptData, Script);
-        }
-
-        private class kvpSorter : IComparer<KeyValuePair<int, int>>
-        {
-            public int Compare(KeyValuePair<int, int> a,
-                    KeyValuePair<int, int> b)
-            {
-                return a.Key.CompareTo(b.Key);
-            }
+            FindConverterForScript(scriptData.Source).FinishCompile(m_scriptEngine, scriptData, Script);
         }
 
         public static KeyValuePair<int, int> FindErrorPosition(int line,
-                int col, Dictionary<KeyValuePair<int, int>,
-                KeyValuePair<int, int>> positionMap)
+                                                               int col, Dictionary<KeyValuePair<int, int>,
+                                                                            KeyValuePair<int, int>> positionMap)
         {
             if (positionMap == null || positionMap.Count == 0)
                 return new KeyValuePair<int, int>(line, col);
 
             KeyValuePair<int, int> ret = new KeyValuePair<int, int>();
 
-             if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
-                    out ret))
+            if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
+                                        out ret))
                 return ret;
 
             List<KeyValuePair<int, int>> sorted =
-                    new List<KeyValuePair<int, int>>(positionMap.Keys);
+                new List<KeyValuePair<int, int>>(positionMap.Keys);
 
             sorted.Sort(new kvpSorter());
 
@@ -693,36 +684,36 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return new KeyValuePair<int, int>(l, c);
         }
 
-        string ReplaceTypes(string message)
+        private string ReplaceTypes(string message)
         {
             message = message.Replace(
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString",
-                    "string");
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString",
+                "string");
 
             message = message.Replace(
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger",
-                    "integer");
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger",
+                "integer");
 
             message = message.Replace(
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat",
-                    "float");
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat",
+                "float");
 
             message = message.Replace(
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list",
-                    "list");
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list",
+                "list");
 
             return message;
         }
 
-        string CleanError(string message)
+        private string CleanError(string message)
         {
             //Remove these long strings
             message = message.Replace(
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass.",
-                    "");
+                "Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass.",
+                "");
             message = message.Replace(
-                    "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.",
-                    "");
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.",
+                "");
             if (message.Contains("The best overloaded method match for"))
             {
                 string[] messageSplit = message.Split('\'');
@@ -738,6 +729,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             return message;
         }
+
+        private class kvpSorter : IComparer<KeyValuePair<int, int>>
+        {
+            #region IComparer<KeyValuePair<int,int>> Members
+
+            public int Compare(KeyValuePair<int, int> a,
+                               KeyValuePair<int, int> b)
+            {
+                return a.Key.CompareTo(b.Key);
+            }
+
+            #endregion
+        }
+
         #endregion
     }
 }

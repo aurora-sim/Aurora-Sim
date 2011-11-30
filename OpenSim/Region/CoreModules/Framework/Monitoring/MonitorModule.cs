@@ -29,21 +29,21 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Net;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Timers;
-using log4net;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
 using OpenSim.Region.CoreModules.Framework.Monitoring.Alerts;
 using OpenSim.Region.CoreModules.Framework.Monitoring.Monitors;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using Aurora.Simulation.Base;
+using log4net;
+using ThreadState = System.Diagnostics.ThreadState;
+using Timer = System.Timers.Timer;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring
 {
@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Dictionary<string, MonitorRegistry> m_registry = new Dictionary<string, MonitorRegistry>();
-        protected ISimulationBase m_simulationBase = null;
+        protected ISimulationBase m_simulationBase;
 
         #region Enums
 
@@ -76,8 +76,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             NumAgentChild,
             NumScriptActive,
             LSLIPS, //Lines per second
-            InPPS,//Packets per second
-            OutPPS,//Packets per second
+            InPPS, //Packets per second
+            OutPPS, //Packets per second
             PendingDownloads,
             PendingUploads,
             VirtualSizeKB,
@@ -90,7 +90,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             SimPhysicsShape,
             SimPhysicsOtherMS,
             SimPhysicsMemory,
-            ScriptEPS,//Events per second
+            ScriptEPS, //Events per second
             SimSpareTime,
             SimSleepTime,
             IOPumpTime
@@ -108,35 +108,33 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         {
             #region Declares
 
-            protected Dictionary<string, IMonitor> m_monitors = new Dictionary<string, IMonitor>();
+            private readonly float[] lastReportedSimStats = new float[35];
+            private readonly MonitorModule m_module;
+            private readonly Timer m_report = new Timer();
             protected Dictionary<string, IAlert> m_alerts = new Dictionary<string, IAlert>();
-            protected IScene m_currentScene = null;
-            private Timer m_report = new Timer();
-            // Sending a stats update every 2 seconds-
-            private int statsUpdatesEveryMS = 2000;
-            // How long between the sending of stats updates in seconds
-            private float statsUpdateFactor = 2;
+            protected IScene m_currentScene;
             //The estate module to pull out the region flags
             private IEstateModule m_estateModule;
-            private MonitorModule m_module;
+            protected Dictionary<string, IMonitor> m_monitors = new Dictionary<string, IMonitor>();
+            private float statsUpdateFactor = 2;
+            private int statsUpdatesEveryMS = 2000;
 
-            private float[] lastReportedSimStats = new float[35];
             /// <summary>
-            /// The last reported stats for this region
+            ///   The last reported stats for this region
             /// </summary>
             public float[] LastReportedSimStats
             {
                 get { return lastReportedSimStats; }
             }
-        
+
             #endregion
 
             #region Constructor
 
             /// <summary>
-            /// Constructor, set the MonitorModule ref up
+            ///   Constructor, set the MonitorModule ref up
             /// </summary>
-            /// <param name="module"></param>
+            /// <param name = "module"></param>
             public MonitorRegistry(MonitorModule module)
             {
                 m_module = module;
@@ -151,10 +149,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region Add Region
 
             /// <summary>
-            /// Set the scene for this instance, add the HTTP handler for the monitor stats,
+            ///   Set the scene for this instance, add the HTTP handler for the monitor stats,
             ///   add all the given monitors and alerts, and start the stats heartbeat.
             /// </summary>
-            /// <param name="scene"></param>
+            /// <param name = "scene"></param>
             public void AddScene(IScene scene)
             {
                 if (scene != null)
@@ -173,7 +171,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     m_report.Elapsed += statsHeartBeat;
                     m_report.Enabled = true;
                 }
-                else //As we arn't a scene, we add all of the monitors that do not need the scene and run for the entire instance
+                else
+                    //As we arn't a scene, we add all of the monitors that do not need the scene and run for the entire instance
                     AddDefaultMonitors();
             }
 
@@ -183,7 +182,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 {
                     //Kill the stats heartbeat and http handler
                     m_report.Stop();
-                    MainServer.Instance.RemoveHTTPHandler("POST", "/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
+                    MainServer.Instance.RemoveHTTPHandler("POST",
+                                                          "/monitorstats/" + m_currentScene.RegionInfo.RegionID + "/");
                 }
                 //Remove all monitors/alerts
                 m_alerts.Clear();
@@ -195,7 +195,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region Default
 
             /// <summary>
-            /// Add the monitors that are for the entire instance
+            ///   Add the monitors that are for the entire instance
             /// </summary>
             protected void AddDefaultMonitors()
             {
@@ -207,9 +207,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
 
             /// <summary>
-            /// Add the monitors that are for each scene
+            ///   Add the monitors that are for each scene
             /// </summary>
-            /// <param name="scene"></param>
+            /// <param name = "scene"></param>
             protected void AddRegionMonitors(IScene scene)
             {
                 AddMonitor(new AgentCountMonitor(scene));
@@ -239,18 +239,18 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region Add/Remove/Get Monitor and Alerts
 
             /// <summary>
-            /// Add a new monitor to the monitor list
+            ///   Add a new monitor to the monitor list
             /// </summary>
-            /// <param name="monitor"></param>
+            /// <param name = "monitor"></param>
             public void AddMonitor(IMonitor monitor)
             {
                 m_monitors.Add(monitor.GetName(), monitor);
             }
 
             /// <summary>
-            /// Add a new alert
+            ///   Add a new alert
             /// </summary>
-            /// <param name="alert"></param>
+            /// <param name = "alert"></param>
             public void AddAlert(IAlert alert)
             {
                 alert.OnTriggerAlert += OnTriggerAlert;
@@ -258,27 +258,27 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
 
             /// <summary>
-            /// Remove a known monitor from the list
+            ///   Remove a known monitor from the list
             /// </summary>
-            /// <param name="Name"></param>
+            /// <param name = "Name"></param>
             public void RemoveMonitor(string Name)
             {
                 m_monitors.Remove(Name);
             }
 
             /// <summary>
-            /// Remove a known alert from the list
+            ///   Remove a known alert from the list
             /// </summary>
-            /// <param name="Name"></param>
+            /// <param name = "Name"></param>
             public void RemoveAlert(string Name)
             {
                 m_alerts.Remove(Name);
             }
 
             /// <summary>
-            /// Get a known monitor from the list, if not known, it will return null
+            ///   Get a known monitor from the list, if not known, it will return null
             /// </summary>
-            /// <param name="Name"></param>
+            /// <param name = "Name"></param>
             /// <returns></returns>
             public IMonitor GetMonitor(string Name)
             {
@@ -289,9 +289,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
 
             /// <summary>
-            /// Gets a known alert from the list, if not known, it will return null
+            ///   Gets a known alert from the list, if not known, it will return null
             /// </summary>
-            /// <param name="Name"></param>
+            /// <param name = "Name"></param>
             /// <returns></returns>
             public IAlert GetAlert(string Name)
             {
@@ -305,12 +305,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region Trigger Alert
 
             /// <summary>
-            /// This occurs when the alert has been triggered and it alerts the console about it
+            ///   This occurs when the alert has been triggered and it alerts the console about it
             /// </summary>
-            /// <param name="reporter"></param>
-            /// <param name="reason"></param>
-            /// <param name="fatal"></param>
-            void OnTriggerAlert(System.Type reporter, string reason, bool fatal)
+            /// <param name = "reporter"></param>
+            /// <param name = "reason"></param>
+            /// <param name = "fatal"></param>
+            private void OnTriggerAlert(Type reporter, string reason, bool fatal)
             {
                 string regionName = m_currentScene != null ? " for " + m_currentScene.RegionInfo.RegionName : "";
                 m_log.Error("[Monitor] " + reporter.Name + regionName + " reports " + reason + " (Fatal: " + fatal + ")");
@@ -321,7 +321,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region Report
 
             /// <summary>
-            /// Create a string that has the info from all monitors that we know of
+            ///   Create a string that has the info from all monitors that we know of
             /// </summary>
             /// <returns></returns>
             public string Report()
@@ -340,9 +340,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             #region HTTP Stats page
 
             /// <summary>
-            /// Return a hashable of the monitors, or just the ones requested
+            ///   Return a hashable of the monitors, or just the ones requested
             /// </summary>
-            /// <param name="request"></param>
+            /// <param name = "request"></param>
             /// <returns></returns>
             public Hashtable StatsPage(Hashtable request)
             {
@@ -350,7 +350,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 // eg url/?monitor=Monitor.Name
                 if (request.ContainsKey("monitor"))
                 {
-                    string monID = (string)request["monitor"];
+                    string monID = (string) request["monitor"];
 
                     foreach (IMonitor monitor in m_monitors.Values)
                     {
@@ -403,8 +403,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
             #region Stats Heartbeat
 
-            private SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
-            private SimStatsPacket.RegionBlock rb = null;
+            private readonly SimStatsPacket.StatBlock[] sb = new SimStatsPacket.StatBlock[35];
+            private SimStatsPacket.RegionBlock rb;
 
             protected void buildInitialRegionBlock()
             {
@@ -415,56 +415,63 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 {
                     if (m_estateModule == null)
                         m_estateModule = m_currentScene.RequestModuleInterface<IEstateModule>();
-                    regionFlags = m_estateModule != null ? m_estateModule.GetRegionFlags() : (uint)0;
+                    regionFlags = m_estateModule != null ? m_estateModule.GetRegionFlags() : 0;
                 }
                 catch (Exception)
                 {
                     // leave region flags at 0
                 }
-                rb.ObjectCapacity = (uint)m_currentScene.RegionInfo.ObjectCapacity;
+                rb.ObjectCapacity = (uint) m_currentScene.RegionInfo.ObjectCapacity;
                 rb.RegionFlags = regionFlags;
-                rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX / Constants.RegionSize;
-                rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY / Constants.RegionSize;
+                rb.RegionX = (uint) m_currentScene.RegionInfo.RegionLocX/Constants.RegionSize;
+                rb.RegionY = (uint) m_currentScene.RegionInfo.RegionLocY/Constants.RegionSize;
             }
 
             /// <summary>
-            /// This is called by a timer and makes a SimStats class of the current stats that we have in this simulator.
-            ///  It then sends the packet to the client and triggers the events to tell followers about the updated stats
+            ///   This is called by a timer and makes a SimStats class of the current stats that we have in this simulator.
+            ///   It then sends the packet to the client and triggers the events to tell followers about the updated stats
             ///   and updates the LastSet* values for monitors.
             /// </summary>
-            /// <param name="sender"></param>
-            /// <param name="e"></param>
+            /// <param name = "sender"></param>
+            /// <param name = "e"></param>
             protected void statsHeartBeat(object sender, EventArgs e)
             {
-                lock(m_report)
-                    m_report.Stop ();
+                lock (m_report)
+                    m_report.Stop();
                 if (rb == null)
                     buildInitialRegionBlock();
 
                 // Know what's not thread safe in Mono... modifying timers.
                 lock (m_report)
                 {
-                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor(MonitorModuleHelper.SimFrameStats);
-                    ITimeDilationMonitor timeDilationMonitor = (ITimeDilationMonitor)GetMonitor(MonitorModuleHelper.TimeDilation);
-                    ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)GetMonitor(MonitorModuleHelper.TotalFrameTime);
-                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.SleepFrameTime);
-                    ITimeMonitor otherFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.OtherFrameTime);
-                    IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)GetMonitor(MonitorModuleHelper.TotalPhysicsFrameTime);
-                    ITimeMonitor physicsSyncFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.PhysicsSyncFrameTime);
-                    ITimeMonitor physicsTimeFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.PhysicsUpdateFrameTime);
-                    IAgentUpdateMonitor agentUpdateFrameMonitor = (IAgentUpdateMonitor)GetMonitor(MonitorModuleHelper.AgentUpdateCount);
-                    INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor(MonitorModuleHelper.NetworkMonitor);
+                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor) GetMonitor(MonitorModuleHelper.SimFrameStats);
+                    ITimeDilationMonitor timeDilationMonitor =
+                        (ITimeDilationMonitor) GetMonitor(MonitorModuleHelper.TimeDilation);
+                    ITotalFrameTimeMonitor totalFrameMonitor =
+                        (ITotalFrameTimeMonitor) GetMonitor(MonitorModuleHelper.TotalFrameTime);
+                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.SleepFrameTime);
+                    ITimeMonitor otherFrameMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.OtherFrameTime);
+                    IPhysicsFrameMonitor physicsFrameMonitor =
+                        (IPhysicsFrameMonitor) GetMonitor(MonitorModuleHelper.TotalPhysicsFrameTime);
+                    ITimeMonitor physicsSyncFrameMonitor =
+                        (ITimeMonitor) GetMonitor(MonitorModuleHelper.PhysicsSyncFrameTime);
+                    ITimeMonitor physicsTimeFrameMonitor =
+                        (ITimeMonitor) GetMonitor(MonitorModuleHelper.PhysicsUpdateFrameTime);
+                    IAgentUpdateMonitor agentUpdateFrameMonitor =
+                        (IAgentUpdateMonitor) GetMonitor(MonitorModuleHelper.AgentUpdateCount);
+                    INetworkMonitor networkMonitor = (INetworkMonitor) GetMonitor(MonitorModuleHelper.NetworkMonitor);
                     IMonitor imagesMonitor = GetMonitor(MonitorModuleHelper.ImagesFrameTime);
-                    ITimeMonitor scriptMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.ScriptFrameTime);
-                    IScriptCountMonitor totalScriptMonitor = (IScriptCountMonitor)GetMonitor(MonitorModuleHelper.TotalScriptCount);
-                    
+                    ITimeMonitor scriptMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.ScriptFrameTime);
+                    IScriptCountMonitor totalScriptMonitor =
+                        (IScriptCountMonitor) GetMonitor(MonitorModuleHelper.TotalScriptCount);
+
                     #region various statistic googly moogly
 
-                    float simfps = simFrameMonitor.SimFPS / statsUpdateFactor;
+                    float simfps = simFrameMonitor.SimFPS/statsUpdateFactor;
                     // save the reported value so there is something available for llGetRegionFPS 
                     simFrameMonitor.LastReportedSimFPS = simfps;
 
-                    float physfps = (float)physicsFrameMonitor.PhysicsFPS / statsUpdateFactor;
+                    float physfps = physicsFrameMonitor.PhysicsFPS/statsUpdateFactor;
                     physicsFrameMonitor.LastReportedPhysicsFPS = physfps;
                     //Update the time dilation with the newest physicsFPS
                     timeDilationMonitor.SetPhysicsFPS(physfps);
@@ -475,50 +482,50 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                     //Some info on this packet http://wiki.secondlife.com/wiki/Statistics_Bar_Guide
 
-                    sb[0].StatID = (uint)Stats.TimeDilation;
-                    sb[0].StatValue = (float)timeDilationMonitor.GetValue();
+                    sb[0].StatID = (uint) Stats.TimeDilation;
+                    sb[0].StatValue = (float) timeDilationMonitor.GetValue();
 
-                    sb[1].StatID = (uint)Stats.FPS;
+                    sb[1].StatID = (uint) Stats.FPS;
                     sb[1].StatValue = simfps;
 
-                    float realsimfps = simfps * 2;
+                    float realsimfps = simfps*2;
 
-                    sb[2].StatID = (uint)Stats.PhysFPS;
+                    sb[2].StatID = (uint) Stats.PhysFPS;
                     sb[2].StatValue = physfps;
 
-                    sb[3].StatID = (uint)Stats.AgentUpdates;
-                    sb[3].StatValue = (agentUpdateFrameMonitor.AgentUpdates / realsimfps);
+                    sb[3].StatID = (uint) Stats.AgentUpdates;
+                    sb[3].StatValue = (agentUpdateFrameMonitor.AgentUpdates/realsimfps);
 
-                    sb[4].StatID = (uint)Stats.FrameMS;
-                    float TotalFrames = (float)(totalFrameMonitor.GetValue() / realsimfps);
+                    sb[4].StatID = (uint) Stats.FrameMS;
+                    float TotalFrames = (float) (totalFrameMonitor.GetValue()/realsimfps);
                     sb[4].StatValue = TotalFrames;
 
-                    sb[5].StatID = (uint)Stats.NetMS;
-                    sb[5].StatValue = 0;//TODO: Implement this
+                    sb[5].StatID = (uint) Stats.NetMS;
+                    sb[5].StatValue = 0; //TODO: Implement this
 
-                    sb[6].StatID = (uint)Stats.SimOtherMS;
-                    float otherMS = (float)(otherFrameMonitor.GetValue() / realsimfps);
+                    sb[6].StatID = (uint) Stats.SimOtherMS;
+                    float otherMS = (float) (otherFrameMonitor.GetValue()/realsimfps);
                     sb[6].StatValue = otherMS;
 
-                    sb[7].StatID = (uint)Stats.SimPhysicsMS;
-                    float PhysicsMS = (float)(physicsTimeFrameMonitor.GetValue() / realsimfps);
+                    sb[7].StatID = (uint) Stats.SimPhysicsMS;
+                    float PhysicsMS = (float) (physicsTimeFrameMonitor.GetValue()/realsimfps);
                     sb[7].StatValue = PhysicsMS;
 
-                    sb[8].StatID = (uint)Stats.AgentMS;
-                    sb[8].StatValue = (agentUpdateFrameMonitor.AgentFrameTime / realsimfps);
+                    sb[8].StatID = (uint) Stats.AgentMS;
+                    sb[8].StatValue = (agentUpdateFrameMonitor.AgentFrameTime/realsimfps);
 
-                    sb[9].StatID = (uint)Stats.ImagesMS;
-                    float imageMS = (float)(imagesMonitor.GetValue() / realsimfps);
+                    sb[9].StatID = (uint) Stats.ImagesMS;
+                    float imageMS = (float) (imagesMonitor.GetValue()/realsimfps);
                     sb[9].StatValue = imageMS;
 
-                    sb[10].StatID = (uint)Stats.ScriptMS;
-                    float ScriptMS = (float)(scriptMonitor.GetValue() / realsimfps);
+                    sb[10].StatID = (uint) Stats.ScriptMS;
+                    float ScriptMS = (float) (scriptMonitor.GetValue()/realsimfps);
                     sb[10].StatValue = ScriptMS;
 
-                    sb[11].StatID = (uint)Stats.TotalObjects;
-                    sb[12].StatID = (uint)Stats.ActiveObjects;
-                    sb[13].StatID = (uint)Stats.NumAgentMain;
-                    sb[14].StatID = (uint)Stats.NumAgentChild;
+                    sb[11].StatID = (uint) Stats.TotalObjects;
+                    sb[12].StatID = (uint) Stats.ActiveObjects;
+                    sb[13].StatID = (uint) Stats.NumAgentMain;
+                    sb[14].StatID = (uint) Stats.NumAgentChild;
 
                     IEntityCountModule entityCountModule = m_currentScene.RequestModuleInterface<IEntityCountModule>();
                     if (entityCountModule != null)
@@ -532,74 +539,76 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                         sb[14].StatValue = entityCountModule.ChildAgents;
                     }
 
-                    sb[15].StatID = (uint)Stats.NumScriptActive;
+                    sb[15].StatID = (uint) Stats.NumScriptActive;
                     sb[15].StatValue = totalScriptMonitor.ActiveScripts;
 
-                    sb[16].StatID = (uint)Stats.LSLIPS;
+                    sb[16].StatID = (uint) Stats.LSLIPS;
                     sb[16].StatValue = 0; //This isn't used anymore, and has been superseeded by LSLEPS
 
-                    sb[17].StatID = (uint)Stats.InPPS;
-                    sb[17].StatValue = (float)(networkMonitor.InPacketsPerSecond / statsUpdateFactor);
+                    sb[17].StatID = (uint) Stats.InPPS;
+                    sb[17].StatValue = (networkMonitor.InPacketsPerSecond/statsUpdateFactor);
 
-                    sb[18].StatID = (uint)Stats.OutPPS;
-                    sb[18].StatValue = (float)(networkMonitor.OutPacketsPerSecond / statsUpdateFactor);
+                    sb[18].StatID = (uint) Stats.OutPPS;
+                    sb[18].StatValue = (networkMonitor.OutPacketsPerSecond/statsUpdateFactor);
 
-                    sb[19].StatID = (uint)Stats.PendingDownloads;
-                    sb[19].StatValue = (float)(networkMonitor.PendingDownloads);
+                    sb[19].StatID = (uint) Stats.PendingDownloads;
+                    sb[19].StatValue = (networkMonitor.PendingDownloads);
 
-                    sb[20].StatID = (uint)Stats.PendingUploads;
-                    sb[20].StatValue = (float)(networkMonitor.PendingUploads);
+                    sb[20].StatID = (uint) Stats.PendingUploads;
+                    sb[20].StatValue = (networkMonitor.PendingUploads);
 
                     //21 and 22 are forced to the GC memory as they WILL make memory usage go up rapidly otherwise!
-                    sb[21].StatID = (uint)Stats.VirtualSizeKB;
-                    sb[21].StatValue = GC.GetTotalMemory(false) / 1024;// System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
+                    sb[21].StatID = (uint) Stats.VirtualSizeKB;
+                    sb[21].StatValue = GC.GetTotalMemory(false)/1024;
+                        // System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
 
-                    sb[22].StatID = (uint)Stats.ResidentSizeKB;
-                    sb[22].StatValue = GC.GetTotalMemory(false) / 1024;//(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
-                    
-                    sb[23].StatID = (uint)Stats.PendingLocalUploads;
-                    sb[23].StatValue = (float)(networkMonitor.PendingUploads / statsUpdateFactor);
-                    
-                    sb[24].StatID = (uint)Stats.TotalUnackedBytes;
-                    sb[24].StatValue = (float)(networkMonitor.UnackedBytes);
+                    sb[22].StatID = (uint) Stats.ResidentSizeKB;
+                    sb[22].StatValue = GC.GetTotalMemory(false)/1024;
+                        //(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
 
-                    sb[25].StatID = (uint)Stats.PhysicsPinnedTasks;
+                    sb[23].StatID = (uint) Stats.PendingLocalUploads;
+                    sb[23].StatValue = (networkMonitor.PendingUploads/statsUpdateFactor);
+
+                    sb[24].StatID = (uint) Stats.TotalUnackedBytes;
+                    sb[24].StatValue = (networkMonitor.UnackedBytes);
+
+                    sb[25].StatID = (uint) Stats.PhysicsPinnedTasks;
                     sb[25].StatValue = 0;
 
-                    sb[26].StatID = (uint)Stats.PhysicsLODTasks;
+                    sb[26].StatID = (uint) Stats.PhysicsLODTasks;
                     sb[26].StatValue = 0;
 
-                    sb[27].StatID = (uint)Stats.SimPhysicsStepMS;
+                    sb[27].StatID = (uint) Stats.SimPhysicsStepMS;
                     sb[27].StatValue = m_currentScene.PhysicsScene.StepTime;
-                    
-                    sb[28].StatID = (uint)Stats.SimPhysicsShape;
+
+                    sb[28].StatID = (uint) Stats.SimPhysicsShape;
                     sb[28].StatValue = 0;
 
-                    sb[29].StatID = (uint)Stats.SimPhysicsOtherMS;
-                    sb[29].StatValue = (float)(physicsSyncFrameMonitor.GetValue() / realsimfps);
+                    sb[29].StatID = (uint) Stats.SimPhysicsOtherMS;
+                    sb[29].StatValue = (float) (physicsSyncFrameMonitor.GetValue()/realsimfps);
 
-                    sb[30].StatID = (uint)Stats.SimPhysicsMemory;
+                    sb[30].StatID = (uint) Stats.SimPhysicsMemory;
                     sb[30].StatValue = 0;
 
-                    sb[31].StatID = (uint)Stats.ScriptEPS;
-                    sb[31].StatValue = totalScriptMonitor.ScriptEPS / statsUpdateFactor;
-                    
-                    sb[32].StatID = (uint)Stats.SimSpareTime;
+                    sb[31].StatID = (uint) Stats.ScriptEPS;
+                    sb[31].StatValue = totalScriptMonitor.ScriptEPS/statsUpdateFactor;
+
+                    sb[32].StatID = (uint) Stats.SimSpareTime;
                     //Spare time is the total time minus the stats that are in the same category in the client
                     // It is the sleep time, physics step, update physics shape, physics other, and pumpI0.
                     // Note: take out agent Update and script time for now, as they are not a part of the heartbeat right now and will mess this calc up
                     float SpareTime = TotalFrames - (
-                        /*NetMS + */ PhysicsMS + otherMS + imageMS);
+                                                        /*NetMS + */ PhysicsMS + otherMS + imageMS);
 //                         + /*(agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor) +*/
 //                        (imagesMonitor.GetValue() / statsUpdateFactor) /* + ScriptMS*/));
-                    
+
                     sb[32].StatValue = SpareTime;
 
-                    sb[33].StatID = (uint)Stats.SimSleepTime;
-                    sb[33].StatValue = (float)(sleepFrameMonitor.GetValue() / realsimfps);
+                    sb[33].StatID = (uint) Stats.SimSleepTime;
+                    sb[33].StatValue = (float) (sleepFrameMonitor.GetValue()/realsimfps);
 
-                    sb[34].StatID = (uint)Stats.IOPumpTime;
-                    sb[34].StatValue = 0;//TODO: implement this
+                    sb[34].StatID = (uint) Stats.IOPumpTime;
+                    sb[34].StatValue = 0; //TODO: implement this
 
                     #endregion
 
@@ -607,7 +616,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     {
                         if (float.IsInfinity(sb[i].StatValue) ||
                             float.IsNaN(sb[i].StatValue))
-                            sb[i].StatValue = 0;//Don't send huge values
+                            sb[i].StatValue = 0; //Don't send huge values
                         lastReportedSimStats[i] = sb[i].StatValue;
                     }
 
@@ -618,52 +627,51 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                     m_module.SendStatsResults(simStats);
 
                     //Tell all the scene presences about the new stats
-                    foreach (IScenePresence agent in m_currentScene.GetScenePresences ())
+                    foreach (IScenePresence agent in m_currentScene.GetScenePresences().Where(agent => !agent.IsChildAgent))
                     {
-                        if (!agent.IsChildAgent)
-                            agent.ControllingClient.SendSimStats(simStats);
+                        agent.ControllingClient.SendSimStats(simStats);
                     }
                     //Now fix any values that require reseting
                     ResetValues();
                 }
                 lock (m_report)
-                    m_report.Start ();
+                    m_report.Start();
             }
 
             /// <summary>
-            /// Reset the values of the stats that require resetting (ones that use += and not =)
+            ///   Reset the values of the stats that require resetting (ones that use += and not =)
             /// </summary>
             public void ResetValues()
             {
                 foreach (IMonitor m in m_monitors.Values)
                 {
-                    m.ResetStats ();
+                    m.ResetStats();
                 }
             }
 
             /// <summary>
-            /// Set the correct update time for the timer
+            ///   Set the correct update time for the timer
             /// </summary>
-            /// <param name="ms"></param>
+            /// <param name = "ms"></param>
             public void SetUpdateMS(int ms)
             {
                 statsUpdatesEveryMS = ms;
-                statsUpdateFactor = (float)(statsUpdatesEveryMS / 1000);
+                statsUpdateFactor = (statsUpdatesEveryMS/1000);
                 m_report.Interval = statsUpdatesEveryMS;
             }
 
             #endregion
         }
-        
+
         #endregion
 
         #region Get
 
         /// <summary>
-        /// Get a monitor from the given Key (RegionID or "" for the base instance) by Name
+        ///   Get a monitor from the given Key (RegionID or "" for the base instance) by Name
         /// </summary>
-        /// <param name="Key"></param>
-        /// <param name="Name"></param>
+        /// <param name = "Key"></param>
+        /// <param name = "Name"></param>
         /// <returns></returns>
         public IMonitor GetMonitor(string Key, string Name)
         {
@@ -675,9 +683,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         }
 
         /// <summary>
-        /// Get the latest region stats for the given regionID
+        ///   Get the latest region stats for the given regionID
         /// </summary>
-        /// <param name="Key"></param>
+        /// <param name = "Key"></param>
         /// <returns></returns>
         public float[] GetRegionStats(string Key)
         {
@@ -693,25 +701,25 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         #region Console
 
         /// <summary>
-        /// This shows stats for ALL regions in the instance
+        ///   This shows stats for ALL regions in the instance
         /// </summary>
-        /// <param name="module"></param>
-        /// <param name="args"></param>
+        /// <param name = "module"></param>
+        /// <param name = "args"></param>
         protected void DebugMonitors(string[] args)
         {
             //Dump all monitors to the console
             foreach (MonitorRegistry registry in m_registry.Values)
             {
                 m_log.Info("[Stats] " + registry.Report());
-                m_log.Info ("");
+                m_log.Info("");
             }
         }
 
         /// <summary>
-        /// This shows the stats for the given region
+        ///   This shows the stats for the given region
         /// </summary>
-        /// <param name="module"></param>
-        /// <param name="args"></param>
+        /// <param name = "module"></param>
+        /// <param name = "args"></param>
         protected void DebugMonitorsInCurrentRegion(string[] args)
         {
             SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
@@ -719,14 +727,15 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             {
                 //Dump the all instance one first
                 m_log.Info("[Stats] " + m_registry[""].Report());
-                m_log.Info ("");
+                m_log.Info("");
 
                 //Then dump for each scene
                 manager.ForEachCurrentScene(delegate(IScene scene)
-                {
-                    m_log.Info("[Stats] " + m_registry[scene.RegionInfo.RegionID.ToString()].Report());
-                    m_log.Info ("");
-                });
+                                                {
+                                                    m_log.Info("[Stats] " +
+                                                               m_registry[scene.RegionInfo.RegionID.ToString()].Report());
+                                                    m_log.Info("");
+                                                });
             }
             else
             {
@@ -735,31 +744,31 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
         }
 
-        protected void HandleShowThreads (string[] cmd)
+        protected void HandleShowThreads(string[] cmd)
         {
-            m_log.Info (GetThreadsReport ());
+            m_log.Info(GetThreadsReport());
         }
 
-        protected void HandleShowUptime (string[] cmd)
+        protected void HandleShowUptime(string[] cmd)
         {
-            m_log.Info (GetUptimeReport ());
+            m_log.Info(GetUptimeReport());
         }
 
-        protected void HandleShowStats (string[] cmd)
+        protected void HandleShowStats(string[] cmd)
         {
             DebugMonitorsInCurrentRegion(cmd);
         }
 
-        protected void HandleShowQueues (string[] cmd)
+        protected void HandleShowQueues(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            string[] showParams = args.ToArray ();
-            m_log.Info (GetQueuesReport (showParams));
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] showParams = args.ToArray();
+            m_log.Info(GetQueuesReport(showParams));
         }
 
         /// <summary>
-        /// Print UDP Queue data for each client
+        ///   Print UDP Queue data for each client
         /// </summary>
         /// <returns></returns>
         protected string GetQueuesReport(string[] showParams)
@@ -775,7 +784,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             int maxNameLength = 18;
             int maxRegionNameLength = 14;
             int maxTypeLength = 4;
-            int totalInfoFieldsLength = maxNameLength + columnPadding + maxRegionNameLength + columnPadding + maxTypeLength + columnPadding;
+            int totalInfoFieldsLength = maxNameLength + columnPadding + maxRegionNameLength + columnPadding +
+                                        maxTypeLength + columnPadding;
 
             report.AppendFormat("{0,-" + maxNameLength + "}{1,-" + columnPadding + "}", "User", "");
             report.AppendFormat("{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}", "Region", "");
@@ -814,14 +824,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             if (manager != null)
             {
                 manager.ForEachScene(
-                    delegate(IScene scene)
-                    {
-                        scene.ForEachClient(
-                            delegate(IClientAPI client)
+                    scene => scene.ForEachClient(
+                        delegate(IClientAPI client)
                             {
                                 if (client is IStatsCollector)
                                 {
-                                    IScenePresence SP = scene.GetScenePresence (client.AgentId);
+                                    IScenePresence SP = scene.GetScenePresence(client.AgentId);
                                     if (SP == null || (SP.IsChildAgent && !showChildren))
                                         return;
 
@@ -830,20 +838,22 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
                                     report.AppendFormat(
                                         "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
-                                        name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
+                                        name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name,
+                                        "");
                                     report.AppendFormat(
                                         "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
-                                        regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
+                                        regionName.Length > maxRegionNameLength
+                                            ? regionName.Substring(0, maxRegionNameLength)
+                                            : regionName, "");
                                     report.AppendFormat(
                                         "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
                                         SP.IsChildAgent ? "Child" : "Root", "");
 
-                                    IStatsCollector stats = (IStatsCollector)client;
+                                    IStatsCollector stats = (IStatsCollector) client;
 
                                     report.AppendLine(stats.Report());
                                 }
-                            });
-                    });
+                            }));
             }
 
             return report.ToString();
@@ -854,7 +864,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         #region Diagonistics
 
         /// <summary>
-        /// Print statistics to the logfile, if they are active
+        ///   Print statistics to the logfile, if they are active
         /// </summary>
         private void LogDiagnostics(object source, ElapsedEventArgs e)
         {
@@ -884,7 +894,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         }
 
         /// <summary>
-        /// Get a report about the registered threads in this server.
+        ///   Get a report about the registered threads in this server.
         /// </summary>
         public string GetThreadsReport()
         {
@@ -901,32 +911,33 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                 foreach (ProcessThread t in threads)
                 {
                     sb.Append("ID: " + t.Id + ", TotalProcessorTime: " + t.TotalProcessorTime + ", TimeRunning: " +
-                        (DateTime.Now - t.StartTime) + ", Pri: " + t.CurrentPriority + ", State: " + t.ThreadState);
-                    if (t.ThreadState == System.Diagnostics.ThreadState.Wait)
+                              (DateTime.Now - t.StartTime) + ", Pri: " + t.CurrentPriority + ", State: " + t.ThreadState);
+                    if (t.ThreadState == ThreadState.Wait)
                         sb.Append(", Reason: " + t.WaitReason + Environment.NewLine);
                     else
                         sb.Append(Environment.NewLine);
-
                 }
             }
             int workers = 0, ports = 0, maxWorkers = 0, maxPorts = 0;
-            System.Threading.ThreadPool.GetAvailableThreads(out workers, out ports);
-            System.Threading.ThreadPool.GetMaxThreads(out maxWorkers, out maxPorts);
+            ThreadPool.GetAvailableThreads(out workers, out ports);
+            ThreadPool.GetMaxThreads(out maxWorkers, out maxPorts);
 
             sb.Append(Environment.NewLine + "*** ThreadPool threads ***" + Environment.NewLine);
-            sb.Append("workers: " + (maxWorkers - workers) + " (" + maxWorkers + "); ports: " + (maxPorts - ports) + " (" + maxPorts + ")" + Environment.NewLine);
+            sb.Append("workers: " + (maxWorkers - workers) + " (" + maxWorkers + "); ports: " + (maxPorts - ports) +
+                      " (" + maxPorts + ")" + Environment.NewLine);
 
             return sb.ToString();
         }
 
         /// <summary>
-        /// Return a report about the uptime of this server
+        ///   Return a report about the uptime of this server
         /// </summary>
         /// <returns></returns>
         public string GetUptimeReport()
         {
             StringBuilder sb = new StringBuilder(String.Format("Time now is {0}\n", DateTime.Now));
-            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_simulationBase.StartupTime.DayOfWeek, m_simulationBase.StartupTime));
+            sb.Append(String.Format("Server has been running since {0}, {1}\n", m_simulationBase.StartupTime.DayOfWeek,
+                                    m_simulationBase.StartupTime));
             sb.Append(String.Format("That is an elapsed time of {0}\n", DateTime.Now - m_simulationBase.StartupTime));
 
             return sb.ToString();
@@ -940,21 +951,26 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         {
             m_simulationBase = simulationBase;
 
-            Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
+            Timer PeriodicDiagnosticsTimer = new Timer(60*60*1000); // One hour
             PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
             PeriodicDiagnosticsTimer.Enabled = true;
-            PeriodicDiagnosticsTimer.Start ();
+            PeriodicDiagnosticsTimer.Start();
             if (MainConsole.Instance != null)
             {
-                MainConsole.Instance.Commands.AddCommand ("show threads", "show threads", "List tracked threads", HandleShowThreads);
-                MainConsole.Instance.Commands.AddCommand ("show uptime", "show uptime", "Show server startup time and uptime", HandleShowUptime);
-                MainConsole.Instance.Commands.AddCommand ("show queues", "show queues [full]", "Shows the queues for the given agent (if full is given as a parameter, child agents are displayed as well)", HandleShowQueues);
-                MainConsole.Instance.Commands.AddCommand ("show stats", "show stats", "Show statistical information for this server", HandleShowStats);
+                MainConsole.Instance.Commands.AddCommand("show threads", "show threads", "List tracked threads",
+                                                         HandleShowThreads);
+                MainConsole.Instance.Commands.AddCommand("show uptime", "show uptime",
+                                                         "Show server startup time and uptime", HandleShowUptime);
+                MainConsole.Instance.Commands.AddCommand("show queues", "show queues [full]",
+                                                         "Shows the queues for the given agent (if full is given as a parameter, child agents are displayed as well)",
+                                                         HandleShowQueues);
+                MainConsole.Instance.Commands.AddCommand("show stats", "show stats",
+                                                         "Show statistical information for this server", HandleShowStats);
 
-                MainConsole.Instance.Commands.AddCommand ("stats report",
-                                   "stats report",
-                                   "Returns a variety of statistics about the current region and/or simulator",
-                                   DebugMonitors);
+                MainConsole.Instance.Commands.AddCommand("stats report",
+                                                         "stats report",
+                                                         "Returns a variety of statistics about the current region and/or simulator",
+                                                         DebugMonitors);
             }
 
             MonitorRegistry reg = new MonitorRegistry(this);
@@ -979,35 +995,11 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             }
         }
 
-        public void OnAddedScene(IScene scene)
-        {
-            if (m_registry.ContainsKey(scene.RegionInfo.RegionID.ToString()))
-            {
-                //Kill the old!
-                m_registry[scene.RegionInfo.RegionID.ToString()].Close();
-                m_registry.Remove(scene.RegionInfo.RegionID.ToString());
-            }
-            //Register all the commands for this region
-            MonitorRegistry reg = new MonitorRegistry(this);
-            reg.AddScene(scene);
-            m_registry[scene.RegionInfo.RegionID.ToString()] = reg;
-            scene.RegisterModuleInterface<IMonitorModule>(this);
-        }
-
-        public void OnCloseScene(IScene scene)
-        {
-            m_registry.Remove(scene.RegionInfo.RegionID.ToString());
-        }
-
         public void Start()
         {
         }
 
         public void PostStart()
-        {
-        }
-
-        public void Dispose()
         {
         }
 
@@ -1034,5 +1026,29 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         }
 
         #endregion
+
+        public void OnAddedScene(IScene scene)
+        {
+            if (m_registry.ContainsKey(scene.RegionInfo.RegionID.ToString()))
+            {
+                //Kill the old!
+                m_registry[scene.RegionInfo.RegionID.ToString()].Close();
+                m_registry.Remove(scene.RegionInfo.RegionID.ToString());
+            }
+            //Register all the commands for this region
+            MonitorRegistry reg = new MonitorRegistry(this);
+            reg.AddScene(scene);
+            m_registry[scene.RegionInfo.RegionID.ToString()] = reg;
+            scene.RegisterModuleInterface<IMonitorModule>(this);
+        }
+
+        public void OnCloseScene(IScene scene)
+        {
+            m_registry.Remove(scene.RegionInfo.RegionID.ToString());
+        }
+
+        public void Dispose()
+        {
+        }
     }
 }

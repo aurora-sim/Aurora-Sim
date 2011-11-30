@@ -32,21 +32,13 @@ namespace OpenSim.Framework
 {
     public class RegionHandshakeArgs : EventArgs
     {
-        public bool isEstateManager;
+        public byte[] RegionType;
+        public UUID SimOwner;
         public float billableFactor;
-        public float terrainHeightRange0;
-        public float terrainHeightRange1;
-        public float terrainHeightRange2;
-        public float terrainHeightRange3;
-        public float terrainStartHeight0;
-        public float terrainStartHeight1;
-        public float terrainStartHeight2;
-        public float terrainStartHeight3;
-        public byte simAccess;
-        public float waterHeight;
+        public bool isEstateManager;
         public uint regionFlags;
         public string regionName;
-        public UUID SimOwner;
+        public byte simAccess;
         public UUID terrainBase0;
         public UUID terrainBase1;
         public UUID terrainBase2;
@@ -55,6 +47,14 @@ namespace OpenSim.Framework
         public UUID terrainDetail1;
         public UUID terrainDetail2;
         public UUID terrainDetail3;
-        public byte[] RegionType;
+        public float terrainHeightRange0;
+        public float terrainHeightRange1;
+        public float terrainHeightRange2;
+        public float terrainHeightRange3;
+        public float terrainStartHeight0;
+        public float terrainStartHeight1;
+        public float terrainStartHeight2;
+        public float terrainStartHeight3;
+        public float waterHeight;
     }
 }

@@ -30,44 +30,42 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Xml;
-using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
 using OpenSim.Framework.Serialization.External;
-using OpenSim.Region.CoreModules.World.Terrain;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {
     /// <summary>
-    /// Method called when all the necessary assets for an archive request have been received.
+    ///   Method called when all the necessary assets for an archive request have been received.
     /// </summary>
     public delegate void AssetsRequestCallback(
         ICollection<UUID> assetsFoundUuids, ICollection<UUID> assetsNotFoundUuids);
 
     /// <summary>
-    /// Execute the write of an archive once we have received all the necessary data
+    ///   Execute the write of an archive once we have received all the necessary data
     /// </summary>
     public class ArchiveWriteRequestExecution
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ITerrainModule m_terrainModule;
-        protected IRegionSerialiserModule m_serialiser;
-        protected List<ISceneEntity> m_sceneObjects;
-        protected IScene m_scene;
         protected TarArchiveWriter m_archiveWriter;
         protected Guid m_requestId;
+        protected IScene m_scene;
+        protected List<ISceneEntity> m_sceneObjects;
+        protected IRegionSerialiserModule m_serialiser;
+        protected ITerrainModule m_terrainModule;
 
         public ArchiveWriteRequestExecution(
-             List<ISceneEntity> sceneObjects,
-             ITerrainModule terrainModule,
-             IRegionSerialiserModule serialiser,
-             IScene scene,
-             TarArchiveWriter archiveWriter,
-             Guid requestId)
+            List<ISceneEntity> sceneObjects,
+            ITerrainModule terrainModule,
+            IRegionSerialiserModule serialiser,
+            IScene scene,
+            TarArchiveWriter archiveWriter,
+            Guid requestId)
         {
             m_sceneObjects = sceneObjects;
             m_terrainModule = terrainModule;
@@ -88,7 +86,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 m_archiveWriter.Close();
             }
-            
+
             m_log.InfoFormat("[ARCHIVER]: Finished writing out OAR for {0}", m_scene.RegionInfo.RegionName);
 
             m_scene.EventManager.TriggerOarFileSaved(m_requestId, String.Empty);
@@ -114,7 +112,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // Write out region settings
             string settingsPath
                 = String.Format("{0}{1}.xml", ArchiveConstants.SETTINGS_PATH, m_scene.RegionInfo.RegionName);
-            m_archiveWriter.WriteFile(settingsPath, RegionSettingsSerializer.Serialize(m_scene.RegionInfo.RegionSettings));
+            m_archiveWriter.WriteFile(settingsPath,
+                                      RegionSettingsSerializer.Serialize(m_scene.RegionInfo.RegionSettings));
 
             m_log.InfoFormat("[ARCHIVER]: Added region settings to archive.");
 
@@ -157,14 +156,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         }
 
         /// <summary>
-        /// Create the control file for a 0.2 version archive
+        ///   Create the control file for a 0.2 version archive
         /// </summary>
         /// <returns></returns>
         public static string Create0p2ControlFile()
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter xtw = new XmlTextWriter(sw);
-            xtw.Formatting = Formatting.Indented;
+            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
             xtw.WriteStartDocument();
             xtw.WriteStartElement("archive");
             xtw.WriteAttributeString("major_version", "0");
@@ -173,7 +171,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             xtw.WriteStartElement("creation_info");
             DateTime now = DateTime.UtcNow;
             TimeSpan t = now - new DateTime(1970, 1, 1);
-            xtw.WriteElementString("datetime", ((int)t.TotalSeconds).ToString());
+            xtw.WriteElementString("datetime", ((int) t.TotalSeconds).ToString());
             xtw.WriteElementString("id", UUID.Random().ToString());
             xtw.WriteEndElement();
             xtw.WriteEndElement();

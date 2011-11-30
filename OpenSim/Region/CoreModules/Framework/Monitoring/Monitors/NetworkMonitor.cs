@@ -26,7 +26,6 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -34,15 +33,9 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
     {
         private volatile float inPacketsPerSecond;
         private volatile float outPacketsPerSecond;
-        private volatile float unackedBytes;
         private volatile float pendingDownloads;
         private volatile float pendingUploads;
-
-        public float InPacketsPerSecond { get { return inPacketsPerSecond; } }
-        public float OutPacketsPerSecond { get { return outPacketsPerSecond; } }
-        public float UnackedBytes { get { return unackedBytes; } }
-        public float PendingDownloads { get { return pendingDownloads; } }
-        public float PendingUploads { get { return pendingUploads; } }
+        private volatile float unackedBytes;
 
         public NetworkMonitor(IScene scene)
         {
@@ -50,11 +43,81 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void AddPacketsStats(int inPackets, int outPackets, int unAckedBytes)
+        #region IMonitor Members
+
+        public void ResetStats()
         {
-            AddInPackets(inPackets);
-            AddOutPackets(outPackets);
-            AddUnackedBytes(unAckedBytes);
+            inPacketsPerSecond = 0;
+            outPacketsPerSecond = 0;
+            unackedBytes = 0;
+            pendingDownloads = 0;
+            pendingUploads = 0;
+        }
+
+        #endregion
+
+        #region Implementation of IMonitor
+
+        public double GetValue()
+        {
+            return 0;
+        }
+
+        public string GetName()
+        {
+            return "Network Monitor";
+        }
+
+        public string GetFriendlyValue()
+        {
+            return "InPackets: " + inPacketsPerSecond + " p/sec \n"
+                   + "OutPackets: " + outPacketsPerSecond + " p/sec \n"
+                   + "UnackedBytes: " + unackedBytes + " bytes \n"
+                   + "PendingDownloads: " + pendingDownloads + " \n"
+                   + "PendingUploads: " + pendingUploads + " \n";
+        }
+
+        #endregion
+
+        #region Client Handling
+
+        protected void OnNewClient(IClientAPI client)
+        {
+            client.OnNetworkStatsUpdate += AddPacketsStats;
+        }
+
+        protected void OnClosingClient(IClientAPI client)
+        {
+            client.OnNetworkStatsUpdate -= AddPacketsStats;
+        }
+
+        #endregion
+
+        #region INetworkMonitor Members
+
+        public float InPacketsPerSecond
+        {
+            get { return inPacketsPerSecond; }
+        }
+
+        public float OutPacketsPerSecond
+        {
+            get { return outPacketsPerSecond; }
+        }
+
+        public float UnackedBytes
+        {
+            get { return unackedBytes; }
+        }
+
+        public float PendingDownloads
+        {
+            get { return pendingDownloads; }
+        }
+
+        public float PendingUploads
+        {
+            get { return pendingUploads; }
         }
 
         public void AddInPackets(int numPackets)
@@ -82,50 +145,13 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             pendingUploads += count;
         }
 
-        public void ResetStats()
-        {
-            inPacketsPerSecond = 0;
-            outPacketsPerSecond = 0;
-            unackedBytes = 0;
-            pendingDownloads = 0;
-            pendingUploads = 0;
-        }
-
-        #region Implementation of IMonitor
-
-        public double GetValue()
-        {
-            return 0;
-        }
-
-        public string GetName()
-        {
-            return "Network Monitor";
-        }
-
-        public string GetFriendlyValue()
-        {
-            return "InPackets: " + inPacketsPerSecond + " p/sec \n"
-                 + "OutPackets: " + outPacketsPerSecond + " p/sec \n"
-                 + "UnackedBytes: " + unackedBytes + " bytes \n"
-                 + "PendingDownloads: " + pendingDownloads + " \n"
-                 + "PendingUploads: " + pendingUploads + " \n";
-        }
-
         #endregion
 
-        #region Client Handling
-
-        protected void OnNewClient(IClientAPI client)
+        public void AddPacketsStats(int inPackets, int outPackets, int unAckedBytes)
         {
-            client.OnNetworkStatsUpdate += AddPacketsStats;
+            AddInPackets(inPackets);
+            AddOutPackets(outPackets);
+            AddUnackedBytes(unAckedBytes);
         }
-
-        protected void OnClosingClient(IClientAPI client)
-        {
-            client.OnNetworkStatsUpdate -= AddPacketsStats;
-        }
-
-        #endregion
     }
 }

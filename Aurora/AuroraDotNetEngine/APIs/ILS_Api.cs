@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections;
-
 using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;

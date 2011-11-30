@@ -27,10 +27,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.IO;
-using System.Text;
 using System.Collections.Specialized;
+using System.IO;
+using System.Net;
+using System.Text;
 
 namespace OpenSim.Framework
 {
@@ -38,16 +38,22 @@ namespace OpenSim.Framework
     {
         #region Helper Classes
 
+        #region Nested type: Element
+
         public abstract class Element
         {
             public string Name;
         }
 
+        #endregion
+
+        #region Nested type: File
+
         public class File : Element
         {
-            public string Filename;
             public string ContentType;
             public byte[] Data;
+            public string Filename;
 
             public File(string name, string filename, string contentType, byte[] data)
             {
@@ -57,6 +63,10 @@ namespace OpenSim.Framework
                 Data = data;
             }
         }
+
+        #endregion
+
+        #region Nested type: Parameter
 
         public class Parameter : Element
         {
@@ -68,6 +78,8 @@ namespace OpenSim.Framework
                 Value = value;
             }
         }
+
+        #endregion
 
         #endregion Helper Classes
 
@@ -87,26 +99,29 @@ namespace OpenSim.Framework
                 {
                     if (param is File)
                     {
-                        File file = (File)param;
+                        File file = (File) param;
 
                         // Add just the first part of this param, since we will write the file data directly to the Stream
-                        string header = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"; filename=\"{2}\";\r\nContent-Type: {3}\r\n\r\n",
-                            boundary,
-                            file.Name,
-                            !String.IsNullOrEmpty(file.Filename) ? file.Filename : "tempfile",
-                            file.ContentType);
+                        string header =
+                            string.Format(
+                                "--{0}\r\nContent-Disposition: form-data; name=\"{1}\"; filename=\"{2}\";\r\nContent-Type: {3}\r\n\r\n",
+                                boundary,
+                                file.Name,
+                                !String.IsNullOrEmpty(file.Filename) ? file.Filename : "tempfile",
+                                file.ContentType);
 
                         formDataStream.Write(Encoding.UTF8.GetBytes(header), 0, header.Length);
                         formDataStream.Write(file.Data, 0, file.Data.Length);
                     }
                     else
                     {
-                        Parameter parameter = (Parameter)param;
+                        Parameter parameter = (Parameter) param;
 
-                        string postData = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}\r\n",
-                            boundary,
-                            parameter.Name,
-                            parameter.Value);
+                        string postData =
+                            string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}\r\n",
+                                          boundary,
+                                          parameter.Name,
+                                          parameter.Value);
                         formDataStream.Write(Encoding.UTF8.GetBytes(postData), 0, postData.Length);
                     }
                 }
@@ -120,7 +135,7 @@ namespace OpenSim.Framework
                 // Copy the temporary stream to the network stream
                 formDataStream.Seek(0, SeekOrigin.Begin);
                 using (Stream requestStream = request.GetRequestStream())
-                    formDataStream.CopyTo(requestStream, (int)formDataStream.Length);
+                    formDataStream.CopyTo(requestStream, (int) formDataStream.Length);
             }
 
             #endregion Stream Writing
@@ -142,23 +157,24 @@ namespace OpenSim.Framework
             return formDataBoundary;
         }
     }
+
     public static class Extentions
     {
         #region Stream
 
         /// <summary>
-        /// Copies the contents of one stream to another, starting at the 
-        /// current position of each stream
+        ///   Copies the contents of one stream to another, starting at the 
+        ///   current position of each stream
         /// </summary>
-        /// <param name="copyFrom">The stream to copy from, at the position 
-        /// where copying should begin</param>
-        /// <param name="copyTo">The stream to copy to, at the position where 
-        /// bytes should be written</param>
-        /// <param name="maximumBytesToCopy">The maximum bytes to copy</param>
+        /// <param name = "copyFrom">The stream to copy from, at the position 
+        ///   where copying should begin</param>
+        /// <param name = "copyTo">The stream to copy to, at the position where 
+        ///   bytes should be written</param>
+        /// <param name = "maximumBytesToCopy">The maximum bytes to copy</param>
         /// <returns>The total number of bytes copied</returns>
         /// <remarks>
-        /// Copying begins at the streams' current positions. The positions are
-        /// NOT reset after copying is complete.
+        ///   Copying begins at the streams' current positions. The positions are
+        ///   NOT reset after copying is complete.
         /// </remarks>
         public static int CopyTo(this Stream copyFrom, Stream copyTo, int maximumBytesToCopy)
         {
@@ -178,13 +194,15 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Converts an entire stream to a string, regardless of current stream
-        /// position
+        ///   Converts an entire stream to a string, regardless of current stream
+        ///   position
         /// </summary>
-        /// <param name="stream">The stream to convert to a string</param>
+        /// <param name = "stream">The stream to convert to a string</param>
         /// <returns></returns>
-        /// <remarks>When this method is done, the stream position will be 
-        /// reset to its previous position before this method was called</remarks>
+        /// <remarks>
+        ///   When this method is done, the stream position will be 
+        ///   reset to its previous position before this method was called
+        /// </remarks>
         public static string GetStreamString(this Stream stream)
         {
             string value = null;
@@ -214,16 +232,18 @@ namespace OpenSim.Framework
         #region Uri
 
         /// <summary>
-        /// Combines a Uri that can contain both a base Uri and relative path
-        /// with a second relative path fragment
+        ///   Combines a Uri that can contain both a base Uri and relative path
+        ///   with a second relative path fragment
         /// </summary>
-        /// <param name="uri">Starting (base) Uri</param>
-        /// <param name="fragment">Relative path fragment to append to the end
-        /// of the Uri</param>
+        /// <param name = "uri">Starting (base) Uri</param>
+        /// <param name = "fragment">Relative path fragment to append to the end
+        ///   of the Uri</param>
         /// <returns>The combined Uri</returns>
-        /// <remarks>This is similar to the Uri constructor that takes a base
-        /// Uri and the relative path, except this method can append a relative
-        /// path fragment on to an existing relative path</remarks>
+        /// <remarks>
+        ///   This is similar to the Uri constructor that takes a base
+        ///   Uri and the relative path, except this method can append a relative
+        ///   path fragment on to an existing relative path
+        /// </remarks>
         public static Uri Combine(this Uri uri, string fragment)
         {
             string fragment1 = uri.Fragment;
@@ -238,13 +258,13 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Combines a Uri that can contain both a base Uri and relative path
-        /// with a second relative path fragment. If the fragment is absolute,
-        /// it will be returned without modification
+        ///   Combines a Uri that can contain both a base Uri and relative path
+        ///   with a second relative path fragment. If the fragment is absolute,
+        ///   it will be returned without modification
         /// </summary>
-        /// <param name="uri">Starting (base) Uri</param>
-        /// <param name="fragment">Relative path fragment to append to the end
-        /// of the Uri, or an absolute Uri to return unmodified</param>
+        /// <param name = "uri">Starting (base) Uri</param>
+        /// <param name = "fragment">Relative path fragment to append to the end
+        ///   of the Uri, or an absolute Uri to return unmodified</param>
         /// <returns>The combined Uri</returns>
         public static Uri Combine(this Uri uri, Uri fragment)
         {
@@ -263,14 +283,14 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Appends a query string to a Uri that may or may not have existing 
-        /// query parameters
+        ///   Appends a query string to a Uri that may or may not have existing 
+        ///   query parameters
         /// </summary>
-        /// <param name="uri">Uri to append the query to</param>
-        /// <param name="query">Query string to append. Can either start with ?
-        /// or just containg key/value pairs</param>
+        /// <param name = "uri">Uri to append the query to</param>
+        /// <param name = "query">Query string to append. Can either start with ?
+        ///   or just containg key/value pairs</param>
         /// <returns>String representation of the Uri with the query string
-        /// appended</returns>
+        ///   appended</returns>
         public static string AppendQuery(this Uri uri, string query)
         {
             if (String.IsNullOrEmpty(query))
@@ -288,12 +308,12 @@ namespace OpenSim.Framework
         }
 
         #endregion Uri
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="collection"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
+
+        ///<summary>
+        ///</summary>
+        ///<param name = "collection"></param>
+        ///<param name = "key"></param>
+        ///<returns></returns>
         public static string GetOne(this NameValueCollection collection, string key)
         {
             string[] values = collection.GetValues(key);

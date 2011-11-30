@@ -31,7 +31,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
-using log4net;
+using BitmapProcessing;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
@@ -39,6 +39,7 @@ using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -56,9 +57,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
     public struct DrawStruct
     {
+        public SolidBrush brush;
         public DrawRoutine dr;
         public Rectangle rect;
-        public SolidBrush brush;
         public face[] trns;
     }
 
@@ -67,10 +68,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IScene m_scene;
         private IConfigSource m_config;
+        private Dictionary<UUID, Color> m_mapping;
+        private IScene m_scene;
         private IMapTileTerrainRenderer terrainRenderer;
-        
+
         #region IMapImageGenerator Members
 
         public void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP)
@@ -103,23 +105,23 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             terrainRenderer.Initialise(m_scene, m_config);
 
             mapBMP = null;
-            terrainBMP = new Bitmap(Constants.RegionSize, Constants.RegionSize, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            terrainBMP = new Bitmap(Constants.RegionSize, Constants.RegionSize, PixelFormat.Format24bppRgb);
             terrainBMP = terrainRenderer.TerrainToBitmap(terrainBMP);
 
             if (drawPrimVolume && terrainBMP != null)
             {
-                mapBMP = new Bitmap (terrainBMP);
-                mapBMP = DrawObjectVolume (m_scene, mapBMP);
+                mapBMP = new Bitmap(terrainBMP);
+                mapBMP = DrawObjectVolume(m_scene, mapBMP);
             }
             else
             {
-                mapBMP = new Bitmap (terrainBMP);
+                if (terrainBMP != null) mapBMP = new Bitmap(terrainBMP);
             }
 
             if (m_mapping != null)
             {
-                SaveCache ();
-                m_mapping.Clear ();
+                SaveCache();
+                m_mapping.Clear();
             }
         }
 
@@ -142,42 +144,43 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
         }
 
+        public Bitmap CreateViewImage(Vector3 camPos, Vector3 camDir, float fov, int width, int height, bool useTextures)
+        {
+            return null;
+        }
+
         #endregion
 
-        #region IRegionModule Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
             m_config = source;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
 
             IConfig startupConfig = m_config.Configs["Startup"];
             if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
-                    "MapImageModule")
+                "MapImageModule")
                 return;
 
             m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -191,11 +194,15 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #endregion
 
-        private Bitmap DrawObjectVolume (IScene whichScene, Bitmap mapbmp)
+        public void PostInitialise()
+        {
+        }
+
+        private Bitmap DrawObjectVolume(IScene whichScene, Bitmap mapbmp)
         {
             ITerrainChannel heightmap = whichScene.RequestModuleInterface<ITerrainChannel>();
             //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
-            ISceneEntity[] objs = whichScene.Entities.GetEntities ();
+            ISceneEntity[] objs = whichScene.Entities.GetEntities();
             Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
             List<float> z_sortheights = new List<float>();
@@ -208,9 +215,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     // Only draw the contents of SceneObjectGroup
                     if (obj is SceneObjectGroup)
                     {
-                        SceneObjectGroup mapdot = (SceneObjectGroup)obj;
+                        SceneObjectGroup mapdot = (SceneObjectGroup) obj;
                         Color mapdotspot = Color.Gray; // Default color when prim color is white
-                        
+
                         // Loop over prim in group
                         foreach (SceneObjectPart part in mapdot.ChildrenList)
                         {
@@ -236,11 +243,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                 try
                                 {
-                                    if((int)pos.X == m_scene.RegionInfo.RegionSizeX)
+                                    if ((int) pos.X == m_scene.RegionInfo.RegionSizeX)
                                         pos.X = m_scene.RegionInfo.RegionSizeX - 1;
-                                    if((int)pos.Y == m_scene.RegionInfo.RegionSizeY)
+                                    if ((int) pos.Y == m_scene.RegionInfo.RegionSizeY)
                                         pos.Y = m_scene.RegionInfo.RegionSizeY - 1;
-                                    isBelow256AboveTerrain = (pos.Z < (heightmap[(int)pos.X, (int)pos.Y] + 256f));
+                                    isBelow256AboveTerrain = (pos.Z < (heightmap[(int) pos.X, (int) pos.Y] + 256f));
                                 }
                                 catch (Exception)
                                 {
@@ -260,8 +267,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         if (part.Shape == null)
                                             continue;
 
-                                        if (part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass)
-                                            continue; // eliminates trees from this since we don't really have a good tree representation
+                                        if (part.Shape.PCode == (byte) PCode.Tree ||
+                                            part.Shape.PCode == (byte) PCode.NewTree ||
+                                            part.Shape.PCode == (byte) PCode.Grass)
+                                            continue;
+                                                // eliminates trees from this since we don't really have a good tree representation
                                         // if you want tree blocks on the map comment the above line and uncomment the below line
                                         //mapdotspot = Color.PaleGreen;
 
@@ -277,7 +287,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         }
                                         catch (Exception)
                                         {
-                                            texcolor = Color.FromArgb((int)textureEntry.DefaultTexture.RGBA.A, (int)textureEntry.DefaultTexture.RGBA.R, (int)textureEntry.DefaultTexture.RGBA.G, (int)textureEntry.DefaultTexture.RGBA.B);
+                                            texcolor = Color.FromArgb((int) textureEntry.DefaultTexture.RGBA.A,
+                                                                      (int) textureEntry.DefaultTexture.RGBA.R,
+                                                                      (int) textureEntry.DefaultTexture.RGBA.G,
+                                                                      (int) textureEntry.DefaultTexture.RGBA.B);
                                         }
 
                                         if (!(texcolor.R == 255 && texcolor.G == 255 && texcolor.B == 255))
@@ -296,12 +309,13 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         // Mono Array
                                     }
                                     // Translate scale by rotation so scale is represented properly when object is rotated
-                                    Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y, part.Shape.Scale.Z);
+                                    Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y,
+                                                                 part.Shape.Scale.Z);
                                     Vector3 scale = new Vector3();
                                     Vector3 tScale = new Vector3();
                                     Vector3 axPos = new Vector3(pos.X, pos.Y, pos.Z);
 
-                                    scale = lscale * part.GetWorldRotation();
+                                    scale = lscale*part.GetWorldRotation();
 
                                     // negative scales don't work in this situation
                                     scale.X = Math.Abs(scale.X);
@@ -309,18 +323,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     scale.Z = Math.Abs(scale.Z);
 
                                     // This scaling isn't very accurate and doesn't take into account the face rotation :P
-                                    int mapdrawstartX = (int)(pos.X - scale.X);
-                                    int mapdrawstartY = (int)(pos.Y - scale.Y);
-                                    int mapdrawendX = (int)(pos.X + scale.X);
-                                    int mapdrawendY = (int)(pos.Y + scale.Y);
+                                    int mapdrawstartX = (int) (pos.X - scale.X);
+                                    int mapdrawstartY = (int) (pos.Y - scale.Y);
+                                    int mapdrawendX = (int) (pos.X + scale.X);
+                                    int mapdrawendY = (int) (pos.Y + scale.Y);
 
                                     // If object is beyond the edge of the map, don't draw it to avoid errors
-                                    if (mapdrawstartX < 0 || mapdrawstartX > (m_scene.RegionInfo.RegionSizeX - 1) || mapdrawendX < 0 || mapdrawendX > (m_scene.RegionInfo.RegionSizeX - 1)
-                                                          || mapdrawstartY < 0 || mapdrawstartY > (m_scene.RegionInfo.RegionSizeY - 1) || mapdrawendY < 0
-                                                          || mapdrawendY > (m_scene.RegionInfo.RegionSizeY - 1))
+                                    if (mapdrawstartX < 0 || mapdrawstartX > (m_scene.RegionInfo.RegionSizeX - 1) ||
+                                        mapdrawendX < 0 || mapdrawendX > (m_scene.RegionInfo.RegionSizeX - 1)
+                                        || mapdrawstartY < 0 || mapdrawstartY > (m_scene.RegionInfo.RegionSizeY - 1) ||
+                                        mapdrawendY < 0
+                                        || mapdrawendY > (m_scene.RegionInfo.RegionSizeY - 1))
                                         continue;
 
                                     #region obb face reconstruction part duex
+
                                     Vector3[] vertexes = new Vector3[8];
 
                                     // float[] distance = new float[6];
@@ -330,7 +347,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
                                     // vertexes[0].x = pos.X + vertexes[0].x;
                                     //vertexes[0].y = pos.Y + vertexes[0].y;
@@ -341,7 +358,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceA[4] = vertexes[0];
 
                                     tScale = lscale;
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[1].x = pos.X + vertexes[1].x;
@@ -353,7 +370,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceC[4] = vertexes[1];
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
 
                                     vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
@@ -366,7 +383,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceC[5] = vertexes[2];
 
                                     tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     //vertexes[3].x = pos.X + vertexes[3].x;
@@ -378,7 +395,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceA[5] = vertexes[3];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[4].x = pos.X + vertexes[4].x;
@@ -390,7 +407,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceD[4] = vertexes[4];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[5].x = pos.X + vertexes[5].x;
@@ -402,7 +419,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceB[5] = vertexes[5];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[6].x = pos.X + vertexes[6].x;
@@ -414,7 +431,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceB[4] = vertexes[6];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * part.GetWorldRotation()));
+                                    scale = ((tScale*part.GetWorldRotation()));
                                     vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[7].x = pos.X + vertexes[7].x;
@@ -424,24 +441,27 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     FaceD[2] = vertexes[7];
                                     FaceC[3] = vertexes[7];
                                     FaceD[5] = vertexes[7];
+
                                     #endregion
 
                                     //int wy = 0;
 
                                     //bool breakYN = false; // If we run into an error drawing, break out of the
                                     // loop so we don't lag to death on error handling
-                                    DrawStruct ds = new DrawStruct();
-                                    ds.brush = new SolidBrush(mapdotspot);
+                                    DrawStruct ds = new DrawStruct {brush = new SolidBrush(mapdotspot)};
                                     if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Circle)
                                     {
                                         ds.dr = DrawRoutine.Ellipse;
-                                        Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X / 2),
-                                            (256 - (part.AbsolutePosition.Y + (part.Scale.Y / 2))),
-                                            0);
-                                        Location.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
-                                        Location.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
-                                        Location = Location * part.GetWorldRotation ();
-                                        ds.rect = new Rectangle((int)Location.X, (int)Location.Y, (int)Math.Abs(part.Shape.Scale.X), (int)Math.Abs(part.Shape.Scale.Y));
+                                        Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X/2),
+                                                                       (256 -
+                                                                        (part.AbsolutePosition.Y + (part.Scale.Y/2))),
+                                                                       0);
+                                        Location.X /= m_scene.RegionInfo.RegionSizeX/Constants.RegionSize;
+                                        Location.Y /= m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
+                                        Location = Location*part.GetWorldRotation();
+                                        ds.rect = new Rectangle((int) Location.X, (int) Location.Y,
+                                                                (int) Math.Abs(part.Shape.Scale.X),
+                                                                (int) Math.Abs(part.Shape.Scale.Y));
                                     }
                                     else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
                                     {
@@ -459,8 +479,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                             working[3] = project(FaceC[i], axPos);
                                             working[4] = project(FaceA[i], axPos);
 
-                                            face workingface = new face();
-                                            workingface.pts = working;
+                                            face workingface = new face {pts = working};
 
                                             ds.trns[i] = workingface;
                                         }
@@ -511,27 +530,31 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return mapbmp;
         }
 
-        private void ReadCacheMap ()
+        private void ReadCacheMap()
         {
-            if (!Directory.Exists ("assetcache"))
-                Directory.CreateDirectory ("assetcache");
-            if (!Directory.Exists (Path.Combine ("assetcache", "mapTileTextureCache")))
-                Directory.CreateDirectory (Path.Combine ("assetcache", "mapTileTextureCache"));
+            if (!Directory.Exists("assetcache"))
+                Directory.CreateDirectory("assetcache");
+            if (!Directory.Exists(Path.Combine("assetcache", "mapTileTextureCache")))
+                Directory.CreateDirectory(Path.Combine("assetcache", "mapTileTextureCache"));
 
-            FileStream stream = new FileStream (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
-            StreamReader m_streamReader = new StreamReader (stream);
-            string file = m_streamReader.ReadToEnd ();
-            m_streamReader.Close ();
+            FileStream stream =
+                new FileStream(
+                    Path.Combine(Path.Combine("assetcache", "mapTileTextureCache"),
+                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.OpenOrCreate);
+            StreamReader m_streamReader = new StreamReader(stream);
+            string file = m_streamReader.ReadToEnd();
+            m_streamReader.Close();
             //Read file here
             if (file != "") //New file
             {
-                bool loaded = DeserializeCache (file);
+                bool loaded = DeserializeCache(file);
                 if (!loaded)
                 {
                     //Something went wrong, delete the file
                     try
                     {
-                        File.Delete (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"));
+                        File.Delete(Path.Combine(Path.Combine("assetcache", "mapTileTextureCache"),
+                                                 m_scene.RegionInfo.RegionName + ".tc"));
                     }
                     catch
                     {
@@ -540,49 +563,52 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
         }
 
-        private bool DeserializeCache (string file)
+        private bool DeserializeCache(string file)
         {
-            OSDMap map = OSDParser.DeserializeJson (file) as OSDMap;
+            OSDMap map = OSDParser.DeserializeJson(file) as OSDMap;
             if (map == null)
                 return false;
 
             foreach (KeyValuePair<string, OSD> kvp in map)
             {
-                Color4 c = kvp.Value.AsColor4 ();
-                UUID key = UUID.Parse (kvp.Key);
-                if (!m_mapping.ContainsKey (key))
-                    m_mapping.Add (key, Color.FromArgb ((int)(c.A * 255), (int)(c.R * 255), (int)(c.G * 255), (int)(c.B * 255)));
+                Color4 c = kvp.Value.AsColor4();
+                UUID key = UUID.Parse(kvp.Key);
+                if (!m_mapping.ContainsKey(key))
+                    m_mapping.Add(key,
+                                  Color.FromArgb((int) (c.A*255), (int) (c.R*255), (int) (c.G*255), (int) (c.B*255)));
             }
 
             return true;
         }
 
-        private void SaveCache ()
+        private void SaveCache()
         {
-            OSDMap map = SerializeCache ();
-            FileStream stream = new FileStream (Path.Combine (Path.Combine ("assetcache", "mapTileTextureCache"), m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
-            StreamWriter writer = new StreamWriter (stream);
-            writer.WriteLine (OSDParser.SerializeJsonString (map));
-            writer.Close ();
+            OSDMap map = SerializeCache();
+            FileStream stream =
+                new FileStream(
+                    Path.Combine(Path.Combine("assetcache", "mapTileTextureCache"),
+                                 m_scene.RegionInfo.RegionName + ".tc"), FileMode.Create);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine(OSDParser.SerializeJsonString(map));
+            writer.Close();
         }
 
-        private OSDMap SerializeCache ()
+        private OSDMap SerializeCache()
         {
-            OSDMap map = new OSDMap ();
+            OSDMap map = new OSDMap();
             foreach (KeyValuePair<UUID, Color> kvp in m_mapping)
             {
-                map.Add (kvp.Key.ToString (), new Color4 (kvp.Value.R, kvp.Value.G, kvp.Value.B, kvp.Value.A));
+                map.Add(kvp.Key.ToString(), new Color4(kvp.Value.R, kvp.Value.G, kvp.Value.B, kvp.Value.A));
             }
             return map;
         }
 
-        private Dictionary<UUID, Color> m_mapping;
         private Color computeAverageColor(UUID textureID, Color defaultColor)
         {
             if (m_mapping == null)
             {
-                m_mapping = new Dictionary<UUID, Color> ();
-                this.ReadCacheMap ();
+                m_mapping = new Dictionary<UUID, Color>();
+                this.ReadCacheMap();
             }
             if (textureID == UUID.Zero) return defaultColor; // not set
             if (m_mapping.ContainsKey(textureID)) return m_mapping[textureID]; // one of the predefined textures
@@ -603,31 +629,33 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             try
             {
-                Image i = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (asset.Data);
-                if(i != null)
+                Image i = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(asset.Data);
+                if (i != null)
                     return new Bitmap(i);
             }
             catch (DllNotFoundException)
             {
-                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}", id);
-
+                m_log.ErrorFormat(
+                    "[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}",
+                    id);
             }
             catch (IndexOutOfRangeException)
             {
-                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
+                m_log.ErrorFormat(
+                    "[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
             }
             catch (Exception)
             {
-                m_log.ErrorFormat("[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
-
+                m_log.ErrorFormat(
+                    "[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
             }
             return null;
         }
 
         // Compute the average color of a texture.
-        private unsafe Color computeAverageColor(Bitmap bmp)
+        private Color computeAverageColor(Bitmap bmp)
         {
-            BitmapProcessing.FastBitmap unsafeBMP = new BitmapProcessing.FastBitmap(bmp);
+            FastBitmap unsafeBMP = new FastBitmap(bmp);
             // we have 256 x 256 pixel, each with 256 possible color-values per
             // color-channel, so 2^24 is the maximum value we can get, adding everything.
             unsafeBMP.LockBitmap();
@@ -649,28 +677,24 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             unsafeBMP.UnlockBitmap();
 
-            return Color.FromArgb((int)r / pixels, (int)g / pixels, (int)b / pixels);
+            return Color.FromArgb(r/pixels, g/pixels, b/pixels);
         }
 
         private Point project(Vector3 point3d, Vector3 originpos)
         {
-            Point returnpt = new Point();
+            Point returnpt = new Point
+                                 {X = (int) point3d.X, Y = (int) ((m_scene.RegionInfo.RegionSizeY - 1) - point3d.Y)};
             //originpos = point3d;
             //int d = (int)(256f / 1.5f);
 
             //Vector3 topos = new Vector3(0, 0, 0);
-           // float z = -point3d.z - topos.z;
+            // float z = -point3d.z - topos.z;
 
-            returnpt.X = (int)point3d.X;//(int)((topos.x - point3d.x) / z * d);
-            returnpt.Y = (int)((m_scene.RegionInfo.RegionSizeY - 1) - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
-            returnpt.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
-            returnpt.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
+            //(int)((topos.x - point3d.x) / z * d);
+            //(int)(255 - (((topos.y - point3d.y) / z * d)));
+            returnpt.X /= m_scene.RegionInfo.RegionSizeX/Constants.RegionSize;
+            returnpt.Y /= m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
             return returnpt;
-        }
-
-        public Bitmap CreateViewImage(Vector3 camPos, Vector3 camDir, float fov, int width, int height, bool useTextures)
-        {
-            return null;
         }
     }
 }

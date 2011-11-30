@@ -25,19 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using OpenSim.Framework;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
 using log4net;
 
 namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
@@ -46,9 +44,76 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IRegistryCore m_registry;
+
+        #endregion
+
+        #region IGridWideMessageModule Members
+
+        public void KickUser(UUID avatarID, string message)
+        {
+            //Get required interfaces
+            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+            IClientCapsService client = capsService.GetClientCapsService(avatarID);
+            if (client != null)
+            {
+                IRegionClientCapsService regionClient = client.GetRootCapsService();
+                if (regionClient != null)
+                {
+                    //Send the message to the client
+                    messagePost.Post(regionClient.RegionHandle,
+                                     BuildRequest("KickUserMessage", message, regionClient.AgentID.ToString()));
+                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
+                    if (agentProcessor != null)
+                        agentProcessor.LogoutAgent(regionClient, true);
+                    m_log.Info("User will be kicked in less than 30 seconds.");
+                    return;
+                }
+            }
+            m_log.Info("Could not find user to send message to.");
+        }
+
+        public void MessageUser(UUID avatarID, string message)
+        {
+            //Get required interfaces
+            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+            IClientCapsService client = capsService.GetClientCapsService(avatarID);
+            if (client != null)
+            {
+                IRegionClientCapsService regionClient = client.GetRootCapsService();
+                if (regionClient != null)
+                {
+                    //Send the message to the client
+                    messagePost.Post(regionClient.RegionHandle,
+                                     BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
+                    m_log.Info("Message sent, will be delievered in the next 30 seconds to the user.");
+                    return;
+                }
+            }
+            m_log.Info("Could not find user to send message to.");
+        }
+
+        public void SendAlert(string message)
+        {
+            //Get required interfaces
+            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+            List<IClientCapsService> clients = capsService.GetClientsCapsServices();
+
+            //Go through all clients, and send the message asyncly to all agents that are root
+            foreach (IRegionClientCapsService regionClient in from client in clients from regionClient in client.GetCapsServices() where regionClient.RootAgent select regionClient)
+            {
+                m_log.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
+                //Send the message to the client
+                messagePost.Post(regionClient.RegionHandle,
+                                 BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
+            }
+            m_log.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 30 seconds.");
+        }
 
         #endregion
 
@@ -61,23 +126,27 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
-            registry.RegisterModuleInterface<IGridWideMessageModule> (this);
+            registry.RegisterModuleInterface<IGridWideMessageModule>(this);
             IConfig handlersConfig = config.Configs["Handlers"];
-            if (MainConsole.Instance != null && handlersConfig != null && handlersConfig.GetString("GridWideMessage", "") == "GridWideMessageModule")
+            if (MainConsole.Instance != null && handlersConfig != null &&
+                handlersConfig.GetString("GridWideMessage", "") == "GridWideMessageModule")
             {
-                MainConsole.Instance.Commands.AddCommand ("grid send alert",
-                    "grid send alert <message>", "Sends a message to all users in the grid", SendGridAlert);
-                MainConsole.Instance.Commands.AddCommand ("grid send message",
-                    "grid send message <first> <last> <message>", "Sends a message to a user in the grid", SendGridMessage);
-                MainConsole.Instance.Commands.AddCommand ("grid kick user",
-                    "grid kick user <first> <last> <message>", "Kicks a user from the grid", KickUserMessage);
+                MainConsole.Instance.Commands.AddCommand("grid send alert",
+                                                         "grid send alert <message>",
+                                                         "Sends a message to all users in the grid", SendGridAlert);
+                MainConsole.Instance.Commands.AddCommand("grid send message",
+                                                         "grid send message <first> <last> <message>",
+                                                         "Sends a message to a user in the grid", SendGridMessage);
+                MainConsole.Instance.Commands.AddCommand("grid kick user",
+                                                         "grid kick user <first> <last> <message>",
+                                                         "Kicks a user from the grid", KickUserMessage);
             }
         }
 
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ().OnMessageReceived += OnMessageReceived;
+            m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
@@ -89,7 +158,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             //Combine the params and figure out the message
             string message = CombineParams(cmd, 3);
 
-            SendAlert (message);
+            SendAlert(message);
         }
 
         protected void SendGridMessage(string[] cmd)
@@ -98,14 +167,14 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             string user = CombineParams(cmd, 3, 5);
             string message = CombineParams(cmd, 5);
 
-            IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService> ();
-            UserAccount account = userService.GetUserAccount (UUID.Zero, user.Split (' ')[0], user.Split (' ')[1]);
+            IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService>();
+            UserAccount account = userService.GetUserAccount(UUID.Zero, user.Split(' ')[0], user.Split(' ')[1]);
             if (account == null)
             {
-                m_log.Info ("User does not exist.");
+                m_log.Info("User does not exist.");
                 return;
             }
-            MessageUser (account.PrincipalID, message);
+            MessageUser(account.PrincipalID, message);
         }
 
         protected void KickUserMessage(string[] cmd)
@@ -115,15 +184,15 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             if (user.EndsWith(" "))
                 user = user.Remove(user.Length - 1);
             string message = CombineParams(cmd, 5);
-            IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService> ();
-            UserAccount account = userService.GetUserAccount (UUID.Zero, user);
+            IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService>();
+            UserAccount account = userService.GetUserAccount(UUID.Zero, user);
             if (account == null)
             {
-                m_log.Info ("User does not exist.");
+                m_log.Info("User does not exist.");
                 return;
             }
 
-            KickUser (account.PrincipalID, message);
+            KickUser(account.PrincipalID, message);
         }
 
         private string CombineParams(string[] commandParams, int pos)
@@ -175,13 +244,13 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
                 if (manager != null && manager.Scenes.Count > 0)
                 {
-                    foreach(IScene scene in manager.Scenes)
+                    foreach (IScene scene in manager.Scenes)
                     {
                         IScenePresence sp = null;
-                        if(scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
+                        if (scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
                         {
                             IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
-                            if(dialogModule != null)
+                            if (dialogModule != null)
                             {
                                 //Send the message to the user now
                                 dialogModule.SendAlertToUser(UUID.Parse(user), value);
@@ -206,9 +275,9 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                         if (scene.TryGetScenePresence(UUID.Parse(user), out sp))
                         {
                             sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
-                            IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule> ();
+                            IEntityTransferModule transferModule = scene.RequestModuleInterface<IEntityTransferModule>();
                             if (transferModule != null)
-                                transferModule.IncomingCloseAgent (scene, sp.UUID);
+                                transferModule.IncomingCloseAgent(scene, sp.UUID);
                         }
                     }
                 }
@@ -217,71 +286,5 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
         }
 
         #endregion
-
-        public void KickUser(UUID avatarID, string message)
-        {
-            //Get required interfaces
-            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService> ();
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService> ();
-            IClientCapsService client = capsService.GetClientCapsService (avatarID);
-            if (client != null)
-            {
-                IRegionClientCapsService regionClient = client.GetRootCapsService ();
-                if (regionClient != null)
-                {
-                    //Send the message to the client
-                    messagePost.Post (regionClient.RegionHandle, BuildRequest ("KickUserMessage", message, regionClient.AgentID.ToString ()));
-                    IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing> ();
-                    if (agentProcessor != null)
-                        agentProcessor.LogoutAgent (regionClient, true);
-                    m_log.Info ("User will be kicked in less than 30 seconds.");
-                    return;
-                }
-            }
-            m_log.Info ("Could not find user to send message to.");
-        }
-
-        public void MessageUser(UUID avatarID, string message)
-        {
-            //Get required interfaces
-            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService> ();
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService> ();
-            IClientCapsService client = capsService.GetClientCapsService (avatarID);
-            if (client != null)
-            {
-                IRegionClientCapsService regionClient = client.GetRootCapsService ();
-                if (regionClient != null)
-                {
-                    //Send the message to the client
-                    messagePost.Post (regionClient.RegionHandle, BuildRequest ("GridWideMessage", message, regionClient.AgentID.ToString ()));
-                    m_log.Info ("Message sent, will be delievered in the next 30 seconds to the user.");
-                    return;
-                }
-            }
-            m_log.Info ("Could not find user to send message to.");
-        }
-
-        public void SendAlert(string message)
-        {
-            //Get required interfaces
-            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService> ();
-            ICapsService capsService = m_registry.RequestModuleInterface<ICapsService> ();
-            List<IClientCapsService> clients = capsService.GetClientsCapsServices ();
-
-            //Go through all clients, and send the message asyncly to all agents that are root
-            foreach (IClientCapsService client in clients)
-            {
-                foreach (IRegionClientCapsService regionClient in client.GetCapsServices ())
-                {
-                    if (regionClient.RootAgent)
-                    {
-                        m_log.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
-                        //Send the message to the client
-                        messagePost.Post (regionClient.RegionHandle, BuildRequest ("GridWideMessage", message, regionClient.AgentID.ToString ()));
-                    }
-                }
-            }
-            m_log.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 30 seconds.");
-        }
     }
 }

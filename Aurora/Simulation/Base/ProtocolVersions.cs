@@ -29,28 +29,28 @@ namespace Aurora.Simulation.Base
 {
     public class ProtocolVersions
     {
-        /// <value>
-        /// This is the external protocol versions.  It is separate from the OpenSimulator project version.
+        ///<value>
+        ///  This is the external protocol versions.  It is separate from the OpenSimulator project version.
         /// 
-        /// These version numbers should be increased by 1 every time a code
-        /// change in the Service.Connectors and Server.Handlers, espectively, 
-        /// makes the previous OpenSimulator revision incompatible
-        /// with the new revision. 
+        ///  These version numbers should be increased by 1 every time a code
+        ///  change in the Service.Connectors and Server.Handlers, espectively, 
+        ///  makes the previous OpenSimulator revision incompatible
+        ///  with the new revision. 
         /// 
-        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
-        /// but not outright failure) do not need a version number increment.
+        ///  Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
+        ///  but not outright failure) do not need a version number increment.
         /// 
-        /// Having this version number allows the grid service to reject connections from regions running a version
-        /// of the code that is too old. 
+        ///  Having this version number allows the grid service to reject connections from regions running a version
+        ///  of the code that is too old. 
         ///
-        /// </value>
-        
+        ///</value>
         // The range of acceptable servers for client-side connectors
-        public readonly static int ClientProtocolVersionMin = 0;
-        public readonly static int ClientProtocolVersionMax = 0;
+        public static readonly int ClientProtocolVersionMin;
+
+        public static readonly int ClientProtocolVersionMax;
 
         // The range of acceptable clients in server-side handlers
-        public readonly static int ServerProtocolVersionMin = 0;
-        public readonly static int ServerProtocolVersionMax = 0;
+        public static readonly int ServerProtocolVersionMin;
+        public static readonly int ServerProtocolVersionMax;
     }
 }

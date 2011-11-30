@@ -25,9 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -36,6 +33,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
     public interface ITerrainFloodEffect
     {
         void FloodEffect(ITerrainChannel map, UUID userID, float north,
-            float west, float south, float east, float strength);
+                         float west, float south, float east, float strength);
     }
 }

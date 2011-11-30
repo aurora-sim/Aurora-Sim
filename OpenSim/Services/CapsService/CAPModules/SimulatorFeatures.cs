@@ -25,18 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using log4net;
-using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
@@ -47,16 +36,38 @@ namespace OpenSim.Services.CapsService
     {
         private IRegionClientCapsService m_service;
 
-        private Hashtable SimulatorFeaturesCAP (Hashtable mDhttpMethod)
+        #region ICapsServiceConnector Members
+
+        public void RegisterCaps(IRegionClientCapsService service)
         {
-            OSDMap data = new OSDMap ();
+            m_service = service;
+
+            m_service.AddStreamHandler("SimulatorFeatures",
+                                       new RestHTTPHandler("GET", m_service.CreateCAPS("SimulatorFeatures", ""),
+                                                           SimulatorFeaturesCAP));
+        }
+
+        public void DeregisterCaps()
+        {
+            m_service.RemoveStreamHandler("SimulatorFeatures", "GET");
+        }
+
+        public void EnteringRegion()
+        {
+        }
+
+        #endregion
+
+        private Hashtable SimulatorFeaturesCAP(Hashtable mDhttpMethod)
+        {
+            OSDMap data = new OSDMap();
             data["MeshRezEnabled"] = true;
             data["MeshUploadEnabled"] = true;
             data["MeshXferEnabled"] = true;
             data["PhysicsMaterialsEnabled"] = true;
 
 
-            OSDMap typesMap = new OSDMap ();
+            OSDMap typesMap = new OSDMap();
 
             typesMap["convex"] = true;
             typesMap["none"] = true;
@@ -65,38 +76,17 @@ namespace OpenSim.Services.CapsService
             data["PhysicsShapeTypes"] = typesMap;
 
 
-
             //Data URLS need sent as well
             //Not yet...
             //data["DataUrls"] = m_service.Registry.RequestModuleInterface<IGridRegistrationService> ().GetUrlForRegisteringClient (m_service.AgentID + "|" + m_service.RegionHandle);
 
             //Send back data
-            Hashtable responsedata = new Hashtable ();
+            Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(data);
             return responsedata;
-        }
-
-        public void RegisterCaps (IRegionClientCapsService service)
-        {
-            m_service = service;
-
-            m_service.AddStreamHandler ("SimulatorFeatures", new RestHTTPHandler ("GET", m_service.CreateCAPS ("SimulatorFeatures", ""),
-                                                      delegate (Hashtable m_dhttpMethod)
-                                                      {
-                                                          return SimulatorFeaturesCAP (m_dhttpMethod);
-                                                      }));
-        }
-
-        public void DeregisterCaps ()
-        {
-            m_service.RemoveStreamHandler ("SimulatorFeatures", "GET");
-        }
-
-        public void EnteringRegion ()
-        {
         }
     }
 }

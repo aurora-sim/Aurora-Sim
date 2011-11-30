@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Collections;
-
 using key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
@@ -40,21 +38,21 @@ namespace Aurora.BotManager
 {
     public interface IBot_Api
     {
-        LSL_Vector botGetWaitingTime (LSL_Integer waitTime);
+        LSL_Vector botGetWaitingTime(LSL_Integer waitTime);
         void botSetMap(string keyOfBot, LSL_List positions, LSL_List movementType, LSL_Integer flags);
-        LSL_String botCreateBot (string FirstName, string LastName, string appearanceToClone, LSL_Vector startPos);
-        void botRemoveBot (string bot);
-        void botPauseMovement (string bot);
-        void botResumeMovement (string bot);
-        void botFollowAvatar (string bot, string avatarName, LSL_Float startFollowDistance, LSL_Float endFollowDistance);
-        void botStopFollowAvatar (string bot);
-        void botSendChatMessage (string bot, string message, int sayType, int channel);
-        void botSetShouldFly (string keyOfBot, int ShouldFly);
-        void botSitObject (string bot, string objectID, LSL_Vector offset);
-        void botStandUp (string bot);
-        void botTouchObject (string bot, string objectID);
-        void botAddTag (string bot, string tag);
-        LSL_List botGetBotsWithTag (string tag);
-        void botRemoveBotsWithTag (string tag);
+        LSL_String botCreateBot(string FirstName, string LastName, string appearanceToClone, LSL_Vector startPos);
+        void botRemoveBot(string bot);
+        void botPauseMovement(string bot);
+        void botResumeMovement(string bot);
+        void botFollowAvatar(string bot, string avatarName, LSL_Float startFollowDistance, LSL_Float endFollowDistance);
+        void botStopFollowAvatar(string bot);
+        void botSendChatMessage(string bot, string message, int sayType, int channel);
+        void botSetShouldFly(string keyOfBot, int ShouldFly);
+        void botSitObject(string bot, string objectID, LSL_Vector offset);
+        void botStandUp(string bot);
+        void botTouchObject(string bot, string objectID);
+        void botAddTag(string bot, string tag);
+        LSL_List botGetBotsWithTag(string tag);
+        void botRemoveBotsWithTag(string tag);
     }
 }

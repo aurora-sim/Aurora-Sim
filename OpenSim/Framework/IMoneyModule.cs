@@ -32,6 +32,7 @@ namespace OpenSim.Framework
     //public delegate void ObjectPaid(UUID objectID, UUID agentID, int amount);
     // For legacy money module. Fumi.Iseki
     public delegate bool ObjectPaid(UUID objectID, UUID agentID, int amount);
+
     // For DTL money module.
     public delegate bool PostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount);
 
@@ -47,21 +48,23 @@ namespace OpenSim.Framework
 
     public interface IMoneyModule
     {
+        int UploadCharge { get; }
+        int GroupCreationCharge { get; }
+
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
-                int amount);
+                             int amount);
 
         int Balance(IClientAPI client);
         bool Charge(IClientAPI client, int amount);
         bool Charge(UUID agentID, int amount, string text);
-
-        int UploadCharge { get; }
-        int GroupCreationCharge { get; }
 
         event ObjectPaid OnObjectPaid;
         event PostObjectPaid OnPostObjectPaid;
 
         bool Transfer(UUID toID, UUID fromID, int amount, string description);
         bool Transfer(UUID toID, UUID fromID, int amount, string description, TransactionType type);
-        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description, TransactionType type);
+
+        bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
+                      TransactionType type);
     }
 }

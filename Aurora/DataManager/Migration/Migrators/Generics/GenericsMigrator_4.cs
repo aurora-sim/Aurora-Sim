@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -42,11 +42,11 @@ namespace Aurora.DataManager.Migration.Migrators
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
             AddSchema("generics", ColDefs(
-                ColDef ("OwnerID", ColumnTypes.String36, true),
-                ColDef ("Type", ColumnTypes.String64, true),
+                ColDef("OwnerID", ColumnTypes.String36, true),
+                ColDef("Type", ColumnTypes.String64, true),
                 ColDef("Key", ColumnTypes.String64, true),
-                ColDef ("Value", ColumnTypes.LongText)
-                ));
+                ColDef("Value", ColumnTypes.LongText)
+                                      ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

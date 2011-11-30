@@ -25,9 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.IO;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
@@ -41,7 +41,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             get { return ".r32"; }
         }
 
-        public ITerrainChannel LoadFile (string filename, IScene scene)
+        public ITerrainChannel LoadFile(string filename, IScene scene)
         {
             FileInfo file = new FileInfo(filename);
             FileStream s = file.Open(FileMode.Open, FileAccess.Read);
@@ -52,7 +52,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight, int sectionWidth, int sectionHeight)
+        public ITerrainChannel LoadFile(string filename, int offsetX, int offsetY, int fileWidth, int fileHeight,
+                                        int sectionWidth, int sectionHeight)
         {
             TerrainChannel retval = new TerrainChannel(sectionWidth, sectionHeight, null);
 
@@ -67,8 +68,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             while (currFileYOffset < offsetY)
             {
                 // read a whole strip of regions
-                int heightsToRead = sectionHeight * (fileWidth * sectionWidth);
-                bs.ReadBytes(heightsToRead * 4); // because the floats are 4 bytes in the file
+                int heightsToRead = sectionHeight*(fileWidth*sectionWidth);
+                bs.ReadBytes(heightsToRead*4); // because the floats are 4 bytes in the file
                 currFileYOffset++;
             }
 
@@ -85,7 +86,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 // i.e. eat X upto where we start
                 while (currFileXOffset < offsetX)
                 {
-                    bs.ReadBytes(sectionWidth * 4); // 4 bytes = single
+                    bs.ReadBytes(sectionWidth*4); // 4 bytes = single
                     currFileXOffset++;
                 }
 
@@ -104,7 +105,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 while (currFileXOffset < fileWidth)
                 {
                     // eat the next regions x line
-                    bs.ReadBytes(sectionWidth * 4); // 4 bytes = single
+                    bs.ReadBytes(sectionWidth*4); // 4 bytes = single
                     currFileXOffset++;
                 }
             }
@@ -115,11 +116,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             return retval;
         }
 
-        public ITerrainChannel LoadStream (Stream s, IScene scene)
+        public ITerrainChannel LoadStream(Stream s, IScene scene)
         {
             BinaryReader bs = new BinaryReader(s);
-            int size = (int)System.Math.Sqrt(s.Length);
-            size /= sizeof(short);
+            int size = (int) Math.Sqrt(s.Length);
+            size /= sizeof (short);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
             for (int y = 0; y < retval.Height; y++)
             {
@@ -153,7 +154,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
                 int x;
                 for (x = 0; x < map.Width; x++)
                 {
-                    bs.Write((float) map[x, y]);
+                    bs.Write(map[x, y]);
                 }
             }
 

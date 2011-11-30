@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
 {
@@ -44,17 +43,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FloodBrushes
         #region ITerrainFloodEffect Members
 
         /// <summary>
-        /// reverts an area of the map to the heightfield stored in the revertmap
+        ///   reverts an area of the map to the heightfield stored in the revertmap
         /// </summary>
-        /// <param name="map">the current heightmap</param>
-        /// <param name="fillArea">array indicating which sections of the map are to be reverted</param>
-        /// <param name="strength">unused</param>
+        /// <param name = "map">the current heightmap</param>
+        /// <param name = "fillArea">array indicating which sections of the map are to be reverted</param>
+        /// <param name = "strength">unused</param>
         public void FloodEffect(ITerrainChannel map, UUID userID, float north,
-            float west, float south, float east, float strength)
+                                float west, float south, float east, float strength)
         {
-           for (int x = (int)west; x < (int)east; x++)
+            for (int x = (int) west; x < (int) east; x++)
             {
-                for (int y = (int)south; y < (int)north; y++)
+                for (int y = (int) south; y < (int) north; y++)
                 {
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;

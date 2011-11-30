@@ -25,15 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using OpenSim.Framework;
-using log4net;
-using Nini.Config;
 using Aurora.Services.DataService;
-using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenSim.Framework;
 
 namespace OpenSim.CoreApplicationPlugins
 {
@@ -72,10 +66,10 @@ namespace OpenSim.CoreApplicationPlugins
             get { return GetType().Name; }
         }
 
+        #endregion
+
         public void Dispose()
         {
         }
-
-        #endregion
     }
 }

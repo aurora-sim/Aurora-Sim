@@ -26,47 +26,41 @@
  */
 
 using System;
-using System.Collections;
-using System.Net;
-
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse;
+using OpenSim.Framework.Servers.HttpServer;
 
 namespace Aurora.Simulation.Base
 {
     public class RestHandlerUtils
     {
         /// <summary>
-        /// Extract the param from an uri.
+        ///   Extract the param from an uri.
         /// </summary>
-        /// <param name="uri">Something like this: /uuid/ or /uuid/handle/release</param>
-        /// <param name="uri">uuid on uuid field</param>
-        /// <param name="action">optional action</param>
+        /// <param name="regionHandle"></param>
+        /// <param name = "action">optional action</param>
+        /// <param name="path">Something like this: /uuid/ or /uuid/handle/release</param>
+        /// <param name="uuid">uuid on uuid field</param>
         public static bool GetParams(string path, out UUID uuid, out ulong regionHandle, out string action)
         {
             uuid = UUID.Zero;
             action = "";
             regionHandle = 0;
 
-            path = path.Trim(new char[] { '/' });
+            path = path.Trim(new[] {'/'});
             string[] parts = path.Split('/');
             if (parts.Length <= 1)
             {
                 return false;
             }
-            else
-            {
-                if (!UUID.TryParse(parts[0], out uuid))
-                    return false;
+            if (!UUID.TryParse(parts[0], out uuid))
+                return false;
 
-                if (parts.Length >= 2)
-                    UInt64.TryParse(parts[1], out regionHandle);
-                if (parts.Length >= 3)
-                    action = parts[2];
+            if (parts.Length >= 2)
+                UInt64.TryParse(parts[1], out regionHandle);
+            if (parts.Length >= 3)
+                action = parts[2];
 
-                return true;
-            }
+            return true;
         }
 
         public static bool GetAuthentication(OSHttpRequest httpRequest, out string authority, out string authKey)
@@ -74,13 +68,12 @@ namespace Aurora.Simulation.Base
             authority = string.Empty;
             authKey = string.Empty;
 
-            Uri authUri;
-
             string auth = httpRequest.Headers["authentication"];
             // Authentication keys look like this:
             // http://orgrid.org:8002/<uuid>
             if ((auth != null) && (!string.Empty.Equals(auth)) && auth != "None")
             {
+                Uri authUri;
                 if (Uri.TryCreate(auth, UriKind.Absolute, out authUri))
                 {
                     authority = authUri.Authority;
@@ -91,6 +84,5 @@ namespace Aurora.Simulation.Base
 
             return false;
         }
-
     }
 }

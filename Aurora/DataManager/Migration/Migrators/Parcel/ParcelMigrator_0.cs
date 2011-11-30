@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {

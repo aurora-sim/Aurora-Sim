@@ -26,15 +26,14 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Reflection;
+using Aurora.DataManager;
+using Aurora.Simulation.Base;
+using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using log4net;
-using Nini.Config;
-using System.Reflection;
-using OpenSim.Framework;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.AuthenticationService
 {
@@ -45,16 +44,61 @@ namespace OpenSim.Services.AuthenticationService
     // verifiable identification.
     //
     public class PasswordAuthenticationService :
-            AuthenticationServiceBase, IAuthenticationService, IService
+        AuthenticationServiceBase, IAuthenticationService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IAuthenticationService Members
+
+        public string Authenticate(UUID principalID, string authType, string password, int lifetime)
+        {
+            //Return automatically if we do not auth users
+            if (!m_authenticateUsers)
+                return GetToken(principalID, lifetime);
+
+            AuthData data = m_Database.Get(principalID, authType);
+
+            if (data != null)
+            {
+                if (authType != "UserAccount")
+                {
+                    if (data.PasswordHash == password)
+                    {
+                        //Really should be moved out in the future
+                        if (authType == "WebLoginKey")
+                            this.Remove(principalID, authType); //Only allow it to be used once
+                        return GetToken(principalID, lifetime);
+                    }
+                }
+                else
+                {
+                    string hashed = Util.Md5Hash(password + ":" +
+                                                 data.PasswordSalt);
+
+                    m_log.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed,
+                                      data.PasswordHash);
+
+                    if (data.PasswordHash == hashed)
+                    {
+                        return GetToken(principalID, lifetime);
+                    }
+                }
+            }
+
+            m_log.DebugFormat("[AUTH SERVICE]: PrincipalID {0} or its data not found", principalID);
+            return String.Empty;
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -71,7 +115,7 @@ namespace OpenSim.Services.AuthenticationService
                 m_authenticateUsers = authConfig.GetBoolean("AuthenticateUsers", m_authenticateUsers);
             }
 
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAuthenticationData>();
+            m_Database = DataManager.RequestPlugin<IAuthenticationData>();
             registry.RegisterModuleInterface<IAuthenticationService>(this);
         }
 
@@ -83,42 +127,6 @@ namespace OpenSim.Services.AuthenticationService
         {
         }
 
-        public string Authenticate(UUID principalID, string authType, string password, int lifetime)
-        {
-            //Return automatically if we do not auth users
-            if(!m_authenticateUsers)
-                return GetToken(principalID, lifetime);
-
-            AuthData data = m_Database.Get(principalID, authType);
-
-            if (data != null)
-            {
-                if (authType != "UserAccount")
-                {
-                    if (data.PasswordHash == password)
-                    {
-                        //Really should be moved out in the future
-                        if (authType == "WebLoginKey")
-                            this.Remove (principalID, authType); //Only allow it to be used once
-                        return GetToken (principalID, lifetime);
-                    }
-                }
-                else
-                {
-                    string hashed = Util.Md5Hash (password + ":" +
-                            data.PasswordSalt);
-
-                    m_log.TraceFormat ("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
-
-                    if (data.PasswordHash == hashed)
-                    {
-                        return GetToken (principalID, lifetime);
-                    }
-                }
-            }
-
-            m_log.DebugFormat("[AUTH SERVICE]: PrincipalID {0} or its data not found", principalID);
-            return String.Empty;
-        }
+        #endregion
     }
 }

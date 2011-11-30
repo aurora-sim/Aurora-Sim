@@ -26,25 +26,19 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Security;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Physics.Manager;
-using PrimType = Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule.PrimType;
-using SculptType = Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule.SculptType;
-using Aurora.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class SOPObject : MarshalByRefObject, IObject, IObjectPhysics, IObjectShape, IObjectSound
+    internal class SOPObject : MarshalByRefObject, IObject, IObjectPhysics, IObjectShape, IObjectSound
     {
-        private readonly IScene m_rootScene;
         private readonly uint m_localID;
+        private readonly IScene m_rootScene;
         private readonly ISecurityCredential m_security;
 
         [Obsolete("Replace with 'credential' constructor [security]")]
@@ -54,87 +48,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             m_localID = localID;
         }
 
-        public SOPObject (IScene rootScene, uint localID, ISecurityCredential credential)
+        public SOPObject(IScene rootScene, uint localID, ISecurityCredential credential)
         {
             m_rootScene = rootScene;
             m_localID = localID;
             m_security = credential;
         }
 
-        /// <summary>
-        /// This needs to run very, very quickly.
-        /// It is utilized in nearly every property and method.
-        /// </summary>
-        /// <returns></returns>
-        private ISceneChildEntity GetSOP ()
-        {
-            return m_rootScene.GetSceneObjectPart(m_localID);
-        }
-
-        private bool CanEdit()
-        {
-            if (!m_security.CanEditObject(this))
-            {
-                throw new SecurityException("Insufficient Permission to edit object with UUID [" + GetSOP().UUID + "]");
-            }
-            return true;
-        }
-
-        #region OnTouch
-
-        private event OnTouchDelegate _OnTouch;
-        private bool _OnTouchActive = false;
-
-        public event OnTouchDelegate OnTouch
-        {
-            add
-            {
-                if (CanEdit())
-                {
-                    if (!_OnTouchActive)
-                    {
-                        GetSOP().Flags |= PrimFlags.Touch;
-                        _OnTouchActive = true;
-                        m_rootScene.EventManager.OnObjectGrab += EventManager_OnObjectGrab;
-                    }
-
-                    _OnTouch += value;
-                }
-            }
-            remove
-            {
-                _OnTouch -= value;
-
-                if (_OnTouch == null)
-                {
-                    GetSOP().Flags &= ~PrimFlags.Touch;
-                    _OnTouchActive = false;
-                    m_rootScene.EventManager.OnObjectGrab -= EventManager_OnObjectGrab;
-                }
-            }
-        }
-
-        void EventManager_OnObjectGrab (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos, IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
-        {
-            if (_OnTouchActive && m_localID == part.LocalId)
-            {
-                TouchEventArgs e = new TouchEventArgs();
-                e.Avatar = new SPAvatar(m_rootScene, remoteClient.AgentId, m_security);
-                e.TouchBiNormal = surfaceArgs.Binormal;
-                e.TouchMaterialIndex = surfaceArgs.FaceIndex;
-                e.TouchNormal = surfaceArgs.Normal;
-                e.TouchPosition = surfaceArgs.Position;
-                e.TouchST = new Vector2(surfaceArgs.STCoord.X, surfaceArgs.STCoord.Y);
-                e.TouchUV = new Vector2(surfaceArgs.UVCoord.X, surfaceArgs.UVCoord.Y);
-
-                IObject sender = this;
-
-                if (_OnTouch != null)
-                    _OnTouch(sender, e);
-            }
-        }
-
-        #endregion
+        #region IObject Members
 
         public bool Exists
         {
@@ -166,26 +87,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return GetSOP().Description; }
             set
             {
-                if (CanEdit()) 
+                if (CanEdit())
                     GetSOP().Description = value;
             }
         }
 
         public UUID OwnerId
         {
-            get { return GetSOP().OwnerID;}
+            get { return GetSOP().OwnerID; }
         }
 
         public UUID CreatorId
         {
-            get { return GetSOP().CreatorID;}
+            get { return GetSOP().CreatorID; }
         }
 
         public IObject[] Children
         {
             get
             {
-                ISceneChildEntity my = GetSOP ();
+                ISceneChildEntity my = GetSOP();
                 int total = my.ParentEntity.PrimCount;
 
                 IObject[] rets = new IObject[total];
@@ -209,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                ISceneChildEntity sop = GetSOP ();
+                ISceneChildEntity sop = GetSOP();
                 IObjectMaterial[] rets = new IObjectMaterial[getNumberOfSides(sop)];
 
                 for (int i = 0; i < rets.Length; i++)
@@ -233,14 +154,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public Quaternion WorldRotation
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public Quaternion OffsetRotation
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public Vector3 WorldPosition
@@ -250,7 +171,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             {
                 if (CanEdit())
                 {
-                    ISceneChildEntity pos = GetSOP ();
+                    ISceneChildEntity pos = GetSOP();
                     pos.UpdateOffSet(value - pos.AbsolutePosition);
                 }
             }
@@ -263,7 +184,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             {
                 if (CanEdit())
                 {
-                    GetSOP().FixOffsetPosition(value,false);
+                    GetSOP().FixOffsetPosition(value, false);
                 }
             }
         }
@@ -271,8 +192,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public Vector3 SitTarget
         {
             get { return GetSOP().SitTargetPosition; }
-            set 
-            { 
+            set
+            {
                 if (CanEdit())
                 {
                     GetSOP().SitTargetPosition = value;
@@ -283,8 +204,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public string SitTargetText
         {
             get { return GetSOP().SitName; }
-            set 
-            { 
+            set
+            {
                 if (CanEdit())
                 {
                     GetSOP().SitName = value;
@@ -295,7 +216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public string TouchText
         {
             get { return GetSOP().TouchName; }
-            set 
+            set
             {
                 if (CanEdit())
                 {
@@ -307,67 +228,67 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public string Text
         {
             get { return GetSOP().Text; }
-            set 
+            set
             {
                 if (CanEdit())
                 {
-                    GetSOP().SetText(value,new Vector3(1.0f,1.0f,1.0f),1.0f);
+                    GetSOP().SetText(value, new Vector3(1.0f, 1.0f, 1.0f), 1.0f);
                 }
             }
         }
 
         public bool IsRotationLockedX
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsRotationLockedY
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsRotationLockedZ
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsSandboxed
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsImmotile
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsAlwaysReturned
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsTemporary
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool IsFlexible
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public PhysicsMaterial PhysicsMaterial
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public IObjectPhysics Physics
@@ -380,11 +301,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             get { return this; }
         }
 
-        public IObjectInventory Inventory 
+        public IObjectInventory Inventory
         {
             get { return new SOPObjectInventory(m_rootScene, GetSOP().TaskInventory); }
         }
-        
+
+        #endregion
+
         #region Public Functions
 
         public void Say(string msg)
@@ -392,25 +315,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             if (!CanEdit())
                 return;
 
-            ISceneChildEntity sop = GetSOP ();
+            ISceneChildEntity sop = GetSOP();
             IChatModule chatModule = m_rootScene.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
                 chatModule.SimChat(msg, ChatTypeEnum.Say, 0, sop.AbsolutePosition,
-                    sop.Name, sop.UUID, false, m_rootScene);
+                                   sop.Name, sop.UUID, false, m_rootScene);
         }
 
-        public void Say(string msg,int channel)
+        public void Say(string msg, int channel)
         {
             if (!CanEdit())
                 return;
 
-            ISceneChildEntity sop = GetSOP ();
+            ISceneChildEntity sop = GetSOP();
             IChatModule chatModule = m_rootScene.RequestModuleInterface<IChatModule>();
             if (chatModule != null)
                 chatModule.SimChat(msg, ChatTypeEnum.Say, channel, sop.AbsolutePosition,
-                    sop.Name, sop.UUID, false, m_rootScene);
+                                   sop.Name, sop.UUID, false, m_rootScene);
         }
-         
+
         public void Dialog(UUID avatar, string message, string[] buttons, int chat_channel)
         {
             if (!CanEdit())
@@ -423,12 +346,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
             if (buttons.Length < 1)
             {
-                Say("ERROR: No less than 1 button can be shown",2147483647);
+                Say("ERROR: No less than 1 button can be shown", 2147483647);
                 return;
             }
             if (buttons.Length > 12)
             {
-                Say("ERROR: No more than 12 buttons can be shown",2147483647);
+                Say("ERROR: No more than 12 buttons can be shown", 2147483647);
                 return;
             }
 
@@ -436,12 +359,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             {
                 if (button == String.Empty)
                 {
-                    Say("ERROR: button label cannot be blank",2147483647);
+                    Say("ERROR: button label cannot be blank", 2147483647);
                     return;
                 }
                 if (button.Length > 24)
                 {
-                    Say("ERROR: button label cannot be longer than 24 characters",2147483647);
+                    Say("ERROR: button label cannot be longer than 24 characters", 2147483647);
                     return;
                 }
             }
@@ -449,23 +372,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             dm.SendDialogToUser(
                 avatar, GetSOP().Name, GetSOP().UUID, GetSOP().OwnerID,
                 message, new UUID("00000000-0000-2222-3333-100000001000"), chat_channel, buttons);
-            
         }
-        
-        #endregion
 
+        #endregion
 
         #region Supporting Functions
 
         // Helper functions to understand if object has cut, hollow, dimple, and other affecting number of faces
-        private static void hasCutHollowDimpleProfileCut(int primType, PrimitiveBaseShape shape, out bool hasCut, out bool hasHollow,
-            out bool hasDimple, out bool hasProfileCut)
+        private static void hasCutHollowDimpleProfileCut(int primType, PrimitiveBaseShape shape, out bool hasCut,
+                                                         out bool hasHollow,
+                                                         out bool hasDimple, out bool hasProfileCut)
         {
-            if (primType == (int)PrimType.Box
+            if (primType == (int) PrimType.Box
                 ||
-                primType == (int)PrimType.Cylinder
+                primType == (int) PrimType.Cylinder
                 ||
-                primType == (int)PrimType.Prism)
+                primType == (int) PrimType.Prism)
 
                 hasCut = (shape.ProfileBegin > 0) || (shape.ProfileEnd > 0);
             else
@@ -474,7 +396,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             hasHollow = shape.ProfileHollow > 0;
             hasDimple = (shape.ProfileBegin > 0) || (shape.ProfileEnd > 0); // taken from llSetPrimitiveParms
             hasProfileCut = hasDimple; // is it the same thing?
-
         }
 
         private static int getScriptPrimType(PrimitiveBaseShape primShape)
@@ -510,7 +431,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             return (int) PrimType.NotPrimitive;
         }
 
-        private static int getNumberOfSides (ISceneChildEntity part)
+        private static int getNumberOfSides(ISceneChildEntity part)
         {
             int ret;
             bool hasCut;
@@ -519,7 +440,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             bool hasProfileCut;
 
             int primType = getScriptPrimType(part.Shape);
-            hasCutHollowDimpleProfileCut(primType, part.Shape, out hasCut, out hasHollow, out hasDimple, out hasProfileCut);
+            hasCutHollowDimpleProfileCut(primType, part.Shape, out hasCut, out hasHollow, out hasDimple,
+                                         out hasProfileCut);
 
             switch (primType)
             {
@@ -545,7 +467,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                     if (hasDimple) ret += 2;
                     if (hasHollow)
                         ret += 1; // GOTCHA: LSL shows 2 additional sides here. 
-                                  // This has been fixed, but may cause porting issues.
+                    // This has been fixed, but may cause porting issues.
                     break;
                 case (int) PrimType.Torus:
                     ret = 1;
@@ -572,27 +494,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             return ret;
         }
 
-
         #endregion
 
         #region IObjectPhysics
 
         public bool Enabled
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool Phantom
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool PhantomCollisions
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public double Density
@@ -610,15 +531,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public double Buoyancy
         {
             get { return GetSOP().PhysActor.Buoyancy; }
-            set { GetSOP().PhysActor.Buoyancy = (float)value; }
+            set { GetSOP().PhysActor.Buoyancy = (float) value; }
         }
 
         public Vector3 GeometricCenter
         {
-            get
-            {
-                return Vector3.Zero;
-            }
+            get { return Vector3.Zero; }
         }
 
         public Vector3 CenterOfMass
@@ -735,6 +653,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         private UUID m_sculptMap = UUID.Zero;
 
+        private SculptType m_sculptType = SculptType.Default;
+
         public UUID SculptMap
         {
             get { return m_sculptMap; }
@@ -747,8 +667,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 SetPrimitiveSculpted(SculptMap, (byte) SculptType);
             }
         }
-
-        private SculptType m_sculptType = SculptType.Default;
 
         public SculptType SculptType
         {
@@ -765,27 +683,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public HoleShape HoleType
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public double HoleSize
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public PrimType PrimType
         {
-            get { return (PrimType)getScriptPrimType(GetSOP().Shape); }
-            set { throw new System.NotImplementedException(); }
+            get { return (PrimType) getScriptPrimType(GetSOP().Shape); }
+            set { throw new NotImplementedException(); }
         }
 
         private void SetPrimitiveSculpted(UUID map, byte type)
         {
             ObjectShapePacket.ObjectDataBlock shapeBlock = new ObjectShapePacket.ObjectDataBlock();
 
-            ISceneChildEntity part = GetSOP ();
+            ISceneChildEntity part = GetSOP();
 
             UUID sculptId = map;
 
@@ -796,21 +714,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             // retain pathcurve
             shapeBlock.PathCurve = part.Shape.PathCurve;
 
-            part.Shape.SetSculptProperties((byte)type, sculptId);
+            part.Shape.SetSculptProperties(type, sculptId);
             part.Shape.SculptEntry = true;
             part.UpdateShape(shapeBlock);
         }
 
-
         #endregion
 
-
         #region Implementation of IObjectSound
+
+        #region IObject Members
 
         public IObjectSound Sound
         {
             get { return this; }
         }
+
+        #endregion
+
+        #region IObjectSound Members
 
         public void Play(UUID asset, double volume)
         {
@@ -818,6 +740,87 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 return;
 
             GetSOP().SendSound(asset.ToString(), volume, true, 0, 0, false, false);
+        }
+
+        #endregion
+
+        #endregion
+
+        /// <summary>
+        ///   This needs to run very, very quickly.
+        ///   It is utilized in nearly every property and method.
+        /// </summary>
+        /// <returns></returns>
+        private ISceneChildEntity GetSOP()
+        {
+            return m_rootScene.GetSceneObjectPart(m_localID);
+        }
+
+        private bool CanEdit()
+        {
+            if (!m_security.CanEditObject(this))
+            {
+                throw new SecurityException("Insufficient Permission to edit object with UUID [" + GetSOP().UUID + "]");
+            }
+            return true;
+        }
+
+        #region OnTouch
+
+        private bool _OnTouchActive;
+
+        public event OnTouchDelegate OnTouch
+        {
+            add
+            {
+                if (CanEdit())
+                {
+                    if (!_OnTouchActive)
+                    {
+                        GetSOP().Flags |= PrimFlags.Touch;
+                        _OnTouchActive = true;
+                        m_rootScene.EventManager.OnObjectGrab += EventManager_OnObjectGrab;
+                    }
+
+                    _OnTouch += value;
+                }
+            }
+            remove
+            {
+                _OnTouch -= value;
+
+                if (_OnTouch == null)
+                {
+                    GetSOP().Flags &= ~PrimFlags.Touch;
+                    _OnTouchActive = false;
+                    m_rootScene.EventManager.OnObjectGrab -= EventManager_OnObjectGrab;
+                }
+            }
+        }
+
+        private event OnTouchDelegate _OnTouch;
+
+        private void EventManager_OnObjectGrab(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
+                                               IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        {
+            if (_OnTouchActive && m_localID == part.LocalId)
+            {
+                TouchEventArgs e = new TouchEventArgs
+                                       {
+                                           Avatar = new SPAvatar(m_rootScene, remoteClient.AgentId, m_security),
+                                           TouchBiNormal = surfaceArgs.Binormal,
+                                           TouchMaterialIndex = surfaceArgs.FaceIndex,
+                                           TouchNormal = surfaceArgs.Normal,
+                                           TouchPosition = surfaceArgs.Position,
+                                           TouchST = new Vector2(surfaceArgs.STCoord.X, surfaceArgs.STCoord.Y),
+                                           TouchUV = new Vector2(surfaceArgs.UVCoord.X, surfaceArgs.UVCoord.Y)
+                                       };
+
+                IObject sender = this;
+
+                if (_OnTouch != null)
+                    _OnTouch(sender, e);
+            }
         }
 
         #endregion

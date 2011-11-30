@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.Linq;
 using System.Threading;
 using HttpServer;
 
@@ -34,15 +35,15 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class PollServiceRequestManager
     {
+        private static readonly Queue m_requests = Queue.Synchronized(new Queue());
+        private readonly PollServiceWorkerThread[] m_PollServiceWorkerThreads;
+        private readonly uint m_WorkerThreadCount;
         private readonly BaseHttpServer m_server;
-        private static Queue m_requests = Queue.Synchronized(new Queue());
-        private uint m_WorkerThreadCount = 0;
-        private Thread[] m_workerThreads;
-        private PollServiceWorkerThread[] m_PollServiceWorkerThreads;
-        private Thread m_watcherThread;
+        private readonly int m_timeOut;
+        private readonly Thread[] m_workerThreads;
         private bool m_running = true;
-        private int m_timeOut = 0;
-        private bool m_threadRunning = false;
+        private bool m_threadRunning;
+        private Thread m_watcherThread;
 
         public PollServiceRequestManager(BaseHttpServer pSrv, uint pWorkerThreadCount, int pTimeout)
         {
@@ -88,16 +89,15 @@ namespace OpenSim.Framework.Servers.HttpServer
                     m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_timeOut);
                     m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
 
-                    m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart);
-                    m_workerThreads[i].Name = String.Format("PollServiceWorkerThread{0}", i);
+                    m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
+                                             {Name = String.Format("PollServiceWorkerThread{0}", i)};
                     //Can't add to thread Tracker here Referencing OpenSim.Framework creates circular reference
                     m_workerThreads[i].Start();
                 }
             }
 
             //start watcher threads
-            m_watcherThread = new Thread(ThreadStart);
-            m_watcherThread.Name = "PollServiceWatcherThread";
+            m_watcherThread = new Thread(ThreadStart) {Name = "PollServiceWatcherThread"};
             m_watcherThread.Start();
         }
 
@@ -132,11 +132,11 @@ namespace OpenSim.Framework.Servers.HttpServer
                 for (int tc = 0; tc < m_WorkerThreadCount && m_requests.Count > 0; tc++)
                 {
                     //Loop over number of requests each thread handles.
-                    for (int i=0;i<reqperthread && m_requests.Count > 0;i++)
+                    for (int i = 0; i < reqperthread && m_requests.Count > 0; i++)
                     {
                         try
                         {
-                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest)m_requests.Dequeue());
+                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest) m_requests.Dequeue());
                         }
                         catch (InvalidOperationException)
                         {
@@ -150,21 +150,20 @@ namespace OpenSim.Framework.Servers.HttpServer
         }
 
 
-
         ~PollServiceRequestManager()
         {
-            foreach (object o in m_requests)
+            foreach (PollServiceHttpRequest req in m_requests.Cast<PollServiceHttpRequest>())
             {
-                PollServiceHttpRequest req = (PollServiceHttpRequest) o;
-                m_server.DoHTTPGruntWork(req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id), new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext));
+                m_server.DoHTTPGruntWork(req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
+                                         new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request),
+                                                            req.HttpContext));
             }
 
             m_requests.Clear();
 
-            foreach (Thread t in m_workerThreads)
+            foreach (Thread t in m_workerThreads.Where(t => t != null))
             {
-                if(t != null)
-                    t.Abort();
+                t.Abort();
             }
             m_running = false;
         }

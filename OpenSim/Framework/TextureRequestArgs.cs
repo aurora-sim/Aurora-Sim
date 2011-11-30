@@ -36,7 +36,6 @@ namespace OpenSim.Framework
         private uint m_packetNumber;
         private float m_priority;
         private int m_requestType;
-        private uint m_requestsequence;
         protected UUID m_requestedAssetID;
 
         public float Priority
@@ -45,33 +44,26 @@ namespace OpenSim.Framework
             set { m_priority = value; }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
+        ///<summary>
+        ///</summary>
         public uint PacketNumber
         {
             get { return m_packetNumber; }
             set { m_packetNumber = value; }
         }
 
-        public uint requestSequence
-        {
-            get { return m_requestsequence; }
-            set { m_requestsequence = value; }
-        }
+        public uint requestSequence { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
+        ///<summary>
+        ///</summary>
         public sbyte DiscardLevel
         {
             get { return m_discardLevel; }
             set { m_discardLevel = value; }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
+        ///<summary>
+        ///</summary>
         public UUID RequestedAssetID
         {
             get { return m_requestedAssetID; }

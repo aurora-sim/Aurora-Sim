@@ -27,13 +27,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
@@ -41,14 +40,13 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private int m_rootAgents = 0;
-        private int m_childAgents = 0;
-        private int m_objects = 0;
-        private int m_activeObjects = 0;
+        private readonly Dictionary<UUID, bool> m_lastAddedPhysicalStatus = new Dictionary<UUID, bool>();
 
-        private Dictionary<UUID, bool> m_lastAddedPhysicalStatus = new Dictionary<UUID, bool>();
-
-        private object m_objectsLock = new object();
+        private readonly object m_objectsLock = new object();
+        private int m_activeObjects;
+        private int m_childAgents;
+        private int m_objects;
+        private int m_rootAgents;
 
         #endregion
 
@@ -76,13 +74,13 @@ namespace Aurora.Modules
 
         #endregion
 
-        #region IRegionModuleBase Members
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             scene.RegisterModuleInterface<IEntityCountModule>(this);
 
@@ -97,11 +95,11 @@ namespace Aurora.Modules
             scene.AuroraEventManager.RegisterEventHandler("ObjectChangedPhysicalStatus", OnGenericEvent);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
@@ -125,26 +123,26 @@ namespace Aurora.Modules
 
         #region Agents
 
-        protected void OnMakeChildAgent (IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
+        protected void OnMakeChildAgent(IScenePresence presence, GridRegion destination)
         {
             //Switch child agent to root agent
             m_rootAgents--;
             m_childAgents++;
         }
 
-        protected void OnMakeRootAgent (IScenePresence presence)
+        protected void OnMakeRootAgent(IScenePresence presence)
         {
             m_rootAgents++;
             m_childAgents--;
         }
 
-        protected void OnNewPresence (IScenePresence presence)
+        protected void OnNewPresence(IScenePresence presence)
         {
             // Why don't we check for root agents? We don't because it will be added in MakeRootAgent and removed from here
             m_childAgents++;
         }
 
-        void OnRemovePresence (IScenePresence presence)
+        private void OnRemovePresence(IScenePresence presence)
         {
             if (presence.IsChildAgent)
                 m_childAgents--;
@@ -156,11 +154,11 @@ namespace Aurora.Modules
 
         #region Objects
 
-        protected void OnObjectBeingAddedToScene (ISceneEntity obj)
+        protected void OnObjectBeingAddedToScene(ISceneEntity obj)
         {
             lock (m_objectsLock)
             {
-                foreach (ISceneChildEntity child in obj.ChildrenEntities ())
+                foreach (ISceneChildEntity child in obj.ChildrenEntities())
                 {
                     bool physicalStatus = (child.Flags & PrimFlags.Physics) == PrimFlags.Physics;
                     if (!m_lastAddedPhysicalStatus.ContainsKey(child.UUID))
@@ -218,7 +216,7 @@ namespace Aurora.Modules
             //If the object changes physical status, we need to make sure to update the active objects count
             if (FunctionName == "ObjectChangedPhysicalStatus")
             {
-                OnObjectBeingAddedToScene((SceneObjectGroup)parameters);
+                OnObjectBeingAddedToScene((SceneObjectGroup) parameters);
             }
             return null;
         }

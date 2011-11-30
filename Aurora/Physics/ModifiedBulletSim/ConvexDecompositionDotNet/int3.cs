@@ -52,9 +52,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 switch (i)
                 {
-                    case 0: return x;
-                    case 1: return y;
-                    case 2: return z;
+                    case 0:
+                        return x;
+                    case 1:
+                        return y;
+                    case 2:
+                        return z;
                 }
                 throw new ArgumentOutOfRangeException();
             }
@@ -62,9 +65,15 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 switch (i)
                 {
-                    case 0: x = value; return;
-                    case 1: y = value; return;
-                    case 2: z = value; return;
+                    case 0:
+                        x = value;
+                        return;
+                    case 1:
+                        y = value;
+                        return;
+                    case 2:
+                        z = value;
+                        return;
                 }
                 throw new ArgumentOutOfRangeException();
             }
@@ -87,10 +96,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         public static bool operator ==(int3 a, int3 b)
         {
             // If both are null, or both are same instance, return true.
-            if (System.Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
                 return true;
             // If one is null, but not both, return false.
-            if (((object)a == null) || ((object)b == null))
+            if (((object) a == null) || ((object) b == null))
                 return false;
 
             for (int i = 0; i < 3; i++)

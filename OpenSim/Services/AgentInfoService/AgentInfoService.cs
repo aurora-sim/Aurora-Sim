@@ -27,16 +27,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Reflection;
+using Aurora.DataManager;
+using Aurora.Simulation.Base;
 using Nini.Config;
-using log4net;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services
 {
@@ -45,38 +42,15 @@ namespace OpenSim.Services
         #region Declares
 
         protected IAgentInfoConnector m_agentInfoConnector;
-        protected IRegistryCore m_registry;
         protected List<string> m_lockedUsers = new List<string>();
+        protected IRegistryCore m_registry;
 
         #endregion
-
-        #region IService Members
-
-        public virtual void Initialize (IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAgentInfoService>(this);
-        }
-
-        public virtual void Start (IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public virtual void FinishedStartup ()
-        {
-            m_agentInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
-        }
 
         public string Name
         {
             get { return GetType().Name; }
         }
-
-        #endregion
 
         #region IAgentInfoService Members
 
@@ -87,20 +61,10 @@ namespace OpenSim.Services
 
         public virtual UserInfo GetUserInfo(string userID)
         {
-            return GetUserInfo (userID, true);
+            return GetUserInfo(userID, true);
         }
 
-        private UserInfo GetUserInfo (string userID, bool checkForOfflineStatus)
-        {
-            bool changed = false;
-            UserInfo info = m_agentInfoConnector.Get (userID, checkForOfflineStatus, out changed);
-            if (changed)
-                if (!m_lockedUsers.Contains (userID))
-                    m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("UserStatusChange", new object[3] { userID, false, UUID.Zero });
-            return info;
-        }
-
-        public virtual UserInfo[] GetUserInfos (string[] userIDs)
+        public virtual UserInfo[] GetUserInfos(string[] userIDs)
         {
             UserInfo[] infos = new UserInfo[userIDs.Length];
             for (int i = 0; i < userIDs.Length; i++)
@@ -110,15 +74,18 @@ namespace OpenSim.Services
             return infos;
         }
 
-        public virtual string[] GetAgentsLocations (string requestor, string[] userIDs)
+        public virtual string[] GetAgentsLocations(string requestor, string[] userIDs)
         {
             string[] infos = new string[userIDs.Length];
             for (int i = 0; i < userIDs.Length; i++)
             {
                 UserInfo user = GetUserInfo(userIDs[i]);
                 if (user != null && user.IsOnline)
-                    infos[i] = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, user.CurrentRegionID).ServerURI;
-                else if(user == null)
+                    infos[i] =
+                        m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero,
+                                                                                          user.CurrentRegionID).
+                            ServerURI;
+                else if (user == null)
                     infos[i] = "NonExistant";
                 else
                     infos[i] = "NotOnline";
@@ -126,67 +93,118 @@ namespace OpenSim.Services
             return infos;
         }
 
-        public virtual bool SetHomePosition (string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
+        public virtual bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             m_agentInfoConnector.SetHomePosition(userID, homeID, homePosition, homeLookAt);
             return true;
         }
 
-        public virtual void SetLastPosition (string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
+        public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
-        public virtual void LockLoggedInStatus (string userID, bool locked)
+        public virtual void LockLoggedInStatus(string userID, bool locked)
         {
-            if(locked && !m_lockedUsers.Contains(userID))
+            if (locked && !m_lockedUsers.Contains(userID))
                 m_lockedUsers.Add(userID);
             else
                 m_lockedUsers.Remove(userID);
         }
 
-        public virtual void SetLoggedIn (string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
+        public virtual void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
-            UserInfo userInfo = GetUserInfo (userID, false);//We are changing the status, so don't look
+            UserInfo userInfo = GetUserInfo(userID, false); //We are changing the status, so don't look
             if (userInfo == null)
             {
-                Save (new UserInfo ()
-                {
-                    IsOnline = loggingIn,
-                    UserID = userID,
-                    CurrentLookAt = Vector3.Zero,
-                    CurrentPosition = Vector3.Zero,
-                    CurrentRegionID = enteringRegion,
-                    HomeLookAt = Vector3.Zero,
-                    HomePosition = Vector3.Zero,
-                    HomeRegionID = UUID.Zero,
-                    Info = new OpenMetaverse.StructuredData.OSDMap (),
-                    LastLogin = DateTime.Now.ToUniversalTime(),
-                    LastLogout = DateTime.Now.ToUniversalTime(),
-                });
+                Save(new UserInfo
+                         {
+                             IsOnline = loggingIn,
+                             UserID = userID,
+                             CurrentLookAt = Vector3.Zero,
+                             CurrentPosition = Vector3.Zero,
+                             CurrentRegionID = enteringRegion,
+                             HomeLookAt = Vector3.Zero,
+                             HomePosition = Vector3.Zero,
+                             HomeRegionID = UUID.Zero,
+                             Info = new OSDMap(),
+                             LastLogin = DateTime.Now.ToUniversalTime(),
+                             LastLogout = DateTime.Now.ToUniversalTime(),
+                         });
             }
-            if (m_lockedUsers.Contains (userID))
+            if (m_lockedUsers.Contains(userID))
                 return; //User is locked, leave them alone
-            if(loggingIn)
-                if(enteringRegion == UUID.Zero)
-                    m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogin", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now.ToUniversalTime()), Util.ToUnixTime (DateTime.Now.ToUniversalTime()) });
+            if (loggingIn)
+                if (enteringRegion == UUID.Zero)
+                    m_agentInfoConnector.Update(userID, new string[3] {"IsOnline", "LastLogin", "LastSeen"},
+                                                new object[3]
+                                                    {
+                                                        loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
+                                                        Util.ToUnixTime(DateTime.Now.ToUniversalTime())
+                                                    });
                 else
-                    m_agentInfoConnector.Update (userID, new string[4] { "IsOnline", "LastLogin", "CurrentRegionID", "LastSeen" }, new object[4] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now.ToUniversalTime()), enteringRegion, Util.ToUnixTime (DateTime.Now.ToUniversalTime()) });
+                    m_agentInfoConnector.Update(userID,
+                                                new string[4] {"IsOnline", "LastLogin", "CurrentRegionID", "LastSeen"},
+                                                new object[4]
+                                                    {
+                                                        loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
+                                                        enteringRegion, Util.ToUnixTime(DateTime.Now.ToUniversalTime())
+                                                    });
             else
-                m_agentInfoConnector.Update (userID, new string[3] { "IsOnline", "LastLogout", "LastSeen" }, new object[3] { loggingIn ? 1 : 0, Util.ToUnixTime (DateTime.Now.ToUniversalTime()), Util.ToUnixTime (DateTime.Now.ToUniversalTime()) });
+                m_agentInfoConnector.Update(userID, new string[3] {"IsOnline", "LastLogout", "LastSeen"},
+                                            new object[3]
+                                                {
+                                                    loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
+                                                    Util.ToUnixTime(DateTime.Now.ToUniversalTime())
+                                                });
 
             if (fireLoggedInEvent)
             {
                 //Trigger an event so listeners know
-                m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("UserStatusChange", new object[3] { userID, loggingIn, enteringRegion });
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                    "UserStatusChange", new object[3] {userID, loggingIn, enteringRegion});
             }
         }
 
-        public virtual void Save (UserInfo userInfo)
+        #endregion
+
+        #region IService Members
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            m_agentInfoConnector.Set(userInfo);
+            m_registry = registry;
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
+                return;
+
+            registry.RegisterModuleInterface<IAgentInfoService>(this);
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public virtual void FinishedStartup()
+        {
+            m_agentInfoConnector = DataManager.RequestPlugin<IAgentInfoConnector>();
         }
 
         #endregion
+
+        private UserInfo GetUserInfo(string userID, bool checkForOfflineStatus)
+        {
+            bool changed = false;
+            UserInfo info = m_agentInfoConnector.Get(userID, checkForOfflineStatus, out changed);
+            if (changed)
+                if (!m_lockedUsers.Contains(userID))
+                    m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
+                        "UserStatusChange", new object[3] {userID, false, UUID.Zero});
+            return info;
+        }
+
+        public virtual void Save(UserInfo userInfo)
+        {
+            m_agentInfoConnector.Set(userInfo);
+        }
     }
 }

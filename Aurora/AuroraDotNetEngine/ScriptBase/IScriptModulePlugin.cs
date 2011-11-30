@@ -27,14 +27,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
@@ -45,6 +41,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         IConfigSource ConfigSource { get; }
 
         IScriptModule ScriptModule { get; }
+        Dictionary<Type, object> Extensions { get; }
 
         bool PostScriptEvent(UUID m_itemID, UUID uUID, EventParams EventParams, EventPriority EventPriority);
 
@@ -66,10 +63,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         IScriptApi GetApi(UUID m_itemID, string p);
 
-        bool PipeEventsForScript (ISceneChildEntity m_host, Vector3 vector3);
+        bool PipeEventsForScript(ISceneChildEntity m_host, Vector3 vector3);
 
-        void RegisterExtension<T> (T instance);
-
-        Dictionary<Type, object> Extensions { get; }
+        void RegisterExtension<T>(T instance);
     }
 }

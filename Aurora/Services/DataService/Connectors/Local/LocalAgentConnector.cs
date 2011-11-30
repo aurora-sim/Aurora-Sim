@@ -27,30 +27,34 @@
 
 using System.Collections.Generic;
 using System.Reflection;
-using OpenMetaverse;
 using Aurora.Framework;
-using log4net;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class LocalAgentConnector : IAgentConnector
-	{
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+    {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IGenericData GD = null;
+        private IGenericData GD;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IAgentConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             GD = GenericData;
 
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Agent", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
-            DataManager.DataManager.RegisterPlugin(Name+"Local", this);
+            GD.ConnectToDatabase(defaultConnectionString, "Agent",
+                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "LocalConnector")
             {
@@ -63,22 +67,18 @@ namespace Aurora.Services.DataService
             get { return "IAgentConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         /// <summary>
-        /// Gets the info about the agent (TOS data, maturity info, language, etc)
+        ///   Gets the info about the agent (TOS data, maturity info, language, etc)
         /// </summary>
-        /// <param name="agentID"></param>
+        /// <param name = "agentID"></param>
         /// <returns></returns>
         public IAgentInfo GetAgent(UUID agentID)
-		{
-			IAgentInfo agent = new IAgentInfo();
+        {
+            IAgentInfo agent = new IAgentInfo();
             List<string> query = null;
             try
             {
-                query = GD.Query(new[] { "ID", "`Key`" }, new object[] { agentID, "AgentInfo" }, "userdata", "Value");
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {agentID, "AgentInfo"}, "userdata", "Value");
             }
             catch
             {
@@ -86,52 +86,51 @@ namespace Aurora.Services.DataService
             if (query == null || query.Count == 0)
                 return null; //Couldn't find it, return null then.
 
-            OSDMap agentInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
+            OSDMap agentInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
 
             agent.FromOSD(agentInfo);
             agent.PrincipalID = agentID;
-			return agent;
-		}
+            return agent;
+        }
 
         /// <summary>
-        /// Updates the language and maturity params of the agent.
-        /// Note: we only allow for this on the grid side
+        ///   Updates the language and maturity params of the agent.
+        ///   Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name="agent"></param>
+        /// <param name = "agent"></param>
         public void UpdateAgent(IAgentInfo agent)
-		{
+        {
             List<object> SetValues = new List<object> {OSDParser.SerializeLLSDXmlString(agent.ToOSD())};
             List<string> SetRows = new List<string> {"Value"};
-           
-            
-            
+
+
             List<object> KeyValue = new List<object> {agent.PrincipalID, "AgentInfo"};
 
             List<string> KeyRow = new List<string> {"ID", "`Key`"};
 
             GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
-		}
+        }
 
         /// <summary>
-        /// Creates a new database entry for the agent.
-        /// Note: we only allow for this on the grid side
+        ///   Creates a new database entry for the agent.
+        ///   Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name="agentID"></param>
+        /// <param name = "agentID"></param>
         public void CreateNewAgent(UUID agentID)
-		{
+        {
             List<object> values = new List<object> {agentID, "AgentInfo"};
             IAgentInfo info = new IAgentInfo {PrincipalID = agentID};
             values.Add(OSDParser.SerializeLLSDXmlString(info.ToOSD())); //Value which is a default Profile
             GD.Insert("userdata", values.ToArray());
-		}
+        }
 
         /// <summary>
-        /// Checks whether the mac address and viewer are allowed to connect to this grid.
-        /// Note: we only allow for this on the grid side
+        ///   Checks whether the mac address and viewer are allowed to connect to this grid.
+        ///   Note: we only allow for this on the grid side
         /// </summary>
-        /// <param name="Mac"></param>
-        /// <param name="viewer"></param>
-        /// <param name="reason"></param>
+        /// <param name = "Mac"></param>
+        /// <param name = "viewer"></param>
+        /// <param name = "reason"></param>
         /// <returns></returns>
         public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
         {
@@ -154,6 +153,12 @@ namespace Aurora.Services.DataService
             }
             reason = "";
             return true;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
         }
     }
 }

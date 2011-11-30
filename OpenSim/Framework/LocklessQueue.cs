@@ -25,32 +25,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace OpenSim.Framework
 {
+
     #region LockFreeQueue from http://www.boyet.com/Articles/LockfreeStack.html. Thanks to Julian M. Bucknall.
-    internal class SingleLinkNode<T> 
+
+    internal class SingleLinkNode<T>
     {
-      // Note; the Next member cannot be a property since it participates in
-      // many CAS operations
-      public SingleLinkNode<T> Next; 
-      public T Item;
+        // Note; the Next member cannot be a property since it participates in
+        // many CAS operations
+        public T Item;
+        public SingleLinkNode<T> Next;
     }
 
     public interface IPriorityConverter<P>
     {
-        int Convert(P priority);
         int PriorityCount { get; }
+        int Convert(P priority);
     }
 
     public class LimitedPriorityQueue<T, P>
     {
-
-        private IPriorityConverter<P> converter;
-        private LockFreeQueue<T>[] queueList;
+        private readonly IPriorityConverter<P> converter;
+        private readonly LockFreeQueue<T>[] queueList;
 
         public LimitedPriorityQueue(IPriorityConverter<P> converter)
         {
@@ -90,9 +90,8 @@ namespace OpenSim.Framework
 
     public class LockFreeQueue<T>
     {
-
-        SingleLinkNode<T> head;
-        SingleLinkNode<T> tail;
+        private SingleLinkNode<T> head;
+        private SingleLinkNode<T> tail;
 
         public LockFreeQueue()
         {
@@ -105,8 +104,7 @@ namespace OpenSim.Framework
             SingleLinkNode<T> oldTail = null;
             SingleLinkNode<T> oldTailNext;
 
-            SingleLinkNode<T> newNode = new SingleLinkNode<T>();
-            newNode.Item = item;
+            SingleLinkNode<T> newNode = new SingleLinkNode<T> {Item = item};
 
             bool newNodeWasAdded = false;
             while (!newNodeWasAdded)
@@ -117,13 +115,13 @@ namespace OpenSim.Framework
                 if (tail == oldTail)
                 {
                     if (oldTailNext == null)
-                        newNodeWasAdded = SyncMethods.CAS<SingleLinkNode<T>>(ref tail.Next, null, newNode);
+                        newNodeWasAdded = SyncMethods.CAS(ref tail.Next, null, newNode);
                     else
-                        SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, oldTailNext);
+                        SyncMethods.CAS(ref tail, oldTail, oldTailNext);
                 }
             }
 
-            SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, newNode);
+            SyncMethods.CAS(ref tail, oldTail, newNode);
         }
 
         public bool Dequeue(out T item)
@@ -134,7 +132,6 @@ namespace OpenSim.Framework
             bool haveAdvancedHead = false;
             while (!haveAdvancedHead)
             {
-
                 oldHead = head;
                 SingleLinkNode<T> oldTail = tail;
                 SingleLinkNode<T> oldHeadNext = oldHead.Next;
@@ -147,14 +144,14 @@ namespace OpenSim.Framework
                         {
                             return false;
                         }
-                        SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, oldHeadNext);
+                        SyncMethods.CAS(ref tail, oldTail, oldHeadNext);
                     }
 
                     else
                     {
                         item = oldHeadNext.Item;
                         haveAdvancedHead =
-                          SyncMethods.CAS<SingleLinkNode<T>>(ref head, oldHead, oldHeadNext);
+                            SyncMethods.CAS(ref head, oldHead, oldHeadNext);
                     }
                 }
             }
@@ -174,8 +171,8 @@ namespace OpenSim.Framework
         public static bool CAS<T>(ref T location, T comparand, T newValue) where T : class
         {
             return
-                (object)comparand ==
-                (object)Interlocked.CompareExchange<T>(ref location, newValue, comparand);
+                comparand ==
+                Interlocked.CompareExchange(ref location, newValue, comparand);
         }
     }
 
@@ -183,21 +180,18 @@ namespace OpenSim.Framework
 
     public sealed class LocklessQueue<T>
     {
-        private sealed class SingleLinkNode
-        {
-            public SingleLinkNode Next;
-            public T Item;
-        }
-
-        SingleLinkNode head;
-        SingleLinkNode tail;
-        int count;
-
-        public int Count { get { return count; } }
+        private int count;
+        private SingleLinkNode head;
+        private SingleLinkNode tail;
 
         public LocklessQueue()
         {
             Init();
+        }
+
+        public int Count
+        {
+            get { return count; }
         }
 
         public void Enqueue(T item)
@@ -205,8 +199,7 @@ namespace OpenSim.Framework
             SingleLinkNode oldTail = null;
             SingleLinkNode oldTailNext;
 
-            SingleLinkNode newNode = new SingleLinkNode();
-            newNode.Item = item;
+            SingleLinkNode newNode = new SingleLinkNode {Item = item};
 
             bool newNodeWasAdded = false;
 
@@ -261,9 +254,9 @@ namespace OpenSim.Framework
             return true;
         }
 
-        public bool Dequeue (int num, out List<T> items)
+        public bool Dequeue(int num, out List<T> items)
         {
-            items = new List<T> (num);
+            items = new List<T>(num);
             SingleLinkNode oldHead = null;
             bool haveAdvancedHead = false;
 
@@ -282,18 +275,18 @@ namespace OpenSim.Framework
                             if (oldHeadNext == null)
                                 return false;
 
-                            CAS (ref tail, oldTail, oldHeadNext);
+                            CAS(ref tail, oldTail, oldHeadNext);
                         }
                         else
                         {
                             items.Add(oldHeadNext.Item);
-                            haveAdvancedHead = CAS (ref head, oldHead, oldHeadNext);
+                            haveAdvancedHead = CAS(ref head, oldHead, oldHeadNext);
                         }
                     }
                 }
             }
 
-            Interlocked.Decrement (ref count);
+            Interlocked.Decrement(ref count);
             return true;
         }
 
@@ -311,8 +304,18 @@ namespace OpenSim.Framework
         private static bool CAS(ref SingleLinkNode location, SingleLinkNode comparand, SingleLinkNode newValue)
         {
             return
-                (object)comparand ==
-                (object)Interlocked.CompareExchange<SingleLinkNode>(ref location, newValue, comparand);
+                comparand ==
+                Interlocked.CompareExchange(ref location, newValue, comparand);
         }
+
+        #region Nested type: SingleLinkNode
+
+        private sealed class SingleLinkNode
+        {
+            public T Item;
+            public SingleLinkNode Next;
+        }
+
+        #endregion
     }
 }

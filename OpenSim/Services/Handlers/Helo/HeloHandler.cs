@@ -25,62 +25,61 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using Nini.Config;
-using log4net;
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class HeloServiceInConnector : IService
     {
-        public void Initialize (IConfigSource config, OpenSim.Framework.IRegistryCore registry)
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            MainServer.Instance.AddStreamHandler (new HeloServerGetHandler ("aurora"));
+            MainServer.Instance.AddStreamHandler(new HeloServerGetHandler("aurora"));
         }
 
-        public void Start (IConfigSource config, OpenSim.Framework.IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void FinishedStartup ()
+        public void FinishedStartup()
         {
         }
+
+        #endregion
     }
 
     public class HeloServerGetHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_HandlersType;
+        private readonly string m_HandlersType;
 
-        public HeloServerGetHandler (string handlersType) :
-            base ("GET", "/helo")
+        public HeloServerGetHandler(string handlersType) :
+            base("GET", "/helo")
         {
             m_HandlersType = handlersType;
         }
 
-        public override byte[] Handle (string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public override byte[] Handle(string path, Stream requestData,
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            return OKResponse (httpResponse);
+            return OKResponse(httpResponse);
         }
 
-        private byte[] OKResponse (OSHttpResponse httpResponse)
+        private byte[] OKResponse(OSHttpResponse httpResponse)
         {
-            httpResponse.AddHeader ("X-Handlers-Provided", m_HandlersType);
-            httpResponse.StatusCode = (int)HttpStatusCode.OK;
+            httpResponse.AddHeader("X-Handlers-Provided", m_HandlersType);
+            httpResponse.StatusCode = (int) HttpStatusCode.OK;
             httpResponse.StatusDescription = "OK";
             return new byte[0];
         }
-
     }
 }

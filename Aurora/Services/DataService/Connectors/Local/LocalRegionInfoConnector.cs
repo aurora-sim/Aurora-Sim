@@ -25,12 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
-using Aurora.DataManager;
 using Aurora.Framework;
 using OpenSim.Framework;
 using Nini.Config;
@@ -42,7 +38,7 @@ namespace Aurora.Services.DataService
     public class LocalRegionInfoConnector : IRegionInfoConnector
     {
         private IGenericData GD = null;
-        private string m_regionSettingsRealm = "regionsettings";
+        private const string m_regionSettingsRealm = "regionsettings";
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
@@ -71,18 +67,20 @@ namespace Aurora.Services.DataService
 
         public void UpdateRegionInfo(RegionInfo region)
         {
-            List<object> Values = new List<object>();
-            Values.Add(region.RegionID);
-            Values.Add(region.RegionName.MySqlEscape());
-            Values.Add(OSDParser.SerializeJsonString(region.PackRegionInfoData(true)));
-            Values.Add(region.Disabled ? 1 : 0);
-            GD.Replace("simulator", new string[]{"RegionID","RegionName",
+            List<object> Values = new List<object>
+                                      {
+                                          region.RegionID,
+                                          region.RegionName.MySqlEscape(),
+                                          OSDParser.SerializeJsonString(region.PackRegionInfoData(true)),
+                                          region.Disabled ? 1 : 0
+                                      };
+            GD.Replace("simulator", new[]{"RegionID","RegionName",
                 "RegionInfo","Disabled"}, Values.ToArray());
         }
 
         public void Delete(RegionInfo region)
         {
-            GD.Delete("simulator", new string[] { "RegionID" }, new object[] { region.RegionID });
+            GD.Delete("simulator", new[] { "RegionID" }, new object[] { region.RegionID });
         }
 
         public RegionInfo[] GetRegionInfos(bool nonDisabledOnly)
@@ -94,9 +92,9 @@ namespace Aurora.Services.DataService
             if (RetVal.Count == 0)
                 return Infos.ToArray();
             RegionInfo replyData = new RegionInfo();
-            for (int i = 0; i < RetVal.Count; i++)
+            foreach (string t in RetVal)
             {
-                replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[i]));
+                replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(t));
                 Infos.Add(replyData);
                 replyData = new RegionInfo();
             }
@@ -134,9 +132,8 @@ namespace Aurora.Services.DataService
         public Dictionary<float, RegionLightShareData> LoadRegionWindlightSettings(UUID regionUUID)
         {
             Dictionary<float, RegionLightShareData> RetVal = new Dictionary<float, RegionLightShareData>();
-            List<RegionLightShareData> RWLDs = new List<RegionLightShareData>();
             RegionLightShareData RWLD = new RegionLightShareData();
-            RWLDs = GenericUtils.GetGenerics<RegionLightShareData>(regionUUID, "RegionWindLightData", GD, RWLD);
+            List<RegionLightShareData> RWLDs = GenericUtils.GetGenerics(regionUUID, "RegionWindLightData", GD, RWLD);
             foreach (RegionLightShareData lsd in RWLDs)
             {
                 if(!RetVal.ContainsKey(lsd.minEffectiveAltitude))
@@ -156,7 +153,7 @@ namespace Aurora.Services.DataService
         {
             RegionSettings settings = new RegionSettings ();
 
-            Dictionary<string, List<string>> query = GD.QueryNames (new string[1] { "regionUUID" }, new object[1] { regionUUID }, m_regionSettingsRealm, "*");
+            Dictionary<string, List<string>> query = GD.QueryNames (new[] { "regionUUID" }, new object[] { regionUUID }, m_regionSettingsRealm, "*");
             if (query.Count == 0)
             {
                 settings.RegionUUID = regionUUID;
@@ -228,7 +225,7 @@ namespace Aurora.Services.DataService
         public void StoreRegionSettings (RegionSettings rs)
         {
             //Delete the original
-            GD.Delete (m_regionSettingsRealm, new string[1] { "regionUUID" }, new object[1] { rs.RegionUUID });
+            GD.Delete (m_regionSettingsRealm, new[] { "regionUUID" }, new object[] { rs.RegionUUID });
             //Now replace with the new
             GD.Insert (m_regionSettingsRealm, new object[] { rs.RegionUUID, rs.BlockTerraform ? 1 : 0, rs.BlockFly ? 1 : 0, rs.AllowDamage ? 1 : 0,
                 rs.RestrictPushing ? 1 : 0, rs.AllowLandResell ? 1 : 0, rs.AllowLandJoinDivide ? 1 : 0, rs.BlockShowInSearch ? 1 : 0, rs.AgentLimit, rs.ObjectBonus,
@@ -236,7 +233,7 @@ namespace Aurora.Services.DataService
                 rs.TerrainTexture2, rs.TerrainTexture3, rs.TerrainTexture4, rs.Elevation1NW, rs.Elevation2NW,
                 rs.Elevation1NE, rs.Elevation2NE, rs.Elevation1SE, rs.Elevation2SE, rs.Elevation1SW, rs.Elevation2SW,
                 rs.WaterHeight, rs.TerrainRaiseLimit, rs.TerrainLowerLimit, rs.UseEstateSun ? 1 : 0, rs.FixedSun ? 1 : 0, rs.SunPosition,
-                rs.Covenant, rs.Sandbox ? 1 : 0, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, (rs.LoadedCreationID == null ? "" : rs.LoadedCreationID), rs.LoadedCreationDateTime,
+                rs.Covenant, rs.Sandbox ? 1 : 0, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, (rs.LoadedCreationID ?? ""), rs.LoadedCreationDateTime,
                 rs.TerrainMapImageID, rs.TerrainImageID, rs.MinimumAge, rs.CovenantLastUpdated, OSDParser.SerializeJsonString(rs.Generic)});
         }
 

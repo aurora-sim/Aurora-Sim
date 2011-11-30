@@ -34,21 +34,22 @@ namespace OpenSim.Framework.Servers.HttpServer
 
     public class BinaryStreamHandler : BaseStreamHandler
     {
-        private BinaryMethod m_method;
+        private readonly BinaryMethod m_method;
 
-        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public BinaryStreamHandler(string httpMethod, string path, BinaryMethod binaryMethod)
+            : base(httpMethod, path)
+        {
+            m_method = binaryMethod;
+        }
+
+        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest,
+                                      OSHttpResponse httpResponse)
         {
             byte[] data = ReadFully(request);
             string param = GetParam(path);
             string responseString = m_method(data, path, param);
 
             return Encoding.UTF8.GetBytes(responseString);
-        }
-
-        public BinaryStreamHandler(string httpMethod, string path, BinaryMethod binaryMethod)
-            : base(httpMethod, path)
-        {
-            m_method = binaryMethod;
         }
 
         private static byte[] ReadFully(Stream stream)

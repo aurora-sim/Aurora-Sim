@@ -38,15 +38,11 @@ namespace OpenSim.Framework
         public UUID MapImageID;
         public String Name;
         public uint RegionFlags;
+        public ushort SizeX;
+        public ushort SizeY;
         public byte WaterHeight;
         public ushort X;
         public ushort Y;
-        public ushort SizeX;
-        public ushort SizeY;
-
-        public MapBlockData()
-        {
-        }
 
         public OSDMap ToOSD()
         {

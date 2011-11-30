@@ -25,39 +25,52 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
     /// <summary>
-    /// This class deals with putting async messages into the regions 'queues' and sending them to them
+    ///   This class deals with putting async messages into the regions 'queues' and sending them to them
     ///   when they request them. This is used for Aurora.Server
     /// </summary>
     public class RemoteAsyncMessagePostService : IService, IAsyncMessagePostService
     {
-        protected IRegistryCore m_registry;
         protected IAsyncMessageRecievedService m_asyncReceiverService;
 
         protected Dictionary<ulong, OSDArray> m_regionMessages = new Dictionary<ulong, OSDArray>();
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
+        protected IRegistryCore m_registry;
 
         public string Name
         {
             get { return GetType().Name; }
+        }
+
+        #region IAsyncMessagePostService Members
+
+        /// <summary>
+        ///   Post a new message to the given region by region handle
+        /// </summary>
+        /// <param name = "RegionHandle"></param>
+        /// <param name = "request"></param>
+        public void Post(ulong RegionHandle, OSDMap request)
+        {
+            if (!m_regionMessages.ContainsKey(RegionHandle))
+                m_regionMessages.Add(RegionHandle, new OSDArray());
+
+            m_regionMessages[RegionHandle].Add(request);
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -78,6 +91,8 @@ namespace OpenSim.Services.MessagingService
         {
         }
 
+        #endregion
+
         protected OSDMap OnMessageReceived(OSDMap message)
         {
             //If it is an async message request, make sure that the request is valid and check it
@@ -91,7 +106,7 @@ namespace OpenSim.Services.MessagingService
 
                     if (message.ContainsKey("RegionHandles"))
                     {
-                        OSDArray handles = (OSDArray)message["RegionHandles"];
+                        OSDArray handles = (OSDArray) message["RegionHandles"];
 
                         for (int i = 0; i < handles.Count; i += 2)
                         {
@@ -122,19 +137,6 @@ namespace OpenSim.Services.MessagingService
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// Post a new message to the given region by region handle
-        /// </summary>
-        /// <param name="RegionHandle"></param>
-        /// <param name="request"></param>
-        public void Post(ulong RegionHandle, OSDMap request)
-        {
-            if (!m_regionMessages.ContainsKey(RegionHandle))
-                m_regionMessages.Add(RegionHandle, new OSDArray());
-
-            m_regionMessages[RegionHandle].Add(request);
         }
     }
 }

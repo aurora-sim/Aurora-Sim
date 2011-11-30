@@ -37,9 +37,9 @@ namespace OpenSim.Framework.Servers.HttpServer
     public delegate void ReturnResponse<T>(T reponse);
 
     /// <summary>
-    /// Makes an asynchronous REST request with a callback to invoke with the response.
+    ///   Makes an asynchronous REST request with a callback to invoke with the response.
     /// </summary>
-    public class RestObjectPosterResponse<TResponse>
+    public class RestObjectPosterResponse<TResponse> where TResponse : class
     {
 //        private static readonly log4net.ILog m_log
 //            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -62,8 +62,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Encoding.UTF8;
+            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {
@@ -95,11 +94,14 @@ namespace OpenSim.Framework.Servers.HttpServer
 //                StreamReader reader = new StreamReader(stream);
 //                m_log.DebugFormat("[REST OBJECT POSTER RESPONSE]: Received {0}", reader.ReadToEnd());
 
-                deserial = (TResponse) deserializer.Deserialize(stream);
-
-                if (deserial != null && ResponseCallback != null)
+                if (stream != null)
                 {
-                    ResponseCallback(deserial);
+                    deserial = (TResponse) deserializer.Deserialize(stream);
+
+                    if (deserial != null && ResponseCallback != null)
+                    {
+                        ResponseCallback(deserial);
+                    }
                 }
             }
         }

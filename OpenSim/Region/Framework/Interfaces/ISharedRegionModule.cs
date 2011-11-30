@@ -25,15 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ISharedRegionModule : IRegionModuleBase
     {
         /// <summary>
-        /// This is called exactly once after all the shared region-modules have been instanciated and
-        /// <see cref="IRegionModuleBase.Initialise"/>d.
+        ///   This is called exactly once after all the shared region-modules have been instanciated and
+        ///   <see cref = "IRegionModuleBase.Initialise" />d.
         /// </summary>
         void PostInitialise();
     }

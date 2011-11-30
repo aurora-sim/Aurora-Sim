@@ -25,18 +25,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
+using System.Diagnostics;
 using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class PWSMemoryMonitor : IMonitor
+    internal class PWSMemoryMonitor : IMonitor
     {
         #region Implementation of IMonitor
 
         public double GetValue()
         {
-            return System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64;
+            return Process.GetCurrentProcess().PrivateMemorySize64;
         }
 
         public string GetName()
@@ -46,10 +46,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)(GetValue() / (1024 * 1024)) + "MB (Global)";
+            return (int) (GetValue()/(1024*1024)) + "MB (Global)";
         }
 
-        public void ResetStats ()
+        public void ResetStats()
         {
         }
 

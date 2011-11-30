@@ -25,24 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Reflection;
-using log4net;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
+using log4net;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class Host : System.MarshalByRefObject, IHost
+    internal class Host : MarshalByRefObject, IHost
     {
-        private readonly IObject m_obj;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly IGraphics m_graphics;
         private readonly IExtension m_extend;
-        private readonly MicroScheduler m_threader = new MicroScheduler ();
+        private readonly IGraphics m_graphics;
+        private readonly IObject m_obj;
+        private readonly MicroScheduler m_threader = new MicroScheduler();
         //private Scene m_scene;
 
-        public Host (IObject m_obj, IScene m_scene, IExtension m_extend)
+        public Host(IObject m_obj, IScene m_scene, IExtension m_extend)
         {
             this.m_obj = m_obj;
             this.m_extend = m_extend;
@@ -52,10 +51,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             m_scene.EventManager.OnFrame += EventManager_OnFrame;
         }
 
-        private void EventManager_OnFrame ()
-        {
-            m_threader.Tick (1000);
-        }
+        #region IHost Members
 
         public IObject Object
         {
@@ -80,6 +76,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public IMicrothreader Microthreads
         {
             get { return m_threader; }
+        }
+
+        #endregion
+
+        private void EventManager_OnFrame()
+        {
+            m_threader.Tick(1000);
         }
     }
 }

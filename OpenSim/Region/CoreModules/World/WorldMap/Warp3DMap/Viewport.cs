@@ -33,21 +33,22 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 {
     public class Viewport
     {
-        private const float DEG_TO_RAD = (float)Math.PI / 180f;
+        private const float DEG_TO_RAD = (float) Math.PI/180f;
         private static readonly Vector3 UP_DIRECTION = Vector3.UnitZ;
 
-        public Vector3 Position;
-        public Vector3 LookDirection;
-        public float FieldOfView;
-        public float NearPlaneDistance;
         public float FarPlaneDistance;
-        public int Width;
+        public float FieldOfView;
         public int Height;
-        public bool Orthographic;
-        public float OrthoWindowWidth;
+        public Vector3 LookDirection;
+        public float NearPlaneDistance;
         public float OrthoWindowHeight;
+        public float OrthoWindowWidth;
+        public bool Orthographic;
+        public Vector3 Position;
+        public int Width;
 
-        public Viewport(Vector3 position, Vector3 lookDirection, float fieldOfView, float farPlaneDist, float nearPlaneDist, int width, int height)
+        public Viewport(Vector3 position, Vector3 lookDirection, float fieldOfView, float farPlaneDist,
+                        float nearPlaneDist, int width, int height)
         {
             // Perspective projection mode
             Position = position;
@@ -59,7 +60,8 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             Height = height;
         }
 
-        public Viewport(Vector3 position, Vector3 lookDirection, float farPlaneDist, float nearPlaneDist, int width, int height, float orthoWindowWidth, float orthoWindowHeight)
+        public Viewport(Vector3 position, Vector3 lookDirection, float farPlaneDist, float nearPlaneDist, int width,
+                        int height, float orthoWindowWidth, float orthoWindowHeight)
         {
             // Orthographic projection mode
             Position = position;
@@ -76,8 +78,8 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
         public Point VectorToScreen(Vector3 v)
         {
             Matrix4 m = GetWorldToViewportMatrix();
-            Vector3 screenPoint = v * m;
-            return new Point((int)screenPoint.X, (int)screenPoint.Y);
+            Vector3 screenPoint = v*m;
+            return new Point((int) screenPoint.X, (int) screenPoint.Y);
         }
 
         public Matrix4 GetWorldToViewportMatrix()
@@ -113,16 +115,16 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
         public Matrix4 GetPerspectiveProjectionMatrix()
         {
-            float aspectRatio = (float)Width / (float)Height;
+            float aspectRatio = Width/(float) Height;
 
-            float hFoV = FieldOfView * DEG_TO_RAD;
+            float hFoV = FieldOfView*DEG_TO_RAD;
             float zn = NearPlaneDistance;
             float zf = FarPlaneDistance;
 
-            float xScale = 1f / (float)Math.Tan(hFoV / 2f);
-            float yScale = aspectRatio * xScale;
-            float m33 = (zf == double.PositiveInfinity) ? -1 : (zf / (zn - zf));
-            float m43 = zn * m33;
+            float xScale = 1f/(float) Math.Tan(hFoV/2f);
+            float yScale = aspectRatio*xScale;
+            float m33 = (zf == double.PositiveInfinity) ? -1 : (zf/(zn - zf));
+            float m43 = zn*m33;
 
             return new Matrix4(
                 xScale, 0f, 0f, 0f,
@@ -138,20 +140,20 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             float zn = NearPlaneDistance;
             float zf = FarPlaneDistance;
 
-            float m33 = 1 / (zn - zf);
-            float m43 = zn * m33;
+            float m33 = 1/(zn - zf);
+            float m43 = zn*m33;
 
             return new Matrix4(
-                2f / w, 0f, 0f, 0f,
-                0f, 2f / h, 0f, 0f,
+                2f/w, 0f, 0f, 0f,
+                0f, 2f/h, 0f, 0f,
                 0f, 0f, m33, 0f,
                 0f, 0f, m43, 1f);
         }
 
         public Matrix4 GetViewportMatrix()
         {
-            float scaleX = (float)Width * 0.5f;
-            float scaleY = (float)Height * 0.5f;
+            float scaleX = Width*0.5f;
+            float scaleY = Height*0.5f;
             float offsetX = 0f + scaleX;
             float offsetY = 0f + scaleY;
 

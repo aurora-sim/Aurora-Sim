@@ -26,136 +26,135 @@
  */
 
 using System.Collections.Generic;
-using OpenMetaverse;
-using OpenSim.Framework;
 using Nini.Config;
+using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
     public interface ISimulationDataStore
     {
         /// <summary>
-        /// Initialises the data storage engine
+        ///   The name of the plugin
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        ///   Whether we should save backups currently or not
+        /// </summary>
+        bool SaveBackups { get; set; }
+
+        /// <summary>
+        ///   Initialises the data storage engine
         /// </summary>
         void Initialise();
 
         /// <summary>
-        /// Entirely removes the region, this includes everything about the region
+        ///   Entirely removes the region, this includes everything about the region
         /// </summary>
-        /// <param name="uuid"></param>
-        /// <param name="regionUUID"></param>
+        /// <param name = "uuid"></param>
+        /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        void RemoveRegion (UUID regionUUID);
+        void RemoveRegion(UUID regionUUID);
 
         /// <summary>
-        /// Something has changed in the region, just alerting us to the change if we need to do anything
+        ///   Something has changed in the region, just alerting us to the change if we need to do anything
         /// </summary>
-        void Tainted ();
+        void Tainted();
 
         /// <summary>
-        /// Load persisted objects from region storage.
+        ///   Load persisted objects from region storage.
         /// </summary>
-        /// <param name="regionUUID">the Region UUID</param>
+        /// <param name = "regionUUID">the Region UUID</param>
         /// <returns>List of loaded groups</returns>
-        List<ISceneEntity> LoadObjects (IScene scene);
+        List<ISceneEntity> LoadObjects(IScene scene);
 
         /// <summary>
-        /// Load the latest terrain revision from region storage
+        ///   Load the latest terrain revision from region storage
         /// </summary>
-        /// <param name="regionID">the region UUID</param>
+        /// <param name = "regionID">the region UUID</param>
         /// <returns>Heightfield data</returns>
         short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        /// Load the latest water revision from region storage
+        ///   Load the latest water revision from region storage
         /// </summary>
-        /// <param name="scene">the region</param>
+        /// <param name = "scene">the region</param>
         /// <returns>Heightfield data</returns>
         short[] LoadWater(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
 
         /// <summary>
-        /// Load all parcels from the database
+        ///   Load all parcels from the database
         /// </summary>
-        /// <param name="regionUUID"></param>
+        /// <param name = "regionUUID"></param>
         /// <returns></returns>
         List<LandData> LoadLandObjects(UUID regionUUID);
 
         /// <summary>
-        /// Shutdown and exit the module
+        ///   Shutdown and exit the module
         /// </summary>
-        void Shutdown ();
+        void Shutdown();
 
         /// <summary>
-        /// The name of the plugin
+        ///   Make a copy of the given data store
         /// </summary>
-        string Name { get; }
+        ISimulationDataStore Copy();
 
         /// <summary>
-        /// Whether we should save backups currently or not
+        ///   Rename any backups that we might have to a new regionName
         /// </summary>
-        bool SaveBackups { get; set;}
-
-        /// <summary>
-        /// Make a copy of the given data store
-        /// </summary>
-        ISimulationDataStore Copy ();
-
-        /// <summary>
-        /// Rename any backups that we might have to a new regionName
-        /// </summary>
-        /// <param name="oldRegionName"></param>
-        /// <param name="newRegionName"></param>
-        /// <param name="configSource"></param>
-        void RenameBackupFiles (string oldRegionName, string newRegionName, IConfigSource configSource);
+        /// <param name = "oldRegionName"></param>
+        /// <param name = "newRegionName"></param>
+        /// <param name = "configSource"></param>
+        void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource);
     }
-    
+
     /// <summary>
-    /// Legacy component so that we can load from OpenSim and older Aurora databases
+    ///   Legacy component so that we can load from OpenSim and older Aurora databases
     /// </summary>
     public interface ILegacySimulationDataStore
     {
         /// <summary>
-        /// Initialises the data storage engine
-        /// </summary>
-        /// <param name="filename">The file to save the database to (may not be applicable).  Alternatively,
-        /// a connection string for the database</param>
-        void Initialise (string filename);
-
-        /// <summary>
-        /// Dispose the database
-        /// </summary>
-        void Dispose ();
-
-        /// <summary>
-        /// Load persisted objects from region storage.
-        /// </summary>
-        /// <param name="regionUUID">the Region UUID</param>
-        /// <returns>List of loaded groups</returns>
-        List<ISceneEntity> LoadObjects (UUID regionUUID, IScene scene);
-
-        /// <summary>
-        /// Load the latest terrain revision from region storage
-        /// </summary>
-        /// <param name="regionID">the region UUID</param>
-        /// <returns>Heightfield data</returns>
-        short[] LoadTerrain (IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
-
-        /// <summary>
-        /// Load all parcels from the database
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        /// <returns></returns>
-        List<LandData> LoadLandObjects (UUID regionUUID);
-
-        /// <summary>
-        /// Removes all parcels assocated with the given region
-        /// </summary>
-        /// <param name="regionUUID"></param>
-        void RemoveAllLandObjects(UUID regionUUID);
-
-        /// <summary>
-        /// The name of the plugin
+        ///   The name of the plugin
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        ///   Initialises the data storage engine
+        /// </summary>
+        /// <param name = "filename">The file to save the database to (may not be applicable).  Alternatively,
+        ///   a connection string for the database</param>
+        void Initialise(string filename);
+
+        /// <summary>
+        ///   Dispose the database
+        /// </summary>
+        void Dispose();
+
+        /// <summary>
+        ///   Load persisted objects from region storage.
+        /// </summary>
+        /// <param name = "regionUUID">the Region UUID</param>
+        /// <returns>List of loaded groups</returns>
+        List<ISceneEntity> LoadObjects(UUID regionUUID, IScene scene);
+
+        /// <summary>
+        ///   Load the latest terrain revision from region storage
+        /// </summary>
+        /// <param name = "regionID">the region UUID</param>
+        /// <returns>Heightfield data</returns>
+        short[] LoadTerrain(IScene scene, bool RevertMap, int RegionSizeX, int RegionSizeY);
+
+        /// <summary>
+        ///   Load all parcels from the database
+        /// </summary>
+        /// <param name = "regionUUID"></param>
+        /// <returns></returns>
+        List<LandData> LoadLandObjects(UUID regionUUID);
+
+        /// <summary>
+        ///   Removes all parcels assocated with the given region
+        /// </summary>
+        /// <param name = "regionUUID"></param>
+        void RemoveAllLandObjects(UUID regionUUID);
     }
 }

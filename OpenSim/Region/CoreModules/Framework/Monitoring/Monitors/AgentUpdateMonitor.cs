@@ -26,17 +26,13 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
     public class AgentUpdateMonitor : IMonitor, IAgentUpdateMonitor
     {
-        private int agentUpdates = 0;
-        private int agentTime = 0;
-
-        public int AgentFrameTime { get { return agentTime; } }
-        public int AgentUpdates { get { return agentUpdates; } }
+        private int agentTime;
+        private int agentUpdates;
 
         public AgentUpdateMonitor(IScene scene)
         {
@@ -56,10 +52,22 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + " updates/sec";
+            return (int) GetValue() + " updates/sec";
         }
 
         #endregion
+
+        #region IAgentUpdateMonitor Members
+
+        public int AgentFrameTime
+        {
+            get { return agentTime; }
+        }
+
+        public int AgentUpdates
+        {
+            get { return agentUpdates; }
+        }
 
         public void AddAgentUpdates(int value)
         {
@@ -71,10 +79,16 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             agentTime += value;
         }
 
+        #endregion
+
+        #region IMonitor Members
+
         public void ResetStats()
         {
             agentUpdates = 0;
             agentTime = 0;
         }
+
+        #endregion
     }
 }

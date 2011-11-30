@@ -29,15 +29,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
 using log4net;
-using Nini.Config;
 
 namespace Aurora.Modules
 {
@@ -47,6 +44,7 @@ namespace Aurora.Modules
 
         private static readonly ILog m_log
             = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private bool m_UseSelectionParticles = true;
 
         public bool UseSelectionParticles
@@ -71,7 +69,7 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
@@ -79,11 +77,11 @@ namespace Aurora.Modules
             scene.EventManager.OnRemovePresence += EventManager_OnRemovePresence;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             scene.EventManager.OnNewClient -= EventManager_OnNewClient;
             scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
@@ -125,51 +123,52 @@ namespace Aurora.Modules
             client.OnViewerEffect -= ProcessViewerEffect;
         }
 
-        protected void EventManager_OnNewPresence (IScenePresence presence)
+        protected void EventManager_OnNewPresence(IScenePresence presence)
         {
-            presence.RegisterModuleInterface<PerClientSelectionParticles>(new PerClientSelectionParticles(presence, this));
+            presence.RegisterModuleInterface(new PerClientSelectionParticles(presence, this));
         }
 
-        protected void EventManager_OnRemovePresence (IScenePresence presence)
+        protected void EventManager_OnRemovePresence(IScenePresence presence)
         {
             PerClientSelectionParticles particles = presence.RequestModuleInterface<PerClientSelectionParticles>();
             if (particles != null)
             {
                 particles.Close();
-                presence.UnregisterModuleInterface<PerClientSelectionParticles>(particles);
+                presence.UnregisterModuleInterface(particles);
             }
         }
 
         /// <summary>
-        /// Invoked when the client requests a prim.
+        ///   Invoked when the client requests a prim.
         /// </summary>
-        /// <param name="primLocalID"></param>
-        /// <param name="cacheMissType">0 => full object (viewer doesn't have it)
-        /// 1 => CRC mismatch only</param>
-        /// <param name="remoteClient"></param>
+        /// <param name = "primLocalID"></param>
+        /// <param name = "cacheMissType">0 => full object (viewer doesn't have it)
+        ///   1 => CRC mismatch only</param>
+        /// <param name = "remoteClient"></param>
         protected void RequestPrim(uint primLocalID, byte cacheMissType, IClientAPI remoteClient)
         {
             IEntity entity;
-            if (remoteClient.Scene.Entities.TryGetChildPrimParent (primLocalID, out entity))
+            if (remoteClient.Scene.Entities.TryGetChildPrimParent(primLocalID, out entity))
             {
                 if (entity is ISceneEntity)
                 {
-                    IScenePresence SP = remoteClient.Scene.GetScenePresence (remoteClient.AgentId);
+                    IScenePresence SP = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
                     //We send a forced because we MUST send a full update, as the client doesn't have this prim
-                    ((ISceneEntity)entity).ScheduleGroupUpdateToAvatar (SP, PrimUpdateFlags.ForcedFullUpdate);
-                    IObjectCache cache = remoteClient.Scene.RequestModuleInterface<IObjectCache> ();
+                    ((ISceneEntity) entity).ScheduleGroupUpdateToAvatar(SP, PrimUpdateFlags.ForcedFullUpdate);
+                    IObjectCache cache = remoteClient.Scene.RequestModuleInterface<IObjectCache>();
                     if (cache != null)
-                        cache.RemoveObject (remoteClient.AgentId, entity.LocalId, cacheMissType);
-                    m_log.WarnFormat ("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID, cacheMissType, ((ISceneEntity)entity).RootChild.CRC);
+                        cache.RemoveObject(remoteClient.AgentId, entity.LocalId, cacheMissType);
+                    m_log.WarnFormat("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID,
+                                     cacheMissType, ((ISceneEntity) entity).RootChild.CRC);
                 }
             }
         }
 
         /// <summary>
-        /// Invoked when the client selects a prim.
+        ///   Invoked when the client selects a prim.
         /// </summary>
-        /// <param name="primLocalID"></param>
-        /// <param name="remoteClient"></param>
+        /// <param name = "primLocalID"></param>
+        /// <param name = "remoteClient"></param>
         protected void SelectPrim(List<uint> primLocalIDs, IClientAPI remoteClient)
         {
             IScene scene = remoteClient.Scene;
@@ -180,9 +179,9 @@ namespace Aurora.Modules
                 ISceneChildEntity entity = null;
                 if (scene.SceneGraph.TryGetPart(primLocalID, out entity))
                 {
-                    if(entity is ISceneChildEntity)
+                    if (entity is ISceneChildEntity)
                     {
-                        prim = entity as ISceneChildEntity;
+                        prim = entity;
                         // changed so that we send select to all the indicated prims
                         // also to root prim (done in prim.IsSelected)
                         // so "edit link parts" keep the object select and not moved by physics
@@ -203,23 +202,24 @@ namespace Aurora.Modules
 
                 if (entity != null)
                 {
-                    if(!EntitiesToUpdate.Contains(entity))
+                    if (!EntitiesToUpdate.Contains(entity))
                         EntitiesToUpdate.Add(entity);
                 }
                 else
                 {
-                    m_log.ErrorFormat ("[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.", primLocalID);
+                    m_log.ErrorFormat("[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.",
+                                      primLocalID);
                     //Send a kill packet to the viewer so it doesn't come up again
-                    remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] { primLocalID });
+                    remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] {primLocalID});
                 }
             }
             IScenePresence SP;
-            scene.TryGetScenePresence (remoteClient.AgentId, out SP);
+            scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             if (SP == null)
                 return;
             if (EntitiesToUpdate.Count != 0)
             {
-                SP.SceneViewer.QueuePartsForPropertiesUpdate (EntitiesToUpdate.ToArray ());
+                SP.SceneViewer.QueuePartsForPropertiesUpdate(EntitiesToUpdate.ToArray());
             }
             PerClientSelectionParticles selection = SP.RequestModuleInterface<PerClientSelectionParticles>();
             if (selection != null)
@@ -230,14 +230,14 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Handle the deselection of a prim from the client.
+        ///   Handle the deselection of a prim from the client.
         /// </summary>
-        /// <param name="primLocalID"></param>
-        /// <param name="remoteClient"></param>
+        /// <param name = "primLocalID"></param>
+        /// <param name = "remoteClient"></param>
         protected void DeselectPrim(uint primLocalID, IClientAPI remoteClient)
         {
             IScene scene = remoteClient.Scene;
-            ISceneChildEntity part = scene.GetSceneObjectPart (primLocalID);
+            ISceneChildEntity part = scene.GetSceneObjectPart(primLocalID);
             //Do this first... As if its null, this wont be fired.
             IScenePresence SP;
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
@@ -268,7 +268,8 @@ namespace Aurora.Modules
             //            part.ParentGroup.IsSelected = false;
             part.IsSelected = false;
 
-            if (!part.ParentEntity.IsAttachment) //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
+            if (!part.ParentEntity.IsAttachment)
+                //This NEEDS to be done because otherwise rotationalVelocity will break! Only for the editing av as the client stops the rotation for them when they are in edit
             {
                 if (part.AngularVelocity != Vector3.Zero && !part.ParentEntity.IsDeleted)
                     SP.SceneViewer.QueuePartForUpdate(part, PrimUpdateFlags.ForcedFullUpdate);
@@ -286,17 +287,19 @@ namespace Aurora.Modules
             scene.TryGetScenePresence(remoteClient.AgentId, out SP);
             for (int i = 0; i < args.Count; i++)
             {
-                ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
-                effect.AgentID = args[i].AgentID;
-                effect.Color = args[i].Color;
-                effect.Duration = args[i].Duration;
-                effect.ID = args[i].ID;
-                effect.Type = args[i].Type;
-                effect.TypeData = args[i].TypeData;
+                ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock
+                                                            {
+                                                                AgentID = args[i].AgentID,
+                                                                Color = args[i].Color,
+                                                                Duration = args[i].Duration,
+                                                                ID = args[i].ID,
+                                                                Type = args[i].Type,
+                                                                TypeData = args[i].TypeData
+                                                            };
                 effectBlockArray[i] = effect;
                 //Save the color
-                if (effect.Type == (int)EffectType.Beam || effect.Type == (int)EffectType.Point
-                    || effect.Type == (int)EffectType.Sphere)
+                if (effect.Type == (int) EffectType.Beam || effect.Type == (int) EffectType.Point
+                    || effect.Type == (int) EffectType.Sphere)
                 {
                     Color4 color = new Color4(effect.Color, 0, false);
                     if (SP != null && !(color.R == 0 && color.G == 0 && color.B == 0))
@@ -309,10 +312,9 @@ namespace Aurora.Modules
                     }
                 }
 
-                foreach (IScenePresence client in scene.GetScenePresences ())
+                foreach (IScenePresence client in scene.GetScenePresences().Where(client => client.ControllingClient.AgentId != remoteClient.AgentId))
                 {
-                    if (client.ControllingClient.AgentId != remoteClient.AgentId)
-                        client.ControllingClient.SendViewerEffect(effectBlockArray);
+                    client.ControllingClient.SendViewerEffect(effectBlockArray);
                 }
             }
         }
@@ -323,30 +325,19 @@ namespace Aurora.Modules
 
         protected class PerClientSelectionParticles
         {
-            protected IScenePresence m_presence;
-            protected SelectionModule m_module;
-            protected bool m_IsSelecting = false;
-            protected ISceneChildEntity m_SelectedUUID = null;
             protected byte[] m_EffectColor = new Color4(1, 0.01568628f, 0, 1).GetBytes();
-            protected int m_effectsLastSent = 0;
+            protected bool m_IsSelecting;
+            protected ISceneChildEntity m_SelectedUUID;
+            protected int m_effectsLastSent;
+            protected SelectionModule m_module;
+            protected IScenePresence m_presence;
 
-            public PerClientSelectionParticles (IScenePresence presence, SelectionModule mod)
+            public PerClientSelectionParticles(IScenePresence presence, SelectionModule mod)
             {
                 m_presence = presence;
                 m_module = mod;
                 //Hook up to onFrame so that we can send the updates
                 m_presence.Scene.EventManager.OnFrame += EventManager_OnFrame;
-            }
-
-            public void Close()
-            {
-                m_SelectedUUID = null;
-                m_IsSelecting = false;
-                m_module = null;
-                m_EffectColor = null;
-                if(m_presence != null)
-                    m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
-                m_presence = null;
             }
 
             public ISceneChildEntity SelectedUUID
@@ -367,12 +358,25 @@ namespace Aurora.Modules
                 set { m_IsSelecting = value; }
             }
 
+            public void Close()
+            {
+                m_SelectedUUID = null;
+                m_IsSelecting = false;
+                m_module = null;
+                m_EffectColor = null;
+                if (m_presence != null)
+                    m_presence.Scene.EventManager.OnFrame -= EventManager_OnFrame;
+                m_presence = null;
+            }
+
             protected void EventManager_OnFrame()
             {
                 if (m_presence == null)
-                    return; //We can't deregister ourselves... our reference is lost... so just hope we stop getting called soon
+                    return;
+                        //We can't deregister ourselves... our reference is lost... so just hope we stop getting called soon
                 if (!m_presence.IsChildAgent && m_module.UseSelectionParticles && (m_effectsLastSent == 0 ||
-                    Util.EnvironmentTickCountSubtract(m_effectsLastSent) > 900))
+                                                                                   Util.EnvironmentTickCountSubtract(
+                                                                                       m_effectsLastSent) > 900))
                 {
                     SendViewerEffects();
                     m_effectsLastSent = Util.EnvironmentTickCount();
@@ -380,7 +384,7 @@ namespace Aurora.Modules
             }
 
             /// <summary>
-            /// This sends the little particles to the client if they are selecting something or such
+            ///   This sends the little particles to the client if they are selecting something or such
             /// </summary>
             protected void SendViewerEffects()
             {
@@ -396,27 +400,28 @@ namespace Aurora.Modules
 
                 ViewerEffectPacket.EffectBlock[] effectBlockArray = new ViewerEffectPacket.EffectBlock[1];
 
-                ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock();
-                effect.AgentID = m_presence.UUID;
-                effect.Color = EffectColor;
-                effect.Duration = 0.9f;
-                effect.ID = UUID.Random(); //This seems to be what is passed by SL when its send from the server
-                effect.Type = (int)EffectType.Beam; //Bean is the line from hand to object
+                ViewerEffectPacket.EffectBlock effect = new ViewerEffectPacket.EffectBlock
+                                                            {
+                                                                AgentID = m_presence.UUID,
+                                                                Color = EffectColor,
+                                                                Duration = 0.9f,
+                                                                ID = UUID.Random(),
+                                                                Type = (int) EffectType.Beam
+                                                            };
+                //This seems to be what is passed by SL when its send from the server
+                //Bean is the line from hand to object
 
                 byte[] part = new byte[56];
-                m_presence.UUID.ToBytes(part, 0);//UUID of av first
-                SOP.UUID.ToBytes(part, 16);//UUID of object
-                SOP.AbsolutePosition.ToBytes(part, 32);//position of object first
+                m_presence.UUID.ToBytes(part, 0); //UUID of av first
+                SOP.UUID.ToBytes(part, 16); //UUID of object
+                SOP.AbsolutePosition.ToBytes(part, 32); //position of object first
 
                 effect.TypeData = part;
                 effectBlockArray[0] = effect;
 
                 m_presence.Scene.ForEachClient(
-                    delegate(IClientAPI client)
-                    {
-                        client.SendViewerEffect(effectBlockArray);
-                    }
-                );
+                    client => client.SendViewerEffect(effectBlockArray)
+                    );
             }
         }
 

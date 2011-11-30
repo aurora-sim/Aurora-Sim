@@ -32,8 +32,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class Rect3d
     {
-        public float[] mMin = new float[3];
         public float[] mMax = new float[3];
+        public float[] mMin = new float[3];
 
         public Rect3d()
         {
@@ -83,13 +83,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
     {
         public static bool computeSplitPlane(List<float3> vertices, List<int> indices, ref float4 plane)
         {
-            float[] bmin = { Single.MaxValue, Single.MaxValue, Single.MaxValue };
-            float[] bmax = { Single.MinValue, Single.MinValue, Single.MinValue };
+            float[] bmin = {Single.MaxValue, Single.MaxValue, Single.MaxValue};
+            float[] bmax = {Single.MinValue, Single.MinValue, Single.MinValue};
 
-            for (int i = 0; i < vertices.Count; i++)
+            foreach (float3 p in vertices)
             {
-                float3 p = vertices[i];
-
                 if (p[0] < bmin[0])
                     bmin[0] = p[0];
                 if (p[1] < bmin[1])
@@ -129,9 +127,9 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float[] p2 = new float[3];
             float[] p3 = new float[3];
 
-            p3[0] = p2[0] = p1[0] = bmin[0] + dx * 0.5f;
-            p3[1] = p2[1] = p1[1] = bmin[1] + dy * 0.5f;
-            p3[2] = p2[2] = p1[2] = bmin[2] + dz * 0.5f;
+            p3[0] = p2[0] = p1[0] = bmin[0] + dx*0.5f;
+            p3[1] = p2[1] = p1[1] = bmin[1] + dy*0.5f;
+            p3[2] = p2[2] = p1[2] = bmin[2] + dz*0.5f;
 
             Rect3d b = new Rect3d(bmin, bmax);
 
@@ -207,11 +205,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float wy = (A[1] - B[1]);
             float wz = (A[2] - B[2]);
 
-            float vw_x = vy * wz - vz * wy;
-            float vw_y = vz * wx - vx * wz;
-            float vw_z = vx * wy - vy * wx;
+            float vw_x = vy*wz - vz*wy;
+            float vw_y = vz*wx - vx*wz;
+            float vw_z = vx*wy - vy*wx;
 
-            float mag = (float)Math.Sqrt((vw_x * vw_x) + (vw_y * vw_y) + (vw_z * vw_z));
+            float mag = (float) Math.Sqrt((vw_x*vw_x) + (vw_y*vw_y) + (vw_z*vw_z));
 
             if (mag < 0.000001f)
             {
@@ -219,14 +217,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
             else
             {
-                mag = 1.0f / mag;
+                mag = 1.0f/mag;
             }
 
-            float x = vw_x * mag;
-            float y = vw_y * mag;
-            float z = vw_z * mag;
+            float x = vw_x*mag;
+            float y = vw_y*mag;
+            float z = vw_z*mag;
 
-            float D = 0.0f - ((x * A[0]) + (y * A[1]) + (z * A[2]));
+            float D = 0.0f - ((x*A[0]) + (y*A[1]) + (z*A[2]));
 
             plane.x = x;
             plane.y = y;

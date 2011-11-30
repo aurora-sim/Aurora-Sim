@@ -41,8 +41,8 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
         private const int N = 0x1000;
 
         private static readonly int[] p = new int[SAMPLE_SIZE + SAMPLE_SIZE + 2];
-        private static readonly float[,] g3 = new float[SAMPLE_SIZE + SAMPLE_SIZE + 2, 3];
-        private static readonly float[,] g2 = new float[SAMPLE_SIZE + SAMPLE_SIZE + 2, 2];
+        private static readonly float[,] g3 = new float[SAMPLE_SIZE + SAMPLE_SIZE + 2,3];
+        private static readonly float[,] g2 = new float[SAMPLE_SIZE + SAMPLE_SIZE + 2,2];
         private static readonly float[] g1 = new float[SAMPLE_SIZE + SAMPLE_SIZE + 2];
 
         static Perlin()
@@ -53,21 +53,21 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             for (i = 0; i < B; i++)
             {
                 p[i] = i;
-                g1[i] = (float)((rng.Next() % (B + B)) - B) / B;
+                g1[i] = (float) ((rng.Next()%(B + B)) - B)/B;
 
                 for (j = 0; j < 2; j++)
-                    g2[i, j] = (float)((rng.Next() % (B + B)) - B) / B;
+                    g2[i, j] = (float) ((rng.Next()%(B + B)) - B)/B;
                 normalize2(g2, i);
 
                 for (j = 0; j < 3; j++)
-                    g3[i, j] = (float)((rng.Next() % (B + B)) - B) / B;
+                    g3[i, j] = (float) ((rng.Next()%(B + B)) - B)/B;
                 normalize3(g3, i);
             }
 
             while (--i > 0)
             {
                 k = p[i];
-                p[i] = p[j = rng.Next() % B];
+                p[i] = p[j = rng.Next()%B];
                 p[j] = k;
             }
 
@@ -88,15 +88,15 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             float rx0, rx1, sx, t, u, v;
 
             t = arg + N;
-            bx0 = ((int)t) & BM;
+            bx0 = ((int) t) & BM;
             bx1 = (bx0 + 1) & BM;
-            rx0 = t - (int)t;
+            rx0 = t - (int) t;
             rx1 = rx0 - 1f;
 
             sx = s_curve(rx0);
 
-            u = rx0 * g1[p[bx0]];
-            v = rx1 * g1[p[bx1]];
+            u = rx0*g1[p[bx0]];
+            v = rx1*g1[p[bx1]];
 
             return Utils.Lerp(u, v, sx);
         }
@@ -108,15 +108,15 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             int i, j;
 
             t = x + N;
-            bx0 = ((int)t) & BM;
+            bx0 = ((int) t) & BM;
             bx1 = (bx0 + 1) & BM;
-            rx0 = t - (int)t;
+            rx0 = t - (int) t;
             rx1 = rx0 - 1f;
 
             t = y + N;
-            by0 = ((int)t) & BM;
+            by0 = ((int) t) & BM;
             by1 = (by0 + 1) & BM;
-            ry0 = t - (int)t;
+            ry0 = t - (int) t;
             ry1 = ry0 - 1f;
 
             i = p[bx0];
@@ -130,12 +130,12 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             sx = s_curve(rx0);
             sy = s_curve(ry0);
 
-            u = rx0 * g2[b00, 0] + ry0 * g2[b00, 1];
-            v = rx1 * g2[b10, 0] + ry0 * g2[b10, 1];
+            u = rx0*g2[b00, 0] + ry0*g2[b00, 1];
+            v = rx1*g2[b10, 0] + ry0*g2[b10, 1];
             a = Utils.Lerp(u, v, sx);
 
-            u = rx0 * g2[b01, 0] + ry1 * g2[b01, 1];
-            v = rx1 * g2[b11, 0] + ry1 * g2[b11, 1];
+            u = rx0*g2[b01, 0] + ry1*g2[b01, 1];
+            v = rx1*g2[b11, 0] + ry1*g2[b11, 1];
             b = Utils.Lerp(u, v, sx);
 
             return Utils.Lerp(a, b, sy);
@@ -148,21 +148,21 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             int i, j;
 
             t = x + N;
-            bx0 = ((int)t) & BM;
+            bx0 = ((int) t) & BM;
             bx1 = (bx0 + 1) & BM;
-            rx0 = t - (int)t;
+            rx0 = t - (int) t;
             rx1 = rx0 - 1f;
 
             t = y + N;
-            by0 = ((int)t) & BM;
+            by0 = ((int) t) & BM;
             by1 = (by0 + 1) & BM;
-            ry0 = t - (int)t;
+            ry0 = t - (int) t;
             ry1 = ry0 - 1f;
 
             t = z + N;
-            bz0 = ((int)t) & BM;
+            bz0 = ((int) t) & BM;
             bz1 = (bz0 + 1) & BM;
-            rz0 = t - (int)t;
+            rz0 = t - (int) t;
             rz1 = rz0 - 1f;
 
             i = p[bx0];
@@ -177,22 +177,22 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
             sy = s_curve(ry0);
             sz = s_curve(rz0);
 
-            u = rx0 * g3[b00 + bz0, 0] + ry0 * g3[b00 + bz0, 1] + rz0 * g3[b00 + bz0, 2];
-            v = rx1 * g3[b10 + bz0, 0] + ry0 * g3[b10 + bz0, 1] + rz0 * g3[b10 + bz0, 2];
+            u = rx0*g3[b00 + bz0, 0] + ry0*g3[b00 + bz0, 1] + rz0*g3[b00 + bz0, 2];
+            v = rx1*g3[b10 + bz0, 0] + ry0*g3[b10 + bz0, 1] + rz0*g3[b10 + bz0, 2];
             a = Utils.Lerp(u, v, t);
 
-            u = rx0 * g3[b01 + bz0, 0] + ry1 * g3[b01 + bz0, 1] + rz0 * g3[b01 + bz0, 2];
-            v = rx1 * g3[b11 + bz0, 0] + ry1 * g3[b11 + bz0, 1] + rz0 * g3[b11 + bz0, 2];
+            u = rx0*g3[b01 + bz0, 0] + ry1*g3[b01 + bz0, 1] + rz0*g3[b01 + bz0, 2];
+            v = rx1*g3[b11 + bz0, 0] + ry1*g3[b11 + bz0, 1] + rz0*g3[b11 + bz0, 2];
             b = Utils.Lerp(u, v, t);
 
             c = Utils.Lerp(a, b, sy);
 
-            u = rx0 * g3[b00 + bz1, 0] + ry0 * g3[b00 + bz1, 1] + rz1 * g3[b00 + bz1, 2];
-            v = rx1 * g3[b10 + bz1, 0] + ry0 * g3[b10 + bz1, 1] + rz1 * g3[b10 + bz1, 2];
+            u = rx0*g3[b00 + bz1, 0] + ry0*g3[b00 + bz1, 1] + rz1*g3[b00 + bz1, 2];
+            v = rx1*g3[b10 + bz1, 0] + ry0*g3[b10 + bz1, 1] + rz1*g3[b10 + bz1, 2];
             a = Utils.Lerp(u, v, t);
 
-            u = rx0 * g3[b01 + bz1, 0] + ry1 * g3[b01 + bz1, 1] + rz1 * g3[b01 + bz1, 2];
-            v = rx1 * g3[b11 + bz1, 0] + ry1 * g3[b11 + bz1, 1] + rz1 * g3[b11 + bz1, 2];
+            u = rx0*g3[b01 + bz1, 0] + ry1*g3[b01 + bz1, 1] + rz1*g3[b01 + bz1, 2];
+            v = rx1*g3[b11 + bz1, 0] + ry1*g3[b11 + bz1, 1] + rz1*g3[b11 + bz1, 2];
             b = Utils.Lerp(u, v, t);
 
             d = Utils.Lerp(a, b, sy);
@@ -206,8 +206,8 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             for (t = 0f; freq >= 1f; freq *= 0.5f)
             {
-                v = freq * x;
-                t += noise1(v) / freq;
+                v = freq*x;
+                t += noise1(v)/freq;
             }
             return t;
         }
@@ -219,9 +219,9 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             for (t = 0f; freq >= 1f; freq *= 0.5f)
             {
-                vec.X = freq * x;
-                vec.Y = freq * y;
-                t += noise2(vec.X, vec.Y) / freq;
+                vec.X = freq*x;
+                vec.Y = freq*y;
+                t += noise2(vec.X, vec.Y)/freq;
             }
             return t;
         }
@@ -233,10 +233,10 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
             for (t = 0f; freq >= 1f; freq *= 0.5f)
             {
-                vec.X = freq * x;
-                vec.Y = freq * y;
-                vec.Z = freq * z;
-                t += noise3(vec.X, vec.Y, vec.Z) / freq;
+                vec.X = freq*x;
+                vec.Y = freq*y;
+                vec.Z = freq*z;
+                t += noise3(vec.X, vec.Y, vec.Z)/freq;
             }
             return t;
         }
@@ -245,27 +245,27 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
         {
             float s;
 
-            s = (float)Math.Sqrt(v[i, 0] * v[i, 0] + v[i, 1] * v[i, 1]);
-            s = 1.0f / s;
-            v[i, 0] = v[i, 0] * s;
-            v[i, 1] = v[i, 1] * s;
+            s = (float) Math.Sqrt(v[i, 0]*v[i, 0] + v[i, 1]*v[i, 1]);
+            s = 1.0f/s;
+            v[i, 0] = v[i, 0]*s;
+            v[i, 1] = v[i, 1]*s;
         }
 
         private static void normalize3(float[,] v, int i)
         {
             float s;
 
-            s = (float)Math.Sqrt(v[i, 0] * v[i, 0] + v[i, 1] * v[i, 1] + v[i, 2] * v[i, 2]);
-            s = 1.0f / s;
+            s = (float) Math.Sqrt(v[i, 0]*v[i, 0] + v[i, 1]*v[i, 1] + v[i, 2]*v[i, 2]);
+            s = 1.0f/s;
 
-            v[i, 0] = v[i, 0] * s;
-            v[i, 1] = v[i, 1] * s;
-            v[i, 2] = v[i, 2] * s;
+            v[i, 0] = v[i, 0]*s;
+            v[i, 1] = v[i, 1]*s;
+            v[i, 2] = v[i, 2]*s;
         }
 
         private static float s_curve(float t)
         {
-            return t * t * (3f - 2f * t);
+            return t*t*(3f - 2f*t);
         }
     }
 }

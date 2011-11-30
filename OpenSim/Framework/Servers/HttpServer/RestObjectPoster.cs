@@ -35,7 +35,7 @@ using System.Xml.Serialization;
 namespace OpenSim.Framework.Servers.HttpServer
 {
     /// <summary>
-    /// Makes an asynchronous REST request which doesn't require us to do anything with the response.
+    ///   Makes an asynchronous REST request which doesn't require us to do anything with the response.
     /// </summary>
     public class RestObjectPoster
     {
@@ -54,8 +54,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Encoding.UTF8;
+            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {

@@ -27,11 +27,10 @@
 
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
-    class AgentCountMonitor : IMonitor
+    internal class AgentCountMonitor : IMonitor
     {
         private readonly IScene m_scene;
 
@@ -57,7 +56,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
             return m_scene.RequestModuleInterface<IEntityCountModule>().RootAgents + " agent(s)";
         }
 
-        public void ResetStats ()
+        public void ResetStats()
         {
         }
 

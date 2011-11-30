@@ -39,8 +39,8 @@ namespace Aurora.Configuration
         private static string dbPasswd = "aurora";
         private static string dbSchema = "aurora";
         private static string dbUser = "aurora";
-        private static string ipAddress = Aurora.Framework.Utilities.GetExternalIp();
-        private static bool auroraReconfig = false;
+        private static string ipAddress = Framework.Utilities.GetExternalIp();
+        private static bool auroraReconfig;
         private static string platform = "1";
         private static string mode = "1";
         private static string dbregion = "1";
@@ -49,167 +49,145 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigHostName()
         {
-            if (System.IO.File.Exists("Aurora.ini"))
+            if (!File.Exists("Aurora.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("Aurora.ini", "Aurora.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("Aurora.ini", "Aurora.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraConfigData()
         {
-            if (System.IO.File.Exists("Configuration/Data/Data.ini"))
+            if (!File.Exists("Configuration/Data/Data.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("Configuration/Data/Data.ini", "Configuration/Data/Data.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("Configuration/Data/Data.ini", "Configuration/Data/Data.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraServerConfigData()
         {
-            if (System.IO.File.Exists("AuroraServerConfiguration/Data/Data.ini"))
+            if (!File.Exists("AuroraServerConfiguration/Data/Data.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("AuroraServerConfiguration/Data/Data.ini", "AuroraServerConfiguration/Data/Data.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("AuroraServerConfiguration/Data/Data.ini", "AuroraServerConfiguration/Data/Data.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraConfigMySql()
         {
-            if (System.IO.File.Exists("Configuration/Data/MySql.ini"))
+            if (!File.Exists("Configuration/Data/MySql.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("Configuration/Data/MySql.ini", "Configuration/Data/MySql.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("Configuration/Data/MySql.ini", "Configuration/Data/MySql.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraServerMySQL()
         {
-            if (System.IO.File.Exists("AuroraServerConfiguration/Data/MySQL.ini"))
+            if (!File.Exists("AuroraServerConfiguration/Data/MySQL.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("AuroraServerConfiguration/Data/MySQL.ini", "AuroraServerConfiguration/Data/MySQL.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("AuroraServerConfiguration/Data/MySQL.ini", "AuroraServerConfiguration/Data/MySQL.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraConfigMain()
         {
-            if (System.IO.File.Exists("Configuration/Main.ini"))
+            if (!File.Exists("Configuration/Main.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("Configuration/Main.ini", "Configuration/Main.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("Configuration/Main.ini", "Configuration/Main.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraConfigCommon()
         {
-            if (System.IO.File.Exists("Configuration/Standalone/StandaloneCommon.ini"))
+            if (!File.Exists("Configuration/Standalone/StandaloneCommon.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("Configuration/Standalone/StandaloneCommon.ini", "Configuration/Standalone/StandaloneCommon.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("Configuration/Standalone/StandaloneCommon.ini", "Configuration/Standalone/StandaloneCommon.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraGridCommon()
         {
-            if (System.IO.File.Exists("Configuration/Grid/AuroraGridCommon.ini"))
+            if (!File.Exists("Configuration/Grid/AuroraGridCommon.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("Configuration/Grid/AuroraGridCommon.ini", "Configuration/Grid/AuroraGridCommon.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("Configuration/Grid/AuroraGridCommon.ini", "Configuration/Grid/AuroraGridCommon.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraLogin()
         {
-            if (System.IO.File.Exists("AuroraServerConfiguration/Login.ini"))
+            if (!File.Exists("AuroraServerConfiguration/Login.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("AuroraServerConfiguration/Login.ini", "AuroraServerConfiguration/Login.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("AuroraServerConfiguration/Login.ini", "AuroraServerConfiguration/Login.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraGridInfoService()
         {
-            if (System.IO.File.Exists("AuroraServerConfiguration/GridInfoService.ini"))
+            if (!File.Exists("AuroraServerConfiguration/GridInfoService.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("AuroraServerConfiguration/GridInfoService.ini", "AuroraServerConfiguration/GridInfoService.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("AuroraServerConfiguration/GridInfoService.ini", "AuroraServerConfiguration/GridInfoService.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void CheckAuroraServer()
         {
-            if (System.IO.File.Exists("AuroraServer.ini"))
+            if (!File.Exists("AuroraServer.ini")) return;
+            try
             {
-                try
-                {
-                    System.IO.File.Move("AuroraServer.ini", "AuroraServer.ini.old");
-                }
-                catch
-                {
-                }
-                auroraReconfig = true;
+                File.Move("AuroraServer.ini", "AuroraServer.ini.old");
             }
+            catch
+            {
+            }
+            auroraReconfig = true;
         }
 
         private static void ConfigureAuroraini()
@@ -311,7 +289,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraData()
         {
             CheckAuroraConfigData();
-            string str = string.Format("Include-SQLite =", ipAddress);
             try
             {
                 using (TextReader reader = new StreamReader("Configuration/Data/Data.ini.example"))
@@ -348,7 +325,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraServerData()
         {
             CheckAuroraServerConfigData();
-            string str = string.Format("Include-SQLite =", ipAddress);
             try
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/Data.ini.example"))
@@ -385,7 +361,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraMain()
         {
             CheckAuroraConfigMain();
-            string str = string.Format("Include-Standalone = ", ipAddress);
             try
             {
                 using (TextReader reader = new StreamReader("Configuration/Main.ini.example"))
@@ -421,7 +396,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraCommon()
         {
             CheckAuroraConfigCommon();
-            string str = string.Format("Region_Aurora =", regionFlag);
             try
             {
                 using (TextReader reader = new StreamReader("Configuration/Standalone/StandaloneCommon.ini.example"))
@@ -477,7 +451,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraGridCommon()
         {
             CheckAuroraGridCommon();
-            string str = string.Format("RegistrationURI = ", ipAddress);
             try
             {
                 using (TextReader reader = new StreamReader("Configuration/Grid/AuroraGridCommon.ini.example"))
@@ -510,7 +483,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraMySql()
         {
             CheckAuroraConfigMySql();
-            string str = string.Format("ConnectionString = \"Data Source=localhost;Database={0};User ID={1};Password={2};\"", dbSource, dbSchema, dbUser, dbPasswd);
             try
             {
                 using (TextReader reader = new StreamReader("Configuration/Data/MySql.ini.example"))
@@ -547,7 +519,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraServerMySQL()
         {
             CheckAuroraServerMySQL();
-            string str = string.Format("ConnectionString = \"Data Source=localhost;Database={0};User ID={1};Password={2};\"", dbSource, dbSchema, dbUser, dbPasswd);
             try
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
@@ -584,7 +555,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraLogin()
         {
             CheckAuroraLogin();
-            string str = string.Format("DefaultHomeRegion =", regionFlag);
             try
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/Login.ini.example"))
@@ -625,7 +595,6 @@ namespace Aurora.Configuration
         private static void ConfigureAuroraGridInfoService()
         {
             CheckAuroraGridInfoService();
-            string str = string.Format("DefaultHomeRegion =", regionFlag);
             try
             {
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/GridInfoService.ini.example"))
@@ -686,15 +655,10 @@ namespace Aurora.Configuration
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(regionFlag);
             Console.ForegroundColor = ConsoleColor.White;
-            if (auroraReconfig)
-            {
-                Console.WriteLine("\nNOTE: Aurora-Sim has been reconfigured as Grid Mode.\nPrevious configurations are marked *.old.\nPlease revise the new configurations.\n");
-            }
-            else
-            {
-                Console.WriteLine("Your Aurora-Sim's configuration is complete.\nPlease revise it.");
-            }
-            Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(auroraReconfig
+                                      ? "\nNOTE: Aurora-Sim has been reconfigured as Grid Mode.\nPrevious configurations are marked *.old.\nPlease revise the new configurations.\n"
+                                      : "Your Aurora-Sim's configuration is complete.\nPlease revise it.");
+                Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("====================================================================\n");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora.Server>");
@@ -729,22 +693,16 @@ namespace Aurora.Configuration
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine(regionFlag);
                 Console.ForegroundColor = ConsoleColor.White;
-                if (auroraReconfig)
-                {
-                    Console.WriteLine("\nNOTE: Aurora-Sim has been reconfigured as Standalone Mode.\nPrevious configurations are marked *.old.\nPlease revise the new configurations.\n");
-                }
-                else
-                {
-                    Console.WriteLine("Your Aurora-Sim's configuration is complete.\nPlease revise it.");
-                }
+                Console.WriteLine(auroraReconfig
+                                      ? "\nNOTE: Aurora-Sim has been reconfigured as Standalone Mode.\nPrevious configurations are marked *.old.\nPlease revise the new configurations.\n"
+                                      : "Your Aurora-Sim's configuration is complete.\nPlease revise it.");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora>");
                 Console.ReadLine();
-                Process Aurora = new Process();
+                Process Aurora = new Process {StartInfo = {FileName = "Aurora.exe"}};
 
-                Aurora.StartInfo.FileName = "Aurora.exe";
 
                 Aurora.Start();
             }
@@ -770,7 +728,7 @@ namespace Aurora.Configuration
             {
                 mode = "1";
             }
-            mode = mode.Trim();
+            if (mode != null) mode = mode.Trim();
             Console.ResetColor();
             Console.Write("Which database do you want to use for the region ? \n(this will not affect Aurora.Server)");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -783,22 +741,15 @@ namespace Aurora.Configuration
             {
                 dbregion = "1";
             }
-            dbregion = dbregion.Trim();
+            if (dbregion != null) dbregion = dbregion.Trim();
             Console.ResetColor();
             Console.Write("Name of your Aurora-Sim: ");
             Console.ForegroundColor = ConsoleColor.Green;
             
             worldName = Console.ReadLine();
-            if (worldName == string.Empty)
-            {
-                worldName = "My Aurora";
-            }
-            else
-            {
-                worldName = worldName.Trim();
-            }
+            if (worldName != null) worldName = worldName == string.Empty ? "My Aurora" : worldName.Trim();
             Console.ResetColor();
-            if (dbregion.Equals("1"))
+            if (dbregion != null && dbregion.Equals("1"))
             {
             Console.Write("MySql database name for your region: [aurora]");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -833,7 +784,7 @@ namespace Aurora.Configuration
             
             dbPasswd = Console.ReadLine();
             }
-            if (mode.Equals("2"))
+            if (mode != null && mode.Equals("2"))
             {
                 Console.ResetColor();
                 Console.Write("MySql database name for Aurora.Server: [aurora]");
@@ -870,13 +821,13 @@ namespace Aurora.Configuration
                 dbPasswd = Console.ReadLine();
             }
             Console.ResetColor();
-            Console.Write("Your external domain name (preferred) or IP address: [" +Aurora.Framework.Utilities.GetExternalIp()+"]");
+            Console.Write("Your external domain name (preferred) or IP address: [" +Framework.Utilities.GetExternalIp()+"]");
             Console.ForegroundColor = ConsoleColor.Green;
             
             ipAddress = Console.ReadLine();
             if (ipAddress == string.Empty)
             {
-                ipAddress = Aurora.Framework.Utilities.GetExternalIp();
+                ipAddress = Framework.Utilities.GetExternalIp();
             }
             Console.ResetColor();
             Console.Write("The name you will use for your Welcome Land: ");
@@ -900,8 +851,7 @@ namespace Aurora.Configuration
             {
                 platform = "1";
             }
-            platform = platform.Trim();
-
+            if (platform != null) platform = platform.Trim();
         }
 
         public static void Main(string[] args)

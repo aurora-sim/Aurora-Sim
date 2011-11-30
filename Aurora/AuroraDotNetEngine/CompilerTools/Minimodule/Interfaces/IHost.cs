@@ -25,11 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using log4net;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

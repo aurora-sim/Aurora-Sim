@@ -28,11 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Xml;
 using System.IO;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -50,7 +46,6 @@ namespace OpenSim.Framework
         public string RegionFile = String.Empty;
         public bool Disabled = false;
 
-        private EstateSettings m_estateSettings;
         private RegionSettings m_regionSettings;
 
         private int m_objectCapacity = 0;
@@ -88,37 +83,16 @@ namespace OpenSim.Framework
         /// </summary>
         public int RegionSizeZ = 4096;
 
-        public EstateSettings EstateSettings
-        {
-            get
-            {
-               return m_estateSettings;
-            }
-
-            set { m_estateSettings = value; }
-        }
+        public EstateSettings EstateSettings { get; set; }
 
         public RegionSettings RegionSettings
         {
-            get
-            {
-                if (m_regionSettings == null)
-                {
-                    m_regionSettings = new RegionSettings();
-                }
-
-                return m_regionSettings;
-            }
+            get { return m_regionSettings ?? (m_regionSettings = new RegionSettings()); }
 
             set { m_regionSettings = value; }
         }
 
-        private bool m_allowScriptCrossing = false;
-        public bool AllowScriptCrossing
-        {
-            get { return m_allowScriptCrossing; }
-            set { m_allowScriptCrossing = value; }
-        }
+        public bool AllowScriptCrossing { get; set; }
 
         private List<int> m_UDPPorts = new List<int> ();
         public List<int> UDPPorts
@@ -127,12 +101,7 @@ namespace OpenSim.Framework
             set { m_UDPPorts = value; }
         }
 
-        private bool m_trustBinariesFromForeignSims = false;
-        public bool TrustBinariesFromForeignSims
-        {
-            get { return m_trustBinariesFromForeignSims; }
-            set { m_trustBinariesFromForeignSims = value; }
-        }
+        public bool TrustBinariesFromForeignSims { get; set; }
 
         private bool m_seeIntoThisSimFromNeighbor = true;
         public bool SeeIntoThisSimFromNeighbor
@@ -142,6 +111,13 @@ namespace OpenSim.Framework
         }
 
         private bool m_allowPhysicalPrims = true;
+
+        public RegionInfo()
+        {
+            TrustBinariesFromForeignSims = false;
+            AllowScriptCrossing = false;
+        }
+
         public bool AllowPhysicalPrims
         {
             get { return m_allowPhysicalPrims; }
@@ -305,7 +281,7 @@ namespace OpenSim.Framework
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
             args["region_size_y"] = OSD.FromInteger(RegionSizeY);
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
-            OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(delegate(int a) { return a;}));
+            OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(a => a));
             args["UDPPorts"] = ports;
             args["InfiniteRegion"] = OSD.FromBoolean(InfiniteRegion);
             if (secure)

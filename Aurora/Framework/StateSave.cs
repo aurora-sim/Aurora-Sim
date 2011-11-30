@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
@@ -36,74 +34,76 @@ namespace Aurora.Framework
 {
     public class StateSave : IDataTransferable
     {
-        public string State;
-        public string Source;
-        public UUID ItemID;
-        public bool Running;
-        public bool Disabled;
-        public string Variables;
-        public OSDMap Plugins;
-        public UUID PermsGranter;
-        public int PermsMask;
-        public double MinEventDelay;
         public string AssemblyName;
         public bool Compiled = true;
-        public UUID UserInventoryID;
+        public bool Disabled;
+        public UUID ItemID;
+        public double MinEventDelay;
+        public UUID PermsGranter;
+        public int PermsMask;
+        public OSDMap Plugins;
+        public bool Running;
+        public string Source;
+        public string State;
         public bool TargetOmegaWasSet;
+        public UUID UserInventoryID;
+        public string Variables;
 
-        public override void FromOSD (OSDMap map)
+        public override void FromOSD(OSDMap map)
         {
-            State = map["State"].AsString ();
-            Source = map["Source"].AsString ();
-            ItemID = map["ItemID"].AsUUID ();
-            Running = map["Running"].AsBoolean ();
-            Disabled = map["Disabled"].AsBoolean ();
-            Variables = map["Variables"].AsString ();
-            Plugins = (OSDMap)map["Plugins"];
-            PermsGranter = map["PermsGranter"].AsUUID ();
-            PermsMask = map["PermsMask"].AsInteger ();
-            MinEventDelay = map["MinEventDelay"].AsReal ();
-            AssemblyName = map["AssemblyName"].AsString ();
-            UserInventoryID = map["UserInventoryID"].AsUUID ();
-            TargetOmegaWasSet = map["TargetOmegaWasSet"].AsBoolean ();
-            if(map.ContainsKey("Compiled"))
-                Compiled = map["Compiled"].AsBoolean ();
+            State = map["State"].AsString();
+            Source = map["Source"].AsString();
+            ItemID = map["ItemID"].AsUUID();
+            Running = map["Running"].AsBoolean();
+            Disabled = map["Disabled"].AsBoolean();
+            Variables = map["Variables"].AsString();
+            Plugins = (OSDMap) map["Plugins"];
+            PermsGranter = map["PermsGranter"].AsUUID();
+            PermsMask = map["PermsMask"].AsInteger();
+            MinEventDelay = map["MinEventDelay"].AsReal();
+            AssemblyName = map["AssemblyName"].AsString();
+            UserInventoryID = map["UserInventoryID"].AsUUID();
+            TargetOmegaWasSet = map["TargetOmegaWasSet"].AsBoolean();
+            if (map.ContainsKey("Compiled"))
+                Compiled = map["Compiled"].AsBoolean();
         }
 
-        public override OSDMap ToOSD ()
+        public override OSDMap ToOSD()
         {
-            OSDMap map = new OSDMap ();
-            map.Add ("State", State);
-            map.Add ("Source", Source);
-            map.Add ("ItemID", ItemID);
-            map.Add ("Running", Running);
-            map.Add ("Disabled", Disabled);
-            map.Add ("Variables", Variables);
-            map.Add ("Plugins", Plugins);
-            map.Add ("PermsGranter", PermsGranter);
-            map.Add ("PermsMask", PermsMask);
-            map.Add ("MinEventDelay", MinEventDelay);
-            map.Add ("AssemblyName", AssemblyName);
-            map.Add ("UserInventoryID", UserInventoryID);
-            map.Add ("TargetOmegaWasSet", TargetOmegaWasSet);
-            map.Add ("Compiled", Compiled);
+            OSDMap map = new OSDMap
+                             {
+                                 {"State", State},
+                                 {"Source", Source},
+                                 {"ItemID", ItemID},
+                                 {"Running", Running},
+                                 {"Disabled", Disabled},
+                                 {"Variables", Variables},
+                                 {"Plugins", Plugins},
+                                 {"PermsGranter", PermsGranter},
+                                 {"PermsMask", PermsMask},
+                                 {"MinEventDelay", MinEventDelay},
+                                 {"AssemblyName", AssemblyName},
+                                 {"UserInventoryID", UserInventoryID},
+                                 {"TargetOmegaWasSet", TargetOmegaWasSet},
+                                 {"Compiled", Compiled}
+                             };
             return map;
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs ()
+        public override Dictionary<string, object> ToKeyValuePairs()
         {
-            return Util.OSDToDictionary (ToOSD ());
+            return Util.OSDToDictionary(ToOSD());
         }
 
-        public override void FromKVP (Dictionary<string, object> KVP)
+        public override void FromKVP(Dictionary<string, object> KVP)
         {
-            FromOSD (Util.DictionaryToOSD (KVP));
+            FromOSD(Util.DictionaryToOSD(KVP));
         }
 
-        public override IDataTransferable Duplicate ()
+        public override IDataTransferable Duplicate()
         {
-            StateSave m = new StateSave ();
-            m.FromOSD (ToOSD ());
+            StateSave m = new StateSave();
+            m.FromOSD(ToOSD());
             return m;
         }
     }

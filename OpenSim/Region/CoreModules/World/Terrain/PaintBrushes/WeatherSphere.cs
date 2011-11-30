@@ -26,15 +26,14 @@
  */
 
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
     /// <summary>
-    /// Thermal Weathering Paint Brush
+    ///   Thermal Weathering Paint Brush
     /// </summary>
     public class WeatherSphere : ITerrainPaintableEffect
     {
@@ -145,13 +144,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
         {
             Moore,
             VonNeumann
-        } ;
+        };
 
         #endregion
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
+                                float duration, float BrushSize, List<IScene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
@@ -195,7 +195,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 
                                 if (target > heightF + talus)
                                 {
-                                    float calc = duration * ((target - heightF) - talus) * z;
+                                    float calc = duration*((target - heightF) - talus)*z;
                                     heightF += calc;
                                     target -= calc;
                                 }

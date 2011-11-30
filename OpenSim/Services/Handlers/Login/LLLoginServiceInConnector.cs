@@ -26,29 +26,30 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using log4net;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class LLLoginServiceInConnector : IService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private IConfigSource m_Config;
 
         private ILoginService m_LoginService;
         private bool m_Proxy;
 
-        private IConfigSource m_Config;
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -60,7 +61,9 @@ namespace OpenSim.Services
             if (handlerConfig.GetString("LLLoginHandler", "") != Name)
                 return;
 
-            IHttpServer server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer((uint)handlerConfig.GetInt("LLLoginHandlerPort"));
+            IHttpServer server =
+                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
+                    (uint) handlerConfig.GetInt("LLLoginHandlerPort"));
             m_log.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
             ReadLocalServiceFromConfig(config);
             m_LoginService = registry.RequestModuleInterface<ILoginService>();
@@ -71,6 +74,8 @@ namespace OpenSim.Services
         public void FinishedStartup()
         {
         }
+
+        #endregion
 
         private void ReadLocalServiceFromConfig(IConfigSource config)
         {

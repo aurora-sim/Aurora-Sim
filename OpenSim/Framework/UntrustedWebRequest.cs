@@ -29,53 +29,57 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Security;
+using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using log4net;
 
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Used for requests to untrusted endpoints that may potentially be
-    /// malicious
+    ///   Used for requests to untrusted endpoints that may potentially be
+    ///   malicious
     /// </summary>
     public static class UntrustedHttpWebRequest
     {
-        /// <summary>Setting this to true will allow HTTP connections to localhost</summary>
+        /// <summary>
+        ///   Setting this to true will allow HTTP connections to localhost
+        /// </summary>
         private const bool DEBUG = true;
 
         private static readonly ILog m_log =
-                LogManager.GetLogger(
-                System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            LogManager.GetLogger(
+                MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static readonly ICollection<string> allowableSchemes = new List<string> { "http", "https" };
+        private static readonly ICollection<string> allowableSchemes = new List<string> {"http", "https"};
 
         /// <summary>
-        /// Creates an HttpWebRequest that is hardened against malicious
-        /// endpoints after ensuring the given Uri is safe to retrieve
+        ///   Creates an HttpWebRequest that is hardened against malicious
+        ///   endpoints after ensuring the given Uri is safe to retrieve
         /// </summary>
-        /// <param name="uri">Web location to request</param>
+        /// <param name = "uri">Web location to request</param>
         /// <returns>A hardened HttpWebRequest if the uri was determined to be safe</returns>
-        /// <exception cref="ArgumentNullException">If uri is null</exception>
-        /// <exception cref="ArgumentException">If uri is unsafe</exception>
+        /// <exception cref = "ArgumentNullException">If uri is null</exception>
+        /// <exception cref = "ArgumentException">If uri is unsafe</exception>
         public static HttpWebRequest Create(Uri uri)
         {
-            return Create(uri, DEBUG, 1000 * 5, 1000 * 20, 10);
+            return Create(uri, DEBUG, 1000*5, 1000*20, 10);
         }
 
         /// <summary>
-        /// Creates an HttpWebRequest that is hardened against malicious
-        /// endpoints after ensuring the given Uri is safe to retrieve
+        ///   Creates an HttpWebRequest that is hardened against malicious
+        ///   endpoints after ensuring the given Uri is safe to retrieve
         /// </summary>
-        /// <param name="uri">Web location to request</param>
-        /// <param name="allowLoopback">True to allow connections to localhost, otherwise false</param>
-        /// <param name="readWriteTimeoutMS">Read write timeout, in milliseconds</param>
-        /// <param name="timeoutMS">Connection timeout, in milliseconds</param>
-        /// <param name="maximumRedirects">Maximum number of allowed redirects</param>
+        /// <param name = "uri">Web location to request</param>
+        /// <param name = "allowLoopback">True to allow connections to localhost, otherwise false</param>
+        /// <param name = "readWriteTimeoutMS">Read write timeout, in milliseconds</param>
+        /// <param name = "timeoutMS">Connection timeout, in milliseconds</param>
+        /// <param name = "maximumRedirects">Maximum number of allowed redirects</param>
         /// <returns>A hardened HttpWebRequest if the uri was determined to be safe</returns>
-        /// <exception cref="ArgumentNullException">If uri is null</exception>
-        /// <exception cref="ArgumentException">If uri is unsafe</exception>
-        public static HttpWebRequest Create(Uri uri, bool allowLoopback, int readWriteTimeoutMS, int timeoutMS, int maximumRedirects)
+        /// <exception cref = "ArgumentNullException">If uri is null</exception>
+        /// <exception cref = "ArgumentException">If uri is unsafe</exception>
+        public static HttpWebRequest Create(Uri uri, bool allowLoopback, int readWriteTimeoutMS, int timeoutMS,
+                                            int maximumRedirects)
         {
             if (uri == null)
                 throw new ArgumentNullException("uri");
@@ -83,7 +87,7 @@ namespace OpenSim.Framework
             if (!IsUriAllowable(uri, allowLoopback))
                 throw new ArgumentException("Uri " + uri + " was rejected");
 
-            HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
+            HttpWebRequest httpWebRequest = (HttpWebRequest) WebRequest.Create(uri);
             httpWebRequest.MaximumAutomaticRedirections = maximumRedirects;
             httpWebRequest.ReadWriteTimeout = readWriteTimeoutMS;
             httpWebRequest.Timeout = timeoutMS;
@@ -96,7 +100,7 @@ namespace OpenSim.Framework
         {
             try
             {
-                byte[] requestData = System.Text.Encoding.UTF8.GetBytes(data);
+                byte[] requestData = Encoding.UTF8.GetBytes(data);
 
                 HttpWebRequest request = Create(url);
                 request.Method = "POST";
@@ -139,13 +143,13 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Determines whether a URI is allowed based on scheme and host name.
-        /// No requireSSL check is done here
+        ///   Determines whether a URI is allowed based on scheme and host name.
+        ///   No requireSSL check is done here
         /// </summary>
-        /// <param name="allowLoopback">True to allow loopback addresses to be used</param>
-        /// <param name="uri">The URI to test for whether it should be allowed.</param>
+        /// <param name = "allowLoopback">True to allow loopback addresses to be used</param>
+        /// <param name = "uri">The URI to test for whether it should be allowed.</param>
         /// <returns>
-        ///     <c>true</c> if [is URI allowable] [the specified URI]; otherwise, <c>false</c>.
+        ///   <c>true</c> if [is URI allowable] [the specified URI]; otherwise, <c>false</c>.
         /// </returns>
         private static bool IsUriAllowable(Uri uri, bool allowLoopback)
         {
@@ -169,14 +173,14 @@ namespace OpenSim.Framework
                 // The host is actually an IP address.
                 switch (hostIPAddress.AddressFamily)
                 {
-                    case System.Net.Sockets.AddressFamily.InterNetwork:
+                    case AddressFamily.InterNetwork:
                         if (!allowLoopback && (addressBytes[0] == 127 || addressBytes[0] == 10))
                         {
                             m_log.WarnFormat("Rejecting URL {0} because it is a loopback address.", uri);
                             return false;
                         }
                         break;
-                    case System.Net.Sockets.AddressFamily.InterNetworkV6:
+                    case AddressFamily.InterNetworkV6:
                         if (!allowLoopback && IsIPv6Loopback(hostIPAddress))
                         {
                             m_log.WarnFormat("Rejecting URL {0} because it is a loopback address.", uri);
@@ -203,11 +207,11 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Determines whether an IP address is the IPv6 equivalent of "localhost/127.0.0.1".
+        ///   Determines whether an IP address is the IPv6 equivalent of "localhost/127.0.0.1".
         /// </summary>
-        /// <param name="ip">The ip address to check.</param>
+        /// <param name = "ip">The ip address to check.</param>
         /// <returns>
-        ///     <c>true</c> if this is a loopback IP address; <c>false</c> otherwise.
+        ///   <c>true</c> if this is a loopback IP address; <c>false</c> otherwise.
         /// </returns>
         private static bool IsIPv6Loopback(IPAddress ip)
         {

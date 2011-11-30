@@ -25,21 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
-    /// <summary>
-    /// Speed-Optimised Hybrid Erosion Brush
+    ///<summary>
+    ///  Speed-Optimised Hybrid Erosion Brush
     ///
-    /// As per Jacob Olsen's Paper
-    /// http://www.oddlabs.com/download/terrain_generation.pdf
-    /// </summary>
+    ///  As per Jacob Olsen's Paper
+    ///  http://www.oddlabs.com/download/terrain_generation.pdf
+    ///</summary>
     public class OlsenSphere : ITerrainPaintableEffect
     {
         private const float nConst = 1024;
@@ -149,22 +147,23 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
         {
             Moore,
             VonNeumann
-        } ;
+        };
 
         #endregion
 
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scene)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
+                                float duration, float BrushSize, List<IScene> scene)
         {
             strength = TerrainUtil.MetersToSphericalStrength(strength);
 
             int x;
 
-            int xFrom = (int)(rx - BrushSize + 0.5);
-            int xTo = (int)(rx + BrushSize + 0.5) + 1;
-            int yFrom = (int)(ry - BrushSize + 0.5);
-            int yTo = (int)(ry + BrushSize + 0.5) + 1;
+            int xFrom = (int) (rx - BrushSize + 0.5);
+            int xTo = (int) (rx + BrushSize + 0.5) + 1;
+            int yFrom = (int) (ry - BrushSize + 0.5);
+            int yTo = (int) (ry + BrushSize + 0.5) + 1;
 
             if (xFrom < 0)
                 xFrom = 0;
@@ -224,12 +223,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                             }
                         }
 
-                        float T = nConst / ((map.Width + map.Height) / 2);
+                        float T = nConst/((map.Width + map.Height)/2);
                         // Apply results
                         if (0 < max && max <= T)
                         {
                             int[] maxCoords = Neighbours(type, loc);
-                            float heightDelta = 0.5f * max * z * duration;
+                            float heightDelta = 0.5f*max*z*duration;
                             map[x, y] -= heightDelta;
                             map[x + maxCoords[0], y + maxCoords[1]] += heightDelta;
                         }

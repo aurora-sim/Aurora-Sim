@@ -27,22 +27,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.CoreModules;
-using OpenSim.Region;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using log4net;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
     /// <summary>
-    /// Prepares events so they can be directly executed upon a script by EventQueueManager, then queues it.
+    ///   Prepares events so they can be directly executed upon a script by EventQueueManager, then queues it.
     /// </summary>
     public class EventManager
     {
@@ -62,50 +57,51 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private ScriptEngine m_scriptEngine;
+        private readonly Dictionary<uint, Dictionary<UUID, DetectParams>> CoalescedTouchEvents =
+            new Dictionary<uint, Dictionary<UUID, DetectParams>>();
 
-        private Dictionary<uint, Dictionary<UUID, DetectParams>> CoalescedTouchEvents = new Dictionary<uint, Dictionary<UUID, DetectParams>>();
+        private readonly ScriptEngine m_scriptEngine;
 
         public EventManager(ScriptEngine _ScriptEngine)
         {
             m_scriptEngine = _ScriptEngine;
         }
 
-        public void HookUpRegionEvents (IScene Scene)
+        public void HookUpRegionEvents(IScene Scene)
         {
             //m_log.Info("[" + myScriptEngine.ScriptEngineName +
             //           "]: Hooking up to server events");
 
             Scene.EventManager.OnObjectGrab +=
-                    touch_start;
+                touch_start;
             Scene.EventManager.OnObjectGrabbing +=
-                    touch;
+                touch;
             Scene.EventManager.OnObjectDeGrab +=
-                    touch_end;
+                touch_end;
             Scene.EventManager.OnScriptChangedEvent +=
-                    changed;
+                changed;
             Scene.EventManager.OnScriptAtTargetEvent +=
-                    at_target;
+                at_target;
             Scene.EventManager.OnScriptNotAtTargetEvent +=
-                    not_at_target;
+                not_at_target;
             Scene.EventManager.OnScriptAtRotTargetEvent +=
-                    at_rot_target;
+                at_rot_target;
             Scene.EventManager.OnScriptNotAtRotTargetEvent +=
-                    not_at_rot_target;
+                not_at_rot_target;
             Scene.EventManager.OnScriptControlEvent +=
-                    control;
+                control;
             Scene.EventManager.OnScriptColliderStart +=
-                    collision_start;
+                collision_start;
             Scene.EventManager.OnScriptColliding +=
-                    collision;
+                collision;
             Scene.EventManager.OnScriptCollidingEnd +=
-                    collision_end;
+                collision_end;
             Scene.EventManager.OnScriptLandColliderStart +=
-                    land_collision_start;
+                land_collision_start;
             Scene.EventManager.OnScriptLandColliding +=
-                    land_collision;
+                land_collision;
             Scene.EventManager.OnScriptLandColliderEnd +=
-                    land_collision_end;
+                land_collision_end;
             Scene.EventManager.OnAttach += attach;
             Scene.EventManager.OnScriptMovingStartEvent += moving_start;
             Scene.EventManager.OnScriptMovingEndEvent += moving_end;
@@ -114,7 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
 
             IMoneyModule money =
-                    Scene.RequestModuleInterface<IMoneyModule>();
+                Scene.RequestModuleInterface<IMoneyModule>();
             if (money != null)
             {
                 money.OnObjectPaid += HandleObjectPaid;
@@ -139,7 +135,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //{
             //    money(part.LocalId, agentID, amount);
             //}
-            if (part != null) 
+            if (part != null)
             {
                 m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
                 if (part.ParentEntity != null) part = part.ParentEntity.RootChild;
@@ -155,19 +151,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             bool ret = true;
 
-            foreach (IScene scene in m_scriptEngine.Worlds)
+            if (m_scriptEngine.Worlds.Any(scene => scene.RegionInfo.RegionHandle == regionHandle))
             {
-                if (scene.RegionInfo.RegionHandle == regionHandle)
-                {
-                    ret = money(localID, agentID, amount);
-                    break;
-                }
+                ret = money(localID, agentID, amount);
             }
 
             return ret;
         }
 
-        public void changed (ISceneChildEntity part, uint change)
+        public void changed(ISceneChildEntity part, uint change)
         {
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
@@ -178,38 +170,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "changed";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(change) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(change)};
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         /// <summary>
-        /// Handles piping the proper stuff to The script engine for touching
-        /// Including DetectedParams
+        ///   Handles piping the proper stuff to The script engine for touching
+        ///   Including DetectedParams
         /// </summary>
-        /// <param name="part"></param>
-        /// <param name="child"></param>
-        /// <param name="offsetPos"></param>
-        /// <param name="remoteClient"></param>
-        /// <param name="surfaceArgs"></param>
-        public void touch_start (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
-                IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        /// <param name = "part"></param>
+        /// <param name = "child"></param>
+        /// <param name = "offsetPos"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "surfaceArgs"></param>
+        public void touch_start(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
+                                IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             // Add to queue for all scripts in ObjectID object
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
             if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
                 det = new Dictionary<UUID, DetectParams>();
 
-            DetectParams detparam = new DetectParams();
-            detparam.Key = remoteClient.AgentId;
+            DetectParams detparam = new DetectParams {Key = remoteClient.AgentId};
 
             detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
-            
+
             if (surfaceArgs != null)
             {
                 detparam.SurfaceTouchArgs = surfaceArgs;
@@ -224,17 +215,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_start";
-            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(),
+                                                EventPriority.FirstStart, param);
             }
         }
 
-        public void touch (ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
-                IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
+        public void touch(ISceneChildEntity part, ISceneChildEntity child, Vector3 offsetPos,
+                          IClientAPI remoteClient, SurfaceTouchEventArgs surfaceArgs)
         {
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
             if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
@@ -242,11 +233,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Add to queue for all scripts in ObjectID object
             DetectParams detparam = new DetectParams();
-            detparam = new DetectParams();
-            detparam.Key = remoteClient.AgentId;
-            detparam.OffsetPos = new LSL_Types.Vector3(offsetPos.X,
-                                                     offsetPos.Y,
-                                                     offsetPos.Z);
+            detparam = new DetectParams
+                           {
+                               Key = remoteClient.AgentId,
+                               OffsetPos = new LSL_Types.Vector3(offsetPos.X,
+                                                                 offsetPos.Y,
+                                                                 offsetPos.Z)
+                           };
 
             detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
@@ -263,16 +256,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch";
-            object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count) };
+            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(),
+                                                EventPriority.FirstStart, param);
             }
         }
 
-        public void touch_end (ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient,
+        public void touch_end(ISceneChildEntity part, ISceneChildEntity child, IClientAPI remoteClient,
                               SurfaceTouchEventArgs surfaceArgs)
         {
             Dictionary<UUID, DetectParams> det = new Dictionary<UUID, DetectParams>();
@@ -281,8 +274,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Add to queue for all scripts in ObjectID object
             DetectParams detparam = new DetectParams();
-            detparam = new DetectParams();
-            detparam.Key = remoteClient.AgentId;
+            detparam = new DetectParams {Key = remoteClient.AgentId};
 
             detparam.Populate(m_scriptEngine.findPrimsScene(part.LocalId));
             detparam.LinkNum = child.LinkNum;
@@ -296,15 +288,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
             if (datas == null || datas.Length == 0)
-                return; 
-            
-            string functionName = "touch_end";
-            object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count) };
+                return;
 
-            foreach (ScriptData ID in datas)
+            string functionName = "touch_end";
+            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(), EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new List<DetectParams>(det.Values).ToArray(),
+                                                EventPriority.FirstStart, param);
             }
             //Remove us from the det param list
             det.Remove(remoteClient.AgentId);
@@ -326,29 +318,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (datas == null || datas.Length == 0) return ret;
             }
             string functionName = "money";
-            object[] param = new object[] {
-                    new LSL_Types.LSLString(agentID.ToString()),
-                    new LSL_Types.LSLInteger(amount) };
+            object[] param = new object[]
+                                 {
+                                     new LSL_Types.LSLString(agentID.ToString()),
+                                     new LSL_Types.LSLInteger(amount)
+                                 };
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param)) {
-                     m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
-                    ret = true;
-                }
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
+                ret = true;
             }
             return ret;
         }
 
-        public void collision_start (ISceneChildEntity part, ColliderArgs col)
+        public void collision_start(ISceneChildEntity part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
 
-            foreach (DetectedObject detobj in col.Colliders)
+            foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams {Key = detobj.keyUUID}))
             {
-                DetectParams d = new DetectParams();
-                d.Key = detobj.keyUUID;
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -362,28 +353,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
                     //if (datas == null || datas.Length == 0)
-                        return;
+                    return;
                 }
                 string functionName = "collision_start";
-                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
+                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
-                foreach (ScriptData ID in datas)
+                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
 
-        public void collision (ISceneChildEntity part, ColliderArgs col)
+        public void collision(ISceneChildEntity part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
 
-            foreach (DetectedObject detobj in col.Colliders)
+            foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams {Key = detobj.keyUUID}))
             {
-                DetectParams d = new DetectParams();
-                d.Key = detobj.keyUUID;
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -397,28 +385,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
                     //if (datas == null || datas.Length == 0)
-                        return;
+                    return;
                 }
                 string functionName = "collision";
-                object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count) };
+                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
-                foreach (ScriptData ID in datas)
+                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
 
-        public void collision_end (ISceneChildEntity part, ColliderArgs col)
+        public void collision_end(ISceneChildEntity part, ColliderArgs col)
         {
             // Add to queue for all scripts in ObjectID object
             List<DetectParams> det = new List<DetectParams>();
 
-            foreach (DetectedObject detobj in col.Colliders)
+            foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams {Key = detobj.keyUUID}))
             {
-                DetectParams d = new DetectParams();
-                d.Key = detobj.keyUUID;
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -432,30 +417,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
                     //if (datas == null || datas.Length == 0)
-                        return;
+                    return;
                 }
                 string functionName = "collision_end";
-                object[] param = new Object[] { new LSL_Types.LSLInteger (det.Count) };
+                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
 
-                foreach (ScriptData ID in datas)
+                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
 
-        public void land_collision_start (ISceneChildEntity part, ColliderArgs col)
+        public void land_collision_start(ISceneChildEntity part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
-            foreach (DetectedObject detobj in col.Colliders)
+            foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
+                                                                          {
+                                                                              Position = new LSL_Types.Vector3(detobj.posVector.X,
+                                                                                                               detobj.posVector.Y,
+                                                                                                               detobj.posVector.Z),
+                                                                              Key = detobj.keyUUID
+                                                                          }))
             {
-                DetectParams d = new DetectParams();
-                d.Position = new LSL_Types.Vector3(detobj.posVector.X,
-                    detobj.posVector.Y,
-                    detobj.posVector.Z);
-                d.Key = detobj.keyUUID;
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -468,30 +453,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
                     //if (datas == null || datas.Length == 0)
-                        return;
+                    return;
                 }
                 string functionName = "land_collision_start";
-                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
 
-                foreach (ScriptData ID in datas)
+                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
 
-        public void land_collision (ISceneChildEntity part, ColliderArgs col)
+        public void land_collision(ISceneChildEntity part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
-            foreach (DetectedObject detobj in col.Colliders)
+            foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
+                                                                          {
+                                                                              Position = new LSL_Types.Vector3(detobj.posVector.X,
+                                                                                                               detobj.posVector.Y,
+                                                                                                               detobj.posVector.Z),
+                                                                              Key = detobj.keyUUID
+                                                                          }))
             {
-                DetectParams d = new DetectParams();
-                d.Position = new LSL_Types.Vector3(detobj.posVector.X,
-                    detobj.posVector.Y,
-                    detobj.posVector.Z);
-                d.Key = detobj.keyUUID;
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -504,30 +489,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
                     //if (datas == null || datas.Length == 0)
-                        return;
+                    return;
                 }
                 string functionName = "land_collision";
-                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
 
-                foreach (ScriptData ID in datas)
+                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
 
-        public void land_collision_end (ISceneChildEntity part, ColliderArgs col)
+        public void land_collision_end(ISceneChildEntity part, ColliderArgs col)
         {
             List<DetectParams> det = new List<DetectParams>();
 
-            foreach (DetectedObject detobj in col.Colliders)
+            foreach (DetectParams d in col.Colliders.Select(detobj => new DetectParams
+                                                                          {
+                                                                              Position = new LSL_Types.Vector3(detobj.posVector.X,
+                                                                                                               detobj.posVector.Y,
+                                                                                                               detobj.posVector.Z),
+                                                                              Key = detobj.keyUUID
+                                                                          }))
             {
-                DetectParams d = new DetectParams();
-                d.Position = new LSL_Types.Vector3(detobj.posVector.X,
-                    detobj.posVector.Y,
-                    detobj.posVector.Z);
-                d.Key = detobj.keyUUID;
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -540,22 +525,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //datas = ScriptEngine.ScriptProtection.GetScripts(part.ParentGroup.RootPart.UUID);
                     //if (datas == null || datas.Length == 0)
-                        return;
+                    return;
                 }
                 string functionName = "land_collision_end";
-                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
+                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
 
-                foreach (ScriptData ID in datas)
+                foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
                 {
-                    if (CheckIfEventShouldFire(ID, functionName, param))
-                        m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
+                    m_scriptEngine.AddToScriptQueue(ID, functionName, det.ToArray(), EventPriority.FirstStart, param);
                 }
             }
         }
 
-        public void control (ISceneChildEntity part, UUID itemID, UUID agentID, uint held, uint change)
+        public void control(ISceneChildEntity part, UUID itemID, UUID agentID, uint held, uint change)
         {
-            if(part == null)
+            if (part == null)
                 return;
             ScriptData ID = ScriptEngine.ScriptProtection.GetScript(part.UUID, itemID);
 
@@ -563,19 +547,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "control";
-            object[] param = new object[] {
-                    new LSL_Types.LSLString(agentID.ToString()),
-                    new LSL_Types.LSLInteger(held),
-                    new LSL_Types.LSLInteger(change)};
+            object[] param = new object[]
+                                 {
+                                     new LSL_Types.LSLString(agentID.ToString()),
+                                     new LSL_Types.LSLInteger(held),
+                                     new LSL_Types.LSLInteger(change)
+                                 };
 
             if (CheckIfEventShouldFire(ID, functionName, param))
                 m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
         }
 
         public void email(uint localID, UUID itemID, string timeSent,
-                string address, string subject, string message, int numLeft)
+                          string address, string subject, string message, int numLeft)
         {
-            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -587,24 +573,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "email";
-            object[] param = new object[] {
-                    new LSL_Types.LSLString(timeSent),
-                    new LSL_Types.LSLString(address),
-                    new LSL_Types.LSLString(subject),
-                    new LSL_Types.LSLString(message),
-                    new LSL_Types.LSLInteger(numLeft)};
+            object[] param = new object[]
+                                 {
+                                     new LSL_Types.LSLString(timeSent),
+                                     new LSL_Types.LSLString(address),
+                                     new LSL_Types.LSLString(subject),
+                                     new LSL_Types.LSLString(message),
+                                     new LSL_Types.LSLInteger(numLeft)
+                                 };
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         public void at_target(uint localID, uint handle, Vector3 targetpos,
-                Vector3 atpos)
+                              Vector3 atpos)
         {
-            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -616,21 +604,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "at_target";
-            object[] param = new object[] {
-                    new LSL_Types.LSLInteger(handle),
-                    new LSL_Types.Vector3(targetpos.X,targetpos.Y,targetpos.Z),
-                    new LSL_Types.Vector3(atpos.X,atpos.Y,atpos.Z) };
+            object[] param = new object[]
+                                 {
+                                     new LSL_Types.LSLInteger(handle),
+                                     new LSL_Types.Vector3(targetpos.X, targetpos.Y, targetpos.Z),
+                                     new LSL_Types.Vector3(atpos.X, atpos.Y, atpos.Z)
+                                 };
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         public void not_at_target(uint localID)
         {
-            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -644,17 +634,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "not_at_target";
             object[] param = new object[0];
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         public void at_rot_target(uint localID, uint handle, Quaternion targetrot,
-                Quaternion atrot)
+                                  Quaternion atrot)
         {
-            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -666,21 +656,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "at_rot_target";
-            object[] param = new object[] {
-                    new LSL_Types.LSLInteger(handle),
-                    new LSL_Types.Quaternion(targetrot.X,targetrot.Y,targetrot.Z,targetrot.W),
-                    new LSL_Types.Quaternion(atrot.X,atrot.Y,atrot.Z,atrot.W) };
+            object[] param = new object[]
+                                 {
+                                     new LSL_Types.LSLInteger(handle),
+                                     new LSL_Types.Quaternion(targetrot.X, targetrot.Y, targetrot.Z, targetrot.W),
+                                     new LSL_Types.Quaternion(atrot.X, atrot.Y, atrot.Z, atrot.W)
+                                 };
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         public void not_at_rot_target(uint localID)
         {
-            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -694,16 +686,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "not_at_rot_target";
             object[] param = new object[0];
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         public void attach(uint localID, UUID itemID, UUID avatar)
         {
-            ISceneChildEntity part = m_scriptEngine.findPrim (localID);
+            ISceneChildEntity part = m_scriptEngine.findPrim(localID);
             if (part == null)
                 return;
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
@@ -715,17 +707,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "attach";
-            object[] param = new object[] {
-                    new LSL_Types.LSLString(avatar.ToString()) };
+            object[] param = new object[]
+                                 {
+                                     new LSL_Types.LSLString(avatar.ToString())
+                                 };
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
-        public void moving_start (ISceneChildEntity part)
+        public void moving_start(ISceneChildEntity part)
         {
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
@@ -738,14 +732,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "moving_start";
             object[] param = new object[0];
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
-        public void moving_end (ISceneChildEntity part)
+        public void moving_end(ISceneChildEntity part)
         {
             ScriptData[] datas = ScriptEngine.ScriptProtection.GetScripts(part.UUID);
 
@@ -758,44 +752,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string functionName = "moving_end";
             object[] param = new object[0];
 
-            foreach (ScriptData ID in datas)
+            foreach (ScriptData ID in datas.Where(ID => CheckIfEventShouldFire(ID, functionName, param)))
             {
-                if (CheckIfEventShouldFire(ID, functionName, param))
-                    m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart, param);
+                m_scriptEngine.AddToScriptQueue(ID, functionName, new DetectParams[0], EventPriority.FirstStart,
+                                                param);
             }
         }
 
         /// <summary>
-        /// Start multiple scripts in the object
+        ///   Start multiple scripts in the object
         /// </summary>
-        /// <param name="part"></param>
-        /// <param name="items"></param>
-        /// <param name="startParam"></param>
-        /// <param name="postOnRez"></param>
-        /// <param name="engine"></param>
-        /// <param name="stateSource"></param>
-        /// <param name="RezzedFrom"></param>
+        /// <param name = "part"></param>
+        /// <param name = "items"></param>
+        /// <param name = "startParam"></param>
+        /// <param name = "postOnRez"></param>
+        /// <param name = "engine"></param>
+        /// <param name = "stateSource"></param>
+        /// <param name = "RezzedFrom"></param>
         public void rez_scripts(ISceneChildEntity part, TaskInventoryItem[] items,
-                int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
+                                int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
         {
-            List<LUStruct> ItemsToStart = new List<LUStruct>();
-            foreach (TaskInventoryItem item in items)
-            {
-                LUStruct itemToQueue = m_scriptEngine.StartScript(part, item.ItemID,
-                        startParam, postOnRez, stateSource, RezzedFrom);
-                if (itemToQueue.Action != LUType.Unknown)
-                    ItemsToStart.Add(itemToQueue);
-            }
+            List<LUStruct> ItemsToStart = items.Select(item => m_scriptEngine.StartScript(part, item.ItemID, startParam, postOnRez, stateSource, RezzedFrom)).Where(itemToQueue => itemToQueue.Action != LUType.Unknown).ToList();
             if (ItemsToStart.Count != 0)
                 m_scriptEngine.MaintenanceThread.AddScriptChange(ItemsToStart.ToArray(), LoadPriority.FirstStart);
         }
-        
+
         /// <summary>
-        /// This checks the minimum amount of time between script firings as well as control events, making sure that events do NOT fire after scripts reset, close or restart, etc
+        ///   This checks the minimum amount of time between script firings as well as control events, making sure that events do NOT fire after scripts reset, close or restart, etc
         /// </summary>
-        /// <param name="ID"></param>
-        /// <param name="FunctionName"></param>
-        /// <param name="param"></param>
+        /// <param name = "ID"></param>
+        /// <param name = "FunctionName"></param>
+        /// <param name = "param"></param>
         /// <returns></returns>
         private bool CheckIfEventShouldFire(ScriptData ID, string FunctionName, object[] param)
         {
@@ -809,10 +796,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //This will happen if the script doesn't compile correctly
                 if (ID.Script == null)
                 {
-                    m_log.Info ("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name + "' to fire event " + FunctionName);
+                    m_log.Info("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name +
+                               "' to fire event " + FunctionName);
                     return false;
                 }
-                scriptEvents eventType = (scriptEvents)Enum.Parse (typeof (scriptEvents), FunctionName);
+                scriptEvents eventType = (scriptEvents) Enum.Parse(typeof (scriptEvents), FunctionName);
 
                 // this must be done even if there is no event method
 
@@ -824,11 +812,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     ID.RemoveLandCollisionEvents = false;
 
 
-                if ((ID.Script.GetStateEventFlags (ID.State) & (long)eventType) == 0)
+                if ((ID.Script.GetStateEventFlags(ID.State) & (long) eventType) == 0)
                     return false; //If the script doesn't contain the state, don't even bother queueing it
 
                 //Make sure we can execute events at position
-                if (!m_scriptEngine.PipeEventsForScript (ID.Part))
+                if (!m_scriptEngine.PipeEventsForScript(ID.Part))
                     return false;
 
                 if (eventType == scriptEvents.timer)
@@ -839,7 +827,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 else if (eventType == scriptEvents.control)
                 {
-                    int held = ((LSL_Types.LSLInteger)param[1]).value;
+                    int held = ((LSL_Types.LSLInteger) param[1]).value;
                     // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
 
                     // If the last message was a 0 (nothing held)
@@ -909,27 +897,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Changed changed;
                     if (param[0] is Changed)
                     {
-                        changed = (Changed)param[0];
+                        changed = (Changed) param[0];
                     }
                     else
                     {
-                        changed = (Changed)(((LSL_Types.LSLInteger)param[0]).value);
+                        changed = (Changed) (((LSL_Types.LSLInteger) param[0]).value);
                     }
-                    if (ID.ChangedInQueue.Contains (changed))
+                    if (ID.ChangedInQueue.Contains(changed))
                         return false;
-                    ID.ChangedInQueue.Add (changed);
+                    ID.ChangedInQueue.Add(changed);
                 }
 
                 if (FunctionName == "state_entry")
-                    ID.ResetEvents ();
+                    ID.ResetEvents();
             }
             return true;
         }
-        
+
         /// <summary>
-        /// This removes the event from the queue and allows it to be fired again
+        ///   This removes the event from the queue and allows it to be fired again
         /// </summary>
-        /// <param name="QIS"></param>
+        /// <param name = "QIS"></param>
         public void EventComplete(QueueItemStruct QIS)
         {
             lock (QIS.ID.ScriptEventLock)
@@ -958,13 +946,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     Changed changed;
                     if (QIS.param[0] is Changed)
                     {
-                        changed = (Changed)QIS.param[0];
+                        changed = (Changed) QIS.param[0];
                     }
                     else
                     {
-                        changed = (Changed)(((LSL_Types.LSLInteger)QIS.param[0]).value);
+                        changed = (Changed) (((LSL_Types.LSLInteger) QIS.param[0]).value);
                     }
-                    QIS.ID.ChangedInQueue.Remove (changed);
+                    QIS.ID.ChangedInQueue.Remove(changed);
                 }
             }
         }

@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -58,7 +58,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Active", ColumnTypes.String100),
                 ColDef("Checked", ColumnTypes.String100),
                 ColDef("Notes", ColumnTypes.String1024)
-                ));
+                                          ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

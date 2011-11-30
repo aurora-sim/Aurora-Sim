@@ -33,7 +33,6 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenSim.Framework;
-using Aurora.Modules.RegionLoader;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
 
@@ -246,7 +245,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 config.Set("Location", location);
             }
 
-            string[] locationElements = location.Split(new char[] { ',' });
+            string[] locationElements = location.Split(new[] { ',' });
 
             region.RegionLocX = Convert.ToInt32(locationElements[0]) * Constants.RegionSize;
             region.RegionLocY = Convert.ToInt32(locationElements[1]) * Constants.RegionSize;
@@ -373,7 +372,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <summary>
         /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
         /// </summary>
-        /// <param name="module"></param>
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {

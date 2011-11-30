@@ -25,20 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using System.Timers;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Nini.Config;
-using log4net;
-using Aurora.DataManager;
-using Aurora.Framework;
-using OpenMetaverse;
-
 namespace Aurora.Modules
 {
     /*#region Weather Module

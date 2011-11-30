@@ -26,27 +26,20 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Xml;
 using Nini.Config;
 using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.DataManager;
-using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -124,10 +117,7 @@ namespace Aurora.Modules
         /// <param name="cmdparams">Additional arguments passed to the command</param>
         public void RunCommand (string[] cmdparams)
         {
-            m_manager.ForEachCurrentScene (delegate (IScene scene)
-            {
-                scene.AuroraEventManager.FireGenericEventHandler ("Backup", null);
-            });
+            m_manager.ForEachCurrentScene (scene => scene.AuroraEventManager.FireGenericEventHandler("Backup", null));
         }
 
         public void DisableBackup (string[] cmdparams)
@@ -157,10 +147,8 @@ namespace Aurora.Modules
         {
             #region Declares
 
-            protected static readonly ILog m_log
-                = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
             protected IScene m_scene;
-            protected bool m_LoadingPrims = false;
+            protected bool m_LoadingPrims;
 
             #endregion
 
@@ -272,13 +260,13 @@ namespace Aurora.Modules
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
-                        else if (group.RootChild.Shape == null)
+                        if (group.RootChild.Shape == null)
                         {
                             m_log.Warn("[BackupModule]: Broken object (" + group.Name + ") found while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
-                        else if (group.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX + 10 ||
+                        if (group.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX + 10 ||
                             group.AbsolutePosition.X < -10 ||
                             group.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY + 10 ||
                             group.AbsolutePosition.Y < -10)
@@ -369,11 +357,7 @@ namespace Aurora.Modules
                     lock (m_scene.Entities)
                     {
                         ISceneEntity[] entities = m_scene.Entities.GetEntities();
-                        foreach (ISceneEntity entity in entities)
-                        {
-                            if (!entity.IsAttachment)
-                                groups.Add(entity);
-                        }
+                        groups.AddRange(entities.Where(entity => !entity.IsAttachment));
                     }
                     //Delete all the groups now
                     DeleteSceneObjects(groups.ToArray(), true, true);
@@ -404,10 +388,10 @@ namespace Aurora.Modules
                                 List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
                                 parts.AddRange(entity.ChildrenEntities());
                                 DeleteSceneObject(entity, true, false); //Don't remove from the database
-                                m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                                {
-                                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle, parts.ToArray());
-                                });
+                                m_scene.ForEachScenePresence(
+                                    avatar =>
+                                    avatar.ControllingClient.SendKillObject(m_scene.RegionInfo.RegionHandle,
+                                                                            parts.ToArray()));
                             }
                         }
                     }
@@ -425,6 +409,7 @@ namespace Aurora.Modules
             /// </summary>
             /// <param name="groups"></param>
             /// <param name="DeleteScripts"></param>
+            /// <param name="sendKillPackets"></param>
             /// <returns></returns>
             public bool DeleteSceneObjects (ISceneEntity[] groups, bool DeleteScripts, bool sendKillPackets)
             {
@@ -440,11 +425,8 @@ namespace Aurora.Modules
                 }
                 if(sendKillPackets)
                 {
-                    m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                                                     {
-                                                         avatar.ControllingClient.SendKillObject(
-                                                             m_scene.RegionInfo.RegionHandle, parts.ToArray());
-                                                     });
+                    m_scene.ForEachScenePresence(avatar => avatar.ControllingClient.SendKillObject(
+                        m_scene.RegionInfo.RegionHandle, parts.ToArray()));
                 }
 
                 return true;
@@ -536,8 +518,8 @@ namespace Aurora.Modules
             #region IAuroraBackupModule Methods
 
             private bool m_isArchiving = false;
-            private List<UUID> m_missingAssets = new List<UUID>();
-            private List<LandData> m_parcels = new List<LandData>();
+            private readonly List<UUID> m_missingAssets = new List<UUID>();
+            private readonly List<LandData> m_parcels = new List<LandData>();
             private bool m_merge = false;
             private bool m_loadAssets = false;
 
@@ -639,7 +621,7 @@ namespace Aurora.Modules
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex);
                     }
                 }
                 entities = null;
@@ -664,7 +646,7 @@ namespace Aurora.Modules
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex);
                     }
                 }
                 if (foundAllAssets)
@@ -677,7 +659,7 @@ namespace Aurora.Modules
             {
                 int tMapSize = tModule.Height * tModule.Height;
                 byte[] sdata = new byte[tMapSize * 2];
-                System.Buffer.BlockCopy (tModule.GetSerialised (tModule.Scene), 0, sdata, 0, sdata.Length);
+                Buffer.BlockCopy (tModule.GetSerialised (tModule.Scene), 0, sdata, 0, sdata.Length);
                 return sdata;
             }
 
@@ -755,16 +737,12 @@ namespace Aurora.Modules
                     {
                         scene.EventManager.TriggerIncomingLandDataFromStorage(m_parcels, Vector2.Zero);
                         //Update the database as well!
-                        if (parcelManagementModule != null)
+                        foreach (LandData parcel in m_parcels)
                         {
-                            foreach (LandData parcel in m_parcels)
-                            {
-                                parcelManagementModule.UpdateLandObject(parcelManagementModule.GetLandObject(parcel.LocalID));
-                            }
+                            parcelManagementModule.UpdateLandObject(parcelManagementModule.GetLandObject(parcel.LocalID));
                         }
                     }
-                    else if (parcelManagementModule != null)
-                        parcelManagementModule.ResetSimLandObjects ();
+                    else parcelManagementModule.ResetSimLandObjects ();
                     m_parcels.Clear();
                 }
             }
@@ -886,9 +864,9 @@ namespace Aurora.Modules
                     if(m_loadAssets)
                     {
                         AssetBase asset = new AssetBase();
-                        asset.Unpack(OSDParser.DeserializeJson(UTF8Encoding.UTF8.GetString(data)));
+                        asset.Unpack(OSDParser.DeserializeJson(Encoding.UTF8.GetString(data)));
                         bool exists = scene.AssetService.Get(asset.IDString) != null;
-                        if(!exists && asset != null)
+                        if(!exists)
                             scene.AssetService.Store(asset);
                     }
                 }
@@ -897,7 +875,7 @@ namespace Aurora.Modules
             private ITerrainChannel ReadTerrain (byte[] data, IScene scene)
             {
                 short[] sdata = new short[data.Length / 2];
-                System.Buffer.BlockCopy (data, 0, sdata, 0, data.Length);
+                Buffer.BlockCopy (data, 0, sdata, 0, data.Length);
                 return new TerrainChannel(sdata, scene);
             }
 

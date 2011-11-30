@@ -30,36 +30,33 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Threading;
-using log4net;
+using Aurora.DataManager;
 using MySql.Data.MySqlClient;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Data;
-using Aurora.DataManager;
+using log4net;
 
 namespace OpenSim.Data.MySQL
 {
     /// <summary>
-    /// A MySQL Interface for the Region Server
+    ///   A MySQL Interface for the Region Server
     /// </summary>
     public class MySQLSimulationData : ILegacySimulationDataStore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        private readonly object m_dbLock = new object();
         private string m_connectionString;
-        private object m_dbLock = new object ();
+
+        #region ILegacySimulationDataStore Members
 
         public string Name
         {
-            get
-            {
-                return "MySQL";
-            }
+            get { return "MySQL"; }
         }
 
         public void Initialise(string connectionString)
@@ -73,51 +70,25 @@ namespace OpenSim.Data.MySQL
                 // Apply new Migrations
                 //
                 Assembly assem = GetType().Assembly;
-                LegacyMigration m = new LegacyMigration (dbcon, assem, "RegionStore");
+                LegacyMigration m = new LegacyMigration(dbcon, assem, "RegionStore");
                 m.Update();
             }
         }
 
-        private IDataReader ExecuteReader(MySqlCommand c)
+        public void Dispose()
         {
-            IDataReader r = null;
-
-            try
-            {
-                r = c.ExecuteReader();
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[REGION DB]: MySQL error in ExecuteReader: " + e.Message);
-                throw;
-            }
-
-            return r;
         }
 
-        private void ExecuteNonQuery(MySqlCommand c)
-        {
-            try
-            {
-                c.ExecuteNonQuery();
-            }
-            catch (Exception e)
-            {
-                m_log.Error("[REGION DB]: MySQL error in ExecuteNonQuery: " + e.Message);
-                throw;
-            }
-        }
-
-        public void Dispose() {}
+        #endregion
 
         #region Objects
 
-        public List<ISceneEntity> LoadObjects (UUID regionID, IScene scene)
+        public List<ISceneEntity> LoadObjects(UUID regionID, IScene scene)
         {
             const int ROWS_PER_QUERY = 5000;
 
             Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>(ROWS_PER_QUERY);
-            Dictionary<UUID, ISceneEntity> objects = new Dictionary<UUID, ISceneEntity> ();
+            Dictionary<UUID, ISceneEntity> objects = new Dictionary<UUID, ISceneEntity>();
             int count = 0;
 
             #region Prim Loading
@@ -147,7 +118,7 @@ namespace OpenSim.Data.MySQL
                                 prims[prim.UUID] = prim;
 
                                 ++count;
-                                if (count % ROWS_PER_QUERY == 0)
+                                if (count%ROWS_PER_QUERY == 0)
                                     m_log.Info("[REGION DB]: Loaded " + count + " prims...");
                             }
                         }
@@ -160,17 +131,16 @@ namespace OpenSim.Data.MySQL
             #region SceneObjectGroup Creation
 
             // Create all of the SOGs from the root prims first
-            foreach (SceneObjectPart prim in prims.Values)
+            foreach (SceneObjectPart prim in prims.Values.Where(prim => prim.ParentUUID == UUID.Zero))
             {
-                if (prim.ParentUUID == UUID.Zero)
-                    objects[prim.UUID] = new SceneObjectGroup(prim, scene);
+                objects[prim.UUID] = new SceneObjectGroup(prim, scene);
             }
 
-            List<uint> foundLocalIDs = new List<uint> ();
+            List<uint> foundLocalIDs = new List<uint>();
             // Add all of the children objects to the SOGs
             foreach (SceneObjectPart prim in prims.Values)
             {
-                if(!foundLocalIDs.Contains(prim.LocalId))
+                if (!foundLocalIDs.Contains(prim.LocalId))
                     foundLocalIDs.Add(prim.LocalId);
                 else
                     prim.LocalId = 0; //Reset it! Only use it once!
@@ -235,13 +205,13 @@ namespace OpenSim.Data.MySQL
 
             m_log.DebugFormat("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
 
-            return new List<ISceneEntity> (objects.Values);
+            return new List<ISceneEntity>(objects.Values);
         }
 
         /// <summary>
-        /// Load in a prim's persisted inventory.
+        ///   Load in a prim's persisted inventory.
         /// </summary>
-        /// <param name="prim">The prim</param>
+        /// <param name = "prim">The prim</param>
         private void LoadItems(SceneObjectPart prim)
         {
             lock (m_dbLock)
@@ -291,41 +261,42 @@ namespace OpenSim.Data.MySQL
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         cmd.CommandText = "SHOW COLUMNS from terrain";
-                        using (IDataReader reader = ExecuteReader (cmd))
+                        using (IDataReader reader = ExecuteReader(cmd))
                         {
-                            while (reader.Read ())
+                            while (reader.Read())
                             {
-                                if (reader["Field"].ToString () == "X")
+                                if (reader["Field"].ToString() == "X")
                                     hasX = true;
-                                if (reader["Field"].ToString () == "Revert")
+                                if (reader["Field"].ToString() == "Revert")
                                     hasRevert = true;
                             }
                         }
                     }
                 }
-                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
                 {
-                    dbcon.Open ();
+                    dbcon.Open();
 
-                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         cmd.CommandText = "select Heightfield" + (hasX ? ",X,Y " : "") +
-                            "from terrain where RegionUUID = ?RegionUUID " + (hasRevert ? ("and Revert = '" + Revert.ToString() + "'") : "") +
-                            " order by Revision desc limit 1";
+                                          "from terrain where RegionUUID = ?RegionUUID " +
+                                          (hasRevert ? ("and Revert = '" + Revert.ToString() + "'") : "") +
+                                          " order by Revision desc limit 1";
 
-                        cmd.Parameters.AddWithValue ("RegionUUID", scene.RegionInfo.RegionID.ToString ());
+                        cmd.Parameters.AddWithValue("RegionUUID", scene.RegionInfo.RegionID.ToString());
 
                         using (IDataReader reader = ExecuteReader(cmd))
                         {
                             while (reader.Read())
                             {
-                                if (!hasX || !hasRevert || reader["X"].ToString () == "-1")
+                                if (!hasX || !hasRevert || reader["X"].ToString() == "-1")
                                 {
-                                    m_log.Warn ("Found double terrain");
-                                    byte[] heightmap = (byte[])reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    m_log.Warn("Found double terrain");
+                                    byte[] heightmap = (byte[]) reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX*RegionSizeX];
                                     double[,] terrain = null;
-                                    terrain = new double[RegionSizeX, RegionSizeY];
+                                    terrain = new double[RegionSizeX,RegionSizeY];
                                     terrain.Initialize();
 
                                     using (MemoryStream str = new MemoryStream(heightmap))
@@ -345,18 +316,19 @@ namespace OpenSim.Data.MySQL
                                     {
                                         for (int y = 0; y < RegionSizeY; y++)
                                         {
-                                            map[y * RegionSizeX + x] = (short)(terrain[x, y] * Constants.TerrainCompression);
+                                            map[y*RegionSizeX + x] =
+                                                (short) (terrain[x, y]*Constants.TerrainCompression);
                                         }
                                     }
                                     return map;
                                 }
                                 else
                                 {
-                                    m_log.Warn ("Found single terrain");
-                                    byte[] heightmap = (byte[])reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    m_log.Warn("Found single terrain");
+                                    byte[] heightmap = (byte[]) reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX*RegionSizeX];
                                     int ii = 0;
-                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                    for (int i = 0; i < heightmap.Length; i += sizeof (short))
                                     {
                                         map[ii] = Utils.BytesToInt16(heightmap, i);
                                         ii++;
@@ -373,7 +345,7 @@ namespace OpenSim.Data.MySQL
             return null;
         }
 
-        public short[] LoadWater (IScene scene, bool Revert, int RegionSizeX, int RegionSizeY)
+        public short[] LoadWater(IScene scene, bool Revert, int RegionSizeX, int RegionSizeY)
         {
             lock (m_dbLock)
             {
@@ -386,10 +358,10 @@ namespace OpenSim.Data.MySQL
                     using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         cmd.CommandText = "select Heightfield,X,Y " +
-                            "from terrain where RegionUUID = ?RegionUUID and Revert = '" + r + "'" +
-                            "order by Revision desc limit 1";
+                                          "from terrain where RegionUUID = ?RegionUUID and Revert = '" + r + "'" +
+                                          "order by Revision desc limit 1";
 
-                        cmd.Parameters.AddWithValue ("RegionUUID", scene.RegionInfo.RegionID.ToString ());
+                        cmd.Parameters.AddWithValue("RegionUUID", scene.RegionInfo.RegionID.ToString());
 
                         using (IDataReader reader = ExecuteReader(cmd))
                         {
@@ -397,22 +369,23 @@ namespace OpenSim.Data.MySQL
                             {
                                 if (reader["X"].ToString() == "-1")
                                 {
-                                    byte[] heightmap = (byte[])reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    byte[] heightmap = (byte[]) reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX*RegionSizeX];
                                     int ii = 0;
-                                    for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                    for (int i = 0; i < heightmap.Length; i += sizeof (double))
                                     {
-                                        map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
+                                        map[ii] =
+                                            (short) (Utils.BytesToDouble(heightmap, i)*Constants.TerrainCompression);
                                         ii++;
                                     }
                                     return map;
                                 }
                                 else
                                 {
-                                    byte[] heightmap = (byte[])reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    byte[] heightmap = (byte[]) reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX*RegionSizeX];
                                     int ii = 0;
-                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                    for (int i = 0; i < heightmap.Length; i += sizeof (short))
                                     {
                                         map[ii] = Utils.BytesToInt16(heightmap, i);
                                         ii++;
@@ -450,44 +423,44 @@ namespace OpenSim.Data.MySQL
             }
         }
 
-        public List<LandData> LoadLandObjects (UUID regionUUID)
+        public List<LandData> LoadLandObjects(UUID regionUUID)
         {
-            List<LandData> landData = new List<LandData> ();
+            List<LandData> landData = new List<LandData>();
 
             lock (m_dbLock)
             {
-                using (MySqlConnection dbcon = new MySqlConnection (m_connectionString))
+                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
                 {
-                    dbcon.Open ();
+                    dbcon.Open();
 
-                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         cmd.CommandText = "select * from land where RegionUUID = ?RegionUUID";
-                        cmd.Parameters.AddWithValue ("RegionUUID", regionUUID.ToString ());
+                        cmd.Parameters.AddWithValue("RegionUUID", regionUUID.ToString());
 
-                        using (IDataReader reader = ExecuteReader (cmd))
+                        using (IDataReader reader = ExecuteReader(cmd))
                         {
-                            while (reader.Read ())
+                            while (reader.Read())
                             {
-                                LandData newLand = BuildLandData (reader);
-                                landData.Add (newLand);
+                                LandData newLand = BuildLandData(reader);
+                                landData.Add(newLand);
                             }
                         }
                     }
 
-                    using (MySqlCommand cmd = dbcon.CreateCommand ())
+                    using (MySqlCommand cmd = dbcon.CreateCommand())
                     {
                         foreach (LandData land in landData)
                         {
-                            cmd.Parameters.Clear ();
+                            cmd.Parameters.Clear();
                             cmd.CommandText = "select * from landaccesslist where LandUUID = ?LandUUID";
-                            cmd.Parameters.AddWithValue ("LandUUID", land.GlobalID.ToString ());
+                            cmd.Parameters.AddWithValue("LandUUID", land.GlobalID.ToString());
 
-                            using (IDataReader reader = ExecuteReader (cmd))
+                            using (IDataReader reader = ExecuteReader(cmd))
                             {
-                                while (reader.Read ())
+                                while (reader.Read())
                                 {
-                                    land.ParcelAccessList.Add (BuildLandAccessData (reader));
+                                    land.ParcelAccessList.Add(BuildLandAccessData(reader));
                                 }
                             }
                         }
@@ -499,6 +472,36 @@ namespace OpenSim.Data.MySQL
         }
 
         #endregion
+
+        private IDataReader ExecuteReader(MySqlCommand c)
+        {
+            IDataReader r = null;
+
+            try
+            {
+                r = c.ExecuteReader();
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[REGION DB]: MySQL error in ExecuteReader: " + e.Message);
+                throw;
+            }
+
+            return r;
+        }
+
+        private void ExecuteNonQuery(MySqlCommand c)
+        {
+            try
+            {
+                c.ExecuteNonQuery();
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[REGION DB]: MySQL error in ExecuteNonQuery: " + e.Message);
+                throw;
+            }
+        }
 
         public void Shutdown()
         {
@@ -623,7 +626,7 @@ namespace OpenSim.Data.MySQL
                             prim.TouchName = o[i].ToString();
                             break;
                         case "ObjectFlags":
-                            prim.Flags = (PrimFlags)Convert.ToUInt32(o[i].ToString());
+                            prim.Flags = (PrimFlags) Convert.ToUInt32(o[i].ToString());
                             break;
                         case "OwnerMask":
                             prim.OwnerMask = Convert.ToUInt32(o[i].ToString());
@@ -741,11 +744,11 @@ namespace OpenSim.Data.MySQL
                             break;
                         case "TextureAnimation":
                             if (!(row[i] is DBNull))
-                                prim.TextureAnimation = (byte[])o[i];
+                                prim.TextureAnimation = (byte[]) o[i];
                             break;
                         case "ParticleSystem":
                             if (!(row[i] is DBNull))
-                                prim.ParticleSystem = (byte[])o[i];
+                                prim.ParticleSystem = (byte[]) o[i];
                             break;
                         case "OmegaX":
                             OmegaX = Convert.ToSingle(o[i].ToString());
@@ -806,7 +809,7 @@ namespace OpenSim.Data.MySQL
                             prim.CollisionSoundVolume = Convert.ToSingle(o[i].ToString());
                             break;
                         case "PassTouches":
-                            prim.PassTouch = (int)Convert.ToSingle(o[i].ToString());
+                            prim.PassTouch = (int) Convert.ToSingle(o[i].ToString());
                             break;
                         case "VolumeDetect":
                             if (!(row[i] is DBNull))
@@ -819,8 +822,8 @@ namespace OpenSim.Data.MySQL
                             prim.GenericData = o[i].ToString();
                             break;
                         case "MediaURL":
-                            if (!(o[i] is System.DBNull))
-                                prim.MediaUrl = (string)o[i];
+                            if (!(o[i] is DBNull))
+                                prim.MediaUrl = (string) o[i];
                             break;
                         case "SceneGroupID":
                             break;
@@ -898,15 +901,15 @@ namespace OpenSim.Data.MySQL
                             s.State = Convert.ToByte(o[i]);
                             break;
                         case "Texture":
-                            byte[] textureEntry = (byte[])o[i];
+                            byte[] textureEntry = (byte[]) o[i];
                             s.TextureEntry = textureEntry;
                             break;
                         case "ExtraParams":
-                            s.ExtraParams = (byte[])o[i];
+                            s.ExtraParams = (byte[]) o[i];
                             break;
                         case "Media":
-                            if (!(o[i] is System.DBNull))
-                                s.Media = PrimitiveBaseShape.MediaList.FromXml((string)o[i]);
+                            if (!(o[i] is DBNull))
+                                s.Media = PrimitiveBaseShape.MediaList.FromXml((string) o[i]);
                             break;
                         default:
                             m_log.Warn("[MySQL]: Unknown database row: " + name);
@@ -916,9 +919,9 @@ namespace OpenSim.Data.MySQL
                     #endregion
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                m_log.Warn("[MySQL]: Exception loading a SceneObject, " + ex.ToString() + ", not loading..");
+                m_log.Warn("[MySQL]: Exception loading a SceneObject, " + ex + ", not loading..");
                 return null;
             }
             s.Scale = new Vector3(ScaleX, ScaleY, ScaleZ);
@@ -926,164 +929,172 @@ namespace OpenSim.Data.MySQL
             prim.SoundFlags = 1; // If it's persisted at all, it's looped
 
             prim.Color = Color.FromArgb(ColorA, ColorR, ColorG, ColorB);
-            prim.FixOffsetPosition(new Vector3(PositionX, PositionY, PositionZ),true);
-            prim.FixGroupPosition( new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ),true);
+            prim.FixOffsetPosition(new Vector3(PositionX, PositionY, PositionZ), true);
+            prim.FixGroupPosition(new Vector3(GroupPositionX, GroupPositionY, GroupPositionZ), true);
             prim.Velocity = new Vector3(VelocityX, VelocityY, VelocityZ);
             prim.AngularVelocity = new Vector3(AngularVelocityX, AngularVelocityY, AngularVelocityZ);
             prim.RotationOffset = new Quaternion(RotationX, RotationY, RotationZ, RotationW);
             prim.SitTargetPositionLL = new Vector3(SitTargetOffsetX, SitTargetOffsetY, SitTargetOffsetZ);
-            prim.SitTargetOrientationLL = new Quaternion(SitTargetOrientX, SitTargetOrientY, SitTargetOrientZ, SitTargetOrientW);
+            prim.SitTargetOrientationLL = new Quaternion(SitTargetOrientX, SitTargetOrientY, SitTargetOrientZ,
+                                                         SitTargetOrientW);
             prim.AngularVelocity = new Vector3(OmegaX, OmegaY, OmegaZ);
-            prim.CameraEyeOffset = new Vector3 (CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ);
-            prim.CameraAtOffset = new Vector3 (CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ);
-            prim.Acceleration = new Vector3 (AccelerationX, AccelerationY, AccelerationZ);
+            prim.CameraEyeOffset = new Vector3(CameraEyeOffsetX, CameraEyeOffsetY, CameraEyeOffsetZ);
+            prim.CameraAtOffset = new Vector3(CameraAtOffsetX, CameraAtOffsetY, CameraAtOffsetZ);
+            prim.Acceleration = new Vector3(AccelerationX, AccelerationY, AccelerationZ);
 
             return prim;
         }
 
 
         /// <summary>
-        /// Build a prim inventory item from the persisted data.
+        ///   Build a prim inventory item from the persisted data.
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name = "row"></param>
         /// <returns></returns>
         private static TaskInventoryItem BuildItem(IDataReader row)
         {
-            TaskInventoryItem taskItem = new TaskInventoryItem();
+            TaskInventoryItem taskItem = new TaskInventoryItem
+                                             {
+                                                 ItemID = DBGuid.FromDB(row["itemID"]),
+                                                 ParentPartID = DBGuid.FromDB(row["primID"]),
+                                                 AssetID = DBGuid.FromDB(row["assetID"]),
+                                                 ParentID = DBGuid.FromDB(row["parentFolderID"]),
+                                                 InvType = Convert.ToInt32(row["invType"]),
+                                                 Type = Convert.ToInt32(row["assetType"]),
+                                                 Name = (String) row["name"],
+                                                 Description = (String) row["description"],
+                                                 CreationDate = Convert.ToUInt32(row["creationDate"]),
+                                                 CreatorIdentification = row["creatorID"].ToString(),
+                                                 OwnerID = DBGuid.FromDB(row["ownerID"]),
+                                                 LastOwnerID = DBGuid.FromDB(row["lastOwnerID"]),
+                                                 GroupID = DBGuid.FromDB(row["groupID"]),
+                                                 NextPermissions = Convert.ToUInt32(row["nextPermissions"]),
+                                                 CurrentPermissions = Convert.ToUInt32(row["currentPermissions"]),
+                                                 BasePermissions = Convert.ToUInt32(row["basePermissions"]),
+                                                 EveryonePermissions = Convert.ToUInt32(row["everyonePermissions"]),
+                                                 GroupPermissions = Convert.ToUInt32(row["groupPermissions"]),
+                                                 Flags = Convert.ToUInt32(row["flags"]),
+                                                 SalePrice = Convert.ToInt32(row["salePrice"]),
+                                                 SaleType = Convert.ToByte(row["saleType"])
+                                             };
 
-            taskItem.ItemID        = DBGuid.FromDB(row["itemID"]);
-            taskItem.ParentPartID  = DBGuid.FromDB(row["primID"]);
-            taskItem.AssetID       = DBGuid.FromDB(row["assetID"]);
-            taskItem.ParentID      = DBGuid.FromDB(row["parentFolderID"]);
 
-            taskItem.InvType       = Convert.ToInt32(row["invType"]);
-            taskItem.Type          = Convert.ToInt32(row["assetType"]);
 
-            taskItem.Name          = (String)row["name"];
-            taskItem.Description   = (String)row["description"];
-            taskItem.CreationDate  = Convert.ToUInt32(row["creationDate"]);
-            taskItem.CreatorIdentification = row["creatorID"].ToString();
-            taskItem.OwnerID       = DBGuid.FromDB(row["ownerID"]);
-            taskItem.LastOwnerID   = DBGuid.FromDB(row["lastOwnerID"]);
-            taskItem.GroupID       = DBGuid.FromDB(row["groupID"]);
 
-            taskItem.NextPermissions = Convert.ToUInt32(row["nextPermissions"]);
-            taskItem.CurrentPermissions     = Convert.ToUInt32(row["currentPermissions"]);
-            taskItem.BasePermissions      = Convert.ToUInt32(row["basePermissions"]);
-            taskItem.EveryonePermissions  = Convert.ToUInt32(row["everyonePermissions"]);
-            taskItem.GroupPermissions     = Convert.ToUInt32(row["groupPermissions"]);
-            taskItem.Flags = Convert.ToUInt32(row["flags"]);
-            taskItem.SalePrice = Convert.ToInt32(row["salePrice"]);
-            taskItem.SaleType = Convert.ToByte(row["saleType"]);
 
             return taskItem;
         }
 
         private static RegionSettings BuildRegionSettings(IDataReader row)
         {
-            RegionSettings newSettings = new RegionSettings();
+            RegionSettings newSettings = new RegionSettings
+                                             {
+                                                 RegionUUID = DBGuid.FromDB(row["regionUUID"]),
+                                                 BlockTerraform = Convert.ToBoolean(row["block_terraform"]),
+                                                 AllowDamage = Convert.ToBoolean(row["allow_damage"]),
+                                                 BlockFly = Convert.ToBoolean(row["block_fly"]),
+                                                 RestrictPushing = Convert.ToBoolean(row["restrict_pushing"]),
+                                                 AllowLandResell = Convert.ToBoolean(row["allow_land_resell"]),
+                                                 AllowLandJoinDivide = Convert.ToBoolean(row["allow_land_join_divide"]),
+                                                 BlockShowInSearch = Convert.ToBoolean(row["block_show_in_search"]),
+                                                 AgentLimit = Convert.ToInt32(row["agent_limit"]),
+                                                 ObjectBonus = Convert.ToDouble(row["object_bonus"]),
+                                                 Maturity = Convert.ToInt32(row["maturity"]),
+                                                 DisableScripts = Convert.ToBoolean(row["disable_scripts"]),
+                                                 DisableCollisions = Convert.ToBoolean(row["disable_collisions"]),
+                                                 DisablePhysics = Convert.ToBoolean(row["disable_physics"]),
+                                                 TerrainTexture1 = DBGuid.FromDB(row["terrain_texture_1"]),
+                                                 TerrainTexture2 = DBGuid.FromDB(row["terrain_texture_2"]),
+                                                 TerrainTexture3 = DBGuid.FromDB(row["terrain_texture_3"]),
+                                                 TerrainTexture4 = DBGuid.FromDB(row["terrain_texture_4"]),
+                                                 Elevation1NW = Convert.ToDouble(row["elevation_1_nw"]),
+                                                 Elevation2NW = Convert.ToDouble(row["elevation_2_nw"]),
+                                                 Elevation1NE = Convert.ToDouble(row["elevation_1_ne"]),
+                                                 Elevation2NE = Convert.ToDouble(row["elevation_2_ne"]),
+                                                 Elevation1SE = Convert.ToDouble(row["elevation_1_se"]),
+                                                 Elevation2SE = Convert.ToDouble(row["elevation_2_se"]),
+                                                 Elevation1SW = Convert.ToDouble(row["elevation_1_sw"]),
+                                                 Elevation2SW = Convert.ToDouble(row["elevation_2_sw"]),
+                                                 WaterHeight = Convert.ToDouble(row["water_height"]),
+                                                 TerrainRaiseLimit = Convert.ToDouble(row["terrain_raise_limit"]),
+                                                 TerrainLowerLimit = Convert.ToDouble(row["terrain_lower_limit"]),
+                                                 UseEstateSun = Convert.ToBoolean(row["use_estate_sun"]),
+                                                 Sandbox = Convert.ToBoolean(row["sandbox"]),
+                                                 SunVector = new Vector3(
+                                                     Convert.ToSingle(row["sunvectorx"]),
+                                                     Convert.ToSingle(row["sunvectory"]),
+                                                     Convert.ToSingle(row["sunvectorz"])
+                                                     ),
+                                                 FixedSun = Convert.ToBoolean(row["fixed_sun"]),
+                                                 SunPosition = Convert.ToDouble(row["sun_position"]),
+                                                 Covenant = DBGuid.FromDB(row["covenant"]),
+                                                 CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"]),
+                                                 LoadedCreationDateTime =
+                                                     Convert.ToInt32(row["loaded_creation_datetime"])
+                                             };
 
-            newSettings.RegionUUID = DBGuid.FromDB(row["regionUUID"]);
-            newSettings.BlockTerraform = Convert.ToBoolean(row["block_terraform"]);
-            newSettings.AllowDamage = Convert.ToBoolean(row["allow_damage"]);
-            newSettings.BlockFly = Convert.ToBoolean(row["block_fly"]);
-            newSettings.RestrictPushing = Convert.ToBoolean(row["restrict_pushing"]);
-            newSettings.AllowLandResell = Convert.ToBoolean(row["allow_land_resell"]);
-            newSettings.AllowLandJoinDivide = Convert.ToBoolean(row["allow_land_join_divide"]);
-            newSettings.BlockShowInSearch = Convert.ToBoolean(row["block_show_in_search"]);
-            newSettings.AgentLimit = Convert.ToInt32(row["agent_limit"]);
-            newSettings.ObjectBonus = Convert.ToDouble(row["object_bonus"]);
-            newSettings.Maturity = Convert.ToInt32(row["maturity"]);
-            newSettings.DisableScripts = Convert.ToBoolean(row["disable_scripts"]);
-            newSettings.DisableCollisions = Convert.ToBoolean(row["disable_collisions"]);
-            newSettings.DisablePhysics = Convert.ToBoolean(row["disable_physics"]);
-            newSettings.TerrainTexture1 = DBGuid.FromDB(row["terrain_texture_1"]);
-            newSettings.TerrainTexture2 = DBGuid.FromDB(row["terrain_texture_2"]);
-            newSettings.TerrainTexture3 = DBGuid.FromDB(row["terrain_texture_3"]);
-            newSettings.TerrainTexture4 = DBGuid.FromDB(row["terrain_texture_4"]);
-            newSettings.Elevation1NW = Convert.ToDouble(row["elevation_1_nw"]);
-            newSettings.Elevation2NW = Convert.ToDouble(row["elevation_2_nw"]);
-            newSettings.Elevation1NE = Convert.ToDouble(row["elevation_1_ne"]);
-            newSettings.Elevation2NE = Convert.ToDouble(row["elevation_2_ne"]);
-            newSettings.Elevation1SE = Convert.ToDouble(row["elevation_1_se"]);
-            newSettings.Elevation2SE = Convert.ToDouble(row["elevation_2_se"]);
-            newSettings.Elevation1SW = Convert.ToDouble(row["elevation_1_sw"]);
-            newSettings.Elevation2SW = Convert.ToDouble(row["elevation_2_sw"]);
-            newSettings.WaterHeight = Convert.ToDouble(row["water_height"]);
-            newSettings.TerrainRaiseLimit = Convert.ToDouble(row["terrain_raise_limit"]);
-            newSettings.TerrainLowerLimit = Convert.ToDouble(row["terrain_lower_limit"]);
-            newSettings.UseEstateSun = Convert.ToBoolean(row["use_estate_sun"]);
-            newSettings.Sandbox = Convert.ToBoolean(row["sandbox"]);
-            newSettings.SunVector = new Vector3 (
-                                                 Convert.ToSingle(row["sunvectorx"]),
-                                                 Convert.ToSingle(row["sunvectory"]),
-                                                 Convert.ToSingle(row["sunvectorz"])
-                                                 );
-            newSettings.FixedSun = Convert.ToBoolean(row["fixed_sun"]);
-            newSettings.SunPosition = Convert.ToDouble(row["sun_position"]);
-            newSettings.Covenant = DBGuid.FromDB(row["covenant"]);
-            newSettings.CovenantLastUpdated = Convert.ToInt32(row["covenantlastupdated"]);
-            
-            newSettings.LoadedCreationDateTime = Convert.ToInt32(row["loaded_creation_datetime"]);
-            
+
+
             if (row["loaded_creation_id"] is DBNull)
                 newSettings.LoadedCreationID = "";
-            else 
+            else
                 newSettings.LoadedCreationID = (String) row["loaded_creation_id"];
 
             newSettings.TerrainImageID = DBGuid.FromDB(row["map_tile_ID"]);
             newSettings.TerrainMapImageID = DBGuid.FromDB(row["terrain_tile_ID"]);
             newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
 
-            OSD o = OSDParser.DeserializeJson((String)row["generic"]);
+            OSD o = OSDParser.DeserializeJson((String) row["generic"]);
             if (o.Type == OSDType.Map)
-                newSettings.Generic = (OSDMap)o;
-            
+                newSettings.Generic = (OSDMap) o;
+
             return newSettings;
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
+        ///<summary>
+        ///</summary>
+        ///<param name = "row"></param>
+        ///<returns></returns>
         private static LandData BuildLandData(IDataReader row)
         {
-            LandData newData = new LandData();
+            LandData newData = new LandData
+                                   {
+                                       GlobalID = DBGuid.FromDB(row["UUID"]),
+                                       LocalID = Convert.ToInt32(row["LocalLandID"]),
+                                       Bitmap = (Byte[]) row["Bitmap"],
+                                       Name = (String) row["Name"],
+                                       Description = (String) row["Description"],
+                                       OwnerID = DBGuid.FromDB(row["OwnerUUID"]),
+                                       IsGroupOwned = Convert.ToBoolean(row["IsGroupOwned"]),
+                                       Area = Convert.ToInt32(row["Area"]),
+                                       AuctionID = Convert.ToUInt32(row["AuctionID"]),
+                                       Category = (ParcelCategory) Convert.ToInt32(row["Category"]),
+                                       ClaimDate = Convert.ToInt32(row["ClaimDate"]),
+                                       ClaimPrice = Convert.ToInt32(row["ClaimPrice"]),
+                                       GroupID = DBGuid.FromDB(row["GroupUUID"]),
+                                       SalePrice = Convert.ToInt32(row["SalePrice"]),
+                                       Status = (ParcelStatus) Convert.ToInt32(row["LandStatus"]),
+                                       Flags = Convert.ToUInt32(row["LandFlags"]),
+                                       LandingType = Convert.ToByte(row["LandingType"]),
+                                       MediaAutoScale = Convert.ToByte(row["MediaAutoScale"]),
+                                       MediaID = DBGuid.FromDB(row["MediaTextureUUID"]),
+                                       MediaURL = (String) row["MediaURL"],
+                                       MusicURL = (String) row["MusicURL"],
+                                       PassHours = Convert.ToSingle(row["PassHours"]),
+                                       PassPrice = Convert.ToInt32(row["PassPrice"])
+                                   };
 
-            newData.GlobalID = DBGuid.FromDB(row["UUID"]);
-            newData.LocalID = Convert.ToInt32(row["LocalLandID"]);
 
             // Bitmap is a byte[512]
-            newData.Bitmap = (Byte[]) row["Bitmap"];
 
-            newData.Name = (String) row["Name"];
-            newData.Description = (String) row["Description"];
-            newData.OwnerID = DBGuid.FromDB(row["OwnerUUID"]);
-            newData.IsGroupOwned = Convert.ToBoolean(row["IsGroupOwned"]);
-            newData.Area = Convert.ToInt32(row["Area"]);
-            newData.AuctionID = Convert.ToUInt32(row["AuctionID"]); //Unimplemented
-            newData.Category = (ParcelCategory) Convert.ToInt32(row["Category"]);
-                //Enum libsecondlife.Parcel.ParcelCategory
-            newData.ClaimDate = Convert.ToInt32(row["ClaimDate"]);
-            newData.ClaimPrice = Convert.ToInt32(row["ClaimPrice"]);
-            newData.GroupID = DBGuid.FromDB(row["GroupUUID"]);
-            newData.SalePrice = Convert.ToInt32(row["SalePrice"]);
-            newData.Status = (ParcelStatus) Convert.ToInt32(row["LandStatus"]);
-                //Enum. libsecondlife.Parcel.ParcelStatus
-            newData.Flags = Convert.ToUInt32(row["LandFlags"]);
-            newData.LandingType = Convert.ToByte(row["LandingType"]);
-            newData.MediaAutoScale = Convert.ToByte(row["MediaAutoScale"]);
-            newData.MediaID = DBGuid.FromDB(row["MediaTextureUUID"]);
-            newData.MediaURL = (String) row["MediaURL"];
-            newData.MusicURL = (String) row["MusicURL"];
-            newData.PassHours = Convert.ToSingle(row["PassHours"]);
-            newData.PassPrice = Convert.ToInt32(row["PassPrice"]);
+            //Unimplemented
+            //Enum libsecondlife.Parcel.ParcelCategory
+            //Enum. libsecondlife.Parcel.ParcelStatus
             UUID authedbuyer = UUID.Zero;
             UUID snapshotID = UUID.Zero;
 
-            UUID.TryParse((string)row["AuthBuyerID"], out authedbuyer);
-            UUID.TryParse((string)row["SnapshotUUID"], out snapshotID);
+            UUID.TryParse((string) row["AuthBuyerID"], out authedbuyer);
+            UUID.TryParse((string) row["SnapshotUUID"], out snapshotID);
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
 
             newData.AuthBuyerID = authedbuyer;
@@ -1092,10 +1103,10 @@ namespace OpenSim.Data.MySQL
             {
                 newData.UserLocation =
                     new Vector3(Convert.ToSingle(row["UserLocationX"]), Convert.ToSingle(row["UserLocationY"]),
-                                  Convert.ToSingle(row["UserLocationZ"]));
+                                Convert.ToSingle(row["UserLocationZ"]));
                 newData.UserLookAt =
                     new Vector3(Convert.ToSingle(row["UserLookAtX"]), Convert.ToSingle(row["UserLookAtY"]),
-                                  Convert.ToSingle(row["UserLookAtZ"]));
+                                Convert.ToSingle(row["UserLookAtZ"]));
             }
             catch (InvalidCastException)
             {
@@ -1117,17 +1128,18 @@ namespace OpenSim.Data.MySQL
             return newData;
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
+        ///<summary>
+        ///</summary>
+        ///<param name = "row"></param>
+        ///<returns></returns>
         private static ParcelManager.ParcelAccessEntry BuildLandAccessData(IDataReader row)
         {
-            ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-            entry.AgentID = DBGuid.FromDB(row["AccessUUID"]);
-            entry.Flags = (AccessList) Convert.ToInt32(row["Flags"]);
-            entry.Time = new DateTime();
+            ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry
+                                                        {
+                                                            AgentID = DBGuid.FromDB(row["AccessUUID"]),
+                                                            Flags = (AccessList) Convert.ToInt32(row["Flags"]),
+                                                            Time = new DateTime()
+                                                        };
             return entry;
         }
     }

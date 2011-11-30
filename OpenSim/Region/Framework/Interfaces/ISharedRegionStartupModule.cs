@@ -25,62 +25,57 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public interface ISharedRegionStartupModule
     {
         /// <summary>
-        /// Initialise and load the configs of the module
-        /// This is used by IServices, DO NOT USE ANYTHING THAT REQUIRES IService here!
+        ///   Initialise and load the configs of the module
+        ///   This is used by IServices, DO NOT USE ANYTHING THAT REQUIRES IService here!
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="source"></param>
-        /// <param name="openSimBase"></param>
-        void Initialise (IScene scene, IConfigSource source, ISimulationBase openSimBase);
+        /// <param name = "scene"></param>
+        /// <param name = "source"></param>
+        /// <param name = "openSimBase"></param>
+        void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
-        /// PostInitialise the module
-        /// This is used by IServices, DO NOT USE ANYTHING THAT REQUIRES IService here!
+        ///   PostInitialise the module
+        ///   This is used by IServices, DO NOT USE ANYTHING THAT REQUIRES IService here!
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="source"></param>
-        /// <param name="openSimBase"></param>
-        void PostInitialise (IScene scene, IConfigSource source, ISimulationBase openSimBase);
+        /// <param name = "scene"></param>
+        /// <param name = "source"></param>
+        /// <param name = "openSimBase"></param>
+        void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
-        /// Do the functions of the module and set up any necessary functions
+        ///   Do the functions of the module and set up any necessary functions
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="source"></param>
-        /// <param name="openSimBase"></param>
-        void FinishStartup (IScene scene, IConfigSource source, ISimulationBase openSimBase);
+        /// <param name = "scene"></param>
+        /// <param name = "source"></param>
+        /// <param name = "openSimBase"></param>
+        void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
-        /// Do the functions of the module and set up any necessary functions
+        ///   Do the functions of the module and set up any necessary functions
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="source"></param>
-        /// <param name="openSimBase"></param>
-        void PostFinishStartup (IScene scene, IConfigSource source, ISimulationBase openSimBase);
+        /// <param name = "scene"></param>
+        /// <param name = "source"></param>
+        /// <param name = "openSimBase"></param>
+        void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase);
 
         /// <summary>
-        /// Close the module and remove all references to it
+        ///   Close the module and remove all references to it
         /// </summary>
-        /// <param name="scene"></param>
-        /// <param name="m_config"></param>
-        /// <param name="m_OpenSimBase"></param>
-        void Close (IScene scene);
+        /// <param name = "scene"></param>
+        /// <param name = "m_config"></param>
+        /// <param name = "m_OpenSimBase"></param>
+        void Close(IScene scene);
 
         /// <summary>
-        /// Fired once when the entire instance is fully started up
+        ///   Fired once when the entire instance is fully started up
         /// </summary>
         void StartupComplete();
     }

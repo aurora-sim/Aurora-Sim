@@ -25,77 +25,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Reflection;
+using Aurora.DataManager;
+using Aurora.Simulation.Base;
 using Nini.Config;
-using log4net;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
+using log4net.Core;
 
 namespace OpenSim.Services.AvatarService
 {
     public class AvatarService : IAvatarService, IService
     {
-        protected IAvatarData m_Database = null;
-        protected IRegistryCore m_registry = null;
+        protected IAvatarData m_Database;
         protected bool m_enableCacheBakedTextures = true;
+        protected IRegistryCore m_registry;
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
+        #region IAvatarService Members
+
         public virtual IAvatarService InnerService
         {
             get { return this; }
-        }
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-
-            IConfig avatarConfig = config.Configs["AvatarService"];
-            if (avatarConfig != null)
-                m_enableCacheBakedTextures = avatarConfig.GetBoolean ("EnableBakedTextureCaching", m_enableCacheBakedTextures);
-            
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString ("AvatarHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAvatarService>(this);
-
-            MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]", "Resets the given avatar's appearance to the default", ResetAvatarAppearance);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IAvatarData> ();
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        public void ResetAvatarAppearance(string[] cmd)
-        {
-            string name = "";
-            if (cmd.Length == 3)
-                name = MainConsole.Instance.CmdPrompt("Avatar Name");
-            else
-                name = Util.CombineParams(cmd, 3);
-            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
-            if(acc == null)
-            {
-                MainConsole.Instance.Output("No known avatar with that name.", log4net.Core.Level.Emergency);
-                return;
-            }
-            ResetAvatar(acc.PrincipalID);
         }
 
         public AvatarAppearance GetAppearance(UUID principalID)
@@ -119,8 +74,13 @@ namespace OpenSim.Services.AvatarService
 
         public bool SetAvatar(UUID principalID, AvatarData avatar)
         {
-            m_registry.RequestModuleInterface<ISimulationBase> ().EventManager.FireGenericEventHandler ("SetAppearance", new object[2] { principalID, avatar });
-            return m_Database.Store (principalID, avatar);
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
+                                                                                                      new object[2]
+                                                                                                          {
+                                                                                                              principalID,
+                                                                                                              avatar
+                                                                                                          });
+            return m_Database.Store(principalID, avatar);
         }
 
         public bool ResetAvatar(UUID principalID)
@@ -144,7 +104,7 @@ namespace OpenSim.Services.AvatarService
                 return;
             }
             wearable.MaxItems = 0; //Unlimited items
-            
+
             /*AvatarBaseData baseData = new AvatarBaseData();
             AvatarBaseData[] av = m_CacheDatabase.Get("PrincipalID", principalID.ToString());
             foreach (AvatarBaseData abd in av)
@@ -182,6 +142,54 @@ namespace OpenSim.Services.AvatarService
             catch
             {
             }*/
+        }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+
+            IConfig avatarConfig = config.Configs["AvatarService"];
+            if (avatarConfig != null)
+                m_enableCacheBakedTextures = avatarConfig.GetBoolean("EnableBakedTextureCaching",
+                                                                     m_enableCacheBakedTextures);
+
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
+                return;
+
+            registry.RegisterModuleInterface<IAvatarService>(this);
+
+            MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
+                                                     "Resets the given avatar's appearance to the default",
+                                                     ResetAvatarAppearance);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_Database = DataManager.RequestPlugin<IAvatarData>();
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        public void ResetAvatarAppearance(string[] cmd)
+        {
+            string name = "";
+            name = cmd.Length == 3 ? MainConsole.Instance.CmdPrompt("Avatar Name") : Util.CombineParams(cmd, 3);
+            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
+            if (acc == null)
+            {
+                MainConsole.Instance.Output("No known avatar with that name.", Level.Emergency);
+                return;
+            }
+            ResetAvatar(acc.PrincipalID);
         }
     }
 }

@@ -25,45 +25,41 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.DataManager;
 using Aurora.Framework;
-using Aurora.Services.DataService;
+using Aurora.Simulation.Base;
+using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services
 {
     public class AuroraDataServerPostHandler : BaseStreamHandler
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private AgentInfoHandler AgentHandler = new AgentInfoHandler();
-        private AssetHandler AssetHandler = new AssetHandler();
-        private TelehubInfoHandler TelehubHandler = new TelehubInfoHandler();
+        private readonly AbuseReportsHandler AbuseHandler = new AbuseReportsHandler();
+        private readonly AgentInfoHandler AgentHandler = new AgentInfoHandler();
+        private readonly AssetHandler AssetHandler = new AssetHandler();
+        private readonly DirectoryInfoHandler DirectoryHandler = new DirectoryInfoHandler();
+        private readonly EstateInfoHandler EstateHandler = new EstateInfoHandler();
+        private readonly GroupsServiceHandler GroupsHandler = new GroupsServiceHandler();
+        private readonly MuteInfoHandler MuteHandler = new MuteInfoHandler();
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
-        private EstateInfoHandler EstateHandler = new EstateInfoHandler();
-        private MuteInfoHandler MuteHandler = new MuteInfoHandler();
-        private DirectoryInfoHandler DirectoryHandler = new DirectoryInfoHandler();
-        private GroupsServiceHandler GroupsHandler = new GroupsServiceHandler();
-        private AbuseReportsHandler AbuseHandler = new AbuseReportsHandler();
+        private TelehubInfoHandler TelehubHandler = new TelehubInfoHandler();
 
         protected string m_SessionID;
         protected IRegistryCore m_registry;
 
-        public AuroraDataServerPostHandler (string url, string SessionID, IRegistryCore registry) :
+        public AuroraDataServerPostHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_SessionID = SessionID;
@@ -71,7 +67,7 @@ namespace OpenSim.Services
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -95,17 +91,21 @@ namespace OpenSim.Services
 
                 method = request["METHOD"].ToString();
                 IGridRegistrationService urlModule =
-                            m_registry.RequestModuleInterface<IGridRegistrationService>();
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
                 switch (method)
                 {
-                    #region Agents
+                        #region Agents
+
                     case "getagent":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return AgentHandler.GetAgent(request);
-                    #endregion
-                    #region Assets
+
+                        #endregion
+
+                        #region Assets
+
                     case "updatelsldata":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
@@ -116,8 +116,11 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return AssetHandler.FindLSLData(request);
-                    #endregion
-                    #region Estates
+
+                        #endregion
+
+                        #region Estates
+
                     case "loadestatesettings":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
@@ -158,8 +161,11 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return EstateHandler.GetEstatesOwner(request);
-                    #endregion
-                    #region Mutes
+
+                        #endregion
+
+                        #region Mutes
+
                     case "getmutelist":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
@@ -180,8 +186,11 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return MuteHandler.IsMuted(request);
-                    #endregion
-                    #region Search
+
+                        #endregion
+
+                        #region Search
+
                     case "findland":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
@@ -217,8 +226,11 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return DirectoryHandler.FindClassifiedsInRegion(request);
-                    #endregion
-                    #region Groups
+
+                        #endregion
+
+                        #region Groups
+
                     case "CreateGroup":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
@@ -369,15 +381,18 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GroupsHandler.GetGroupInvites(request);
-                    #endregion
-                    #region Abuse Reports
+
+                        #endregion
+
+                        #region Abuse Reports
+
                     case "AddAbuseReport":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
                                 return FailureResult();
                         return AbuseHandler.AddAbuseReport(request);
-                    #endregion
 
+                        #endregion
                 }
                 m_log.DebugFormat("[AuroraDataServerPostHandler]: unknown method {0} request {1}", method.Length, method);
             }
@@ -387,7 +402,6 @@ namespace OpenSim.Services
             }
 
             return FailureResult();
-
         }
 
         #region Misc
@@ -402,12 +416,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -427,8 +441,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -440,7 +453,8 @@ namespace OpenSim.Services
 
     public class AgentInfoHandler
     {
-        IAgentConnector AgentConnector;
+        private readonly IAgentConnector AgentConnector;
+
         public AgentInfoHandler()
         {
             AgentConnector = DataManager.RequestPlugin<IAgentConnector>("IAgentConnectorLocal");
@@ -467,7 +481,8 @@ namespace OpenSim.Services
 
     public class AssetHandler
     {
-        IAssetConnector AssetConnector;
+        private readonly IAssetConnector AssetConnector;
+
         public AssetHandler()
         {
             AssetConnector = DataManager.RequestPlugin<IAssetConnector>("IAssetConnectorLocal");
@@ -510,12 +525,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -530,8 +545,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -542,7 +556,6 @@ namespace OpenSim.Services
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
@@ -551,26 +564,22 @@ namespace OpenSim.Services
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
     }
 
     public class GroupsServiceHandler
     {
-        IGroupsServiceConnector GroupsServiceConnector;
+        private readonly IGroupsServiceConnector GroupsServiceConnector;
+
         public GroupsServiceHandler()
         {
             GroupsServiceConnector = DataManager.RequestPlugin<IGroupsServiceConnector>("IGroupsServiceConnectorLocal");
@@ -593,7 +602,8 @@ namespace OpenSim.Services
             ulong OwnerPowers = ulong.Parse(request["OwnerPowers"].ToString());
 
             GroupsServiceConnector.CreateGroup(groupID, name, charter, showInList,
-                insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, founderID, EveryonePowers, OwnerRoleID, OwnerPowers);
+                                               insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish,
+                                               founderID, EveryonePowers, OwnerRoleID, OwnerPowers);
 
             return SuccessResult();
         }
@@ -611,7 +621,7 @@ namespace OpenSim.Services
             string ItemName = request["ItemName"].ToString();
 
             GroupsServiceConnector.AddGroupNotice(requestingAgentID, groupID, noticeID, fromName, subject,
-                message, ItemID, AssetType, ItemName);
+                                                  message, ItemID, AssetType, ItemName);
 
             return SuccessResult();
         }
@@ -688,7 +698,8 @@ namespace OpenSim.Services
             int allowPublish = int.Parse(request["allowPublish"].ToString());
             int maturePublish = int.Parse(request["maturePublish"].ToString());
 
-            GroupsServiceConnector.UpdateGroup(requestingAgentID, groupID, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish);
+            GroupsServiceConnector.UpdateGroup(requestingAgentID, groupID, charter, showInList, insigniaID,
+                                               membershipFee, openEnrollment, allowPublish, maturePublish);
 
             return SuccessResult();
         }
@@ -741,7 +752,8 @@ namespace OpenSim.Services
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
             string FromAgentName = request["FromAgentName"].ToString();
 
-            GroupsServiceConnector.AddAgentGroupInvite(requestingAgentID, inviteID, GroupID, roleID, AgentID, FromAgentName);
+            GroupsServiceConnector.AddAgentGroupInvite(requestingAgentID, inviteID, GroupID, roleID, AgentID,
+                                                       FromAgentName);
 
             return SuccessResult();
         }
@@ -787,11 +799,11 @@ namespace OpenSim.Services
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
             UUID GroupID = UUID.Parse(request["GroupID"].ToString());
             string GroupName = "";
-            if(request.ContainsKey("GroupName"))
+            if (request.ContainsKey("GroupName"))
                 GroupName = request["GroupName"].ToString();
 
             GroupRecord r = GroupsServiceConnector.GetGroupRecord(requestingAgentID, GroupID, GroupName);
-            if(r != null)
+            if (r != null)
                 result.Add("A", r.ToKeyValuePairs());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -809,7 +821,7 @@ namespace OpenSim.Services
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
 
             GroupMembershipData r = GroupsServiceConnector.GetGroupMembershipData(requestingAgentID, GroupID, AgentID);
-            if(r != null)
+            if (r != null)
                 result.Add("A", r.ToKeyValuePairs());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -876,7 +888,7 @@ namespace OpenSim.Services
             UUID inviteID = UUID.Parse(request["inviteID"].ToString());
 
             GroupInviteInfo r = GroupsServiceConnector.GetAgentToGroupInvite(requestingAgentID, inviteID);
-            if(r != null)
+            if (r != null)
                 result.Add("A", r.ToKeyValuePairs());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -950,7 +962,8 @@ namespace OpenSim.Services
             uint queryflags = uint.Parse(request["queryflags"].ToString());
 
 
-            List<DirGroupsReplyData> rs = GroupsServiceConnector.FindGroups(requestingAgentID, search, StartQuery, queryflags);
+            List<DirGroupsReplyData> rs = GroupsServiceConnector.FindGroups(requestingAgentID, search, StartQuery,
+                                                                            queryflags);
             int i = 0;
             foreach (DirGroupsReplyData r in rs)
             {
@@ -1019,10 +1032,8 @@ namespace OpenSim.Services
 
             List<GroupMembersData> rs = GroupsServiceConnector.GetGroupMembers(requestingAgentID, GroupID);
             int i = 0;
-            foreach (GroupMembersData r in rs)
+            foreach (GroupMembersData r in rs.Where(r => r != null))
             {
-                if (r == null)
-                    continue;
                 result.Add(ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
@@ -1104,12 +1115,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1124,8 +1135,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -1136,7 +1146,6 @@ namespace OpenSim.Services
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
@@ -1145,29 +1154,26 @@ namespace OpenSim.Services
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
     }
 
     public class DirectoryInfoHandler
     {
-        IDirectoryServiceConnector DirectoryServiceConnector;
+        private readonly IDirectoryServiceConnector DirectoryServiceConnector;
+
         public DirectoryInfoHandler()
         {
-            DirectoryServiceConnector = DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnectorLocal");
+            DirectoryServiceConnector =
+                DataManager.RequestPlugin<IDirectoryServiceConnector>("IDirectoryServiceConnectorLocal");
         }
 
         public byte[] FindLand(Dictionary<string, object> request)
@@ -1202,7 +1208,8 @@ namespace OpenSim.Services
             int AREA = int.Parse(request["AREA"].ToString());
             int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
             uint FLAGS = uint.Parse(request["FLAGS"].ToString());
-            DirLandReplyData[] lands = DirectoryServiceConnector.FindLandForSale(SEARCHTYPE, PRICE.ToString(), AREA.ToString(), STARTQUERY, FLAGS);
+            DirLandReplyData[] lands = DirectoryServiceConnector.FindLandForSale(SEARCHTYPE, PRICE.ToString(),
+                                                                                 AREA.ToString(), STARTQUERY, FLAGS);
 
             int i = 0;
             foreach (DirLandReplyData land in lands)
@@ -1268,7 +1275,8 @@ namespace OpenSim.Services
             string CATEGORY = request["CATEGORY"].ToString();
             string QUERYFLAGS = request["QUERYFLAGS"].ToString();
             int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
-            DirClassifiedReplyData[] lands = DirectoryServiceConnector.FindClassifieds(QUERYTEXT, CATEGORY, QUERYFLAGS, STARTQUERY);
+            DirClassifiedReplyData[] lands = DirectoryServiceConnector.FindClassifieds(QUERYTEXT, CATEGORY, QUERYFLAGS,
+                                                                                       STARTQUERY);
 
             int i = 0;
             foreach (DirClassifiedReplyData land in lands)
@@ -1323,12 +1331,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1343,8 +1351,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -1355,7 +1362,6 @@ namespace OpenSim.Services
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
@@ -1364,26 +1370,22 @@ namespace OpenSim.Services
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
     }
 
     public class EstateInfoHandler
     {
-        IEstateConnector EstateConnector;
+        private readonly IEstateConnector EstateConnector;
+
         public EstateInfoHandler()
         {
             EstateConnector = DataManager.RequestPlugin<IEstateConnector>("IEstateConnectorLocal");
@@ -1397,7 +1399,7 @@ namespace OpenSim.Services
             List<int> EstateIDs = EstateConnector.GetEstates(search);
             Dictionary<string, object> estateresult = new Dictionary<string, object>();
             int i = 0;
-            if(EstateIDs != null)
+            if (EstateIDs != null)
             {
                 foreach (int estateID in EstateIDs)
                 {
@@ -1499,7 +1501,7 @@ namespace OpenSim.Services
             if (request.ContainsKey("REGIONID"))
             {
                 string regionID = request["REGIONID"].ToString();
-                if(regionID != null)
+                if (regionID != null)
                     EstateConnector.LoadEstateSettings(UUID.Parse(regionID), out ES);
             }
             if (ES == null)
@@ -1512,17 +1514,18 @@ namespace OpenSim.Services
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
+
         private byte[] SuccessResult()
         {
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1544,12 +1547,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1569,8 +1572,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -1581,7 +1583,6 @@ namespace OpenSim.Services
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
@@ -1590,26 +1591,22 @@ namespace OpenSim.Services
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
     }
 
     public class MuteInfoHandler
     {
-        IMuteListConnector MuteListConnector;
+        private readonly IMuteListConnector MuteListConnector;
+
         public MuteInfoHandler()
         {
             MuteListConnector = DataManager.RequestPlugin<IMuteListConnector>("IMuteListConnectorLocal");
@@ -1668,17 +1665,18 @@ namespace OpenSim.Services
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
+
         private byte[] SuccessResult()
         {
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1693,8 +1691,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -1705,7 +1702,6 @@ namespace OpenSim.Services
         // By: A Million Lemmings
         public string ConvertDecString(int dvalue)
         {
-
             string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             string retVal = string.Empty;
@@ -1714,26 +1710,22 @@ namespace OpenSim.Services
 
             do
             {
+                double remainder = value - (26*Math.Truncate(value/26));
 
-                double remainder = value - (26 * Math.Truncate(value / 26));
+                retVal = retVal + CHARS.Substring((int) remainder, 1);
 
-                retVal = retVal + CHARS.Substring((int)remainder, 1);
-
-                value = Math.Truncate(value / 26);
-
-            }
-            while (value > 0);
-
+                value = Math.Truncate(value/26);
+            } while (value > 0);
 
 
             return retVal;
-
         }
     }
 
     public class TelehubInfoHandler
     {
-        IRegionConnector GridConnector;
+        private IRegionConnector GridConnector;
+
         public TelehubInfoHandler()
         {
             GridConnector = DataManager.RequestPlugin<IRegionConnector>("IRegionConnectorLocal");
@@ -1744,12 +1736,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1764,8 +1756,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 
@@ -1777,7 +1768,8 @@ namespace OpenSim.Services
     {
         public byte[] AddAbuseReport(Dictionary<string, object> request)
         {
-            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            IAbuseReportsConnector m_AbuseReportsService =
+                DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
 
             AbuseReport ar = new AbuseReport(request);
             m_AbuseReportsService.AddAbuseReport(ar);
@@ -1789,7 +1781,8 @@ namespace OpenSim.Services
         public byte[] UpdateAbuseReport(Dictionary<string, object> request)
         {
             AbuseReport ar = new AbuseReport(request);
-            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            IAbuseReportsConnector m_AbuseReportsService =
+                DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
             m_AbuseReportsService.UpdateAbuseReport(ar, request["Password"].ToString());
             //m_log.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
@@ -1798,9 +1791,11 @@ namespace OpenSim.Services
 
         public byte[] GetAbuseReport(Dictionary<string, object> request)
         {
-            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            IAbuseReportsConnector m_AbuseReportsService =
+                DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
             string xmlString = WebUtils.BuildXmlResponse(
-                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()), request["Password"].ToString()).ToKeyValuePairs());
+                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()),
+                                                     request["Password"].ToString()).ToKeyValuePairs());
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
@@ -1808,11 +1803,12 @@ namespace OpenSim.Services
 
         public byte[] GetAbuseReports(Dictionary<string, object> request)
         {
-            IAbuseReportsConnector m_AbuseReportsService = DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
-            List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()), int.Parse(request["count"].ToString()), request["filter"].ToString());
-            Dictionary<string, object> returnvalue = new Dictionary<string, object>();
-            foreach (AbuseReport ar in ars)
-                returnvalue.Add(ar.Number.ToString(), ar);
+            IAbuseReportsConnector m_AbuseReportsService =
+                DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
+            List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()),
+                                                                          int.Parse(request["count"].ToString()),
+                                                                          request["filter"].ToString());
+            Dictionary<string, object> returnvalue = ars.ToDictionary<AbuseReport, string, object>(ar => ar.Number.ToString(), ar => ar);
 
             string xmlString = WebUtils.BuildXmlResponse(returnvalue);
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
@@ -1825,12 +1821,12 @@ namespace OpenSim.Services
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -1845,8 +1841,7 @@ namespace OpenSim.Services
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 

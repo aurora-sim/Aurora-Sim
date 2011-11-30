@@ -26,7 +26,6 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -57,6 +56,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #endregion
 
+        #region ITimeMonitor Members
+
         public void AddTime(int value)
         {
             SleepFrame += value;
@@ -66,5 +67,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         {
             SleepFrame = 0;
         }
+
+        #endregion
     }
 }

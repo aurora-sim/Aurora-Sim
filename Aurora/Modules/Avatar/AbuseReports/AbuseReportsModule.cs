@@ -28,34 +28,36 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Net.Mail;
-using log4net;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
+using Aurora.Modules.AbuseReportsGUI;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Modules.AbuseReportsGUI;
-using System.Windows.Forms;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
     /// <summary>
-    /// Enables the saving of abuse reports to the database
+    ///   Enables the saving of abuse reports to the database
     /// </summary>
     public class AbuseReportsModule : ISharedRegionModule
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_enabled = false;
-        private List<IScene> m_SceneList = new List<IScene> ();
-        
+        private readonly List<IScene> m_SceneList = new List<IScene>();
+        private bool m_enabled;
+
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
+
+        #region ISharedRegionModule Members
+
         public void Initialise(IConfigSource source)
         {
             IConfig cnf = source.Configs["AbuseReports"];
@@ -63,7 +65,7 @@ namespace Aurora.Modules
                 m_enabled = cnf.GetBoolean("Enabled", true);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -75,21 +77,16 @@ namespace Aurora.Modules
             }
 
             if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand ("open abusereportsGUI",
-                                          "open abusereportsGUI",
-                                          "Opens the abuse reports GUI", OpenGUI);
+                MainConsole.Instance.Commands.AddCommand("open abusereportsGUI",
+                                                         "open abusereportsGUI",
+                                                         "Opens the abuse reports GUI", OpenGUI);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
             //Disabled until complete
             //scene.EventManager.OnRegisterCaps += OnRegisterCaps;
         }
 
-        private void OnClosingClient(IClientAPI client)
-        {
-            client.OnUserReport -= UserReport;
-        }
-
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -105,7 +102,7 @@ namespace Aurora.Modules
             //scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
@@ -123,13 +120,15 @@ namespace Aurora.Modules
             get { return "AbuseReportsModule"; }
         }
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-        
         public void Close()
         {
+        }
+
+        #endregion
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnUserReport -= UserReport;
         }
 
         private void OnNewClient(IClientAPI client)
@@ -138,39 +137,44 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// This deals with saving the report into the database.
+        ///   This deals with saving the report into the database.
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="regionName"></param>
-        /// <param name="abuserID"></param>
-        /// <param name="catagory"></param>
-        /// <param name="checkflags"></param>
-        /// <param name="details"></param>
-        /// <param name="objectID"></param>
-        /// <param name="position"></param>
-        /// <param name="reportType"></param>
-        /// <param name="screenshotID"></param>
-        /// <param name="summery"></param>
-        /// <param name="reporter"></param>
-        private void UserReport(IClientAPI client, string regionName,UUID abuserID, byte catagory, byte checkflags, string details, UUID objectID, Vector3 position, byte reportType ,UUID screenshotID, string summery, UUID reporter)
+        /// <param name = "client"></param>
+        /// <param name = "regionName"></param>
+        /// <param name = "abuserID"></param>
+        /// <param name = "catagory"></param>
+        /// <param name = "checkflags"></param>
+        /// <param name = "details"></param>
+        /// <param name = "objectID"></param>
+        /// <param name = "position"></param>
+        /// <param name = "reportType"></param>
+        /// <param name = "screenshotID"></param>
+        /// <param name = "summery"></param>
+        /// <param name = "reporter"></param>
+        private void UserReport(IClientAPI client, string regionName, UUID abuserID, byte catagory, byte checkflags,
+                                string details, UUID objectID, Vector3 position, byte reportType, UUID screenshotID,
+                                string summery, UUID reporter)
         {
-            AbuseReport report = new AbuseReport();
-            report.ObjectUUID = objectID;
-            report.ObjectPosition = position.ToString();
-            report.Active = true;
-            report.Checked = false;
-            report.Notes = "";
-            report.AssignedTo = "No One";
-            report.ScreenshotID = screenshotID;
+            AbuseReport report = new AbuseReport
+                                     {
+                                         ObjectUUID = objectID,
+                                         ObjectPosition = position.ToString(),
+                                         Active = true,
+                                         Checked = false,
+                                         Notes = "",
+                                         AssignedTo = "No One",
+                                         ScreenshotID = screenshotID
+                                     };
+
             if (objectID != UUID.Zero)
             {
-                ISceneChildEntity Object = client.Scene.GetSceneObjectPart (objectID);
+                ISceneChildEntity Object = client.Scene.GetSceneObjectPart(objectID);
                 report.ObjectName = Object.Name;
             }
-        	else
+            else
                 report.ObjectName = "";
 
-        	string [] detailssplit = details.Split('\n');
+            string[] detailssplit = details.Split('\n');
 
             string AbuseDetails = detailssplit[detailssplit.Length - 1];
 
@@ -211,10 +215,14 @@ namespace Aurora.Modules
             if (ES.AbuseEmailToEstateOwner && ES.AbuseEmail != "")
             {
                 IEmailModule Email = m_SceneList[0].RequestModuleInterface<IEmailModule>();
-                if(Email != null)
+                if (Email != null)
                     Email.SendEmail(UUID.Zero, ES.AbuseEmail, "Abuse Report", "This abuse report was submitted by " +
-                        report.ReporterName + " against " + report.AbuserName + " at " + report.AbuseLocation + " in your region " + report.RegionName +
-                        ". Summary: " + report.AbuseSummary + ". Details: " + report.AbuseDetails + ".");
+                                                                              report.ReporterName + " against " +
+                                                                              report.AbuserName + " at " +
+                                                                              report.AbuseLocation + " in your region " +
+                                                                              report.RegionName +
+                                                                              ". Summary: " + report.AbuseSummary +
+                                                                              ". Details: " + report.AbuseDetails + ".");
             }
             //Tell the DB about it
             IAbuseReports conn = m_SceneList[0].RequestModuleInterface<IAbuseReports>();
@@ -226,14 +234,14 @@ namespace Aurora.Modules
 
         protected void OpenGUI(string[] cmdparams)
         {
-            System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(ThreadProcARGUI));
+            Thread t = new Thread(ThreadProcARGUI);
             t.Start();
         }
 
         public void ThreadProcARGUI()
         {
-            Culture.SetCurrentCulture ();
-            Application.Run (new Abuse (m_SceneList[0].AssetService, m_SceneList[0].RequestModuleInterface<IJ2KDecoder>()));
+            Culture.SetCurrentCulture();
+            Application.Run(new Abuse(m_SceneList[0].AssetService, m_SceneList[0].RequestModuleInterface<IJ2KDecoder>()));
         }
 
         #endregion
@@ -245,30 +253,28 @@ namespace Aurora.Modules
             UUID capuuid = UUID.Random();
 
             caps.AddStreamHandler("SendUserReportWithScreenshot",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessSendUserReportWithScreenshot(m_dhttpMethod, capuuid, agentID);
-                                                      }));
-
-            
+                                  new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+                                                      m_dhttpMethod =>
+                                                      ProcessSendUserReportWithScreenshot(m_dhttpMethod,
+                                                                                          capuuid,
+                                                                                          agentID)));
         }
 
         private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
         {
-            IScenePresence SP = findScenePresence (agentID);
-            string RegionName = (string)m_dhttpMethod["abuse-region-name"];
-            UUID AbuserID = UUID.Parse((string)m_dhttpMethod["abuser-id"]);
-            byte Category = byte.Parse((string)m_dhttpMethod["category"]);
-            byte CheckFlags = byte.Parse((string)m_dhttpMethod["check-flags"]);
-            string details = (string)m_dhttpMethod["details"];
-            UUID objectID = UUID.Parse((string)m_dhttpMethod["object-id"]);
-            Vector3 position = Vector3.Zero;//(string)m_dhttpMethod["position"];
-            byte ReportType = byte.Parse((string)m_dhttpMethod["report-type"]);
-            UUID ScreenShotID = UUID.Parse((string)m_dhttpMethod["screenshot-id"]);
-            string summary = (string)m_dhttpMethod["summary"];
+            IScenePresence SP = findScenePresence(agentID);
+            string RegionName = (string) m_dhttpMethod["abuse-region-name"];
+            UUID AbuserID = UUID.Parse((string) m_dhttpMethod["abuser-id"]);
+            byte Category = byte.Parse((string) m_dhttpMethod["category"]);
+            byte CheckFlags = byte.Parse((string) m_dhttpMethod["check-flags"]);
+            string details = (string) m_dhttpMethod["details"];
+            UUID objectID = UUID.Parse((string) m_dhttpMethod["object-id"]);
+            Vector3 position = Vector3.Zero; //(string)m_dhttpMethod["position"];
+            byte ReportType = byte.Parse((string) m_dhttpMethod["report-type"]);
+            UUID ScreenShotID = UUID.Parse((string) m_dhttpMethod["screenshot-id"]);
+            string summary = (string) m_dhttpMethod["summary"];
             UserReport(SP.ControllingClient, RegionName, AbuserID, Category, CheckFlags,
-                details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
+                       details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
             //TODO: Figure this out later
             return new Hashtable();
         }
@@ -277,18 +283,11 @@ namespace Aurora.Modules
 
         #region Helpers
 
-        public IScenePresence findScenePresence (UUID avID)
+        public IScenePresence findScenePresence(UUID avID)
         {
-            foreach (IScene s in m_SceneList)
-            {
-                IScenePresence SP = s.GetScenePresence (avID);
-                if (SP != null)
-                    return SP;
-            }
-            return null;
+            return m_SceneList.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
         }
 
         #endregion
     }
 }
-    

@@ -30,20 +30,21 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using MySql.Data.MySqlClient;
-using Aurora.Framework;
 using Aurora.DataManager.Migration;
+using Aurora.Framework;
+using MySql.Data.MySqlClient;
+using OpenMetaverse;
 using log4net;
 
 namespace Aurora.DataManager.MySQL
 {
     public class MySQLDataLoader : DataManagerBase
     {
-        private string m_connectionString = "";
         private static readonly ILog m_log =
-                LogManager.GetLogger (
-                MethodBase.GetCurrentMethod ().DeclaringType);
+            LogManager.GetLogger(
+                MethodBase.GetCurrentMethod().DeclaringType);
+
+        private string m_connectionString = "";
 
         public override string Identifier
         {
@@ -75,11 +76,11 @@ namespace Aurora.DataManager.MySQL
                     param[i] = new MySqlParameter(p.Key, p.Value);
                     i++;
                 }
-                return MySqlHelper.ExecuteReader (m_connectionString, sql, param);
+                return MySqlHelper.ExecuteReader(m_connectionString, sql, param);
             }
             catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Query(" + sql + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Query(" + sql + "), " + e);
                 return null;
             }
         }
@@ -92,14 +93,14 @@ namespace Aurora.DataManager.MySQL
                 int i = 0;
                 foreach (KeyValuePair<string, object> p in parameters)
                 {
-                    param[i] = new MySqlParameter (p.Key, p.Value);
+                    param[i] = new MySqlParameter(p.Key, p.Value);
                     i++;
                 }
-                MySqlHelper.ExecuteNonQuery (m_connectionString, sql, param);
+                MySqlHelper.ExecuteNonQuery(m_connectionString, sql, param);
             }
             catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] ExecuteNonQuery(" + sql + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] ExecuteNonQuery(" + sql + "), " + e);
             }
         }
 
@@ -107,40 +108,40 @@ namespace Aurora.DataManager.MySQL
         {
             m_connectionString = connectionstring;
 
-            var migrationManager = new MigrationManager (this, migratorName, validateTables);
-            migrationManager.DetermineOperation ();
-            migrationManager.ExecuteOperation ();
+            var migrationManager = new MigrationManager(this, migratorName, validateTables);
+            migrationManager.DetermineOperation();
+            migrationManager.ExecuteOperation();
         }
 
         public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
         {
             IDataReader reader = null;
-            List<string> retVal = new List<string> ();
+            List<string> retVal = new List<string>();
             Dictionary<string, object> ps = new Dictionary<string, object>();
             string query;
             if (keyRow == "")
             {
-                query = String.Format ("select {0} from {1}",
+                query = String.Format("select {0} from {1}",
                                       wantedValue, table);
             }
             else
             {
                 ps["?" + keyRow] = keyValue;
-                query = String.Format ("select {0} from {1} where {2} = ?{3}",
+                query = String.Format("select {0} from {1} where {2} = ?{3}",
                                       wantedValue, table, keyRow, keyRow);
             }
             try
             {
                 using (reader = Query(query, ps))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
                             if (reader[i] is byte[])
-                                retVal.Add (OpenMetaverse.Utils.BytesToString ((byte[])reader[i]));
+                                retVal.Add(Utils.BytesToString((byte[]) reader[i]));
                             else
-                                retVal.Add (reader.GetString (i));
+                                retVal.Add(reader.GetString(i));
                         }
                     }
                     return retVal;
@@ -148,7 +149,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 return retVal;
             }
             finally
@@ -157,13 +158,13 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                    m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 }
             }
         }
@@ -171,19 +172,19 @@ namespace Aurora.DataManager.MySQL
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             IDataReader reader = null;
-            List<string> retVal = new List<string> ();
-            string query = String.Format ("select {0} from {1} where {2}",
-                                      wantedValue, table, whereClause);
+            List<string> retVal = new List<string>();
+            string query = String.Format("select {0} from {1} where {2}",
+                                         wantedValue, table, whereClause);
             try
             {
-                using (reader = Query (query, new Dictionary<string, object> ()))
+                using (reader = Query(query, new Dictionary<string, object>()))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
                             if (reader[i] != DBNull.Value)
-                                retVal.Add (reader.GetString (i));
+                                retVal.Add(reader.GetString(i));
                         }
                     }
                     return retVal;
@@ -191,7 +192,7 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 return null;
             }
             finally
@@ -200,13 +201,13 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                    m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 }
             }
         }
@@ -214,27 +215,26 @@ namespace Aurora.DataManager.MySQL
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
             IDataReader reader = null;
-            List<string> retVal = new List<string> ();
-            string query = String.Format ("select {0} from {1} {2}",
+            List<string> retVal = new List<string>();
+            string query = String.Format("select {0} from {1} {2}",
                                          wantedValue, table, whereClause);
             try
             {
-                using (reader = Query (query, new Dictionary<string, object> ()))
+                using (reader = Query(query, new Dictionary<string, object>()))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
-                            retVal.Add (reader.GetString (i));
+                            retVal.Add(reader.GetString(i));
                         }
                     }
                     return retVal;
-
                 }
             }
             catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] QueryFullData(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] QueryFullData(" + query + "), " + e);
                 return null;
             }
             finally
@@ -243,13 +243,13 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                    m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 }
             }
         }
@@ -257,11 +257,12 @@ namespace Aurora.DataManager.MySQL
         public override IDataReader QueryData(string whereClause, string table, string wantedValue)
         {
             string query = String.Format("select {0} from {1} {2}",
-                                      wantedValue, table, whereClause);
-            return Query (query, new Dictionary<string, object> ());
+                                         wantedValue, table, whereClause);
+            return Query(query, new Dictionary<string, object>());
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue,
+                                           string order)
         {
             IDataReader reader = null;
             List<string> retVal = new List<string>();
@@ -269,7 +270,7 @@ namespace Aurora.DataManager.MySQL
             string query = "";
             if (keyRow == "")
             {
-                query = String.Format ("select {0} from {1}",
+                query = String.Format("select {0} from {1}",
                                       wantedValue, table);
             }
             else
@@ -280,14 +281,14 @@ namespace Aurora.DataManager.MySQL
             }
             try
             {
-                using (reader = Query (query + order, ps))
+                using (reader = Query(query + order, ps))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
-                            Type r = reader[i].GetType ();
-                            retVal.Add (r == typeof (DBNull) ? null : reader.GetString (i));
+                            Type r = reader[i].GetType();
+                            retVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
                         }
                     }
                     return retVal;
@@ -295,8 +296,8 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
-                return new List<string> ();
+                m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
+                return new List<string>();
             }
             finally
             {
@@ -304,13 +305,13 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                    m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 }
             }
         }
@@ -320,8 +321,8 @@ namespace Aurora.DataManager.MySQL
             IDataReader reader = null;
             List<string> retVal = new List<string>();
             Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = String.Format ("select {0} from {1} where ",
-                                      wantedValue, table);
+            string query = String.Format("select {0} from {1} where ",
+                                         wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
@@ -329,26 +330,26 @@ namespace Aurora.DataManager.MySQL
                 query += String.Format("{0} = ?{1} and ", keyRow[i], keyRow[i].Replace("`", ""));
                 i++;
             }
-            query = query.Remove (query.Length - 5);
+            query = query.Remove(query.Length - 5);
 
             try
             {
-                using (reader = Query (query, ps))
+                using (reader = Query(query, ps))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (i = 0; i < reader.FieldCount; i++)
                         {
-                            Type r = reader[i].GetType ();
-                            retVal.Add (r == typeof (DBNull) ? null : reader.GetString (i));
+                            Type r = reader[i].GetType();
+                            retVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
                         }
                     }
                     return retVal;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e.ToString());
+                m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 return null;
             }
             finally
@@ -357,52 +358,53 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Error ("[MySQLDataLoader] Query(" + query + "), " + e.ToString ());
+                    m_log.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 }
             }
         }
 
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
+                                                                    string wantedValue)
         {
             IDataReader reader = null;
             Dictionary<string, List<string>> retVal = new Dictionary<string, List<string>>();
             Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = String.Format ("select {0} from {1} where ",
-                                      wantedValue, table);
+            string query = String.Format("select {0} from {1} where ",
+                                         wantedValue, table);
             int i = 0;
             foreach (object value in keyValue)
             {
-                query += String.Format ("{0} = ?{1} and ", keyRow[i], keyRow[i]);
+                query += String.Format("{0} = ?{1} and ", keyRow[i], keyRow[i]);
                 ps["?" + keyRow[i]] = value;
                 i++;
             }
-            query = query.Remove (query.Length - 5);
+            query = query.Remove(query.Length - 5);
 
             try
             {
-                using (reader = Query (query, ps))
+                using (reader = Query(query, ps))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (i = 0; i < reader.FieldCount; i++)
                         {
-                            Type r = reader[i].GetType ();
-                            AddValueToList (ref retVal, reader.GetName (i),
-                                           r == typeof (DBNull) ? null : reader[i].ToString ());
+                            Type r = reader[i].GetType();
+                            AddValueToList(ref retVal, reader.GetName(i),
+                                           r == typeof (DBNull) ? null : reader[i].ToString());
                         }
                     }
                     return retVal;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] QueryNames(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] QueryNames(" + query + "), " + e);
                 return null;
             }
             finally
@@ -411,35 +413,36 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.Error ("[MySQLDataLoader] QueryNames(" + query + "), " + e.ToString ());
+                    m_log.Error("[MySQLDataLoader] QueryNames(" + query + "), " + e);
                 }
             }
         }
 
-        private void AddValueToList (ref Dictionary<string, List<string>> dic, string key, string value)
+        private void AddValueToList(ref Dictionary<string, List<string>> dic, string key, string value)
         {
-            if (!dic.ContainsKey (key))
-                dic.Add (key, new List<string> ());
+            if (!dic.ContainsKey(key))
+                dic.Add(key, new List<string>());
 
-            dic[key].Add (value);
+            dic[key].Add(value);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                    object[] keyValues)
         {
             string query = String.Format("update {0} set ", table);
             int i = 0;
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             foreach (object value in setValues)
             {
-                query += string.Format("{0} = ?{1},", setRows[i], setRows[i].Replace("`",""));
+                query += string.Format("{0} = ?{1},", setRows[i], setRows[i].Replace("`", ""));
                 string valueSTR = value.ToString();
-                if(valueSTR == "")
+                if (valueSTR == "")
                     valueSTR = " ";
                 parameters["?" + setRows[i].Replace("`", "")] = valueSTR;
                 i++;
@@ -456,30 +459,30 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 5);
             try
             {
-                ExecuteNonQuery (query, parameters);
+                ExecuteNonQuery(query, parameters);
             }
             catch (MySqlException e)
             {
-                m_log.Error ("[MySQLDataLoader] Update(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Update(" + query + "), " + e);
             }
             return true;
         }
 
-        public override bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                          object[] keyValues)
         {
             string query = String.Format("update {0} set ", table);
             int i = 0;
             Dictionary<string, object> parameters = new Dictionary<string, object>();
-            foreach(object value in setValues)
+            foreach (string valueSTR in setValues.Select(value => value.ToString()))
             {
-                string valueSTR = value.ToString();
                 query += string.Format("{0} = {1},", setRows[i], valueSTR);
                 i++;
             }
             i = 0;
             query = query.Remove(query.Length - 1);
             query += " where ";
-            foreach(object value in keyValues)
+            foreach (object value in keyValues)
             {
                 parameters["?" + keyRows[i].Replace("`", "")] = value;
                 query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
@@ -490,9 +493,9 @@ namespace Aurora.DataManager.MySQL
             {
                 ExecuteNonQuery(query, parameters);
             }
-            catch(MySqlException e)
+            catch (MySqlException e)
             {
-                m_log.Error("[MySQLDataLoader] Update(" + query + "), " + e.ToString());
+                m_log.Error("[MySQLDataLoader] Update(" + query + "), " + e);
             }
             return true;
         }
@@ -506,7 +509,7 @@ namespace Aurora.DataManager.MySQL
             {
                 parameters[a] = o;
                 query += "?" + a + ",";
-                a += "a";//...Lazy, should be numeric
+                a += "a"; //...Lazy, should be numeric
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -515,9 +518,9 @@ namespace Aurora.DataManager.MySQL
             {
                 ExecuteNonQuery(query, parameters);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Insert(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
             }
             return true;
         }
@@ -543,11 +546,11 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
-                ExecuteNonQuery (query, param);
+                ExecuteNonQuery(query, param);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Insert(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
             }
             return true;
         }
@@ -583,11 +586,11 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
-                ExecuteNonQuery (query, param);
+                ExecuteNonQuery(query, param);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Replace(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Replace(" + query + "), " + e);
                 return false;
             }
             return true;
@@ -615,11 +618,11 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
-                ExecuteNonQuery (query, param);
+                ExecuteNonQuery(query, param);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] DirectReplace(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] DirectReplace(" + query + "), " + e);
                 return false;
             }
             return true;
@@ -642,9 +645,9 @@ namespace Aurora.DataManager.MySQL
             {
                 ExecuteNonQuery(query, param);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Insert(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
                 return false;
             }
             return true;
@@ -661,15 +664,15 @@ namespace Aurora.DataManager.MySQL
                 query += keys[i] + " = ?" + keys[i].Replace("`", "") + " AND ";
                 i++;
             }
-            if(keys.Length > 0)
+            if (keys.Length > 0)
                 query = query.Remove(query.Length - 5);
             try
             {
                 ExecuteNonQuery(query, param);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Delete(" + query + "), " + e.ToString ());
+                m_log.Error("[MySQLDataLoader] Delete(" + query + "), " + e);
                 return false;
             }
             return true;
@@ -698,11 +701,11 @@ namespace Aurora.DataManager.MySQL
             string query = "delete from " + table + " WHERE " + whereclause;
             try
             {
-                ExecuteNonQuery (query, new Dictionary<string, object> ());
+                ExecuteNonQuery(query, new Dictionary<string, object>());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] Delete", e);
+                m_log.Error("[MySQLDataLoader] Delete", e);
                 return false;
             }
             return true;
@@ -713,11 +716,11 @@ namespace Aurora.DataManager.MySQL
             string query = "delete from " + table + " WHERE '" + key + "' < now()";
             try
             {
-                ExecuteNonQuery (query, new Dictionary<string, object> ());
+                ExecuteNonQuery(query, new Dictionary<string, object>());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] DeleteByTime", e);
+                m_log.Error("[MySQLDataLoader] DeleteByTime", e);
                 return false;
             }
             return true;
@@ -725,15 +728,15 @@ namespace Aurora.DataManager.MySQL
 
         public override void CreateTable(string table, ColumnDefinition[] columns)
         {
-            table = table.ToLower ();
-            if (TableExists (table))
+            table = table.ToLower();
+            if (TableExists(table))
             {
-                throw new DataManagerException ("Trying to create a table with name of one that already exists.");
+                throw new DataManagerException("Trying to create a table with name of one that already exists.");
             }
 
             string columnDefinition = string.Empty;
             var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
-            bool multiplePrimary = primaryColumns.Count () > 1;
+            bool multiplePrimary = primaryColumns.Count() > 1;
 
             foreach (ColumnDefinition column in columns)
             {
@@ -741,7 +744,8 @@ namespace Aurora.DataManager.MySQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += "`" + column.Name + "` " + GetColumnTypeStringSymbol (column.Type) + ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += "`" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) +
+                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -756,39 +760,42 @@ namespace Aurora.DataManager.MySQL
                     }
                     listOfPrimaryNamesString += "`" + column.Name + "`";
                 }
-                multiplePrimaryString = string.Format (", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
             }
 
-            string query = string.Format ("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
+                                         multiplePrimaryString);
 
             try
             {
-                ExecuteNonQuery (query, new Dictionary<string, object> ());
+                ExecuteNonQuery(query, new Dictionary<string, object>());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] CreateTable", e);
+                m_log.Error("[MySQLDataLoader] CreateTable", e);
             }
         }
 
-        public override void UpdateTable (string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns,
+                                         Dictionary<string, string> renameColumns)
         {
-            table = table.ToLower ();
-            if (!TableExists (table))
+            table = table.ToLower();
+            if (!TableExists(table))
             {
-                throw new DataManagerException ("Trying to update a table with name of one that does not exist.");
+                throw new DataManagerException("Trying to update a table with name of one that does not exist.");
             }
 
-            List<ColumnDefinition> oldColumns = ExtractColumnsFromTable (table);
+            List<ColumnDefinition> oldColumns = ExtractColumnsFromTable(table);
 
-            Dictionary<string, ColumnDefinition> removedColumns = new Dictionary<string, ColumnDefinition> ();
-            Dictionary<string, ColumnDefinition> modifiedColumns = new Dictionary<string, ColumnDefinition> ();
-            Dictionary<string, ColumnDefinition> addedColumns = columns.Where (column => !oldColumns.Contains (column)).ToDictionary (column => column.Name.ToLower());
-            foreach (ColumnDefinition column in oldColumns.Where (column => !columns.Contains (column)))
+            Dictionary<string, ColumnDefinition> removedColumns = new Dictionary<string, ColumnDefinition>();
+            Dictionary<string, ColumnDefinition> modifiedColumns = new Dictionary<string, ColumnDefinition>();
+            Dictionary<string, ColumnDefinition> addedColumns =
+                columns.Where(column => !oldColumns.Contains(column)).ToDictionary(column => column.Name.ToLower());
+            foreach (ColumnDefinition column in oldColumns.Where(column => !columns.Contains(column)))
             {
-                if(addedColumns.ContainsKey(column.Name.ToLower()))
+                if (addedColumns.ContainsKey(column.Name.ToLower()))
                 {
-                    if(column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() ||
+                    if (column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() ||
                         column.Type != addedColumns[column.Name.ToLower()].Type)
                         modifiedColumns.Add(column.Name.ToLower(), addedColumns[column.Name.ToLower()]);
                     addedColumns.Remove(column.Name.ToLower());
@@ -799,31 +806,24 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
-                foreach (ColumnDefinition column in addedColumns.Values)
+                foreach (string query in addedColumns.Values.Select(column => "add `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) +
+                                                                              " ").Select(addedColumnsQuery => string.Format("alter table " + table + " " + addedColumnsQuery)))
                 {
-                    string addedColumnsQuery = "add `" + column.Name + "` " + GetColumnTypeStringSymbol (column.Type) + " ";
-                    string query = string.Format ("alter table " + table + " " + addedColumnsQuery);
-
-                    ExecuteNonQuery (query, new Dictionary<string, object> ());
+                    ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
-                foreach (ColumnDefinition column in modifiedColumns.Values)
+                foreach (string query in modifiedColumns.Values.Select(column => "modify column `" + column.Name + "` " +
+                                                                                 GetColumnTypeStringSymbol(column.Type) + " ").Select(modifiedColumnsQuery => string.Format("alter table " + table + " " + modifiedColumnsQuery)))
                 {
-                    string modifiedColumnsQuery = "modify column `" + column.Name + "` " + GetColumnTypeStringSymbol (column.Type) + " ";
-                    string query = string.Format ("alter table " + table + " " + modifiedColumnsQuery);
-
-                    ExecuteNonQuery (query, new Dictionary<string, object> ());
+                    ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
-                foreach (ColumnDefinition column in removedColumns.Values)
+                foreach (string query in removedColumns.Values.Select(column => "drop `" + column.Name + "` ").Select(droppedColumnsQuery => string.Format("alter table " + table + " " + droppedColumnsQuery)))
                 {
-                    string droppedColumnsQuery = "drop `" + column.Name + "` ";
-                    string query = string.Format ("alter table " + table + " " + droppedColumnsQuery);
-
-                    ExecuteNonQuery (query, new Dictionary<string, object> ());
+                    ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] UpdateTable", e);
+                m_log.Error("[MySQLDataLoader] UpdateTable", e);
             }
         }
 
@@ -896,76 +896,84 @@ namespace Aurora.DataManager.MySQL
 
         public override void DropTable(string tableName)
         {
-            tableName = tableName.ToLower ();
+            tableName = tableName.ToLower();
             try
             {
-                ExecuteNonQuery (string.Format ("drop table {0}", tableName), new Dictionary<string, object> ());
+                ExecuteNonQuery(string.Format("drop table {0}", tableName), new Dictionary<string, object>());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] DropTable", e);
+                m_log.Error("[MySQLDataLoader] DropTable", e);
             }
         }
 
         public override void ForceRenameTable(string oldTableName, string newTableName)
         {
-            newTableName = newTableName.ToLower ();
+            newTableName = newTableName.ToLower();
             try
             {
-                ExecuteNonQuery (string.Format ("RENAME TABLE {0} TO {1}", oldTableName, newTableName), new Dictionary<string, object> ());
+                ExecuteNonQuery(string.Format("RENAME TABLE {0} TO {1}", oldTableName, newTableName),
+                                new Dictionary<string, object>());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] ForceRenameTable", e);                
+                m_log.Error("[MySQLDataLoader] ForceRenameTable", e);
             }
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
+                                                                 ColumnDefinition[] columnDefinitions)
         {
-            sourceTableName = sourceTableName.ToLower ();
-            destinationTableName = destinationTableName.ToLower ();
+            sourceTableName = sourceTableName.ToLower();
+            destinationTableName = destinationTableName.ToLower();
             try
             {
-                ExecuteNonQuery (string.Format ("insert into {0} select * from {1}", destinationTableName,
-                                                          sourceTableName), new Dictionary<string, object> ());
+                ExecuteNonQuery(string.Format("insert into {0} select * from {1}", destinationTableName,
+                                              sourceTableName), new Dictionary<string, object>());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e);
+                m_log.Error("[MySQLDataLoader] CopyAllDataBetweenMatchingTables", e);
             }
         }
 
         public override bool TableExists(string table)
         {
             IDataReader reader = null;
-            List<string> retVal = new List<string> ();
+            List<string> retVal = new List<string>();
             try
             {
-                using (reader = Query ("show tables", new Dictionary<string, object> ()))
+                using (reader = Query("show tables", new Dictionary<string, object>()))
                 {
-                    while (reader.Read ())
+                    while (reader.Read())
                     {
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
-                            retVal.Add (reader.GetString (i).ToLower());
+                            retVal.Add(reader.GetString(i).ToLower());
                         }
                     }
                 }
             }
-            catch (Exception e) { m_log.Error("[MySQLDataLoader] TableExists", e); }
+            catch (Exception e)
+            {
+                m_log.Error("[MySQLDataLoader] TableExists", e);
+            }
             finally
             {
                 try
                 {
                     if (reader != null)
                     {
-                        reader.Close ();
+                        reader.Close();
                         //reader.Dispose ();
                     }
                 }
-                catch (Exception e) { m_log.Error ("[MySQLDataLoader] TableExists", e); }
+                catch (Exception e)
+                {
+                    m_log.Error("[MySQLDataLoader] TableExists", e);
+                }
             }
-            return retVal.Contains (table.ToLower());
+            return retVal.Contains(table.ToLower());
         }
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
@@ -975,18 +983,23 @@ namespace Aurora.DataManager.MySQL
             IDataReader rdr = null;
             try
             {
-                rdr = Query(string.Format ("desc {0}", tableName), new Dictionary<string,object>());
-                while (rdr.Read ())
+                rdr = Query(string.Format("desc {0}", tableName), new Dictionary<string, object>());
+                while (rdr.Read())
                 {
                     var name = rdr["Field"];
                     var pk = rdr["Key"];
                     var type = rdr["Type"];
-                    defs.Add (new ColumnDefinition { Name = name.ToString (), IsPrimary = pk.ToString () == "PRI", Type = ConvertTypeToColumnType (type.ToString ()) });
+                    defs.Add(new ColumnDefinition
+                                 {
+                                     Name = name.ToString(),
+                                     IsPrimary = pk.ToString() == "PRI",
+                                     Type = ConvertTypeToColumnType(type.ToString())
+                                 });
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                m_log.Error ("[MySQLDataLoader] ExtractColumnsFromTable", e);
+                m_log.Error("[MySQLDataLoader] ExtractColumnsFromTable", e);
             }
             finally
             {
@@ -994,11 +1007,14 @@ namespace Aurora.DataManager.MySQL
                 {
                     if (rdr != null)
                     {
-                        rdr.Close ();
+                        rdr.Close();
                         //rdr.Dispose ();
                     }
                 }
-                catch (Exception e) { m_log.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e); }
+                catch (Exception e)
+                {
+                    m_log.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e);
+                }
             }
             return defs;
         }
@@ -1072,19 +1088,21 @@ namespace Aurora.DataManager.MySQL
                 case "tinyint(4)":
                     return ColumnTypes.TinyInt4;
             }
-            if (tStr.StartsWith ("varchar"))
+            if (tStr.StartsWith("varchar"))
             {
                 //... Someone was editing the database
                 // Swallow the exception... but set it to the highest setting so we don't break anything
                 return ColumnTypes.String8196;
             }
-            if (tStr.StartsWith ("int"))
+            if (tStr.StartsWith("int"))
             {
                 //... Someone was editing the database
                 // Swallow the exception... but set it to the highest setting so we don't break anything
                 return ColumnTypes.Integer11;
             }
-            throw new Exception("You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
+            throw new Exception(
+                "You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " +
+                tStr);
         }
 
         public override IGenericData Copy()
@@ -1093,4 +1111,3 @@ namespace Aurora.DataManager.MySQL
         }
     }
 }
-

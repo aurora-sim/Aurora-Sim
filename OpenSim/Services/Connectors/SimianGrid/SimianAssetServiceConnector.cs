@@ -30,34 +30,65 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using log4net;
+using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Simulation.Base;
+using OpenSim.Framework;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.Connectors.SimianGrid
 {
     /// <summary>
-    /// Connects to the SimianGrid asset service
+    ///   Connects to the SimianGrid asset service
     /// </summary>
     public class SimianAssetServiceConnector : IAssetService, IService
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+
         private static string ZeroID = UUID.Zero.ToString();
 
-        private string m_serverUrl = String.Empty;
         private IImprovedAssetCache m_cache;
+        private string m_serverUrl = String.Empty;
 
-        public SimianAssetServiceConnector() { }
-        public SimianAssetServiceConnector(string url) { m_serverUrl = url; }
-        public string Name { get { return GetType().Name; } }
+        public SimianAssetServiceConnector()
+        {
+        }
+
+        public SimianAssetServiceConnector(string url)
+        {
+            m_serverUrl = url;
+        }
+
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #region IAssetService Members
+
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_cache = registry.RequestModuleInterface<IImprovedAssetCache>();
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
+
+        #endregion
 
         #region IService Members
 
@@ -71,26 +102,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
             registry.RegisterModuleInterface<IAssetService>(this);
         }
 
-        public void Configure (IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-            m_cache = registry.RequestModuleInterface<IImprovedAssetCache>();
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
         #endregion
 
-        public IAssetService InnerService
-        {
-            get { return this; }
-        }
-        
         private void CommonInit(IConfigSource source)
         {
             IConfig gridConfig = source.Configs["AssetService"];
@@ -107,6 +120,52 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             if (String.IsNullOrEmpty(m_serverUrl))
                 m_log.Info("[SIMIAN ASSET CONNECTOR]: No AssetServerURI specified, disabling connector");
+        }
+
+        private AssetBase GetRemote(string id)
+        {
+            AssetBase asset = null;
+            Uri url;
+
+            // Determine if id is an absolute URL or a grid-relative UUID
+            if (!Uri.TryCreate(id, UriKind.Absolute, out url))
+                url = new Uri(m_serverUrl + id);
+
+            try
+            {
+                HttpWebRequest request = UntrustedHttpWebRequest.Create(url);
+
+                using (WebResponse response = request.GetResponse())
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        string creatorID = response.Headers.GetOne("X-Asset-Creator-Id") ?? string.Empty;
+
+                        // Create the asset object
+                        asset = new AssetBase(id, String.Empty,
+                                              (AssetType) SLUtil.ContentTypeToSLAssetType(response.ContentType),
+                                              UUID.Parse(creatorID));
+
+                        // Grab the asset data from the response stream
+                        using (MemoryStream stream = new MemoryStream())
+                        {
+                            responseStream.CopyTo(stream, Int32.MaxValue);
+                            asset.Data = stream.ToArray();
+                        }
+                    }
+                }
+
+                // Cache store
+                if (m_cache != null)
+                    m_cache.Cache(asset);
+
+                return asset;
+            }
+            catch (Exception ex)
+            {
+                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Asset GET from " + url + " failed: " + ex.Message);
+                return null;
+            }
         }
 
         #region IAssetService
@@ -154,11 +213,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         /// <summary>
-        /// Get an asset asynchronously
+        ///   Get an asset asynchronously
         /// </summary>
-        /// <param name="id">The asset id</param>
-        /// <param name="sender">Represents the requester.  Passed back via the handler</param>
-        /// <param name="handler">The handler to call back once the asset has been retrieved</param>
+        /// <param name = "id">The asset id</param>
+        /// <param name = "sender">Represents the requester.  Passed back via the handler</param>
+        /// <param name = "handler">The handler to call back once the asset has been retrieved</param>
         /// <returns>True if the id was parseable, false otherwise</returns>
         public bool Get(string id, Object sender, AssetRetrieved handler)
         {
@@ -180,21 +239,21 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             Util.FireAndForget(
-                delegate(object o)
-                {
-                    AssetBase asset = GetRemote(id);
-                    handler(id, sender, asset);
-                }
-            );
+                delegate
+                    {
+                        AssetBase asset = GetRemote(id);
+                        handler(id, sender, asset);
+                    }
+                );
 
             return true;
         }
 
         /// <summary>
-        /// Creates a new asset
+        ///   Creates a new asset
         /// </summary>
         /// Returns a random ID if none is passed into it
-        /// <param name="asset"></param>
+        /// <param name = "asset"></param>
         /// <returns></returns>
         public UUID Store(AssetBase asset)
         {
@@ -232,7 +291,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             // Distinguish public and private assets
             bool isPublic = true;
-            switch ((AssetType)asset.Type)
+            switch ((AssetType) asset.Type)
             {
                 case AssetType.CallingCard:
                 case AssetType.Gesture:
@@ -247,20 +306,29 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 asset.TypeString = SLUtil.SLAssetTypeToContentType(asset.Type);
 
             // Build the remote storage request
-            List<MultipartForm.Element> postParameters = new List<MultipartForm.Element>()
-            {
-                new MultipartForm.Parameter("AssetID", asset.ID.ToString()),
-                new MultipartForm.Parameter("CreatorID", asset.CreatorID.ToString()),
-                new MultipartForm.Parameter("Temporary", ((asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary) ? "1" : "0"),
-                new MultipartForm.Parameter("Public", isPublic ? "1" : "0"),
-                new MultipartForm.File("Asset", asset.Name, asset.TypeString, asset.Data)
-            };
+            List<MultipartForm.Element> postParameters = new List<MultipartForm.Element>
+                                                             {
+                                                                 new MultipartForm.Parameter("AssetID",
+                                                                                             asset.ID.ToString()),
+                                                                 new MultipartForm.Parameter("CreatorID",
+                                                                                             asset.CreatorID.ToString()),
+                                                                 new MultipartForm.Parameter("Temporary",
+                                                                                             ((asset.Flags &
+                                                                                               AssetFlags.Temperary) ==
+                                                                                              AssetFlags.Temperary)
+                                                                                                 ? "1"
+                                                                                                 : "0"),
+                                                                 new MultipartForm.Parameter("Public",
+                                                                                             isPublic ? "1" : "0"),
+                                                                 new MultipartForm.File("Asset", asset.Name,
+                                                                                        asset.TypeString, asset.Data)
+                                                             };
 
             // Make the remote storage request
             try
             {
-                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(m_serverUrl);
-                
+                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(m_serverUrl);
+
                 HttpWebResponse response = MultipartForm.Post(request, postParameters);
                 using (Stream responseStream = response.GetResponseStream())
                 {
@@ -272,7 +340,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                         OSD responseOSD = OSDParser.Deserialize(responseStr);
                         if (responseOSD.Type == OSDType.Map)
                         {
-                            OSDMap responseMap = (OSDMap)responseOSD;
+                            OSDMap responseMap = (OSDMap) responseOSD;
                             if (responseMap["Success"].AsBoolean())
                                 return asset.ID;
                             else
@@ -298,16 +366,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             m_log.WarnFormat("[SIMIAN ASSET CONNECTOR]: Failed to store asset \"{0}\" ({1}, {2}): {3}",
-                asset.Name, asset.ID, asset.TypeString, errorMessage);
+                             asset.Name, asset.ID, asset.TypeString, errorMessage);
             return UUID.Zero;
         }
 
         /// <summary>
-        /// Update an asset's content
+        ///   Update an asset's content
         /// </summary>
         /// Attachments and bare scripts need this!!
-        /// <param name="id"> </param>
-        /// <param name="data"></param>
+        /// <param name = "id"> </param>
+        /// <param name = "data"></param>
         /// <returns></returns>
         public bool UpdateContent(UUID id, byte[] data)
         {
@@ -326,9 +394,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
         }
 
         /// <summary>
-        /// Delete an asset
+        ///   Delete an asset
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name = "id"></param>
         /// <returns></returns>
         public bool Delete(UUID id)
         {
@@ -346,15 +414,15 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             try
             {
-                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
                 request.Method = "DELETE";
 
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (HttpWebResponse response = (HttpWebResponse) request.GetResponse())
                 {
                     if (response.StatusCode != HttpStatusCode.NoContent)
                     {
                         m_log.Warn("[SIMIAN ASSET CONNECTOR]: Unexpected response when deleting asset " + url + ": " +
-                            response.StatusCode + " (" + response.StatusDescription + ")");
+                                   response.StatusCode + " (" + response.StatusDescription + ")");
                     }
                 }
 
@@ -362,55 +430,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Failed to delete asset " + id + " from the asset service: " + ex.Message);
+                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Failed to delete asset " + id + " from the asset service: " +
+                           ex.Message);
                 return false;
             }
         }
 
         #endregion IAssetService
-
-        private AssetBase GetRemote(string id)
-        {
-            AssetBase asset = null;
-            Uri url;
-
-            // Determine if id is an absolute URL or a grid-relative UUID
-            if (!Uri.TryCreate(id, UriKind.Absolute, out url))
-                url = new Uri(m_serverUrl + id);
-
-            try
-            {
-                HttpWebRequest request = UntrustedHttpWebRequest.Create(url);
-
-                using (WebResponse response = request.GetResponse())
-                {
-                    using (Stream responseStream = response.GetResponseStream())
-                    {
-                        string creatorID = response.Headers.GetOne("X-Asset-Creator-Id") ?? string.Empty;
-
-                        // Create the asset object
-                        asset = new AssetBase(id, String.Empty, (AssetType)SLUtil.ContentTypeToSLAssetType(response.ContentType), UUID.Parse(creatorID));
-
-                        // Grab the asset data from the response stream
-                        using (MemoryStream stream = new MemoryStream())
-                        {
-                            responseStream.CopyTo(stream, Int32.MaxValue);
-                            asset.Data = stream.ToArray();
-                        }
-                    }
-                }
-
-                // Cache store
-                if (m_cache != null)
-                    m_cache.Cache(asset);
-
-                return asset;
-            }
-            catch (Exception ex)
-            {
-                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Asset GET from " + url + " failed: " + ex.Message);
-                return null;
-            }
-        }
     }
 }

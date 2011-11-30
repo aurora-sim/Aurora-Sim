@@ -26,10 +26,7 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenMetaverse;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -71,6 +68,5 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         HoleShape HoleType { get; set; }
         Double HoleSize { get; set; }
         PrimType PrimType { get; set; }
-
     }
 }

@@ -25,33 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OpenSim.Services.Connectors;
-using OpenSim.Services;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Nini.Config;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services;
+using OpenSim.Services.Connectors;
+using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCAgentInfoConnector : IAgentInfoService, IService
     {
         protected IAgentInfoService m_localService;
-        protected AgentInfoConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected AgentInfoConnector m_remoteService;
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IAgentInfoService Members
 
         public IAgentInfoService InnerService
         {
@@ -59,7 +57,7 @@ namespace Aurora.Modules
             {
                 //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
                 //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
                     return m_localService;
                 else
                     return this;
@@ -73,11 +71,10 @@ namespace Aurora.Modules
                 return;
 
             string localAssetHandler = handlerConfig.GetString("LocalAgentInfoHandler", "AgentInfoService");
-            List<IAgentInfoService> services = Aurora.Framework.AuroraModuleLoader.PickupModules<IAgentInfoService>();
-            foreach(IAgentInfoService s in services)
-                if(s.GetType().Name == localAssetHandler)
-                    m_localService = s;
-            if(m_localService == null)
+            List<IAgentInfoService> services = AuroraModuleLoader.PickupModules<IAgentInfoService>();
+            foreach (IAgentInfoService s in services.Where(s => s.GetType().Name == localAssetHandler))
+                m_localService = s;
+            if (m_localService == null)
                 m_localService = new AgentInfoService();
             m_localService.Initialize(config, registry);
             m_remoteService = new AgentInfoConnector();
@@ -98,10 +95,6 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
-        #endregion
-
-        #region IAgentInfoService Members
-
         public UserInfo GetUserInfo(string userID)
         {
             UserInfo info = m_localService.GetUserInfo(userID);
@@ -120,8 +113,8 @@ namespace Aurora.Modules
 
         public string[] GetAgentsLocations(string requestor, string[] userIDs)
         {
-            string[] info = m_localService.GetAgentsLocations (requestor, userIDs);
-            string[] info2 = m_remoteService.GetAgentsLocations (requestor, userIDs);
+            string[] info = m_localService.GetAgentsLocations(requestor, userIDs);
+            string[] info2 = m_remoteService.GetAgentsLocations(requestor, userIDs);
             if (info == null)
                 info = info2;
             else
@@ -147,12 +140,12 @@ namespace Aurora.Modules
 
         public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
-            m_localService.SetLoggedIn (userID, loggingIn, fireLoggedInEvent, enteringRegion);
+            m_localService.SetLoggedIn(userID, loggingIn, fireLoggedInEvent, enteringRegion);
         }
 
         public void LockLoggedInStatus(string userID, bool locked)
         {
-            m_localService.LockLoggedInStatus (userID, locked);
+            m_localService.LockLoggedInStatus(userID, locked);
         }
 
         #endregion

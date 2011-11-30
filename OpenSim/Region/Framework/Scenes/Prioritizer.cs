@@ -26,16 +26,13 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-using log4net;
+using System.Reflection;
 using Nini.Config;
-using OpenSim.Framework;
 using OpenMetaverse;
-using OpenSim.Region.Physics.Manager;
+using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
+using log4net;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 /*
@@ -64,13 +61,25 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class Culler : ICuller
     {
-        private bool m_useDistanceCulling = true;
-        private bool m_useCulling = true;
-        private int m_cachedXOffset = 0;
-        private int m_cachedYOffset = 0;
+        private readonly Dictionary<uint, bool> m_previousCulled = new Dictionary<uint, bool>();
+        private readonly bool m_useDistanceCulling = true;
+        private int m_cachedXOffset;
+        private int m_cachedYOffset;
+        private int m_lastCached;
         private float m_sizeToForceDualCulling = 10f;
-        private int m_lastCached = 0;
-        private Dictionary<uint, bool> m_previousCulled = new Dictionary<uint, bool>();
+        private bool m_useCulling = true;
+
+        public Culler(IScene scene)
+        {
+            IConfig interestConfig = scene.Config.Configs["InterestManagement"];
+            if (interestConfig != null)
+            {
+                m_useCulling = interestConfig.GetBoolean("UseCulling", m_useCulling);
+                m_useDistanceCulling = interestConfig.GetBoolean("UseDistanceBasedCulling", m_useDistanceCulling);
+            }
+        }
+
+        #region ICuller Members
 
         public bool UseCulling
         {
@@ -78,44 +87,34 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_useCulling = value; }
         }
 
-        public Culler (IScene scene)
-        {
-            IConfig interestConfig = scene.Config.Configs["InterestManagement"];
-            if (interestConfig != null)
-            {
-                m_useCulling = interestConfig.GetBoolean ("UseCulling", m_useCulling);
-                m_useDistanceCulling = interestConfig.GetBoolean ("UseDistanceBasedCulling", m_useDistanceCulling);
-            }
-        }
-
-        public void Reset ()
-        {
-            m_cachedXOffset = 0;
-            m_cachedYOffset = 0;
-        }
-
-        #region ICuller Members
-
         public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene)
         {
             return ShowEntityToClient(client, entity, scene, Util.EnvironmentTickCount());
+        }
+
+        #endregion
+
+        public void Reset()
+        {
+            m_cachedXOffset = 0;
+            m_cachedYOffset = 0;
         }
 
         public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene, int currentTickCount)
         {
             if (!m_useCulling)
                 return true; //If we arn't using culling, return true by default to show all prims
-            if(entity == null || client == null || scene == null)
+            if (entity == null || client == null || scene == null)
                 return false;
 
             bool cull = false;
-            lock(m_previousCulled)
+            lock (m_previousCulled)
             {
-                if(m_previousCulled.TryGetValue(entity.LocalId, out cull))
+                if (m_previousCulled.TryGetValue(entity.LocalId, out cull))
                 {
                     Int32 diff = currentTickCount - m_lastCached;
                     Int32 timingDiff = (diff >= 0) ? diff : (diff + Util.EnvironmentTickCountMask + 1);
-                    if (timingDiff > 5 * 1000)//Only recheck every 5 seconds
+                    if (timingDiff > 5*1000) //Only recheck every 5 seconds
                     {
                         m_lastCached = Util.EnvironmentTickCount();
                         m_previousCulled.Clear();
@@ -125,51 +124,51 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (m_useDistanceCulling && !DistanceCulling (client, entity, scene))
+            if (m_useDistanceCulling && !DistanceCulling(client, entity, scene))
             {
-                lock(m_previousCulled)
+                lock (m_previousCulled)
                     m_previousCulled[entity.LocalId] = false;
                 return false;
             }
 
-            if (!ParcelPrivateCulling (client, entity))
+            if (!ParcelPrivateCulling(client, entity))
             {
-                lock(m_previousCulled)
+                lock (m_previousCulled)
                     m_previousCulled[entity.LocalId] = false;
                 return false;
             }
 
             //No more, guess its fine
-            lock(m_previousCulled)
+            lock (m_previousCulled)
                 m_previousCulled[entity.LocalId] = true;
             return true;
         }
 
-        private bool ParcelPrivateCulling (IScenePresence client, IEntity entity)
+        private bool ParcelPrivateCulling(IScenePresence client, IEntity entity)
         {
             if (entity is IScenePresence)
             {
-                IScenePresence pEntity = (IScenePresence)entity;
-                if ((client.CurrentParcel != null && 
-                    client.CurrentParcel.LandData.Private) ||
+                IScenePresence pEntity = (IScenePresence) entity;
+                if ((client.CurrentParcel != null &&
+                     client.CurrentParcel.LandData.Private) ||
                     (pEntity.CurrentParcel != null &&
-                    pEntity.CurrentParcel.LandData.Private))
+                     pEntity.CurrentParcel.LandData.Private))
                 {
                     //We need to check whether this presence is sitting on anything, so that we can check from the object's
                     // position, rather than the offset position of the object that the avatar is sitting on
                     if (pEntity.CurrentParcelUUID != client.CurrentParcelUUID)
-                        return false;//Can't see avatar's outside the parcel
+                        return false; //Can't see avatar's outside the parcel
                 }
             }
             return true;
         }
 
-        public bool DistanceCulling (IScenePresence client, IEntity entity, IScene scene)
+        public bool DistanceCulling(IScenePresence client, IEntity entity, IScene scene)
         {
             float DD = client.DrawDistance;
             if (DD < 32) //Limit to a small distance
                 DD = 32;
-            if (DD > scene.RegionInfo.RegionSizeX && 
+            if (DD > scene.RegionInfo.RegionSizeX &&
                 DD > scene.RegionInfo.RegionSizeY)
                 return true; //Its larger than the region, no culling check even necessary
             Vector3 posToCheckFrom = client.GetAbsolutePosition();
@@ -180,28 +179,32 @@ namespace OpenSim.Region.Framework.Scenes
                     IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                     if (agentInfoService != null)
                     {
-                        UserInfo info = agentInfoService.GetUserInfo (client.UUID.ToString ());
+                        UserInfo info = agentInfoService.GetUserInfo(client.UUID.ToString());
                         if (info != null)
                         {
-                            GridRegion r = scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID, 
-                                info.CurrentRegionID);
+                            GridRegion r = scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID,
+                                                                             info.CurrentRegionID);
                             if (r != null)
                             {
                                 m_cachedXOffset = scene.RegionInfo.RegionLocX - r.RegionLocX;
-                                m_cachedYOffset = scene.RegionInfo.RegionLocY - r.RegionLocY; 
+                                m_cachedYOffset = scene.RegionInfo.RegionLocY - r.RegionLocY;
                             }
                         }
                     }
                 }
                 //We need to add the offset so that we can check from the right place in child regions
                 if (m_cachedXOffset < 0)
-                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX - (scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
+                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX -
+                                       (scene.RegionInfo.RegionSizeX + client.AbsolutePosition.X + m_cachedXOffset);
                 if (m_cachedYOffset < 0)
-                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y + m_cachedYOffset);
+                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY -
+                                       (scene.RegionInfo.RegionSizeY + client.AbsolutePosition.Y + m_cachedYOffset);
                 if (m_cachedXOffset > scene.RegionInfo.RegionSizeX)
-                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX - (scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
+                    posToCheckFrom.X = scene.RegionInfo.RegionSizeX -
+                                       (scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
                 if (m_cachedYOffset > scene.RegionInfo.RegionSizeY)
-                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY - (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
+                    posToCheckFrom.Y = scene.RegionInfo.RegionSizeY -
+                                       (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
             }
             Vector3 entityPosToCheckFrom = Vector3.Zero;
             bool doHeavyCulling = false;
@@ -210,151 +213,212 @@ namespace OpenSim.Region.Framework.Scenes
                 doHeavyCulling = true;
                 //We need to check whether this object is an attachment, and if so, set it so that we check from the avatar's
                 // position, rather than from the offset of the attachment
-                ISceneEntity sEntity = (ISceneEntity)entity;
+                ISceneEntity sEntity = (ISceneEntity) entity;
                 if (sEntity.RootChild.IsAttachment)
                 {
-                    IScenePresence attachedAvatar = scene.GetScenePresence (sEntity.RootChild.AttachedAvatar);
+                    IScenePresence attachedAvatar = scene.GetScenePresence(sEntity.RootChild.AttachedAvatar);
                     if (attachedAvatar != null)
                         entityPosToCheckFrom = attachedAvatar.AbsolutePosition;
                 }
                 else
-                    entityPosToCheckFrom = sEntity.RootChild.GetGroupPosition ();
+                    entityPosToCheckFrom = sEntity.RootChild.GetGroupPosition();
             }
             else if (entity is IScenePresence)
             {
                 //We need to check whether this presence is sitting on anything, so that we can check from the object's
                 // position, rather than the offset position of the object that the avatar is sitting on
-                IScenePresence pEntity = (IScenePresence)entity;
+                IScenePresence pEntity = (IScenePresence) entity;
                 if (pEntity.Sitting)
                 {
-                    ISceneChildEntity sittingEntity = scene.GetSceneObjectPart (pEntity.SittingOnUUID);
+                    ISceneChildEntity sittingEntity = scene.GetSceneObjectPart(pEntity.SittingOnUUID);
                     if (sittingEntity != null)
-                        entityPosToCheckFrom = sittingEntity.GetGroupPosition ();
+                        entityPosToCheckFrom = sittingEntity.GetGroupPosition();
                 }
                 else
                     entityPosToCheckFrom = pEntity.GetAbsolutePosition();
             }
             //If the distance is greater than the clients draw distance, its out of range
-            if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom) >
-                DD * DD) //Use squares to make it faster than having to do the sqrt
+            if (Vector3.DistanceSquared(posToCheckFrom, entityPosToCheckFrom) >
+                DD*DD) //Use squares to make it faster than having to do the sqrt
             {
                 if (!doHeavyCulling)
-                    return false;//Don't do the hardcore checks
+                    return false; //Don't do the hardcore checks
                 ISceneEntity childEntity = (entity as ISceneEntity);
                 if (childEntity != null && HardCullingCheck(childEntity))
                 {
                     #region Side culling check (X, Y, Z) plane checks
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, 0, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom + new Vector3(childEntity.OOBsize.X, 0, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, 0, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom - new Vector3(childEntity.OOBsize.X, 0, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, childEntity.OOBsize.Y, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom + new Vector3(0, childEntity.OOBsize.Y, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, childEntity.OOBsize.Y, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom - new Vector3(0, childEntity.OOBsize.Y, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, 0, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom + new Vector3(0, 0, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, 0, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom - new Vector3(0, 0, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
+
                     #endregion
+
                     #region Corner checks ((x,y),(-x,-y),(x,-y),(-x,y), (y,z),(-y,-z),(y,-z),(-y,z), (x,z),(-x,-z),(x,-z),(-x,z))
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom +
+                                                new Vector3(childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom -
+                                                new Vector3(childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom +
+                                                new Vector3(childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom -
+                                                new Vector3(childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom +
+                                                new Vector3(0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom -
+                                                new Vector3(0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom +
+                                                new Vector3(0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom -
+                                                new Vector3(0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom +
+                                                new Vector3(childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom -
+                                                new Vector3(childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom + new Vector3 (-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom +
+                                                new Vector3(-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
-                    if (Vector3.DistanceSquared (posToCheckFrom, entityPosToCheckFrom - new Vector3 (-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD * DD) //Use squares to make it faster than having to do the sqrt
+                    if (
+                        Vector3.DistanceSquared(posToCheckFrom,
+                                                entityPosToCheckFrom -
+                                                new Vector3(-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
+                        DD*DD) //Use squares to make it faster than having to do the sqrt
                         return true;
+
                     #endregion
                 }
                 return false;
             }
-            
+
             return true;
         }
 
-        private bool HardCullingCheck (ISceneEntity childEntity)
+        private bool HardCullingCheck(ISceneEntity childEntity)
         {
             Vector3 OOBsize = childEntity.OOBsize;
-            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
+            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling*m_sizeToForceDualCulling ||
+                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling*m_sizeToForceDualCulling ||
+                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling*m_sizeToForceDualCulling)
                 return true;
             return false;
         }
 
-        private float LengthSquared (float a, float b)
+        private float LengthSquared(float a, float b)
         {
-            return (a * a) + (b * b);
+            return (a*a) + (b*b);
         }
-
-        #endregion
     }
 
     public class Prioritizer : IPrioritizer
     {
-        private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public UpdatePrioritizationSchemes UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
+        private readonly double m_childReprioritizationDistance = 20.0;
 
-        private double m_childReprioritizationDistance = 20.0;
-
-        public double ChildReprioritizationDistance { get { return m_childReprioritizationDistance; } }
+        public UpdatePrioritizationSchemes UpdatePrioritizationScheme =
+            UpdatePrioritizationSchemes.BestAvatarResponsiveness;
 
         public Prioritizer(IScene scene)
         {
             IConfig interestConfig = scene.Config.Configs["InterestManagement"];
             if (interestConfig != null)
             {
-                string update_prioritization_scheme = interestConfig.GetString("UpdatePrioritizationScheme", "BestAvatarResponsiveness").Trim().ToLower();
+                string update_prioritization_scheme =
+                    interestConfig.GetString("UpdatePrioritizationScheme", "BestAvatarResponsiveness").Trim().ToLower();
                 m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
                 try
                 {
-                    UpdatePrioritizationScheme = (UpdatePrioritizationSchemes)Enum.Parse(typeof(UpdatePrioritizationSchemes), update_prioritization_scheme, true);
+                    UpdatePrioritizationScheme =
+                        (UpdatePrioritizationSchemes)
+                        Enum.Parse(typeof (UpdatePrioritizationSchemes), update_prioritization_scheme, true);
                 }
                 catch (Exception)
                 {
-                    m_log.Warn("[Prioritizer]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
+                    m_log.Warn(
+                        "[Prioritizer]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
                     UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
                 }
             }
 
             //m_log.Info("[Prioritizer]: Using the " + UpdatePrioritizationScheme + " prioritization scheme");
+        }
+
+        #region IPrioritizer Members
+
+        public double ChildReprioritizationDistance
+        {
+            get { return m_childReprioritizationDistance; }
         }
 
         public double GetUpdatePriority(IScenePresence client, IEntity entity)
@@ -385,9 +449,9 @@ namespace OpenSim.Region.Framework.Scenes
                         priority = GetPriorityByBestAvatarResponsiveness(client, entity);
                         break;
                     case UpdatePrioritizationSchemes.OOB:*/
-                        adjustRootPriority = false; //It doesn't need it
-                        priority = GetPriorityByOOBDistance(client, entity);
-                        /*break;
+                adjustRootPriority = false; //It doesn't need it
+                priority = GetPriorityByOOBDistance(client, entity);
+                /*break;
                     default:
                         throw new InvalidOperationException("UpdatePrioritizationScheme not defined.");
                 }*/
@@ -396,7 +460,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!(ex is InvalidOperationException))
                 {
-                    m_log.Warn("[PRIORITY]: Error in finding priority of a prim/user:" + ex.ToString());
+                    m_log.Warn("[PRIORITY]: Error in finding priority of a prim/user:" + ex);
                 }
                 //Set it to max if it errors
                 priority = double.PositiveInfinity;
@@ -408,7 +472,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (adjustRootPriority && entity is ISceneChildEntity)
             {
-                ISceneChildEntity sop = ((ISceneChildEntity)entity);
+                ISceneChildEntity sop = ((ISceneChildEntity) entity);
                 if (sop.IsRoot)
                 {
                     ISceneEntity grp = sop.ParentEntity;
@@ -431,48 +495,50 @@ namespace OpenSim.Region.Framework.Scenes
             return priority;
         }
 
-        private double GetPriorityByOOBDistance (IScenePresence presence, IEntity entity)
+        #endregion
+
+        private double GetPriorityByOOBDistance(IScenePresence presence, IEntity entity)
         {
             // If this is an update for our own avatar give it the highest priority
             if (presence == entity)
                 return 0.0;
 
             // Use the camera position for local agents and avatar position for remote agents
-            Vector3 presencePos = (presence.IsChildAgent) ?
-                presence.AbsolutePosition :
-                presence.CameraPosition;
+            Vector3 presencePos = (presence.IsChildAgent)
+                                      ? presence.AbsolutePosition
+                                      : presence.CameraPosition;
 
 
             // Use group position for child prims
             Vector3 entityPos;
             float distsq;
             if (entity is SceneObjectGroup)
-                {
-                SceneObjectGroup g = (SceneObjectGroup)entity;
-                entityPos = g.AbsolutePosition + g.OOBoffset * g.GroupRotation;
+            {
+                SceneObjectGroup g = (SceneObjectGroup) entity;
+                entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
                 distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
-                }
+            }
 
             else if (entity is SceneObjectPart)
-                {
-                SceneObjectPart p = (SceneObjectPart)entity;
+            {
+                SceneObjectPart p = (SceneObjectPart) entity;
                 if (p.IsRoot)
-                    {
+                {
                     SceneObjectGroup g = p.ParentGroup;
-                    entityPos = g.AbsolutePosition + g.OOBoffset * g.GroupRotation;
+                    entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
                     distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
-                    }
-                else
-                    {
-                    distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
-                    }
                 }
+                else
+                {
+                    distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
+                }
+            }
 
             else
-                {
+            {
                 entityPos = entity.AbsolutePosition;
                 distsq = - Vector3.DistanceSquared(presencePos, entityPos);
-                }
+            }
 
             if (distsq > 0.0f)
                 distsq = 0.0f;
@@ -485,24 +551,24 @@ namespace OpenSim.Region.Framework.Scenes
             return DateTime.UtcNow.ToOADate();
         }
 
-        private double GetPriorityByDistance (IScenePresence presence, IEntity entity)
+        private double GetPriorityByDistance(IScenePresence presence, IEntity entity)
         {
             // If this is an update for our own avatar give it the highest priority
             if (presence == entity)
                 return 0.0;
 
             // Use the camera position for local agents and avatar position for remote agents
-            Vector3 presencePos = (presence.IsChildAgent) ?
-                presence.AbsolutePosition :
-                presence.CameraPosition;
+            Vector3 presencePos = (presence.IsChildAgent)
+                                      ? presence.AbsolutePosition
+                                      : presence.CameraPosition;
 
             // Use group position for child prims
             Vector3 entityPos = entity.AbsolutePosition;
 
-            return Vector3.DistanceSquared (presencePos, entityPos);
+            return Vector3.DistanceSquared(presencePos, entityPos);
         }
 
-        private double GetPriorityByFrontBack (IScenePresence presence, IEntity entity)
+        private double GetPriorityByFrontBack(IScenePresence presence, IEntity entity)
         {
             // If this is an update for our own avatar give it the highest priority
             if (presence == entity)
@@ -515,7 +581,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Can't use Scene.GetGroupByPrim() here, since the entity may have been delete from the scene
                 // before its scheduled update was triggered
                 //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
-                entityPos = ((SceneObjectPart)entity).ParentGroup.AbsolutePosition;
+                entityPos = ((SceneObjectPart) entity).ParentGroup.AbsolutePosition;
             }
             else
             {
@@ -529,11 +595,11 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 camAtAxis = presence.CameraAtAxis;
 
                 // Distance
-                double priority = Vector3.DistanceSquared (camPosition, entityPos);
+                double priority = Vector3.DistanceSquared(camPosition, entityPos);
 
                 // Plane equation
-                float d = -Vector3.Dot (camPosition, camAtAxis);
-                float p = Vector3.Dot (camAtAxis, entityPos) + d;
+                float d = -Vector3.Dot(camPosition, camAtAxis);
+                float p = Vector3.Dot(camAtAxis, entityPos) + d;
                 if (p < 0.0f) priority *= 2.0;
 
                 return priority;
@@ -543,11 +609,11 @@ namespace OpenSim.Region.Framework.Scenes
                 // Child agent. Use the normal distance method
                 Vector3 presencePos = presence.AbsolutePosition;
 
-                return Vector3.DistanceSquared (presencePos, entityPos);
+                return Vector3.DistanceSquared(presencePos, entityPos);
             }
         }
 
-        private double GetPriorityByBestAvatarResponsiveness (IScenePresence presence, IEntity entity)
+        private double GetPriorityByBestAvatarResponsiveness(IScenePresence presence, IEntity entity)
         {
             // If this is an update for our own avatar give it the highest priority
             if (presence.UUID == entity.UUID)
@@ -567,17 +633,17 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 camAtAxis = presence.CameraAtAxis;
 
                 // Distance
-                double priority = Vector3.DistanceSquared (camPosition, entityPos);
+                double priority = Vector3.DistanceSquared(camPosition, entityPos);
 
                 // Plane equation
-                float d = -Vector3.Dot (camPosition, camAtAxis);
-                float p = Vector3.Dot (camAtAxis, entityPos) + d;
+                float d = -Vector3.Dot(camPosition, camAtAxis);
+                float p = Vector3.Dot(camAtAxis, entityPos) + d;
                 if (p < 0.0f) priority *= 2.0;
 
                 //Add distance again to really emphasize it
-                priority += Vector3.DistanceSquared (presence.AbsolutePosition, entityPos);
+                priority += Vector3.DistanceSquared(presence.AbsolutePosition, entityPos);
 
-                if ((Vector3.Distance (presence.AbsolutePosition, entityPos) / 2) > presence.DrawDistance)
+                if ((Vector3.Distance(presence.AbsolutePosition, entityPos)/2) > presence.DrawDistance)
                 {
                     //Outside of draw distance!
                     priority *= 2;
@@ -586,14 +652,14 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart rootPart = null;
                 if (entity is SceneObjectPart)
                 {
-                    if (((SceneObjectPart)entity).ParentGroup != null &&
-                        ((SceneObjectPart)entity).ParentGroup.RootPart != null)
-                        rootPart = ((SceneObjectPart)entity).ParentGroup.RootPart;
+                    if (((SceneObjectPart) entity).ParentGroup != null &&
+                        ((SceneObjectPart) entity).ParentGroup.RootPart != null)
+                        rootPart = ((SceneObjectPart) entity).ParentGroup.RootPart;
                 }
                 if (entity is SceneObjectGroup)
                 {
-                    if (((SceneObjectGroup)entity).RootPart != null)
-                        rootPart = ((SceneObjectGroup)entity).RootPart;
+                    if (((SceneObjectGroup) entity).RootPart != null)
+                        rootPart = ((SceneObjectGroup) entity).RootPart;
                 }
 
                 if (rootPart != null)
@@ -614,13 +680,13 @@ namespace OpenSim.Region.Framework.Scenes
                         priority /= 2; //Emphasize physical objs
 
                     //Factor in the size of objects as well, big ones are MUCH more important than small ones
-                    float size = rootPart.ParentGroup.GroupScale ().Length ();
+                    float size = rootPart.ParentGroup.GroupScale().Length();
                     //Cap size at 200 so that it doesn't completely overwhelm other objects
                     if (size > 200)
                         size = 200;
 
                     //Do it dynamically as well so that larger prims get smaller quicker
-                    priority /= size > 40 ? (size / 35) : (size > 20 ? (size / 17) : 1);
+                    priority /= size > 40 ? (size/35) : (size > 20 ? (size/17) : 1);
 
                     if (rootPart.IsAttachment)
                     {
@@ -636,7 +702,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Child agent. Use the normal distance method
                 Vector3 presencePos = presence.AbsolutePosition;
 
-                return Vector3.DistanceSquared (presencePos, entityPos);
+                return Vector3.DistanceSquared(presencePos, entityPos);
             }
         }
     }

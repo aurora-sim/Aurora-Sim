@@ -31,10 +31,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class int4
     {
+        public int w;
         public int x;
         public int y;
         public int z;
-        public int w;
 
         public int4()
         {
@@ -54,10 +54,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 switch (i)
                 {
-                    case 0: return x;
-                    case 1: return y;
-                    case 2: return z;
-                    case 3: return w;
+                    case 0:
+                        return x;
+                    case 1:
+                        return y;
+                    case 2:
+                        return z;
+                    case 3:
+                        return w;
                 }
                 throw new ArgumentOutOfRangeException();
             }

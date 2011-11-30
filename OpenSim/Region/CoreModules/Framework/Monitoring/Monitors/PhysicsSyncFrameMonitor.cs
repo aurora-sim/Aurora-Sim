@@ -26,7 +26,6 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -42,7 +41,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return (double)physicsSyncTime;
+            return physicsSyncTime;
         }
 
         public string GetName()
@@ -52,7 +51,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms";
+            return (int) GetValue() + "ms";
         }
 
         #endregion

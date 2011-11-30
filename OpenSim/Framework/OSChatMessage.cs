@@ -38,39 +38,22 @@ namespace OpenSim.Framework
     }
 
     /// <summary>
-    /// ChatFromViewer Arguments
+    ///   ChatFromViewer Arguments
     /// </summary>
     public class OSChatMessage : EventArgs, IEventArgs
     {
         protected int m_channel;
         protected string m_from;
+        protected UUID m_fromID;
         protected string m_message;
         protected Vector3 m_position;
+        protected float m_range;
 
         protected IScene m_scene;
         protected IClientAPI m_sender;
         protected ISceneChildEntity m_senderObject;
-        protected ChatTypeEnum m_type;
-        protected UUID m_fromID;
-        protected float m_range;
         protected UUID m_toAgentID;
-
-        public OSChatMessage Copy()
-        {
-            OSChatMessage message = new OSChatMessage();
-            message.Channel = Channel;
-            message.From = From;
-            message.Message = Message;
-            message.Position = Position;
-            message.Range = Range;
-            message.Scene = Scene;
-            message.Sender = Sender;
-            message.SenderObject = SenderObject;
-            message.SenderUUID = SenderUUID;
-            message.Type = Type;
-            message.ToAgentID = ToAgentID;
-            return message;
-        }
+        protected ChatTypeEnum m_type;
 
         public OSChatMessage()
         {
@@ -78,7 +61,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// The message sent by the user
+        ///   The message sent by the user
         /// </summary>
         public string Message
         {
@@ -87,7 +70,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// The type of message, eg say, shout, broadcast.
+        ///   The type of message, eg say, shout, broadcast.
         /// </summary>
         public ChatTypeEnum Type
         {
@@ -96,7 +79,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Which channel was this message sent on? Different channels may have different listeners. Public chat is on channel zero.
+        ///   Which channel was this message sent on? Different channels may have different listeners. Public chat is on channel zero.
         /// </summary>
         public int Channel
         {
@@ -105,7 +88,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// How far should this chat go? -1 is default range for the type
+        ///   How far should this chat go? -1 is default range for the type
         /// </summary>
         public float Range
         {
@@ -114,7 +97,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// The position of the sender at the time of the message broadcast.
+        ///   The position of the sender at the time of the message broadcast.
         /// </summary>
         public Vector3 Position
         {
@@ -123,7 +106,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// The name of the sender (needed for scripts)
+        ///   The name of the sender (needed for scripts)
         /// </summary>
         public string From
         {
@@ -131,22 +114,8 @@ namespace OpenSim.Framework
             set { m_from = value; }
         }
 
-        #region IEventArgs Members
-
-        /// TODO: Sender and SenderObject should just be Sender and of
-        /// type IChatSender
-
         /// <summary>
-        /// The client responsible for sending the message, or null.
-        /// </summary>
-        public IClientAPI Sender
-        {
-            get { return m_sender; }
-            set { m_sender = value; }
-        }
-
-        /// <summary>
-        /// The object responsible for sending the message, or null.
+        ///   The object responsible for sending the message, or null.
         /// </summary>
         public ISceneChildEntity SenderObject
         {
@@ -166,13 +135,46 @@ namespace OpenSim.Framework
             set { m_toAgentID = value; }
         }
 
+        #region IEventArgs Members
+
+        /// TODO: Sender and SenderObject should just be Sender and of
+        /// type IChatSender
         /// <summary>
-        ///
+        ///   The client responsible for sending the message, or null.
         /// </summary>
+        public IClientAPI Sender
+        {
+            get { return m_sender; }
+            set { m_sender = value; }
+        }
+
+        ///<summary>
+        ///</summary>
         public IScene Scene
         {
             get { return m_scene; }
             set { m_scene = value; }
+        }
+
+        #endregion
+
+        public OSChatMessage Copy()
+        {
+            OSChatMessage message = new OSChatMessage
+                                        {
+                                            Channel = Channel,
+                                            From = From,
+                                            Message = Message,
+                                            Position = Position,
+                                            Range = Range,
+                                            Scene = Scene,
+                                            Sender = Sender,
+                                            SenderObject = SenderObject,
+                                            SenderUUID = SenderUUID,
+                                            Type = Type,
+                                            ToAgentID = ToAgentID
+                                        };
+            return message;
         }
 
         public override string ToString()
@@ -183,9 +185,9 @@ namespace OpenSim.Framework
 
         public Dictionary<string, object> ToKVP()
         {
-            Dictionary<string, object> kvp = new Dictionary<string,object>();
+            Dictionary<string, object> kvp = new Dictionary<string, object>();
             kvp["Message"] = Message;
-            kvp["Type"] = (int)Type;
+            kvp["Type"] = (int) Type;
             kvp["Channel"] = Channel;
             kvp["Range"] = Range;
             kvp["Position"] = Position;
@@ -198,7 +200,7 @@ namespace OpenSim.Framework
         public void FromKVP(Dictionary<string, object> kvp)
         {
             Message = kvp["Message"].ToString();
-            Type = ((ChatTypeEnum)int.Parse(kvp["Type"].ToString()));
+            Type = ((ChatTypeEnum) int.Parse(kvp["Type"].ToString()));
             Channel = int.Parse(kvp["Channel"].ToString());
             Range = float.Parse(kvp["Range"].ToString());
             Position = Vector3.Parse(kvp["Position"].ToString());
@@ -206,7 +208,5 @@ namespace OpenSim.Framework
             SenderUUID = UUID.Parse(kvp["SenderUUID"].ToString());
             ToAgentID = UUID.Parse(kvp["ToAgentID"].ToString());
         }
-
-        #endregion
     }
 }

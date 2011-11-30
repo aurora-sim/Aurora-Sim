@@ -32,9 +32,9 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 {
     public class HullResult
     {
-        public bool Polygons = true; // true if indices represents polygons, false indices are triangles
-        public List<float3> OutputVertices = new List<float3>();
         public List<int> Indices;
+        public List<float3> OutputVertices = new List<float3>();
+        public bool Polygons = true; // true if indices represents polygons, false indices are triangles
 
         // If triangles, then indices are array indexes into the vertex list.
         // If polygons, indices are in the form (number of points in face) (p1, p2, p3, ..) etc..
@@ -42,19 +42,19 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
     public class PHullResult
     {
-        public List<float3> Vertices = new List<float3>();
         public List<int> Indices = new List<int>();
+        public List<float3> Vertices = new List<float3>();
     }
 
     [Flags]
-    public enum HullFlag : int
+    public enum HullFlag
     {
         QF_DEFAULT = 0,
         QF_TRIANGLES = (1 << 0), // report results as triangles, not polygons.
         QF_SKIN_WIDTH = (1 << 2) // extrude hull based on this skin width
     }
 
-    public enum HullError : int
+    public enum HullError
     {
         QE_OK, // success!
         QE_FAIL // failed.
@@ -63,11 +63,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
     public class HullDesc
     {
         public HullFlag Flags; // flags to use when generating the convex hull.
-        public List<float3> Vertices;
-        public float NormalEpsilon; // the epsilon for removing duplicates. This is a normalized value, if normalized bit is on.
-        public float SkinWidth;
-        public uint MaxVertices; // maximum number of vertices to be considered for the hull!
         public uint MaxFaces;
+        public uint MaxVertices; // maximum number of vertices to be considered for the hull!
+
+        public float NormalEpsilon;
+                     // the epsilon for removing duplicates. This is a normalized value, if normalized bit is on.
+
+        public float SkinWidth;
+        public List<float3> Vertices;
 
         public HullDesc()
         {
@@ -107,11 +110,24 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
     public class ConvexH
     {
+        public List<HalfEdge> edges = new List<HalfEdge>();
+        public List<Plane> facets = new List<Plane>();
+        public List<float3> vertices = new List<float3>();
+
+        public ConvexH(int vertices_size, int edges_size, int facets_size)
+        {
+            vertices = new List<float3>(vertices_size);
+            edges = new List<HalfEdge>(edges_size);
+            facets = new List<Plane>(facets_size);
+        }
+
+        #region Nested type: HalfEdge
+
         public struct HalfEdge
         {
             public short ea; // the other half of the edge (index into edges list)
-            public byte v; // the vertex at the start of this edge (index into vertices list)
             public byte p; // the facet on which this edge lies (index into facets list)
+            public byte v; // the vertex at the start of this edge (index into vertices list)
 
             public HalfEdge(short _ea, byte _v, byte _p)
             {
@@ -128,38 +144,29 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
         }
 
-        public List<float3> vertices = new List<float3>();
-        public List<HalfEdge> edges = new List<HalfEdge>();
-        public List<Plane> facets = new List<Plane>();
-
-        public ConvexH(int vertices_size, int edges_size, int facets_size)
-        {
-            vertices = new List<float3>(vertices_size);
-            edges = new List<HalfEdge>(edges_size);
-            facets = new List<Plane>(facets_size);
-        }
+        #endregion
     }
 
     public class VertFlag
     {
-        public byte planetest;
         public byte junk;
-        public byte undermap;
         public byte overmap;
+        public byte planetest;
+        public byte undermap;
     }
 
     public class EdgeFlag
     {
-        public byte planetest;
         public byte fixes;
-        public short undermap;
         public short overmap;
+        public byte planetest;
+        public short undermap;
     }
 
     public class PlaneFlag
     {
-        public byte undermap;
         public byte overmap;
+        public byte undermap;
     }
 
     public class Coplanar

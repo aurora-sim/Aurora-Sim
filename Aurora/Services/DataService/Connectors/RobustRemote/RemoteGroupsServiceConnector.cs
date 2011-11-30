@@ -26,34 +26,32 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteGroupsServiceConnector : IGroupsServiceConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IGroupsServiceConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "RemoteConnector")
             {
@@ -67,12 +65,10 @@ namespace Aurora.Services.DataService
             get { return "IGroupsServiceConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID,
-            ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
+        public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID,
+                                int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish,
+                                UUID founderID,
+                                ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -95,21 +91,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (founderID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(founderID.ToString(),
+                                                                                           "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
-        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
+        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject,
+                                   string message, UUID ItemID, int AssetType, string ItemName)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -128,17 +127,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -153,24 +154,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
+                                                                                           "RemoteServerURI", false);
+                foreach (Dictionary<string, object> replyData in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                              m_ServerURI,
+                                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData != null))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                            return replyData["groupTitle"].ToString();
-                    }
+                    return replyData["groupTitle"].ToString();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return "No Title Could Be Found";
         }
@@ -188,24 +184,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
+                                                                                           "RemoteServerURI", false);
+                foreach (Dictionary<string, object> replyData in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                              m_ServerURI,
+                                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData != null))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                            return replyData["groupTitle"].ToString();
-                    }
+                    return replyData["groupTitle"].ToString();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
             return "No Title Could Be Found";
         }
@@ -224,21 +215,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(requestingAgentID.ToString(), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
-        public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers)
+        public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description,
+                                   string Title, ulong Powers)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -255,21 +249,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(requestingAgentID.ToString(), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
-        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
+        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID,
+                                int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -288,17 +285,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(requestingAgentID.ToString(), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -315,21 +314,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(requestingAgentID.ToString(), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
-        public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers)
+        public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title,
+                               ulong Powers)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -346,21 +348,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(requestingAgentID.ToString(), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
-        public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices, int ListInProfile)
+        public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices,
+                                      int ListInProfile)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -375,21 +380,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
-        public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID, string FromAgentName)
+        public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID,
+                                        string FromAgentName)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -405,17 +413,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -431,17 +441,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    SynchronousRestFormsRequester.MakeRequest ("POST",
-                           m_ServerURI,
-                           reqString);
+                    SynchronousRestFormsRequester.MakeRequest("POST",
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -459,17 +471,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -487,17 +501,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -514,36 +530,18 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (GroupRecord @group in (from mServerUri in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values into replyvalues from f in replyvalues select f).OfType<Dictionary<string, object>>().Select(f => new GroupRecord(f)))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            GroupRecord group = null;
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    group = new GroupRecord ((Dictionary<string, object>)f);
-                                    // Success
-                                    return group;
-                                }
-                            }
-                        }
-                    }
+                    // Success
+                    return group;
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -562,25 +560,23 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (string mServerUri in m_ServerURIs)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
                         if (replyData != null)
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            GroupProfileData group = null;
                             foreach (object f in replyvalues)
                             {
                                 if (f is Dictionary<string, object>)
                                 {
-                                    group = new GroupProfileData ((Dictionary<string, object>)f);
+                                    GroupProfileData @group = new GroupProfileData((Dictionary<string, object>) f);
                                     // Success
                                     return group;
                                 }
@@ -591,7 +587,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -610,12 +606,14 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                             m_ServerURI,
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -624,12 +622,9 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupMembershipData group = null;
-                            foreach (object f in replyvalues)
+                            foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    group = new GroupMembershipData((Dictionary<string, object>)f);
-                                }
+                                group = new GroupMembershipData(f);
                             }
                             // Success
                             return group;
@@ -639,7 +634,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -658,12 +653,14 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                             m_ServerURI,
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -672,10 +669,9 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             bool group = false;
-                            foreach (object f in replyvalues)
+                            foreach (object f in replyvalues.Where(f => bool.TryParse(f.ToString(), out group)))
                             {
-                                if (bool.TryParse(f.ToString(), out group))
-                                    break;
+                                break;
                             }
                             // Success
                             return group;
@@ -685,7 +681,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -703,27 +699,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object> replyData in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                              m_ServerURI,
+                                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData != null))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            // Success
-                            return UUID.Parse(replyData["A"].ToString());
-                        }
-                    }
+                    // Success
+                    return UUID.Parse(replyData["A"].ToString());
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return UUID.Zero;
@@ -741,12 +730,14 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                             m_ServerURI,
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -755,12 +746,9 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupInviteInfo group = null;
-                            foreach (object f in replyvalues)
+                            foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    group = new GroupInviteInfo((Dictionary<string, object>)f);
-                                }
+                                group = new GroupInviteInfo(f);
                             }
                             // Success
                             return group;
@@ -770,7 +758,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -789,12 +777,14 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                             m_ServerURI,
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -803,12 +793,9 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupMembersData group = null;
-                            foreach (object f in replyvalues)
+                            foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    group = new GroupMembersData((Dictionary<string, object>)f);
-                                }
+                                group = new GroupMembersData(f);
                             }
                             // Success
                             return group;
@@ -818,7 +805,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -836,12 +823,14 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
+                                                                             m_ServerURI,
+                                                                             reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -850,12 +839,9 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupNoticeInfo group = null;
-                            foreach (object f in replyvalues)
+                            foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    group = new GroupNoticeInfo((Dictionary<string, object>)f);
-                                }
+                                group = new GroupNoticeInfo(f);
                             }
                             // Success
                             return group;
@@ -865,7 +851,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -883,42 +869,27 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupMembershipData> Groups = new List<GroupMembershipData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupMembershipData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupMembershipData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupMembershipData>();
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags)
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery,
+                                                   uint queryflags)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -932,36 +903,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<DirGroupsReplyData> Groups = new List<DirGroupsReplyData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new DirGroupsReplyData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new DirGroupsReplyData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<DirGroupsReplyData>();
@@ -980,36 +935,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupRolesData> Groups = new List<GroupRolesData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupRolesData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRolesData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRolesData>();
@@ -1027,36 +966,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString(), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupRolesData> Groups = new List<GroupRolesData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupRolesData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRolesData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRolesData>();
@@ -1074,36 +997,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupMembersData> Groups = new List<GroupMembersData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupMembersData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupMembersData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupMembersData>();
@@ -1121,36 +1028,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupRoleMembersData> Groups = new List<GroupRoleMembersData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupRoleMembersData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRoleMembersData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRoleMembersData>();
@@ -1168,36 +1059,20 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupNoticeData> Groups = new List<GroupNoticeData>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupNoticeData((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupNoticeData(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupNoticeData>();
@@ -1214,42 +1089,32 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                          m_ServerURI,
+                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
-                    {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
-                        {
-                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
-                            List<GroupInviteInfo> Groups = new List<GroupInviteInfo>();
-                            foreach (object f in replyvalues)
-                            {
-                                if (f is Dictionary<string, object>)
-                                {
-                                    Groups.Add(new GroupInviteInfo((Dictionary<string, object>)f));
-                                }
-                            }
-                            // Success
-                            return Groups;
-                        }
-                    }
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupInviteInfo(f)).ToList();
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupInviteInfo>();
         }
 
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+        }
+
+        #endregion
+
+        public void Dispose()
         {
         }
     }

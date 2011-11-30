@@ -26,78 +26,76 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.IO;
 using System.Reflection;
 using OpenMetaverse;
 
 namespace OpenSim.Data.MSSQL
 {
     /// <summary>
-    /// A management class for the MS SQL Storage Engine
+    ///   A management class for the MS SQL Storage Engine
     /// </summary>
     public class MSSQLManager
     {
         /// <summary>
-        /// Connection string for ADO.net
+        ///   Connection string for ADO.net
         /// </summary>
         private readonly string connectionString;
 
         /// <summary>
-        /// Initialize the manager and set the connectionstring
+        ///   Initialize the manager and set the connectionstring
         /// </summary>
-        /// <param name="connection"></param>
+        /// <param name = "connection"></param>
         public MSSQLManager(string connection)
         {
             connectionString = connection;
         }
 
         /// <summary>
-        /// Type conversion to a SQLDbType functions
+        ///   Type conversion to a SQLDbType functions
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name = "type"></param>
         /// <returns></returns>
         internal SqlDbType DbtypeFromType(Type type)
         {
-            if (type == typeof(string))
+            if (type == typeof (string))
             {
                 return SqlDbType.VarChar;
             }
-            if (type == typeof(double))
+            if (type == typeof (double))
             {
                 return SqlDbType.Float;
             }
-            if (type == typeof(Single))
+            if (type == typeof (Single))
             {
                 return SqlDbType.Float;
             }
-            if (type == typeof(int))
+            if (type == typeof (int))
             {
                 return SqlDbType.Int;
             }
-            if (type == typeof(bool))
+            if (type == typeof (bool))
             {
                 return SqlDbType.Bit;
             }
-            if (type == typeof(UUID))
+            if (type == typeof (UUID))
             {
                 return SqlDbType.UniqueIdentifier;
             }
-            if (type == typeof(sbyte))
+            if (type == typeof (sbyte))
             {
                 return SqlDbType.Int;
             }
-            if (type == typeof(Byte[]))
+            if (type == typeof (Byte[]))
             {
                 return SqlDbType.Image;
             }
-            if (type == typeof(uint) || type == typeof(ushort))
+            if (type == typeof (uint) || type == typeof (ushort))
             {
                 return SqlDbType.Int;
             }
-            if (type == typeof(ulong))
+            if (type == typeof (ulong))
             {
                 return SqlDbType.BigInt;
             }
@@ -105,31 +103,31 @@ namespace OpenSim.Data.MSSQL
         }
 
         /// <summary>
-        /// Creates value for parameter.
+        ///   Creates value for parameter.
         /// </summary>
-        /// <param name="value">The value.</param>
+        /// <param name = "value">The value.</param>
         /// <returns></returns>
         private static object CreateParameterValue(object value)
         {
             Type valueType = value.GetType();
 
-            if (valueType == typeof(UUID)) //TODO check if this works
+            if (valueType == typeof (UUID)) //TODO check if this works
             {
                 return ((UUID) value).Guid;
             }
-            if (valueType == typeof(UUID))
+            if (valueType == typeof (UUID))
             {
-                return ((UUID)value).Guid;
+                return ((UUID) value).Guid;
             }
-            if (valueType == typeof(bool))
+            if (valueType == typeof (bool))
             {
-                return (bool)value ? 1 : 0;
+                return (bool) value ? 1 : 0;
             }
-            if (valueType == typeof(Byte[]))
+            if (valueType == typeof (Byte[]))
             {
                 return value;
             }
-            if (valueType == typeof(int))
+            if (valueType == typeof (int))
             {
                 return value;
             }
@@ -137,10 +135,10 @@ namespace OpenSim.Data.MSSQL
         }
 
         /// <summary>
-        /// Create a parameter for a command
+        ///   Create a parameter for a command
         /// </summary>
-        /// <param name="parameterName">Name of the parameter.</param>
-        /// <param name="parameterObject">parameter object.</param>
+        /// <param name = "parameterName">Name of the parameter.</param>
+        /// <param name = "parameterObject">parameter object.</param>
         /// <returns></returns>
         internal SqlParameter CreateParameter(string parameterName, object parameterObject)
         {
@@ -148,11 +146,11 @@ namespace OpenSim.Data.MSSQL
         }
 
         /// <summary>
-        /// Creates the parameter for a command.
+        ///   Creates the parameter for a command.
         /// </summary>
-        /// <param name="parameterName">Name of the parameter.</param>
-        /// <param name="parameterObject">parameter object.</param>
-        /// <param name="parameterOut">if set to <c>true</c> parameter is a output parameter</param>
+        /// <param name = "parameterName">Name of the parameter.</param>
+        /// <param name = "parameterObject">parameter object.</param>
+        /// <param name = "parameterOut">if set to <c>true</c> parameter is a output parameter</param>
         /// <returns></returns>
         internal SqlParameter CreateParameter(string parameterName, object parameterObject, bool parameterOut)
         {
@@ -178,12 +176,12 @@ namespace OpenSim.Data.MSSQL
         }
 
         /// <summary>
-        /// Checks if we need to do some migrations to the database
+        ///   Checks if we need to do some migrations to the database
         /// </summary>
-        /// <param name="migrationStore">migrationStore.</param>
+        /// <param name = "migrationStore">migrationStore.</param>
         public void CheckMigration(string migrationStore)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString)) 
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 Assembly assem = GetType().Assembly;
@@ -194,7 +192,7 @@ namespace OpenSim.Data.MSSQL
         }
 
         /// <summary>
-        /// Returns the version of this DB provider
+        ///   Returns the version of this DB provider
         /// </summary>
         /// <returns>A string containing the DB provider</returns>
         public string getVersion()

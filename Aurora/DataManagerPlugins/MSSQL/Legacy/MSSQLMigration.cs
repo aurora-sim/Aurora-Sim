@@ -39,7 +39,8 @@ namespace OpenSim.Data.MSSQL
         {
         }
 
-        public MSSQLMigration(DbConnection conn, Assembly assem, string subtype, string type) : base(conn, assem, subtype, type)
+        public MSSQLMigration(DbConnection conn, Assembly assem, string subtype, string type)
+            : base(conn, assem, subtype, type)
         {
         }
 
@@ -50,7 +51,8 @@ namespace OpenSim.Data.MSSQL
             {
                 try
                 {
-                    cmd.CommandText = "select top 1 version from migrations where name = '" + type + "' order by version desc"; //Must be 
+                    cmd.CommandText = "select top 1 version from migrations where name = '" + type +
+                                      "' order by version desc"; //Must be 
                     using (IDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())

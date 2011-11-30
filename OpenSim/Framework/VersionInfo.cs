@@ -27,14 +27,13 @@
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace OpenSim.Framework
 {
     public class VersionInfo
     {
-        public const string VERSION_NUMBER = "0.4.3";
-        public const Flavour VERSION_FLAVOUR = Flavour.Dev;
-        public const string VERSION_NAME = "Aurora";
+        #region Flavour enum
 
         public enum Flavour
         {
@@ -45,6 +44,30 @@ namespace OpenSim.Framework
             Release,
             Post_Fixes
         }
+
+        #endregion
+
+        public const string VERSION_NUMBER = "0.4.3";
+        public const Flavour VERSION_FLAVOUR = Flavour.Dev;
+        public const string VERSION_NAME = "Aurora";
+
+        public const int VERSIONINFO_VERSION_LENGTH = 27;
+
+        ///<value>
+        ///  This is the external interface version.  It is separate from the OpenSimulator project version.
+        /// 
+        ///  This version number should be 
+        ///  increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
+        ///  with the new revision.  This will usually be due to interregion or grid facing interface changes.
+        /// 
+        ///  Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
+        ///  but not outright failure) do not need a version number increment.
+        /// 
+        ///  Having this version number allows the grid service to reject connections from regions running a version
+        ///  of the code that is too old. 
+        ///
+        ///</value>
+        public static readonly int MajorInterfaceVersion = 6;
 
         public static string Version
         {
@@ -67,49 +90,33 @@ namespace OpenSim.Framework
             //
             string gitCommitFileName = ".version";
 
-            string pathToGitFile = Path.Combine (Environment.CurrentDirectory, Path.Combine("..\\", Path.Combine(".git", "logs")));
+            string pathToGitFile = Path.Combine(Environment.CurrentDirectory,
+                                                Path.Combine("..\\", Path.Combine(".git", "logs")));
 
-            if (Directory.Exists (pathToGitFile))
+            if (Directory.Exists(pathToGitFile))
             {
-                string gitFile = Path.Combine (pathToGitFile, "HEAD");
-                if (File.Exists (gitFile))
+                string gitFile = Path.Combine(pathToGitFile, "HEAD");
+                if (File.Exists(gitFile))
                 {
-                    string[] lines = File.ReadAllLines (gitFile);
+                    string[] lines = File.ReadAllLines(gitFile);
                     string lastLine = lines[lines.Length - 1];
-                    string[] splitLastLine = lastLine.Split (new string[2] { " ", "\t" }, StringSplitOptions.RemoveEmptyEntries);
-                    versionString = "Aurora-" + splitLastLine[1].Substring (0, 6)/*First 6 digits of the commit hash*/ +
-                        " " + splitLastLine[5] /*Time zone info*/;
-                    FileStream s = File.Open (gitCommitFileName, FileMode.Create);
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes (versionString);
-                    s.Write (data, 0, data.Length);
-                    s.Close ();
+                    string[] splitLastLine = lastLine.Split(new string[2] {" ", "\t"},
+                                                            StringSplitOptions.RemoveEmptyEntries);
+                    versionString = "Aurora-" + splitLastLine[1].Substring(0, 6) /*First 6 digits of the commit hash*/+
+                                    " " + splitLastLine[5] /*Time zone info*/;
+                    FileStream s = File.Open(gitCommitFileName, FileMode.Create);
+                    byte[] data = Encoding.UTF8.GetBytes(versionString);
+                    s.Write(data, 0, data.Length);
+                    s.Close();
                 }
             }
-            else if (File.Exists (gitCommitFileName))
+            else if (File.Exists(gitCommitFileName))
             {
-                StreamReader CommitFile = File.OpenText (gitCommitFileName);
-                versionString = CommitFile.ReadLine ();
-                CommitFile.Close ();
+                StreamReader CommitFile = File.OpenText(gitCommitFileName);
+                versionString = CommitFile.ReadLine();
+                CommitFile.Close();
             }
             return versionString;
         }
-
-        public const int VERSIONINFO_VERSION_LENGTH = 27;
-
-        /// <value>
-        /// This is the external interface version.  It is separate from the OpenSimulator project version.
-        /// 
-        /// This version number should be 
-        /// increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
-        /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
-        /// 
-        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
-        /// but not outright failure) do not need a version number increment.
-        /// 
-        /// Having this version number allows the grid service to reject connections from regions running a version
-        /// of the code that is too old. 
-        ///
-        /// </value>
-        public readonly static int MajorInterfaceVersion = 6;
     }
 }

@@ -27,36 +27,42 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Net;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Maps from client AgentID and RemoteEndPoint values to IClientAPI
-    /// references for all of the connected clients
+    ///   Maps from client AgentID and RemoteEndPoint values to IClientAPI
+    ///   references for all of the connected clients
     /// </summary>
     public class ClientManager
     {
-        /// <summary>A dictionary mapping from <seealso cref="UUID"/>
-        /// to <seealso cref="IClientAPI"/> references</summary>
-        private Dictionary<UUID, IClientAPI> m_dict1;
-        /// <summary>A dictionary mapping from <seealso cref="IPEndPoint"/>
-        /// to <seealso cref="IClientAPI"/> references</summary>
-        private Dictionary<IPEndPoint, IClientAPI> m_dict2;
-        /// <summary>An immutable collection of <seealso cref="IClientAPI"/>
-        /// references</summary>
-        private IClientAPI[] m_array;
-        /// <summary>Synchronization object for writing to the collections</summary>
-        private object m_syncRoot = new object();
-
-        /// <summary>Number of clients in the collection</summary>
-        public int Count { get { return m_dict1.Count; } }
+        /// <summary>
+        ///   A dictionary mapping from <seealso cref = "UUID" />
+        ///   to <seealso cref = "IClientAPI" /> references
+        /// </summary>
+        private readonly Dictionary<UUID, IClientAPI> m_dict1;
 
         /// <summary>
-        /// Default constructor
+        ///   A dictionary mapping from <seealso cref = "IPEndPoint" />
+        ///   to <seealso cref = "IClientAPI" /> references
+        /// </summary>
+        private readonly Dictionary<IPEndPoint, IClientAPI> m_dict2;
+
+        /// <summary>
+        ///   Synchronization object for writing to the collections
+        /// </summary>
+        private readonly object m_syncRoot = new object();
+
+        /// <summary>
+        ///   An immutable collection of <seealso cref = "IClientAPI" />
+        ///   references
+        /// </summary>
+        private IClientAPI[] m_array;
+
+        /// <summary>
+        ///   Default constructor
         /// </summary>
         public ClientManager()
         {
@@ -66,12 +72,20 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Add a client reference to the collection if it does not already
-        /// exist
+        ///   Number of clients in the collection
         /// </summary>
-        /// <param name="value">Reference to the client object</param>
+        public int Count
+        {
+            get { return m_dict1.Count; }
+        }
+
+        /// <summary>
+        ///   Add a client reference to the collection if it does not already
+        ///   exist
+        /// </summary>
+        /// <param name = "value">Reference to the client object</param>
         /// <returns>True if the client reference was successfully added,
-        /// otherwise false if the given key already existed in the collection</returns>
+        ///   otherwise false if the given key already existed in the collection</returns>
         public bool Add(IClientAPI value)
         {
             lock (m_syncRoot)
@@ -97,11 +111,11 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Remove a client from the collection
+        ///   Remove a client from the collection
         /// </summary>
-        /// <param name="key">UUID of the client to remove</param>
+        /// <param name = "key">UUID of the client to remove</param>
         /// <returns>True if a client was removed, or false if the given UUID
-        /// was not present in the collection</returns>
+        ///   was not present in the collection</returns>
         public bool Remove(UUID key)
         {
             lock (m_syncRoot)
@@ -132,7 +146,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Resets the client collection
+        ///   Resets the client collection
         /// </summary>
         public void Clear()
         {
@@ -145,9 +159,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Checks if a UUID is in the collection
+        ///   Checks if a UUID is in the collection
         /// </summary>
-        /// <param name="key">UUID to check for</param>
+        /// <param name = "key">UUID to check for</param>
         /// <returns>True if the UUID was found in the collection, otherwise false</returns>
         public bool ContainsKey(UUID key)
         {
@@ -155,9 +169,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Checks if an endpoint is in the collection
+        ///   Checks if an endpoint is in the collection
         /// </summary>
-        /// <param name="key">Endpoint to check for</param>
+        /// <param name = "key">Endpoint to check for</param>
         /// <returns>True if the endpoint was found in the collection, otherwise false</returns>
         public bool ContainsKey(IPEndPoint key)
         {
@@ -165,14 +179,17 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Attempts to fetch a value out of the collection
+        ///   Attempts to fetch a value out of the collection
         /// </summary>
-        /// <param name="key">UUID of the client to retrieve</param>
-        /// <param name="value">Retrieved client, or null on lookup failure</param>
+        /// <param name = "key">UUID of the client to retrieve</param>
+        /// <param name = "value">Retrieved client, or null on lookup failure</param>
         /// <returns>True if the lookup succeeded, otherwise false</returns>
         public bool TryGetValue(UUID key, out IClientAPI value)
         {
-            try { return m_dict1.TryGetValue(key, out value); }
+            try
+            {
+                return m_dict1.TryGetValue(key, out value);
+            }
             catch (Exception)
             {
                 value = null;
@@ -181,14 +198,17 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Attempts to fetch a value out of the collection
+        ///   Attempts to fetch a value out of the collection
         /// </summary>
-        /// <param name="key">Endpoint of the client to retrieve</param>
-        /// <param name="value">Retrieved client, or null on lookup failure</param>
+        /// <param name = "key">Endpoint of the client to retrieve</param>
+        /// <param name = "value">Retrieved client, or null on lookup failure</param>
         /// <returns>True if the lookup succeeded, otherwise false</returns>
         public bool TryGetValue(IPEndPoint key, out IClientAPI value)
         {
-            try { return m_dict2.TryGetValue(key, out value); }
+            try
+            {
+                return m_dict2.TryGetValue(key, out value);
+            }
             catch (Exception)
             {
                 value = null;
@@ -197,29 +217,28 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Performs a given task in parallel for each of the elements in the
-        /// collection
+        ///   Performs a given task in parallel for each of the elements in the
+        ///   collection
         /// </summary>
-        /// <param name="action">Action to perform on each element</param>
+        /// <param name = "action">Action to perform on each element</param>
         public void ForEach(Action<IClientAPI> action)
         {
             IClientAPI[] localArray = m_array;
             Parallel.For(0, localArray.Length,
-                delegate(int i)
-                { action(localArray[i]); }
-            );
+                         i => action(localArray[i])
+                );
         }
 
         /// <summary>
-        /// Performs a given task synchronously for each of the elements in
-        /// the collection
+        ///   Performs a given task synchronously for each of the elements in
+        ///   the collection
         /// </summary>
-        /// <param name="action">Action to perform on each element</param>
+        /// <param name = "action">Action to perform on each element</param>
         public void ForEachSync(Action<IClientAPI> action)
         {
             IClientAPI[] localArray = m_array;
-            for (int i = 0; i < localArray.Length; i++)
-                action(localArray[i]);
+            foreach (IClientAPI t in localArray)
+                action(t);
         }
     }
 }

@@ -31,7 +31,6 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Sound
 {
@@ -39,13 +38,21 @@ namespace OpenSim.Region.CoreModules.World.Sound
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        private readonly Dictionary<UUID, ConeOfSilence> Cones = new Dictionary<UUID, ConeOfSilence>();
         protected IScene m_scene;
-        
+
+        public bool IsSharedModule
+        {
+            get { return false; }
+        }
+
+        #region INonSharedRegionModule Members
+
         public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
 
@@ -55,7 +62,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
             m_scene.RegisterModuleInterface<ISoundModule>(this);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.EventManager.OnNewClient -= OnNewClient;
             m_scene.EventManager.OnClosingClient -= OnClosingClient;
@@ -63,35 +70,32 @@ namespace OpenSim.Region.CoreModules.World.Sound
             m_scene.UnregisterModuleInterface<ISoundModule>(this);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
         }
-        
-        public void PostInitialise() {}
-        public void Close() {}
-        public string Name { get { return "Sound Module"; } }
-        public bool IsSharedModule { get { return false; } }
-        
-        private void OnNewClient(IClientAPI client)
+
+        public void Close()
         {
-            client.OnSoundTrigger += TriggerSound;
         }
 
-        private void OnClosingClient(IClientAPI client)
+        public string Name
         {
-            client.OnSoundTrigger -= TriggerSound;
+            get { return "Sound Module"; }
         }
+
+        #endregion
+
+        #region ISoundModule Members
 
         public virtual void PlayAttachedSound(
             UUID soundID, UUID ownerID, UUID objectID, double gain, Vector3 position, byte flags, float radius)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(objectID);
             if (part == null)
                 return;
 
@@ -101,44 +105,45 @@ namespace OpenSim.Region.CoreModules.World.Sound
             if (parcelManagement != null)
             {
                 ILO = parcelManagement.GetLandObject(position.X, position.Y);
-                if(ILO != null)
-                    LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+                if (ILO != null)
+                    LocalOnly = (ILO.LandData.Flags & (uint) ParcelFlags.SoundLocal) == (uint) ParcelFlags.SoundLocal;
             }
 
             m_scene.ForEachScenePresence(delegate(IScenePresence sp)
-            {
-                if (Cones.Count != 0)
-                {
-                    foreach (ConeOfSilence CS in Cones.Values)
-                    {
-                        if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) > CS.Radius)
-                        {
-                            // Presence is outside of the Cone of silence
-                            if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
-                            {
-                                //Sound was triggered inside the cone, but avatar is outside
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            // Avatar is inside the cone of silence
-                            if (Util.GetDistanceTo(CS.Position, position) > CS.Radius)
-                            {
-                                //Sound was triggered outside of the cone, but avatar is inside of the cone.
-                                continue;
-                            }
-                        }
-                    }
-                }
-                if (sp.IsChildAgent)
-                    return;
+                                             {
+                                                 if (Cones.Count != 0)
+                                                 {
+                                                     foreach (ConeOfSilence CS in Cones.Values)
+                                                     {
+                                                         if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) >
+                                                             CS.Radius)
+                                                         {
+                                                             // Presence is outside of the Cone of silence
+                                                             if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
+                                                             {
+                                                                 //Sound was triggered inside the cone, but avatar is outside
+                                                                 continue;
+                                                             }
+                                                         }
+                                                         else
+                                                         {
+                                                             // Avatar is inside the cone of silence
+                                                             if (Util.GetDistanceTo(CS.Position, position) > CS.Radius)
+                                                             {
+                                                                 //Sound was triggered outside of the cone, but avatar is inside of the cone.
+                                                                 continue;
+                                                             }
+                                                         }
+                                                     }
+                                                 }
+                                                 if (sp.IsChildAgent)
+                                                     return;
 
-                double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                if (dis > 100.0) // Max audio distance
-                    return;
+                                                 double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
+                                                 if (dis > 100.0) // Max audio distance
+                                                     return;
 
-                /*if (grp.IsAttachment)
+                                                 /*if (grp.IsAttachment)
                 {
                     if (grp.GetAttachmentPoint() > 30) // HUD
                     {
@@ -150,49 +155,41 @@ namespace OpenSim.Region.CoreModules.World.Sound
                         dis = 0;
                 }*/
 
-                //Check to see if the person is local and the av is in the same parcel
-                if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
-                    return;
+                                                 //Check to see if the person is local and the av is in the same parcel
+                                                 if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
+                                                     return;
 
-                if ((sp.CurrentParcelUUID != ILO.LandData.GlobalID &&
-                    (sp.CurrentParcel.LandData.Private || ILO.LandData.Private)))
-                    return; //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
-                        
+                                                 if ((sp.CurrentParcelUUID != ILO.LandData.GlobalID &&
+                                                      (sp.CurrentParcel.LandData.Private || ILO.LandData.Private)))
+                                                     return;
+                                                         //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
 
-                // Scale by distance
-                if (radius == 0)
-                    gain = (float)((double)gain * ((100.0 - dis) / 100.0));
-                else
-                    gain = (float)((double)gain * ((radius - dis) / radius));
 
-                if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
-                    flags += (int)OpenMetaverse.SoundFlags.Queue;
-                sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID, (float)gain, flags);
-            });
+                                                 // Scale by distance
+                                                 if (radius == 0)
+                                                     gain = (float) (gain*((100.0 - dis)/100.0));
+                                                 else
+                                                     gain = (float) (gain*((radius - dis)/radius));
+
+                                                 if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
+                                                     flags += (int) SoundFlags.Queue;
+                                                 sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID,
+                                                                                            (float) gain, flags);
+                                             });
         }
-
-        private class ConeOfSilence
-        {
-            public Vector3 Position;
-            public double Radius;
-        }
-
-        private Dictionary<UUID, ConeOfSilence> Cones = new Dictionary<UUID, ConeOfSilence>();
 
         public virtual void AddConeOfSilence(UUID objectID, Vector3 position, double Radius)
         {
             //Must have parcel owner permissions, too many places for abuse in this
-            ISceneEntity group = m_scene.GetSceneObjectPart (objectID).ParentEntity;
+            ISceneEntity group = m_scene.GetSceneObjectPart(objectID).ParentEntity;
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
-                ILandObject land = parcelManagement.GetLandObject((int)position.X, (int)position.Y);
+                ILandObject land = parcelManagement.GetLandObject((int) position.X, (int) position.Y);
                 if (!m_scene.Permissions.CanEditParcel(group.OwnerID, land))
                     return;
             }
-            ConeOfSilence CS = new ConeOfSilence();
-            CS.Position = position;
-            CS.Radius = Radius;
+            ConeOfSilence CS = new ConeOfSilence {Position = position, Radius = Radius};
             Cones.Add(objectID, CS);
         }
 
@@ -202,7 +199,8 @@ namespace OpenSim.Region.CoreModules.World.Sound
         }
 
         public virtual void TriggerSound(
-            UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle, float radius)
+            UUID soundId, UUID ownerID, UUID objectID, UUID parentID, double gain, Vector3 position, UInt64 handle,
+            float radius)
         {
             bool LocalOnly = false;
             ILandObject ILO = null;
@@ -211,9 +209,9 @@ namespace OpenSim.Region.CoreModules.World.Sound
             {
                 ILO = parcelManagement.GetLandObject(position.X, position.Y);
                 if (ILO != null) //Check only if null, otherwise this breaks megaregions
-                    LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
+                    LocalOnly = (ILO.LandData.Flags & (uint) ParcelFlags.SoundLocal) == (uint) ParcelFlags.SoundLocal;
             }
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (objectID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(objectID);
             if (part == null)
             {
                 IScenePresence sp;
@@ -232,52 +230,80 @@ namespace OpenSim.Region.CoreModules.World.Sound
             }
 
             m_scene.ForEachScenePresence(delegate(IScenePresence sp)
-            {
-                if (Cones.Count != 0)
-                {
-                    foreach (ConeOfSilence CS in Cones.Values)
-                    {
-                        if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) > CS.Radius)
-                        {
-                            // Presence is outside of the Cone of silence
+                                             {
+                                                 if (Cones.Count != 0)
+                                                 {
+                                                     foreach (ConeOfSilence CS in Cones.Values)
+                                                     {
+                                                         if (Util.GetDistanceTo(sp.AbsolutePosition, CS.Position) >
+                                                             CS.Radius)
+                                                         {
+                                                             // Presence is outside of the Cone of silence
 
-                            if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
-                            {
-                                //Sound was triggered inside the cone, but avatar is outside
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            // Avatar is inside the cone of silence
-                            if (Util.GetDistanceTo(CS.Position, position) > CS.Radius)
-                            {
-                                //Sound was triggered outside of the cone, but avatar is inside of the cone.
-                                continue;
-                            }
-                        }
-                    }
-                }
-                if (sp.IsChildAgent)
-                    return;
+                                                             if (Util.GetDistanceTo(CS.Position, position) < CS.Radius)
+                                                             {
+                                                                 //Sound was triggered inside the cone, but avatar is outside
+                                                                 continue;
+                                                             }
+                                                         }
+                                                         else
+                                                         {
+                                                             // Avatar is inside the cone of silence
+                                                             if (Util.GetDistanceTo(CS.Position, position) > CS.Radius)
+                                                             {
+                                                                 //Sound was triggered outside of the cone, but avatar is inside of the cone.
+                                                                 continue;
+                                                             }
+                                                         }
+                                                     }
+                                                 }
+                                                 if (sp.IsChildAgent)
+                                                     return;
 
-                double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
-                if (dis > 100.0) // Max audio distance
-                    return;
+                                                 double dis = Util.GetDistanceTo(sp.AbsolutePosition, position);
+                                                 if (dis > 100.0) // Max audio distance
+                                                     return;
 
-                //Check to see if the person is local and the av is in the same parcel
-                if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
-                    return;
+                                                 //Check to see if the person is local and the av is in the same parcel
+                                                 if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)
+                                                     return;
 
-                // Scale by distance
-                if (radius == 0)
-                    gain = (float)((double)gain * ((100.0 - dis) / 100.0));
-                else
-                    gain = (float)((double)gain * ((radius - dis) / radius));
+                                                 // Scale by distance
+                                                 if (radius == 0)
+                                                     gain = (float) (gain*((100.0 - dis)/100.0));
+                                                 else
+                                                     gain = (float) (gain*((radius - dis)/radius));
 
-                sp.ControllingClient.SendTriggeredSound(
-                    soundId, ownerID, objectID, parentID, handle, position, (float)gain);
-            });
+                                                 sp.ControllingClient.SendTriggeredSound(
+                                                     soundId, ownerID, objectID, parentID, handle, position,
+                                                     (float) gain);
+                                             });
         }
+
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
+
+        private void OnNewClient(IClientAPI client)
+        {
+            client.OnSoundTrigger += TriggerSound;
+        }
+
+        private void OnClosingClient(IClientAPI client)
+        {
+            client.OnSoundTrigger -= TriggerSound;
+        }
+
+        #region Nested type: ConeOfSilence
+
+        private class ConeOfSilence
+        {
+            public Vector3 Position;
+            public double Radius;
+        }
+
+        #endregion
     }
 }

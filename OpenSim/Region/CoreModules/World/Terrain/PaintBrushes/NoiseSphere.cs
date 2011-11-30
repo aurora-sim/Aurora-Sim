@@ -25,11 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Framework;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
 {
@@ -37,19 +36,20 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
     {
         #region ITerrainPaintableEffect Members
 
-        public void PaintEffect (ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength, float duration, float BrushSize, List<IScene> scenes)
+        public void PaintEffect(ITerrainChannel map, UUID userID, float rx, float ry, float rz, float strength,
+                                float duration, float BrushSize, List<IScene> scenes)
         {
-            int n = (int)(BrushSize + 0.5f);
+            int n = (int) (BrushSize + 0.5f);
             if (BrushSize > 6) //If it gets too high, it will start roughening at an ever increasing rate when held down
                 BrushSize = 6;
             strength = TerrainUtil.MetersToSphericalStrength(BrushSize);
 
             float area = BrushSize;
-            float step = BrushSize / 4;
+            float step = BrushSize/4;
             duration *= 0.01f; //MCP Should be read from ini file
 
-            int zx = (int)(rx + 0.5);
-            int zy = (int)(ry + 0.5);
+            int zx = (int) (rx + 0.5);
+            int zy = (int) (ry + 0.5);
 
             float average = 0;
             int avgsteps = 0;
@@ -77,11 +77,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                         if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                             continue;
 
-                        float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) / (strength);
+                        float z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength)/(strength);
                         if (z > 0) // add in non-zero amount
                         {
-                            float a = (map[x, y] - (average / avgsteps));
-                            float newz = map[x, y] + (a * duration);
+                            float a = (map[x, y] - (average/avgsteps));
+                            float newz = map[x, y] + (a*duration);
 
                             if (newz > 0.0)
                                 map[x, y] = newz;

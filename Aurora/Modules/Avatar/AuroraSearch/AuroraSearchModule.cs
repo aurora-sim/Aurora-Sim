@@ -26,27 +26,16 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
-using System.Net;
-using System.Net.Sockets;
-using log4net;
+using System.Linq;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using ProfileFlags = OpenMetaverse.ProfileFlags;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Nwc.XmlRpc;
-using System.Xml;
-using Aurora.Framework;
-using Aurora.DataManager;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
@@ -55,78 +44,18 @@ namespace Aurora.Modules
         #region Declares
 
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IProfileConnector ProfileFrontend = null;
-        private List<IScene> m_Scenes = new List<IScene> ();
-        private bool m_SearchEnabled = false;
-        private IGroupsModule GroupsModule = null;
-        private IDirectoryServiceConnector directoryService = null;
+        private readonly List<IScene> m_Scenes = new List<IScene>();
+        private IGroupsModule GroupsModule;
+        private IProfileConnector ProfileFrontend;
+        private IDirectoryServiceConnector directoryService;
+        private bool m_SearchEnabled;
 
         #endregion
-
-        #region ISharedRegionModule Members
-
-        public void Initialise(IConfigSource config)
-        {
-            IConfig searchConfig = config.Configs["Search"];
-            if (searchConfig != null) //Check whether we are enabled
-                if (searchConfig.GetString("SearchModule", Name) == Name)
-                    m_SearchEnabled = true;
-        }
-
-        public void AddRegion (IScene scene)
-        {
-            if (!m_SearchEnabled)
-                return;
-
-            m_Scenes.Add(scene);
-            scene.EventManager.OnNewClient += NewClient;
-            scene.EventManager.OnClosingClient += OnClosingClient;
-        }
-
-        public void RemoveRegion (IScene scene)
-        {
-            if (!m_SearchEnabled)
-                return;
-
-            m_Scenes.Remove(scene);
-            scene.EventManager.OnNewClient -= NewClient;
-            scene.EventManager.OnClosingClient -= OnClosingClient;
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-            if (!m_SearchEnabled)
-                return;
-            //Pull in the services we need
-            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
-            directoryService = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-            GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public string Name
-        {
-            get { return "AuroraSearchModule"; }
-        }
 
         public bool IsSharedModule
         {
             get { return false; }
         }
-
-        #endregion
 
         #region Client
 
@@ -163,26 +92,32 @@ namespace Aurora.Modules
 
         #region Search Module
 
+        #region Delegates
+
+        public delegate void SendPacket<T>(T[] data);
+
+        #endregion
+
         /// <summary>
-        /// Parcel request
+        ///   Parcel request
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="queryID"></param>
-        /// <param name="queryText">The thing to search for</param>
-        /// <param name="queryFlags"></param>
-        /// <param name="category"></param>
-        /// <param name="simName"></param>
-        /// <param name="queryStart"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "queryID"></param>
+        /// <param name = "queryText">The thing to search for</param>
+        /// <param name = "queryFlags"></param>
+        /// <param name = "category"></param>
+        /// <param name = "simName"></param>
+        /// <param name = "queryStart"></param>
         protected void DirPlacesQuery(IClientAPI remoteClient, UUID queryID,
                                       string queryText, int queryFlags, int category, string simName,
                                       int queryStart)
         {
-            List<DirPlacesReplyData> ReturnValues = new List<DirPlacesReplyData>(directoryService.FindLand(queryText, category.ToString(), queryStart, (uint)queryFlags));
-            
-            SplitPackets<DirPlacesReplyData> (ReturnValues, delegate (DirPlacesReplyData[] data)
-            {
-                remoteClient.SendDirPlacesReply (queryID, data);
-            });
+            List<DirPlacesReplyData> ReturnValues =
+                new List<DirPlacesReplyData>(directoryService.FindLand(queryText, category.ToString(), queryStart,
+                                                                       (uint) queryFlags));
+
+            SplitPackets(ReturnValues,
+                         data => remoteClient.SendDirPlacesReply(queryID, data));
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -193,35 +128,35 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Land for sale request
+        ///   Land for sale request
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="queryID"></param>
-        /// <param name="queryFlags"></param>
-        /// <param name="searchType"></param>
-        /// <param name="price"></param>
-        /// <param name="area"></param>
-        /// <param name="queryStart"></param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "queryID"></param>
+        /// <param name = "queryFlags"></param>
+        /// <param name = "searchType"></param>
+        /// <param name = "price"></param>
+        /// <param name = "area"></param>
+        /// <param name = "queryStart"></param>
         public void DirLandQuery(IClientAPI remoteClient, UUID queryID,
                                  uint queryFlags, uint searchType, int price, int area,
                                  int queryStart)
         {
-            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price.ToString(), area.ToString(), queryStart, queryFlags));
-            
-            SplitPackets<DirLandReplyData> (ReturnValues, delegate (DirLandReplyData[] data)
-            {
-                remoteClient.SendDirLandReply (queryID, data);
-            });
+            List<DirLandReplyData> ReturnValues =
+                new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price.ToString(),
+                                                                            area.ToString(), queryStart, queryFlags));
+
+            SplitPackets(ReturnValues,
+                         data => remoteClient.SendDirLandReply(queryID, data));
         }
 
         /// <summary>
-        /// Finds either people or events
+        ///   Finds either people or events
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="queryID">Just a UUID to send back to the client</param>
-        /// <param name="queryText">The term to search for</param>
-        /// <param name="queryFlags">Flags like maturity, etc</param>
-        /// <param name="queryStart">Where in the search should we start? 0, 10, 20, etc</param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "queryID">Just a UUID to send back to the client</param>
+        /// <param name = "queryText">The term to search for</param>
+        /// <param name = "queryFlags">Flags like maturity, etc</param>
+        /// <param name = "queryStart">Where in the search should we start? 0, 10, 20, etc</param>
         public void DirFindQuery(IClientAPI remoteClient, UUID queryID,
                                  string queryText, uint queryFlags, int queryStart)
         {
@@ -244,9 +179,10 @@ namespace Aurora.Modules
                                    string queryText, uint queryFlags, int queryStart)
         {
             //Find the user accounts
-            List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(m_Scenes[0].RegionInfo.ScopeID, queryText);
+            List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(m_Scenes[0].RegionInfo.ScopeID,
+                                                                                        queryText);
             List<DirPeopleReplyData> ReturnValues =
-                    new List<DirPeopleReplyData>();
+                new List<DirPeopleReplyData>();
 
             foreach (UserAccount item in accounts)
             {
@@ -254,24 +190,26 @@ namespace Aurora.Modules
                 IUserProfileInfo UserProfile = ProfileFrontend.GetUserProfile(item.PrincipalID);
                 if (UserProfile == null)
                 {
-                    DirPeopleReplyData person = new DirPeopleReplyData();
-                    person.agentID = item.PrincipalID;
-                    person.firstName = item.FirstName;
-                    person.lastName = item.LastName;
+                    DirPeopleReplyData person = new DirPeopleReplyData
+                                                    {
+                                                        agentID = item.PrincipalID,
+                                                        firstName = item.FirstName,
+                                                        lastName = item.LastName
+                                                    };
                     if (GroupsModule == null)
                         person.group = "";
                     else
                     {
                         person.group = "";
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
-                        foreach (GroupMembershipData membership in memberships)
+                        foreach (GroupMembershipData membership in memberships.Where(membership => membership.Active))
                         {
-                            if (membership.Active)
-                                person.group = membership.GroupName;
+                            person.group = membership.GroupName;
                         }
                     }
                     //Then we have to pull the GUI to see if the user is online or not
-                    UserInfo Pinfo = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                    UserInfo Pinfo =
+                        m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline) //If it is null, they are offline
                         person.online = true;
                     person.reputation = 0;
@@ -279,10 +217,12 @@ namespace Aurora.Modules
                 }
                 else if (UserProfile.AllowPublish) //Check whether they want to be in search or not
                 {
-                    DirPeopleReplyData person = new DirPeopleReplyData();
-                    person.agentID = item.PrincipalID;
-                    person.firstName = item.FirstName;
-                    person.lastName = item.LastName;
+                    DirPeopleReplyData person = new DirPeopleReplyData
+                                                    {
+                                                        agentID = item.PrincipalID,
+                                                        firstName = item.FirstName,
+                                                        lastName = item.LastName
+                                                    };
                     if (GroupsModule == null)
                         person.group = "";
                     else
@@ -290,14 +230,14 @@ namespace Aurora.Modules
                         person.group = "";
                         //Check what group they have set
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
-                        foreach (GroupMembershipData membership in memberships)
+                        foreach (GroupMembershipData membership in memberships.Where(membership => membership.Active))
                         {
-                            if (membership.Active)
-                                person.group = membership.GroupName;
+                            person.group = membership.GroupName;
                         }
                     }
                     //Then we have to pull the GUI to see if the user is online or not
-                    UserInfo Pinfo = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
+                    UserInfo Pinfo =
+                        m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(item.PrincipalID.ToString());
                     if (Pinfo != null && Pinfo.IsOnline)
                         person.online = true;
                     person.reputation = 0;
@@ -305,36 +245,32 @@ namespace Aurora.Modules
                 }
             }
 
-            SplitPackets<DirPeopleReplyData> (ReturnValues, delegate (DirPeopleReplyData[] data)
-            {
-                remoteClient.SendDirPeopleReply (queryID, data);
-            });
+            SplitPackets(ReturnValues,
+                         data => remoteClient.SendDirPeopleReply(queryID, data));
         }
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
                                    string queryText, uint queryFlags, int queryStart)
         {
-            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
+            List<DirEventsReplyData> ReturnValues =
+                new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
 
-            SplitPackets<DirEventsReplyData> (ReturnValues, delegate (DirEventsReplyData[] data)
-            {
-                remoteClient.SendDirEventsReply (queryID, data);
-            });
+            SplitPackets(ReturnValues,
+                         data => remoteClient.SendDirEventsReply(queryID, data));
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
                                        string queryText, uint queryFlags, uint category,
                                        int queryStart)
         {
-            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags.ToString(), queryStart));
+            List<DirClassifiedReplyData> ReturnValues =
+                new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(),
+                                                                                  queryFlags.ToString(), queryStart));
 
-            SplitPackets<DirClassifiedReplyData> (ReturnValues, delegate (DirClassifiedReplyData[] data)
-            {
-                remoteClient.SendDirClassifiedReply (queryID, data);
-            });
+            SplitPackets(ReturnValues,
+                         data => remoteClient.SendDirClassifiedReply(queryID, data));
         }
 
-        public delegate void SendPacket<T>(T[] data);
         public void SplitPackets<T>(List<T> packets, SendPacket<T> send)
         {
             if (packets.Count == 0)
@@ -345,9 +281,9 @@ namespace Aurora.Modules
             int i = 0;
             while (i < packets.Count)
             {
-                int count = Math.Min (10, packets.Count);
+                int count = Math.Min(10, packets.Count);
                 //Split into sets of 10 packets
-                T[] data = packets.GetRange (i, count).ToArray();
+                T[] data = packets.GetRange(i, count).ToArray();
                 i += count;
                 if (data.Length != 0)
                     send(data);
@@ -355,10 +291,10 @@ namespace Aurora.Modules
         }
 
         /// <summary>
-        /// Tell the client about X event
+        ///   Tell the client about X event
         /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="queryEventID">ID of the event</param>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "queryEventID">ID of the event</param>
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
             //Find the event
@@ -378,13 +314,10 @@ namespace Aurora.Modules
             mapItemReply mapitem = new mapItemReply();
             uint xstart = 0;
             uint ystart = 0;
-            OpenMetaverse.Utils.LongToUInts (remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
-            OpenSim.Services.Interfaces.GridRegion GR = null;
+            Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
+            GridRegion GR = null;
 
-            if (regionhandle == 0)
-                GR = new OpenSim.Services.Interfaces.GridRegion (remoteClient.Scene.RegionInfo);
-            else
-                GR = m_Scenes[0].GridService.GetRegionByPosition (UUID.Zero, (int)xstart, (int)ystart);
+            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scenes[0].GridService.GetRegionByPosition(UUID.Zero, (int) xstart, (int) ystart);
             if (GR == null)
             {
                 //No region???
@@ -392,7 +325,8 @@ namespace Aurora.Modules
             }
 
             #region Telehub
-            if (itemtype == (uint)OpenMetaverse.GridItemType.Telehub)
+
+            if (itemtype == (uint) GridItemType.Telehub)
             {
                 IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
                 if (GF == null)
@@ -403,16 +337,18 @@ namespace Aurora.Modules
                 Telehub telehub = GF.FindTelehub(GR.RegionID, GR.RegionHandle);
                 if (telehub != null)
                 {
-                    mapitem = new mapItemReply();
+                    mapitem = new mapItemReply
+                                  {
+                                      x = (uint) (GR.RegionLocX + telehub.TelehubLocX),
+                                      y = (uint) (GR.RegionLocY + telehub.TelehubLocY),
+                                      id = GR.RegionID,
+                                      name = Util.Md5Hash(GR.RegionName + tc.ToString()),
+                                      Extra = 1,
+                                      Extra2 = 0
+                                  };
                     //The position is in GLOBAL coordinates (in meters)
-                    mapitem.x = (uint)(GR.RegionLocX + telehub.TelehubLocX);
-                    mapitem.y = (uint)(GR.RegionLocY + telehub.TelehubLocY);
-                    mapitem.id = GR.RegionID;
                     //This is how the name is sent, go figure
-                    mapitem.name = Util.Md5Hash(GR.RegionName + tc.ToString());
                     //Not sure, but this is what gets sent
-                    mapitem.Extra = 1;
-                    mapitem.Extra2 = 0;
 
                     mapitems.Add(mapitem);
                     remoteClient.SendMapItemReply(mapitems.ToArray(), itemtype, flags);
@@ -425,13 +361,13 @@ namespace Aurora.Modules
             #region Land for sale
 
             //PG land that is for sale
-            if (itemtype == (uint)OpenMetaverse.GridItemType.LandForSale)
+            if (itemtype == (uint) GridItemType.LandForSale)
             {
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
                 DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
-                
+
                 int locX = 0;
                 int locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
@@ -441,19 +377,16 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
-                    foreach (IScene scene in m_Scenes)
+                    foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
                     {
-                        if (scene.RegionInfo.RegionID == landdata.RegionID)
-                        {
-                            //Global coords, so add the meters
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
-                        }
+                        //Global coords, so add the meters
+                        locX = scene.RegionInfo.RegionLocX;
+                        locY = scene.RegionInfo.RegionLocY;
                     }
                     if (locY == 0 && locX == 0)
                     {
                         //Ask the grid service for the coordinates if the region is not local
-                        OpenSim.Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
+                        GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
                         if (r != null)
                         {
                             locX = r.RegionLocX;
@@ -463,14 +396,16 @@ namespace Aurora.Modules
                     if (locY == 0 && locX == 0) //Couldn't find the region, don't send
                         continue;
 
-                    mapitem = new mapItemReply();
+                    mapitem = new mapItemReply
+                                  {
+                                      x = (uint) (locX + landdata.UserLocation.X),
+                                      y = (uint) (locY + landdata.UserLocation.Y),
+                                      id = landDir.parcelID,
+                                      name = landDir.name,
+                                      Extra = landDir.actualArea,
+                                      Extra2 = landDir.salePrice
+                                  };
                     //Global coords, so make sure its in meters
-                    mapitem.x = (uint)(locX + landdata.UserLocation.X);
-                    mapitem.y = (uint)(locY + landdata.UserLocation.Y);
-                    mapitem.id = landDir.parcelID;
-                    mapitem.name = landDir.name;
-                    mapitem.Extra = landDir.actualArea;
-                    mapitem.Extra2 = landDir.salePrice;
                     mapitems.Add(mapitem);
                 }
                 //Send all the map items
@@ -482,13 +417,13 @@ namespace Aurora.Modules
             }
 
             //Adult or mature land that is for sale
-            if (itemtype == (uint)OpenMetaverse.GridItemType.AdultLandForSale)
+            if (itemtype == (uint) GridItemType.AdultLandForSale)
             {
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
                 DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
-                
+
                 int locX = 0;
                 int locY = 0;
                 foreach (DirLandReplyData landDir in Landdata)
@@ -496,18 +431,15 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
-                    foreach (IScene scene in m_Scenes)
+                    foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
                     {
-                        if (scene.RegionInfo.RegionID == landdata.RegionID)
-                        {
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
-                        }
+                        locX = scene.RegionInfo.RegionLocX;
+                        locY = scene.RegionInfo.RegionLocY;
                     }
                     if (locY == 0 && locX == 0)
                     {
                         //Ask the grid service for the coordinates if the region is not local
-                        OpenSim.Services.Interfaces.GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
+                        GridRegion r = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, landdata.RegionID);
                         if (r != null)
                         {
                             locX = r.RegionLocX;
@@ -517,14 +449,16 @@ namespace Aurora.Modules
                     if (locY == 0 && locX == 0) //Couldn't find the region, don't send
                         continue;
 
-                    mapitem = new mapItemReply();
+                    mapitem = new mapItemReply
+                                  {
+                                      x = (uint) (locX + landdata.UserLocation.X),
+                                      y = (uint) (locY + landdata.UserLocation.Y),
+                                      id = landDir.parcelID,
+                                      name = landDir.name,
+                                      Extra = landDir.actualArea,
+                                      Extra2 = landDir.salePrice
+                                  };
                     //Global coords, so make sure its in meters
-                    mapitem.x = (uint)(locX + landdata.UserLocation.X);
-                    mapitem.y = (uint)(locY + landdata.UserLocation.Y);
-                    mapitem.id = landDir.parcelID;
-                    mapitem.name = landDir.name;
-                    mapitem.Extra = landDir.actualArea;
-                    mapitem.Extra2 = landDir.salePrice;
 
                     mapitems.Add(mapitem);
                 }
@@ -540,40 +474,42 @@ namespace Aurora.Modules
 
             #region Events
 
-            if (itemtype == (uint)OpenMetaverse.GridItemType.PgEvent ||
-                itemtype == (uint)OpenMetaverse.GridItemType.MatureEvent ||
-                itemtype == (uint)OpenMetaverse.GridItemType.AdultEvent)
+            if (itemtype == (uint) GridItemType.PgEvent ||
+                itemtype == (uint) GridItemType.MatureEvent ||
+                itemtype == (uint) GridItemType.AdultEvent)
             {
                 if (directoryService == null)
                     return;
 
                 //Find the maturity level
-                int maturity = itemtype == (uint)OpenMetaverse.GridItemType.PgEvent ?
-                    (int)DirectoryManager.EventFlags.PG :
-                    (itemtype == (uint)GridItemType.MatureEvent) ?
-                    (int)DirectoryManager.EventFlags.Mature :
-                    (int)DirectoryManager.EventFlags.Adult;
+                int maturity = itemtype == (uint) GridItemType.PgEvent
+                                   ? (int) DirectoryManager.EventFlags.PG
+                                   : (itemtype == (uint) GridItemType.MatureEvent)
+                                         ? (int) DirectoryManager.EventFlags.Mature
+                                         : (int) DirectoryManager.EventFlags.Adult;
 
                 //Gets all the events occuring in the given region by maturity level
                 DirEventsReplyData[] Eventdata = directoryService.FindAllEventsInRegion(GR.RegionName, maturity);
-                
+
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                     //Get more info on the event
                     EventData eventdata = directoryService.GetEventInfo(eventData.eventID.ToString());
                     if (eventdata == null)
-                        continue;//Can't do anything about it
+                        continue; //Can't do anything about it
                     Vector3 globalPos = eventdata.globalPos;
-                    mapitem = new mapItemReply();
-                    
+                    mapitem = new mapItemReply
+                                  {
+                                      x = (uint) (globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX/2)),
+                                      y = (uint) (globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY/2)),
+                                      id = UUID.Random(),
+                                      name = eventData.name,
+                                      Extra = (int) eventdata.dateUTC,
+                                      Extra2 = (int) eventdata.eventID
+                                  };
+
                     //Use global position plus half the region so that it doesn't always appear in the bottom corner
-                    mapitem.x = (uint)(globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX / 2));
-                    mapitem.y = (uint)(globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY / 2));
-                    
-                    mapitem.id = UUID.Random();
-                    mapitem.name = eventData.name;
-                    mapitem.Extra = (int)eventdata.dateUTC;
-                    mapitem.Extra2 = (int)eventdata.eventID;
+
                     mapitems.Add(mapitem);
                 }
                 //Send if we have any
@@ -588,7 +524,7 @@ namespace Aurora.Modules
 
             #region Classified
 
-            if (itemtype == (uint)OpenMetaverse.GridItemType.Classified)
+            if (itemtype == (uint) GridItemType.Classified)
             {
                 if (directoryService == null)
                     return;
@@ -597,18 +533,24 @@ namespace Aurora.Modules
                 foreach (Classified classified in Classifieds)
                 {
                     //Get the region so we have its position
-                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByName(UUID.Zero, classified.SimName);
-                    
-                    mapitem = new mapItemReply();
-                    
+                    GridRegion region = m_Scenes[0].GridService.GetRegionByName(UUID.Zero, classified.SimName);
+
+                    mapitem = new mapItemReply
+                                  {
+                                      x = (uint)
+                                          (region.RegionLocX + classified.GlobalPos.X +
+                                           (remoteClient.Scene.RegionInfo.RegionSizeX/2)),
+                                      y = (uint)
+                                          (region.RegionLocY + classified.GlobalPos.Y +
+                                           (remoteClient.Scene.RegionInfo.RegionSizeY/2)),
+                                      id = classified.CreatorUUID,
+                                      name = classified.Name,
+                                      Extra = 0,
+                                      Extra2 = 0
+                                  };
+
                     //Use global position plus half the sim so that all classifieds are not in the bottom corner
-                    mapitem.x = (uint)(region.RegionLocX + classified.GlobalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX / 2));
-                    mapitem.y = (uint)(region.RegionLocY + classified.GlobalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY / 2));
-                    
-                    mapitem.id = classified.CreatorUUID;
-                    mapitem.name = classified.Name;
-                    mapitem.Extra = 0;
-                    mapitem.Extra2 = 0;
+
                     mapitems.Add(mapitem);
                 }
                 //Send the events, if we have any
@@ -622,55 +564,36 @@ namespace Aurora.Modules
             #endregion
         }
 
-        public void OnPlacesQueryRequest(UUID QueryID, UUID TransactionID, string QueryText, uint QueryFlags, byte Category, string SimName, IClientAPI client)
+        public void OnPlacesQueryRequest(UUID QueryID, UUID TransactionID, string QueryText, uint QueryFlags,
+                                         byte Category, string SimName, IClientAPI client)
         {
             if (QueryFlags == 64) //Agent Owned
             {
                 //Get all the parcels
                 LandData[] LandData = directoryService.GetParcelByOwner(client.AgentId);
 
-                List<ExtendedLandData> parcels = new List<ExtendedLandData>();
-                foreach (LandData land in LandData)
-                {
-                    //Find the region so we can add the meters correctly
-                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
-                    if (region != null)
-                    {
-                        ExtendedLandData parcel = new ExtendedLandData();
-                        parcel.LandData = land;
-                        parcel.RegionType = region.RegionType;
-                        parcel.RegionName = region.RegionName;
-                        parcel.GlobalPosX = region.RegionLocX + land.UserLocation.X;
-                        parcel.GlobalPosY = region.RegionLocY + land.UserLocation.Y;
-                        parcels.Add(parcel);
-                    }
-                }
-                
-                client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
+                client.SendPlacesQuery((from land in LandData
+                                        let region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID)
+                                        where region != null
+                                        select new ExtendedLandData
+                                                   {
+                                                       LandData = land, RegionType = region.RegionType, RegionName = region.RegionName, GlobalPosX = region.RegionLocX + land.UserLocation.X, GlobalPosY = region.RegionLocY + land.UserLocation.Y
+                                                   }).ToArray(), QueryID, TransactionID);
             }
             if (QueryFlags == 256) //Group Owned
             {
                 //Find all the group owned land
                 LandData[] LandData = directoryService.GetParcelByOwner(QueryID);
 
-                List<ExtendedLandData> parcels = new List<ExtendedLandData>();
-                foreach (LandData land in LandData)
-                {
-                    //Find the region from the grid service so that we can add the meters correctly
-                    OpenSim.Services.Interfaces.GridRegion region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID);
-                    if (region != null)
-                    {
-                        ExtendedLandData parcel = new ExtendedLandData();
-                        parcel.LandData = land;
-                        parcel.RegionType = region.RegionType;
-                        parcel.RegionName = region.RegionName;
-                        parcel.GlobalPosX = region.RegionLocX + land.UserLocation.X;
-                        parcel.GlobalPosY = region.RegionLocY + land.UserLocation.Y;
-                        parcels.Add(parcel);
-                    }
-                }
+                List<ExtendedLandData> parcels = (from land in LandData
+                                                  let region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID)
+                                                  where region != null
+                                                  select new ExtendedLandData
+                                                             {
+                                                                 LandData = land, RegionType = region.RegionType, RegionName = region.RegionName, GlobalPosX = region.RegionLocX + land.UserLocation.X, GlobalPosY = region.RegionLocY + land.UserLocation.Y
+                                                             }).ToList();
                 //Send if we have any parcels
-                if(parcels.Count != 0)
+                if (parcels.Count != 0)
                     client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
             }
         }
@@ -683,25 +606,27 @@ namespace Aurora.Modules
             if (accounts == null)
                 accounts = new List<UserAccount>(0);
 
-            AvatarPickerReplyPacket replyPacket = (AvatarPickerReplyPacket)PacketPool.Instance.GetPacket(PacketType.AvatarPickerReply);
+            AvatarPickerReplyPacket replyPacket =
+                (AvatarPickerReplyPacket) PacketPool.Instance.GetPacket(PacketType.AvatarPickerReply);
             // TODO: don't create new blocks if recycling an old packet
 
             AvatarPickerReplyPacket.DataBlock[] searchData =
                 new AvatarPickerReplyPacket.DataBlock[accounts.Count];
-            AvatarPickerReplyPacket.AgentDataBlock agentData = new AvatarPickerReplyPacket.AgentDataBlock();
+            AvatarPickerReplyPacket.AgentDataBlock agentData = new AvatarPickerReplyPacket.AgentDataBlock
+                                                                   {AgentID = avatarID, QueryID = RequestID};
 
-            agentData.AgentID = avatarID;
-            agentData.QueryID = RequestID;
             replyPacket.AgentData = agentData;
 
             int i = 0;
             foreach (UserAccount item in accounts)
             {
                 UUID translatedIDtem = item.PrincipalID;
-                searchData[i] = new AvatarPickerReplyPacket.DataBlock();
-                searchData[i].AvatarID = translatedIDtem;
-                searchData[i].FirstName = Utils.StringToBytes((string)item.FirstName);
-                searchData[i].LastName = Utils.StringToBytes((string)item.LastName);
+                searchData[i] = new AvatarPickerReplyPacket.DataBlock
+                                    {
+                                        AvatarID = translatedIDtem,
+                                        FirstName = Utils.StringToBytes(item.FirstName),
+                                        LastName = Utils.StringToBytes(item.LastName)
+                                    };
                 i++;
             }
             if (accounts.Count == 0)
@@ -710,20 +635,84 @@ namespace Aurora.Modules
             }
             replyPacket.Data = searchData;
 
-            AvatarPickerReplyAgentDataArgs agent_data = new AvatarPickerReplyAgentDataArgs();
-            agent_data.AgentID = replyPacket.AgentData.AgentID;
-            agent_data.QueryID = replyPacket.AgentData.QueryID;
+            AvatarPickerReplyAgentDataArgs agent_data = new AvatarPickerReplyAgentDataArgs
+                                                            {
+                                                                AgentID = replyPacket.AgentData.AgentID,
+                                                                QueryID = replyPacket.AgentData.QueryID
+                                                            };
 
             List<AvatarPickerReplyDataArgs> data_args = new List<AvatarPickerReplyDataArgs>();
             for (i = 0; i < replyPacket.Data.Length; i++)
             {
-                AvatarPickerReplyDataArgs data_arg = new AvatarPickerReplyDataArgs();
-                data_arg.AvatarID = replyPacket.Data[i].AvatarID;
-                data_arg.FirstName = replyPacket.Data[i].FirstName;
-                data_arg.LastName = replyPacket.Data[i].LastName;
+                AvatarPickerReplyDataArgs data_arg = new AvatarPickerReplyDataArgs
+                                                         {
+                                                             AvatarID = replyPacket.Data[i].AvatarID,
+                                                             FirstName = replyPacket.Data[i].FirstName,
+                                                             LastName = replyPacket.Data[i].LastName
+                                                         };
                 data_args.Add(data_arg);
             }
             client.SendAvatarPickerReply(agent_data, data_args);
+        }
+
+        #endregion
+
+        #region ISharedRegionModule Members
+
+        public void Initialise(IConfigSource config)
+        {
+            IConfig searchConfig = config.Configs["Search"];
+            if (searchConfig != null) //Check whether we are enabled
+                if (searchConfig.GetString("SearchModule", Name) == Name)
+                    m_SearchEnabled = true;
+        }
+
+        public void AddRegion(IScene scene)
+        {
+            if (!m_SearchEnabled)
+                return;
+
+            m_Scenes.Add(scene);
+            scene.EventManager.OnNewClient += NewClient;
+            scene.EventManager.OnClosingClient += OnClosingClient;
+        }
+
+        public void RemoveRegion(IScene scene)
+        {
+            if (!m_SearchEnabled)
+                return;
+
+            m_Scenes.Remove(scene);
+            scene.EventManager.OnNewClient -= NewClient;
+            scene.EventManager.OnClosingClient -= OnClosingClient;
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+            if (!m_SearchEnabled)
+                return;
+            //Pull in the services we need
+            ProfileFrontend = DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            directoryService = DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+            GroupsModule = scene.RequestModuleInterface<IGroupsModule>();
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void PostInitialise()
+        {
+        }
+
+        public void Close()
+        {
+        }
+
+        public string Name
+        {
+            get { return "AuroraSearchModule"; }
         }
 
         #endregion

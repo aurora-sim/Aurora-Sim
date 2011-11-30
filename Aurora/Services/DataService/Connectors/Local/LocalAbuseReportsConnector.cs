@@ -27,33 +27,36 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Data;
 using Aurora.Framework;
-using Aurora.DataManager;
+using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
-using Nini.Config;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
 {
     public class LocalAbuseReportsConnector : IAbuseReportsConnector
-	{
-		private IGenericData GD = null;
+    {
+        private IGenericData GD;
         private string WebPassword = "";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IAbuseReportsConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             GD = GenericData;
 
             if (source.Configs[Name] != null)
-                defaultConnectionString = source.Configs[Name].GetString ("ConnectionString", defaultConnectionString);
+                defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase (defaultConnectionString, "AbuseReports", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
+            GD.ConnectToDatabase(defaultConnectionString, "AbuseReports",
+                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin (Name + "Local", this);
-            if (source.Configs["AuroraConnectors"].GetString ("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
+            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
+            if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 WebPassword = Util.Md5Hash(source.Configs["Handlers"].GetString("WireduxHandlerPassword", String.Empty));
 
@@ -63,9 +66,8 @@ namespace Aurora.Services.DataService
                 //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
                 //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
                 //}
-                DataManager.DataManager.RegisterPlugin (Name, this);
+                DataManager.DataManager.RegisterPlugin(Name, this);
             }
-
         }
 
         public string Name
@@ -73,15 +75,11 @@ namespace Aurora.Services.DataService
             get { return "IAbuseReportsConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         /// <summary>
-        /// Gets the abuse report associated with the number and uses the pass to authenticate.
+        ///   Gets the abuse report associated with the number and uses the pass to authenticate.
         /// </summary>
-        /// <param name="Number"></param>
-        /// <param name="Password"></param>
+        /// <param name = "Number"></param>
+        /// <param name = "Password"></param>
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
@@ -112,67 +110,71 @@ namespace Aurora.Services.DataService
 
         public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
         {
-            List<AbuseReport> rv = new List<AbuseReport> ();
-            System.Data.IDataReader dr = GD.QueryData ("where CONVERT(number, UNSIGNED) >= " + start.ToString () + " and " + filter + " LIMIT 0, 10", "abusereports", "*");
+            List<AbuseReport> rv = new List<AbuseReport>();
+            IDataReader dr =
+                GD.QueryData(
+                    "where CONVERT(number, UNSIGNED) >= " + start.ToString() + " and " + filter + " LIMIT 0, 10",
+                    "abusereports", "*");
             try
             {
-                while (dr.Read ())
+                while (dr.Read())
                 {
-                    AbuseReport report = new AbuseReport ();
-                    report.Category = dr[0].ToString ();
-                    report.ReporterName = dr[1].ToString ();
-                    report.ObjectName = dr[2].ToString ();
-                    report.ObjectUUID = new UUID (dr[3].ToString ());
-                    report.AbuserName = dr[4].ToString ();
-                    report.AbuseLocation = dr[5].ToString ();
-                    report.AbuseDetails = dr[6].ToString ();
-                    report.ObjectPosition = dr[7].ToString ();
-                    report.RegionName = dr[8].ToString ();
-                    report.ScreenshotID = new UUID (dr[9].ToString ());
-                    report.AbuseSummary = dr[10].ToString ();
-                    report.Number = int.Parse (dr[11].ToString ());
-                    report.AssignedTo = dr[12].ToString ();
-                    report.Active = int.Parse (dr[13].ToString ()) == 1;
-                    report.Checked = int.Parse (dr[14].ToString ()) == 1;
-                    report.Notes = dr[15].ToString ();
-                    rv.Add (report);
+                    AbuseReport report = new AbuseReport
+                                             {
+                                                 Category = dr[0].ToString(),
+                                                 ReporterName = dr[1].ToString(),
+                                                 ObjectName = dr[2].ToString(),
+                                                 ObjectUUID = new UUID(dr[3].ToString()),
+                                                 AbuserName = dr[4].ToString(),
+                                                 AbuseLocation = dr[5].ToString(),
+                                                 AbuseDetails = dr[6].ToString(),
+                                                 ObjectPosition = dr[7].ToString(),
+                                                 RegionName = dr[8].ToString(),
+                                                 ScreenshotID = new UUID(dr[9].ToString()),
+                                                 AbuseSummary = dr[10].ToString(),
+                                                 Number = int.Parse(dr[11].ToString()),
+                                                 AssignedTo = dr[12].ToString(),
+                                                 Active = int.Parse(dr[13].ToString()) == 1,
+                                                 Checked = int.Parse(dr[14].ToString()) == 1,
+                                                 Notes = dr[15].ToString()
+                                             };
+                    rv.Add(report);
                 }
-                dr.Close ();
-                dr.Dispose ();
+                dr.Close();
+                dr.Dispose();
             }
             catch
             {
             }
-            GD.CloseDatabase ();
+            GD.CloseDatabase();
             return rv;
         }
 
         /// <summary>
-        /// Adds a new abuse report to the database
+        ///   Adds a new abuse report to the database
         /// </summary>
-        /// <param name="report"></param>
-        /// <param name="Password"></param>
+        /// <param name = "report"></param>
+        /// <param name = "Password"></param>
         public void AddAbuseReport(AbuseReport report)
         {
-            List<object> InsertValues = new List<object>();
-            InsertValues.Add(report.Category.ToString().MySqlEscape());
-            InsertValues.Add(report.ReporterName.MySqlEscape());
-            InsertValues.Add(report.ObjectName.MySqlEscape());
-            InsertValues.Add(report.ObjectUUID);
-            InsertValues.Add(report.AbuserName.MySqlEscape());
-            InsertValues.Add(report.AbuseLocation.MySqlEscape());
-            InsertValues.Add(report.AbuseDetails.MySqlEscape());
-            InsertValues.Add(report.ObjectPosition.MySqlEscape());
-            InsertValues.Add(report.RegionName.MySqlEscape());
-            InsertValues.Add(report.ScreenshotID);
-            InsertValues.Add(report.AbuseSummary.MySqlEscape());
+            List<object> InsertValues = new List<object>
+                                            {
+                                                report.Category.ToString().MySqlEscape(),
+                                                report.ReporterName.MySqlEscape(),
+                                                report.ObjectName.MySqlEscape(),
+                                                report.ObjectUUID,
+                                                report.AbuserName.MySqlEscape(),
+                                                report.AbuseLocation.MySqlEscape(),
+                                                report.AbuseDetails.MySqlEscape(),
+                                                report.ObjectPosition.MySqlEscape(),
+                                                report.RegionName.MySqlEscape(),
+                                                report.ScreenshotID,
+                                                report.AbuseSummary.MySqlEscape()
+                                            };
 
             //We do not trust the number sent by the region. Always find it ourselves
             List<string> values = GD.Query("", "", "abusereports", "Number", " ORDER BY Number DESC");
-            if (values.Count == 0)
-                report.Number = 0;
-            else
-                report.Number = int.Parse(values[0]);
+            report.Number = values.Count == 0 ? 0 : int.Parse(values[0]);
 
             report.Number++;
 
@@ -187,65 +189,74 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        /// Updates an abuse report and authenticates with the password.
+        ///   Updates an abuse report and authenticates with the password.
         /// </summary>
-        /// <param name="report"></param>
-        /// <param name="Password"></param>
+        /// <param name = "report"></param>
+        /// <param name = "Password"></param>
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
             if (!CheckPassword(Password))
                 return;
             //This is update, so we trust the number as it should know the number it's updating now.
-            List<object> InsertValues = new List<object>();
-            InsertValues.Add(report.Category.ToString().MySqlEscape());
-            InsertValues.Add(report.ReporterName.MySqlEscape());
-            InsertValues.Add(report.ObjectName.MySqlEscape());
-            InsertValues.Add(report.ObjectUUID);
-            InsertValues.Add(report.AbuserName.MySqlEscape());
-            InsertValues.Add(report.AbuseLocation.MySqlEscape());
-            InsertValues.Add(report.AbuseDetails.MySqlEscape());
-            InsertValues.Add(report.ObjectPosition.MySqlEscape());
-            InsertValues.Add(report.RegionName.MySqlEscape());
-            InsertValues.Add(report.ScreenshotID);
-            InsertValues.Add(report.AbuseSummary.MySqlEscape());
-            InsertValues.Add(report.Number);
+            List<object> InsertValues = new List<object>
+                                            {
+                                                report.Category.ToString().MySqlEscape(),
+                                                report.ReporterName.MySqlEscape(),
+                                                report.ObjectName.MySqlEscape(),
+                                                report.ObjectUUID,
+                                                report.AbuserName.MySqlEscape(),
+                                                report.AbuseLocation.MySqlEscape(),
+                                                report.AbuseDetails.MySqlEscape(),
+                                                report.ObjectPosition.MySqlEscape(),
+                                                report.RegionName.MySqlEscape(),
+                                                report.ScreenshotID,
+                                                report.AbuseSummary.MySqlEscape(),
+                                                report.Number,
+                                                report.AssignedTo.MySqlEscape(),
+                                                report.Active ? 1 : 0,
+                                                report.Checked ? 1 : 0,
+                                                report.Notes.MySqlEscape()
+                                            };
 
-            InsertValues.Add(report.AssignedTo.MySqlEscape());
-            InsertValues.Add(report.Active ? 1 : 0);
-            InsertValues.Add(report.Checked ? 1 : 0);
-            InsertValues.Add(report.Notes.MySqlEscape());
+            List<string> InsertKeys = new List<string>
+                                          {
+                                              "Category",
+                                              "ReporterName",
+                                              "ObjectName",
+                                              "ObjectUUID",
+                                              "AbuserName",
+                                              "AbuseLocation",
+                                              "AbuseDetails",
+                                              "ObjectPosition",
+                                              "RegionName",
+                                              "ScreenshotID",
+                                              "AbuseSummary",
+                                              "Number",
+                                              "AssignedTo",
+                                              "Active",
+                                              "Checked",
+                                              "Notes"
+                                          };
 
-            List<string> InsertKeys = new List<string>();
-            InsertKeys.Add("Category");
-            InsertKeys.Add("ReporterName");
-            InsertKeys.Add("ObjectName");
-            InsertKeys.Add("ObjectUUID");
-            InsertKeys.Add("AbuserName");
-            InsertKeys.Add("AbuseLocation");
-            InsertKeys.Add("AbuseDetails");
-            InsertKeys.Add("ObjectPosition");
-            InsertKeys.Add("RegionName");
-            InsertKeys.Add("ScreenshotID");
-            InsertKeys.Add("AbuseSummary");
-            InsertKeys.Add("Number");
-            InsertKeys.Add("AssignedTo");
-            InsertKeys.Add("Active");
-            InsertKeys.Add("Checked");
-            InsertKeys.Add("Notes");
+            GD.Replace("abusereports", InsertKeys.ToArray(), InsertValues.ToArray());
+        }
 
-            GD.Replace("abusereports", InsertKeys.ToArray(),InsertValues.ToArray());
+        #endregion
+
+        public void Dispose()
+        {
         }
 
         /// <summary>
-        /// Check the user's password, not currently used
+        ///   Check the user's password, not currently used
         /// </summary>
-        /// <param name="Password"></param>
+        /// <param name = "Password"></param>
         /// <returns></returns>
         private bool CheckPassword(string Password)
         {
             if (Password == WebPassword)
                 return true;
-            string OtherPass = Util.Md5Hash (Password);
+            string OtherPass = Util.Md5Hash(Password);
             if (OtherPass == WebPassword)
                 return true;
             List<string> TruePassword = GD.Query("Method", "abusereports", "passwords", "Password");

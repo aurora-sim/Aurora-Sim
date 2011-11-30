@@ -25,58 +25,88 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
     public delegate void UnackedPacketMethod(OutgoingPacket packet);
+
     /// <summary>
-    /// Holds a reference to the <seealso cref="LLUDPClient"/> this packet is
-    /// destined for, along with the serialized packet data, sequence number
-    /// (if this is a resend), number of times this packet has been resent,
-    /// the time of the last resend, and the throttling category for this
-    /// packet
+    ///   Holds a reference to the <seealso cref = "LLUDPClient" /> this packet is
+    ///   destined for, along with the serialized packet data, sequence number
+    ///   (if this is a resend), number of times this packet has been resent,
+    ///   the time of the last resend, and the throttling category for this
+    ///   packet
     /// </summary>
     public sealed class OutgoingPacket
     {
-        /// <summary>Client this packet is destined for</summary>
-        public LLUDPClient Client;
-        /// <summary>Packet data to send</summary>
+        /// <summary>
+        ///   Packet data to send
+        /// </summary>
         public UDPPacketBuffer Buffer;
-        /// <summary>Sequence number of the wrapped packet</summary>
-        public uint SequenceNumber;
-        /// <summary>Number of times this packet has been resent</summary>
-        public int ResendCount;
-        /// <summary>Environment.TickCount when this packet was last sent over the wire</summary>
-        public int TickCount;
-        /// <summary>Category this packet belongs to</summary>
-        public ThrottleOutPacketType Category;
-        /// <summary>The delegate to be called if this packet is determined to be unacknowledged</summary>
-        public UnackedPacketMethod UnackedMethod;
-        /// <summary>The delegate to be called when this packet is sent</summary>
-        public UnackedPacketMethod FinishedMethod;
-        /// <summary>The # of times the server has attempted to send this packet</summary>
-        public int ReSendAttempt = 0;
-        /// <summary>The packet we are sending</summary>
-        public Packet Packet;
-
-        public int WhoDoneIt = 0;
 
         /// <summary>
-        /// Default constructor
+        ///   Category this packet belongs to
         /// </summary>
-        /// <param name="client">Reference to the client this packet is destined for</param>
-        /// <param name="buffer">Serialized packet data. If the flags or sequence number
-        /// need to be updated, they will be injected directly into this binary buffer</param>
-        /// <param name="category">Throttling category for this packet</param>
-        /// <param name="resendMethod">The delegate to be called if this packet is determined to be unacknowledged</param>
-        /// <param name="finishedMethod">The delegate to be called when this packet is sent</param>
+        public ThrottleOutPacketType Category;
+
+        /// <summary>
+        ///   Client this packet is destined for
+        /// </summary>
+        public LLUDPClient Client;
+
+        /// <summary>
+        ///   The delegate to be called when this packet is sent
+        /// </summary>
+        public UnackedPacketMethod FinishedMethod;
+
+        /// <summary>
+        ///   The packet we are sending
+        /// </summary>
+        public Packet Packet;
+
+        /// <summary>
+        ///   The # of times the server has attempted to send this packet
+        /// </summary>
+        public int ReSendAttempt;
+
+        /// <summary>
+        ///   Number of times this packet has been resent
+        /// </summary>
+        public int ResendCount;
+
+        /// <summary>
+        ///   Sequence number of the wrapped packet
+        /// </summary>
+        public uint SequenceNumber;
+
+        /// <summary>
+        ///   Environment.TickCount when this packet was last sent over the wire
+        /// </summary>
+        public int TickCount;
+
+        /// <summary>
+        ///   The delegate to be called if this packet is determined to be unacknowledged
+        /// </summary>
+        public UnackedPacketMethod UnackedMethod;
+
+        public int WhoDoneIt;
+
+        /// <summary>
+        ///   Default constructor
+        /// </summary>
+        /// <param name = "client">Reference to the client this packet is destined for</param>
+        /// <param name = "buffer">Serialized packet data. If the flags or sequence number
+        ///   need to be updated, they will be injected directly into this binary buffer</param>
+        /// <param name = "category">Throttling category for this packet</param>
+        /// <param name = "resendMethod">The delegate to be called if this packet is determined to be unacknowledged</param>
+        /// <param name = "finishedMethod">The delegate to be called when this packet is sent</param>
+        /// <param name="packet"></param>
         public OutgoingPacket(LLUDPClient client, UDPPacketBuffer buffer,
-            ThrottleOutPacketType category, UnackedPacketMethod resendMethod,
-            UnackedPacketMethod finishedMethod, Packet packet)
+                              ThrottleOutPacketType category, UnackedPacketMethod resendMethod,
+                              UnackedPacketMethod finishedMethod, Packet packet)
         {
             Client = client;
             Buffer = buffer;
@@ -86,7 +116,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             Packet = packet;
         }
 
-        public void Destroy (int whoDoneIt)
+        public void Destroy(int whoDoneIt)
         {
             WhoDoneIt = whoDoneIt;
             /*if(!PacketPool.Instance.ReturnPacket(Packet))

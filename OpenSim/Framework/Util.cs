@@ -33,6 +33,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -41,15 +42,17 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Threading;
-using log4net;
+using System.Windows.Forms;
+using System.Xml;
+using Amib.Threading;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Amib.Threading;
+using log4net;
 using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
+
 #if NET_4_0
 using System.Threading.Tasks;
 #endif
@@ -57,7 +60,7 @@ using System.Threading.Tasks;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// The method used by Util.FireAndForget for asynchronously firing events
+    ///   The method used by Util.FireAndForget for asynchronously firing events
     /// </summary>
     public enum FireAndForgetMethod
     {
@@ -72,31 +75,35 @@ namespace OpenSim.Framework
     }
 
     /// <summary>
-    /// Miscellaneous utility functions
+    ///   Miscellaneous utility functions
     /// </summary>
     public class Util
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static uint nextXferID = 5000;
-        private static Random randomClass = new Random();
+        private static readonly Random randomClass = new Random();
         // Get a list of invalid file characters (OS dependent)
-        private static string regexInvalidFileChars = "[" + new String(Path.GetInvalidFileNameChars()) + "]";
-        private static string regexInvalidPathChars = "[" + new String(Path.GetInvalidPathChars()) + "]";
-        private static object XferLock = new object();
-        /// <summary>Thread pool used for Util.FireAndForget if
-        /// FireAndForgetMethod.SmartThreadPool is used</summary>
+        private static readonly string regexInvalidFileChars = "[" + new String(Path.GetInvalidFileNameChars()) + "]";
+        private static readonly string regexInvalidPathChars = "[" + new String(Path.GetInvalidPathChars()) + "]";
+        private static readonly object XferLock = new object();
+
+        /// <summary>
+        ///   Thread pool used for Util.FireAndForget if
+        ///   FireAndForgetMethod.SmartThreadPool is used
+        /// </summary>
         private static SmartThreadPool m_ThreadPool;
 
         // Unix-epoch starts at January 1st 1970, 00:00:00 UTC. And all our times in the server are (or at least should be) in UTC.
         private static readonly DateTime unixEpoch =
-            DateTime.ParseExact("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z", DateTimeFormatInfo.InvariantInfo).ToUniversalTime();
+            DateTime.ParseExact("1970-01-01 00:00:00 +0", "yyyy-MM-dd hh:mm:ss z", DateTimeFormatInfo.InvariantInfo).
+                ToUniversalTime();
 
-        public static readonly Regex UUIDPattern 
+        public static readonly Regex UUIDPattern
             = new Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
         public static FireAndForgetMethod FireAndForgetMethod = FireAndForgetMethod.SmartThreadPool;
-        private volatile static bool m_threadPoolRunning = false;
+        private static volatile bool m_threadPoolRunning;
 
         public static string ConvertToString(List<string> list)
         {
@@ -111,27 +118,28 @@ namespace OpenSim.Framework
         public static List<string> ConvertToList(string listAsString)
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
-            List<string> value = new List<string>(listAsString.Split(new string[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries));
+            List<string> value =
+                new List<string>(listAsString.Split(new[] {",", " "}, StringSplitOptions.RemoveEmptyEntries));
             return value;
         }
 
         /// <summary>
-        /// Gets the name of the directory where the current running executable
-        /// is located
+        ///   Gets the name of the directory where the current running executable
+        ///   is located
         /// </summary>
         /// <returns>Filesystem path to the directory containing the current
-        /// executable</returns>
+        ///   executable</returns>
         public static string ExecutingDirectory()
         {
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
         /// <summary>
-        /// Linear interpolates B<->C using percent A
+        ///   Linear interpolates B<->C using percent A
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="c"></param>
+        /// <param name = "a"></param>
+        /// <param name = "b"></param>
+        /// <param name = "c"></param>
         /// <returns></returns>
         public static double lerp(double a, double b, double c)
         {
@@ -139,19 +147,19 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Bilinear Interpolate, see Lerp but for 2D using 'percents' X & Y.
-        /// Layout:
-        ///     A B
-        ///     C D
-        /// A<->C = Y
-        /// C<->D = X
+        ///   Bilinear Interpolate, see Lerp but for 2D using 'percents' X & Y.
+        ///   Layout:
+        ///   A B
+        ///   C D
+        ///   A<->C = Y
+        ///   C<->D = X
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="c"></param>
-        /// <param name="d"></param>
+        /// <param name = "x"></param>
+        /// <param name = "y"></param>
+        /// <param name = "a"></param>
+        /// <param name = "b"></param>
+        /// <param name = "c"></param>
+        /// <param name = "d"></param>
         /// <returns></returns>
         public static double lerp2D(double x, double y, double a, double b, double c, double d)
         {
@@ -162,45 +170,45 @@ namespace OpenSim.Framework
         public static Encoding UTF8 = Encoding.UTF8;
 
         /// <value>
-        /// Well known UUID for the blank texture used in the Linden SL viewer version 1.20 (and hopefully onwards) 
+        ///   Well known UUID for the blank texture used in the Linden SL viewer version 1.20 (and hopefully onwards) 
         /// </value>
         public static UUID BLANK_TEXTURE_UUID = new UUID("5748decc-f629-461c-9a36-a35a221fe21f");
 
         #region Vector Equations
 
         /// <summary>
-        /// Get the distance between two 3d vectors
+        ///   Get the distance between two 3d vectors
         /// </summary>
-        /// <param name="a">A 3d vector</param>
-        /// <param name="b">A 3d vector</param>
+        /// <param name = "a">A 3d vector</param>
+        /// <param name = "b">A 3d vector</param>
         /// <returns>The distance between the two vectors</returns>
         public static double GetDistanceTo(Vector3 a, Vector3 b)
         {
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
             float dz = a.Z - b.Z;
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            return Math.Sqrt(dx*dx + dy*dy + dz*dz);
         }
 
         /// <summary>
-        /// Get the distance between two 3d vectors (excluding Z)
+        ///   Get the distance between two 3d vectors (excluding Z)
         /// </summary>
-        /// <param name="a">A 3d vector</param>
-        /// <param name="b">A 3d vector</param>
+        /// <param name = "a">A 3d vector</param>
+        /// <param name = "b">A 3d vector</param>
         /// <returns>The distance between the two vectors</returns>
         public static double GetFlatDistanceTo(Vector3 a, Vector3 b)
         {
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
-            return Math.Sqrt(dx * dx + dy * dy);
+            return Math.Sqrt(dx*dx + dy*dy);
         }
 
         /// <summary>
-        /// Returns true if the distance beween A and B is less than amount. Significantly faster than GetDistanceTo since it eliminates the Sqrt.
+        ///   Returns true if the distance beween A and B is less than amount. Significantly faster than GetDistanceTo since it eliminates the Sqrt.
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="amount"></param>
+        /// <param name = "a"></param>
+        /// <param name = "b"></param>
+        /// <param name = "amount"></param>
         /// <returns></returns>
         public static bool DistanceLessThan(Vector3 a, Vector3 b, double amount)
         {
@@ -211,20 +219,20 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Get the magnitude of a 3d vector
+        ///   Get the magnitude of a 3d vector
         /// </summary>
-        /// <param name="a">A 3d vector</param>
+        /// <param name = "a">A 3d vector</param>
         /// <returns>The magnitude of the vector</returns>
         public static double GetMagnitude(Vector3 a)
         {
-            return Math.Sqrt((a.X * a.X) + (a.Y * a.Y) + (a.Z * a.Z));
+            return Math.Sqrt((a.X*a.X) + (a.Y*a.Y) + (a.Z*a.Z));
         }
 
         /// <summary>
-        /// Get a normalized form of a 3d vector
-        /// The vector paramater cannot be <0,0,0>
+        ///   Get a normalized form of a 3d vector
+        ///   The vector paramater cannot be <0,0,0>
         /// </summary>
-        /// <param name="a">A 3d vector</param>
+        /// <param name = "a">A 3d vector</param>
         /// <returns>A new vector which is normalized form of the vector</returns>
         public static Vector3 GetNormalizedVector(Vector3 a)
         {
@@ -232,11 +240,11 @@ namespace OpenSim.Framework
                 throw new ArgumentException("Vector paramater cannot be a zero vector.");
 
             float Mag = (float) GetMagnitude(a);
-            return new Vector3(a.X / Mag, a.Y / Mag, a.Z / Mag);
+            return new Vector3(a.X/Mag, a.Y/Mag, a.Z/Mag);
         }
 
         /// <summary>
-        /// Returns if a vector is a zero vector (has all zero components)
+        ///   Returns if a vector is a zero vector (has all zero components)
         /// </summary>
         /// <returns></returns>
         public static bool IsZeroVector(Vector3 v)
@@ -258,12 +266,12 @@ namespace OpenSim.Framework
 
             if (tr >= 1.0)
             {
-                s = (float) (0.5 / Math.Sqrt(tr));
+                s = (float) (0.5/Math.Sqrt(tr));
                 return new Quaternion(
-                        (left.Z - up.Y) * s,
-                        (up.X - fwd.Z) * s,
-                        (fwd.Y - left.X) * s,
-                        (float) 0.25 / s);
+                    (left.Z - up.Y)*s,
+                    (up.X - fwd.Z)*s,
+                    (fwd.Y - left.X)*s,
+                    (float) 0.25/s);
             }
             else
             {
@@ -272,35 +280,35 @@ namespace OpenSim.Framework
                 if (max < fwd.X)
                 {
                     s = (float) (Math.Sqrt(fwd.X - (left.Y + up.Z) + 1.0));
-                    float x = (float) (s * 0.5);
-                    s = (float) (0.5 / s);
+                    float x = (float) (s*0.5);
+                    s = (float) (0.5/s);
                     return new Quaternion(
-                            x,
-                            (fwd.Y + left.X) * s,
-                            (up.X + fwd.Z) * s,
-                            (left.Z - up.Y) * s);
+                        x,
+                        (fwd.Y + left.X)*s,
+                        (up.X + fwd.Z)*s,
+                        (left.Z - up.Y)*s);
                 }
                 else if (max == left.Y)
                 {
                     s = (float) (Math.Sqrt(left.Y - (up.Z + fwd.X) + 1.0));
-                    float y = (float) (s * 0.5);
-                    s = (float) (0.5 / s);
+                    float y = (float) (s*0.5);
+                    s = (float) (0.5/s);
                     return new Quaternion(
-                            (fwd.Y + left.X) * s,
-                            y,
-                            (left.Z + up.Y) * s,
-                            (up.X - fwd.Z) * s);
+                        (fwd.Y + left.X)*s,
+                        y,
+                        (left.Z + up.Y)*s,
+                        (up.X - fwd.Z)*s);
                 }
                 else
                 {
                     s = (float) (Math.Sqrt(up.Z - (fwd.X + left.Y) + 1.0));
-                    float z = (float) (s * 0.5);
-                    s = (float) (0.5 / s);
+                    float z = (float) (s*0.5);
+                    s = (float) (0.5/s);
                     return new Quaternion(
-                            (up.X + fwd.Z) * s,
-                            (left.Z + up.Y) * s,
-                            z,
-                            (fwd.Y - left.X) * s);
+                        (up.X + fwd.Z)*s,
+                        (left.Z + up.Y)*s,
+                        z,
+                        (fwd.Y - left.X)*s);
                 }
             }
         }
@@ -313,9 +321,11 @@ namespace OpenSim.Framework
         public static T Clamp<T>(T x, T min, T max)
             where T : IComparable<T>
         {
-            return x.CompareTo(max) > 0 ? max :
-                x.CompareTo(min) < 0 ? min :
-                x;
+            return x.CompareTo(max) > 0
+                       ? max
+                       : x.CompareTo(min) < 0
+                             ? min
+                             : x;
         }
 
         public static uint GetNextXferID()
@@ -329,13 +339,13 @@ namespace OpenSim.Framework
             return id;
         }
 
-        /// <summary>
-        /// Debug utility function to convert unbroken strings of XML into something human readable for occasional debugging purposes.
+        ///<summary>
+        ///  Debug utility function to convert unbroken strings of XML into something human readable for occasional debugging purposes.
         ///
-        /// Please don't delete me even if I appear currently unused!
-        /// </summary>
-        /// <param name="rawXml"></param>
-        /// <returns></returns>
+        ///  Please don't delete me even if I appear currently unused!
+        ///</summary>
+        ///<param name = "rawXml"></param>
+        ///<returns></returns>
         public static string GetFormattedXml(string rawXml)
         {
             XmlDocument xd = new XmlDocument();
@@ -344,8 +354,7 @@ namespace OpenSim.Framework
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
 
-            XmlTextWriter xtw = new XmlTextWriter(sw);
-            xtw.Formatting = Formatting.Indented;
+            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
 
             try
             {
@@ -421,16 +430,16 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Return an md5 hash of the given string
+        ///   Return an md5 hash of the given string
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name = "data"></param>
         /// <returns></returns>
         public static string Md5Hash(string data)
         {
             byte[] dataMd5 = ComputeMD5Hash(data);
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < dataMd5.Length; i++)
-                sb.AppendFormat("{0:x2}", dataMd5[i]);
+            foreach (byte t in dataMd5)
+                sb.AppendFormat("{0:x2}", t);
             return sb.ToString();
         }
 
@@ -441,9 +450,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Return an SHA1 hash of the given string
+        ///   Return an SHA1 hash of the given string
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name = "data"></param>
         /// <returns></returns>
         public static string SHA1Hash(string data)
         {
@@ -473,33 +482,24 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Convert a variable length field (byte array) to a string, with a
-        /// field name prepended to each line of the output
+        ///   Convert a variable length field (byte array) to a string, with a
+        ///   field name prepended to each line of the output
         /// </summary>
-        /// <remarks>If the byte array has unprintable characters in it, a
-        /// hex dump will be put in the string instead</remarks>
-        /// <param name="bytes">The byte array to convert to a string</param>
-        /// <param name="fieldName">A field name to prepend to each line of output</param>
+        /// <remarks>
+        ///   If the byte array has unprintable characters in it, a
+        ///   hex dump will be put in the string instead
+        /// </remarks>
+        /// <param name = "bytes">The byte array to convert to a string</param>
+        /// <param name = "fieldName">A field name to prepend to each line of output</param>
         /// <returns>An ASCII string or a string containing a hex dump, minus
-        /// the null terminator</returns>
+        ///   the null terminator</returns>
         public static string FieldToString(byte[] bytes, string fieldName)
         {
             // Check for a common case
             if (bytes.Length == 0) return String.Empty;
 
             StringBuilder output = new StringBuilder();
-            bool printable = true;
-
-            for (int i = 0; i < bytes.Length; ++i)
-            {
-                // Check if there are any unprintable characters in the array
-                if ((bytes[i] < 0x20 || bytes[i] > 0x7E) && bytes[i] != 0x09
-                    && bytes[i] != 0x0D && bytes[i] != 0x0A && bytes[i] != 0x00)
-                {
-                    printable = false;
-                    break;
-                }
-            }
+            bool printable = bytes.All(t => (t >= 0x20 && t <= 0x7E) || t == 0x09 || t == 0x0D || t == 0x0A || t == 0x00);
 
             if (printable)
             {
@@ -509,7 +509,7 @@ namespace OpenSim.Framework
                     output.Append(": ");
                 }
 
-                output.Append(CleanString(Util.UTF8.GetString(bytes, 0, bytes.Length - 1)));
+                output.Append(CleanString(UTF8.GetString(bytes, 0, bytes.Length - 1)));
             }
             else
             {
@@ -525,10 +525,7 @@ namespace OpenSim.Framework
 
                     for (int j = 0; j < 16; j++)
                     {
-                        if ((i + j) < bytes.Length)
-                            output.Append(String.Format("{0:X2} ", bytes[i + j]));
-                        else
-                            output.Append("   ");
+                        output.Append((i + j) < bytes.Length ? String.Format("{0:X2} ", bytes[i + j]) : "   ");
                     }
 
                     for (int j = 0; j < 16 && (i + j) < bytes.Length; j++)
@@ -545,9 +542,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Removes all invalid path chars (OS dependent)
+        ///   Removes all invalid path chars (OS dependent)
         /// </summary>
-        /// <param name="path">path</param>
+        /// <param name = "path">path</param>
         /// <returns>safe path</returns>
         public static string safePath(string path)
         {
@@ -555,9 +552,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Removes all invalid filename chars (OS dependent)
+        ///   Removes all invalid filename chars (OS dependent)
         /// </summary>
-        /// <param name="path">filename</param>
+        /// <param name = "path">filename</param>
         /// <returns>safe filename</returns>
         public static string safeFileName(string filename)
         {
@@ -603,14 +600,7 @@ namespace OpenSim.Framework
             {
                 FileInfo f = new FileInfo(FileName);
 
-                if (!String.IsNullOrEmpty(f.Extension))
-                {
-                    Name = f.FullName.Substring(0, f.FullName.LastIndexOf('.'));
-                }
-                else
-                {
-                    Name = f.FullName;
-                }
+                Name = !String.IsNullOrEmpty(f.Extension) ? f.FullName.Substring(0, f.FullName.LastIndexOf('.')) : f.FullName;
 
                 while (File.Exists(FileName))
                 {
@@ -655,9 +645,9 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Convert an UUID to a raw uuid string.  Right now this is a string without hyphens.
+        ///   Convert an UUID to a raw uuid string.  Right now this is a string without hyphens.
         /// </summary>
-        /// <param name="UUID"></param>
+        /// <param name = "UUID"></param>
         /// <returns></returns>
         public static String ToRawUuidString(UUID UUID)
         {
@@ -691,8 +681,8 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// returns the contents of /etc/issue on Unix Systems
-        /// Use this for where it's absolutely necessary to implement platform specific stuff
+        ///   returns the contents of /etc/issue on Unix Systems
+        ///   Use this for where it's absolutely necessary to implement platform specific stuff
         /// </summary>
         /// <returns></returns>
         public static string ReadEtcIssue()
@@ -767,7 +757,8 @@ namespace OpenSim.Framework
 
         public static void Compress7ZipFile(string path, string destination)
         {
-            ProcessStartInfo p = new ProcessStartInfo();string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+            ProcessStartInfo p = new ProcessStartInfo();
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof (Util)).CodeBase);
             if (pa != null)
             {
                 p.FileName = Path.Combine(pa, "7za.exe");
@@ -781,7 +772,7 @@ namespace OpenSim.Framework
         public static void UnCompress7ZipFile(string path, string destination)
         {
             ProcessStartInfo p = new ProcessStartInfo();
-            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof (Util)).CodeBase);
             if (pa != null)
             {
                 p.FileName = Path.Combine(pa, "7za.exe");
@@ -794,7 +785,7 @@ namespace OpenSim.Framework
 
         public static string Compress(string text)
         {
-            byte[] buffer = Util.UTF8.GetBytes(text);
+            byte[] buffer = UTF8.GetBytes(text);
             MemoryStream memory = new MemoryStream();
             using (GZipStream compressor = new GZipStream(memory, CompressionMode.Compress, true))
             {
@@ -802,7 +793,7 @@ namespace OpenSim.Framework
             }
 
             memory.Position = 0;
-           
+
             byte[] compressed = new byte[memory.Length];
             memory.Read(compressed, 0, compressed.Length);
 
@@ -828,7 +819,7 @@ namespace OpenSim.Framework
                     decompressor.Read(buffer, 0, buffer.Length);
                 }
 
-                return Util.UTF8.GetString(buffer);
+                return UTF8.GetString(buffer);
             }
         }
 
@@ -844,7 +835,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Returns an error message that the user could not be found in the database
+        ///   Returns an error message that the user could not be found in the database
         /// </summary>
         /// <returns>XML string consisting of a error element containing individual error(s)</returns>
         public static XmlRpcResponse CreateUnknownUserErrorResponse()
@@ -859,41 +850,48 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Converts a byte array in big endian order into an ulong.
+        ///   Converts a byte array in big endian order into an ulong.
         /// </summary>
-        /// <param name="bytes">
-        /// The array of bytes
+        /// <param name = "bytes">
+        ///   The array of bytes
         /// </param>
         /// <returns>
-        /// The extracted ulong
+        ///   The extracted ulong
         /// </returns>
         public static ulong BytesToUInt64Big(byte[] bytes)
         {
             if (bytes.Length < 8) return 0;
-            return ((ulong)bytes[0] << 56) | ((ulong)bytes[1] << 48) | ((ulong)bytes[2] << 40) | ((ulong)bytes[3] << 32) |
-                ((ulong)bytes[4] << 24) | ((ulong)bytes[5] << 16) | ((ulong)bytes[6] << 8) | (ulong)bytes[7];
+            return ((ulong) bytes[0] << 56) | ((ulong) bytes[1] << 48) | ((ulong) bytes[2] << 40) |
+                   ((ulong) bytes[3] << 32) |
+                   ((ulong) bytes[4] << 24) | ((ulong) bytes[5] << 16) | ((ulong) bytes[6] << 8) | bytes[7];
         }
 
         // used for RemoteParcelRequest (for "About Landmark")
         public static UUID BuildFakeParcelID(ulong regionHandle, uint x, uint y)
         {
             byte[] bytes =
-            {
-                (byte)regionHandle, (byte)(regionHandle >> 8), (byte)(regionHandle >> 16), (byte)(regionHandle >> 24),
-                (byte)(regionHandle >> 32), (byte)(regionHandle >> 40), (byte)(regionHandle >> 48), (byte)(regionHandle << 56),
-                (byte)x, (byte)(x >> 8), 0, 0,
-                (byte)y, (byte)(y >> 8), 0, 0 };
+                {
+                    (byte) regionHandle, (byte) (regionHandle >> 8), (byte) (regionHandle >> 16),
+                    (byte) (regionHandle >> 24),
+                    (byte) (regionHandle >> 32), (byte) (regionHandle >> 40), (byte) (regionHandle >> 48),
+                    (byte) (regionHandle << 56),
+                    (byte) x, (byte) (x >> 8), 0, 0,
+                    (byte) y, (byte) (y >> 8), 0, 0
+                };
             return new UUID(bytes, 0);
         }
 
         public static UUID BuildFakeParcelID(ulong regionHandle, uint x, uint y, uint z)
         {
             byte[] bytes =
-            {
-                (byte)regionHandle, (byte)(regionHandle >> 8), (byte)(regionHandle >> 16), (byte)(regionHandle >> 24),
-                (byte)(regionHandle >> 32), (byte)(regionHandle >> 40), (byte)(regionHandle >> 48), (byte)(regionHandle << 56),
-                (byte)x, (byte)(x >> 8), (byte)z, (byte)(z >> 8),
-                (byte)y, (byte)(y >> 8), 0, 0 };
+                {
+                    (byte) regionHandle, (byte) (regionHandle >> 8), (byte) (regionHandle >> 16),
+                    (byte) (regionHandle >> 24),
+                    (byte) (regionHandle >> 32), (byte) (regionHandle >> 40), (byte) (regionHandle >> 48),
+                    (byte) (regionHandle << 56),
+                    (byte) x, (byte) (x >> 8), (byte) z, (byte) (z >> 8),
+                    (byte) y, (byte) (y >> 8), 0, 0
+                };
             return new UUID(bytes, 0);
         }
 
@@ -925,31 +923,24 @@ namespace OpenSim.Framework
             x += rx;
             y += ry;
         }
-        
+
         /// <summary>
-        /// Get operating system information if available.  Returns only the first 45 characters of information
+        ///   Get operating system information if available.  Returns only the first 45 characters of information
         /// </summary>
         /// <returns>
-        /// Operating system information.  Returns an empty string if none was available.
+        ///   Operating system information.  Returns an empty string if none was available.
         /// </returns>
         public static string GetOperatingSystemInformation()
         {
             string os = String.Empty;
 
-            if (Environment.OSVersion.Platform != PlatformID.Unix)
-            {
-                os = Environment.OSVersion.ToString();
-            }
-            else
-            {
-                os = ReadEtcIssue();
-            }
-                      
+            os = Environment.OSVersion.Platform != PlatformID.Unix ? Environment.OSVersion.ToString() : ReadEtcIssue();
+
             if (os.Length > 45)
             {
                 os = os.Substring(0, 45);
             }
-            
+
             return os;
         }
 
@@ -959,24 +950,20 @@ namespace OpenSim.Framework
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
                 ru = "Unix/Mono";
+            else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+                ru = "OSX/Mono";
             else
-                if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-                    ru = "OSX/Mono";
-                else
-                {
-                    if (Type.GetType("Mono.Runtime") != null)
-                        ru = "Win/Mono";
-                    else
-                        ru = "Win/.NET";
-                }
+            {
+                ru = Type.GetType("Mono.Runtime") != null ? "Win/Mono" : "Win/.NET";
+            }
 
             return ru;
         }
 
         /// <summary>
-        /// Is the given string a UUID?
+        ///   Is the given string a UUID?
         /// </summary>
-        /// <param name="s"></param>
+        /// <param name = "s"></param>
         /// <returns></returns>
         public static bool isUUID(string s)
         {
@@ -998,7 +985,8 @@ namespace OpenSim.Framework
 
             displayConnectionString = connectionString.Substring(0, passPosition);
             displayConnectionString += "***";
-            displayConnectionString += connectionString.Substring(passEndPosition, connectionString.Length - passEndPosition);
+            displayConnectionString += connectionString.Substring(passEndPosition,
+                                                                  connectionString.Length - passEndPosition);
 
             return displayConnectionString;
         }
@@ -1008,58 +996,70 @@ namespace OpenSim.Framework
             Type settingsType = settingsClass.GetType();
 
             FieldInfo[] fieldInfos = settingsType.GetFields();
-            foreach (FieldInfo fieldInfo in fieldInfos)
+            foreach (FieldInfo fieldInfo in fieldInfos.Where(fieldInfo => !fieldInfo.IsStatic))
             {
-                if (!fieldInfo.IsStatic)
+                if (fieldInfo.FieldType == typeof (String))
                 {
-                    if (fieldInfo.FieldType == typeof(System.String))
-                    {
-                        fieldInfo.SetValue(settingsClass, config.Get(fieldInfo.Name, (string)fieldInfo.GetValue(settingsClass)));
-                    }
-                    else if (fieldInfo.FieldType == typeof(System.Boolean))
-                    {
-                        fieldInfo.SetValue(settingsClass, config.GetBoolean(fieldInfo.Name, (bool)fieldInfo.GetValue(settingsClass)));
-                    }
-                    else if (fieldInfo.FieldType == typeof(System.Int32))
-                    {
-                        fieldInfo.SetValue(settingsClass, config.GetInt(fieldInfo.Name, (int)fieldInfo.GetValue(settingsClass)));
-                    }
-                    else if (fieldInfo.FieldType == typeof(System.Single))
-                    {
-                        fieldInfo.SetValue(settingsClass, config.GetFloat(fieldInfo.Name, (float)fieldInfo.GetValue(settingsClass)));
-                    }
-                    else if (fieldInfo.FieldType == typeof(System.UInt32))
-                    {
-                        fieldInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(fieldInfo.Name, ((uint)fieldInfo.GetValue(settingsClass)).ToString())));
-                    }
+                    fieldInfo.SetValue(settingsClass,
+                                       config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
+                }
+                else if (fieldInfo.FieldType == typeof (Boolean))
+                {
+                    fieldInfo.SetValue(settingsClass,
+                                       config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
+                }
+                else if (fieldInfo.FieldType == typeof (Int32))
+                {
+                    fieldInfo.SetValue(settingsClass,
+                                       config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
+                }
+                else if (fieldInfo.FieldType == typeof (Single))
+                {
+                    fieldInfo.SetValue(settingsClass,
+                                       config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
+                }
+                else if (fieldInfo.FieldType == typeof (UInt32))
+                {
+                    fieldInfo.SetValue(settingsClass,
+                                       Convert.ToUInt32(config.Get(fieldInfo.Name,
+                                                                   ((uint) fieldInfo.GetValue(settingsClass)).
+                                                                       ToString())));
                 }
             }
 
             PropertyInfo[] propertyInfos = settingsType.GetProperties();
-            foreach (PropertyInfo propInfo in propertyInfos)
+            foreach (PropertyInfo propInfo in propertyInfos.Where(propInfo => (propInfo.CanRead) && (propInfo.CanWrite)))
             {
-                if ((propInfo.CanRead) && (propInfo.CanWrite))
+                if (propInfo.PropertyType == typeof (String))
                 {
-                    if (propInfo.PropertyType == typeof(System.String))
-                    {
-                        propInfo.SetValue(settingsClass, config.Get(propInfo.Name, (string)propInfo.GetValue(settingsClass, null)), null);
-                    }
-                    else if (propInfo.PropertyType == typeof(System.Boolean))
-                    {
-                        propInfo.SetValue(settingsClass, config.GetBoolean(propInfo.Name, (bool)propInfo.GetValue(settingsClass, null)), null);
-                    }
-                    else if (propInfo.PropertyType == typeof(System.Int32))
-                    {
-                        propInfo.SetValue(settingsClass, config.GetInt(propInfo.Name, (int)propInfo.GetValue(settingsClass, null)), null);
-                    }
-                    else if (propInfo.PropertyType == typeof(System.Single))
-                    {
-                        propInfo.SetValue(settingsClass, config.GetFloat(propInfo.Name, (float)propInfo.GetValue(settingsClass, null)), null);
-                    }
-                    if (propInfo.PropertyType == typeof(System.UInt32))
-                    {
-                        propInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(propInfo.Name, ((uint)propInfo.GetValue(settingsClass, null)).ToString())), null);
-                    }
+                    propInfo.SetValue(settingsClass,
+                                      config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)),
+                                      null);
+                }
+                else if (propInfo.PropertyType == typeof (Boolean))
+                {
+                    propInfo.SetValue(settingsClass,
+                                      config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)),
+                                      null);
+                }
+                else if (propInfo.PropertyType == typeof (Int32))
+                {
+                    propInfo.SetValue(settingsClass,
+                                      config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)),
+                                      null);
+                }
+                else if (propInfo.PropertyType == typeof (Single))
+                {
+                    propInfo.SetValue(settingsClass,
+                                      config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)),
+                                      null);
+                }
+                if (propInfo.PropertyType == typeof (UInt32))
+                {
+                    propInfo.SetValue(settingsClass,
+                                      Convert.ToUInt32(config.Get(propInfo.Name,
+                                                                  ((uint) propInfo.GetValue(settingsClass, null)).
+                                                                      ToString())), null);
                 }
             }
 
@@ -1107,7 +1107,6 @@ namespace OpenSim.Framework
             }
 
             return retVal;
-
         }
 
         public static uint ConvertAccessLevelToMaturity(byte maturity)
@@ -1127,26 +1126,25 @@ namespace OpenSim.Framework
             }
 
             return retVal;
-
         }
 
         /// <summary>
-        /// Produces an OSDMap from its string representation on a stream
+        ///   Produces an OSDMap from its string representation on a stream
         /// </summary>
-        /// <param name="data">The stream</param>
-        /// <param name="length">The size of the data on the stream</param>
+        /// <param name = "data">The stream</param>
+        /// <param name = "length">The size of the data on the stream</param>
         /// <returns>The OSDMap or an exception</returns>
         public static OSDMap GetOSDMap(Stream stream, int length)
         {
             byte[] data = new byte[length];
             stream.Read(data, 0, length);
-            string strdata = Util.UTF8.GetString(data);
+            string strdata = UTF8.GetString(data);
             OSDMap args = null;
             OSD buffer;
             buffer = OSDParser.DeserializeJson(strdata);
             if (buffer.Type == OSDType.Map)
             {
-                args = (OSDMap)buffer;
+                args = (OSDMap) buffer;
                 return args;
             }
             return null;
@@ -1162,7 +1160,7 @@ namespace OpenSim.Framework
                 buffer = OSDParser.DeserializeJson(data);
                 if (buffer.Type == OSDType.Map)
                 {
-                    args = (OSDMap)buffer;
+                    args = (OSDMap) buffer;
                     return args;
                 }
                 else
@@ -1174,18 +1172,18 @@ namespace OpenSim.Framework
             }
             catch (Exception ex)
             {
-                m_log.Debug("[UTILS]: exception on GetOSDMap " + ex.ToString());
+                m_log.Debug("[UTILS]: exception on GetOSDMap " + ex);
                 return null;
             }
         }
 
         public static string[] Glob(string path)
         {
-            string vol=String.Empty;
+            string vol = String.Empty;
 
             if (Path.VolumeSeparatorChar != Path.DirectorySeparatorChar)
             {
-                string[] vcomps = path.Split(new char[] {Path.VolumeSeparatorChar}, 2, StringSplitOptions.RemoveEmptyEntries);
+                string[] vcomps = path.Split(new[] {Path.VolumeSeparatorChar}, 2, StringSplitOptions.RemoveEmptyEntries);
 
                 if (vcomps.Length > 1)
                 {
@@ -1193,16 +1191,17 @@ namespace OpenSim.Framework
                     vol = vcomps[0];
                 }
             }
-            
-            string[] comps = path.Split(new char[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
+
+            string[] comps = path.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
+                                        StringSplitOptions.RemoveEmptyEntries);
 
             // Glob
 
             path = vol;
             if (vol != String.Empty)
-                path += new String(new char[] {Path.VolumeSeparatorChar, Path.DirectorySeparatorChar});
+                path += new String(new[] {Path.VolumeSeparatorChar, Path.DirectorySeparatorChar});
             else
-                path = new String(new char[] {Path.DirectorySeparatorChar});
+                path = new String(new[] {Path.DirectorySeparatorChar});
 
             List<string> paths = new List<string>();
             List<string> found = new List<string>();
@@ -1220,16 +1219,14 @@ namespace OpenSim.Framework
 
                     if (dirs.Length != 0)
                     {
-                        foreach (string dir in dirs)
-                            addpaths.Add(Path.Combine(path, dir));
+                        addpaths.AddRange(dirs.Select(dir => Path.Combine(path, dir)));
                     }
 
                     // Only add files if that is the last path component
                     if (compIndex == comps.Length - 1)
                     {
                         string[] files = Directory.GetFiles(p, c);
-                        foreach (string f in files)
-                            found.Add(f);
+                        found.AddRange(files);
                     }
                 }
                 paths = addpaths;
@@ -1238,11 +1235,11 @@ namespace OpenSim.Framework
             return found.ToArray();
         }
 
-        public static string[] GetSubFiles (string path)
+        public static string[] GetSubFiles(string path)
         {
-            string[] comps = path.Split (new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.None);
-            List<string> paths = new List<string> ();
-            List<string> found = new List<string> ();
+            string[] comps = path.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
+                                        StringSplitOptions.None);
+            List<string> paths = new List<string>();
             string endFind = comps[comps.Length - 1];
             string baseDir = "";
             for (int i = 0; i < comps.Length - 1; i++)
@@ -1252,15 +1249,9 @@ namespace OpenSim.Framework
                 else
                     baseDir += comps[i] + Path.DirectorySeparatorChar;
             }
-            paths.Add (baseDir);
-            foreach (string p in paths)
-            {
-                string[] files = Directory.GetFiles (p, endFind);
-                foreach (string f in files)
-                    found.Add (f);
-            }
+            paths.Add(baseDir);
 
-            return found.ToArray ();
+            return paths.SelectMany(p => Directory.GetFiles(p, endFind)).ToArray();
         }
 
         public static byte[] StringToBytes256(string str, params object[] args)
@@ -1275,16 +1266,22 @@ namespace OpenSim.Framework
 
         public static byte[] StringToBytes256(string str)
         {
-            if (String.IsNullOrEmpty(str)) { return Utils.EmptyBytes; }
+            if (String.IsNullOrEmpty(str))
+            {
+                return Utils.EmptyBytes;
+            }
             if (str.Length > 254) str = str.Remove(254);
-            if (!str.EndsWith("\0")) { str += "\0"; }
-            
+            if (!str.EndsWith("\0"))
+            {
+                str += "\0";
+            }
+
             // Because this is UTF-8 encoding and not ASCII, it's possible we
             // might have gotten an oversized array even after the string trim
             byte[] data = UTF8.GetBytes(str);
             if (data.Length > 256)
             {
-                Array.Resize<byte>(ref data, 256);
+                Array.Resize(ref data, 256);
                 data[255] = 0;
             }
 
@@ -1293,16 +1290,22 @@ namespace OpenSim.Framework
 
         public static byte[] StringToBytes1024(string str)
         {
-            if (String.IsNullOrEmpty(str)) { return Utils.EmptyBytes; }
+            if (String.IsNullOrEmpty(str))
+            {
+                return Utils.EmptyBytes;
+            }
             if (str.Length > 1023) str = str.Remove(1023);
-            if (!str.EndsWith("\0")) { str += "\0"; }
+            if (!str.EndsWith("\0"))
+            {
+                str += "\0";
+            }
 
             // Because this is UTF-8 encoding and not ASCII, it's possible we
             // might have gotten an oversized array even after the string trim
             byte[] data = UTF8.GetBytes(str);
             if (data.Length > 1024)
             {
-                Array.Resize<byte>(ref data, 1024);
+                Array.Resize(ref data, 1024);
                 data[1023] = 0;
             }
 
@@ -1312,12 +1315,12 @@ namespace OpenSim.Framework
         #region FireAndForget Threading Pattern
 
         /// <summary>
-        /// Created to work around a limitation in Mono with nested delegates
+        ///   Created to work around a limitation in Mono with nested delegates
         /// </summary>
         private sealed class FireAndForgetWrapper
         {
             private static volatile FireAndForgetWrapper instance;
-            private static object syncRoot = new Object();
+            private static readonly object syncRoot = new Object();
 
             public static FireAndForgetWrapper Instance
             {
@@ -1338,28 +1341,34 @@ namespace OpenSim.Framework
                 }
             }
 
-            public void FireAndForget(System.Threading.WaitCallback callback)
+            public void FireAndForget(WaitCallback callback)
             {
                 callback.BeginInvoke(null, EndFireAndForget, callback);
             }
 
-            public void FireAndForget(System.Threading.WaitCallback callback, object obj)
+            public void FireAndForget(WaitCallback callback, object obj)
             {
                 callback.BeginInvoke(obj, EndFireAndForget, callback);
             }
 
             private static void EndFireAndForget(IAsyncResult ar)
             {
-                System.Threading.WaitCallback callback = (System.Threading.WaitCallback)ar.AsyncState;
+                WaitCallback callback = (WaitCallback) ar.AsyncState;
 
-                try { callback.EndInvoke(ar); }
-                catch (Exception ex) { m_log.Error("[UTIL]: Asynchronous method threw an exception: " + ex.ToString(), ex); }
+                try
+                {
+                    callback.EndInvoke(ar);
+                }
+                catch (Exception ex)
+                {
+                    m_log.Error("[UTIL]: Asynchronous method threw an exception: " + ex, ex);
+                }
 
                 ar.AsyncWaitHandle.Close();
             }
         }
 
-        public static void FireAndForget(System.Threading.WaitCallback callback)
+        public static void FireAndForget(WaitCallback callback)
         {
             FireAndForget(callback, null);
         }
@@ -1382,7 +1391,8 @@ namespace OpenSim.Framework
             {
                 //This stops more tasks and threads from being started
                 m_threadPoolRunning = false;
-                m_ThreadPool.WaitForIdle(60 * 1000); //Wait for the threads to be idle, but don't wait for more than a minute
+                m_ThreadPool.WaitForIdle(60*1000);
+                    //Wait for the threads to be idle, but don't wait for more than a minute
                 //Destroy the threadpool now
                 m_ThreadPool.Dispose();
                 m_ThreadPool = null;
@@ -1409,13 +1419,13 @@ namespace OpenSim.Framework
                         return 0;
                     return m_ThreadPool.MaxThreads - m_ThreadPool.InUseThreads;
                 case FireAndForgetMethod.Thread:
-                    return MAX_SYSTEM_THREADS - System.Diagnostics.Process.GetCurrentProcess().Threads.Count;
+                    return MAX_SYSTEM_THREADS - Process.GetCurrentProcess().Threads.Count;
                 default:
                     throw new NotImplementedException();
             }
         }
 
-        public static void FireAndForget(System.Threading.WaitCallback callback, object obj)
+        public static void FireAndForget(WaitCallback callback, object obj)
         {
             switch (FireAndForgetMethod)
             {
@@ -1432,15 +1442,15 @@ namespace OpenSim.Framework
                 case FireAndForgetMethod.SmartThreadPool:
                     if (m_ThreadPool == null)
                         m_ThreadPool = new SmartThreadPool(5000, 15, 1);
-                    if(m_threadPoolRunning)//Check if the thread pool should be running
-                        m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new object[] { callback, obj });
+                    if (m_threadPoolRunning) //Check if the thread pool should be running
+                        m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] {callback, obj});
                     break;
                 case FireAndForgetMethod.Thread:
-                    Thread thread = new Thread (delegate (object o)
-                    {
-                        Culture.SetCurrentCulture ();
-                        callback (o);
-                    });
+                    Thread thread = new Thread(delegate(object o)
+                                                   {
+                                                       Culture.SetCurrentCulture();
+                                                       callback(o);
+                                                   });
                     thread.Start(obj);
                     break;
 #if NET_4_0
@@ -1452,7 +1462,7 @@ namespace OpenSim.Framework
                     throw new NotImplementedException();
             }
         }
-        
+
 #if NET_4_0
         private static async void AwaitCallback(WaitCallback callback, object o)
         {
@@ -1465,8 +1475,8 @@ namespace OpenSim.Framework
 
         private static object SmartThreadPoolCallback(object o)
         {
-            object[] array = (object[])o;
-            WaitCallback callback = (WaitCallback)array[0];
+            object[] array = (object[]) o;
+            WaitCallback callback = (WaitCallback) array[0];
             object obj = array[1];
 
             callback(obj);
@@ -1476,54 +1486,56 @@ namespace OpenSim.Framework
         #endregion FireAndForget Threading Pattern
 
         /// <summary>
-        /// Environment.TickCount is an int but it counts all 32 bits so it goes positive
-        /// and negative every 24.9 days. This trims down TickCount so it doesn't wrap
-        /// for the callers. 
-        /// This trims it to a 12 day interval so don't let your frame time get too long.
+        ///   Environment.TickCount is an int but it counts all 32 bits so it goes positive
+        ///   and negative every 24.9 days. This trims down TickCount so it doesn't wrap
+        ///   for the callers. 
+        ///   This trims it to a 12 day interval so don't let your frame time get too long.
         /// </summary>
         /// <returns></returns>
         public static Int32 EnvironmentTickCount()
         {
             return Environment.TickCount & EnvironmentTickCountMask;
         }
+
         public const Int32 EnvironmentTickCountMask = 0x3fffffff;
 
         /// <summary>
-        /// Environment.TickCount is an int but it counts all 32 bits so it goes positive
-        /// and negative every 24.9 days. Subtracts the passed value (previously fetched by
-        /// 'EnvironmentTickCount()') and accounts for any wrapping.
+        ///   Environment.TickCount is an int but it counts all 32 bits so it goes positive
+        ///   and negative every 24.9 days. Subtracts the passed value (previously fetched by
+        ///   'EnvironmentTickCount()') and accounts for any wrapping.
         /// </summary>
         /// <returns>subtraction of passed prevValue from current Environment.TickCount</returns>
-        public static Int32 EnvironmentTickCountSubtract (Int32 prevValue)
+        public static Int32 EnvironmentTickCountSubtract(Int32 prevValue)
         {
-            Int32 diff = EnvironmentTickCount () - prevValue;
+            Int32 diff = EnvironmentTickCount() - prevValue;
             return (diff >= 0) ? diff : (diff + EnvironmentTickCountMask + 1);
         }
 
         /// <summary>
-        /// Environment.TickCount is an int but it counts all 32 bits so it goes positive
-        /// and negative every 24.9 days. Adds the passed value (previously fetched by
-        /// 'EnvironmentTickCount()') and accounts for any wrapping.
+        ///   Environment.TickCount is an int but it counts all 32 bits so it goes positive
+        ///   and negative every 24.9 days. Adds the passed value (previously fetched by
+        ///   'EnvironmentTickCount()') and accounts for any wrapping.
         /// </summary>
         /// <returns>addition of passed prevValue from current Environment.TickCount</returns>
-        public static Int32 EnvironmentTickCountAdd (Int32 ms)
+        public static Int32 EnvironmentTickCountAdd(Int32 ms)
         {
-            Int32 add = EnvironmentTickCount () + ms;
+            Int32 add = EnvironmentTickCount() + ms;
             return (add >= EnvironmentTickCountMask) ? add - EnvironmentTickCountMask : add;
         }
 
         /// <summary>
-        /// Prints the call stack at any given point. Useful for debugging.
+        ///   Prints the call stack at any given point. Useful for debugging.
         /// </summary>
         public static void PrintCallStack()
         {
-            StackTrace stackTrace = new StackTrace();           // get call stack
-            StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
+            StackTrace stackTrace = new StackTrace(); // get call stack
+            StackFrame[] stackFrames = stackTrace.GetFrames(); // get method calls (frames)
 
             // write call stack method names
             foreach (StackFrame stackFrame in stackFrames)
             {
-                m_log.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name); // write method name
+                m_log.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name);
+                    // write method name
             }
         }
 
@@ -1564,11 +1576,11 @@ namespace OpenSim.Framework
                 else if (map[key].Type == OSDType.String)
                     retVal.Add(key, map[key].AsString());
                 else if (map[key].Type == OSDType.URI)
-                    retVal.Add (key, map[key].AsUri ());
+                    retVal.Add(key, map[key].AsUri());
                 else if (map[key].Type == OSDType.UUID)
-                    retVal.Add (key, map[key].AsUUID ());
+                    retVal.Add(key, map[key].AsUUID());
                 else
-                    retVal.Add(key, (object)map[key].AsString());
+                    retVal.Add(key, map[key].AsString());
             }
             return retVal;
         }
@@ -1577,13 +1589,13 @@ namespace OpenSim.Framework
         {
             uint xx, yy;
             Utils.LongToUInts(regionHandle, out xx, out yy);
-            x = (int)xx;
-            y = (int)yy;
+            x = (int) xx;
+            y = (int) yy;
         }
 
         public static ulong IntsToUlong(int x, int y)
         {
-            return Utils.UIntsToLong((uint)x, (uint)y);
+            return Utils.UIntsToLong((uint) x, (uint) y);
         }
 
         public static string CombineParams(string[] commandParams, int pos)
@@ -1611,18 +1623,18 @@ namespace OpenSim.Framework
         public static string BasePathCombine(string p)
         {
             if (p == "")
-                return System.Windows.Forms.Application.StartupPath;
-            return Path.Combine(System.Windows.Forms.Application.StartupPath, p);
+                return Application.StartupPath;
+            return Path.Combine(Application.StartupPath, p);
         }
 
-        public static void GetReaderLock (ReaderWriterLockSlim l)
+        public static void GetReaderLock(ReaderWriterLockSlim l)
         {
             int i = 0;
             while (i < 10) //Only try 10 times... 10s is way too much
             {
                 try
                 {
-                    l.TryEnterReadLock (100);
+                    l.TryEnterReadLock(100);
                     //Got it
                     return;
                 }
@@ -1631,22 +1643,22 @@ namespace OpenSim.Framework
                     // The reader lock request timed out. Try again
                 }
             }
-            throw new ApplicationException ("Could not retrieve read lock");
+            throw new ApplicationException("Could not retrieve read lock");
         }
 
-        public static void ReleaseReaderLock (ReaderWriterLockSlim l)
+        public static void ReleaseReaderLock(ReaderWriterLockSlim l)
         {
-            l.ExitReadLock ();
+            l.ExitReadLock();
         }
 
-        public static void GetWriterLock (ReaderWriterLockSlim l)
+        public static void GetWriterLock(ReaderWriterLockSlim l)
         {
             int i = 0;
             while (i < 10) //Only try 10 times... 10s is way too much
             {
                 try
                 {
-                    l.TryEnterWriteLock (100);
+                    l.TryEnterWriteLock(100);
                     //Got it
                     return;
                 }
@@ -1655,18 +1667,18 @@ namespace OpenSim.Framework
                     // The reader lock request timed out. Try again
                 }
             }
-            throw new ApplicationException ("Could not retrieve write lock");
+            throw new ApplicationException("Could not retrieve write lock");
         }
 
-        public static void ReleaseWriterLock (ReaderWriterLockSlim l)
+        public static void ReleaseWriterLock(ReaderWriterLockSlim l)
         {
-            l.ExitWriteLock ();
+            l.ExitWriteLock();
         }
 
-        public static sbyte CheckMeshType (sbyte p)
+        public static sbyte CheckMeshType(sbyte p)
         {
-            if(p == (sbyte)AssetType.Mesh)
-                return (sbyte)AssetType.Texture;
+            if (p == (sbyte) AssetType.Mesh)
+                return (sbyte) AssetType.Texture;
             return p;
         }
     }
@@ -1689,8 +1701,10 @@ namespace OpenSim.Framework
     public class NetworkUtils
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static bool m_noInternetConnection = false;
-        private static int m_nextInternetConnectionCheck = 0;
+        private static bool m_noInternetConnection;
+        private static int m_nextInternetConnectionCheck;
+        private static bool useLocalhostLoopback;
+        private static readonly ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress>();
 
         public static IPEndPoint ResolveEndPoint(string hostName, int port)
         {
@@ -1714,7 +1728,9 @@ namespace OpenSim.Framework
                     return endpoint;
                 }
             }
-            catch { }
+            catch
+            {
+            }
             // Reset for next check
             ia = null;
             try
@@ -1752,11 +1768,11 @@ namespace OpenSim.Framework
             if (m_noInternetConnection)
             {
                 if (Util.EnvironmentTickCount() > m_nextInternetConnectionCheck)
-                    return true;//Try again
+                    return true; //Try again
 
                 return false;
             }
-            return true;//No issues
+            return true; //No issues
         }
 
         public static void InternetSuccess()
@@ -1766,21 +1782,21 @@ namespace OpenSim.Framework
 
         public static void InternetFailure()
         {
-            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5 * 60 * 1000);/*5 mins*/
+            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5*60*1000); /*5 mins*/
             m_noInternetConnection = true;
         }
 
         /// <summary>
-        /// Gets the client IP address
+        ///   Gets the client IP address
         /// </summary>
-        /// <param name="xff"></param>
+        /// <param name = "xff"></param>
         /// <returns></returns>
         public static IPEndPoint GetClientIPFromXFF(string xff)
         {
             if (xff == string.Empty)
                 return null;
 
-            string[] parts = xff.Split(new char[] { ',' });
+            string[] parts = xff.Split(new[] {','});
             if (parts.Length > 0)
             {
                 try
@@ -1802,7 +1818,7 @@ namespace OpenSim.Framework
             {
                 try
                 {
-                    Hashtable headers = (Hashtable)req["headers"];
+                    Hashtable headers = (Hashtable) req["headers"];
                     if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
                         return headers["remote_addr"].ToString();
                 }
@@ -1814,43 +1830,42 @@ namespace OpenSim.Framework
             return string.Empty;
         }
 
-        private static bool useLocalhostLoopback = false;
         /// <summary>
-        /// Attempts to resolve the loopback issue, but only works if this is run on the same network as the iPAddress
+        ///   Attempts to resolve the loopback issue, but only works if this is run on the same network as the iPAddress
         /// </summary>
-        /// <param name="iPAddress"></param>
-        /// <param name="clientIP"></param>
+        /// <param name = "iPAddress"></param>
+        /// <param name = "clientIP"></param>
         /// <returns></returns>
-        public static System.Net.IPAddress ResolveAddressForClient(System.Net.IPAddress iPAddress, System.Net.IPEndPoint clientIP)
+        public static IPAddress ResolveAddressForClient(IPAddress iPAddress, IPEndPoint clientIP)
         {
             if (iPAddress.Equals(clientIP.Address))
             {
                 if (useLocalhostLoopback)
                     return IPAddress.Loopback;
                 if (iPAddress == IPAddress.Loopback)
-                    return iPAddress;//Don't send something else if it is already on loopback
+                    return iPAddress; //Don't send something else if it is already on loopback
                 if (CheckInternetConnection())
                 {
 #pragma warning disable 618
                     //The 'bad' way, only works for things on the same machine...
                     try
                     {
-                        string hostName = System.Net.Dns.GetHostName();
-                        IPHostEntry ipEntry = System.Net.Dns.GetHostByName(hostName);
+                        string hostName = Dns.GetHostName();
+                        IPHostEntry ipEntry = Dns.GetHostByName(hostName);
 #pragma warning restore 618
                         IPAddress[] addr = ipEntry.AddressList;
-                        return addr[0];//Loopback around! They are on the same connection
+                        return addr[0]; //Loopback around! They are on the same connection
                     }
                     catch
                     {
-                        InternetFailure();//Something went wrong
+                        InternetFailure(); //Something went wrong
                     }
                 }
             }
             return iPAddress;
         }
 
-        public static System.Net.IPEndPoint ResolveAddressForClient(System.Net.IPEndPoint iPAddress, System.Net.IPEndPoint clientIP)
+        public static IPEndPoint ResolveAddressForClient(IPEndPoint iPAddress, IPEndPoint clientIP)
         {
             iPAddress.Address = ResolveAddressForClient(iPAddress.Address, clientIP);
             return iPAddress;
@@ -1868,35 +1883,38 @@ namespace OpenSim.Framework
             string port1 = "";
             try
             {
-                ipaddr1 = NetworkUtils.GetHostFromURL(uri);
+                ipaddr1 = GetHostFromURL(uri);
             }
-            catch { }
+            catch
+            {
+            }
 
             try
             {
-                port1 = uri.Split(new char[] { ':' })[2];
+                port1 = uri.Split(new[] {':'})[2];
             }
-            catch { }
+            catch
+            {
+            }
 
             // We tried our best to convert the domain names to IP addresses
-            return (ipaddr1 != null) ? "http://" + ipaddr1.ToString() + ":" + port1 : uri;
+            return (ipaddr1 != null) ? "http://" + ipaddr1 + ":" + port1 : uri;
         }
 
         /// <summary>
-        /// Converts a URL to a IPAddress
+        ///   Converts a URL to a IPAddress
         /// </summary>
-        /// <param name="url">URL Standard Format</param>
+        /// <param name = "url">URL Standard Format</param>
         /// <returns>A resolved IP Address</returns>
         public static IPAddress GetHostFromURL(string url)
         {
-            return GetHostFromDNS(url.Split(new char[] { '/', ':' })[3]);
+            return GetHostFromDNS(url.Split(new[] {'/', ':'})[3]);
         }
 
-        private static ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress>();
         /// <summary>
-        /// Returns a IP address from a specified DNS, favouring IPv4 addresses.
+        ///   Returns a IP address from a specified DNS, favouring IPv4 addresses.
         /// </summary>
-        /// <param name="dnsAddress">DNS Hostname</param>
+        /// <param name = "dnsAddress">DNS Hostname</param>
         /// <returns>An IP address, or null</returns>
         public static IPAddress GetHostFromDNS(string dnsAddress)
         {
@@ -1911,18 +1929,20 @@ namespace OpenSim.Framework
             // Is it already a valid IP? No need to look it up.
             if (IPAddress.TryParse(dnsAddress, out ipa))
             {
-                m_dnsCache.Add(dnsAddress, ipa, 30 * 60/*30mins*/);
+                m_dnsCache.Add(dnsAddress, ipa, 30*60 /*30mins*/);
                 return ipa;
             }
             try
             {
                 if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
                 {
-                    m_dnsCache.Add(dnsAddress, ipa, 30 * 60/*30mins*/);
+                    m_dnsCache.Add(dnsAddress, ipa, 30*60 /*30mins*/);
                     return ipa;
                 }
             }
-            catch { }
+            catch
+            {
+            }
             IPAddress[] hosts = null;
 
             // Not an IP, lookup required
@@ -1946,19 +1966,19 @@ namespace OpenSim.Framework
                 throw e;
             }
 
-            foreach (IPAddress host in hosts)
+            if (hosts != null)
             {
-                if (host.AddressFamily == AddressFamily.InterNetwork)
+                foreach (IPAddress host in hosts.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    m_dnsCache.Add(dnsAddress, host, 30 * 60/*30mins*/);
+                    m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
                     return host;
                 }
-            }
 
-            if (hosts.Length > 0)
-            {
-                m_dnsCache.Add(dnsAddress, hosts[0], 30 * 60/*30mins*/);
-                return hosts[0];
+                if (hosts.Length > 0)
+                {
+                    m_dnsCache.Add(dnsAddress, hosts[0], 30*60 /*30mins*/);
+                    return hosts[0];
+                }
             }
 
             return null;
@@ -1970,7 +1990,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Gets a list of all local system IP addresses
+        ///   Gets a list of all local system IP addresses
         /// </summary>
         /// <returns></returns>
         public static IPAddress[] GetLocalHosts()
@@ -2001,20 +2021,16 @@ namespace OpenSim.Framework
                 }
             }
 
-            foreach (IPAddress host in iplist)
+            foreach (IPAddress host in iplist.Where(host => !IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork))
             {
-                if (!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return host;
-                }
+                return host;
             }
 
             if (iplist.Length > 0)
             {
-                foreach (IPAddress host in iplist)
+                foreach (IPAddress host in iplist.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    if (host.AddressFamily == AddressFamily.InterNetwork)
-                        return host;
+                    return host;
                 }
                 // Well all else failed...
                 return iplist[0];
@@ -2023,12 +2039,13 @@ namespace OpenSim.Framework
             return null;
         }
 
+        #region Nested type: IPAddressRange
 
         public class IPAddressRange
         {
-            private byte[] lowerBytes;
-            private byte[] upperBytes;
-            private AddressFamily addressFamily;
+            private readonly AddressFamily addressFamily;
+            private readonly byte[] lowerBytes;
+            private readonly byte[] upperBytes;
 
             public IPAddressRange(IPAddress lower, IPAddress upper)
             {
@@ -2050,8 +2067,10 @@ namespace OpenSim.Framework
 
                 bool lowerBoundary = true, upperBoundary = true;
 
-                for (int i = 0; i < this.lowerBytes.Length &&
-                    (lowerBoundary || upperBoundary); i++)
+                for (int i = 0;
+                     i < this.lowerBytes.Length &&
+                     (lowerBoundary || upperBoundary);
+                     i++)
                 {
                     if ((lowerBoundary && addressBytes[i] < lowerBytes[i]) ||
                         (upperBoundary && addressBytes[i] > upperBytes[i]))
@@ -2066,5 +2085,7 @@ namespace OpenSim.Framework
                 return true;
             }
         }
+
+        #endregion
     }
 }

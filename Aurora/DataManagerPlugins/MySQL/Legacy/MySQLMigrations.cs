@@ -26,30 +26,24 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
-using System.IO;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using log4net;
-using MySql.Data.MySqlClient;
 using Aurora.DataManager;
+using MySql.Data.MySqlClient;
 
 namespace OpenSim.Data.MySQL
 {
-    /// <summary>This is a MySQL-customized migration processor.  The only difference is in how
-    /// it executes SQL scripts (using MySqlScript instead of MyCommand)
-    /// 
+    /// <summary>
+    ///   This is a MySQL-customized migration processor.  The only difference is in how
+    ///   it executes SQL scripts (using MySqlScript instead of MyCommand)
     /// </summary>
     public class MySqlMigration : LegacyMigration
     {
         public MySqlMigration()
-            : base()
-        { 
+        {
         }
 
-        public MySqlMigration(DbConnection conn, Assembly assem, string subtype, string type) : 
+        public MySqlMigration(DbConnection conn, Assembly assem, string subtype, string type) :
             base(conn, assem, subtype, type)
         {
         }
@@ -67,15 +61,13 @@ namespace OpenSim.Data.MySQL
                 return;
             }
 
-            MySqlScript scr = new MySqlScript((MySqlConnection)conn);
+            MySqlScript scr = new MySqlScript((MySqlConnection) conn);
             {
                 foreach (string sql in script)
                 {
                     scr.Query = sql;
-                    scr.Error += delegate(object sender, MySqlScriptErrorEventArgs args)
-                    {
-                        throw new Exception(sql);
-                    };
+                    string sql1 = sql;
+                    scr.Error += delegate { throw new Exception(sql1); };
                     scr.Execute();
                 }
             }

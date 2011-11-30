@@ -25,23 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Nini.Config;
-using log4net;
 using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Xml;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenMetaverse;
-
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.Handlers.AbuseReports
 {
@@ -49,7 +43,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IAbuseReports m_AbuseReportsService;
+        private readonly IAbuseReports m_AbuseReportsService;
 
         public AbuseReportsHandler(IAbuseReports service) :
             base("POST", "/abusereport")
@@ -58,7 +52,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
         }
 
         public override byte[] Handle(string path, Stream requestData,
-                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             StreamReader sr = new StreamReader(requestData);
             string body = sr.ReadToEnd();
@@ -70,7 +64,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
             try
             {
                 Dictionary<string, object> request =
-                        WebUtils.ParseQueryString(body);
+                    WebUtils.ParseQueryString(body);
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
@@ -96,12 +90,11 @@ namespace OpenSim.Services.Handlers.AbuseReports
             }
 
             return FailureResult();
-
         }
 
         #region Method-specific handlers
 
-        byte[] AddAbuseReport(Dictionary<string, object> request)
+        private byte[] AddAbuseReport(Dictionary<string, object> request)
         {
             AbuseReport ar = new AbuseReport(request);
             m_AbuseReportsService.AddAbuseReport(ar);
@@ -110,7 +103,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
             return SuccessResult();
         }
 
-        byte[] UpdateAbuseReport(Dictionary<string, object> request)
+        private byte[] UpdateAbuseReport(Dictionary<string, object> request)
         {
             AbuseReport ar = new AbuseReport(request);
             m_AbuseReportsService.UpdateAbuseReport(ar, request["Password"].ToString());
@@ -119,28 +112,28 @@ namespace OpenSim.Services.Handlers.AbuseReports
             return SuccessResult();
         }
 
-        byte[] GetAbuseReport(Dictionary<string, object> request)
+        private byte[] GetAbuseReport(Dictionary<string, object> request)
         {
             string xmlString = WebUtils.BuildXmlResponse(
-                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()), request["Password"].ToString()).ToKeyValuePairs());
+                m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()),
+                                                     request["Password"].ToString()).ToKeyValuePairs());
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
 
-        byte[] GetAbuseReports(Dictionary<string, object> request)
+        private byte[] GetAbuseReports(Dictionary<string, object> request)
         {
-            List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()), int.Parse(request["count"].ToString()), request["filter"].ToString());
-            Dictionary<string, object> returnvalue = new Dictionary<string,object>();
-            foreach (AbuseReport ar in ars)
-                returnvalue.Add(ar.Number.ToString(), ar);
+            List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()),
+                                                                          int.Parse(request["count"].ToString()),
+                                                                          request["filter"].ToString());
+            Dictionary<string, object> returnvalue = ars.ToDictionary<AbuseReport, string, object>(ar => ar.Number.ToString(), ar => ar);
 
             string xmlString = WebUtils.BuildXmlResponse(returnvalue);
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
-
 
         #endregion
 
@@ -151,12 +144,12 @@ namespace OpenSim.Services.Handlers.AbuseReports
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -178,12 +171,12 @@ namespace OpenSim.Services.Handlers.AbuseReports
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                                             "", "");
 
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+                                                       "");
 
             doc.AppendChild(rootElement);
 
@@ -203,8 +196,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null);
-            xw.Formatting = Formatting.Indented;
+            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
             doc.WriteTo(xw);
             xw.Flush();
 

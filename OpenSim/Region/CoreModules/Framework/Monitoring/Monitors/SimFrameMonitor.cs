@@ -26,7 +26,6 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -35,11 +34,19 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         #region Declares
 
         // saved last reported value so there is something available for llGetRegionFPS 
-        private volatile float lastReportedSimFPS = 0;
+        private volatile float lastReportedSimFPS;
         private volatile float simFPS;
 
-        public float LastReportedSimFPS { get { return lastReportedSimFPS; } set { lastReportedSimFPS = value; } }
-        public float SimFPS { get { return simFPS; } }
+        public float LastReportedSimFPS
+        {
+            get { return lastReportedSimFPS; }
+            set { lastReportedSimFPS = value; }
+        }
+
+        public float SimFPS
+        {
+            get { return simFPS; }
+        }
 
         #endregion
 
@@ -72,15 +79,23 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         #region Other Methods
 
-        public void AddFPS(int fps)
-        {
-            simFPS += fps;
-        }
+        #region IMonitor Members
 
         public void ResetStats()
         {
             simFPS = 0;
         }
+
+        #endregion
+
+        #region ISimFrameMonitor Members
+
+        public void AddFPS(int fps)
+        {
+            simFPS += fps;
+        }
+
+        #endregion
 
         #endregion
     }

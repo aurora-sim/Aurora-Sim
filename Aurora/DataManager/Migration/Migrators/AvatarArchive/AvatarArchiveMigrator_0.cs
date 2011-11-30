@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -48,7 +48,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("IsPublic", ColumnTypes.Integer11)));
 
             AddSchema("passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
-                ColDef("Password", ColumnTypes.String50)));
+                                           ColDef("Password", ColumnTypes.String50)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

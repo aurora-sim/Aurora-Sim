@@ -26,22 +26,13 @@
  */
 
 using System;
-using System.IO;
-using System.Web;
-using System.Collections;
-using System.Threading;
-using System.Collections.Generic;
-using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Capabilities;
+using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
@@ -50,14 +41,16 @@ namespace Aurora.Modules
         private string configToSend = "SLVoice";
         private bool m_enabled = true;
 
+        #region ISharedRegionModule Members
+
         public void Initialise(IConfigSource config)
         {
             IConfig voiceconfig = config.Configs["Voice"];
             if (voiceconfig == null)
                 return;
             m_enabled = false;
-            string voiceModule = "GenericVoice";
-            if (voiceconfig.GetString ("Module", voiceModule) != voiceModule)
+            const string voiceModule = "GenericVoice";
+            if (voiceconfig.GetString("Module", voiceModule) != voiceModule)
                 return;
             m_enabled = true;
             IConfig m_config = config.Configs["GenericVoice"];
@@ -68,25 +61,23 @@ namespace Aurora.Modules
             configToSend = m_config.GetString("ModuleToSend", configToSend);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (m_enabled)
             {
-                scene.EventManager.OnRegisterCaps += delegate(UUID agentID, IHttpServer server)
-                {
-                    return OnRegisterCaps(scene, agentID, server);
-                };
+                scene.EventManager.OnRegisterCaps +=
+                    (agentID, server) => OnRegisterCaps(scene, agentID, server);
             }
         }
 
         // Called to indicate that all loadable modules have now been added
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             // Do nothing.
         }
 
         // Called to indicate that the region is going away.
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
@@ -110,6 +101,8 @@ namespace Aurora.Modules
             get { return "GenericVoiceModule"; }
         }
 
+        #endregion
+
         // OnRegisterCaps is invoked via the scene.EventManager
         // everytime OpenSim hands out capabilities to a client
         // (login, region crossing). We contribute two capabilities to
@@ -126,31 +119,27 @@ namespace Aurora.Modules
         // Note that OnRegisterCaps is called here via a closure
         // delegate containing the scene of the respective region (see
         // Initialise()).
-        public OSDMap OnRegisterCaps (IScene scene, UUID agentID, IHttpServer caps)
+        public OSDMap OnRegisterCaps(IScene scene, UUID agentID, IHttpServer caps)
         {
             OSDMap retVal = new OSDMap();
             retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
             caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ProvisionVoiceAccountRequest(scene, request, path, param,
-                                                                                               agentID);
-                                                       }));
+                                                        (request, path, param, httpRequest, httpResponse) =>
+                                                        ProvisionVoiceAccountRequest(scene, request, path,
+                                                                                     param,
+                                                                                     agentID)));
             retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
             caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                                                       {
-                                                           return ParcelVoiceInfoRequest(scene, request, path, param,
-                                                                                         agentID);
-                                                       }));
+                                                        (request, path, param, httpRequest, httpResponse) =>
+                                                        ParcelVoiceInfoRequest(scene, request, path,
+                                                                               param,
+                                                                               agentID)));
 
             return retVal;
         }
 
         /// Callback for a client request for Voice Account Details.
-        public string ProvisionVoiceAccountRequest (IScene scene, string request, string path, string param,
+        public string ProvisionVoiceAccountRequest(IScene scene, string request, string path, string param,
                                                    UUID agentID)
         {
             try
@@ -170,14 +159,14 @@ namespace Aurora.Modules
         }
 
         /// Callback for a client request for ParcelVoiceInfo
-        public string ParcelVoiceInfoRequest (IScene scene, string request, string path, string param,
+        public string ParcelVoiceInfoRequest(IScene scene, string request, string path, string param,
                                              UUID agentID)
         {
             OSDMap response = new OSDMap();
             response["region_name"] = scene.RegionInfo.RegionName;
             response["parcel_local_id"] = 0;
             response["voice_credentials"] = new OSDMap();
-            ((OSDMap)response["voice_credentials"])["channel_uri"] = "";
+            ((OSDMap) response["voice_credentials"])["channel_uri"] = "";
             return OSDParser.SerializeLLSDXmlString(response);
         }
     }

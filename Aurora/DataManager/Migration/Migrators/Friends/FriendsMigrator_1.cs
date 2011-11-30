@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -42,13 +42,13 @@ namespace Aurora.DataManager.Migration.Migrators
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
             //Remove the old name
-            this.RemoveSchema ("friends");
+            this.RemoveSchema("friends");
             //Add the new lowercase one
-            AddSchema ("friends", ColDefs(
-                ColDef ("PrincipalID", ColumnTypes.Char36, true),
-                ColDef ("Friend", ColumnTypes.Char36, true),
-                ColDef ("Flags", ColumnTypes.String16),
-                ColDef ("Offered", ColumnTypes.Char32)));
+            AddSchema("friends", ColDefs(
+                ColDef("PrincipalID", ColumnTypes.Char36, true),
+                ColDef("Friend", ColumnTypes.Char36, true),
+                ColDef("Flags", ColumnTypes.String16),
+                ColDef("Offered", ColumnTypes.Char32)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

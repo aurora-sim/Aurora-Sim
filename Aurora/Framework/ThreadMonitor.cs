@@ -26,10 +26,7 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using OpenSim.Framework;
 
@@ -37,57 +34,60 @@ namespace Aurora.Framework
 {
     public class ThreadMonitor
     {
-        protected internal class InternalHeartbeat
-        {
-            public Heartbeat heartBeat;
-            public int millisecondTimeOut;
-        }
+        #region Delegates
+
         public delegate bool Heartbeat();
-        protected internal delegate void FireEvent(Heartbeat thread);
-        protected Object m_lock = new Object();
+
+        #endregion
+
         protected List<InternalHeartbeat> m_heartbeats = new List<InternalHeartbeat>();
-        protected int m_timesToIterate = 0;
-        private int m_sleepTime = 0;
+        protected Object m_lock = new Object();
+        private int m_sleepTime;
+        protected int m_timesToIterate;
 
         /// <summary>
-        /// Add this delegate to the tracker so that it can run.
+        ///   Add this delegate to the tracker so that it can run.
         /// </summary>
-        /// <param name="millisecondTimeOut">The time that the thread can run before it is forcefully stopped.</param>
-        /// <param name="hb">The delegate to run.</param>
+        /// <param name = "millisecondTimeOut">The time that the thread can run before it is forcefully stopped.</param>
+        /// <param name = "hb">The delegate to run.</param>
         public void StartTrackingThread(int millisecondTimeOut, Heartbeat hb)
         {
             lock (m_lock)
             {
-                m_heartbeats.Add(new InternalHeartbeat() { heartBeat = hb, millisecondTimeOut = millisecondTimeOut });
+                m_heartbeats.Add(new InternalHeartbeat {heartBeat = hb, millisecondTimeOut = millisecondTimeOut});
             }
         }
 
         /// <summary>
-        /// Start the thread and run through the threads that are given.
+        ///   Start the thread and run through the threads that are given.
         /// </summary>
-        /// <param name="timesToIterate">The number of times to run the delegate.
-        /// <remarks>If you set this parameter to 0, it will loop infinitely.</remarks></param>
-        /// <param name="sleepTime">The sleep time between each iteration.
-        /// <remarks>If you set this parameter to 0, it will loop without sleeping at all.
-        /// The sleeping will have to be deal with in the delegates.</remarks></param>
+        /// <param name = "timesToIterate">The number of times to run the delegate.
+        ///   <remarks>
+        ///     If you set this parameter to 0, it will loop infinitely.
+        ///   </remarks>
+        /// </param>
+        /// <param name = "sleepTime">The sleep time between each iteration.
+        ///   <remarks>
+        ///     If you set this parameter to 0, it will loop without sleeping at all.
+        ///     The sleeping will have to be deal with in the delegates.
+        ///   </remarks>
+        /// </param>
         public void StartMonitor(int timesToIterate, int sleepTime)
         {
             m_timesToIterate = timesToIterate;
             m_sleepTime = sleepTime;
 
-            Thread thread = new Thread(Run);
-            thread.IsBackground = true;
-            thread.Name = "ThreadMonitor";
-            thread.Priority = ThreadPriority.Normal;
+            Thread thread = new Thread(Run)
+                                {IsBackground = true, Name = "ThreadMonitor", Priority = ThreadPriority.Normal};
             thread.Start();
         }
 
         /// <summary>
-        /// Run the loop through the heartbeats.
+        ///   Run the loop through the heartbeats.
         /// </summary>
         protected internal void Run()
         {
-            Culture.SetCurrentCulture ();
+            Culture.SetCurrentCulture();
             try
             {
                 List<InternalHeartbeat> hbToRemove = null;
@@ -98,15 +98,15 @@ namespace Aurora.Framework
                         foreach (InternalHeartbeat intHB in m_heartbeats)
                         {
                             bool isRunning = false;
-                            if (!CallAndWait (intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
+                            if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
                             {
-                                Console.WriteLine ("WARNING: Could not run Heartbeat in specified limits!");
+                                Console.WriteLine("WARNING: Could not run Heartbeat in specified limits!");
                             }
-                            else if(!isRunning)
+                            else if (!isRunning)
                             {
-                                if(hbToRemove == null)
-                                    hbToRemove = new List<InternalHeartbeat> ();
-                                hbToRemove.Add (intHB);
+                                if (hbToRemove == null)
+                                    hbToRemove = new List<InternalHeartbeat>();
+                                hbToRemove.Add(intHB);
                             }
                         }
 
@@ -114,7 +114,7 @@ namespace Aurora.Framework
                         {
                             foreach (InternalHeartbeat intHB in hbToRemove)
                             {
-                                m_heartbeats.Remove (intHB);
+                                m_heartbeats.Remove(intHB);
                             }
                             //Renull it for later
                             hbToRemove = null;
@@ -133,7 +133,7 @@ namespace Aurora.Framework
                     if (m_timesToIterate == -1) //Kill signal
                         break;
                     if (m_sleepTime != 0)
-                        Thread.Sleep (m_sleepTime);
+                        Thread.Sleep(m_sleepTime);
                 }
             }
             catch
@@ -143,10 +143,10 @@ namespace Aurora.Framework
         }
 
         /// <summary>
-        /// Call the method and wait for it to complete or the max time.
+        ///   Call the method and wait for it to complete or the max time.
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <param name="enumerator"></param>
+        /// <param name = "timeout"></param>
+        /// <param name = "enumerator"></param>
         /// <returns></returns>
         public static bool CallAndWait(int timeout, Heartbeat enumerator, out bool isRunning)
         {
@@ -154,20 +154,20 @@ namespace Aurora.Framework
             bool RetVal = false;
             if (timeout == 0)
             {
-                isRunning = enumerator ();
+                isRunning = enumerator();
                 RetVal = true;
             }
             else
             {
                 //The action to fire
                 FireEvent wrappedAction = delegate(Heartbeat en)
-                {
-                    // Set this culture for the thread 
-                    // to en-US to avoid number parsing issues
-                    OpenSim.Framework.Culture.SetCurrentCulture();
-                    en();
-                    RetVal = true;
-                };
+                                              {
+                                                  // Set this culture for the thread 
+                                                  // to en-US to avoid number parsing issues
+                                                  Culture.SetCurrentCulture();
+                                                  en();
+                                                  RetVal = true;
+                                              };
 
                 //Async the action (yeah, this is bad, but otherwise we can't abort afaik)
                 IAsyncResult result = wrappedAction.BeginInvoke(enumerator, null, null);
@@ -197,5 +197,21 @@ namespace Aurora.Framework
                 m_timesToIterate = -1;
             }
         }
+
+        #region Nested type: FireEvent
+
+        protected internal delegate void FireEvent(Heartbeat thread);
+
+        #endregion
+
+        #region Nested type: InternalHeartbeat
+
+        protected internal class InternalHeartbeat
+        {
+            public Heartbeat heartBeat;
+            public int millisecondTimeOut;
+        }
+
+        #endregion
     }
 }

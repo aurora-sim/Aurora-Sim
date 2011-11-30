@@ -27,8 +27,8 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
+using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
@@ -42,27 +42,27 @@ namespace Aurora.DataManager.Migration.Migrators
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
             AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
-                ColDef("ParcelID", ColumnTypes.String50, true),
-                ColDef("LocalID", ColumnTypes.String50),
-                ColDef("LandingX", ColumnTypes.String50),
-                ColDef("LandingY", ColumnTypes.String50),
-                ColDef("LandingZ", ColumnTypes.String50),
-                ColDef("Name", ColumnTypes.String50),
-                ColDef("Description", ColumnTypes.String50),
-                ColDef("Flags", ColumnTypes.String50),
-                ColDef("Dwell", ColumnTypes.String50),
-                ColDef("InfoUUID", ColumnTypes.String50),
-                ColDef("ForSale", ColumnTypes.String50),
-                ColDef("SalePrice", ColumnTypes.String50),
-                ColDef("Auction", ColumnTypes.String50),
-                ColDef("Area", ColumnTypes.String50),
-                ColDef("EstateID", ColumnTypes.String50),
-                ColDef("Maturity", ColumnTypes.String50),
-                ColDef("OwnerID", ColumnTypes.String50),
-                ColDef("GroupID", ColumnTypes.String50),
-                ColDef("ShowInSearch", ColumnTypes.String50),
-                ColDef("SnapshotID", ColumnTypes.String50),
-                ColDef("Bitmap", ColumnTypes.String1024)));
+                                              ColDef("ParcelID", ColumnTypes.String50, true),
+                                              ColDef("LocalID", ColumnTypes.String50),
+                                              ColDef("LandingX", ColumnTypes.String50),
+                                              ColDef("LandingY", ColumnTypes.String50),
+                                              ColDef("LandingZ", ColumnTypes.String50),
+                                              ColDef("Name", ColumnTypes.String50),
+                                              ColDef("Description", ColumnTypes.String50),
+                                              ColDef("Flags", ColumnTypes.String50),
+                                              ColDef("Dwell", ColumnTypes.String50),
+                                              ColDef("InfoUUID", ColumnTypes.String50),
+                                              ColDef("ForSale", ColumnTypes.String50),
+                                              ColDef("SalePrice", ColumnTypes.String50),
+                                              ColDef("Auction", ColumnTypes.String50),
+                                              ColDef("Area", ColumnTypes.String50),
+                                              ColDef("EstateID", ColumnTypes.String50),
+                                              ColDef("Maturity", ColumnTypes.String50),
+                                              ColDef("OwnerID", ColumnTypes.String50),
+                                              ColDef("GroupID", ColumnTypes.String50),
+                                              ColDef("ShowInSearch", ColumnTypes.String50),
+                                              ColDef("SnapshotID", ColumnTypes.String50),
+                                              ColDef("Bitmap", ColumnTypes.String1024)));
 
             AddSchema("events", ColDefs(
                 ColDef("EOwnerID", ColumnTypes.String50),
@@ -79,7 +79,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EFlags", ColumnTypes.String50),
                 ColDef("EMature", ColumnTypes.String50),
                 ColDef("EDuration", ColumnTypes.String50)
-                ));
+                                    ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

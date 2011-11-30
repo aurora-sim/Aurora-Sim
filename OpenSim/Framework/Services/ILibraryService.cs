@@ -25,10 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-
-using OpenSim.Framework;
 using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
@@ -40,5 +36,4 @@ namespace OpenSim.Services.Interfaces
         string LibraryOwnerName { get; }
         string LibraryName { get; }
     }
-
 }

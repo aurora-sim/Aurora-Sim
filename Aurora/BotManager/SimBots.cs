@@ -26,36 +26,28 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
 
 namespace Aurora.BotManager
 {
     /// <summary>
-    /// Created by Christy Lock
+    ///   Created by Christy Lock
     /// </summary>
-    class SimBots
+    internal class SimBots
     {
+        public static double target;
+
         /// <summary>
-        /// This is used to seacrh the current map for
-        /// Items that the bot needs. Like when he is hungry he will search for 9 on the map
-        /// Fun is 7 and Comfort is 8 etc.
-        /// This returns the x and y to BotMe and then he passes them on to Astar and builds a list of waypoints to
-        /// Reach the goal.
+        ///   This is used to seacrh the current map for
+        ///   Items that the bot needs. Like when he is hungry he will search for 9 on the map
+        ///   Fun is 7 and Comfort is 8 etc.
+        ///   This returns the x and y to BotMe and then he passes them on to Astar and builds a list of waypoints to
+        ///   Reach the goal.
         /// </summary>
         public static double distTarget
         {
-            get
-            {
-                return target;
-            }
-            set
-            {
-                target = value;
-            }
+            get { return target; }
+            set { target = value; }
         }
-        public static double target;
 
         public static int[] CheckMap(int[,] currentMap, int xsize, int ysize, int botx, int boty, int type)
         {
@@ -76,7 +68,7 @@ namespace Aurora.BotManager
                     {
                         double distx = botx - i;
                         double disty = boty - j;
-                        double goalDist = Math.Sqrt((distx * distx) + (disty * disty));
+                        double goalDist = Math.Sqrt((distx*distx) + (disty*disty));
                         if (goalDist < distTarget)
                         {
                             target = goalDist;

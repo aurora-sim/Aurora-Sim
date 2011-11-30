@@ -25,25 +25,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Threading;
-using System.Collections.Generic;
-using System.Text;
-using log4net;
 using log4net.Core;
 
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// This is a Fake console that's used when setting up the Scene in Unit Tests
-    /// Don't use this except for Unit Testing or you're in for a world of hurt when the 
-    /// sim gets to ReadLine
+    ///   This is a Fake console that's used when setting up the Scene in Unit Tests
+    ///   Don't use this except for Unit Testing or you're in for a world of hurt when the 
+    ///   sim gets to ReadLine
     /// </summary>
     public class MockConsole : CommandConsole
     {
         public override void Output(string text)
         {
         }
+
         public override void Output(string text, Level level)
         {
         }
@@ -53,9 +49,11 @@ namespace OpenSim.Framework
             //Thread.CurrentThread.Join(1000);
             return string.Empty;
         }
+
         public override void UnlockOutput()
         {
         }
+
         public override void LockOutput()
         {
         }

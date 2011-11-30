@@ -25,33 +25,30 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.CoreModules.Scripting.HttpRequest;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Region.CoreModules.Scripting.HttpRequest;
+using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
     public class HttpRequestPlugin : IScriptPlugin
     {
+        private readonly List<IHttpRequestModule> m_modules = new List<IHttpRequestModule>();
         public ScriptEngine m_ScriptEngine;
-        private List<IHttpRequestModule> m_modules = new List<IHttpRequestModule> ();
+
+        #region IScriptPlugin Members
 
         public void Initialize(ScriptEngine engine)
         {
             m_ScriptEngine = engine;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
-            m_modules.Add(scene.RequestModuleInterface<IHttpRequestModule> ());
+            m_modules.Add(scene.RequestModuleInterface<IHttpRequestModule>());
         }
 
         public bool Check()
@@ -61,10 +58,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 IServiceRequest httpInfo = null;
 
-                if(iHttpReq != null)
+                if (iHttpReq != null)
                 {
                     httpInfo = iHttpReq.GetNextCompletedRequest();
-                    if(!needToContinue)
+                    if (!needToContinue)
                         needToContinue = iHttpReq.GetRequestCount() > 0;
                 }
 
@@ -73,23 +70,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 while (httpInfo != null)
                 {
-                    HttpRequestClass info = (HttpRequestClass)httpInfo;
+                    HttpRequestClass info = (HttpRequestClass) httpInfo;
                     //m_log.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
 
                     // Deliver data to prim's remote_data handler
 
-                    iHttpReq.RemoveCompletedRequest (info);
+                    iHttpReq.RemoveCompletedRequest(info);
 
                     object[] resobj = new object[]
-                {
-                    new LSL_Types.LSLString(info.ReqID.ToString()),
-                    new LSL_Types.LSLInteger(info.Status),
-                    new LSL_Types.list(info.Metadata),
-                    new LSL_Types.LSLString(info.ResponseBody)
-                };
+                                          {
+                                              new LSL_Types.LSLString(info.ReqID.ToString()),
+                                              new LSL_Types.LSLInteger(info.Status),
+                                              new LSL_Types.list(info.Metadata),
+                                              new LSL_Types.LSLString(info.ResponseBody)
+                                          };
 
-                    m_ScriptEngine.AddToObjectQueue (info.PrimID, "http_response", new DetectParams[0], resobj);
-                    httpInfo = iHttpReq.GetNextCompletedRequest ();
+                    m_ScriptEngine.AddToObjectQueue(info.PrimID, "http_response", new DetectParams[0], resobj);
+                    httpInfo = iHttpReq.GetNextCompletedRequest();
                 }
             }
             return needToContinue;
@@ -100,16 +97,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             get { return "HttpRequest"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        public OSD GetSerializationData (UUID itemID, UUID primID)
+        public OSD GetSerializationData(UUID itemID, UUID primID)
         {
             return "";
         }
 
-        public void CreateFromData (UUID itemID, UUID objectID, OSD data)
+        public void CreateFromData(UUID itemID, UUID objectID, OSD data)
         {
         }
 
@@ -117,8 +110,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             foreach (IHttpRequestModule iHttpReq in m_modules)
             {
-                iHttpReq.StopHttpRequest (primID, itemID);
+                iHttpReq.StopHttpRequest(primID, itemID);
             }
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
         }
     }
 }

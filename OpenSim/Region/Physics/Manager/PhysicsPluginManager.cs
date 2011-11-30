@@ -27,40 +27,33 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using Nini.Config;
-using log4net;
 using Aurora.Framework;
+using Nini.Config;
 using OpenSim.Framework;
+using log4net;
 
 namespace OpenSim.Region.Physics.Manager
 {
     /// <summary>
-    /// Description of MyClass.
+    ///   Description of MyClass.
     /// </summary>
     public class PhysicsPluginManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Dictionary<string, IPhysicsPlugin> _PhysPlugins = new Dictionary<string, IPhysicsPlugin>();
-        private Dictionary<string, IMeshingPlugin> _MeshPlugins = new Dictionary<string, IMeshingPlugin>();
+        private readonly Dictionary<string, IMeshingPlugin> _MeshPlugins = new Dictionary<string, IMeshingPlugin>();
+        private readonly Dictionary<string, IPhysicsPlugin> _PhysPlugins = new Dictionary<string, IPhysicsPlugin>();
 
         /// <summary>
-        /// Constructor.
+        ///   Get a physics scene for the given physics engine and mesher.
         /// </summary>
-        public PhysicsPluginManager()
-        {
-        }
-
-        /// <summary>
-        /// Get a physics scene for the given physics engine and mesher.
-        /// </summary>
-        /// <param name="physEngineName"></param>
-        /// <param name="meshEngineName"></param>
-        /// <param name="config"></param>
+        /// <param name = "physEngineName"></param>
+        /// <param name = "meshEngineName"></param>
+        /// <param name = "config"></param>
         /// <returns></returns>
-        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config, RegionInfo region, IRegistryCore registry)
+        public PhysicsScene GetPhysicsScene(string physEngineName, string meshEngineName, IConfigSource config,
+                                            RegionInfo region, IRegistryCore registry)
         {
             if (String.IsNullOrEmpty(physEngineName))
             {
@@ -100,14 +93,14 @@ namespace OpenSim.Region.Physics.Manager
         }
 
         /// <summary>
-        /// Load all plugins in assemblies at the given path
+        ///   Load all plugins in assemblies at the given path
         /// </summary>
-        /// <param name="pluginsPath"></param>
+        /// <param name = "pluginsPath"></param>
         public void LoadPluginsFromAssemblies(string assembliesPath)
         {
-            List<IPhysicsPlugin> physicsPlugins = AuroraModuleLoader.LoadModules<IPhysicsPlugin> (assembliesPath);
-            List<IMeshingPlugin> meshingPlugins = AuroraModuleLoader.LoadModules<IMeshingPlugin> (assembliesPath);
-            meshingPlugins.AddRange(AuroraModuleLoader.LoadModules<IMeshingPlugin> (""));
+            List<IPhysicsPlugin> physicsPlugins = AuroraModuleLoader.LoadModules<IPhysicsPlugin>(assembliesPath);
+            List<IMeshingPlugin> meshingPlugins = AuroraModuleLoader.LoadModules<IMeshingPlugin>(assembliesPath);
+            meshingPlugins.AddRange(AuroraModuleLoader.LoadModules<IMeshingPlugin>(""));
 
             foreach (IPhysicsPlugin plug in physicsPlugins)
             {

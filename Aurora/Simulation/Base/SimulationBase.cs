@@ -26,24 +26,17 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Timers;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Repository;
-using log4net.Config;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using System.Security.Authentication;
@@ -135,6 +128,8 @@ namespace Aurora.Simulation.Base
         /// </summary>
         /// <param name="originalConfig"></param>
         /// <param name="configSource"></param>
+        /// <param name="cmdParams"></param>
+        /// <param name="configLoader"></param>
         public virtual void Initialize(IConfigSource originalConfig, IConfigSource configSource, string[] cmdParams, ConfigurationLoader configLoader)
         {
             m_commandLineParameters = cmdParams;
@@ -185,7 +180,7 @@ namespace Aurora.Simulation.Base
             {
                 string asyncCallMethodStr = SystemConfig.GetString("AsyncCallMethod", String.Empty);
                 FireAndForgetMethod asyncCallMethod;
-                if (!String.IsNullOrEmpty(asyncCallMethodStr) && Utils.EnumTryParse<FireAndForgetMethod>(asyncCallMethodStr, out asyncCallMethod))
+                if (!String.IsNullOrEmpty(asyncCallMethodStr) && Utils.EnumTryParse(asyncCallMethodStr, out asyncCallMethod))
                     Util.FireAndForgetMethod = asyncCallMethod;
 
                 stpMaxThreads = SystemConfig.GetInt("MaxPoolThreads", 15);
@@ -240,7 +235,7 @@ namespace Aurora.Simulation.Base
                     m_log.InfoFormat("[Console]: App {0}", ex.Source);
                     m_log.InfoFormat("[Console]: tgt {0}", ex.TargetSite);
                     Shutdown(true);
-                    throw ex;
+                    throw;
                 }
             }
         }
@@ -299,9 +294,9 @@ namespace Aurora.Simulation.Base
             IConfig startupConfig = m_config.Configs["Startup"];
             if (m_logFileAppender != null)
             {
-                if (m_logFileAppender is log4net.Appender.FileAppender)
+                if (m_logFileAppender is FileAppender)
                 {
-                    log4net.Appender.FileAppender appender = (log4net.Appender.FileAppender)m_logFileAppender;
+                    FileAppender appender = (FileAppender)m_logFileAppender;
                     string fileName = startupConfig.GetString("LogFile", String.Empty);
                     if (fileName != String.Empty)
                     {
@@ -311,7 +306,8 @@ namespace Aurora.Simulation.Base
                 }
             }
 
-            m_log.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
+            if (m_consoleAppender != null)
+                m_log.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
         }
 
         /// <summary>
@@ -349,12 +345,12 @@ namespace Aurora.Simulation.Base
                     server.SetSecureParams(certPath, certPass, sslProtocol);
                 server.Start();
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 //Remove the server from the list
                 m_Servers.Remove (port);
                 //Then pass the exception upwards
-                throw ex;
+                throw;
             }
 
             return (m_Servers[port] = server);
@@ -371,7 +367,7 @@ namespace Aurora.Simulation.Base
             string certPass = m_config.Configs["Network"].GetString("https_cert_pass", "");
             string sslProtocol = m_config.Configs["Network"].GetString("https_ssl_protocol", "Default");
 
-            SslProtocols protocols = SslProtocols.Default;
+            SslProtocols protocols;
             try
             {
                 protocols = (SslProtocols)Enum.Parse(typeof(SslProtocols), sslProtocol);
@@ -436,10 +432,8 @@ namespace Aurora.Simulation.Base
             // Start timer script (run a script every xx seconds)
             if (m_TimerScriptFileName != "disabled")
             {
-                Timer m_TimerScriptTimer = new Timer();
-                m_TimerScriptTimer.Enabled = true;
-                m_TimerScriptTimer.Interval = m_TimerScriptTime * 60 * 1000;
-                m_TimerScriptTimer.Elapsed += RunAutoTimerScript;
+                Timer newtimername = new Timer {Enabled = true, Interval = m_TimerScriptTime*60*1000};
+                newtimername.Elapsed += RunAutoTimerScript;
             }
         }
 
@@ -598,6 +592,7 @@ namespace Aurora.Simulation.Base
             string hostName =
                 m_config.Configs["Network"].GetString("HostName", "http://127.0.0.1");
             //Clean it up a bit
+            // these are doing nothing??
             hostName.Replace("http://", "");
             hostName.Replace("https://", "");
             if(hostName.EndsWith("/"))

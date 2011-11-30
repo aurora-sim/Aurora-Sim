@@ -26,31 +26,40 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using log4net;
 using Nini.Config;
-using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework;
-using OpenSim.Region.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.Attachments
 {
     public class BinaryLoggingModule : INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
-        protected bool m_collectStats;
-        protected IScene m_scene = null;
-        
-        public string Name { get { return "Binary Statistics Logging Module"; } }
-        public Type ReplaceableInterface { get { return null; } }
+        private static StatLogger m_statLog;
+        private static TimeSpan m_statLogPeriod = TimeSpan.FromSeconds(300);
+        private static string m_statsDir = String.Empty;
+        private static readonly Object m_statLockObject = new Object();
 
-        public void Initialise(IConfigSource source) 
+        protected bool m_collectStats;
+        protected IScene m_scene;
+
+        #region INonSharedRegionModule Members
+
+        public string Name
+        {
+            get { return "Binary Statistics Logging Module"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public void Initialise(IConfigSource source)
         {
             try
             {
@@ -83,16 +92,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
         }
 
-        public void RemoveRegion (IScene scene) 
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene) 
+        public void RegionLoaded(IScene scene)
         {
             if (m_collectStats)
             {
@@ -101,35 +110,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     reporter.OnSendStatsResult += LogSimStats;
             }
         }
-        
-        public void Close() 
+
+        public void Close()
         {
         }
 
-        public class StatLogger
-        {
-            public DateTime StartTime;
-            public string Path;
-            public System.IO.BinaryWriter Log;
-        }
-        
-        static StatLogger m_statLog = null;
-        static TimeSpan m_statLogPeriod = TimeSpan.FromSeconds(300);
-        static string m_statsDir = String.Empty;
-        static Object m_statLockObject = new Object();
-        
+        #endregion
+
         private void LogSimStats(SimStats stats)
         {
-            SimStatsPacket pack = new SimStatsPacket();
-            pack.Region = stats.RegionBlock;
-            pack.Stat = stats.StatsBlock;
-            pack.Header.Reliable = false;
+            SimStatsPacket pack = new SimStatsPacket
+                                      {Region = stats.RegionBlock, Stat = stats.StatsBlock, Header = {Reliable = false}};
 
             // note that we are inside the reporter lock when called
             DateTime now = DateTime.Now;
 
             // hide some time information into the packet
-            pack.Header.Sequence = (uint)now.Ticks;
+            pack.Header.Sequence = (uint) now.Ticks;
 
             lock (m_statLockObject) // m_statLog is shared so make sure there is only executer here
             {
@@ -142,10 +139,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         {
                             m_statLog.Log.Close();
                         }
-                        m_statLog = new StatLogger();
-                        m_statLog.StartTime = now;
-                        m_statLog.Path = (m_statsDir.Length > 0 ? m_statsDir + System.IO.Path.DirectorySeparatorChar.ToString() : "")
-                                + String.Format("stats-{0}.log", now.ToString("yyyyMMddHHmmss"));
+                        m_statLog = new StatLogger
+                                        {
+                                            StartTime = now,
+                                            Path = (m_statsDir.Length > 0
+                                                        ? m_statsDir + Path.DirectorySeparatorChar.ToString()
+                                                        : "")
+                                                   + String.Format("stats-{0}.log", now.ToString("yyyyMMddHHmmss"))
+                                        };
                         m_statLog.Log = new BinaryWriter(File.Open(m_statLog.Path, FileMode.Append, FileAccess.Write));
                     }
 
@@ -165,5 +166,16 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
             return;
         }
+
+        #region Nested type: StatLogger
+
+        public class StatLogger
+        {
+            public BinaryWriter Log;
+            public string Path;
+            public DateTime StartTime;
+        }
+
+        #endregion
     }
 }

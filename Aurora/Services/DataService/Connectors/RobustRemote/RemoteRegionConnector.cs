@@ -26,32 +26,32 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.Framework;
-using Aurora.DataManager;
-using OpenMetaverse;
-using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
-using System.IO;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Aurora.Simulation.Base;
 using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class RemoteRegionConnector : IRegionConnector
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
+
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IRegionConnector Members
+
+        public void Initialize(IGenericData unneeded, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "RemoteConnector")
             {
@@ -65,12 +65,6 @@ namespace Aurora.Services.DataService
             get { return "IRegionConnector"; }
         }
 
-        public void Dispose()
-        {
-        }
-
-        #region IGridConnector Members
-
         public void AddTelehub(Telehub telehub, ulong RegionHandle)
         {
             Dictionary<string, object> sendData = telehub.ToKeyValuePairs();
@@ -80,17 +74,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(), "GridServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(),
+                                                                                           "GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -103,23 +99,25 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionHandle.ToString(), "GridServerURI");
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionHandle.ToString(),
+                                                                                           "GridServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     SynchronousRestFormsRequester.MakeRequest("POST",
-                        m_ServerURI,
-                        reqString);
+                                                              m_ServerURI,
+                                                              reqString);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
             }
         }
 
         public Telehub FindTelehub(UUID regionID, ulong regionHandle)
         {
-            Dictionary<string, object> sendData = new Dictionary<string,object>();
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["METHOD"] = "findtelehub";
             sendData["REGIONID"] = regionID.ToString();
@@ -128,45 +126,46 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionHandle.ToString(), "GridServerURI");
-                foreach (string m_ServerURI in m_ServerURIs)
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionHandle.ToString(),
+                                                                                           "GridServerURI");
+                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                                                   m_ServerURI,
+                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
                 {
-                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                           m_ServerURI,
-                           reqString);
-                    if (reply != string.Empty)
+                    if (replyData != null)
                     {
-                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                        if (replyData != null)
+                        if (!replyData.ContainsKey("Result") ||
+                            replyData.ContainsKey("Result") && replyData["Result"].ToString() != "Failure")
                         {
-                            if (!replyData.ContainsKey("Result") || replyData.ContainsKey("Result") && replyData["Result"].ToString() != "Failure")
+                            if (replyData.Count != 0)
                             {
-                                if (replyData.Count != 0)
-                                {
-                                    Telehub t = new Telehub();
-                                    t.FromKVP(replyData);
-                                    if(t.RegionID != UUID.Zero)
-                                        return t;
-                                }
+                                Telehub t = new Telehub();
+                                t.FromKVP(replyData);
+                                if (t.RegionID != UUID.Zero)
+                                    return t;
                             }
                         }
-                        else
-                        {
-                            m_log.DebugFormat("[AuroraRemoteRegionConnector]: RemoveTelehub {0} received null response",
-                                regionID.ToString());
-                        }
+                    }
+                    else
+                    {
+                        m_log.DebugFormat("[AuroraRemoteRegionConnector]: RemoveTelehub {0} received null response",
+                                          regionID.ToString());
                     }
                 }
                 return null;
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e.ToString());
+                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
 
         #endregion
+
+        public void Dispose()
+        {
+        }
     }
 }

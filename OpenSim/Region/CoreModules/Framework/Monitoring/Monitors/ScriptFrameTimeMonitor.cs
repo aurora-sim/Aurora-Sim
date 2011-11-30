@@ -26,7 +26,6 @@
  */
 
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {
@@ -52,10 +51,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int)GetValue() + "ms";
+            return (int) GetValue() + "ms";
         }
 
         #endregion
+
+        #region ITimeMonitor Members
 
         public void AddTime(int time)
         {
@@ -66,5 +67,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         {
             MonitorScriptFrameTime = 0;
         }
+
+        #endregion
     }
 }

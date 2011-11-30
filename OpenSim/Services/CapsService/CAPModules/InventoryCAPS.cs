@@ -26,27 +26,18 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-using log4net;
-using Nini.Config;
-using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
+using Aurora.DataManager;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework.Capabilities;
-
-using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Services.DataService;
-using OpenMetaverse.StructuredData;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Services.CapsService
 {
@@ -54,10 +45,10 @@ namespace OpenSim.Services.CapsService
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string m_newInventory = "0002";
-        private IRegionClientCapsService m_service;
+        private IAssetService m_assetService;
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;
-        private IAssetService m_assetService;
+        private IRegionClientCapsService m_service;
 
         #region ICapsServiceConnector Members
 
@@ -68,63 +59,57 @@ namespace OpenSim.Services.CapsService
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
 
-            RestBytesMethod method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
-            };
+            RestBytesMethod method =
+                (request, path, param, httpRequest, httpResponse) =>
+                HandleWebFetchInventoryDescendents(request, m_service.AgentID);
             service.AddStreamHandler("WebFetchInventoryDescendents",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("WebFetchInventoryDescendents", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST",
+                                                                service.CreateCAPS("WebFetchInventoryDescendents", ""),
+                                                                method));
             service.AddStreamHandler("FetchInventoryDescendents",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventoryDescendents", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST",
+                                                                service.CreateCAPS("FetchInventoryDescendents", ""),
+                                                                method));
             service.AddStreamHandler("FetchInventoryDescendents2",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventoryDescendents2", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST",
+                                                                service.CreateCAPS("FetchInventoryDescendents2", ""),
+                                                                method));
 
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleFetchLibDescendents(request, m_service.AgentID);
-            };
+            method =
+                (request, path, param, httpRequest, httpResponse) =>
+                HandleFetchLibDescendents(request, m_service.AgentID);
             service.AddStreamHandler("FetchLibDescendents",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
+                                                                method));
             service.AddStreamHandler("FetchLibDescendents2",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
+                                                                method));
 
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleFetchInventory(request, m_service.AgentID);
-            };
+            method =
+                (request, path, param, httpRequest, httpResponse) => HandleFetchInventory(request, m_service.AgentID);
             service.AddStreamHandler("FetchInventory",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
+                                                                method));
             service.AddStreamHandler("FetchInventory2",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
+                                                                method));
 
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return HandleFetchLib(request, m_service.AgentID);
-            };
+            method = (request, path, param, httpRequest, httpResponse) => HandleFetchLib(request, m_service.AgentID);
             service.AddStreamHandler("FetchLib",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
+                                                                method));
             service.AddStreamHandler("FetchLib2",
-                new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib2", ""),
-                                                      method));
+                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib2", ""),
+                                                                method));
 
             service.AddStreamHandler("NewFileAgentInventory",
-                new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventory", m_newInventory),
-                                                      NewAgentInventoryRequest));
+                                     new RestStreamHandler("POST",
+                                                           service.CreateCAPS("NewFileAgentInventory", m_newInventory),
+                                                           NewAgentInventoryRequest));
             service.AddStreamHandler("NewFileAgentInventoryVariablePrice",
-                new RestStreamHandler("POST", service.CreateCAPS("NewFileAgentInventoryVariablePrice", ""),
-                                                      NewAgentInventoryRequestVariablePrice));
+                                     new RestStreamHandler("POST",
+                                                           service.CreateCAPS("NewFileAgentInventoryVariablePrice", ""),
+                                                           NewAgentInventoryRequestVariablePrice));
 
             /*method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -162,17 +147,18 @@ namespace OpenSim.Services.CapsService
 
         public byte[] HandleWebFetchInventoryDescendents(string request, UUID AgentID)
         {
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
-            OSDArray foldersrequested = (OSDArray)map["folders"];
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDArray foldersrequested = (OSDArray) map["folders"];
             try
             {
                 //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
-                return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID, UUID.Zero);
+                return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID,
+                                                                                       UUID.Zero);
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             finally
             {
@@ -190,15 +176,17 @@ namespace OpenSim.Services.CapsService
             {
                 //m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
-                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
-                OSDArray foldersrequested = (OSDArray)map["folders"];
+                OSDArray foldersrequested = (OSDArray) map["folders"];
 
-                return Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, m_libraryService.LibraryOwner, AgentID);
+                return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested,
+                                                                                       m_libraryService.LibraryOwner,
+                                                                                       AgentID);
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             OSDMap rmap = new OSDMap();
             rmap["folders"] = new OSDArray();
@@ -211,23 +199,17 @@ namespace OpenSim.Services.CapsService
             {
                 //m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
-                OSDArray foldersrequested = (OSDArray)requestmap["items"];
+                OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
-                OSDMap map = new OSDMap();
+                OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
                 //We have to send the agent_id in the main map as well as all the items
-                map.Add("agent_id", OSD.FromUUID(AgentID));
 
                 OSDArray items = new OSDArray();
-                for (int i = 0; i < foldersrequested.Count; i++)
+                foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(item_id)).Where(item => item != null && item.Count > 0))
                 {
-                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                    //UUID owner_id = requestedFolders["owner_id"].AsUUID();
-                    UUID item_id = requestedFolders["item_id"].AsUUID();
-                    OSDArray item = m_inventoryService.GetItem(item_id);
-                    if (item != null && item.Count > 0)
-                        items.Add(item[0]);
+                    items.Add(item[0]);
                 }
                 map.Add("items", items);
 
@@ -237,7 +219,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             OSDMap rmap = new OSDMap();
             rmap["items"] = new OSDArray();
@@ -250,21 +232,15 @@ namespace OpenSim.Services.CapsService
             {
                 //m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(OpenMetaverse.Utils.StringToBytes(request));
+                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
-                OSDArray foldersrequested = (OSDArray)requestmap["items"];
+                OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
-                OSDMap map = new OSDMap();
-                map.Add("agent_id", OSD.FromUUID(AgentID));
+                OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
                 OSDArray items = new OSDArray();
-                for (int i = 0; i < foldersrequested.Count; i++)
+                foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(item_id)).Where(item => item != null && item.Count > 0))
                 {
-                    OSDMap requestedFolders = (OSDMap)foldersrequested[i];
-                    //UUID owner_id = requestedFolders["owner_id"].AsUUID();
-                    UUID item_id = requestedFolders["item_id"].AsUUID();
-                    OSDArray item = m_inventoryService.GetItem(item_id);
-                    if (item != null && item.Count > 0)
-                        items.Add(item[0]);
+                    items.Add(item[0]);
                 }
                 map.Add("items", items);
 
@@ -274,7 +250,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
+                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             OSDMap rmap = new OSDMap();
             rmap["items"] = new OSDArray();
@@ -286,14 +262,14 @@ namespace OpenSim.Services.CapsService
         #region Inventory upload
 
         /// <summary>
-        /// This handles the uploading of some inventory types
+        ///   This handles the uploading of some inventory types
         /// </summary>
-        /// <param name="llsdRequest"></param>
+        /// <param name = "llsdRequest"></param>
         /// <returns></returns>
         public string NewAgentInventoryRequest(string request, string path, string param,
-                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                               OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             if (asset_type == "texture" ||
                 asset_type == "animation" ||
@@ -312,12 +288,15 @@ namespace OpenSim.Services.CapsService
                     }
                 }*/
             }
-            return OSDParser.SerializeLLSDXmlString(InternalNewAgentInventoryRequest(map, path, param, httpRequest, httpResponse));
+            return
+                OSDParser.SerializeLLSDXmlString(InternalNewAgentInventoryRequest(map, path, param, httpRequest,
+                                                                                  httpResponse));
         }
+
         public string NewAgentInventoryRequestVariablePrice(string request, string path, string param,
-                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             if (asset_type == "texture" ||
                 asset_type == "animation" ||
@@ -339,13 +318,13 @@ namespace OpenSim.Services.CapsService
             OSDMap resp = InternalNewAgentInventoryRequest(map, path, param, httpRequest, httpResponse);
 
             resp["resource_cost"] = 0;
-            resp["upload_price"] = 0;//Set me if you want to use variable cost stuff
+            resp["upload_price"] = 0; //Set me if you want to use variable cost stuff
 
             return OSDParser.SerializeLLSDXmlString(map);
         }
 
         private OSDMap InternalNewAgentInventoryRequest(OSDMap map, string path, string param,
-                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             string asset_type = map["asset_type"].AsString();
             //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
@@ -369,7 +348,7 @@ namespace OpenSim.Services.CapsService
                                   asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
                                   group_mask, next_owner_mask);
             m_service.AddStreamHandler("Upload" + uploaderPath,
-                new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+                                       new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
             string uploaderURL = m_service.HostUri + uploadpath;
             map = new OSDMap();
@@ -380,7 +359,7 @@ namespace OpenSim.Services.CapsService
 
         public string HandleInventoryItemCreate(string request, UUID AgentID)
         {
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
             //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
@@ -429,7 +408,7 @@ namespace OpenSim.Services.CapsService
                                   asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
                                   group_mask, next_owner_mask);
             m_service.AddStreamHandler("Upload" + uploaderPath,
-                new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+                                       new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
             string uploaderURL = m_service.HostUri + uploadpath;
             map = new OSDMap();
@@ -438,80 +417,11 @@ namespace OpenSim.Services.CapsService
             return OSDParser.SerializeLLSDXmlString(map);
         }
 
-        public class AssetUploader
-        {
-            private string uploaderPath = String.Empty;
-            private string uploadMethod = String.Empty;
-            private UUID newAssetID;
-            private UUID inventoryItemID;
-            private UUID parentFolder;
-            private IRegionClientCapsService clientCaps;
-
-
-            private string m_assetName = String.Empty;
-            private string m_assetDes = String.Empty;
-
-            private string m_invType = String.Empty;
-            private string m_assetType = String.Empty;
-            private InventoryCAPS m_invCaps;
-
-            private uint m_everyone_mask = 0;
-            private uint m_group_mask = 0;
-            private uint m_next_owner_mask = 0;
-
-            public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
-                                 UUID parentFolderID, string invType, string assetType, string path,
-                                 string method, IRegionClientCapsService caps, InventoryCAPS invCaps,
-                                 uint everyone_mask, uint group_mask, uint next_owner_mask)
-            {
-                m_assetName = assetName;
-                m_assetDes = description;
-                newAssetID = assetID;
-                inventoryItemID = inventoryItem;
-                uploaderPath = path;
-                parentFolder = parentFolderID;
-                m_assetType = assetType;
-                m_invType = invType;
-                clientCaps = caps;
-                uploadMethod = method;
-                m_invCaps = invCaps;
-                m_everyone_mask = everyone_mask;
-                m_group_mask = group_mask;
-                m_next_owner_mask = next_owner_mask;
-            }
-
-            /// <summary>
-            ///
-            /// </summary>
-            /// <param name="data"></param>
-            /// <param name="path"></param>
-            /// <param name="param"></param>
-            /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
-            {
-                UUID inv = inventoryItemID;
-                clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
-
-                newAssetID = m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder,
-                    data, m_invType, m_assetType, m_everyone_mask, m_group_mask, m_next_owner_mask);
-
-                string res = String.Empty;
-                OSDMap map = new OSDMap();
-                map["new_asset"] = newAssetID.ToString();
-                map["new_inventory_item"] = inv;
-                map["state"] = "complete";
-                res = OSDParser.SerializeLLSDXmlString(map);
-
-                return res;
-            }
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="assetID"></param>
-        /// <param name="inventoryItem"></param>
-        /// <param name="data"></param>
+        ///<summary>
+        ///</summary>
+        ///<param name = "assetID"></param>
+        ///<param name = "inventoryItem"></param>
+        ///<param name = "data"></param>
         public UUID UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
                                           UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
                                           string assetType, uint everyone_mask, uint group_mask, uint next_owner_mask)
@@ -536,37 +446,38 @@ namespace OpenSim.Services.CapsService
             }
             else if (inventoryType == "object")
             {
-                inType = (sbyte)InventoryType.Object;
-                assType = (sbyte)AssetType.Object;
+                inType = (sbyte) InventoryType.Object;
+                assType = (sbyte) AssetType.Object;
 
                 List<Vector3> positions = new List<Vector3>();
                 List<Quaternion> rotations = new List<Quaternion>();
-                OSDMap request = (OSDMap)OSDParser.DeserializeLLSDXml(data);
-                OSDArray instance_list = (OSDArray)request["instance_list"];
-                OSDArray mesh_list = (OSDArray)request["mesh_list"];
-                OSDArray texture_list = (OSDArray)request["texture_list"];
+                OSDMap request = (OSDMap) OSDParser.DeserializeLLSDXml(data);
+                OSDArray instance_list = (OSDArray) request["instance_list"];
+                OSDArray mesh_list = (OSDArray) request["mesh_list"];
+                OSDArray texture_list = (OSDArray) request["texture_list"];
                 SceneObjectGroup grp = null;
 
                 List<UUID> textures = new List<UUID>();
-                for (int i = 0; i < texture_list.Count; i++)
+                foreach (AssetBase textureAsset in texture_list.Select(t => new AssetBase(UUID.Random(), assetName, AssetType.Texture,
+                                                                                          m_service.AgentID) {Data = t.AsBinary()}))
                 {
-                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, AssetType.Texture, m_service.AgentID);
-                    textureAsset.Data = texture_list[i].AsBinary();
                     textureAsset.ID = m_assetService.Store(textureAsset);
                     textures.Add(textureAsset.ID);
                 }
-                InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh, AssetType.Mesh);
+                InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID,
+                                                                                     InventoryType.Mesh, AssetType.Mesh);
                 for (int i = 0; i < mesh_list.Count; i++)
                 {
                     PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
 
-                    Primitive.TextureEntry textureEntry = new Primitive.TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
-                    OSDMap inner_instance_list = (OSDMap)instance_list[i];
+                    Primitive.TextureEntry textureEntry =
+                        new Primitive.TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
+                    OSDMap inner_instance_list = (OSDMap) instance_list[i];
 
-                    OSDArray face_list = (OSDArray)inner_instance_list["face_list"];
+                    OSDArray face_list = (OSDArray) inner_instance_list["face_list"];
                     for (uint face = 0; face < face_list.Count; face++)
                     {
-                        OSDMap faceMap = (OSDMap)face_list[(int)face];
+                        OSDMap faceMap = (OSDMap) face_list[(int) face];
                         Primitive.TextureEntryFace f = pbs.Textures.CreateFace(face);
                         if (faceMap.ContainsKey("fullbright"))
                             f.Fullbright = faceMap["fullbright"].AsBoolean();
@@ -575,10 +486,10 @@ namespace OpenSim.Services.CapsService
 
                         int textureNum = faceMap["image"].AsInteger();
                         float imagerot = faceMap["imagerot"].AsInteger();
-                        float offsets = (float)faceMap["offsets"].AsReal();
-                        float offsett = (float)faceMap["offsett"].AsReal();
-                        float scales = (float)faceMap["scales"].AsReal();
-                        float scalet = (float)faceMap["scalet"].AsReal();
+                        float offsets = (float) faceMap["offsets"].AsReal();
+                        float offsett = (float) faceMap["offsett"].AsReal();
+                        float scales = (float) faceMap["scales"].AsReal();
+                        float scalet = (float) faceMap["scalet"].AsReal();
 
                         if (imagerot != 0)
                             f.Rotation = imagerot;
@@ -590,41 +501,42 @@ namespace OpenSim.Services.CapsService
                             f.RepeatU = scales;
                         if (scalet != 0)
                             f.RepeatV = scalet;
-                        if (textures.Count > textureNum)
-                            f.TextureID = textures[textureNum];
-                        else
-                            f.TextureID = Primitive.TextureEntry.WHITE_TEXTURE;
+                        f.TextureID = textures.Count > textureNum ? textures[textureNum] : Primitive.TextureEntry.WHITE_TEXTURE;
                         textureEntry.FaceTextures[face] = f;
                     }
                     pbs.TextureEntry = textureEntry.GetBytes();
 
-                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_service.AgentID);
-                    meshAsset.Data = mesh_list[i].AsBinary();
+                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_service.AgentID)
+                                              {Data = mesh_list[i].AsBinary()};
                     meshAsset.ID = m_assetService.Store(meshAsset);
 
-                    if(meshFolder == null)
+                    if (meshFolder == null)
                     {
                         m_inventoryService.CreateUserInventory(m_service.AgentID, false);
-                        meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh, AssetType.Mesh);
+                        meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID, InventoryType.Mesh,
+                                                                         AssetType.Mesh);
                     }
 
-                    InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID);
-                    itemBase.AssetType = (sbyte)AssetType.Mesh;//Bad... but whatever
-                    itemBase.AssetID = meshAsset.ID;
-                    itemBase.CreatorId = m_service.AgentID.ToString();
-                    itemBase.Folder = meshFolder.ID;
-                    itemBase.InvType = (int)InventoryType.Texture;
-                    itemBase.Name = "(Mesh) - " + assetName;
-                    itemBase.CurrentPermissions = (uint)PermissionMask.All;
-                    itemBase.BasePermissions = (uint)PermissionMask.All;
-                    itemBase.EveryOnePermissions = everyone_mask;
-                    itemBase.GroupPermissions = group_mask;
-                    itemBase.NextPermissions = next_owner_mask;
+                    InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID)
+                                                     {
+                                                         AssetType = (sbyte) AssetType.Mesh,
+                                                         AssetID = meshAsset.ID,
+                                                         CreatorId = m_service.AgentID.ToString(),
+                                                         Folder = meshFolder.ID,
+                                                         InvType = (int) InventoryType.Texture,
+                                                         Name = "(Mesh) - " + assetName,
+                                                         CurrentPermissions = (uint) PermissionMask.All,
+                                                         BasePermissions = (uint) PermissionMask.All,
+                                                         EveryOnePermissions = everyone_mask,
+                                                         GroupPermissions = group_mask,
+                                                         NextPermissions = next_owner_mask
+                                                     };
+                    //Bad... but whatever
                     m_inventoryService.AddItem(itemBase);
 
                     pbs.SculptEntry = true;
                     pbs.SculptTexture = meshAsset.ID;
-                    pbs.SculptType = (byte)SculptType.Mesh;
+                    pbs.SculptType = (byte) SculptType.Mesh;
                     pbs.SculptData = meshAsset.Data;
 
                     Vector3 position = inner_instance_list["position"].AsVector3();
@@ -633,7 +545,7 @@ namespace OpenSim.Services.CapsService
 
                     int physicsShapeType = inner_instance_list["physics_shape_type"].AsInteger();
                     int material = inner_instance_list["material"].AsInteger();
-                    int mesh = inner_instance_list["mesh"].AsInteger();//?
+                    int mesh = inner_instance_list["mesh"].AsInteger(); //?
 
                     UUID owner_id = m_service.AgentID;
 
@@ -641,10 +553,9 @@ namespace OpenSim.Services.CapsService
                     fakeScene.AddModuleInterfaces(m_service.Registry.GetInterfaces());
 
                     SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity,
-                            Vector3.Zero, assetName, fakeScene);
+                                                               Vector3.Zero, assetName, fakeScene)
+                                               {Scale = scale, AbsolutePosition = position};
 
-                    prim.Scale = scale;
-                    prim.AbsolutePosition = position;
                     rotations.Add(rotation);
                     positions.Add(position);
                     prim.UUID = UUID.Random();
@@ -655,13 +566,13 @@ namespace OpenSim.Services.CapsService
                     prim.CreationDate = Util.UnixTimeSinceEpoch();
                     prim.Name = assetName;
                     prim.Description = "";
-                    prim.PhysicsType = (byte)physicsShapeType;
+                    prim.PhysicsType = (byte) physicsShapeType;
 
-                    prim.BaseMask = (uint)PermissionMask.All;
+                    prim.BaseMask = (uint) PermissionMask.All;
                     prim.EveryoneMask = everyone_mask;
                     prim.NextOwnerMask = next_owner_mask;
                     prim.GroupMask = group_mask;
-                    prim.OwnerMask = (uint)PermissionMask.All;
+                    prim.OwnerMask = (uint) PermissionMask.All;
 
                     if (grp == null)
                         grp = new SceneObjectGroup(prim, fakeScene);
@@ -669,7 +580,7 @@ namespace OpenSim.Services.CapsService
                         grp.AddChild(prim, i + 1);
                     grp.RootPart.IsAttachment = false;
                 }
-                if (grp.ChildrenList.Count > 1)//Fix first link #
+                if (grp.ChildrenList.Count > 1) //Fix first link #
                     grp.RootPart.LinkNum++;
 
                 Vector3 rootPos = positions[0];
@@ -688,7 +599,7 @@ namespace OpenSim.Services.CapsService
                         grp.ChildrenList[i].SetRotationOffset(false, rotations[i], false);
                 }
                 grp.UpdateGroupRotationR(rotations[0]);
-                data = ASCIIEncoding.ASCII.GetBytes(grp.ToXml2());
+                data = Encoding.ASCII.GetBytes(grp.ToXml2());
             }
             else if (inventoryType == "wearable")
             {
@@ -703,30 +614,100 @@ namespace OpenSim.Services.CapsService
                         break;
                 }
             }
-            AssetBase asset = new AssetBase(assetID, assetName, (AssetType)assType, m_service.AgentID) { Data = data };
+            AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
             asset.ID = m_assetService.Store(asset);
             assetID = asset.ID;
 
-            InventoryItemBase item = new InventoryItemBase();
-            item.Owner = m_service.AgentID;
-            item.CreatorId = m_service.AgentID.ToString();
-            item.ID = inventoryItem;
-            item.AssetID = asset.ID;
-            item.Description = assetDescription;
-            item.Name = assetName;
-            item.AssetType = assType;
-            item.InvType = inType;
-            item.Folder = parentFolder;
-            item.CurrentPermissions = (uint)PermissionMask.All;
-            item.BasePermissions = (uint)PermissionMask.All;
-            item.EveryOnePermissions = everyone_mask;
-            item.NextPermissions = next_owner_mask;
-            item.GroupPermissions = group_mask;
-            item.CreationDate = Util.UnixTimeSinceEpoch();
+            InventoryItemBase item = new InventoryItemBase
+                                         {
+                                             Owner = m_service.AgentID,
+                                             CreatorId = m_service.AgentID.ToString(),
+                                             ID = inventoryItem,
+                                             AssetID = asset.ID,
+                                             Description = assetDescription,
+                                             Name = assetName,
+                                             AssetType = assType,
+                                             InvType = inType,
+                                             Folder = parentFolder,
+                                             CurrentPermissions = (uint) PermissionMask.All,
+                                             BasePermissions = (uint) PermissionMask.All,
+                                             EveryOnePermissions = everyone_mask,
+                                             NextPermissions = next_owner_mask,
+                                             GroupPermissions = group_mask,
+                                             CreationDate = Util.UnixTimeSinceEpoch()
+                                         };
 
             m_inventoryService.AddItem(item);
 
             return assetID;
+        }
+
+        public class AssetUploader
+        {
+            private readonly IRegionClientCapsService clientCaps;
+            private readonly UUID inventoryItemID;
+
+
+            private readonly string m_assetDes = String.Empty;
+            private readonly string m_assetName = String.Empty;
+
+            private readonly string m_assetType = String.Empty;
+
+            private readonly uint m_everyone_mask;
+            private readonly uint m_group_mask;
+            private readonly InventoryCAPS m_invCaps;
+            private readonly string m_invType = String.Empty;
+            private readonly uint m_next_owner_mask;
+            private readonly UUID parentFolder;
+            private readonly string uploadMethod = String.Empty;
+            private readonly string uploaderPath = String.Empty;
+            private UUID newAssetID;
+
+            public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
+                                 UUID parentFolderID, string invType, string assetType, string path,
+                                 string method, IRegionClientCapsService caps, InventoryCAPS invCaps,
+                                 uint everyone_mask, uint group_mask, uint next_owner_mask)
+            {
+                m_assetName = assetName;
+                m_assetDes = description;
+                newAssetID = assetID;
+                inventoryItemID = inventoryItem;
+                uploaderPath = path;
+                parentFolder = parentFolderID;
+                m_assetType = assetType;
+                m_invType = invType;
+                clientCaps = caps;
+                uploadMethod = method;
+                m_invCaps = invCaps;
+                m_everyone_mask = everyone_mask;
+                m_group_mask = group_mask;
+                m_next_owner_mask = next_owner_mask;
+            }
+
+            ///<summary>
+            ///</summary>
+            ///<param name = "data"></param>
+            ///<param name = "path"></param>
+            ///<param name = "param"></param>
+            ///<returns></returns>
+            public string uploaderCaps(byte[] data, string path, string param)
+            {
+                UUID inv = inventoryItemID;
+                clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
+
+                newAssetID = m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder,
+                                                             data, m_invType, m_assetType, m_everyone_mask, m_group_mask,
+                                                             m_next_owner_mask);
+
+                string res = String.Empty;
+                OSDMap map = new OSDMap();
+                map["new_asset"] = newAssetID.ToString();
+                map["new_inventory_item"] = inv;
+                map["state"] = "complete";
+                res = OSDParser.SerializeLLSDXmlString(map);
+
+                return res;
+            }
         }
 
         #endregion

@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -33,15 +32,12 @@ using System.Text;
 using OpenSim.Framework;
 using OpenSim.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Nini.Config;
 using log4net;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
-using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules
@@ -50,7 +46,6 @@ namespace OpenSim.Region.CoreModules
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string LastEstateName = "";
-        private string LastEstateChoise = "no";
         private string LastEstateOwner = "Test User";
 
         public void Initialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -99,26 +94,25 @@ namespace OpenSim.Region.CoreModules
                 {
                     m_log.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
                         "These estates are the following:");
-                    for (int i = 0; i < ownerEstates.Count; i++)
+                    foreach (EstateSettings t in ownerEstates)
                     {
-                        m_log.Warn(ownerEstates[i].EstateName);
+                        m_log.Warn(t.EstateName);
                     }
-                    response = MainConsole.Instance.CmdPrompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> () { "yes", "no", "cancel" });
+                    response = MainConsole.Instance.CmdPrompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> { "yes", "no", "cancel" });
                 }
                 else
                 {
                     m_log.WarnFormat("Found user. {0} has no estates currently. Creating a new estate.", account.Name);
                 }
-                LastEstateChoise = response;
                 if (response == "no")
                 {
                     // Create a new estate
+                    // ES could be null 
                     ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name (or cancel to go back)", "My Estate");
                     if (ES.EstateName == "cancel")
                         continue;
                     //Set to auto connect to this region next
                     LastEstateName = ES.EstateName;
-                    LastEstateChoise = "yes";
 
                     string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
                     ES.EstatePass = Password;
@@ -130,30 +124,28 @@ namespace OpenSim.Region.CoreModules
                         m_log.Warn("The connection to the server was broken, please try again soon.");
                         continue;
                     }
-                    else if (ES.EstateID == 0)
+                    if (ES.EstateID == 0)
                     {
                         m_log.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
                         continue;
                     }
                     //We set this back if there wasn't an error because the EstateService will NOT send it back
                     IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
-                    EstatePassword s = new EstatePassword() { Password = Password };
+                    EstatePassword s = new EstatePassword { Password = Password };
                     if (g != null) //Save the pass to the database
                     {
                         g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
                     }
                     break;
                 }
-                else if (response == "yes")
+                if (response == "yes")
                 {
-                    if (ownerEstates.Count != 1)
+                    if (ownerEstates != null && ownerEstates.Count != 1)
                     {
                         if (LastEstateName == "")
                             LastEstateName = ownerEstates[0].EstateName;
 
-                        List<string> responses = new List<string> ();
-                        foreach (EstateSettings settings in ownerEstates)
-                            responses.Add (settings.EstateName);
+                        List<string> responses = ownerEstates.Select(settings => settings.EstateName).ToList();
                         responses.Add ("None");
                         responses.Add ("Cancel");
                         response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName, responses);
@@ -161,8 +153,7 @@ namespace OpenSim.Region.CoreModules
                             continue;
                         LastEstateName = response;
                     }
-                    else
-                        LastEstateName = ownerEstates[0].EstateName;
+                    else if (ownerEstates != null) LastEstateName = ownerEstates[0].EstateName;
 
                     List<int> estateIDs = EstateConnector.GetEstates(LastEstateName);
                     if (estateIDs == null)
@@ -191,7 +182,7 @@ namespace OpenSim.Region.CoreModules
                             }
                             //Reset the pass and save it to the database
                             IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
-                            EstatePassword s = new EstatePassword() { Password = Password };
+                            EstatePassword s = new EstatePassword { Password = Password };
                             if (g != null) //Save the pass to the database
                             {
                                 g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
@@ -248,7 +239,7 @@ namespace OpenSim.Region.CoreModules
                             ES = CreateEstateInfo(scene);
                             break;
                         }
-                        else if (ES != null)
+                        if (ES != null)
                             break;
                     }
                 }
@@ -256,7 +247,7 @@ namespace OpenSim.Region.CoreModules
                 IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
                 EstatePassword s = null;
                 if (g != null)
-                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
+                    s = g.GetGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
                 if (s != null)
                     ES.EstatePass = s.Password;
 
@@ -302,7 +293,7 @@ namespace OpenSim.Region.CoreModules
                     IGenericsConnector g = DataManager.RequestPlugin<IGenericsConnector>();
                     EstatePassword s = null;
                     if (g != null)
-                        s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString(), new EstatePassword());
+                        s = g.GetGeneric(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString(), new EstatePassword());
                     if (s != null)
                         scene.RegionInfo.EstateSettings.EstatePass = s.Password;
                 }
@@ -324,8 +315,7 @@ namespace OpenSim.Region.CoreModules
 
             public override OSDMap ToOSD()
             {
-                OSDMap map = new OSDMap();
-                map.Add("Password", Password);
+                OSDMap map = new OSDMap {{"Password", Password}};
                 return map;
             }
 

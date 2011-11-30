@@ -26,15 +26,10 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
-using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
-using OpenMetaverse.Imaging;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 
@@ -42,19 +37,19 @@ namespace Aurora.Modules.AbuseReportsGUI
 {
     public partial class Abuse : Form
     {
+        private readonly IAbuseReportsConnector AbuseReportsConnector;
+        private readonly string Password;
+        private readonly IAssetService m_assetService;
+        private readonly IJ2KDecoder m_decoder;
+        private AbuseReport CurrentReport;
         private int formNumber = 1;
-        private IAbuseReportsConnector AbuseReportsConnector;
-        private string Password;
-        private AbuseReport CurrentReport = null;
-        private IAssetService m_assetService;
-        private IJ2KDecoder m_decoder;
 
         public Abuse(IAssetService assetService, IJ2KDecoder j2k)
         {
             InitializeComponent();
             m_decoder = j2k;
             m_assetService = assetService;
-            AbuseReportsConnector = Aurora.DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
+            AbuseReportsConnector = DataManager.DataManager.RequestPlugin<IAbuseReportsConnector>();
             Password = "";
             Utilities.InputBox("Password Input Required", "Password for abuse reports database", ref Password);
         }
@@ -112,7 +107,6 @@ namespace Aurora.Modules.AbuseReportsGUI
                 formNumber = 1;
             GotoARNumber.Text = "";
             SetGUI(AbuseReportsConnector.GetAbuseReport(formNumber, Password));
-            
         }
 
         public void SetGUI(AbuseReport AR)
@@ -123,7 +117,7 @@ namespace Aurora.Modules.AbuseReportsGUI
                 Category.Text = AR.Category.ToString();
                 ReporterName.Text = AR.ReporterName;
                 ObjectName.Text = AR.ObjectName;
-                ObjectPos.Text = AR.ObjectPosition.ToString();
+                ObjectPos.Text = AR.ObjectPosition;
                 Abusername.Text = AR.AbuserName;
                 AbuseLocation.Text = AR.AbuseLocation;
                 Summary.Text = AR.AbuseSummary;
@@ -161,8 +155,8 @@ namespace Aurora.Modules.AbuseReportsGUI
 
             AssetBase asset = m_assetService.Get(TextureID.ToString());
             if (asset == null)
-                return new Bitmap (1, 1);
-            Image image = m_decoder.DecodeToImage (asset.Data);
+                return new Bitmap(1, 1);
+            Image image = m_decoder.DecodeToImage(asset.Data);
             if (image != null)
                 return image;
             else

@@ -25,13 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 using rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
-using LSLInteger = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {

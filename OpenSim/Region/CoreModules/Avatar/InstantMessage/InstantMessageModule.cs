@@ -28,70 +28,59 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
     public class InstantMessageModule : ISharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
+            MethodBase.GetCurrentMethod().DeclaringType);
+
+        private readonly List<IScene> m_scenes = new List<IScene>();
+
+        private IMessageTransferModule m_TransferModule;
 
         /// <value>
-        /// Is this module enabled?
+        ///   Is this module enabled?
         /// </value>
-        private bool m_enabled = false;
+        private bool m_enabled;
 
-        private readonly List<IScene> m_scenes = new List<IScene> ();
-
-        #region IRegionModule Members
-
-        private IMessageTransferModule m_TransferModule = null;
+        #region ISharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
             if (config.Configs["Messaging"] != null)
             {
                 if (config.Configs["Messaging"].GetString(
-                        "InstantMessageModule", "InstantMessageModule") !=
-                        "InstantMessageModule")
+                    "InstantMessageModule", "InstantMessageModule") !=
+                    "InstantMessageModule")
                     return;
             }
-            
+
             m_enabled = true;
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
 
             lock (m_scenes)
             {
-                m_scenes.Add (scene);
+                m_scenes.Add(scene);
                 scene.EventManager.OnNewClient += EventManager_OnNewClient;
                 scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
                 scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
             }
         }
 
-        void EventManager_OnClosingClient(IClientAPI client)
-        {
-            //client.OnInstantMessage -= OnInstantMessage;
-        }
-
-        void EventManager_OnNewClient(IClientAPI client)
-        {
-            client.OnInstantMessage += OnInstantMessage;
-        }
-
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -114,7 +103,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -143,15 +132,25 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         #endregion
 
+        private void EventManager_OnClosingClient(IClientAPI client)
+        {
+            //client.OnInstantMessage -= OnInstantMessage;
+        }
+
+        private void EventManager_OnNewClient(IClientAPI client)
+        {
+            client.OnInstantMessage += OnInstantMessage;
+        }
+
         public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
             byte dialog = im.dialog;
 
-            if (dialog != (byte)InstantMessageDialog.MessageFromAgent
-                && dialog != (byte)InstantMessageDialog.StartTyping
-                && dialog != (byte)InstantMessageDialog.StopTyping
-                && dialog != (byte)InstantMessageDialog.BusyAutoResponse
-                && dialog != (byte)InstantMessageDialog.MessageFromObject)
+            if (dialog != (byte) InstantMessageDialog.MessageFromAgent
+                && dialog != (byte) InstantMessageDialog.StartTyping
+                && dialog != (byte) InstantMessageDialog.StopTyping
+                && dialog != (byte) InstantMessageDialog.BusyAutoResponse
+                && dialog != (byte) InstantMessageDialog.MessageFromObject)
             {
                 return;
             }
@@ -160,7 +159,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 if (client == null)
                 {
-                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID, im.fromAgentID);
+                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID,
+                                                                                        im.fromAgentID);
                     if (account != null)
                         im.fromAgentName = account.Name;
                     else
@@ -170,50 +170,50 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     im.fromAgentName = client.Name;
 
                 m_TransferModule.SendInstantMessage(im,
-                    delegate(bool success)
-                    {
-                        if (dialog == (uint)InstantMessageDialog.StartTyping ||
-                            dialog == (uint)InstantMessageDialog.StopTyping ||
-                            dialog == (uint)InstantMessageDialog.MessageFromObject)
-                        {
-                            return;
-                        }
+                                                    delegate(bool success)
+                                                        {
+                                                            if (dialog == (uint) InstantMessageDialog.StartTyping ||
+                                                                dialog == (uint) InstantMessageDialog.StopTyping ||
+                                                                dialog == (uint) InstantMessageDialog.MessageFromObject)
+                                                            {
+                                                                return;
+                                                            }
 
-                        if ((client != null) && !success)
-                        {
-                            client.SendInstantMessage(
-                                    new GridInstantMessage(
-                                    null, im.fromAgentID, "System",
-                                    im.toAgentID,
-                                    (byte)InstantMessageDialog.BusyAutoResponse,
-                                    "Unable to send instant message. "+
-                                    "User is not logged in.", false,
-                                    new Vector3()));
-                        }
-                    }
-                );
+                                                            if ((client != null) && !success)
+                                                            {
+                                                                client.SendInstantMessage(
+                                                                    new GridInstantMessage(
+                                                                        null, im.fromAgentID, "System",
+                                                                        im.toAgentID,
+                                                                        (byte) InstantMessageDialog.BusyAutoResponse,
+                                                                        "Unable to send instant message. " +
+                                                                        "User is not logged in.", false,
+                                                                        new Vector3()));
+                                                            }
+                                                        }
+                    );
             }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="msg"></param>
+        ///<summary>
+        ///</summary>
+        ///<param name = "msg"></param>
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
             byte dialog = msg.dialog;
 
-            if (dialog != (byte)InstantMessageDialog.MessageFromAgent
-                && dialog != (byte)InstantMessageDialog.StartTyping
-                && dialog != (byte)InstantMessageDialog.StopTyping
-                && dialog != (byte)InstantMessageDialog.MessageFromObject)
+            if (dialog != (byte) InstantMessageDialog.MessageFromAgent
+                && dialog != (byte) InstantMessageDialog.StartTyping
+                && dialog != (byte) InstantMessageDialog.StopTyping
+                && dialog != (byte) InstantMessageDialog.MessageFromObject)
             {
                 return;
             }
 
             if (m_TransferModule != null)
             {
-                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount (m_scenes[0].RegionInfo.ScopeID, msg.fromAgentID);
+                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID,
+                                                                                    msg.fromAgentID);
                 if (account != null)
                     msg.fromAgentName = account.Name;
                 else
@@ -222,15 +222,15 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 foreach (IScene scene in m_scenes)
                 {
                     IScenePresence presence = null;
-                    if (scene.TryGetScenePresence (msg.toAgentID, out presence))
+                    if (scene.TryGetScenePresence(msg.toAgentID, out presence))
                     {
-                        presence.ControllingClient.SendInstantMessage (msg);
+                        presence.ControllingClient.SendInstantMessage(msg);
                         return;
                     }
                 }
-                if (dialog == (uint)InstantMessageDialog.StartTyping ||
-                            dialog == (uint)InstantMessageDialog.StopTyping ||
-                            dialog == (uint)InstantMessageDialog.MessageFromObject)
+                if (dialog == (uint) InstantMessageDialog.StartTyping ||
+                    dialog == (uint) InstantMessageDialog.StopTyping ||
+                    dialog == (uint) InstantMessageDialog.MessageFromObject)
                 {
                     return;
                 }

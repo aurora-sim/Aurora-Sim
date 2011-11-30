@@ -28,47 +28,62 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
+using System.Reflection;
 using log4net;
 
 namespace OpenMetaverse
 {
     /// <summary>
-    /// Base UDP server
+    ///   Base UDP server
     /// </summary>
     public abstract class OpenSimUDPBase
     {
-        private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// This method is called when an incoming packet is received
+        ///   Flag to process packets asynchronously or synchronously
         /// </summary>
-        /// <param name="buffer">Incoming packet buffer</param>
-        protected abstract void PacketReceived(UDPPacketBuffer buffer);
-
-        /// <summary>UDP port to bind to in server mode</summary>
-        protected int m_udpPort;
-
-        /// <summary>Local IP address to bind to in server mode</summary>
-        protected IPAddress m_localBindAddress;
-
-        /// <summary>UDP socket, used in either client or server mode</summary>
-        private Socket m_udpSocket;
-
-        /// <summary>Flag to process packets asynchronously or synchronously</summary>
         private bool m_asyncPacketHandling;
 
-        /// <summary>The all important shutdown flag</summary>
-        private volatile bool m_shutdownFlag = true;
-
-        /// <summary>Returns true if the server is currently listening, otherwise false</summary>
-        public bool IsRunning { get { return !m_shutdownFlag; } }
+        /// <summary>
+        ///   Local IP address to bind to in server mode
+        /// </summary>
+        protected IPAddress m_localBindAddress;
 
         /// <summary>
-        /// Default initialiser
+        ///   The all important shutdown flag
         /// </summary>
-        /// <param name="bindAddress">Local IP address to bind the server to</param>
-        /// <param name="port">Port to listening for incoming UDP packets on</param>
+        private volatile bool m_shutdownFlag = true;
+
+        /// <summary>
+        ///   UDP port to bind to in server mode
+        /// </summary>
+        protected int m_udpPort;
+
+        /// <summary>
+        ///   UDP socket, used in either client or server mode
+        /// </summary>
+        private Socket m_udpSocket;
+
+        /// <summary>
+        ///   Returns true if the server is currently listening, otherwise false
+        /// </summary>
+        public bool IsRunning
+        {
+            get { return !m_shutdownFlag; }
+        }
+
+        /// <summary>
+        ///   This method is called when an incoming packet is received
+        /// </summary>
+        /// <param name = "buffer">Incoming packet buffer</param>
+        protected abstract void PacketReceived(UDPPacketBuffer buffer);
+
+        /// <summary>
+        ///   Default initialiser
+        /// </summary>
+        /// <param name = "bindAddress">Local IP address to bind the server to</param>
+        /// <param name = "port">Port to listening for incoming UDP packets on</param>
         public virtual void Initialise(IPAddress bindAddress, int port)
         {
             m_localBindAddress = bindAddress;
@@ -76,21 +91,23 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Start the UDP server
+        ///   Start the UDP server
         /// </summary>
-        /// <param name="recvBufferSize">The size of the receive buffer for 
-        /// the UDP socket. This value is passed up to the operating system 
-        /// and used in the system networking stack. Use zero to leave this
-        /// value as the default</param>
-        /// <param name="asyncPacketHandling">Set this to true to start
-        /// receiving more packets while current packet handler callbacks are
-        /// still running. Setting this to false will complete each packet
-        /// callback before the next packet is processed</param>
-        /// <remarks>This method will attempt to set the SIO_UDP_CONNRESET flag
-        /// on the socket to get newer versions of Windows to behave in a sane
-        /// manner (not throwing an exception when the remote side resets the
-        /// connection). This call is ignored on Mono where the flag is not
-        /// necessary</remarks>
+        /// <param name = "recvBufferSize">The size of the receive buffer for 
+        ///   the UDP socket. This value is passed up to the operating system 
+        ///   and used in the system networking stack. Use zero to leave this
+        ///   value as the default</param>
+        /// <param name = "asyncPacketHandling">Set this to true to start
+        ///   receiving more packets while current packet handler callbacks are
+        ///   still running. Setting this to false will complete each packet
+        ///   callback before the next packet is processed</param>
+        /// <remarks>
+        ///   This method will attempt to set the SIO_UDP_CONNRESET flag
+        ///   on the socket to get newer versions of Windows to behave in a sane
+        ///   manner (not throwing an exception when the remote side resets the
+        ///   connection). This call is ignored on Mono where the flag is not
+        ///   necessary
+        /// </remarks>
         public void Start(int recvBufferSize, bool asyncPacketHandling)
         {
             m_asyncPacketHandling = asyncPacketHandling;
@@ -110,7 +127,7 @@ namespace OpenMetaverse
                 {
                     // This udp socket flag is not supported under mono, 
                     // so we'll catch the exception and continue
-                    m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] { 0 }, null);
+                    m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] {0}, null);
                     //m_log.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag set");
                 }
                 catch (SocketException)
@@ -134,7 +151,7 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Stops the UDP server
+        ///   Stops the UDP server
         /// </summary>
         public void Stop()
         {
@@ -175,7 +192,9 @@ namespace OpenMetaverse
                 {
                     if (e.SocketErrorCode == SocketError.ConnectionReset)
                     {
-                        m_log.Warn("[UDPBASE]: SIO_UDP_CONNRESET was ignored, attempting to salvage the UDP listener on port " + m_udpPort);
+                        m_log.Warn(
+                            "[UDPBASE]: SIO_UDP_CONNRESET was ignored, attempting to salvage the UDP listener on port " +
+                            m_udpPort);
                         bool salvaged = false;
                         while (!salvaged)
                         {
@@ -193,14 +212,21 @@ namespace OpenMetaverse
                                     buf);
                                 salvaged = true;
                             }
-                            catch (SocketException) { }
-                            catch (ObjectDisposedException) { return; }
+                            catch (SocketException)
+                            {
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                return;
+                            }
                         }
 
                         m_log.Warn("[UDPBASE]: Salvaged the UDP listener on port " + m_udpPort);
                     }
                 }
-                catch (ObjectDisposedException) { }
+                catch (ObjectDisposedException)
+                {
+                }
             }
         }
 
@@ -219,7 +245,7 @@ namespace OpenMetaverse
                 // this is the received data
                 //WrappedObject<UDPPacketBuffer> wrappedBuffer = (WrappedObject<UDPPacketBuffer>)iar.AsyncState;
                 //UDPPacketBuffer buffer = wrappedBuffer.Instance;
-                UDPPacketBuffer buffer = (UDPPacketBuffer)iar.AsyncState;
+                UDPPacketBuffer buffer = (UDPPacketBuffer) iar.AsyncState;
 
                 try
                 {
@@ -231,8 +257,12 @@ namespace OpenMetaverse
                     // has just been filled from the socket read.
                     PacketReceived(buffer);
                 }
-                catch (SocketException) { }
-                catch (ObjectDisposedException) { }
+                catch (SocketException)
+                {
+                }
+                catch (ObjectDisposedException)
+                {
+                }
                 finally
                 {
                     //wrappedBuffer.Dispose();
@@ -242,7 +272,6 @@ namespace OpenMetaverse
                     if (!m_asyncPacketHandling)
                         AsyncBeginReceive();
                 }
-
             }
         }
 
@@ -260,10 +289,15 @@ namespace OpenMetaverse
                         SocketFlags.None,
                         buf.RemoteEndPoint);
                 }
-                catch (SocketException) { }
-                catch (ObjectDisposedException) { }
+                catch (SocketException)
+                {
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
         }
+
 /* not in use Send Sync now
         public void AsyncBeginSend(UDPPacketBuffer buf)
         {
@@ -298,5 +332,4 @@ namespace OpenMetaverse
         }
  */
     }
- 
 }

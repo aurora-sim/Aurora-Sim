@@ -28,12 +28,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 // using log4net;
 // using System.Reflection;
@@ -91,17 +91,23 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         // private static readonly ILog m_log =
         //     LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        protected static Vector3 CenterOfRegion = new Vector3(128, 128, 20);
+        private readonly List<int> BlockedChannels = new List<int>();
         private ListenerManager m_listenerManager;
         private Queue m_pending;
         private Queue m_pendingQ;
+        private int m_saydistance = 30;
         private IScene m_scene;
         private IScriptModule m_scriptModule;
-        private int m_whisperdistance = 10;
-        private int m_saydistance = 30;
         private int m_shoutdistance = 100;
-        private List<int> BlockedChannels = new List<int>();
+        private int m_whisperdistance = 10;
 
-        #region IRegionModule Members
+        public bool IsSharedModule
+        {
+            get { return false; }
+        }
+
+        #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
         {
@@ -127,32 +133,26 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_pending = Queue.Synchronized(m_pendingQ);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IWorldComm>(this);
-            m_scriptModule = scene.RequestModuleInterface<IScriptModule> ();
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
             m_scene.EventManager.OnChatFromClient += DeliverClientMessage;
             m_scene.EventManager.OnChatBroadcast += DeliverClientMessage;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
-
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
-
         }
 
         public Type ReplaceableInterface
         {
             get { return null; }
-        }
-
-        public void PostInitialise()
-        {
         }
 
         public void Close()
@@ -162,11 +162,6 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public string Name
         {
             get { return "WorldCommModule"; }
-        }
-
-        public bool IsSharedModule
-        {
-            get { return false; }
         }
 
         #endregion
@@ -188,37 +183,37 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         }
 
         /// <summary>
-        /// Create a listen event callback with the specified filters.
-        /// The parameters localID,itemID are needed to uniquely identify
-        /// the script during 'peek' time. Parameter hostID is needed to
-        /// determine the position of the script.
+        ///   Create a listen event callback with the specified filters.
+        ///   The parameters localID,itemID are needed to uniquely identify
+        ///   the script during 'peek' time. Parameter hostID is needed to
+        ///   determine the position of the script.
         /// </summary>
-        /// <param name="localID">localID of the script engine</param>
-        /// <param name="itemID">UUID of the script engine</param>
-        /// <param name="hostID">UUID of the SceneObjectPart</param>
-        /// <param name="channel">channel to listen on</param>
-        /// <param name="name">name to filter on</param>
-        /// <param name="id">key to filter on (user given, could be totally faked)</param>
-        /// <param name="msg">msg to filter on</param>
+        /// <param name = "localID">localID of the script engine</param>
+        /// <param name = "itemID">UUID of the script engine</param>
+        /// <param name = "hostID">UUID of the SceneObjectPart</param>
+        /// <param name = "channel">channel to listen on</param>
+        /// <param name = "name">name to filter on</param>
+        /// <param name = "id">key to filter on (user given, could be totally faked)</param>
+        /// <param name = "msg">msg to filter on</param>
         /// <returns>number of the scripts handle</returns>
         public int Listen(UUID itemID, UUID hostID, int channel, string name, UUID id, string msg)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads (itemID);
+            m_scriptModule.PokeThreads(itemID);
             return m_listenerManager.AddListener(itemID, hostID, channel, name, id, msg);
         }
 
         /// <summary>
-        /// Sets the listen event with handle as active (active = TRUE) or inactive (active = FALSE).
-        /// The handle used is returned from Listen()
+        ///   Sets the listen event with handle as active (active = TRUE) or inactive (active = FALSE).
+        ///   The handle used is returned from Listen()
         /// </summary>
-        /// <param name="itemID">UUID of the script engine</param>
-        /// <param name="handle">handle returned by Listen()</param>
-        /// <param name="active">temp. activate or deactivate the Listen()</param>
+        /// <param name = "itemID">UUID of the script engine</param>
+        /// <param name = "handle">handle returned by Listen()</param>
+        /// <param name = "active">temp. activate or deactivate the Listen()</param>
         public void ListenControl(UUID itemID, int handle, int active)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads (itemID);
+            m_scriptModule.PokeThreads(itemID);
             if (active == 1)
                 m_listenerManager.Activate(itemID, handle);
             else if (active == 0)
@@ -226,10 +221,10 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         }
 
         /// <summary>
-        /// Removes the listen event callback with handle
+        ///   Removes the listen event callback with handle
         /// </summary>
-        /// <param name="itemID">UUID of the script engine</param>
-        /// <param name="handle">handle returned by Listen()</param>
+        /// <param name = "itemID">UUID of the script engine</param>
+        /// <param name = "handle">handle returned by Listen()</param>
         public void ListenRemove(UUID itemID, int handle)
         {
             //Make sure that the cmd handler thread is running
@@ -238,10 +233,10 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         }
 
         /// <summary>
-        /// Removes all listen event callbacks for the given itemID
-        /// (script engine)
+        ///   Removes all listen event callbacks for the given itemID
+        ///   (script engine)
         /// </summary>
-        /// <param name="itemID">UUID of the script engine</param>
+        /// <param name = "itemID">UUID of the script engine</param>
         public void DeleteListener(UUID itemID)
         {
             //Make sure that the cmd handler thread is running
@@ -249,8 +244,6 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_listenerManager.DeleteListener(itemID);
         }
 
-
-        protected static Vector3 CenterOfRegion = new Vector3(128, 128, 20);
 
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg)
         {
@@ -260,7 +253,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
             if ((source = m_scene.GetSceneObjectPart(id)) != null)
                 position = source.AbsolutePosition;
-            else if ((avatar = m_scene.GetScenePresence(id)) != null) 
+            else if ((avatar = m_scene.GetScenePresence(id)) != null)
                 position = avatar.AbsolutePosition;
             else if (ChatTypeEnum.Region == type)
                 position = CenterOfRegion;
@@ -270,22 +263,22 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             DeliverMessage(type, channel, name, id, msg, position, -1, UUID.Zero);
         }
 
-        public void DeliverMessage (ChatTypeEnum type, int channel, string name, UUID id, UUID toID, string msg)
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, UUID toID, string msg)
         {
             Vector3 position;
             ISceneChildEntity source;
             IScenePresence avatar;
 
-            if ((source = m_scene.GetSceneObjectPart (id)) != null)
+            if ((source = m_scene.GetSceneObjectPart(id)) != null)
                 position = source.AbsolutePosition;
-            else if ((avatar = m_scene.GetScenePresence (id)) != null)
+            else if ((avatar = m_scene.GetScenePresence(id)) != null)
                 position = avatar.AbsolutePosition;
             else if (ChatTypeEnum.Region == type)
                 position = CenterOfRegion;
             else
                 return;
 
-            DeliverMessage (type, channel, name, id, msg, position, -1, toID);
+            DeliverMessage(type, channel, name, id, msg, position, -1, toID);
         }
 
         public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, float Range)
@@ -307,19 +300,77 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         }
 
         /// <summary>
-        /// This method scans over the objects which registered an interest in listen callbacks.
-        /// For everyone it finds, it checks if it fits the given filter. If it does,  then
-        /// enqueue the message for delivery to the objects listen event handler.
-        /// The enqueued ListenerInfo no longer has filter values, but the actually trigged values.
-        /// Objects that do an llSay have their messages delivered here and for nearby avatars,
-        /// the OnChatFromClient event is used.
+        ///   Are there any listen events ready to be dispatched?
         /// </summary>
-        /// <param name="type">type of delvery (whisper,say,shout or regionwide)</param>
-        /// <param name="channel">channel to sent on</param>
-        /// <param name="name">name of sender (object or avatar)</param>
-        /// <param name="id">key of sender (object or avatar)</param>
-        /// <param name="msg">msg to sent</param>
-        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position, float Range, UUID toID)
+        /// <returns>boolean indication</returns>
+        public bool HasMessages()
+        {
+            return m_pending.Count != 0;
+        }
+
+        public bool HasListeners()
+        {
+            return m_listenerManager.GetListenersCount() > 0;
+        }
+
+        /// <summary>
+        ///   Pop the first availlable listen event from the queue
+        /// </summary>
+        /// <returns>ListenerInfo with filter filled in</returns>
+        public IWorldCommListenerInfo GetNextMessage()
+        {
+            ListenerInfo li = null;
+
+            lock (m_pending.SyncRoot)
+            {
+                li = (ListenerInfo) m_pending.Dequeue();
+            }
+
+            return li;
+        }
+
+        /********************************************************************
+         *
+         * Listener Stuff
+         *
+         * *****************************************************************/
+
+        public OSD GetSerializationData(UUID itemID, UUID primID)
+        {
+            if (m_scene.GetSceneObjectPart(primID) != null)
+                return m_listenerManager.GetSerializationData(itemID);
+            else
+                return null;
+        }
+
+        public void CreateFromData(UUID itemID, UUID hostID,
+                                   OSD data)
+        {
+            if (m_scene.GetSceneObjectPart(hostID) != null)
+                m_listenerManager.AddFromData(itemID, hostID, data);
+        }
+
+        #endregion
+
+        public void PostInitialise()
+        {
+        }
+
+        /// <summary>
+        ///   This method scans over the objects which registered an interest in listen callbacks.
+        ///   For everyone it finds, it checks if it fits the given filter. If it does,  then
+        ///   enqueue the message for delivery to the objects listen event handler.
+        ///   The enqueued ListenerInfo no longer has filter values, but the actually trigged values.
+        ///   Objects that do an llSay have their messages delivered here and for nearby avatars,
+        ///   the OnChatFromClient event is used.
+        /// </summary>
+        /// <param name = "type">type of delvery (whisper,say,shout or regionwide)</param>
+        /// <param name = "channel">channel to sent on</param>
+        /// <param name = "name">name of sender (object or avatar)</param>
+        /// <param name = "id">key of sender (object or avatar)</param>
+        /// <param name = "msg">msg to sent</param>
+        public void DeliverMessage(ChatTypeEnum type, int channel, string name, UUID id, string msg, Vector3 position,
+                                   float Range, UUID toID)
         {
             //Make sure that the cmd handler thread is running
             m_scriptModule.PokeThreads(UUID.Zero);
@@ -337,16 +388,17 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                 if (li.GetHostID().Equals(id))
                     continue;
 
-                ISceneChildEntity sPart = m_scene.GetSceneObjectPart (li.GetHostID ());
+                ISceneChildEntity sPart = m_scene.GetSceneObjectPart(li.GetHostID());
                 if (sPart == null)
                     continue;
 
                 if (toID != UUID.Zero)
                     if (sPart.UUID != toID &&
                         sPart.AttachedAvatar != toID)
-                        continue; //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
+                        continue;
+                            //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
 
-                double dis =  Util.GetDistanceTo(sPart.AbsolutePosition, position);
+                double dis = Util.GetDistanceTo(sPart.AbsolutePosition, position);
                 switch (type)
                 {
                     case ChatTypeEnum.Whisper:
@@ -384,50 +436,12 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         protected void QueueMessage(ListenerInfo li)
         {
             //Make sure that the cmd handler thread is running
-            m_scriptModule.PokeThreads (li.GetItemID());
+            m_scriptModule.PokeThreads(li.GetItemID());
             lock (m_pending.SyncRoot)
             {
                 m_pending.Enqueue(li);
             }
         }
-
-        /// <summary>
-        /// Are there any listen events ready to be dispatched?
-        /// </summary>
-        /// <returns>boolean indication</returns>
-        public bool HasMessages()
-        {
-            return m_pending.Count != 0;
-        }
-
-        public bool HasListeners ()
-        {
-            return m_listenerManager.GetListenersCount() > 0;
-        }
-
-        /// <summary>
-        /// Pop the first availlable listen event from the queue
-        /// </summary>
-        /// <returns>ListenerInfo with filter filled in</returns>
-        public IWorldCommListenerInfo GetNextMessage()
-        {
-            ListenerInfo li = null;
-
-            lock (m_pending.SyncRoot)
-            {
-                li = (ListenerInfo)m_pending.Dequeue();
-            }
-
-            return li;
-        }
-
-        #endregion
-
-        /********************************************************************
-         *
-         * Listener Stuff
-         *
-         * *****************************************************************/
 
         private void DeliverClientMessage(Object sender, OSChatMessage e)
         {
@@ -436,28 +450,13 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             else
                 DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, -1, UUID.Zero);
         }
-
-        public OSD GetSerializationData (UUID itemID, UUID primID)
-        {
-            if (m_scene.GetSceneObjectPart (primID) != null)
-                return m_listenerManager.GetSerializationData (itemID);
-            else
-                return null;
-        }
-
-        public void CreateFromData(UUID itemID, UUID hostID,
-                OSD data)
-        {
-            if (m_scene.GetSceneObjectPart (hostID) != null)
-                m_listenerManager.AddFromData(itemID, hostID, data);
-        }
     }
 
     public class ListenerManager
     {
-        private Dictionary<int, List<ListenerInfo>> m_listeners = new Dictionary<int, List<ListenerInfo>>();
-        private int m_maxlisteners;
-        private int m_maxhandles;
+        private readonly Dictionary<int, List<ListenerInfo>> m_listeners = new Dictionary<int, List<ListenerInfo>>();
+        private readonly int m_maxhandles;
+        private readonly int m_maxlisteners;
         private int m_curlisteners;
 
         public ListenerManager(int maxlisteners, int maxhandles)
@@ -489,14 +488,14 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                     {
                         ListenerInfo li = new ListenerInfo(newHandle, itemID, hostID, channel, name, id, msg);
 
-                            List<ListenerInfo> listeners;
-                            if (!m_listeners.TryGetValue(channel,out listeners))
-                            {
-                                listeners = new List<ListenerInfo>();
-                                m_listeners.Add(channel, listeners);
-                            }
-                            listeners.Add(li);
-                            m_curlisteners++;
+                        List<ListenerInfo> listeners;
+                        if (!m_listeners.TryGetValue(channel, out listeners))
+                        {
+                            listeners = new List<ListenerInfo>();
+                            m_listeners.Add(channel, listeners);
+                        }
+                        listeners.Add(li);
+                        m_curlisteners++;
 
                         return newHandle;
                     }
@@ -509,21 +508,18 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         {
             lock (m_listeners)
             {
-                foreach (KeyValuePair<int,List<ListenerInfo>> lis in m_listeners)
+                foreach (KeyValuePair<int, List<ListenerInfo>> lis in m_listeners)
                 {
-                    foreach (ListenerInfo li in lis.Value)
+                    foreach (ListenerInfo li in lis.Value.Where(li => li.GetItemID().Equals(itemID) && li.GetHandle().Equals(handle)))
                     {
-                        if (li.GetItemID().Equals(itemID) && li.GetHandle().Equals(handle))
+                        lis.Value.Remove(li);
+                        if (lis.Value.Count == 0)
                         {
-                            lis.Value.Remove(li);
-                            if (lis.Value.Count == 0)
-                            {
-                                m_listeners.Remove(lis.Key);
-                                m_curlisteners--;
-                            }
-                            // there should be only one, so we bail out early
-                            return;
+                            m_listeners.Remove(lis.Key);
+                            m_curlisteners--;
                         }
+                        // there should be only one, so we bail out early
+                        return;
                     }
                 }
             }
@@ -536,16 +532,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
             lock (m_listeners)
             {
-                foreach (KeyValuePair<int,List<ListenerInfo>> lis in m_listeners)
+                foreach (KeyValuePair<int, List<ListenerInfo>> lis in m_listeners)
                 {
-                    foreach (ListenerInfo li in lis.Value)
-                    {
-                        if (li.GetItemID().Equals(itemID))
-                        {
-                            // store them first, else the enumerated bails on us
-                            removedListeners.Add(li);
-                        }
-                    }
+                    removedListeners.AddRange(lis.Value.Where(li => li.GetItemID().Equals(itemID)));
                     foreach (ListenerInfo li in removedListeners)
                     {
                         lis.Value.Remove(li);
@@ -565,21 +554,15 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             }
         }
 
-            public void Activate(UUID itemID, int handle)
+        public void Activate(UUID itemID, int handle)
         {
             lock (m_listeners)
             {
-                foreach (KeyValuePair<int,List<ListenerInfo>> lis in m_listeners)
+                foreach (ListenerInfo li in from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) && li.GetHandle() == handle select li)
                 {
-                    foreach (ListenerInfo li in lis.Value)
-                    {
-                        if (li.GetItemID().Equals(itemID) && li.GetHandle() == handle)
-                        {
-                            li.Activate();
-                            // only one, bail out
-                            return;
-                        }
-                    }
+                    li.Activate();
+                    // only one, bail out
+                    return;
                 }
             }
         }
@@ -588,17 +571,11 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         {
             lock (m_listeners)
             {
-                foreach (KeyValuePair<int,List<ListenerInfo>> lis in m_listeners)
+                foreach (ListenerInfo li in from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) && li.GetHandle() == handle select li)
                 {
-                    foreach (ListenerInfo li in lis.Value)
-                    {
-                        if (li.GetItemID().Equals(itemID) && li.GetHandle() == handle)
-                        {
-                            li.Deactivate();
-                            // only one, bail out
-                            return;
-                        }
-                    }
+                    li.Deactivate();
+                    // only one, bail out
+                    return;
                 }
             }
         }
@@ -606,17 +583,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         // non-locked access, since its always called in the context of the lock
         private int GetNewHandle(UUID itemID)
         {
-            List<int> handles = new List<int>();
+            List<int> handles = (from lis in m_listeners from li in lis.Value where li.GetItemID().Equals(itemID) select li.GetHandle()).ToList();
 
             // build a list of used keys for this specific itemID...
-            foreach (KeyValuePair<int,List<ListenerInfo>> lis in m_listeners)
-            {
-                 foreach (ListenerInfo li in lis.Value)
-                 {
-                     if (li.GetItemID().Equals(itemID))
-                         handles.Add(li.GetHandle());
-                 }
-            }
 
             // Note: 0 is NOT a valid handle for llListen() to return
             for (int i = 1; i <= m_maxhandles; i++)
@@ -628,7 +597,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             return -1;
         }
 
-        public int GetListenersCount ()
+        public int GetListenersCount()
         {
             return m_listeners.Count;
         }
@@ -643,83 +612,61 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             lock (m_listeners)
             {
                 List<ListenerInfo> listeners;
-                if (!m_listeners.TryGetValue(channel,out listeners))
+                if (!m_listeners.TryGetValue(channel, out listeners))
                 {
                     return collection;
                 }
 
-                foreach (ListenerInfo li in listeners)
-                {
-                    if (!li.IsActive())
-                    {
-                        continue;
-                    }
-                    if (!itemID.Equals(UUID.Zero) && !li.GetItemID().Equals(itemID))
-                    {
-                        continue;
-                    }
-                    if (li.GetName().Length > 0 && !li.GetName().Equals(name))
-                    {
-                        continue;
-                    }
-                    if (!li.GetID().Equals(UUID.Zero) && !li.GetID().Equals(id))
-                    {
-                        continue;
-                    }
-                    if (li.GetMessage().Length > 0 && !li.GetMessage().Equals(msg))
-                    {
-                        continue;
-                    }
-                    collection.Add(li);
-                }
+                collection.AddRange(from li in listeners
+                                    where li.IsActive()
+                                    where itemID.Equals(UUID.Zero) || li.GetItemID().Equals(itemID)
+                                    where li.GetName().Length <= 0 || li.GetName().Equals(name)
+                                    where li.GetID().Equals(UUID.Zero) || li.GetID().Equals(id)
+                                    where li.GetMessage().Length <= 0 || li.GetMessage().Equals(msg)
+                                    select li);
             }
             return collection;
         }
 
-        public OSD GetSerializationData (UUID itemID)
+        public OSD GetSerializationData(UUID itemID)
         {
-            OSDMap data = new OSDMap ();
+            OSDMap data = new OSDMap();
 
             lock (m_listeners)
             {
-                foreach (List<ListenerInfo> list in m_listeners.Values)
+                foreach (ListenerInfo l in from list in m_listeners.Values from l in list where l.GetItemID() == itemID select l)
                 {
-                    foreach (ListenerInfo l in list)
-                    {
-                        if (l.GetItemID () == itemID)
-                        {
-                            data[itemID.ToString()] = l.GetSerializationData ();
-                        }
-                    }
+                    data[itemID.ToString()] = l.GetSerializationData();
                 }
             }
             return data;
         }
 
         public void AddFromData(UUID itemID, UUID hostID,
-                OSD data)
+                                OSD data)
         {
-            OSDMap save = (OSDMap)data;
+            OSDMap save = (OSDMap) data;
             foreach (KeyValuePair<string, OSD> kvp in save)
             {
-                OSDMap item = (OSDMap)kvp.Value;
-                ListenerInfo info = ListenerInfo.FromData (itemID, hostID, item);
-                AddListener (info.GetItemID (), info.GetHostID (), info.GetChannel (), info.GetName (), info.GetID (), info.GetMessage ());
+                OSDMap item = (OSDMap) kvp.Value;
+                ListenerInfo info = ListenerInfo.FromData(itemID, hostID, item);
+                AddListener(info.GetItemID(), info.GetHostID(), info.GetChannel(), info.GetName(), info.GetID(),
+                            info.GetMessage());
             }
         }
     }
 
-    public class ListenerInfo: IWorldCommListenerInfo
+    public class ListenerInfo : IWorldCommListenerInfo
     {
         private bool m_active; // Listener is active or not
+        private int m_channel; // Channel
         private int m_handle; // Assigned handle of this listener
         //private uint m_localID; // Local ID from script engine
-        private UUID m_itemID; // ID of the host script engine
         private UUID m_hostID; // ID of the host/scene part
-        private int m_channel; // Channel
         private UUID m_id; // ID to filter messages from
-        private string m_name; // Object name to filter messages from
+        private UUID m_itemID; // ID of the host script engine
         private string m_message; // The message
+        private string m_name; // Object name to filter messages from
 
         public ListenerInfo(int handle, UUID ItemID, UUID hostID, int channel, string name, UUID id, string message)
         {
@@ -731,20 +678,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             Initialise(li.m_handle, li.m_itemID, li.m_hostID, li.m_channel, name, id, message);
         }
 
-        private void Initialise(int handle, UUID ItemID, UUID hostID, int channel, string name,
-                                UUID id, string message)
-        {
-            m_active = true;
-            m_handle = handle;
-            m_itemID = ItemID;
-            m_hostID = hostID;
-            m_channel = channel;
-            m_name = name;
-            m_id = id;
-            m_message = message;
-        }
+        #region IWorldCommListenerInfo Members
 
-        public OSD GetSerializationData ()
+        public OSD GetSerializationData()
         {
             OSDMap data = new OSDMap();
 
@@ -756,23 +692,6 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             data["Message"] = m_message;
 
             return data;
-        }
-
-        public static ListenerInfo FromData (UUID ItemID, UUID hostID, OSDMap data)
-        {
-            int Handle = data["Handle"].AsInteger ();
-            int Channel = data["Channel"].AsInteger ();
-            string Name = data["Name"].AsString ();
-            string Message = data["Message"].AsString ();
-            UUID ID = data["ID"].AsUUID ();
-            bool Active = data["Active"].AsBoolean ();
-
-            ListenerInfo linfo = new ListenerInfo (Handle,
-                    ItemID, hostID, Channel, Name,
-                    ID, Message);
-            linfo.m_active = Active;
-
-            return linfo;
         }
 
         public UUID GetItemID()
@@ -823,6 +742,37 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         public UUID GetID()
         {
             return m_id;
+        }
+
+        #endregion
+
+        private void Initialise(int handle, UUID ItemID, UUID hostID, int channel, string name,
+                                UUID id, string message)
+        {
+            m_active = true;
+            m_handle = handle;
+            m_itemID = ItemID;
+            m_hostID = hostID;
+            m_channel = channel;
+            m_name = name;
+            m_id = id;
+            m_message = message;
+        }
+
+        public static ListenerInfo FromData(UUID ItemID, UUID hostID, OSDMap data)
+        {
+            int Handle = data["Handle"].AsInteger();
+            int Channel = data["Channel"].AsInteger();
+            string Name = data["Name"].AsString();
+            string Message = data["Message"].AsString();
+            UUID ID = data["ID"].AsUUID();
+            bool Active = data["Active"].AsBoolean();
+
+            ListenerInfo linfo = new ListenerInfo(Handle,
+                                                  ItemID, hostID, Channel, Name,
+                                                  ID, Message) {m_active = Active};
+
+            return linfo;
         }
     }
 }

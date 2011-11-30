@@ -26,27 +26,19 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
-using System.Net;
-using System.Net.Sockets;
-using log4net;
+using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using ProfileFlags = OpenMetaverse.ProfileFlags;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Nwc.XmlRpc;
-using System.Xml;
-using Aurora.Framework;
-using Aurora.DataManager;
 using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
-using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
-using OpenMetaverse.StructuredData;
+using log4net;
+using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Modules
 {
@@ -55,7 +47,7 @@ namespace Aurora.Modules
         #region Declares
 
         /// <summary>
-        /// Avatar profile flags
+        ///   Avatar profile flags
         /// </summary>
         [Flags]
         public enum ProfileFlags : uint
@@ -68,10 +60,10 @@ namespace Aurora.Modules
         }
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IProfileConnector ProfileFrontend = null;
-        private IFriendsModule m_friendsModule;
-        private List<IScene> m_Scenes = new List<IScene> ();
+        private readonly List<IScene> m_Scenes = new List<IScene>();
+        private IProfileConnector ProfileFrontend;
         private bool m_ProfileEnabled = true;
+        private IFriendsModule m_friendsModule;
 
         #endregion
 
@@ -91,7 +83,7 @@ namespace Aurora.Modules
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_ProfileEnabled)
                 return;
@@ -104,17 +96,17 @@ namespace Aurora.Modules
             scene.EventManager.OnClosingClient += OnClosingClient;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             if (!m_ProfileEnabled)
                 return;
-            
+
             m_Scenes.Remove(scene);
             scene.EventManager.OnNewClient -= NewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             m_friendsModule = scene.RequestModuleInterface<IFriendsModule>();
         }
@@ -210,33 +202,36 @@ namespace Aurora.Modules
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI remoteClient = (IClientAPI)sender;
+            IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
-            Dictionary<UUID, string> classifieds = new Dictionary<UUID, string> ();
-            foreach (Classified classified in ProfileFrontend.GetClassifieds (requestedUUID))
-            {
-                classifieds.Add (classified.ClassifiedUUID, classified.Name);
-            }
+            Dictionary<UUID, string> classifieds = ProfileFrontend.GetClassifieds(requestedUUID).ToDictionary(classified => classified.ClassifiedUUID, classified => classified.Name);
 
-            remoteClient.SendAvatarClassifiedReply(requestedUUID, classifieds);        
+            remoteClient.SendAvatarClassifiedReply(requestedUUID, classifieds);
         }
 
         public void ClassifiedInfoRequest(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            Classified classified = ProfileFrontend.GetClassified (queryClassifiedID);
+            Classified classified = ProfileFrontend.GetClassified(queryClassifiedID);
             if (classified == null || classified.CreatorUUID == UUID.Zero)
                 return;
-            remoteClient.SendClassifiedInfoReply(queryClassifiedID, classified.CreatorUUID, classified.CreationDate, classified.ExpirationDate, classified.Category, classified.Name, classified.Description, classified.ParcelUUID, classified.ParentEstate, classified.SnapshotUUID, classified.SimName, classified.GlobalPos, classified.ParcelName, classified.ClassifiedFlags, classified.PriceForListing);
+            remoteClient.SendClassifiedInfoReply(queryClassifiedID, classified.CreatorUUID, classified.CreationDate,
+                                                 classified.ExpirationDate, classified.Category, classified.Name,
+                                                 classified.Description, classified.ParcelUUID, classified.ParentEstate,
+                                                 classified.SnapshotUUID, classified.SimName, classified.GlobalPos,
+                                                 classified.ParcelName, classified.ClassifiedFlags,
+                                                 classified.PriceForListing);
         }
-        
-        public void ClassifiedInfoUpdate(UUID queryclassifiedID, uint queryCategory, string queryName, string queryDescription, UUID queryParcelID,
-                                         uint queryParentEstate, UUID querySnapshotID, Vector3 queryGlobalPos, byte queryclassifiedFlags,
+
+        public void ClassifiedInfoUpdate(UUID queryclassifiedID, uint queryCategory, string queryName,
+                                         string queryDescription, UUID queryParcelID,
+                                         uint queryParentEstate, UUID querySnapshotID, Vector3 queryGlobalPos,
+                                         byte queryclassifiedFlags,
                                          int queryclassifiedPrice, IClientAPI remoteClient)
         {
             IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
 
-            if(p == null)
+            if (p == null)
                 return; //Just fail
 
             IMoneyModule money = p.Scene.RequestModuleInterface<IMoneyModule>();
@@ -263,7 +258,8 @@ namespace Aurora.Modules
 
             UUID parceluuid = p.CurrentParcelUUID;
             string parcelname = "Unknown";
-            IParcelManagementModule parcelManagement = GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
+            IParcelManagementModule parcelManagement =
+                GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
                 ILandObject parcel = parcelManagement.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
@@ -274,43 +270,45 @@ namespace Aurora.Modules
                 }
             }
 
-            uint creationdate = (uint)Util.UnixTimeSinceEpoch();
-            
-            uint expirationdate = (uint)Util.UnixTimeSinceEpoch() + (365 * 24 * 60 * 60);
+            uint creationdate = (uint) Util.UnixTimeSinceEpoch();
 
-            Classified classified = new Classified();
-            classified.ClassifiedUUID = classifiedUUID;
-            classified.CreatorUUID = creatorUUID;
-            classified.CreationDate = creationdate;
-            classified.ExpirationDate = expirationdate;
-            classified.Category = category;
-            classified.Name = name;
-            classified.Description = description;
-            classified.ParcelUUID = parceluuid;
-            classified.ParentEstate = parentestate;
-            classified.SnapshotUUID = snapshotUUID;
-            classified.SimName = simname;
-            classified.GlobalPos = globalpos;
-            classified.ParcelName = parcelname;
-            classified.ClassifiedFlags = classifiedFlags;
-            classified.PriceForListing = classifiedPrice;
+            uint expirationdate = (uint) Util.UnixTimeSinceEpoch() + (365*24*60*60);
 
-            ProfileFrontend.AddClassified (classified);
+            Classified classified = new Classified
+                                        {
+                                            ClassifiedUUID = classifiedUUID,
+                                            CreatorUUID = creatorUUID,
+                                            CreationDate = creationdate,
+                                            ExpirationDate = expirationdate,
+                                            Category = category,
+                                            Name = name,
+                                            Description = description,
+                                            ParcelUUID = parceluuid,
+                                            ParentEstate = parentestate,
+                                            SnapshotUUID = snapshotUUID,
+                                            SimName = simname,
+                                            GlobalPos = globalpos,
+                                            ParcelName = parcelname,
+                                            ClassifiedFlags = classifiedFlags,
+                                            PriceForListing = classifiedPrice
+                                        };
+
+            ProfileFrontend.AddClassified(classified);
         }
-        
+
         public void ClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            ProfileFrontend.RemoveClassified (queryClassifiedID);
+            ProfileFrontend.RemoveClassified(queryClassifiedID);
         }
-        
+
         public void GodClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
             if (GetRegionUserIsIn(remoteClient.AgentId).Permissions.IsGod(remoteClient.AgentId))
             {
-                ProfileFrontend.RemoveClassified (queryClassifiedID);
+                ProfileFrontend.RemoveClassified(queryClassifiedID);
             }
         }
-        
+
         #endregion
 
         #region Picks
@@ -319,15 +317,11 @@ namespace Aurora.Modules
         {
             if (!(sender is IClientAPI))
                 return;
-            
-            IClientAPI remoteClient = (IClientAPI)sender;
-            Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
+
+            IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
-            foreach (ProfilePickInfo Pick in ProfileFrontend.GetPicks(requestedUUID))
-            {
-                picks.Add(Pick.PickUUID, Pick.Name);
-            }
+            Dictionary<UUID, string> picks = ProfileFrontend.GetPicks(requestedUUID).ToDictionary(Pick => Pick.PickUUID, Pick => Pick.Name);
             remoteClient.SendAvatarPicksReply(requestedUUID, picks);
         }
 
@@ -336,32 +330,41 @@ namespace Aurora.Modules
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI remoteClient = (IClientAPI)sender;
+            IClientAPI remoteClient = (IClientAPI) sender;
             UUID PickUUID = UUID.Parse(args[1]);
 
-            ProfilePickInfo pick = ProfileFrontend.GetPick (PickUUID);
-            if(pick != null)
-                remoteClient.SendPickInfoReply(pick.PickUUID, pick.CreatorUUID, pick.TopPick == 1 ? true : false, pick.ParcelUUID, pick.Name, pick.Description, pick.SnapshotUUID, pick.User, pick.OriginalName, pick.SimName, pick.GlobalPos, pick.SortOrder, pick.Enabled == 1 ? true : false);
+            ProfilePickInfo pick = ProfileFrontend.GetPick(PickUUID);
+            if (pick != null)
+                remoteClient.SendPickInfoReply(pick.PickUUID, pick.CreatorUUID, pick.TopPick == 1 ? true : false,
+                                               pick.ParcelUUID, pick.Name, pick.Description, pick.SnapshotUUID,
+                                               pick.User, pick.OriginalName, pick.SimName, pick.GlobalPos,
+                                               pick.SortOrder, pick.Enabled == 1 ? true : false);
         }
 
-        public void PickInfoUpdate (IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name, string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos)
+        public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name,
+                                   string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos)
         {
-            IScenePresence p = GetRegionUserIsIn (remoteClient.AgentId).GetScenePresence (remoteClient.AgentId);
+            IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
 
             UUID parceluuid = p.CurrentParcelUUID;
             string user = "(unknown)";
             string OrigionalName = "(unknown)";
 
-            Vector3 pos_global = new Vector3 (globalPos);
+            Vector3 pos_global = new Vector3(globalPos);
 
-            IParcelManagementModule parcelManagement = GetRegionUserIsIn (remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule> ();
+            IParcelManagementModule parcelManagement =
+                GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
-                ILandObject targetlandObj = parcelManagement.GetLandObject (pos_global.X / Constants.RegionSize, pos_global.Y / Constants.RegionSize);
+                ILandObject targetlandObj = parcelManagement.GetLandObject(pos_global.X/Constants.RegionSize,
+                                                                           pos_global.Y/Constants.RegionSize);
 
                 if (targetlandObj != null)
                 {
-                    UserAccount parcelOwner = GetRegionUserIsIn (remoteClient.AgentId).UserAccountService.GetUserAccount (UUID.Zero, targetlandObj.LandData.OwnerID);
+                    UserAccount parcelOwner =
+                        GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero,
+                                                                                                  targetlandObj.LandData
+                                                                                                      .OwnerID);
                     if (parcelOwner != null)
                         user = parcelOwner.Name;
 
@@ -371,35 +374,37 @@ namespace Aurora.Modules
                 }
             }
 
-            ProfilePickInfo pick = new ProfilePickInfo ();
-            pick.PickUUID = pickID;
-            pick.CreatorUUID = creatorID;
-            pick.TopPick = topPick ? 1 : 0;
-            pick.ParcelUUID = parceluuid;
-            pick.Name = name;
-            pick.Description = desc;
-            pick.SnapshotUUID = snapshotID;
-            pick.User = user;
-            pick.OriginalName = OrigionalName;
-            pick.SimName = remoteClient.Scene.RegionInfo.RegionName;
-            pick.GlobalPos = pos_global;
-            pick.SortOrder = sortOrder;
-            pick.Enabled = enabled ? 1 : 0;
+            ProfilePickInfo pick = new ProfilePickInfo
+                                       {
+                                           PickUUID = pickID,
+                                           CreatorUUID = creatorID,
+                                           TopPick = topPick ? 1 : 0,
+                                           ParcelUUID = parceluuid,
+                                           Name = name,
+                                           Description = desc,
+                                           SnapshotUUID = snapshotID,
+                                           User = user,
+                                           OriginalName = OrigionalName,
+                                           SimName = remoteClient.Scene.RegionInfo.RegionName,
+                                           GlobalPos = pos_global,
+                                           SortOrder = sortOrder,
+                                           Enabled = enabled ? 1 : 0
+                                       };
 
-            ProfileFrontend.AddPick (pick);
+            ProfileFrontend.AddPick(pick);
         }
 
         public void GodPickDelete(IClientAPI remoteClient, UUID AgentID, UUID queryPickID, UUID queryID)
         {
             if (GetRegionUserIsIn(remoteClient.AgentId).Permissions.IsGod(remoteClient.AgentId))
             {
-                ProfileFrontend.RemovePick (queryPickID);
+                ProfileFrontend.RemovePick(queryPickID);
             }
         }
-        
+
         public void PickDelete(IClientAPI remoteClient, UUID queryPickID)
         {
-            ProfileFrontend.RemovePick (queryPickID);
+            ProfileFrontend.RemovePick(queryPickID);
         }
 
         #endregion
@@ -414,27 +419,27 @@ namespace Aurora.Modules
                 return;
             }
 
-            IClientAPI remoteClient = (IClientAPI)sender;
+            IClientAPI remoteClient = (IClientAPI) sender;
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
-            
+
             OSD notes = "";
             string targetNotesUUID = args[0];
 
-            if(!UPI.Notes.TryGetValue(targetNotesUUID, out notes))
+            if (!UPI.Notes.TryGetValue(targetNotesUUID, out notes))
                 notes = "";
 
             remoteClient.SendAvatarNotesReply(new UUID(targetNotesUUID), notes.AsString());
         }
-        
+
         public void AvatarNotesUpdate(IClientAPI remoteClient, UUID queryTargetID, string queryNotes)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
             String notes = queryNotes;
-            
+
             UPI.Notes[queryTargetID.ToString()] = OSD.FromString(notes);
 
             ProfileFrontend.UpdateUserProfile(UPI);
@@ -444,7 +449,8 @@ namespace Aurora.Modules
 
         #region Interests
 
-        public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask, string skillstext, string languages)
+        public void AvatarInterestsUpdate(IClientAPI remoteClient, uint wantmask, string wanttext, uint skillsmask,
+                                          string skillstext, string languages)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
@@ -473,13 +479,14 @@ namespace Aurora.Modules
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
             if (UPI == null)
             {
-                remoteClient.SendAvatarProperties (target, "",
-                                                  Util.ToDateTime (0).ToString ("M/d/yyyy", CultureInfo.InvariantCulture),
+                remoteClient.SendAvatarProperties(target, "",
+                                                  Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                                                   new Byte[1], "", 0,
                                                   UUID.Zero, UUID.Zero, "", UUID.Zero);
                 return;
             }
-            UserInfo TargetPI = remoteClient.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
+            UserInfo TargetPI =
+                remoteClient.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
             bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
             if (isFriend)
             {
@@ -492,7 +499,8 @@ namespace Aurora.Modules
             }
             else
             {
-                UserAccount TargetAccount = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, target);
+                UserAccount TargetAccount =
+                    GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, target);
                 //See if all can see this person
                 //Not a friend, so send the first page only and if they are online
                 uint agentOnline = 0;
@@ -505,21 +513,23 @@ namespace Aurora.Modules
                 if (UPI.MembershipGroup == "")
                 {
                     charterMember = new Byte[1];
-                    charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
+                    charterMember[0] = (Byte) ((TargetAccount.UserFlags & 0xf00) >> 8);
                 }
                 else
                 {
-                    charterMember = OpenMetaverse.Utils.StringToBytes(UPI.MembershipGroup);
+                    charterMember = Utils.StringToBytes(UPI.MembershipGroup);
                 }
                 remoteClient.SendAvatarProperties(UPI.PrincipalID, UPI.AboutText,
-                                                  Util.ToDateTime(UPI.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                  charterMember, UPI.FirstLifeAboutText, (uint)(TargetAccount.UserFlags & agentOnline),
+                                                  Util.ToDateTime(UPI.Created).ToString("M/d/yyyy",
+                                                                                        CultureInfo.InvariantCulture),
+                                                  charterMember, UPI.FirstLifeAboutText,
+                                                  (uint) (TargetAccount.UserFlags & agentOnline),
                                                   UPI.FirstLifeImage, UPI.Image, UPI.WebURL, UPI.Partner);
-
             }
         }
 
-        public void UpdateAvatarProperties(IClientAPI remoteClient, string AboutText, string FLAboutText, UUID FLImageID, UUID ImageID, string WebProfileURL, bool allowpublish, bool maturepublish)
+        public void UpdateAvatarProperties(IClientAPI remoteClient, string AboutText, string FLAboutText, UUID FLImageID,
+                                           UUID ImageID, string WebProfileURL, bool allowpublish, bool maturepublish)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
@@ -527,11 +537,11 @@ namespace Aurora.Modules
 
             if (UPI.Image != ImageID ||
                 UPI.FirstLifeImage != FLImageID ||
-                 UPI.AboutText != AboutText ||
-                 UPI.FirstLifeAboutText != FLAboutText ||
-                 UPI.WebURL != WebProfileURL ||
-                 UPI.AllowPublish != allowpublish ||
-                 UPI.MaturePublish != maturepublish)
+                UPI.AboutText != AboutText ||
+                UPI.FirstLifeAboutText != FLAboutText ||
+                UPI.WebURL != WebProfileURL ||
+                UPI.AllowPublish != allowpublish ||
+                UPI.MaturePublish != maturepublish)
             {
                 UPI.Image = ImageID;
                 UPI.FirstLifeImage = FLImageID;
@@ -548,29 +558,36 @@ namespace Aurora.Modules
 
         private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UUID target, uint agentOnline)
         {
-            UserAccount account = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, target);
+            UserAccount account = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero,
+                                                                                                            target);
             if (Profile == null || account == null)
                 return;
             Byte[] charterMember;
             if (Profile.MembershipGroup == "")
             {
                 charterMember = new Byte[1];
-                charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
+                charterMember[0] = (Byte) ((account.UserFlags & 0xf00) >> 8);
             }
             else
             {
-                charterMember = OpenMetaverse.Utils.StringToBytes(Profile.MembershipGroup);
+                charterMember = Utils.StringToBytes(Profile.MembershipGroup);
             }
             uint membershipGroupINT = 0;
             if (Profile.MembershipGroup != "")
                 membershipGroupINT = 4;
 
-            uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) + membershipGroupINT + (uint)agentOnline + (uint)account.UserFlags;
-            remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(Profile.Interests.WantToMask), Profile.Interests.WantToText, Convert.ToUInt32(Profile.Interests.CanDoMask), Profile.Interests.CanDoText, Profile.Interests.Languages);
+            uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) +
+                         membershipGroupINT + agentOnline + (uint) account.UserFlags;
+            remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(Profile.Interests.WantToMask),
+                                                  Profile.Interests.WantToText,
+                                                  Convert.ToUInt32(Profile.Interests.CanDoMask),
+                                                  Profile.Interests.CanDoText, Profile.Interests.Languages);
             remoteClient.SendAvatarProperties(account.PrincipalID, Profile.AboutText,
-                                              Util.ToDateTime(account.Created).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                              Util.ToDateTime(account.Created).ToString("M/d/yyyy",
+                                                                                        CultureInfo.InvariantCulture),
                                               charterMember, Profile.FirstLifeAboutText, flags,
-                                              Profile.FirstLifeImage, Profile.Image, Profile.WebURL, new UUID(Profile.Partner));
+                                              Profile.FirstLifeImage, Profile.Image, Profile.WebURL,
+                                              new UUID(Profile.Partner));
         }
 
         #endregion
@@ -582,7 +599,9 @@ namespace Aurora.Modules
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
-            UserAccount account = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId);
+            UserAccount account = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero,
+                                                                                                            remoteClient
+                                                                                                                .AgentId);
             remoteClient.SendUserInfoReply(UPI.Visible, UPI.IMViaEmail, account.Email);
         }
 
@@ -609,16 +628,18 @@ namespace Aurora.Modules
                 if (module != null)
                 {
                     int perms = module.GetFriendPerms(hunter, target);
-                    if ((perms & (int)FriendRights.CanSeeOnMap) == (int)FriendRights.CanSeeOnMap)
+                    if ((perms & (int) FriendRights.CanSeeOnMap) == (int) FriendRights.CanSeeOnMap)
                     {
-                        UserInfo GUI = client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
+                        UserInfo GUI =
+                            client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
                         if (GUI != null)
                         {
-                            OpenSim.Services.Interfaces.GridRegion region = GetRegionUserIsIn(client.AgentId).GridService.GetRegionByUUID(UUID.Zero, GUI.CurrentRegionID);
+                            GridRegion region = GetRegionUserIsIn(client.AgentId).GridService.GetRegionByUUID(
+                                UUID.Zero, GUI.CurrentRegionID);
 
                             client.SendScriptTeleportRequest(client.Name, region.RegionName,
-                                                                               GUI.CurrentPosition,
-                                                                               GUI.CurrentLookAt);
+                                                             GUI.CurrentPosition,
+                                                             GUI.CurrentLookAt);
                         }
                     }
                 }
@@ -631,12 +652,7 @@ namespace Aurora.Modules
 
         private IScene GetRegionUserIsIn(UUID uUID)
         {
-            foreach (IScene scene in m_Scenes)
-            {
-                if (scene.GetScenePresence(uUID) != null)
-                    return scene;
-            }
-            return null;
+            return m_Scenes.FirstOrDefault(scene => scene.GetScenePresence(uUID) != null);
         }
 
         private bool IsFriendOfUser(UUID friend, UUID requested)
@@ -646,7 +662,7 @@ namespace Aurora.Modules
             if (m_friendsModule.GetFriendPerms(requested, friend) == -1) //They aren't a friend
             {
                 IScenePresence SP = findScenePresence(friend);
-                if (SP != null && SP.Scene.Permissions.IsGod (friend)) //Check is admin
+                if (SP != null && SP.Scene.Permissions.IsGod(friend)) //Check is admin
                     return true;
 
                 return false;
@@ -656,15 +672,7 @@ namespace Aurora.Modules
 
         public IScenePresence findScenePresence(UUID avID)
         {
-            foreach (IScene s in m_Scenes)
-            {
-                IScenePresence SP = s.GetScenePresence(avID);
-                if (SP != null)
-                {
-                    return SP;
-                }
-            }
-            return null;
+            return m_Scenes.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
         }
 
         #endregion

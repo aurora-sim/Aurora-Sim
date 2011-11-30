@@ -31,24 +31,21 @@ using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.World.Estate
 {
-
     public class EstateTerrainXferHandler
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private AssetBase m_asset;
+        #region Delegates
 
         public delegate void TerrainUploadComplete(string name, byte[] filedata, IClientAPI remoteClient);
 
-        public event TerrainUploadComplete TerrainUploadDone;
+        #endregion
 
-        //private string m_description = String.Empty;
-        //private string m_name = String.Empty;
-        //private UUID TransactionID = UUID.Zero;
-        private sbyte type = 0;
+        private readonly AssetBase m_asset;
 
-        public ulong mXferID;
         private TerrainUploadComplete handlerTerrainUploadDone;
+        public ulong mXferID;
+        private sbyte type;
 
         public EstateTerrainXferHandler(IClientAPI pRemoteClient, string pClientFilename)
         {
@@ -61,18 +58,21 @@ namespace OpenSim.Region.CoreModules.World.Estate
             get { return mXferID; }
         }
 
+        public event TerrainUploadComplete TerrainUploadDone;
+
         public void RequestStartXfer(IClientAPI pRemoteClient)
         {
             mXferID = Util.GetNextXferID();
-            pRemoteClient.SendXferRequest(mXferID, short.Parse(m_asset.Type.ToString()), m_asset.ID, 0, Utils.StringToBytes(m_asset.Name));
+            pRemoteClient.SendXferRequest(mXferID, short.Parse(m_asset.Type.ToString()), m_asset.ID, 0,
+                                          Utils.StringToBytes(m_asset.Name));
         }
 
         /// <summary>
-        /// Process transfer data received from the client.
+        ///   Process transfer data received from the client.
         /// </summary>
-        /// <param name="xferID"></param>
-        /// <param name="packetID"></param>
-        /// <param name="data"></param>
+        /// <param name = "xferID"></param>
+        /// <param name = "packetID"></param>
+        /// <param name = "data"></param>
         public void XferReceive(IClientAPI remoteClient, ulong xferID, uint packetID, byte[] data)
         {
             if (mXferID == xferID)
@@ -96,7 +96,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 if ((packetID & 0x80000000) != 0)
                 {
                     SendCompleteMessage(remoteClient);
-
                 }
             }
         }

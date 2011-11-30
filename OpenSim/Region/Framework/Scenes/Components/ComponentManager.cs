@@ -28,16 +28,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Xml;
-using log4net;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Region.Framework.Scenes.Serialization;
-using OpenSim.Region.Framework.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Framework;
+using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes.Serialization;
+using log4net;
 
 namespace OpenSim.Region.Framework.Scenes.Components
 {
@@ -48,11 +46,231 @@ namespace OpenSim.Region.Framework.Scenes.Components
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Dictionary of all the components that we have by name, component
+        ///   Dictionary of all the components that we have by name, component
         /// </summary>
-        private Dictionary<string, IComponent> m_components = new Dictionary<string, IComponent>();
-        private Dictionary<Type, string> m_componentsBaseType = new Dictionary<Type, string>();
-        private bool m_hasStarted = false;
+        private readonly Dictionary<string, IComponent> m_components = new Dictionary<string, IComponent>();
+
+        private readonly Dictionary<Type, string> m_componentsBaseType = new Dictionary<Type, string>();
+        private bool m_hasStarted;
+
+        #endregion
+
+        #region IComponentManager Members
+
+        /// <summary>
+        ///   Register a new Component base with the manager.
+        ///   This hooks the Component up to serialization and deserialization and also allows it to be pulled from IComponents[] in the SceneObjectPart.
+        /// </summary>
+        /// <param name = "component"></param>
+        public void RegisterComponent(IComponent component)
+        {
+            //Check for the base type first if it isn't null
+            if (component.BaseType != null)
+            {
+                if (m_componentsBaseType.ContainsKey(component.BaseType))
+                {
+                    //We only register one base type per session
+                    m_log.Warn(
+                        "[COMPONENTMANAGER]: Tried registering a component while another base type was already registed by the same base type! The previously registered module was " +
+                        m_componentsBaseType[component.BaseType]);
+                    return;
+                }
+            }
+            //Now check for name duplication
+            if (m_components.ContainsKey(component.Name))
+            {
+                m_log.Warn(
+                    "[COMPONENTMANAGER]: Tried registering a component while another module already has used this name '" +
+                    component.Name + "'!");
+                return;
+            }
+            //Only add if it is not null
+            if (component.BaseType != null)
+                m_componentsBaseType.Add(component.BaseType, component.Name);
+            //Add to the list
+            m_components.Add(component.Name, component);
+        }
+
+        /// <summary>
+        ///   Remove a known Component from the manager.
+        /// </summary>
+        /// <param name = "component"></param>
+        public void DeregisterComponent(IComponent component)
+        {
+            //Remove the base type if it exists
+            if (component.BaseType != null)
+            {
+                if (m_componentsBaseType.ContainsKey(component.BaseType))
+                {
+                    m_componentsBaseType.Remove(component.BaseType);
+                }
+            }
+            //Now clear the name 
+            if (m_components.ContainsKey(component.Name))
+                m_components.Remove(component.Name);
+        }
+
+        /// <summary>
+        ///   Get a list of all the Components that we have registered
+        /// </summary>
+        /// <returns></returns>
+        public IComponent[] GetComponents()
+        {
+            return new List<IComponent>(m_components.Values).ToArray();
+        }
+
+        /// <summary>
+        ///   Get the State of a Component with the given name
+        /// </summary>
+        /// <param name = "obj">The object being checked</param>
+        /// <param name = "Name">Name of the Component</param>
+        /// <returns>The State of the Component</returns>
+        public OSD GetComponentState(ISceneChildEntity obj, string Name)
+        {
+            //Check whether a Component exists for this name
+            if (m_components.ContainsKey(Name))
+            {
+                //Return the State of the object
+                return m_components[Name].GetState(obj.UUID);
+            }
+            else
+            {
+                m_log.Warn("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
+                DefaultComponents com = new DefaultComponents(Name, 0);
+                RegisterComponent(com);
+                return m_components[Name].GetState(obj.UUID);
+            }
+        }
+
+        /// <summary>
+        ///   Set the State of the Component with the given name
+        /// </summary>
+        /// <param name = "obj">The object to update</param>
+        /// <param name = "Name">Name of the Component</param>
+        /// <param name = "State">State to set the Component to</param>
+        public void SetComponentState(ISceneChildEntity obj, string Name, OSD State)
+        {
+            if (obj.UUID == UUID.Zero)
+                return;
+            //Check whether a Component exists for this name
+            if (m_components.ContainsKey(Name))
+            {
+                //Set the State
+                m_components[Name].SetState(obj.UUID, State);
+            }
+            else
+            {
+                DefaultComponents com = new DefaultComponents(Name, 0);
+                RegisterComponent(com);
+                m_components[Name].SetState(obj.UUID, State);
+            }
+        }
+
+        public void RemoveComponentState(UUID obj, string name)
+        {
+            if (obj == UUID.Zero)
+                return;
+            //Check whether a Component exists for this name
+            if (m_components.ContainsKey(Name))
+            {
+                //Set the State
+                m_components[Name].RemoveState(obj);
+            }
+            else
+            {
+                DefaultComponents com = new DefaultComponents(Name, 0);
+                RegisterComponent(com);
+                m_components[Name].RemoveState(obj);
+            }
+        }
+
+        public void RemoveComponents(UUID obj)
+        {
+            if (obj == UUID.Zero)
+                return;
+            //Check whether a Component exists for this name
+            foreach (IComponent comp in m_components.Values)
+            {
+                //Set the State
+                comp.RemoveState(obj);
+            }
+        }
+
+        /// <summary>
+        ///   Change/add all references from the oldID to the new UUID
+        /// </summary>
+        /// <param name = "oldID"></param>
+        /// <param name = "newID"></param>
+        public void ResetComponentIDsToNewObject(UUID oldID, ISceneChildEntity part)
+        {
+            //Run through the list of components and serialize them
+            foreach (IComponent component in m_components.Values)
+            {
+                //Add the componet to the map by its name
+                OSD o = component.GetState(oldID, true);
+                if (o != null && o.Type != OSDType.Unknown)
+                    SetComponentState(part, component.Name, o);
+            }
+        }
+
+        /// <summary>
+        ///   Take the serialized string and set up the Components for this object
+        /// </summary>
+        /// <param name = "obj"></param>
+        /// <param name = "serialized"></param>
+        public void DeserializeComponents(ISceneChildEntity obj, string serialized)
+        {
+            //Pull the OSDMap out for components
+            OSDMap map;
+            try
+            {
+                if (serialized == "")
+                    map = new OSDMap();
+                else
+                    map = (OSDMap) OSDParser.DeserializeJson(serialized);
+            }
+            catch
+            {
+                //Bad JSON? Just return
+                return;
+            }
+
+            //Now check against the list of components we have loaded
+            foreach (KeyValuePair<string, OSD> kvp in map)
+            {
+                //Find the component if it exists
+                IComponent component;
+                if (m_components.TryGetValue(kvp.Key, out component))
+                {
+                    //Update the components value
+                    component.SetState(obj.UUID, kvp.Value);
+                }
+            }
+            map.Clear();
+            map = null;
+        }
+
+        /// <summary>
+        ///   Serialize all the registered Components into a string to be saved later
+        /// </summary>
+        /// <param name = "obj">The object to serialize</param>
+        /// <returns>The serialized string</returns>
+        public string SerializeComponents(ISceneChildEntity obj)
+        {
+            OSDMap ComponentsBody = new OSDMap();
+            //Run through the list of components and serialize them
+            foreach (IComponent component in m_components.Values)
+            {
+                //Add the componet to the map by its name
+                OSD o = component.GetState(obj.UUID, true);
+                if (o != null && o.Type != OSDType.Unknown)
+                    ComponentsBody.Add(component.Name, o);
+            }
+            string result = OSDParser.SerializeJsonString(ComponentsBody);
+            ComponentsBody.Clear();
+
+            return result;
+        }
 
         #endregion
 
@@ -70,7 +288,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_hasStarted)
             {
@@ -81,8 +299,61 @@ namespace OpenSim.Region.Framework.Scenes.Components
             scene.RegisterModuleInterface<IComponentManager>(this);
         }
 
+        public void RemoveRegion(IScene scene)
+        {
+            //Commented out until we can verify that objects arn't requiring this as backup does need this,
+            //   but shouldn't backup come before this?
+            /*scene.UnregisterModuleInterface<IComponentManager>(this);
+            if (m_hasStarted) //This only needs removed once
+            {
+                SceneObjectSerializer.RemoveSerializer("Components");
+                m_hasStarted = false;
+            }*/
+        }
+
+        public void RegionLoaded(IScene scene)
+        {
+        }
+
+        public string Name
+        {
+            get { return "ComponentManager"; }
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        #endregion
+
+        #region ISOPSerializerModule Members
+
+        public void Deserialization(SceneObjectPart obj, XmlTextReader reader)
+        {
+            string components = reader.ReadElementContentAsString("Components", String.Empty);
+            if (components != "")
+            {
+                try
+                {
+                    DeserializeComponents(obj, components);
+                }
+                catch (Exception ex)
+                {
+                    m_log.Warn("[COMPONENTMANAGER]: Error on deserializing Components! " + ex);
+                }
+            }
+        }
+
+        public string Serialization(SceneObjectPart part)
+        {
+            return SerializeComponents(part);
+        }
+
+        #endregion
+
         /// <summary>
-        /// Register a few default Components that are in the SOP
+        ///   Register a few default Components that are in the SOP
         /// </summary>
         private void RegisterDefaultComponents()
         {
@@ -94,7 +365,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("ParticleSystem", new byte[0]);
             RegisterComponent(com);
-            com = new DefaultComponents ("Expires", null);
+            com = new DefaultComponents("Expires", null);
             RegisterComponent(com);
             com = new DefaultComponents("Rezzed", null);
             RegisterComponent(com);
@@ -106,13 +377,13 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("SitTargetPosition", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents ("SitTargetOrientationLL", Vector3.Zero);
+            com = new DefaultComponents("SitTargetOrientationLL", Vector3.Zero);
             RegisterComponent(com);
-            com = new DefaultComponents ("RETURN_AT_EDGE", false);
+            com = new DefaultComponents("RETURN_AT_EDGE", false);
             RegisterComponent(com);
-            com = new DefaultComponents ("BlockGrab", false);
+            com = new DefaultComponents("BlockGrab", false);
             RegisterComponent(com);
-            com = new DefaultComponents ("BlockGrabObject", false);
+            com = new DefaultComponents("BlockGrabObject", false);
             RegisterComponent(com);
             com = new DefaultComponents("StatusSandbox", false);
             RegisterComponent(com);
@@ -155,321 +426,55 @@ namespace OpenSim.Region.Framework.Scenes.Components
             com = new DefaultComponents("TextureAnimation", new byte[0]);
             RegisterComponent(com);
             com = new DefaultComponents("SavedAttachedPos", Vector3.Zero);
-            RegisterComponent (com);
-            com = new DefaultComponents ("SavedAttachmentPoint", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("PhysicsType", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("Density", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("GravityMultiplier", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("Friction", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("Restitution", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("ScriptState", "");
-            RegisterComponent (com);
-            com = new DefaultComponents ("OmegaAxis", Vector3.Zero);
-            RegisterComponent (com);
-            com = new DefaultComponents ("OmegaSpinRate", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("OmegaGain", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("VehicleType", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("VehicleParameters", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("VehicleFlags", 0);
-            RegisterComponent (com);
-            com = new DefaultComponents ("PIDHoverActive", 0);
-            RegisterComponent (com);
+            RegisterComponent(com);
+            com = new DefaultComponents("SavedAttachmentPoint", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("PhysicsType", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("Density", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("GravityMultiplier", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("Friction", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("Restitution", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("ScriptState", "");
+            RegisterComponent(com);
+            com = new DefaultComponents("OmegaAxis", Vector3.Zero);
+            RegisterComponent(com);
+            com = new DefaultComponents("OmegaSpinRate", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("OmegaGain", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("VehicleType", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("VehicleParameters", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("VehicleFlags", 0);
+            RegisterComponent(com);
+            com = new DefaultComponents("PIDHoverActive", 0);
+            RegisterComponent(com);
         }
-
-        public void RemoveRegion (IScene scene)
-        {
-            //Commented out until we can verify that objects arn't requiring this as backup does need this,
-            //   but shouldn't backup come before this?
-            /*scene.UnregisterModuleInterface<IComponentManager>(this);
-            if (m_hasStarted) //This only needs removed once
-            {
-                SceneObjectSerializer.RemoveSerializer("Components");
-                m_hasStarted = false;
-            }*/
-        }
-
-        public void RegionLoaded (IScene scene)
-        {
-        }
-
-        public string Name
-        {
-            get { return "ComponentManager"; }
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        #endregion
-
-        #region IComponentManager Members
-
-        /// <summary>
-        /// Register a new Component base with the manager.
-        /// This hooks the Component up to serialization and deserialization and also allows it to be pulled from IComponents[] in the SceneObjectPart.
-        /// </summary>
-        /// <param name="component"></param>
-        public void RegisterComponent(IComponent component)
-        {
-            //Check for the base type first if it isn't null
-            if (component.BaseType != null)
-            {
-                if (m_componentsBaseType.ContainsKey(component.BaseType))
-                {
-                    //We only register one base type per session
-                    m_log.Warn("[COMPONENTMANAGER]: Tried registering a component while another base type was already registed by the same base type! The previously registered module was " + m_componentsBaseType[component.BaseType]);
-                    return;
-                }
-            }
-            //Now check for name duplication
-            if (m_components.ContainsKey(component.Name))
-            {
-                m_log.Warn("[COMPONENTMANAGER]: Tried registering a component while another module already has used this name '" + component.Name + "'!");
-                return;
-            }
-            //Only add if it is not null
-            if(component.BaseType != null) 
-                m_componentsBaseType.Add(component.BaseType, component.Name);
-            //Add to the list
-            m_components.Add(component.Name, component);
-        }
-
-        /// <summary>
-        /// Remove a known Component from the manager.
-        /// </summary>
-        /// <param name="component"></param>
-        public void DeregisterComponent(IComponent component)
-        {
-            //Remove the base type if it exists
-            if (component.BaseType != null)
-            {
-                if (m_componentsBaseType.ContainsKey(component.BaseType))
-                {
-                    m_componentsBaseType.Remove(component.BaseType);
-                }
-            }
-            //Now clear the name 
-            if (m_components.ContainsKey(component.Name))
-                m_components.Remove(component.Name);
-        }
-
-        /// <summary>
-        /// Get a list of all the Components that we have registered
-        /// </summary>
-        /// <returns></returns>
-        public IComponent[] GetComponents()
-        {
-            return new List<IComponent>(m_components.Values).ToArray();
-        }
-
-        /// <summary>
-        /// Get the State of a Component with the given name
-        /// </summary>
-        /// <param name="obj">The object being checked</param>
-        /// <param name="Name">Name of the Component</param>
-        /// <returns>The State of the Component</returns>
-        public OSD GetComponentState (ISceneChildEntity obj, string Name)
-        {
-            //Check whether a Component exists for this name
-            if (m_components.ContainsKey (Name))
-            {
-                //Return the State of the object
-                return m_components[Name].GetState (obj.UUID);
-            }
-            else
-            {
-                m_log.Warn ("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
-                DefaultComponents com = new DefaultComponents (Name, 0);
-                RegisterComponent (com);
-                return m_components[Name].GetState (obj.UUID);
-            }
-        }
-
-        /// <summary>
-        /// Set the State of the Component with the given name
-        /// </summary>
-        /// <param name="obj">The object to update</param>
-        /// <param name="Name">Name of the Component</param>
-        /// <param name="State">State to set the Component to</param>
-        public void SetComponentState(ISceneChildEntity obj, string Name, OSD State)
-        {
-            if (obj.UUID == UUID.Zero)
-                return;
-            //Check whether a Component exists for this name
-            if (m_components.ContainsKey(Name))
-            {
-                //Set the State
-                m_components[Name].SetState(obj.UUID, State);
-            }
-            else
-            {
-                DefaultComponents com = new DefaultComponents (Name, 0);
-                RegisterComponent (com);
-                m_components[Name].SetState (obj.UUID, State);
-            }
-        }
-
-        public void RemoveComponentState (UUID obj, string name)
-        {
-            if (obj == UUID.Zero)
-                return;
-            //Check whether a Component exists for this name
-            if (m_components.ContainsKey (Name))
-            {
-                //Set the State
-                m_components[Name].RemoveState (obj);
-            }
-            else
-            {
-                DefaultComponents com = new DefaultComponents (Name, 0);
-                RegisterComponent (com);
-                m_components[Name].RemoveState (obj);
-            }
-        }
-
-        public void RemoveComponents (UUID obj)
-        {
-            if (obj == UUID.Zero)
-                return;
-            //Check whether a Component exists for this name
-            foreach(IComponent comp in m_components.Values)
-            {
-                //Set the State
-                comp.RemoveState (obj);
-            }
-        }
-
-        /// <summary>
-        /// Change/add all references from the oldID to the new UUID
-        /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        public void ResetComponentIDsToNewObject (UUID oldID, ISceneChildEntity part)
-        {
-            //Run through the list of components and serialize them
-            foreach (IComponent component in m_components.Values)
-            {
-                //Add the componet to the map by its name
-                OSD o = component.GetState(oldID, true);
-                if (o != null && o.Type != OSDType.Unknown)
-                    SetComponentState(part, component.Name, o); 
-            }
-        }
-
-        /// <summary>
-        /// Take the serialized string and set up the Components for this object
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="serialized"></param>
-        public void DeserializeComponents (ISceneChildEntity obj, string serialized)
-        {
-            //Pull the OSDMap out for components
-            OSDMap map;
-            try
-            {
-                if (serialized == "")
-                    map = new OSDMap();
-                else
-                    map = (OSDMap)OSDParser.DeserializeJson(serialized);
-            }
-            catch
-            {
-                //Bad JSON? Just return
-                return;
-            }
-
-            //Now check against the list of components we have loaded
-            foreach (KeyValuePair<string, OSD> kvp in map)
-            {
-                //Find the component if it exists
-                IComponent component;
-                if (m_components.TryGetValue(kvp.Key, out component))
-                {
-                    //Update the components value
-                    component.SetState(obj.UUID, kvp.Value);
-                }
-            }
-            map.Clear();
-            map = null;
-        }
-
-        /// <summary>
-        /// Serialize all the registered Components into a string to be saved later
-        /// </summary>
-        /// <param name="obj">The object to serialize</param>
-        /// <returns>The serialized string</returns>
-        public string SerializeComponents (ISceneChildEntity obj)
-        {
-            OSDMap ComponentsBody = new OSDMap();
-            //Run through the list of components and serialize them
-            foreach (IComponent component in m_components.Values)
-            {
-                //Add the componet to the map by its name
-                OSD o = component.GetState(obj.UUID, true);
-                if(o != null && o.Type != OSDType.Unknown)
-                    ComponentsBody.Add(component.Name, o);
-            }
-            string result = OSDParser.SerializeJsonString(ComponentsBody);
-            ComponentsBody.Clear();
-
-            return result;
-        }
-
-        #endregion
-
-        #region ISOPSerializerModule Members
-
-        public void Deserialization(SceneObjectPart obj, XmlTextReader reader)
-        {
-            string components = reader.ReadElementContentAsString("Components", String.Empty);
-            if (components != "")
-            {
-                try
-                {
-                    DeserializeComponents(obj, components);
-                }
-                catch (Exception ex)
-                {
-                    m_log.Warn("[COMPONENTMANAGER]: Error on deserializing Components! " + ex.ToString());
-                }
-            }
-        }
-
-        public string Serialization(SceneObjectPart part)
-        {
-            return SerializeComponents(part);
-        }
-
-        #endregion
     }
 
     /// <summary>
-    /// This sets up components for a few internal pieces in the 
+    ///   This sets up components for a few internal pieces in the
     /// </summary>
     public class DefaultComponents : IComponent
     {
-        private Dictionary<UUID, OSD> m_states = new Dictionary<UUID, OSD>();
-        private object m_statesLock = new object ();
+        private readonly Dictionary<UUID, OSD> m_states = new Dictionary<UUID, OSD>();
+        private readonly object m_statesLock = new object();
+        public object m_defaultValue;
         public string m_name;
-        public object m_defaultValue = null;
 
         public DefaultComponents(string name, object defaultValue)
         {
             m_name = name;
             m_defaultValue = defaultValue;
         }
+
+        #region IComponent Members
 
         public Type BaseType
         {
@@ -481,7 +486,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             get { return m_name; }
         }
 
-        public virtual OSD GetState (UUID obj)
+        public virtual OSD GetState(UUID obj)
         {
             return GetState(obj, false);
         }
@@ -491,11 +496,11 @@ namespace OpenSim.Region.Framework.Scenes.Components
             OSD o = null;
             lock (m_statesLock)
             {
-                if (m_states.TryGetValue (obj, out o))
+                if (m_states.TryGetValue(obj, out o))
                 {
                     if (o == m_defaultValue)
                         return null;
-                    if(copy)
+                    if (copy)
                         return o.Copy();
                     return o;
                 }
@@ -504,16 +509,18 @@ namespace OpenSim.Region.Framework.Scenes.Components
             return new OSD();
         }
 
-        public virtual void SetState (UUID obj, OSD osd)
+        public virtual void SetState(UUID obj, OSD osd)
         {
-            lock(m_statesLock)
+            lock (m_statesLock)
                 m_states[obj] = osd;
         }
 
-        public virtual void RemoveState (UUID obj)
+        public virtual void RemoveState(UUID obj)
         {
             lock (m_statesLock)
-                m_states.Remove (obj);
+                m_states.Remove(obj);
         }
+
+        #endregion
     }
 }

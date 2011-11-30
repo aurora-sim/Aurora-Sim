@@ -25,31 +25,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using log4net;
-using Nini.Config;
+using Aurora.DataManager;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using Aurora.DataManager;
-using Aurora.Framework;
 
 namespace OpenSim.Services.CapsService
 {
     public class MeshUploadFlag : ICapsServiceConnector
     {
+        private IProfileConnector m_profileConnector;
         private IRegionClientCapsService m_service;
         private IUserAccountService m_userService;
-        private IProfileConnector m_profileConnector;
+
+        #region ICapsServiceConnector Members
+
+        public void RegisterCaps(IRegionClientCapsService service)
+        {
+            m_service = service;
+            m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
+            m_profileConnector = DataManager.RequestPlugin<IProfileConnector>();
+            m_service.AddStreamHandler("MeshUploadFlag",
+                                       new RestHTTPHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
+                                                           MeshUploadFlagCAP));
+        }
+
+        public void DeregisterCaps()
+        {
+            m_service.RemoveStreamHandler("MeshUploadFlag", "GET");
+        }
+
+        public void EnteringRegion()
+        {
+        }
+
+        #endregion
 
         private Hashtable MeshUploadFlagCAP(Hashtable mDhttpMethod)
         {
@@ -64,7 +77,8 @@ namespace OpenSim.Services.CapsService
             data["legacy_first_name"] = acct.FirstName;
             data["legacy_last_name"] = acct.LastName;
             data["mesh_upload_status"] = "valid"; // add if account has ability to upload mesh?
-            bool isDisplayNameNDefault = (info.DisplayName == acct.Name) || (info.DisplayName == acct.FirstName + "." + acct.LastName);
+            bool isDisplayNameNDefault = (info.DisplayName == acct.Name) ||
+                                         (info.DisplayName == acct.FirstName + "." + acct.LastName);
             data["is_display_name_default"] = isDisplayNameNDefault;
 
             //Send back data
@@ -74,27 +88,6 @@ namespace OpenSim.Services.CapsService
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(data);
             return responsedata;
-        }
-
-        public void RegisterCaps(IRegionClientCapsService service)
-        {
-            m_service = service;
-            m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
-            m_profileConnector = DataManager.RequestPlugin<IProfileConnector>();
-            m_service.AddStreamHandler("MeshUploadFlag", new RestHTTPHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return MeshUploadFlagCAP(m_dhttpMethod);
-                                                      }));
-        }
-
-        public void DeregisterCaps()
-        {
-            m_service.RemoveStreamHandler ("MeshUploadFlag", "GET");
-        }
-
-        public void EnteringRegion()
-        {
         }
     }
 }

@@ -26,34 +26,32 @@
  */
 
 using System;
-using System.Linq;
-using System.IO;
-using System.Xml;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
+using System.Timers;
+using Nini.Config;
+using log4net;
+using log4net.Core;
+using Timer = System.Timers.Timer;
 #if NET_4_0
 using System.Threading.Tasks;
 #endif
-using log4net;
-using Nini.Config;
-using log4net.Core;
 
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// This is a special class designed to take over control of the command console prompt of
-    /// the server instance to allow for the input and output to the server to be redirected
-    /// by an external application, in this case a GUI based application on Windows.
+    ///   This is a special class designed to take over control of the command console prompt of
+    ///   the server instance to allow for the input and output to the server to be redirected
+    ///   by an external application, in this case a GUI based application on Windows.
     /// </summary>
     public class GUIConsole : ICommandConsole
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public bool m_isPrompting = false;
-        public int m_lastSetPromptOption = 0;
+        public bool m_isPrompting;
+        public int m_lastSetPromptOption;
         public List<string> m_promptOptions = new List<string>();
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
@@ -69,7 +67,7 @@ namespace OpenSim.Framework
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
 
             m_Commands.AddCommand("help", "help",
-                    "Get a general command list", Help);
+                                  "Get a general command list", Help);
 
             m_log.Info("[GUIConsole] initialised.");
         }
@@ -83,13 +81,13 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Display a command prompt on the console and wait for user input
+        ///   Display a command prompt on the console and wait for user input
         /// </summary>
         public void Prompt()
         {
             // Set this culture for the thread 
             // to en-US to avoid number parsing issues
-            OpenSim.Framework.Culture.SetCurrentCulture();
+            Culture.SetCurrentCulture();
             string line = ReadLine(m_defaultPrompt + "# ", true, true);
 
 //            result.AsyncWaitHandle.WaitOne(-1);
@@ -108,18 +106,18 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Method that reads a line of text from the user.
+        ///   Method that reads a line of text from the user.
         /// </summary>
-        /// <param name="p"></param>
-        /// <param name="isCommand"></param>
-        /// <param name="e"></param>
+        /// <param name = "p"></param>
+        /// <param name = "isCommand"></param>
+        /// <param name = "e"></param>
         /// <returns></returns>
         public virtual string ReadLine(string p, bool isCommand, bool e)
         {
             string oldDefaultPrompt = m_defaultPrompt;
             m_defaultPrompt = p;
 //            System.Console.Write("{0}", p);
-            string cmdinput = System.Console.ReadLine();
+            string cmdinput = Console.ReadLine();
 
 //            while (cmdinput.Equals(null))
 //            {
@@ -176,13 +174,11 @@ namespace OpenSim.Framework
                 itisdone = true;
                 ret = CmdPrompt(p);
 
-                foreach (char c in excludedCharacters)
+                string ret1 = ret;
+                foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
                 {
-                    if (ret.Contains(c.ToString()))
-                    {
-                        System.Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
+                    Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                    itisdone = false;
                 }
             }
 
@@ -206,13 +202,11 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    foreach (char c in excludedCharacters)
+                    string ret1 = ret;
+                    foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
                     {
-                        if (ret.Contains(c.ToString()))
-                        {
-                            System.Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                        }
+                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                        itisdone = false;
                     }
                 }
             }
@@ -228,9 +222,7 @@ namespace OpenSim.Framework
             m_promptOptions = new List<string>(options);
 
             bool itisdone = false;
-            string optstr = String.Empty;
-            foreach (string s in options)
-                optstr += " " + s;
+            string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
 
             string temp = CmdPrompt(prompt, defaultresponse);
             while (itisdone == false)
@@ -241,7 +233,7 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    System.Console.WriteLine("Valid options are" + optstr);
+                    Console.WriteLine("Valid options are" + optstr);
                     temp = CmdPrompt(prompt, defaultresponse);
                 }
             }
@@ -268,12 +260,11 @@ namespace OpenSim.Framework
         public virtual void Output(string text)
         {
             Log(text);
-            System.Console.WriteLine(text);
+            Console.WriteLine(text);
         }
 
         public virtual void Log(string text)
         {
-
         }
 
         public virtual void LockOutput()
@@ -285,13 +276,14 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// The default prompt text.
+        ///   The default prompt text.
         /// </summary>
         public virtual string DefaultPrompt
         {
             set { m_defaultPrompt = value; }
             get { return m_defaultPrompt; }
         }
+
         protected string m_defaultPrompt;
 
         public virtual string Name
@@ -303,28 +295,17 @@ namespace OpenSim.Framework
 
         public Commands Commands
         {
-            get
-            {
-                return m_Commands;
-            }
-            set
-            {
-                m_Commands = value;
-            }
+            get { return m_Commands; }
+            set { m_Commands = value; }
         }
 
         public IScene ConsoleScene
         {
-            get
-            {
-                return m_ConsoleScene;
-            }
-            set
-            {
-                m_ConsoleScene = value;
-            }
+            get { return m_ConsoleScene; }
+            set { m_ConsoleScene = value; }
         }
-        public IScene m_ConsoleScene = null;
+
+        public IScene m_ConsoleScene;
 
         public void Dispose()
         {
@@ -339,14 +320,15 @@ namespace OpenSim.Framework
         public bool Processing = true;
 #if !NET_4_0
         private delegate void PromptEvent();
-        private IAsyncResult result = null;
-        private PromptEvent action = null;
-        private Object m_consoleLock = new Object();
-        private bool m_calledEndInvoke = false;
+
+        private IAsyncResult result;
+        private PromptEvent action;
+        private readonly Object m_consoleLock = new Object();
+        private bool m_calledEndInvoke;
 #endif
 
         /// <summary>
-        /// Starts the prompt for the console. This will never stop until the region is closed.
+        ///   Starts the prompt for the console. This will never stop until the region is closed.
         /// </summary>
         public void ReadConsole()
         {
@@ -355,37 +337,35 @@ namespace OpenSim.Framework
             {
                 wHandles[0] = result.AsyncWaitHandle;
             }
-            System.Timers.Timer t = new System.Timers.Timer ();
-            t.Interval = 0.5;
-            t.Elapsed += new System.Timers.ElapsedEventHandler (t_Elapsed);
-            t.Start ();
+            Timer t = new Timer {Interval = 0.5};
+            t.Elapsed += t_Elapsed;
+            t.Start();
             while (true)
             {
                 if (!Processing)
                 {
-                    throw new Exception ("Restart");
+                    throw new Exception("Restart");
                 }
                 lock (m_consoleLock)
                 {
                     if (action == null)
                     {
                         action = Prompt;
-                        result = action.BeginInvoke (null, null);
+                        result = action.BeginInvoke(null, null);
                         m_calledEndInvoke = false;
                     }
                     try
                     {
                         if ((!result.IsCompleted) &&
-                            (!result.AsyncWaitHandle.WaitOne (5000, false) || !result.IsCompleted))
+                            (!result.AsyncWaitHandle.WaitOne(5000, false) || !result.IsCompleted))
                         {
-
                         }
                         else if (action != null &&
-                            !result.CompletedSynchronously &&
-                            !m_calledEndInvoke)
+                                 !result.CompletedSynchronously &&
+                                 !m_calledEndInvoke)
                         {
                             m_calledEndInvoke = true;
-                            action.EndInvoke (result);
+                            action.EndInvoke(result);
                             action = null;
                             result = null;
                         }
@@ -393,7 +373,7 @@ namespace OpenSim.Framework
                     catch (Exception ex)
                     {
                         //Eat the exception and go on
-                        Output ("[Console]: Failed to execute command: " + ex.ToString ());
+                        Output("[Console]: Failed to execute command: " + ex);
                         action = null;
                         result = null;
                     }
@@ -401,10 +381,10 @@ namespace OpenSim.Framework
             }
         }
 
-        void t_Elapsed (object sender, System.Timers.ElapsedEventArgs e)
+        private void t_Elapsed(object sender, ElapsedEventArgs e)
         {
             //Tell the GUI that we are still here and it needs to keep checking
-            Console.Write ((char)0);
+            Console.Write((char) 0);
         }
     }
 }

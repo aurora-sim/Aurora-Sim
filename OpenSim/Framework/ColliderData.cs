@@ -33,21 +33,18 @@ namespace OpenSim.Framework
 {
     public class DetectedObject
     {
-        public DetectedObject() { }
+        public int colliderType;
         public UUID groupUUID = UUID.Zero;
-        public UUID ownerUUID = UUID.Zero;
         public UUID keyUUID = UUID.Zero;
+        public string nameStr = String.Empty;
+        public UUID ownerUUID = UUID.Zero;
         public Vector3 posVector = Vector3.Zero;
         public Quaternion rotQuat = Quaternion.Identity;
         public Vector3 velVector = Vector3.Zero;
-        public string nameStr = String.Empty;
-        public int colliderType = 0;
     }
 
     public class ColliderArgs : EventArgs
     {
-        public ColliderArgs() { }
         public List<DetectedObject> Colliders = new List<DetectedObject>();
-
     }
 }

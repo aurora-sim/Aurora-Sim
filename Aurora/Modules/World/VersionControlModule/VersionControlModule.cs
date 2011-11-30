@@ -26,26 +26,26 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Timers;
+using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Nini.Config;
 
 namespace Aurora.Modules
 {
     public class VersionControlModule : ISharedRegionModule
     {
-        private bool m_Enabled = false;
+        private bool m_Enabled;
 
         //Auto OAR configs
-        private Timer m_autoOARTimer = null;
-        private bool m_autoOAREnabled = false;
+        private bool m_autoOAREnabled;
         private float m_autoOARTime = 1; //In days
+        private Timer m_autoOARTimer;
 
         private int nextVersion = 1;
+
+        #region ISharedRegionModule Members
 
         public string Name
         {
@@ -57,7 +57,7 @@ namespace Aurora.Modules
             get { return null; }
         }
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
             if (source.Configs["VersionControl"] == null)
                 return;
@@ -77,27 +77,29 @@ namespace Aurora.Modules
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             if (!m_Enabled)
                 return;
 
             if (m_autoOAREnabled)
             {
-                m_autoOARTimer = new Timer(m_autoOARTime * 1000 * 60 * 60 * 24);//Time in days
+                m_autoOARTimer = new Timer(m_autoOARTime*1000*60*60*24); //Time in days
                 m_autoOARTimer.Elapsed += SaveOAR;
                 m_autoOARTimer.Enabled = true;
             }
             //scene.AddCommand(this, "save version", "save version <description>", "Saves the current region as the next incremented version in the version control module.", SaveVersion);
         }
+
+        #endregion
 
         private void SaveOAR(object sender, ElapsedEventArgs e)
         {
@@ -109,13 +111,9 @@ namespace Aurora.Modules
             if (cmdparams.Length < 3)
                 return;
 
-            string Desc = "";
             cmdparams[0] = "";
             cmdparams[1] = "";
-            foreach(string param in cmdparams)
-            {
-                Desc += param;
-            }
+            string Desc = cmdparams.Aggregate("", (current, param) => current + param);
 
             SaveNext(MainConsole.Instance.ConsoleScene, Desc);
         }
@@ -128,7 +126,8 @@ namespace Aurora.Modules
             tag += "Region." + nextScene.RegionInfo.RegionName;
             tag += ".Desc." + Description;
             tag += ".Version." + nextVersion;
-            tag += ".Date." + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "." + DateTime.Now.Hour;
+            tag += ".Date." + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "." +
+                   DateTime.Now.Hour;
             nextVersion++;
             MainConsole.Instance.RunCommand("save oar " + tag + ".vc.oar");
             //Change back

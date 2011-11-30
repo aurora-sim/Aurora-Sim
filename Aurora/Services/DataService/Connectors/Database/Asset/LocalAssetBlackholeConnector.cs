@@ -33,15 +33,17 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Timers;
 using Aurora.Framework;
-using log4net;
-using OpenMetaverse;
 using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using System.Security.Cryptography;
+using log4net;
+using Timer = System.Timers.Timer;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset
 {
@@ -49,30 +51,29 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
     {
         #region Variables
 
-        private delegate void Blank ();
-        private static readonly SHA256Managed SHA256HashGenerator = new SHA256Managed();
-        private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IGenericData m_Gd;
-        private bool m_Enabled;
-        private bool needsConversion;
-        private readonly List<char> m_InvalidChars = new List<char>();
-        private string m_CacheDirectory = "./BlackHoleAssets";
-        private string m_CacheDirectoryBackup = "./BlackHoleBackup";
         private const int m_CacheDirectoryTiers = 3;
         private const int m_CacheDirectoryTierLen = 1;
-        private readonly System.Timers.Timer taskTimer = new System.Timers.Timer();
-        private int NumberOfDaysForOldAssets = -30;
-        private readonly List<Blank> m_genericTasks = new List<Blank>();
-        private bool m_pointInventory2ParentAssets = true;
-
-        // for debugging
         private const bool disableTimer = false;
+        private static readonly SHA256Managed SHA256HashGenerator = new SHA256Managed();
+        private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly List<char> m_InvalidChars = new List<char>();
+        private readonly List<Blank> m_genericTasks = new List<Blank>();
+        private readonly Stopwatch sw = new Stopwatch();
+        private readonly Timer taskTimer = new Timer();
+        private int NumberOfDaysForOldAssets = -30;
 
         private int convertCount;
         private int convertCountDupe;
         private int convertCountParentFix;
         private int displayCount;
-        readonly Stopwatch sw = new Stopwatch();
+        private string m_CacheDirectory = "./BlackHoleAssets";
+        private string m_CacheDirectoryBackup = "./BlackHoleBackup";
+        private bool m_Enabled;
+        private IGenericData m_Gd;
+        private bool m_pointInventory2ParentAssets = true;
+        private bool needsConversion;
+
+        private delegate void Blank();
 
         #endregion
 
@@ -83,9 +84,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             get { return "IAssetDataPlugin"; }
         }
 
-        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") != "LocalConnectorBlackHole")
+            if (source.Configs["AuroraConnectors"].GetString("AssetConnector", "LocalConnector") !=
+                "LocalConnectorBlackHole")
                 return;
             m_Gd = genericData;
             m_Enabled = true;
@@ -95,7 +98,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             m_CacheDirectory = source.Configs["BlackHole"].GetString("CacheDirector", m_CacheDirectory);
             m_CacheDirectoryBackup = source.Configs["BlackHole"].GetString("BackupCacheDirector", m_CacheDirectoryBackup);
-            NumberOfDaysForOldAssets = source.Configs["BlackHole"].GetInt("AssetsAreOldAfterHowManyDays", 30) * -1;
+            NumberOfDaysForOldAssets = source.Configs["BlackHole"].GetInt("AssetsAreOldAfterHowManyDays", 30)*-1;
             m_Enabled = true;
 
             m_pointInventory2ParentAssets = source.Configs["BlackHole"].GetBoolean("PointInventoryToParentAssets", true);
@@ -123,7 +126,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
-            genericData.ConnectToDatabase(defaultConnectionString, "BlackholeAsset", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            genericData.ConnectToDatabase(defaultConnectionString, "BlackholeAsset",
+                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_InvalidChars.AddRange(Path.GetInvalidPathChars());
             m_InvalidChars.AddRange(Path.GetInvalidFileNameChars());
@@ -155,9 +159,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         #region GetAsset
 
         /// <summary>
-        /// Get a asset
+        ///   Get a asset
         /// </summary>
-        /// <param name="uuid">UUID of the asset requesting</param>
+        /// <param name = "uuid">UUID of the asset requesting</param>
         /// <returns>AssetBase</returns>
         public AssetBase GetAsset(UUID uuid)
         {
@@ -165,9 +169,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         }
 
         /// <summary>
-        /// Get a asset without the actual data. You can always use MetaOnly Property to deterine if its there
+        ///   Get a asset without the actual data. You can always use MetaOnly Property to deterine if its there
         /// </summary>
-        /// <param name="uuid">UUID of the asset requesting</param>
+        /// <param name = "uuid">UUID of the asset requesting</param>
         /// <returns>AssetBase without the actual asset data</returns>
         public AssetBase GetMeta(UUID uuid)
         {
@@ -193,7 +197,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     asset = Convert2BH(uuid);
                     if (asset != null)
                     {
-                        if (metaOnly) asset.Data = new byte[] { };
+                        if (metaOnly) asset.Data = new byte[] {};
                         asset.MetaOnly = metaOnly;
                     }
                 }
@@ -203,7 +207,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     // check the old table
                     databaseTable = "auroraassets_old";
                     dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
-                                    "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, host_uri");
+                                        "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, host_uri");
                     asset = LoadAssetFromDR(dr);
                     if (asset != null) asset.ID = Store(asset);
                 }
@@ -223,7 +227,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 asset.MetaOnly = metaOnly;
                 // save down last time updated
-                m_Gd.Update(databaseTable, new object[] { Util.ToUnixTime(DateTime.UtcNow) }, new[] { "access_time" }, new[] { "id" }, new object[] { asset.ID });
+                m_Gd.Update(databaseTable, new object[] {Util.ToUnixTime(DateTime.UtcNow)}, new[] {"access_time"},
+                            new[] {"id"}, new object[] {asset.ID});
             }
             catch (Exception e)
             {
@@ -246,25 +251,27 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     while (dr.Read())
                     {
                         return new AssetBase(UUID.Parse(dr["id"].ToString()), dr["name"].ToString(),
-                                              (AssetType)int.Parse(dr["asset_type"].ToString()),
-                                              UUID.Parse(dr["creator_id"].ToString()))
-                        {
-                            CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
-                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
-                            Description = dr["description"].ToString(),
-                            Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString()),
-                            HashCode = dr["hash_code"].ToString(),
-                            HostUri = dr["host_uri"].ToString(),
-                            LastAccessed = DateTime.UtcNow,
-                            ParentID = (dr["parent_id"].ToString() == "") ? UUID.Parse(dr["id"].ToString()) : UUID.Parse(dr["parent_id"].ToString())
-                        };
+                                             (AssetType) int.Parse(dr["asset_type"].ToString()),
+                                             UUID.Parse(dr["creator_id"].ToString()))
+                                   {
+                                       CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
+                                       DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
+                                       Description = dr["description"].ToString(),
+                                       Flags = (AssetFlags) int.Parse(dr["asset_flags"].ToString()),
+                                       HashCode = dr["hash_code"].ToString(),
+                                       HostUri = dr["host_uri"].ToString(),
+                                       LastAccessed = DateTime.UtcNow,
+                                       ParentID =
+                                           (dr["parent_id"].ToString() == "")
+                                               ? UUID.Parse(dr["id"].ToString())
+                                               : UUID.Parse(dr["parent_id"].ToString())
+                                   };
                     }
                 }
             }
             catch (Exception e)
             {
                 m_Log.Error("[LocalAssetBlackholeConnector] LoadAssetFromDR(); Error Loading", e);
-
             }
             finally
             {
@@ -288,15 +295,33 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         }
 
         /// <summary>
-        /// Stores the Asset in the database
+        ///   Stores the Asset in the database
         /// </summary>
-        /// <param name="asset">Asset you wish to store</param>
+        /// <param name = "asset">Asset you wish to store</param>
         /// <returns></returns>
         public bool StoreAsset(AssetBase asset)
         {
             bool successful;
             StoreAsset(asset, out successful);
             return successful;
+        }
+
+        public void UpdateContent(UUID id, byte[] assetdata)
+        {
+            ResetTimer(15000);
+            string newHash = WriteFile(id, assetdata);
+            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0],
+                                                    "hash_code");
+            if (hashCodeCheck.Count >= 1)
+            {
+                if (hashCodeCheck[0] != newHash)
+                {
+                    m_Gd.Insert("auroraassets_tasks", new[] {"id", "task_type", "task_values"},
+                                new object[] {UUID.Random(), "HASHCHECK", hashCodeCheck[0]});
+                    m_Gd.Update("auroraassets_" + id.ToString().ToCharArray()[0], new object[] {newHash},
+                                new[] {"hash_code"}, new[] {"id"}, new object[] {id});
+                }
+            }
         }
 
         private AssetBase StoreAsset(AssetBase asset, out bool successful)
@@ -314,8 +339,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         "'", "auroraassets_temp", "id");
                     if (((check1 != null) && (check1.Count == 0)) || (check1 == null))
                     {
-                        m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
-                                    new object[] { asset.ID, asset.HashCode, asset.CreatorID });
+                        m_Gd.Insert("auroraassets_temp", new[] {"id", "hash_code", "creator_id"},
+                                    new object[] {asset.ID, asset.HashCode, asset.CreatorID});
                         asset.ParentID = asset.ID;
                     }
                     else
@@ -328,7 +353,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                         // that asset returned nothing.. so.. 
                         // do some checks on it later
-                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "PARENTCHECK", check1[0] + "|" + asset.ID });
+                        m_Gd.Insert("auroraassets_tasks", new[] {"id", "task_type", "task_values"},
+                                    new object[] {UUID.Random(), "PARENTCHECK", check1[0] + "|" + asset.ID});
                         asset.ParentID = asset.ID;
                     }
                 }
@@ -345,7 +371,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if ((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode))
                 {
                     // Assign the task to check to see if this hash file is being used anymore
-                    m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
+                    m_Gd.Insert("auroraassets_tasks", new[] {"id", "task_type", "task_values"},
+                                new object[] {UUID.Random(), "HASHCHECK", asset.HashCode});
                 }
 
                 // Delete and save the asset
@@ -360,7 +387,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             new object[]
                                 {
                                     asset.ID, asset.HashCode,
-                                    (asset.ID == asset.ParentID) ? ""
+                                    (asset.ID == asset.ParentID)
+                                        ? ""
                                         : (UUID.Zero == asset.ParentID) ? "" : asset.ParentID.ToString(),
                                     (asset.CreatorID == UUID.Zero) ? "" : asset.CreatorID.ToString(), asset.Name,
                                     asset.Description, (int) asset.TypeAsset,
@@ -390,31 +418,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return asset;
         }
 
-        public void UpdateContent(UUID id, byte[] assetdata)
-        {
-            ResetTimer(15000);
-            string newHash = WriteFile(id, assetdata);
-            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0], "hash_code");
-            if (hashCodeCheck.Count >= 1)
-            {
-                if (hashCodeCheck[0] != newHash)
-                {
-                    m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
-                                new object[] { UUID.Random(), "HASHCHECK", hashCodeCheck[0] });
-                    m_Gd.Update("auroraassets_" + id.ToString().ToCharArray()[0], new object[] { newHash },
-                        new[] { "hash_code" }, new[] { "id" }, new object[] { id });
-
-                }
-            }
-        }
         #endregion
 
         #region asset exists
 
         /// <summary>
-        /// Check to see if a asset exists
+        ///   Check to see if a asset exists
         /// </summary>
-        /// <param name="uuid">UUID of the asset you want to check</param>
+        /// <param name = "uuid">UUID of the asset you want to check</param>
         /// <returns></returns>
         public bool ExistsAsset(UUID uuid)
         {
@@ -444,9 +455,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         #region Delete Asset
 
         /// <summary>
-        /// Delete the asset from the database and file system
+        ///   Delete the asset from the database and file system
         /// </summary>
-        /// <param name="id">UUID of the asset you wish to delete</param>
+        /// <param name = "id">UUID of the asset you wish to delete</param>
         /// <returns></returns>
         public bool Delete(UUID id)
         {
@@ -466,19 +477,18 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             string tableName = "auroraassets_" + id.ToString().Substring(0, 1);
             try
             {
-                
                 // assign a task to see if the hash code is being used anywhere else
                 if (assignHashCodeCheckTask)
                 {
-                    m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
-                                new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
+                    m_Gd.Insert("auroraassets_tasks", new[] {"id", "task_type", "task_values"},
+                                new object[] {UUID.Random(), "HASHCHECK", asset.HashCode});
                 }
 
                 // check deleteability of this asset.. if needed
                 if (!ignoreFlags)
                 {
-                    if ((int)(asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
-                        (int)(asset.Flags & AssetFlags.Deletable) != 0)
+                    if ((int) (asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
+                        (int) (asset.Flags & AssetFlags.Deletable) != 0)
                         ignoreFlags = true;
                 }
 
@@ -585,18 +595,18 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             Stream stream = null;
             BinaryFormatter bformatter = new BinaryFormatter();
-            byte[] results = new byte[] { };
+            byte[] results = new byte[] {};
             string filename = GetFileName(hashCode, false);
             try
             {
-                if(!File.Exists(filename))
+                if (!File.Exists(filename))
                 {
-                    if(!RestoreBackup(hashCode))
-                        return new byte[] { };
+                    if (!RestoreBackup(hashCode))
+                        return new byte[] {};
                 }
                 stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                results = (Byte[])bformatter.Deserialize(stream);
-                if(hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
+                results = (Byte[]) bformatter.Deserialize(stream);
+                if (hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
                 {
                     // seen this happen a couple times.. recovery seems to work good..
                     if (!waserror)
@@ -611,16 +621,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch
             {
-                if(!waserror)
+                if (!waserror)
                 {
-                    if(RestoreBackup(hashCode))
+                    if (RestoreBackup(hashCode))
                         return LoadFile(hashCode, true);
                 }
                 return null;
             }
             finally
             {
-                if(stream != null)
+                if (stream != null)
                     stream.Close();
                 stream = null;
             }
@@ -663,18 +673,21 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         #endregion
 
         #region Old Asset Migration To BlackHole
+
+        private readonly Dictionary<UUID, AssetBase> m_convertingAssets = new Dictionary<UUID, AssetBase>();
+
         private void StartMigration()
         {
             if (!sw.IsRunning) sw.Start();
             displayCount++;
             List<string> toConvert = m_Gd.Query(" 1 = 1 LIMIT 5 ", "assets", "id");
-            if(toConvert.Count >= 1)
+            if (toConvert.Count >= 1)
             {
-                foreach(string assetkey in toConvert)
+                foreach (string assetkey in toConvert)
                     Convert2BH(UUID.Parse(assetkey));
             }
             else
-                needsConversion = false;//ALL DONE!
+                needsConversion = false; //ALL DONE!
             if (displayCount == 100)
             {
                 sw.Stop();
@@ -687,131 +700,155 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
         }
 
-        private readonly Dictionary<UUID, AssetBase> m_convertingAssets = new Dictionary<UUID, AssetBase>();
         private AssetBase Convert2BH(UUID uuid)
         {
             AssetBase asset = null;
-            if(m_convertingAssets.TryGetValue(uuid, out asset))
+            if (m_convertingAssets.TryGetValue(uuid, out asset))
                 return asset;
-            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets", "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
+            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets",
+                                            "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
             try
             {
                 if (dr != null)
                 {
-                    while(dr != null && dr.Read())
+                    while (dr != null && dr.Read())
                     {
-                        asset = new AssetBase(dr["id"].ToString(), dr["name"].ToString(), (AssetType)int.Parse(dr["assetType"].ToString()), UUID.Parse(dr["CreatorID"].ToString()))
-                        {
-                            CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
-                            Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString()),
-                            Data = (Byte[])dr["data"],
-                            Description = dr["description"].ToString(),
-                            CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
-                            LastAccessed = DateTime.Now,
-                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
-                            MetaOnly = false,
-                            ParentID = UUID.Parse(dr["id"].ToString())
-                        };
+                        asset = new AssetBase(dr["id"].ToString(), dr["name"].ToString(),
+                                              (AssetType) int.Parse(dr["assetType"].ToString()),
+                                              UUID.Parse(dr["CreatorID"].ToString()))
+                                    {
+                                        CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
+                                        Flags = (AssetFlags) int.Parse(dr["asset_flags"].ToString()),
+                                        Data = (Byte[]) dr["data"],
+                                        Description = dr["description"].ToString(),
+                                        CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
+                                        LastAccessed = DateTime.Now,
+                                        DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
+                                        MetaOnly = false,
+                                        ParentID = UUID.Parse(dr["id"].ToString())
+                                    };
 
                         // set the flags
-                        if(dr["local"].ToString().Equals("1") || dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
+                        if (dr["local"].ToString().Equals("1") ||
+                            dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                             asset.Flags |= AssetFlags.Local;
-                        if(bool.Parse(dr["temporary"].ToString()))
+                        if (bool.Parse(dr["temporary"].ToString()))
                             asset.Flags |= AssetFlags.Temperary;
                         dr.Close();
                         dr = null;
                         m_convertingAssets[uuid] = asset;
 
-                        ResetTimer(1000);//Fire the timer in 1s to finish conversion
-                        lock(m_genericTasks)
+                        ResetTimer(1000); //Fire the timer in 1s to finish conversion
+                        lock (m_genericTasks)
                         {
                             AssetBase asset1 = asset;
                             m_genericTasks.Add(delegate
                                                    {
-                                // go through this asset and change all the guids to the parent IDs
-                                if(!asset1.IsBinaryAsset)
-                                {
-                                    const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
-                                    string stringData = Utils.BytesToString(asset1.Data);
-                                    bool changed = false;
-                                    MatchCollection mc = Regex.Matches(stringData, sPattern);
-                                    if(mc.Count >= 1)
-                                    {
-                                        foreach(Match match in mc)
-                                        {
-                                            try
-                                            {
-                                                UUID theMatch = UUID.Parse(match.Value);
-                                                if(theMatch != UUID.Zero)
-                                                {
-                                                    AssetBase mightBeAsset = GetAsset(theMatch, true, false);
-                                                    if((mightBeAsset != null) && (mightBeAsset.ParentID != UUID.Zero) &&
-                                                        (mightBeAsset.ParentID != mightBeAsset.ID))
-                                                    {
-                                                        stringData = stringData.Replace(match.Value,
-                                                                                        mightBeAsset.ParentID.ToString());
-                                                        changed = true;
-                                                    }
-                                                }
-                                            }
-                                            catch(Exception e)
-                                            {
-                                                m_Log.Error("Errored", e);
-                                            }
-                                        }
-                                    }
-                                    if(changed)
-                                    {
-                                        asset1.Data = Utils.StringToBytes(stringData);
-                                        // so it doesn't try to find the old file
-                                        asset1.LastHashCode = asset1.HashCode;
-                                    }
-                                }
-                                if(File.Exists(GetFileName(Convert.ToBase64String(SHA256HashGenerator.ComputeHash(asset1.Data)) + asset1.Data.Length, false)))
-                                    convertCountDupe++;
+                                                       // go through this asset and change all the guids to the parent IDs
+                                                       if (!asset1.IsBinaryAsset)
+                                                       {
+                                                           const string sPattern =
+                                                               @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
+                                                           string stringData = Utils.BytesToString(asset1.Data);
+                                                           bool changed = false;
+                                                           MatchCollection mc = Regex.Matches(stringData, sPattern);
+                                                           if (mc.Count >= 1)
+                                                           {
+                                                               foreach (Match match in mc)
+                                                               {
+                                                                   try
+                                                                   {
+                                                                       UUID theMatch = UUID.Parse(match.Value);
+                                                                       if (theMatch != UUID.Zero)
+                                                                       {
+                                                                           AssetBase mightBeAsset = GetAsset(theMatch,
+                                                                                                             true, false);
+                                                                           if ((mightBeAsset != null) &&
+                                                                               (mightBeAsset.ParentID != UUID.Zero) &&
+                                                                               (mightBeAsset.ParentID != mightBeAsset.ID))
+                                                                           {
+                                                                               stringData =
+                                                                                   stringData.Replace(match.Value,
+                                                                                                      mightBeAsset.
+                                                                                                          ParentID.
+                                                                                                          ToString());
+                                                                               changed = true;
+                                                                           }
+                                                                       }
+                                                                   }
+                                                                   catch (Exception e)
+                                                                   {
+                                                                       m_Log.Error("Errored", e);
+                                                                   }
+                                                               }
+                                                           }
+                                                           if (changed)
+                                                           {
+                                                               asset1.Data = Utils.StringToBytes(stringData);
+                                                               // so it doesn't try to find the old file
+                                                               asset1.LastHashCode = asset1.HashCode;
+                                                           }
+                                                       }
+                                                       if (
+                                                           File.Exists(
+                                                               GetFileName(
+                                                                   Convert.ToBase64String(
+                                                                       SHA256HashGenerator.ComputeHash(asset1.Data)) +
+                                                                   asset1.Data.Length, false)))
+                                                           convertCountDupe++;
 
-                                // check to see if this asset should have a parent ID
-                                List<string> check1 = m_Gd.Query(
-                                    "hash_code = '" + asset1.HashCode + "' and creator_id = '" + asset1.CreatorID +
-                                    "'", "auroraassets_temp", "id");
-                                bool update = false;
-                                bool insert = false;
-                                if((check1 != null) && (check1.Count == 0))
-                                {
-                                    asset1.ParentID = asset1.ID;
-                                    insert = true;
-                                }
-                                else if((check1 != null) && (check1[0] != asset1.ID.ToString()))
-                                {
-                                    convertCountParentFix++;
-                                    asset1.ParentID = new UUID(check1[0]);
+                                                       // check to see if this asset should have a parent ID
+                                                       List<string> check1 = m_Gd.Query(
+                                                           "hash_code = '" + asset1.HashCode + "' and creator_id = '" +
+                                                           asset1.CreatorID +
+                                                           "'", "auroraassets_temp", "id");
+                                                       bool update = false;
+                                                       bool insert = false;
+                                                       if ((check1 != null) && (check1.Count == 0))
+                                                       {
+                                                           asset1.ParentID = asset1.ID;
+                                                           insert = true;
+                                                       }
+                                                       else if ((check1 != null) && (check1[0] != asset1.ID.ToString()))
+                                                       {
+                                                           convertCountParentFix++;
+                                                           asset1.ParentID = new UUID(check1[0]);
 
-                                    update = true;
-                                }
-                                else
-                                    asset1.ParentID = asset1.ID;
+                                                           update = true;
+                                                       }
+                                                       else
+                                                           asset1.ParentID = asset1.ID;
 
-                                if(StoreAsset(asset1))
-                                    m_Gd.Delete("assets", "id = '" + asset1.ID + "'");
+                                                       if (StoreAsset(asset1))
+                                                           m_Gd.Delete("assets", "id = '" + asset1.ID + "'");
 
-                                try
-                                {
-                                    if(insert)
-                                        m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
-                                                    new object[] { asset1.ID, asset1.HashCode, asset1.CreatorID });
-                                    else if ((update) && (m_pointInventory2ParentAssets))
-                                    {
-                                        m_Gd.Update("inventoryitems", new object[] {asset1.ParentID}, new[] {"assetID"},
-                                                    new[] {"assetID"}, new object[] {asset1.ID});
-                                    }
-                                }
-                                catch(Exception e)
-                                {
-                                    m_Log.Error("[LocalAssetBlackholeManualMigration] Error on update/insert", e);
-                                }
-                                convertCount++;
-                                m_convertingAssets.Remove(uuid);
-                            });
+                                                       try
+                                                       {
+                                                           if (insert)
+                                                               m_Gd.Insert("auroraassets_temp",
+                                                                           new[] {"id", "hash_code", "creator_id"},
+                                                                           new object[]
+                                                                               {
+                                                                                   asset1.ID, asset1.HashCode,
+                                                                                   asset1.CreatorID
+                                                                               });
+                                                           else if ((update) && (m_pointInventory2ParentAssets))
+                                                           {
+                                                               m_Gd.Update("inventoryitems",
+                                                                           new object[] {asset1.ParentID},
+                                                                           new[] {"assetID"},
+                                                                           new[] {"assetID"}, new object[] {asset1.ID});
+                                                           }
+                                                       }
+                                                       catch (Exception e)
+                                                       {
+                                                           m_Log.Error(
+                                                               "[LocalAssetBlackholeManualMigration] Error on update/insert",
+                                                               e);
+                                                       }
+                                                       convertCount++;
+                                                       m_convertingAssets.Remove(uuid);
+                                                   });
                         }
                     }
                 }
@@ -826,6 +863,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             return asset;
         }
+
         #endregion
 
         #region Timer
@@ -839,22 +877,22 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         }
 
         /// <summary>
-        /// Timer runs tasks in the background when not busy
+        ///   Timer runs tasks in the background when not busy
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        /// <param name = "sender"></param>
+        /// <param name = "e"></param>
+        private void t_Elapsed(object sender, ElapsedEventArgs e)
         {
             taskTimer.Stop();
-            if(m_genericTasks.Count > 0)
+            if (m_genericTasks.Count > 0)
             {
                 List<Blank> tasks;
-                lock(m_genericTasks)
+                lock (m_genericTasks)
                 {
                     tasks = new List<Blank>(m_genericTasks);
                     m_genericTasks.Clear();
                 }
-                foreach(Blank b in tasks)
+                foreach (Blank b in tasks)
                 {
                     b();
                 }
@@ -905,42 +943,42 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         AssetBase actemp = GetAsset(uuid2);
                         if ((abtemp == null) && (actemp != null))
                         {
-                            m_Gd.Delete("auroraassets_temp", new[] { "id" }, new object[] { uuid1 });
-                            m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
-                                        new object[] { actemp.ID, actemp.HashCode, actemp.CreatorID });
+                            m_Gd.Delete("auroraassets_temp", new[] {"id"}, new object[] {uuid1});
+                            m_Gd.Insert("auroraassets_temp", new[] {"id", "hash_code", "creator_id"},
+                                        new object[] {actemp.ID, actemp.HashCode, actemp.CreatorID});
                             // I admit this might be a bit over kill.. 
-                            m_Gd.Update("auroraassets_a", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_b", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_c", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_d", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_e", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_f", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_0", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_1", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_2", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_3", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_4", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_5", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_6", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_7", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_8", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_9", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
+                            m_Gd.Update("auroraassets_a", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_b", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_c", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_d", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_e", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_f", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_0", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_1", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_2", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_3", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_4", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_5", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_6", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_7", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_8", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
+                            m_Gd.Update("auroraassets_9", new object[] {uuid2}, new[] {"parent_id"},
+                                        new[] {"parent_id"}, new object[] {uuid1});
                         }
                     }
                 }
@@ -950,7 +988,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 finally
                 {
-                    m_Gd.Delete("auroraassets_tasks", new[] { "id" }, new object[] { task_id });
+                    m_Gd.Delete("auroraassets_tasks", new[] {"id"}, new object[] {task_id});
                     ResetTimer(500);
                 }
             }
@@ -960,9 +998,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 try
                 {
                     List<string> findOld2 =
-                    m_Gd.Query(" access_time < " + Util.ToUnixTime(DateTime.UtcNow.AddDays(NumberOfDaysForOldAssets)) + " LIMIT 1 ",
-                               "auroraassets_" + UUID.Random().ToString().ToCharArray()[0],
-                               "id");
+                        m_Gd.Query(
+                            " access_time < " + Util.ToUnixTime(DateTime.UtcNow.AddDays(NumberOfDaysForOldAssets)) +
+                            " LIMIT 1 ",
+                            "auroraassets_" + UUID.Random().ToString().ToCharArray()[0],
+                            "id");
                     if (findOld2.Count >= 1)
                     {
                         foreach (string ass in findOld2)
@@ -987,7 +1027,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                                     findOld[10]
                                                 });
                             if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count > 0)
-                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] { "id" }, new object[] { ass });
+                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] {"id"}, new object[] {ass});
                         }
                         ResetTimer(100);
                         return;
@@ -1004,22 +1044,22 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private int TaskGetHashCodeUseCount(string hash_code)
         {
             return m_Gd.Query("hash_code", hash_code, "auroraassets_old", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_9", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_8", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_7", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_6", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_5", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_4", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_3", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_2", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_1", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_0", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_f", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_e", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_d", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_c", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_b", "id").Count +
-            m_Gd.Query("hash_code", hash_code, "auroraassets_a", "id").Count;
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_9", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_8", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_7", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_6", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_5", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_4", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_3", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_2", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_1", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_0", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_f", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_e", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_d", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_c", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_b", "id").Count +
+                   m_Gd.Query("hash_code", hash_code, "auroraassets_a", "id").Count;
         }
 
         #endregion

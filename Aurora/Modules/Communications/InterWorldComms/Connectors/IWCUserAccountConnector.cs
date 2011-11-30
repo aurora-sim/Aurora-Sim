@@ -25,46 +25,30 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OpenSim.Services.Connectors;
-using OpenSim.Services.UserAccountService;
-using OpenSim.Services.Interfaces;
-using OpenMetaverse;
-using Nini.Config;
 using Aurora.Simulation.Base;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework;
-using GridRegion = OpenSim.Services.Interfaces.GridRegion;
+using OpenSim.Services.Connectors;
+using OpenSim.Services.Interfaces;
+using OpenSim.Services.UserAccountService;
 
-namespace Aurora.Modules 
+namespace Aurora.Modules
 {
     public class IWCUserAccountConnector : IUserAccountService, IService
     {
         protected UserAccountService m_localService;
-        protected UserAccountServicesConnector m_remoteService;
         protected IRegistryCore m_registry;
-
-        #region IService Members
+        protected UserAccountServicesConnector m_remoteService;
 
         public string Name
         {
             get { return GetType().Name; }
         }
 
-        public IUserAccountService InnerService
-        {
-            get
-            {
-                //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
-                //If we arn't, its ar region we are serving, so give it everything we know
-                if (m_registry.RequestModuleInterface<InterWorldCommunications> ().IsGettingUrlsForIWCConnection)
-                    return m_localService;
-                else
-                    return this;
-            }
-        }
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -76,7 +60,7 @@ namespace Aurora.Modules
             m_localService.Configure(config, registry);
             m_remoteService = new UserAccountServicesConnector();
             m_remoteService.Initialize(config, registry);
-            registry.RegisterModuleInterface<IUserAccountService> (this);
+            registry.RegisterModuleInterface<IUserAccountService>(this);
             m_registry = registry;
         }
 
@@ -95,6 +79,19 @@ namespace Aurora.Modules
         #endregion
 
         #region IUserAccountService Members
+
+        public IUserAccountService InnerService
+        {
+            get
+            {
+                //If we are getting URls for an IWC connection, we don't want to be calling other things, as they are calling us about only our info
+                //If we arn't, its ar region we are serving, so give it everything we know
+                if (m_registry.RequestModuleInterface<InterWorldCommunications>().IsGettingUrlsForIWCConnection)
+                    return m_localService;
+                else
+                    return this;
+            }
+        }
 
         public UserAccount GetUserAccount(UUID scopeID, UUID userID)
         {
@@ -127,41 +124,37 @@ namespace Aurora.Modules
             return accounts;
         }
 
-        private IEnumerable<UserAccount> FixRemoteAccounts (List<UserAccount> list)
-        {
-            List<UserAccount> accounts = new List<UserAccount> ();
-            foreach (UserAccount account in list)
-            {
-                accounts.Add (FixRemoteAccount (account));
-            }
-            return accounts;
-        }
-
-        private UserAccount FixRemoteAccount (UserAccount userAccount)
-        {
-            if (userAccount == null)
-                return userAccount;
-            if (userAccount.Name.Contains ("@"))
-                return userAccount;//If it already has this added, don't mess with it
-            userAccount.Name = userAccount.FirstName + " " + userAccount.LastName + "@" + userAccount.GenericData["GridURL"];
-            return userAccount;
-        }
-
         public bool StoreUserAccount(UserAccount data)
         {
             return m_localService.StoreUserAccount(data);
         }
 
-        public void CreateUser (string name, string md5password, string email)
+        public void CreateUser(string name, string md5password, string email)
         {
-            m_localService.CreateUser (name, md5password, email);
+            m_localService.CreateUser(name, md5password, email);
         }
 
-        public void CreateUser (UUID userID, string name, string md5password, string email)
+        public void CreateUser(UUID userID, string name, string md5password, string email)
         {
-            m_localService.CreateUser (userID, name, md5password, email);
+            m_localService.CreateUser(userID, name, md5password, email);
         }
 
         #endregion
+
+        private IEnumerable<UserAccount> FixRemoteAccounts(List<UserAccount> list)
+        {
+            return list.Select(FixRemoteAccount).ToList();
+        }
+
+        private UserAccount FixRemoteAccount(UserAccount userAccount)
+        {
+            if (userAccount == null)
+                return userAccount;
+            if (userAccount.Name.Contains("@"))
+                return userAccount; //If it already has this added, don't mess with it
+            userAccount.Name = userAccount.FirstName + " " + userAccount.LastName + "@" +
+                               userAccount.GenericData["GridURL"];
+            return userAccount;
+        }
     }
 }

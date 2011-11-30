@@ -40,13 +40,13 @@ namespace OpenSim.Framework
         public int redirectGridX;
         public int redirectGridY;
         public uint regionFlags;
+        public string regionType;
         public byte simAccess;
+        public string simName;
         public float sunHour;
         public float terrainLowerLimit;
         public float terrainRaiseLimit;
         public bool useEstateSun;
         public float waterHeight;
-        public string simName;
-        public string regionType;
     }
 }

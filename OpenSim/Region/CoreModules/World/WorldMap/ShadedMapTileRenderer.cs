@@ -28,11 +28,9 @@
 using System;
 using System.Drawing;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -46,7 +44,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private IScene m_scene;
         //private IConfigSource m_config; // not used currently
 
-        public void Initialise (IScene scene, IConfigSource config)
+        #region IMapTileTerrainRenderer Members
+
+        public void Initialise(IScene scene, IConfigSource config)
         {
             m_scene = scene;
             // m_config = config; // not used currently
@@ -54,7 +54,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         public Bitmap TerrainToBitmap(Bitmap mapbmp)
         {
-             //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
             bool ShadowDebugContinue = true;
@@ -75,7 +75,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             }
 
-            float waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
+            float waterHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
 
             for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
             {
@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         else if (heightvalue < 0f)
                             heightvalue = 0f;
 
-                        Color color = Color.FromArgb((int)heightvalue, 100, (int)heightvalue);
+                        Color color = Color.FromArgb((int) heightvalue, 100, (int) heightvalue);
 
                         mapbmp.SetPixel(x, yr, color);
 
@@ -116,7 +116,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                 if ((x + 1 < m_scene.RegionInfo.RegionSizeX) && (y + 1 < m_scene.RegionInfo.RegionSizeY))
                                 {
-                                    hfvaluecompare = heightmap[x + 1, y + 1]; // light from north-east => look at land height there
+                                    hfvaluecompare = heightmap[x + 1, y + 1];
+                                        // light from north-east => look at land height there
                                 }
                                 if (Single.IsInfinity(hfvalue) || Single.IsNaN(hfvalue))
                                     hfvalue = 0f;
@@ -124,7 +125,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 if (Single.IsInfinity(hfvaluecompare) || Single.IsNaN(hfvaluecompare))
                                     hfvaluecompare = 0f;
 
-                                float hfdiff = hfvalue - hfvaluecompare;  // => positive if NE is lower, negative if here is lower
+                                float hfdiff = hfvalue - hfvaluecompare;
+                                    // => positive if NE is lower, negative if here is lower
 
                                 int hfdiffi = 0;
                                 int hfdiffihighlight = 0;
@@ -133,18 +135,19 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 try
                                 {
                                     // hfdiffi = Math.Abs((int)((hfdiff * 4) + (hfdiff * 0.5))) + 1;
-                                    hfdiffi = Math.Abs((int)(hfdiff * 4.5f)) + 1;
-                                    if (hfdiff % 1f != 0)
+                                    hfdiffi = Math.Abs((int) (hfdiff*4.5f)) + 1;
+                                    if (hfdiff%1f != 0)
                                     {
                                         // hfdiffi = hfdiffi + Math.Abs((int)(((hfdiff % 1) * 0.5f) * 10f) - 1);
-                                        hfdiffi = hfdiffi + Math.Abs((int)((hfdiff % 1f) * 5f) - 1);
+                                        hfdiffi = hfdiffi + Math.Abs((int) ((hfdiff%1f)*5f) - 1);
                                     }
 
-                                    hfdiffihighlight = Math.Abs((int)((hfdiff * highlightfactor) * 4.5f)) + 1;
-                                    if (hfdiff % 1f != 0)
+                                    hfdiffihighlight = Math.Abs((int) ((hfdiff*highlightfactor)*4.5f)) + 1;
+                                    if (hfdiff%1f != 0)
                                     {
                                         // hfdiffi = hfdiffi + Math.Abs((int)(((hfdiff % 1) * 0.5f) * 10f) - 1);
-                                        hfdiffihighlight = hfdiffihighlight + Math.Abs((int)(((hfdiff * highlightfactor) % 1f) * 5f) - 1);
+                                        hfdiffihighlight = hfdiffihighlight +
+                                                           Math.Abs((int) (((hfdiff*highlightfactor)%1f)*5f) - 1);
                                     }
                                 }
                                 catch (OverflowException)
@@ -165,9 +168,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         int r = color.R;
                                         int g = color.G;
                                         int b = color.B;
-                                        color = Color.FromArgb((r + hfdiffihighlight < 255) ? r + hfdiffihighlight : 255,
-                                                               (g + hfdiffihighlight < 255) ? g + hfdiffihighlight : 255,
-                                                               (b + hfdiffihighlight < 255) ? b + hfdiffihighlight : 255);
+                                        color = Color.FromArgb(
+                                            (r + hfdiffihighlight < 255) ? r + hfdiffihighlight : 255,
+                                            (g + hfdiffihighlight < 255) ? g + hfdiffihighlight : 255,
+                                            (b + hfdiffihighlight < 255) ? b + hfdiffihighlight : 255);
                                     }
                                 }
                                 else if (hfdiff < -0.3f)
@@ -189,7 +193,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                                                    (g - hfdiffi > 0) ? g - hfdiffi : 0,
                                                                    (b - hfdiffi > 0) ? b - hfdiffi : 0);
 
-                                            mapbmp.SetPixel(x-1, yr+1, color);
+                                            mapbmp.SetPixel(x - 1, yr + 1, color);
                                         }
                                     }
                                 }
@@ -199,7 +203,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         {
                             if (!terraincorruptedwarningsaid)
                             {
-                                m_log.WarnFormat("[MAPIMAGE]: Your terrain is corrupted in region {0}, it might take a few minutes to generate the map image depending on the corruption level", m_scene.RegionInfo.RegionName);
+                                m_log.WarnFormat(
+                                    "[MAPIMAGE]: Your terrain is corrupted in region {0}, it might take a few minutes to generate the map image depending on the corruption level",
+                                    m_scene.RegionInfo.RegionName);
                                 terraincorruptedwarningsaid = true;
                             }
                             color = Color.Black;
@@ -219,7 +225,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         else if (heightvalue < 0f)
                             heightvalue = 0f;
 
-                        heightvalue = 100f - (heightvalue * 100f) / 19f;
+                        heightvalue = 100f - (heightvalue*100f)/19f;
 
                         try
                         {
@@ -229,7 +235,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         {
                             if (!terraincorruptedwarningsaid)
                             {
-                                m_log.WarnFormat("[MAPIMAGE]: Your terrain is corrupted in region {0}, it might take a few minutes to generate the map image depending on the corruption level", m_scene.RegionInfo.RegionName);
+                                m_log.WarnFormat(
+                                    "[MAPIMAGE]: Your terrain is corrupted in region {0}, it might take a few minutes to generate the map image depending on the corruption level",
+                                    m_scene.RegionInfo.RegionName);
                                 terraincorruptedwarningsaid = true;
                             }
                             Color black = Color.Black;
@@ -241,5 +249,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             // m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (Environment.TickCount - tc) + " ms");
             return mapbmp;
         }
+
+        #endregion
     }
 }

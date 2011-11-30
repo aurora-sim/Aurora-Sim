@@ -25,24 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Drawing;
 using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class SOPObjectMaterial : System.MarshalByRefObject, IObjectMaterial
+    internal class SOPObjectMaterial : MarshalByRefObject, IObjectMaterial
     {
         private readonly int m_face;
         private readonly ISceneChildEntity m_parent;
 
-        public SOPObjectMaterial (int m_face, ISceneChildEntity m_parent)
+        public SOPObjectMaterial(int m_face, ISceneChildEntity m_parent)
         {
             this.m_face = m_face;
             this.m_parent = m_parent;
         }
+
+        #region IObjectMaterial Members
 
         public Color Color
         {
@@ -54,8 +55,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
-                texface.RGBA = new Color4(value.R,value.G,value.B,value.A);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
+                texface.RGBA = new Color4(value.R, value.G, value.B, value.A);
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex);
             }
@@ -71,23 +72,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.TextureID = value;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex);
             }
         }
 
-        private Primitive.TextureEntryFace GetTexface()
-        {
-            Primitive.TextureEntry tex = m_parent.Shape.Textures;
-            return tex.GetFace((uint)m_face);
-        }
-
         public TextureMapping Mapping
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public bool Bright
@@ -96,7 +91,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.Fullbright = value;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex);
@@ -109,7 +104,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.Glow = (float) value;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex);
@@ -122,7 +117,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             set
             {
                 Primitive.TextureEntry tex = m_parent.Shape.Textures;
-                Primitive.TextureEntryFace texface = tex.CreateFace((uint)m_face);
+                Primitive.TextureEntryFace texface = tex.CreateFace((uint) m_face);
                 texface.Shiny = value ? Shininess.High : Shininess.None;
                 tex.FaceTextures[m_face] = texface;
                 m_parent.UpdateTexture(tex);
@@ -132,7 +127,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public bool BumpMap
         {
             get { return GetTexface().Bump == Bumpiness.None; }
-            set { throw new System.NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        #endregion
+
+        private Primitive.TextureEntryFace GetTexface()
+        {
+            Primitive.TextureEntry tex = m_parent.Shape.Textures;
+            return tex.GetFace((uint) m_face);
         }
     }
 }

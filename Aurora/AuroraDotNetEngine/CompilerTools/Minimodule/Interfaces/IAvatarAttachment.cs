@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using Aurora.ScriptEngine.AuroraDotNetEngine;
-
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     public interface IAvatarAttachment
@@ -34,8 +32,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         //// <value>
         /// Describes where on the avatar the attachment is located
         /// </value>
-        int Location { get ; }
-        
+        int Location { get; }
+
         //// <value>
         /// Accessor to the rez'ed asset, representing the attachment
         /// </value>

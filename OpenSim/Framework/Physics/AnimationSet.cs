@@ -27,9 +27,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using OpenMetaverse;
-
-using Animation = OpenSim.Framework.Animation;
 
 namespace OpenSim.Framework
 {
@@ -38,13 +37,8 @@ namespace OpenSim.Framework
     {
         public static AvatarAnimations Animations = new AvatarAnimations();
 
-        private OpenSim.Framework.Animation m_defaultAnimation = new OpenSim.Framework.Animation();
-        private List<OpenSim.Framework.Animation> m_animations = new List<OpenSim.Framework.Animation>();
-
-        public OpenSim.Framework.Animation DefaultAnimation 
-        {
-            get { return m_defaultAnimation; } 
-        }
+        private readonly List<Animation> m_animations = new List<Animation>();
+        private Animation m_defaultAnimation = new Animation();
 
         public AnimationSet(AvatarAnimations animations)
         {
@@ -52,18 +46,17 @@ namespace OpenSim.Framework
             ResetDefaultAnimation();
         }
 
+        public Animation DefaultAnimation
+        {
+            get { return m_defaultAnimation; }
+        }
+
         public bool HasAnimation(UUID animID)
         {
             if (m_defaultAnimation.AnimID == animID)
                 return true;
 
-            for (int i = 0; i < m_animations.Count; ++i)
-            {
-                if (m_animations[i].AnimID == animID)
-                    return true;
-            }
-
-            return false;
+            return m_animations.Any(t => t.AnimID == animID);
         }
 
         public bool Add(UUID animID, int sequenceNum, UUID objectID)
@@ -72,7 +65,7 @@ namespace OpenSim.Framework
             {
                 if (!HasAnimation(animID))
                 {
-                    m_animations.Add(new OpenSim.Framework.Animation(animID, sequenceNum, objectID));
+                    m_animations.Add(new Animation(animID, sequenceNum, objectID));
                     return true;
                 }
             }
@@ -109,14 +102,14 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// The default animation is reserved for "main" animations
-        /// that are mutually exclusive, e.g. flying and sitting.
+        ///   The default animation is reserved for "main" animations
+        ///   that are mutually exclusive, e.g. flying and sitting.
         /// </summary>
         public bool SetDefaultAnimation(UUID animID, int sequenceNum, UUID objectID)
         {
             if (m_defaultAnimation.AnimID != animID)
             {
-                m_defaultAnimation = new OpenSim.Framework.Animation(animID, sequenceNum, objectID);
+                m_defaultAnimation = new Animation(animID, sequenceNum, objectID);
                 return true;
             }
             return false;
@@ -128,7 +121,7 @@ namespace OpenSim.Framework
         }
 
         /// <summary>
-        /// Set the animation as the default animation if it's known
+        ///   Set the animation as the default animation if it's known
         /// </summary>
         public bool TrySetDefaultAnimation(string anim, int sequenceNum, UUID objectID)
         {
@@ -160,29 +153,28 @@ namespace OpenSim.Framework
             }
         }
 
-        public OpenSim.Framework.Animation[] ToArray()
+        public Animation[] ToArray()
         {
-            OpenSim.Framework.Animation[] theArray = new OpenSim.Framework.Animation[m_animations.Count];
+            Animation[] theArray = new Animation[m_animations.Count];
             uint i = 0;
             try
             {
-                foreach (OpenSim.Framework.Animation anim in m_animations)
+                foreach (Animation anim in m_animations)
                     theArray[i++] = anim;
             }
-            catch 
+            catch
             {
-                /* S%^t happens. Ignore. */ 
+                /* S%^t happens. Ignore. */
             }
             return theArray;
         }
 
-        public void FromArray(OpenSim.Framework.Animation[] theArray)
+        public void FromArray(Animation[] theArray)
         {
             if (theArray == null)
                 return;
-            foreach (OpenSim.Framework.Animation anim in theArray)
+            foreach (Animation anim in theArray)
                 m_animations.Add(anim);
         }
     }
 }
- 

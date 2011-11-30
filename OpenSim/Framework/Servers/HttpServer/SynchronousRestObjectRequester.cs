@@ -36,16 +36,15 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class SynchronousRestObjectRequester
     {
-        /// <summary>
-        /// Perform a synchronous REST request.
-        /// </summary>
-        /// <param name="verb"></param>
-        /// <param name="requestUrl"></param>
-        /// <param name="obj"> </param>
-        /// <returns></returns>
-        ///
-        /// <exception cref="System.Net.WebException">Thrown if we encounter a network issue while posting
-        /// the request.  You'll want to make sure you deal with this as they're not uncommon</exception>
+        ///<summary>
+        ///  Perform a synchronous REST request.
+        ///</summary>
+        ///<param name = "verb"></param>
+        ///<param name = "requestUrl"></param>
+        ///<param name = "obj"> </param>
+        ///<returns></returns>
+        ///<exception cref = "System.Net.WebException">Thrown if we encounter a network issue while posting
+        ///  the request.  You'll want to make sure you deal with this as they're not uncommon</exception>
         public static TResponse MakeRequest<TRequest, TResponse>(string verb, string requestUrl, TRequest obj)
         {
             Type type = typeof (TRequest);
@@ -60,8 +59,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                 MemoryStream buffer = new MemoryStream();
 
-                XmlWriterSettings settings = new XmlWriterSettings();
-                settings.Encoding = Encoding.UTF8;
+                XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
 
                 using (XmlWriter writer = XmlWriter.Create(buffer, settings))
                 {
@@ -97,13 +95,16 @@ namespace OpenSim.Framework.Servers.HttpServer
                     if (resp.ContentLength > 0)
                     {
                         Stream respStream = resp.GetResponseStream();
-                        XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
-                        deserial = (TResponse)deserializer.Deserialize(respStream);
-                        respStream.Close();
+                        XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
+                        if (respStream != null)
+                        {
+                            deserial = (TResponse) deserializer.Deserialize(respStream);
+                            respStream.Close();
+                        }
                     }
                 }
             }
-            catch (System.InvalidOperationException)
+            catch (InvalidOperationException)
             {
                 // This is what happens when there is invalid XML or a 404
             }

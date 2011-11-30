@@ -26,14 +26,15 @@
  */
 
 using System.Collections.Generic;
-using OpenSim.Framework;
 using OpenMetaverse;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
     public delegate void MessageResultNotification(bool success);
+
     public delegate void UndeliveredMessage(GridInstantMessage im, string reason);
-   
+
     public interface IMessageTransferModule
     {
         event UndeliveredMessage OnUndeliveredMessage;

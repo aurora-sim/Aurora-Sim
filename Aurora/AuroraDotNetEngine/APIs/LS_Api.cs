@@ -26,18 +26,13 @@
  */
 
 using System;
-using System.Reflection;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
+using Aurora.Framework;
+using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
+using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
-using Nini.Config;
-using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
-
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
@@ -45,120 +40,35 @@ using LSL_List = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list;
 using LSL_Rotation = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Quaternion;
 using LSL_String = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;
 using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
     [Serializable]
     public class LS_Api : MarshalByRefObject, ILS_Api, IScriptApi
     {
-        internal IScriptModulePlugin m_ScriptEngine;
-        internal ISceneChildEntity m_host;
-        internal uint m_localID;
-        internal UUID m_itemID;
-        internal bool m_LSFunctionsEnabled = false;
-        internal IScriptModuleComms m_comms = null;
         internal ScriptProtectionModule ScriptProtection;
-        //internal IWindLightSettingsModule m_lightShareModule;
-
-        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
-        {
-            m_ScriptEngine = ScriptEngine;
-            m_host = host;
-            m_localID = localID;
-            m_itemID = itemID;
-            ScriptProtection = module;
-
-            if (m_ScriptEngine.Config.GetBoolean("AllowLightShareFunctions", false))
-                m_LSFunctionsEnabled = true;
-
-            m_comms = World.RequestModuleInterface<IScriptModuleComms>();
-            if (m_comms == null)
-                m_LSFunctionsEnabled = false;
-        }
-
-        public string Name
-        {
-            get { return "ls"; }
-        }
-
-        public string InterfaceName
-        {
-            get { return "ILS_Api"; }
-        }
-
-        /// <summary>
-        /// We don't have to add any assemblies here
-        /// </summary>
-        public string[] ReferencedAssemblies
-        {
-            get { return new string[0]; }
-        }
-
-        /// <summary>
-        /// We use the default namespace, so we don't have any to add
-        /// </summary>
-        public string[] NamespaceAdditions
-        {
-            get { return new string[0]; }
-        }
-
-        public IScriptApi Copy()
-        {
-            return new LS_Api();
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public override Object InitializeLifetimeService()
-        {
-            ILease lease = (ILease)base.InitializeLifetimeService();
-
-            if (lease.CurrentState == LeaseState.Initial)
-            {
-                lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
-                //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
-                //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
-            }
-            return lease;
-
-        }
+        internal bool m_LSFunctionsEnabled;
+        internal IScriptModulePlugin m_ScriptEngine;
+        internal IScriptModuleComms m_comms;
+        internal ISceneChildEntity m_host;
+        internal UUID m_itemID;
+        internal uint m_localID;
 
         public IScene World
         {
             get { return m_host.ParentEntity.Scene; }
         }
 
-        //
-        //Dumps an error message on the debug console.
-        //
-
-        internal void LSShoutError(string message)
-        {
-            if (message.Length > 1023)
-                message = message.Substring(0, 1023);
-
-            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
-            if (chatModule != null)
-                chatModule.SimChat(message,
-                          ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, 
-                          m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
-
-            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
-            wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
-        }
+        #region ILS_Api Members
 
         /// <summary>
-        /// Get the current Windlight scene
+        ///   Get the current Windlight scene
         /// </summary>
         /// <returns>List of windlight parameters</returns>
         public LSL_List lsGetWindlightScene(LSL_List rules)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS", m_itemID)) return new LSL_List();
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "lsGetWindlightScene", m_host, "LS", m_itemID))
+                return new LSL_List();
 
             /*RegionLightShareData wl = m_lightShareModule.WindLightSettings;
 
@@ -293,6 +203,164 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return values;
             */
             return null;
+        }
+
+        /// <summary>
+        ///   Set the current Windlight scene
+        /// </summary>
+        /// <param name = "rules"></param>
+        /// <returns>success: true or false</returns>
+        public int lsSetWindlightScene(LSL_List rules)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "lsSetWindlightScene", m_host, "LS", m_itemID))
+                return 0;
+
+            if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) &&
+                World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
+            {
+                LSShoutError("lsSetWindlightScene can only be used by estate managers or owners.");
+                return 0;
+            }
+            int success = 0;
+
+            /*if (m_lightShareModule.EnableWindLight)
+            {
+                RegionLightShareData wl = getWindlightProfileFromRules(rules);
+                //m_lightShareModule.SaveWindLightSettings(0, wl);
+                success = 1;
+            }
+            else
+            {
+                LSShoutError("Windlight module is disabled");
+                return 0;
+            }*/
+            return success;
+        }
+
+        /// <summary>
+        ///   Set the current Windlight scene to a target avatar
+        /// </summary>
+        /// <param name = "rules"></param>
+        /// <returns>success: true or false</returns>
+        public int lsSetWindlightSceneTargeted(LSL_List rules, LSL_Key target)
+        {
+            if (!m_LSFunctionsEnabled)
+            {
+                LSShoutError("LightShare functions are not enabled.");
+                return 0;
+            }
+            if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) &&
+                World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
+            {
+                LSShoutError("lsSetWindlightSceneTargeted can only be used by estate managers or owners.");
+                return 0;
+            }
+            int success = 0;
+
+            /*if (m_lightShareModule.EnableWindLight)
+            { 
+                RegionLightShareData wl = getWindlightProfileFromRules(rules);
+                m_lightShareModule.SendWindlightProfileTargeted(wl, new UUID(target.m_string));
+                success = 1;
+            }
+            else
+            {
+                LSShoutError("Windlight module is disabled");
+                return 0;
+            }*/
+            return success;
+        }
+
+        #endregion
+
+        //internal IWindLightSettingsModule m_lightShareModule;
+
+        #region IScriptApi Members
+
+        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID,
+                               ScriptProtectionModule module)
+        {
+            m_ScriptEngine = ScriptEngine;
+            m_host = host;
+            m_localID = localID;
+            m_itemID = itemID;
+            ScriptProtection = module;
+
+            if (m_ScriptEngine.Config.GetBoolean("AllowLightShareFunctions", false))
+                m_LSFunctionsEnabled = true;
+
+            m_comms = World.RequestModuleInterface<IScriptModuleComms>();
+            if (m_comms == null)
+                m_LSFunctionsEnabled = false;
+        }
+
+        public string Name
+        {
+            get { return "ls"; }
+        }
+
+        public string InterfaceName
+        {
+            get { return "ILS_Api"; }
+        }
+
+        /// <summary>
+        ///   We don't have to add any assemblies here
+        /// </summary>
+        public string[] ReferencedAssemblies
+        {
+            get { return new string[0]; }
+        }
+
+        /// <summary>
+        ///   We use the default namespace, so we don't have any to add
+        /// </summary>
+        public string[] NamespaceAdditions
+        {
+            get { return new string[0]; }
+        }
+
+        public IScriptApi Copy()
+        {
+            return new LS_Api();
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+        }
+
+        public override Object InitializeLifetimeService()
+        {
+            ILease lease = (ILease) base.InitializeLifetimeService();
+
+            if (lease.CurrentState == LeaseState.Initial)
+            {
+                lease.InitialLeaseTime = TimeSpan.FromMinutes(0);
+                //                lease.RenewOnCallTime = TimeSpan.FromSeconds(10.0);
+                //                lease.SponsorshipTimeout = TimeSpan.FromMinutes(1.0);
+            }
+            return lease;
+        }
+
+        //
+        //Dumps an error message on the debug console.
+        //
+
+        internal void LSShoutError(string message)
+        {
+            if (message.Length > 1023)
+                message = message.Substring(0, 1023);
+
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(message,
+                                   ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL,
+                                   m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, true, World);
+
+            IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
+            wComm.DeliverMessage(ChatTypeEnum.Shout, ScriptBaseClass.DEBUG_CHANNEL, m_host.Name, m_host.UUID, message);
         }
 
         private RegionLightShareData getWindlightProfileFromRules(LSL_List rules)
@@ -473,67 +541,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             wl.regionID = m_host.ParentGroup.Scene.RegionInfo.RegionID;
             return wl;*/
             return null;
-        }
-        /// <summary>
-        /// Set the current Windlight scene
-        /// </summary>
-        /// <param name="rules"></param>
-        /// <returns>success: true or false</returns>
-        public int lsSetWindlightScene(LSL_List rules)
-        {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "lsSetWindlightScene", m_host, "LS", m_itemID)) return 0;
-            
-            if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) && World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
-            {
-                LSShoutError("lsSetWindlightScene can only be used by estate managers or owners.");
-                return 0;
-            }
-            int success = 0;
-
-            /*if (m_lightShareModule.EnableWindLight)
-            {
-                RegionLightShareData wl = getWindlightProfileFromRules(rules);
-                //m_lightShareModule.SaveWindLightSettings(0, wl);
-                success = 1;
-            }
-            else
-            {
-                LSShoutError("Windlight module is disabled");
-                return 0;
-            }*/
-            return success;
-        }
-        /// <summary>
-        /// Set the current Windlight scene to a target avatar
-        /// </summary>
-        /// <param name="rules"></param>
-        /// <returns>success: true or false</returns>
-        public int lsSetWindlightSceneTargeted(LSL_List rules, LSL_Key target)
-        {
-            if (!m_LSFunctionsEnabled)
-            {
-                LSShoutError("LightShare functions are not enabled.");
-                return 0;
-            }
-            if (!World.RegionInfo.EstateSettings.IsEstateManager(m_host.OwnerID) && World.GetScenePresence(m_host.OwnerID).GodLevel < 200)
-            {
-                LSShoutError("lsSetWindlightSceneTargeted can only be used by estate managers or owners.");
-                return 0;
-            }
-            int success = 0;
-
-            /*if (m_lightShareModule.EnableWindLight)
-            { 
-                RegionLightShareData wl = getWindlightProfileFromRules(rules);
-                m_lightShareModule.SendWindlightProfileTargeted(wl, new UUID(target.m_string));
-                success = 1;
-            }
-            else
-            {
-                LSShoutError("Windlight module is disabled");
-                return 0;
-            }*/
-            return success;
         }
     }
 }

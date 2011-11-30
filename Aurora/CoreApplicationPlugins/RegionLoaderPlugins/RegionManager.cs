@@ -26,24 +26,19 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
 using Aurora.Framework;
 using log4net;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Framework.Servers.HttpServer;
 
 namespace Aurora.Modules.RegionLoader
 {
@@ -54,23 +49,23 @@ namespace Aurora.Modules.RegionLoader
         public delegate void NewRegion(RegionInfo info);
         public delegate void NoOp();
         public event NewRegion OnNewRegion;
-        private bool KillAfterRegionCreation = false;
+        private readonly bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
-        private ISimulationBase m_OpenSimBase;
-        private IRegionInfoConnector m_connector = null;
+        private readonly ISimulationBase m_OpenSimBase;
+        private readonly IRegionInfoConnector m_connector = null;
         private bool m_changingRegion = false;
         private bool m_textHasChanged = false;
-        private SceneManager m_sceneManager;
+        private readonly SceneManager m_sceneManager;
         private string m_defaultRegionsLocation = "DefaultRegions";
 
-        private System.Windows.Forms.Timer m_timer = new Timer ();
-        private List<NoOp> m_timerEvents = new List<NoOp> ();
+        private readonly Timer m_timer = new Timer ();
+        private readonly List<NoOp> m_timerEvents = new List<NoOp> ();
 
         public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
         {
             m_OpenSimBase = baseOpenSim;
             m_sceneManager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager> ();
-            m_connector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
+            m_connector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             KillAfterRegionCreation = killOnCreate;
             InitializeComponent();
             if (openCreatePageFirst)
@@ -117,12 +112,14 @@ namespace Aurora.Modules.RegionLoader
                 MessageBox.Show("You must enter a region name!");
                 return;
             }
-            RegionInfo region = new RegionInfo();
-            region.RegionName = RName.Text;
-            region.RegionID = UUID.Random();
-            region.RegionLocX = int.Parse(LocX.Text) * Constants.RegionSize;
-            region.RegionLocY = int.Parse(LocY.Text) * Constants.RegionSize;
-            
+            RegionInfo region = new RegionInfo
+                                    {
+                                        RegionName = RName.Text,
+                                        RegionID = UUID.Random(),
+                                        RegionLocX = int.Parse(LocX.Text)*Constants.RegionSize,
+                                        RegionLocY = int.Parse(LocY.Text)*Constants.RegionSize
+                                    };
+
             IPAddress address = IPAddress.Parse("0.0.0.0");
             string[] ports = Port.Text.Split (',');
             
@@ -165,16 +162,13 @@ namespace Aurora.Modules.RegionLoader
             CopyOverDefaultRegion (region.RegionName);
             if (KillAfterRegionCreation)
             {
-                System.Windows.Forms.Application.Exit();
+                Application.Exit();
                 return;
             }
-            else
-            {
-                m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
-                SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-                manager.AllRegions++;
-                manager.StartNewRegion(region);
-            }
+            m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            manager.AllRegions++;
+            manager.StartNewRegion(region);
             RefreshCurrentRegions();
         }
 
@@ -203,7 +197,7 @@ namespace Aurora.Modules.RegionLoader
             else
                 textBox4.Text = "Adult";
             DisabledEdit.Checked = region.Disabled;
-            textBox7.Text = string.Join (", ", region.UDPPorts.ConvertAll<string> (delegate (int i) { return i.ToString (); }).ToArray ());
+            textBox7.Text = string.Join (", ", region.UDPPorts.ConvertAll (i => i.ToString()).ToArray ());
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString ();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString ();
             textBox1.Text = region.RegionName;
@@ -222,8 +216,8 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetOfflineStatus ()
         {
-            m_timerEvents.Add (delegate ()
-            {
+            m_timerEvents.Add (delegate
+                                   {
                 RegionStatus.Text = "Offline";
                 RegionStatus.BackColor = Color.Red;
                 putOnline.Enabled = true;
@@ -235,8 +229,8 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetOnlineStatus ()
         {
-            m_timerEvents.Add (delegate ()
-            {
+            m_timerEvents.Add (delegate
+                                   {
                 RegionStatus.Text = "Online";
                 RegionStatus.BackColor = Color.SpringGreen;
                 putOnline.Enabled = false;
@@ -248,8 +242,8 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetStoppingStatus ()
         {
-            m_timerEvents.Add (delegate ()
-            {
+            m_timerEvents.Add (delegate
+                                   {
                 RegionStatus.Text = "Stopping";
                 RegionStatus.BackColor = Color.LightPink;
                 putOnline.Enabled = false;
@@ -261,8 +255,8 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetStartingStatus ()
         {
-            m_timerEvents.Add (delegate ()
-            {
+            m_timerEvents.Add (delegate
+                                   {
                 RegionStatus.Text = "Starting";
                 RegionStatus.BackColor = Color.LightGreen;
                 putOnline.Enabled = false;
@@ -345,7 +339,7 @@ namespace Aurora.Modules.RegionLoader
                 RefreshCurrentRegions();
             RegionListBox.SelectedItem = region.RegionName;
 
-            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
                 OpenSim.Region.Framework.Interfaces.OpenRegionSettings ors = orsc.GetSettings(region.RegionID);
@@ -371,20 +365,14 @@ namespace Aurora.Modules.RegionLoader
             ChangeRegionInfo (region);
         }
 
-        private int ConvertStartupType (StartupType startupType)
+        private int ConvertStartupType (StartupType startupType2)
         {
-            if (startupType == StartupType.Normal)
-                return 0;
-            else 
-                return 1;
+            return startupType2 == StartupType.Normal ? 0 : 1;
         }
 
         private StartupType ConvertIntToStartupType (int i)
         {
-            if (i == 1)
-                return StartupType.Medium;
-            else
-                return StartupType.Normal;
+            return i == 1 ? StartupType.Medium : StartupType.Normal;
         }
 
         private void RegionNameHelp_Click(object sender, EventArgs e)
@@ -529,8 +517,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         {
             SetStartingStatus ();
             RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
-            Util.FireAndForget (delegate (object o)
-            {
+            Util.FireAndForget (delegate
+                                    {
                 m_sceneManager.AllRegions++;
                 m_sceneManager.StartNewRegion (region);
                 if (CurrentRegionID == region.RegionID)
@@ -542,8 +530,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         {
             IScene scene;
             SetStoppingStatus ();
-            Util.FireAndForget (delegate (object o)
-            {
+            Util.FireAndForget (delegate
+                                    {
                 m_sceneManager.AllRegions--;
                 m_sceneManager.TryGetScene (CurrentRegionID, out scene);
                 m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
@@ -621,7 +609,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             if (File.Exists (newFileName))
             {
                 DialogResult s = Utilities.InputBox ("Delete file?", "The file " + name + " already exists, delete?");
-                if (s == System.Windows.Forms.DialogResult.OK)
+                if (s == DialogResult.OK)
                     File.Delete (name);
                 else
                     return;//None selected
@@ -634,14 +622,14 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
             Image b = null;
             if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".png")))
-                b = Bitmap.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".png"));
+                b = Image.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".png"));
             else if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".jpg")))
-                b = Bitmap.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpg"));
+                b = Image.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpg"));
             else if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".jpeg")))
-                b = Bitmap.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpeg"));
+                b = Image.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpeg"));
             if (b == null)
             {
-                RegionSelectionsPicture.Image = b;
+                RegionSelectionsPicture.Image = null;
                 return;
             }
             Bitmap result = new Bitmap(RegionSelectionsPicture.Width, RegionSelectionsPicture.Height);
@@ -654,7 +642,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void RegionManager_Load(object sender, EventArgs e)
         {
-            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
                 string navUrl = orsc.AddOpenRegionSettingsHTMLPage(CurrentRegionID);

@@ -25,23 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Drawing;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Scenes;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class Graphics : System.MarshalByRefObject, IGraphics
+    internal class Graphics : MarshalByRefObject, IGraphics
     {
         private readonly IScene m_scene;
 
-        public Graphics (IScene m_scene)
+        public Graphics(IScene m_scene)
         {
             this.m_scene = m_scene;
         }
+
+        #region IGraphics Members
 
         public UUID SaveBitmap(Bitmap data)
         {
@@ -72,5 +73,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
             return new Bitmap(img);
         }
+
+        #endregion
     }
 }

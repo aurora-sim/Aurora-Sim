@@ -31,7 +31,13 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class RestHTTPHandler : BaseHTTPHandler
     {
-        private GenericHTTPMethod m_dhttpMethod;
+        private readonly GenericHTTPMethod m_dhttpMethod;
+
+        public RestHTTPHandler(string httpMethod, string path, GenericHTTPMethod dhttpMethod)
+            : base(httpMethod, path)
+        {
+            m_dhttpMethod = dhttpMethod;
+        }
 
         public GenericHTTPMethod Method
         {
@@ -40,17 +46,10 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         public override Hashtable Handle(string path, Hashtable request)
         {
-
             string param = GetParam(path);
             request.Add("param", param);
             request.Add("path", path);
             return m_dhttpMethod(request);
-        }
-
-        public RestHTTPHandler(string httpMethod, string path, GenericHTTPMethod dhttpMethod)
-            : base(httpMethod, path)
-        {
-            m_dhttpMethod = dhttpMethod;
         }
     }
 }

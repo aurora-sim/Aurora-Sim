@@ -27,30 +27,25 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using HttpServer;
-using OpenMetaverse;
 using System.Reflection;
+using HttpServer;
 using log4net;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
     public delegate void ReQueuePollServiceItem(PollServiceHttpRequest req);
-    
+
     public class PollServiceWorkerThread
     {
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        public event ReQueuePollServiceItem ReQueue;
-
+        private readonly BlockingQueue<PollServiceHttpRequest> m_request;
         private readonly BaseHttpServer m_server;
-        private BlockingQueue<PollServiceHttpRequest> m_request;
+        private readonly int m_timeout = 250;
         private bool m_running = true;
-        private int m_timeout = 250;
 
         public PollServiceWorkerThread(BaseHttpServer pSrv, int pTimeout)
         {
@@ -59,9 +54,11 @@ namespace OpenSim.Framework.Servers.HttpServer
             m_timeout = pTimeout;
         }
 
+        public event ReQueuePollServiceItem ReQueue;
+
         public void ThreadStart(object o)
         {
-            Culture.SetCurrentCulture ();
+            Culture.SetCurrentCulture();
             Run();
         }
 
@@ -79,7 +76,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                         {
                             str = new StreamReader(req.Request.Body);
                         }
-                        catch (System.ArgumentException)
+                        catch (ArgumentException)
                         {
                             // Stream was not readable means a child agent
                             // was closed due to logout, leaving the
@@ -87,16 +84,19 @@ namespace OpenSim.Framework.Servers.HttpServer
                             continue;
                         }
 
-                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id, str.ReadToEnd());
+                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
+                                                                               str.ReadToEnd());
                         m_server.DoHTTPGruntWork(responsedata,
-                                                 new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request),req.HttpContext));
+                                                 new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request),
+                                                                    req.HttpContext));
                     }
                     else
                     {
                         if ((Environment.TickCount - req.RequestTime) > m_timeout)
                         {
-                            m_server.DoHTTPGruntWork(req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                                                     new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request),req.HttpContext));
+                            m_server.DoHTTPGruntWork(
+                                req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
+                                new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext));
                         }
                         else
                         {
@@ -108,7 +108,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("Exception in poll service thread: " + e.ToString());
+                    m_log.ErrorFormat("Exception in poll service thread: " + e);
                 }
             }
         }

@@ -25,14 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Net;
-
-using OpenMetaverse.StructuredData;
-using OpenMetaverse;
 using Nini.Config;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -50,13 +47,18 @@ namespace OpenSim.Services.Interfaces
 
     public interface ILoginService
     {
-        LoginResponse VerifyClient (string Name, string authType, string passwd, UUID scopeID, bool tosExists,
-            string tosAccepted, string mac, string clientVersion, out UUID secureSession);
-        LoginResponse VerifyClient (UUID AgentID, string authType, string passwd, UUID scopeID, bool tosExists,
-            string tosAccepted, string mac, string clientVersion, out UUID secureSession);
-        LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,
-            string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP, Hashtable requestData, UUID secureSession);
-        Hashtable SetLevel(string firstName, string lastName, string passwd, int level, IPEndPoint clientIP);
         int MinLoginLevel { get; }
+
+        LoginResponse VerifyClient(string Name, string authType, string passwd, UUID scopeID, bool tosExists,
+                                   string tosAccepted, string mac, string clientVersion, out UUID secureSession);
+
+        LoginResponse VerifyClient(UUID AgentID, string authType, string passwd, UUID scopeID, bool tosExists,
+                                   string tosAccepted, string mac, string clientVersion, out UUID secureSession);
+
+        LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,
+                            string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP,
+                            Hashtable requestData, UUID secureSession);
+
+        Hashtable SetLevel(string firstName, string lastName, string passwd, int level, IPEndPoint clientIP);
     }
 }

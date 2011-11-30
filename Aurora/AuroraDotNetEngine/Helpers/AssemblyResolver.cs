@@ -27,6 +27,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
@@ -34,7 +35,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     [Serializable]
     public class AssemblyResolver
     {
-        private string PathToSearch = "";
+        private readonly string PathToSearch = "";
 
         public AssemblyResolver(string pathToSearch)
         {
@@ -42,30 +43,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         }
 
         public Assembly OnAssemblyResolve(object sender,
-                ResolveEventArgs args)
+                                          ResolveEventArgs args)
         {
-            if (!(sender is System.AppDomain))
+            if (!(sender is AppDomain))
                 return null;
 
-            string[] pathList = new string[] {Path.Combine(Directory.GetCurrentDirectory(), "bin"),
-                Path.Combine(Directory.GetCurrentDirectory(),PathToSearch),
-                Path.Combine(Directory.GetCurrentDirectory(),Path.Combine(PathToSearch, "Scripts")),
-                Directory.GetCurrentDirectory(),
-                };
+            string[] pathList = new[]
+                                    {
+                                        Path.Combine(Directory.GetCurrentDirectory(), "bin"),
+                                        Path.Combine(Directory.GetCurrentDirectory(), PathToSearch),
+                                        Path.Combine(Directory.GetCurrentDirectory(),
+                                                     Path.Combine(PathToSearch, "Scripts")),
+                                        Directory.GetCurrentDirectory(),
+                                    };
 
             string assemblyName = args.Name;
             if (assemblyName.IndexOf(",") != -1)
                 assemblyName = args.Name.Substring(0, args.Name.IndexOf(","));
 
-            foreach (string s in pathList)
-            {
-                string path = Path.Combine(s, assemblyName)+".dll";
-
-                if (File.Exists(path))
-                    return Assembly.LoadFrom(path);
-            }
-
-            return null;
+            return (from s in pathList select Path.Combine(s, assemblyName) + ".dll" into path where File.Exists(path) select Assembly.LoadFrom(path)).FirstOrDefault();
         }
     }
 }

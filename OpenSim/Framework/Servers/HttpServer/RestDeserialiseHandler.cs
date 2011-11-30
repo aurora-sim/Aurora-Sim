@@ -36,13 +36,15 @@ namespace OpenSim.Framework.Servers.HttpServer
     public class RestDeserialiseHandler<TRequest, TResponse> : BaseRequestHandler, IStreamHandler
         where TRequest : new()
     {
-        private RestDeserialiseMethod<TRequest, TResponse> m_method;
+        private readonly RestDeserialiseMethod<TRequest, TResponse> m_method;
 
         public RestDeserialiseHandler(string httpMethod, string path, RestDeserialiseMethod<TRequest, TResponse> method)
             : base(httpMethod, path)
         {
             m_method = method;
         }
+
+        #region IStreamHandler Members
 
         public void Handle(string path, Stream request, Stream responseStream,
                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -56,11 +58,13 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             TResponse response = m_method(deserial);
 
-            using (XmlWriter xmlWriter = XmlTextWriter.Create(responseStream))
+            using (XmlWriter xmlWriter = XmlWriter.Create(responseStream))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof (TResponse));
                 serializer.Serialize(xmlWriter, response);
             }
         }
+
+        #endregion
     }
 }

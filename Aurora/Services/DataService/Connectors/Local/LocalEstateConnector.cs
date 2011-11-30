@@ -27,26 +27,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
-using Aurora.DataManager;
-using Aurora.Framework;
-using OpenSim.Framework;
-using Nini.Config;
-using log4net;
+using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Services.Interfaces;
+using OpenSim.Framework;
+using log4net;
 
 namespace Aurora.Services.DataService
 {
     public class LocalEstateConnector : IEstateConnector
-	{
+    {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private IGenericData GD = null;
+        private IGenericData GD;
         private IRegistryCore m_registry;
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry, string defaultConnectionString)
+        #region IEstateConnector Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore registry,
+                               string defaultConnectionString)
         {
             GD = GenericData;
             m_registry = registry;
@@ -54,9 +55,10 @@ namespace Aurora.Services.DataService
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "Estate", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            GD.ConnectToDatabase(defaultConnectionString, "Estate",
+                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-            DataManager.DataManager.RegisterPlugin(Name+"Local", this);
+            DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
             if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "LocalConnector")
             {
@@ -69,26 +71,228 @@ namespace Aurora.Services.DataService
             get { return "IEstateConnector"; }
         }
 
+        public bool LoadEstateSettings(UUID regionID, out EstateSettings settings)
+        {
+            settings = null;
+            List<string> estateID = GD.Query(new[] {"ID", "`Key`"}, new object[] {regionID, "EstateID"}, "estates",
+                                             "`Value`");
+            if (estateID.Count != 0)
+                settings = LoadEstateSettings(Convert.ToInt32(estateID[0]));
+            return true;
+        }
+
+        public EstateSettings CreateEstate(EstateSettings es, UUID RegionID)
+        {
+            int EstateID = 0;
+            List<string> QueryResults = GD.Query("`Key`", "EstateID", "estates", "`Value`", " ORDER BY `Value` DESC");
+            EstateID = QueryResults.Count == 0 ? 99 : int.Parse(QueryResults[0]);
+
+            if (EstateID == 0)
+                EstateID = 99;
+
+            //Check for other estates with the same name
+            List<int> Estates = GetEstates(es.EstateName);
+            if (Estates != null)
+            {
+                if (Estates.Select(this.LoadEstateSettings).Any(otherEstate => otherEstate.EstateName == es.EstateName))
+                {
+                    return new EstateSettings
+                               {
+                                   EstateID = 0,
+                                   EstateName = "Duplicate Estate Name. Please Change."
+                               };
+                }
+            }
+
+            EstateID++;
+            es.EstateID = (uint) EstateID;
+
+            List<object> Values = new List<object> {es.EstateID, "EstateSettings"};
+            OSD map = es.ToOSD(true);
+            Values.Add(OSDParser.SerializeLLSDXmlString(map));
+            GD.Insert("estates", Values.ToArray());
+
+            GD.Insert("estates", new object[]
+                                     {
+                                         RegionID,
+                                         "EstateID",
+                                         EstateID
+                                     });
+
+            es.OnSave += SaveEstateSettings;
+            return es;
+        }
+
+        public void SaveEstateSettings(EstateSettings es)
+        {
+            List<string> query = null;
+            try
+            {
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {es.EstateID, "EstateSettings"}, "estates",
+                                 "`Value`");
+            }
+            catch
+            {
+            }
+            if (query == null || query.Count == 0)
+                return; //Couldn't find it, return default then.
+
+            OSDMap estateInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+
+            if (estateInfo["EstatePass"].AsString() != es.EstatePass)
+            {
+                m_log.Warn("[ESTATE SERVICE]: Wrong estate password in updating of estate " + es.EstateName +
+                           "! Possible attempt to hack this estate!");
+                return;
+            }
+
+            List<string> Keys = new List<string> {"Value"};
+            List<object> Values = new List<object> {OSDParser.SerializeLLSDXmlString(es.ToOSD(true))};
+
+            GD.Update("estates", Values.ToArray(), Keys.ToArray(), new[] {"ID", "`Key`"},
+                      new object[] {es.EstateID, "EstateSettings"});
+
+            SaveBanList(es);
+            SaveUUIDList(es.EstateID, "EstateManagers", es.EstateManagers);
+            SaveUUIDList(es.EstateID, "EstateAccess", es.EstateAccess);
+            SaveUUIDList(es.EstateID, "EstateGroups", es.EstateGroups);
+
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("EstateUpdated",
+                                                                                                      es);
+        }
+
+        public List<int> GetEstates(string search)
+        {
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`",
+                                           " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" +
+                                           search.MySqlEscape() + "</string>%'");
+            if (RetVal.Count == 0)
+                return null;
+            return (from estateInfo in RetVal.Select(OSDParser.DeserializeLLSDXml).OfType<OSDMap>() where estateInfo["EstateName"].AsString() == search select estateInfo["EstateID"].AsInteger()).ToList();
+        }
+
+        public List<UUID> GetRegions(uint estateID)
+        {
+            List<string> RetVal = GD.Query(new[] {"`Key`", "`Value`"}, new object[] {"EstateID", estateID}, "estates",
+                                           "ID");
+            if (RetVal.Count == 0)
+                return null;
+            return RetVal.Select(UUID.Parse).ToList();
+        }
+
+        public List<EstateSettings> GetEstates(UUID OwnerID)
+        {
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`",
+                                           " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateOwner</key><uuid>" +
+                                           OwnerID + "</uuid>%'");
+            if (RetVal.Count == 0)
+                return null;
+            return RetVal.Select(OSDParser.DeserializeLLSDXml).OfType<OSDMap>().Select(estateInfo => LoadEstateSettings(estateInfo["EstateID"].AsInteger())).Where(es => es != null).ToList();
+        }
+
+        public bool LinkRegion(UUID regionID, int estateID, string password)
+        {
+            List<string> query = null;
+            try
+            {
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {estateID, "EstateSettings"}, "estates", "`Value`");
+            }
+            catch
+            {
+            }
+            if (query == null || query.Count == 0)
+                return false; //Couldn't find it, return default then.
+
+            OSDMap estateInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+
+            if (estateInfo["EstatePass"].AsString() != password)
+                return false;
+
+            GD.Replace("estates", new[] {"ID", "`Key`", "`Value`"},
+                       new object[]
+                           {
+                               regionID,
+                               "EstateID",
+                               estateID
+                           });
+
+            return true;
+        }
+
+        public bool DelinkRegion(UUID regionID, string password)
+        {
+            List<string> query = null;
+            try
+            {
+                //First make sure they are in the estate
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {regionID, "EstateID"}, "estates", "`Value`");
+            }
+            catch
+            {
+            }
+            if (query == null || query.Count == 0)
+                return false; //Couldn't find it, return default then.
+
+            try
+            {
+                //Now pull the estate settings to check the password
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {query[0], "EstateSettings"}, "estates", "`Value`");
+            }
+            catch
+            {
+            }
+
+            OSDMap estateInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+
+            if (estateInfo["EstatePass"].AsString() != password)
+                return false; //fakers!
+
+            GD.Delete("estates", new[] {"ID", "`Key`"},
+                      new object[]
+                          {
+                              regionID,
+                              "EstateID"
+                          });
+
+            return true;
+        }
+
+        public bool DeleteEstate(int estateID, string password)
+        {
+            List<string> query = null;
+            try
+            {
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {estateID, "EstateSettings"}, "estates", "Value");
+            }
+            catch
+            {
+            }
+            if (query == null || query.Count == 0)
+                return false; //Couldn't find it, return default then.
+
+            OSDMap estateInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+
+            if (estateInfo["EstatePass"].AsString() != password)
+                return false;
+
+            GD.Delete("estates", new[] {"ID"}, new object[] {estateID});
+
+            return true;
+        }
+
+        #endregion
+
         public void Dispose()
         {
         }
 
-        public bool LoadEstateSettings(UUID regionID, out EstateSettings settings)
-		{
-            settings = null;
-            List<string> estateID = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "`Value`");
-            if (estateID.Count != 0)
-                settings = LoadEstateSettings(Convert.ToInt32(estateID[0]));
-			return true;
-		}
-
-		public EstateSettings LoadEstateSettings(int estateID)
-		{
+        public EstateSettings LoadEstateSettings(int estateID)
+        {
             EstateSettings settings = new EstateSettings();
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "`Value`");
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {estateID, "EstateSettings"}, "estates", "`Value`");
             }
             catch
             {
@@ -96,13 +300,13 @@ namespace Aurora.Services.DataService
             if (query == null || query.Count == 0)
                 return null; //Couldn't find it, return default then.
 
-            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
+            OSDMap estateInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
 
             settings.AbuseEmail = estateInfo["AbuseEmail"].AsString();
             settings.AbuseEmailToEstateOwner = estateInfo["AbuseEmailToEstateOwner"].AsInteger() == 1;
             settings.AllowDirectTeleport = estateInfo["AllowDirectTeleport"].AsInteger() == 1;
             settings.AllowVoice = estateInfo["AllowVoice"].AsInteger() == 1;
-            settings.BillableFactor = (float)estateInfo["BillableFactor"].AsReal();
+            settings.BillableFactor = (float) estateInfo["BillableFactor"].AsReal();
             settings.BlockDwell = estateInfo["BlockDwell"].AsInteger() == 1;
             settings.DenyAnonymous = estateInfo["DenyAnonymous"].AsInteger() == 1;
             settings.DenyIdentified = estateInfo["DenyIdentified"].AsInteger() == 1;
@@ -127,24 +331,31 @@ namespace Aurora.Services.DataService
             settings.AllowSetHome = estateInfo["AllowSetHome"].AsInteger() == 1;
             settings.EstatePass = estateInfo["EstatePass"].AsString();
 
-			LoadBanList(settings);
+            LoadBanList(settings);
             settings.EstateAccess = LoadUUIDList(settings.EstateID, "EstateAccess");
             settings.EstateGroups = LoadUUIDList(settings.EstateID, "EstateGroups");
             settings.EstateManagers = LoadUUIDList(settings.EstateID, "EstateManagers");
-			settings.OnSave += SaveEstateSettings;
-			return settings;
+            settings.OnSave += SaveEstateSettings;
+            return settings;
+        }
+
+        public List<UUID> GetRegions(int estateID)
+        {
+            List<string> RegionIDs = GD.Query(new[] {"`Key`", "`Value`"}, new object[] {"EstateID", estateID}, "estates",
+                                              "ID");
+            return RegionIDs.Select(RegionID => new UUID(RegionID)).ToList();
         }
 
         #region Helpers
 
         private void LoadBanList(EstateSettings es)
-		{
-			es.ClearBans();
+        {
+            es.ClearBans();
 
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateBans" }, "estates", "`Value`");
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {es.EstateID, "EstateBans"}, "estates", "`Value`");
             }
             catch
             {
@@ -152,26 +363,25 @@ namespace Aurora.Services.DataService
             if (query == null || query.Count == 0)
                 return; //Couldn't find it, return then.
 
-            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
-            foreach (OSD map in estateInfo.Values)
+            OSDMap estateInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+            foreach (EstateBan eb in from OSDMap estateBan in estateInfo.Values select new EstateBan
+                                                                                           {
+                                                                                               BannedUserID = estateBan["BannedUserID"].AsUUID(),
+                                                                                               BannedHostAddress = estateBan["BannedHostAddress"].AsString(),
+                                                                                               BannedHostIPMask = estateBan["BannedHostIPMask"].AsString()
+                                                                                           })
             {
-                OSDMap estateBan = (OSDMap)map;
-				EstateBan eb = new EstateBan();
+                es.AddBan(eb);
+            }
+        }
 
-                eb.BannedUserID = estateBan["BannedUserID"].AsUUID();
-                eb.BannedHostAddress = estateBan["BannedHostAddress"].AsString();
-                eb.BannedHostIPMask = estateBan["BannedHostIPMask"].AsString();
-				es.AddBan(eb);
-			}
-		}
-
-		UUID[] LoadUUIDList(uint EstateID, string table)
+        private UUID[] LoadUUIDList(uint EstateID, string table)
         {
             List<UUID> uuids = new List<UUID>();
             List<string> query = null;
             try
             {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { EstateID, table }, "estates", "`Value`");
+                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {EstateID, table}, "estates", "`Value`");
             }
             catch
             {
@@ -179,279 +389,42 @@ namespace Aurora.Services.DataService
             if (query == null || query.Count == 0)
                 return uuids.ToArray(); //Couldn't find it, return then.
 
-            OSDArray estateInfo = (OSDArray)OSDParser.DeserializeLLSDXml(query[0]);
-            foreach (OSD uuid in estateInfo)
-            {
-                uuids.Add(uuid.AsUUID());
-            }
+            OSDArray estateInfo = (OSDArray) OSDParser.DeserializeLLSDXml(query[0]);
+            uuids.AddRange(estateInfo.Select(uuid => uuid.AsUUID()));
 
             return uuids.ToArray();
-		}
+        }
 
-		private void SaveBanList(EstateSettings es)
-		{
+        private void SaveBanList(EstateSettings es)
+        {
             OSDMap estateBans = new OSDMap();
             foreach (EstateBan b in es.EstateBans)
             {
-                OSDMap estateBan = new OSDMap();
-                estateBan.Add("BannedUserID", OSD.FromUUID(b.BannedUserID));
-                estateBan.Add("BannedHostAddress", OSD.FromString(b.BannedHostAddress));
-                estateBan.Add("BannedHostIPMask", OSD.FromString(b.BannedHostIPMask));
+                OSDMap estateBan = new OSDMap
+                                       {
+                                           {"BannedUserID", OSD.FromUUID(b.BannedUserID)},
+                                           {"BannedHostAddress", OSD.FromString(b.BannedHostAddress)},
+                                           {"BannedHostIPMask", OSD.FromString(b.BannedHostIPMask)}
+                                       };
                 estateBans.Add(b.BannedUserID.ToString(), estateBan);
-			}
+            }
 
             string value = OSDParser.SerializeLLSDXmlString(estateBans);
-            GD.Replace("estates", new string[] { "ID", "`Key`", "`Value`" }, new object[] { es.EstateID, "EstateBans", value });
-		}
+            GD.Replace("estates", new[] {"ID", "`Key`", "`Value`"}, new object[] {es.EstateID, "EstateBans", value});
+        }
 
-		void SaveUUIDList(uint EstateID, string table, UUID[] data)
-		{
-			OSDArray estate = new OSDArray();
-            foreach (UUID uuid in data) 
+        private void SaveUUIDList(uint EstateID, string table, UUID[] data)
+        {
+            OSDArray estate = new OSDArray();
+            foreach (UUID uuid in data)
             {
                 estate.Add(OSD.FromUUID(uuid));
             }
 
             string value = OSDParser.SerializeLLSDXmlString(estate);
-            GD.Replace("estates", new string[] { "ID", "`Key`", "`Value`" }, new object[] { EstateID, table, value });
+            GD.Replace("estates", new[] {"ID", "`Key`", "`Value`"}, new object[] {EstateID, table, value});
         }
 
         #endregion
-
-        public EstateSettings CreateEstate(EstateSettings es, UUID RegionID)
-		{
-            int EstateID = 0;
-            List<string> QueryResults = GD.Query("`Key`", "EstateID", "estates", "`Value`", " ORDER BY `Value` DESC");
-            if (QueryResults.Count == 0)
-                EstateID = 99;
-            else
-                EstateID = int.Parse(QueryResults[0]);
-
-            if (EstateID == 0)
-                EstateID = 99;
-
-            //Check for other estates with the same name
-            List<int> Estates = GetEstates(es.EstateName);
-            if (Estates != null)
-            {
-                foreach (int otherEstateID in Estates)
-                {
-                    EstateSettings otherEstate = this.LoadEstateSettings(otherEstateID);
-                    if (otherEstate.EstateName == es.EstateName)
-                    { //Cant have two estates with the same name.
-                        //We set the estate name so that the region can get the error and so we don't have to spit out more junk to find it.
-                        return new EstateSettings()
-                        {
-                            EstateID = 0,
-                            EstateName = "Duplicate Estate Name. Please Change."
-                        };
-                    }
-                }
-            }
-
-            EstateID++;
-            es.EstateID = (uint)EstateID;
-
-            List<object> Values = new List<object>();
-            Values.Add(es.EstateID);
-            Values.Add("EstateSettings");
-            OSD map = es.ToOSD(true);
-            Values.Add(OSDParser.SerializeLLSDXmlString(map));
-            GD.Insert("estates", Values.ToArray());
-
-            GD.Insert("estates", new object[] {
-					RegionID,
-                    "EstateID",
-					EstateID
-				});
-
-            es.OnSave += SaveEstateSettings;
-            return es;
-		}
-
-        public void SaveEstateSettings(OpenSim.Framework.EstateSettings es)
-        {
-            List<string> query = null;
-            try
-            {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateSettings" }, "estates", "`Value`");
-            }
-            catch
-            {
-            }
-            if (query == null || query.Count == 0)
-                return; //Couldn't find it, return default then.
-
-            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
-
-            if (estateInfo["EstatePass"].AsString() != es.EstatePass)
-            {
-                m_log.Warn("[ESTATE SERVICE]: Wrong estate password in updating of estate " + es.EstateName + "! Possible attempt to hack this estate!");
-                return;
-            }
-
-            List<string> Keys = new List<string>();
-            Keys.Add("Value");
-            List<object> Values = new List<object>();
-            Values.Add(OSDParser.SerializeLLSDXmlString(es.ToOSD(true)));
-
-            GD.Update("estates", Values.ToArray(), Keys.ToArray(), new string[] { "ID", "`Key`" }, new object[] { es.EstateID, "EstateSettings" });
-
-            SaveBanList(es);
-            SaveUUIDList(es.EstateID, "EstateManagers", es.EstateManagers);
-            SaveUUIDList(es.EstateID, "EstateAccess", es.EstateAccess);
-            SaveUUIDList(es.EstateID, "EstateGroups", es.EstateGroups);
-
-            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("EstateUpdated", es);
-        }
-
-        public List<int> GetEstates(string search)
-        {
-            List<int> result = new List<int>();
-            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" + search.MySqlEscape() + "</string>%'");
-            if (RetVal.Count == 0)
-                return null;
-            foreach (string val in RetVal)
-            {
-                OSD oval = OSDParser.DeserializeLLSDXml (val);
-                if (oval is OSDMap)
-                {
-                    OSDMap estateInfo = (OSDMap)oval;
-                    if (estateInfo["EstateName"].AsString () == search)
-                        result.Add (estateInfo["EstateID"].AsInteger ());
-                }
-            }
-            return result;
-        }
-
-        public List<UUID> GetRegions(uint estateID)
-        {
-            List<UUID> result = new List<UUID>();
-            List<string> RetVal = GD.Query(new string[]{"`Key`","`Value`"}, new object[]{"EstateID",estateID}, "estates", "ID");
-            if (RetVal.Count == 0)
-                return null;
-            foreach (string val in RetVal)
-            {
-                result.Add(UUID.Parse(val));
-            }
-            return result;
-        }
-
-        public List<EstateSettings> GetEstates(UUID OwnerID)
-        {
-            List<EstateSettings> result = new List<EstateSettings>();
-            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateOwner</key><uuid>" + OwnerID + "</uuid>%'");
-            if (RetVal.Count == 0)
-                return null;
-            foreach (string val in RetVal)
-            {
-                OSD oval = OSDParser.DeserializeLLSDXml (val);
-                if (oval is OSDMap)
-                {
-                    OSDMap estateInfo = (OSDMap)oval;
-                    EstateSettings es = LoadEstateSettings (estateInfo["EstateID"].AsInteger ());
-                    if(es != null)
-                        result.Add (es);
-                }
-            }
-            return result;
-        }
-
-        public bool LinkRegion(UUID regionID, int estateID, string password)
-        {
-            List<string> query = null;
-            try
-            {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "`Value`");
-            }
-            catch
-            {
-            }
-            if (query == null || query.Count == 0)
-                return false; //Couldn't find it, return default then.
-
-            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
-
-            if (estateInfo["EstatePass"].AsString() != password)
-                return false;
-
-            GD.Replace("estates", new string[] { "ID", "`Key`", "`Value`" },
-                new object[] {
-				regionID,
-                "EstateID",
-				estateID
-			});
-
-            return true;
-        }
-
-        public bool DelinkRegion(UUID regionID, string password)
-        {
-            List<string> query = null;
-            try
-            {
-                //First make sure they are in the estate
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { regionID, "EstateID" }, "estates", "`Value`");
-            }
-            catch
-            {
-            }
-            if (query == null || query.Count == 0)
-                return false; //Couldn't find it, return default then.
-
-            try
-            {
-                //Now pull the estate settings to check the password
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { query[0], "EstateSettings" }, "estates", "`Value`");
-            }
-            catch
-            {
-            }
-
-            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
-
-            if (estateInfo["EstatePass"].AsString() != password)
-                return false; //fakers!
-
-            GD.Delete("estates", new string[] { "ID", "`Key`" },
-                new object[] {
-				regionID,
-                "EstateID"
-			});
-
-            return true;
-        }
-
-		public List<OpenMetaverse.UUID> GetRegions(int estateID)
-		{
-            List<string> RegionIDs = GD.Query(new string[] { "`Key`", "`Value`" }, new object[] { "EstateID", estateID }, "estates", "ID");
-			List<UUID> regions = new List<UUID>();
-			foreach (string RegionID in RegionIDs)
-				regions.Add(new UUID(RegionID));
-			return regions;
-		}
-
-        public bool DeleteEstate(int estateID, string password)
-		{
-            List<string> query = null;
-            try
-            {
-                query = GD.Query(new string[] { "ID", "`Key`" }, new object[] { estateID, "EstateSettings" }, "estates", "Value");
-            }
-            catch
-            {
-            }
-            if (query == null || query.Count == 0)
-                return false; //Couldn't find it, return default then.
-
-            OSDMap estateInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
-
-            if (estateInfo["EstatePass"].AsString() != password)
-                return false;
-
-			GD.Delete("estates", new string[] { "ID" }, new object[] { estateID });
-
-			return true;
-		}
-	}
+    }
 }

@@ -27,28 +27,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Aurora.Framework;
-using Aurora.DataManager;
+using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using Nini.Config;
-using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Services.DataService
 {
     public class LocalGridConnector : IRegionData
-	{
-		private IGenericData GD = null;
+    {
+        private IGenericData GD;
         private string m_realm = "gridregions";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        #region IRegionData Members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                               string defaultConnectionString)
         {
-            if(source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
+                "LocalConnector")
             {
                 GD = GenericData;
 
@@ -56,7 +56,8 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(connectionString, "GridRegions", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(connectionString, "GridRegions",
+                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(Name, this);
             }
@@ -67,15 +68,12 @@ namespace Aurora.Services.DataService
             get { return "IRegionData"; }
         }
 
-        public void Dispose()
-        {
-        }
-
         public List<GridRegion> Get(string regionName, UUID scopeID)
         {
             List<string> query;
             if (scopeID != UUID.Zero)
-                query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "' and ScopeID = '" + scopeID + "'", m_realm, "*");
+                query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "' and ScopeID = '" + scopeID + "'",
+                                 m_realm, "*");
             else
                 query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "'", m_realm, "*");
 
@@ -85,22 +83,22 @@ namespace Aurora.Services.DataService
             return ParseQuery(query);
         }
 
-        public List<GridRegion> Get (RegionFlags flags)
+        public List<GridRegion> Get(RegionFlags flags)
         {
             List<string> query;
-            query = GD.Query ("Flags & '" + ((int)flags).ToString() + "'", m_realm, "*");
-            return ParseQuery (query);
+            query = GD.Query("Flags & '" + ((int) flags).ToString() + "'", m_realm, "*");
+            return ParseQuery(query);
         }
 
         public GridRegion Get(int posX, int posY, UUID scopeID)
         {
             List<string> query;
             if (scopeID != UUID.Zero)
-                query = GD.Query(new string[3] { "LocX", "LocY", "ScopeID" },
-                    new object[3] { posX, posY, scopeID }, m_realm, "*");
+                query = GD.Query(new string[3] {"LocX", "LocY", "ScopeID"},
+                                 new object[3] {posX, posY, scopeID}, m_realm, "*");
             else
-                query = GD.Query(new string[2] { "LocX", "LocY" }, 
-                    new object[2] { posX, posY }, m_realm, "*");
+                query = GD.Query(new string[2] {"LocX", "LocY"},
+                                 new object[2] {posX, posY}, m_realm, "*");
 
             if (query.Count == 0)
                 return null;
@@ -112,7 +110,8 @@ namespace Aurora.Services.DataService
         {
             List<string> query;
             if (scopeID != UUID.Zero)
-                query = GD.Query(new string[2] { "RegionUUID", "ScopeID" }, new object[2] { regionID, scopeID }, m_realm, "*");
+                query = GD.Query(new string[2] {"RegionUUID", "ScopeID"}, new object[2] {regionID, scopeID}, m_realm,
+                                 "*");
             else
                 query = GD.Query("RegionUUID", regionID, m_realm, "*");
 
@@ -122,57 +121,22 @@ namespace Aurora.Services.DataService
             return ParseQuery(query)[0];
         }
 
-        private List<GridRegion> Get(int regionFlags, UUID scopeID)
-        {
-            List<string> query;
-            if (scopeID != UUID.Zero)
-                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0 and ScopeID = '" + scopeID + "'", m_realm, "*");
-            else
-                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0", m_realm, "*");
-
-            if (query.Count == 0)
-                return new List<GridRegion>();
-
-            return ParseQuery(query);
-        }
-
         public List<GridRegion> Get(int startX, int startY, int endX, int endY, UUID scopeID)
         {
             List<string> query;
             if (scopeID != UUID.Zero)
                 query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                    "' and LocY between '" + startY + "' and '" + endY +
-                    "' and ScopeID = '" + scopeID + "'", m_realm, "*");
+                                 "' and LocY between '" + startY + "' and '" + endY +
+                                 "' and ScopeID = '" + scopeID + "'", m_realm, "*");
             else
                 query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                    "' and LocY between '" + startY + "' and '" + endY + "'",
-                    m_realm, "*");
+                                 "' and LocY between '" + startY + "' and '" + endY + "'",
+                                 m_realm, "*");
 
             if (query.Count == 0)
                 return new List<GridRegion>();
 
             return ParseQuery(query);
-        }
-
-        protected List<GridRegion> ParseQuery(List<string> query)
-        {
-            List<GridRegion> regionData = new List<GridRegion>();
-
-            for (int i = 0; i < query.Count; i += 14)
-            {
-                GridRegion data = new GridRegion();
-                OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[i + 13]);
-                data.FromOSD(map);
-
-                //Check whether it should be down
-                if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000 * 6)))
-                    data.Access |= (int)SimAccess.Down;
-
-                if(!regionData.Contains(data))
-                    regionData.Add(data);
-            }
-
-            return regionData;
         }
 
         public bool Store(GridRegion region)
@@ -215,7 +179,7 @@ namespace Aurora.Services.DataService
 
         public bool Delete(UUID regionID)
         {
-            return GD.Delete(m_realm, new string[1] { "RegionUUID" }, new object[1] { regionID });
+            return GD.Delete(m_realm, new string[1] {"RegionUUID"}, new object[1] {regionID});
         }
 
         public bool DeleteAll(string[] criteriaKey, object[] criteriaValue)
@@ -225,12 +189,12 @@ namespace Aurora.Services.DataService
 
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
-            return Get((int)RegionFlags.DefaultRegion, scopeID);
+            return Get((int) RegionFlags.DefaultRegion, scopeID);
         }
 
         public List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
         {
-            List<GridRegion> regions = Get((int)RegionFlags.FallbackRegion, scopeID);
+            List<GridRegion> regions = Get((int) RegionFlags.FallbackRegion, scopeID);
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             regions.Sort(distanceComparer);
             return regions;
@@ -238,22 +202,68 @@ namespace Aurora.Services.DataService
 
         public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
-            List<GridRegion> Regions = Get((int)RegionFlags.Safe, scopeID);
-            Regions.AddRange(Get((int)RegionFlags.RegionOnline, scopeID));
+            List<GridRegion> Regions = Get((int) RegionFlags.Safe, scopeID);
+            Regions.AddRange(Get((int) RegionFlags.RegionOnline, scopeID));
 
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             Regions.Sort(distanceComparer);
             return Regions;
         }
 
+        #endregion
+
+        public void Dispose()
+        {
+        }
+
+        private List<GridRegion> Get(int regionFlags, UUID scopeID)
+        {
+            List<string> query;
+            if (scopeID != UUID.Zero)
+                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0 and ScopeID = '" + scopeID + "'",
+                                 m_realm, "*");
+            else
+                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0", m_realm, "*");
+
+            if (query.Count == 0)
+                return new List<GridRegion>();
+
+            return ParseQuery(query);
+        }
+
+        protected List<GridRegion> ParseQuery(List<string> query)
+        {
+            List<GridRegion> regionData = new List<GridRegion>();
+
+            for (int i = 0; i < query.Count; i += 14)
+            {
+                GridRegion data = new GridRegion();
+                OSDMap map = (OSDMap) OSDParser.DeserializeJson(query[i + 13]);
+                data.FromOSD(map);
+
+                //Check whether it should be down
+                if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000*6)))
+                    data.Access |= (int) SimAccess.Down;
+
+                if (!regionData.Contains(data))
+                    regionData.Add(data);
+            }
+
+            return regionData;
+        }
+
+        #region Nested type: RegionDataDistanceCompare
+
         public class RegionDataDistanceCompare : IComparer<GridRegion>
         {
-            private Vector2 m_origin;
+            private readonly Vector2 m_origin;
 
             public RegionDataDistanceCompare(int x, int y)
             {
                 m_origin = new Vector2(x, y);
             }
+
+            #region IComparer<GridRegion> Members
 
             public int Compare(GridRegion regionA, GridRegion regionB)
             {
@@ -262,10 +272,14 @@ namespace Aurora.Services.DataService
                 return Math.Sign(VectorDistance(m_origin, vectorA) - VectorDistance(m_origin, vectorB));
             }
 
+            #endregion
+
             private float VectorDistance(Vector2 x, Vector2 y)
             {
                 return (x - y).Length();
             }
         }
+
+        #endregion
     }
 }

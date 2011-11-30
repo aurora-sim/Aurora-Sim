@@ -27,7 +27,6 @@
 
 using System.IO;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.World.Terrain
 {
@@ -35,8 +34,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
     {
         string FileExtension { get; }
         ITerrainChannel LoadFile(string filename, IScene scene);
-        ITerrainChannel LoadFile(string filename, int fileStartX, int fileStartY, int fileWidth, int fileHeight, int sectionWidth, int sectionHeight);
-        ITerrainChannel LoadStream (Stream stream, IScene scene);
+
+        ITerrainChannel LoadFile(string filename, int fileStartX, int fileStartY, int fileWidth, int fileHeight,
+                                 int sectionWidth, int sectionHeight);
+
+        ITerrainChannel LoadStream(Stream stream, IScene scene);
         void SaveFile(string filename, ITerrainChannel map);
         void SaveStream(Stream stream, ITerrainChannel map);
     }

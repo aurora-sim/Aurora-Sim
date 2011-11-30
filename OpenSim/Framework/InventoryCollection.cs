@@ -31,7 +31,7 @@ using OpenMetaverse;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Used to serialize a whole inventory for transfer over the network.
+    ///   Used to serialize a whole inventory for transfer over the network.
     /// </summary>
     public class InventoryCollection
     {

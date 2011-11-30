@@ -28,21 +28,20 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
-using OpenSim.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Framework
 {
     /// <summary>
-    /// An interface for connecting to the authentication datastore
+    ///   An interface for connecting to the authentication datastore
     /// </summary>
     public interface IRegionData : IAuroraDataPlugin
     {
-        GridRegion Get (UUID regionID, UUID ScopeID);
-        List<GridRegion> Get (string regionName, UUID ScopeID);
-        GridRegion Get (int x, int y, UUID ScopeID);
-        List<GridRegion> Get (RegionFlags regionFlags);
-        List<GridRegion> Get (int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
+        GridRegion Get(UUID regionID, UUID ScopeID);
+        List<GridRegion> Get(string regionName, UUID ScopeID);
+        GridRegion Get(int x, int y, UUID ScopeID);
+        List<GridRegion> Get(RegionFlags regionFlags);
+        List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
 
         bool Store(GridRegion data);
 
@@ -55,7 +54,7 @@ namespace Aurora.Framework
     }
 
     [Flags]
-    public enum RegionFlags : int
+    public enum RegionFlags
     {
         DefaultRegion = 1, // Used for new Rez. Random if multiple defined
         FallbackRegion = 2, // Regions we redirect to when the destination is down

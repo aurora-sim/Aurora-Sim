@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security;
 using log4net;
@@ -38,9 +39,6 @@ using Aurora.Framework;
 using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenMetaverse.StructuredData;
 using RegionFlags = OpenMetaverse.RegionFlags;
@@ -109,25 +107,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                                 int matureLevel, bool restrictPushObject, bool allowParcelChanges)
         {
 
-            if (blockTerraform)
-                m_scene.RegionInfo.RegionSettings.BlockTerraform = true;
-            else
-                m_scene.RegionInfo.RegionSettings.BlockTerraform = false;
+            m_scene.RegionInfo.RegionSettings.BlockTerraform = blockTerraform;
 
-            if (noFly)
-                m_scene.RegionInfo.RegionSettings.BlockFly = true;
-            else
-                m_scene.RegionInfo.RegionSettings.BlockFly = false;
+            m_scene.RegionInfo.RegionSettings.BlockFly = noFly;
 
-            if (allowDamage)
-                m_scene.RegionInfo.RegionSettings.AllowDamage = true;
-            else
-                m_scene.RegionInfo.RegionSettings.AllowDamage = false;
+            m_scene.RegionInfo.RegionSettings.AllowDamage = allowDamage;
 
-            if (restrictPushObject)
-                m_scene.RegionInfo.RegionSettings.RestrictPushing = true;
-            else
-                m_scene.RegionInfo.RegionSettings.RestrictPushing = false;
+            m_scene.RegionInfo.RegionSettings.RestrictPushing = restrictPushObject;
 
 
 
@@ -144,10 +130,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             else
                 m_scene.RegionInfo.RegionSettings.Maturity = 2;
 
-            if (allowParcelChanges)
-                m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = true;
-            else
-                m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = false;
+            m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = allowParcelChanges;
 
             m_scene.RegionInfo.RegionSettings.Save();
             TriggerRegionInfoChange();
@@ -161,16 +144,14 @@ namespace OpenSim.Region.CoreModules.World.Estate
             retVal["DispatchRegionInfo"] = CapsUtil.CreateCAPS("DispatchRegionInfo", "");
 
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchRegionInfo"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"], agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"],
+                                                                           agentID)));
             retVal["EstateChangeInfo"] = CapsUtil.CreateCAPS("EstateChangeInfo", "");
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EstateChangeInfo"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"], agentID);
-                                                      }));
+                                                        m_dhttpMethod =>
+                                                        EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"],
+                                                                         agentID)));
             return retVal;
         }
 
@@ -338,9 +319,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         break;
                 }
             }
-            else
-            {
-            }
         }
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
@@ -383,9 +361,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 m_scene.RegionInfo.RegionSettings.Save();
                 TriggerRegionInfoChange();
             }
-            else
-            {
-            }
         }
 
         private void handleEstateRestartSimRequest(IClientAPI remoteClient, int timeInSeconds)
@@ -417,7 +392,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             TriggerRegionInfoChange();
         }
 
-        private enum AccessDeltaRequest : int 
+        private enum AccessDeltaRequest
         {
             ApplyToAllEstates = 1 << 0,
             ApplyToManagedEstates = 1 << 1,
@@ -569,23 +544,12 @@ namespace OpenSim.Region.CoreModules.World.Estate
                             {
                                 EstateBan[] innerbanlistcheck = estate.EstateBans;
 
-                                bool inneralreadyInList = false;
+                                bool inneralreadyInList = innerbanlistcheck.Any(t => user == t.BannedUserID);
 
-                                for (int i = 0; i < innerbanlistcheck.Length; i++)
-                                {
-                                    if (user == innerbanlistcheck[i].BannedUserID)
-                                    {
-                                        inneralreadyInList = true;
-                                        break;
-                                    }
-
-                                }
                                 if (!inneralreadyInList)
                                 {
-                                    EstateBan item = new EstateBan ();
+                                    EstateBan item = new EstateBan {BannedUserID = user, EstateID = estate.EstateID};
 
-                                    item.BannedUserID = user;
-                                    item.EstateID = estate.EstateID;
                                     IScenePresence SP = m_scene.GetScenePresence (user);
                                     item.BannedHostAddress = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
                                     item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP ()).Address.ToString () : "0.0.0.0";
@@ -598,24 +562,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     }
                     EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
-                    bool alreadyInList = false;
+                    bool alreadyInList = banlistcheck.Any(t => user == t.BannedUserID);
 
-                    for (int i = 0; i < banlistcheck.Length; i++)
-                    {
-                        if (user == banlistcheck[i].BannedUserID)
-                        {
-                            alreadyInList = true;
-                            break;
-                        }
-
-                    }
                     if (!alreadyInList)
                     {
-                        EstateBan item = new EstateBan();
+                        EstateBan item = new EstateBan
+                                             {
+                                                 BannedUserID = user,
+                                                 EstateID = m_scene.RegionInfo.EstateSettings.EstateID,
+                                                 BannedHostAddress = "0.0.0.0"
+                                             };
 
-                        item.BannedUserID = user;
-                        item.EstateID = m_scene.RegionInfo.EstateSettings.EstateID;
-                        item.BannedHostAddress = "0.0.0.0";
                         IScenePresence SP = m_scene.GetScenePresence (user);
                         item.BannedHostIPMask = (SP != null) ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP()).Address.ToString() : "0.0.0.0";
 
@@ -674,18 +631,17 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                 bool inneralreadyInList = false;
                                 EstateBan innerlistitem = null;
 
-                                for (int i = 0; i < innerbanlistcheck.Length; i++)
+                                foreach (EstateBan t in innerbanlistcheck)
                                 {
-                                    if (user == innerbanlistcheck[i].BannedUserID)
+                                    if (user == t.BannedUserID)
                                     {
                                         inneralreadyInList = true;
-                                        innerlistitem = innerbanlistcheck[i];
+                                        innerlistitem = t;
                                         break;
                                     }
-
                                 }
 
-                                if (inneralreadyInList && innerlistitem != null)
+                                if (inneralreadyInList)
                                 {
                                     m_scene.RegionInfo.EstateSettings.RemoveBan (innerlistitem.BannedUserID);
                                 }
@@ -698,21 +654,20 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     bool alreadyInList = false;
                     EstateBan listitem = null;
 
-                    for (int i = 0; i < banlistcheck.Length; i++)
+                    foreach (EstateBan t in banlistcheck)
                     {
-                        if (user == banlistcheck[i].BannedUserID)
+                        if (user == t.BannedUserID)
                         {
                             alreadyInList = true;
-                            listitem = banlistcheck[i];
+                            listitem = t;
                             break;
                         }
-
                     }
 
                     //Trigger the event
                     m_scene.AuroraEventManager.FireGenericEventHandler("UnBanUser", user);
 
-                    if (alreadyInList && listitem != null)
+                    if (alreadyInList)
                     {
                         m_scene.RegionInfo.EstateSettings.RemoveBan(listitem.BannedUserID);
                         if ((estateAccessType & (int)AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
@@ -815,20 +770,11 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private void handleEstateDebugRegionRequest(IClientAPI remote_client, UUID invoice, UUID senderID, bool scripted, bool collisionEvents, bool physics)
         {
-            if (physics)
-                m_scene.RegionInfo.RegionSettings.DisablePhysics = true;
-            else
-                m_scene.RegionInfo.RegionSettings.DisablePhysics = false;
+            m_scene.RegionInfo.RegionSettings.DisablePhysics = physics;
 
-            if (scripted)
-                m_scene.RegionInfo.RegionSettings.DisableScripts = true;
-            else
-                m_scene.RegionInfo.RegionSettings.DisableScripts = false;
+            m_scene.RegionInfo.RegionSettings.DisableScripts = scripted;
 
-            if (collisionEvents)
-                m_scene.RegionInfo.RegionSettings.DisableCollisions = true;
-            else
-                m_scene.RegionInfo.RegionSettings.DisableCollisions = false;
+            m_scene.RegionInfo.RegionSettings.DisableCollisions = collisionEvents;
 
 
             m_scene.RegionInfo.RegionSettings.Save();
@@ -978,28 +924,28 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 }
                 catch (IOException e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e.ToString());
+                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was an IO Exception loading your terrain.  Please check free space.");
 
                     return;
                 }
                 catch (SecurityException e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e.ToString());
+                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was a security Exception loading your terrain.  Please check the security on the simulator drive");
 
                     return;
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e.ToString());
+                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was a security Exception loading your terrain.  Please check the security on the simulator drive");
 
                     return;
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error loading a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e.ToString());
+                    m_log.ErrorFormat("[TERRAIN]: Error loading a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was a general error loading your terrain.  Please fix the terrain file and try again");
                 }
             }
@@ -1059,26 +1005,32 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private void HandleRegionInfoRequest(IClientAPI remote_client)
         {
-           RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs();
-           args.billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor;
-           args.estateID = m_scene.RegionInfo.EstateSettings.EstateID;
-           args.maxAgents = (byte)m_scene.RegionInfo.RegionSettings.AgentLimit;
-           args.objectBonusFactor = (float)m_scene.RegionInfo.RegionSettings.ObjectBonus;
-           args.parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID;
-           args.pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter;
-           args.redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX;
-           args.redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY;
-           args.regionFlags = GetRegionFlags();
-           args.simAccess = m_scene.RegionInfo.AccessLevel;
-           args.sunHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
-           args.terrainLowerLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
-           args.terrainRaiseLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
-           args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
-           args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
-           args.simName = m_scene.RegionInfo.RegionName;
-           args.regionType = m_scene.RegionInfo.RegionType;
+            RegionInfoForEstateMenuArgs args = new RegionInfoForEstateMenuArgs
+                                                   {
+                                                       billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor,
+                                                       estateID = m_scene.RegionInfo.EstateSettings.EstateID,
+                                                       maxAgents = (byte) m_scene.RegionInfo.RegionSettings.AgentLimit,
+                                                       objectBonusFactor =
+                                                           (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
+                                                       parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
+                                                       pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
+                                                       redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
+                                                       redirectGridY = m_scene.RegionInfo.EstateSettings.RedirectGridY,
+                                                       regionFlags = GetRegionFlags(),
+                                                       simAccess = m_scene.RegionInfo.AccessLevel,
+                                                       sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition,
+                                                       terrainLowerLimit =
+                                                           (float) m_scene.RegionInfo.RegionSettings.TerrainLowerLimit,
+                                                       terrainRaiseLimit =
+                                                           (float) m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit,
+                                                       useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun,
+                                                       waterHeight =
+                                                           (float) m_scene.RegionInfo.RegionSettings.WaterHeight,
+                                                       simName = m_scene.RegionInfo.RegionName,
+                                                       regionType = m_scene.RegionInfo.RegionType
+                                                   };
 
-           remote_client.SendRegionInfoToEstateMenu(args);
+            remote_client.SendRegionInfoToEstateMenu(args);
         }
 
         private void HandleEstateCovenantRequest(IClientAPI remote_client)
@@ -1094,11 +1046,11 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             Dictionary<uint, float> SceneData = new Dictionary<uint,float>();
             
-            if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopColliders)
+            if (reportType == (uint)EstateTools.LandStatReportType.TopColliders)
             {
                 SceneData = m_scene.PhysicsScene.GetTopColliders();
             }
-            else if (reportType == (uint)OpenMetaverse.EstateTools.LandStatReportType.TopScripts)
+            else if (reportType == (uint)EstateTools.LandStatReportType.TopScripts)
             {
                 IScriptModule scriptModule = m_scene.RequestModuleInterface<IScriptModule>();
                 SceneData = scriptModule.GetTopScripts(m_scene.RegionInfo.RegionID);
@@ -1115,38 +1067,35 @@ namespace OpenSim.Region.CoreModules.World.Estate
                         if (prt.ParentEntity != null)
                         {
                             ISceneEntity sog = prt.ParentEntity;
-                            if (sog != null)
+                            LandStatReportItem lsri = new LandStatReportItem
+                                                          {
+                                                              Location = sog.AbsolutePosition,
+                                                              Score = SceneData[obj],
+                                                              TaskID = sog.UUID,
+                                                              TaskLocalID = sog.LocalId,
+                                                              TaskName = prt.Name,
+                                                              TimeModified = sog.RootChild.Rezzed
+                                                          };
+                            Services.Interfaces.UserAccount account =
+                                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, sog.OwnerID);
+                            lsri.OwnerName = account != null ? account.Name : "Unknown";
+
+                            if (filter.Length != 0)
                             {
-                                LandStatReportItem lsri = new LandStatReportItem();
-                                lsri.Location = sog.AbsolutePosition;
-                                lsri.Score = SceneData[obj];
-                                lsri.TaskID = sog.UUID;
-                                lsri.TaskLocalID = sog.LocalId;
-                                lsri.TaskName = prt.Name;
-                                lsri.TimeModified = sog.RootChild.Rezzed;
-                                OpenSim.Services.Interfaces.UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, sog.OwnerID);
-                                if (account != null)
-                                    lsri.OwnerName = account.Name;
-                                else
-                                    lsri.OwnerName = "Unknown";
-
-                                if (filter.Length != 0)
+                                //Its in the filter, don't check it
+                                if (requestFlags == 2) //Owner name
                                 {
-                                    //Its in the filter, don't check it
-                                    if (requestFlags == 2) //Owner name
-                                    {
-                                        if (!lsri.OwnerName.Contains(filter))
-                                            continue;
-                                    }
-                                    if (requestFlags == 4)//Object name
-                                    {
-                                        if (!lsri.TaskName.Contains(filter))
-                                            continue;
-                                    }
+                                    if (!lsri.OwnerName.Contains(filter))
+                                        continue;
                                 }
-
-                                SceneReport.Add(lsri);
+                                if (requestFlags == 4) //Object name
+                                {
+                                    if (!lsri.TaskName.Contains(filter))
+                                        continue;
+                                }
                             }
+
+                            SceneReport.Add(lsri);
                         }
                     }
 
@@ -1177,14 +1126,14 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 uuidarr = uuidLst.ToArray();
             }
 
-            for (int i = 0; i < uuidarr.Length; i++)
+            foreach (UUID t in uuidarr)
             {
-                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuidarr[i]);
+                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, t);
                 // we drop it.  It gets cached though...  so we're ready for the next request.
             }
         }
 
-        private enum SimWideDeletesFlags : int
+        private enum SimWideDeletesFlags
         {
             ReturnObjectsOtherEstate = 1,
             ReturnObjects = 2,
@@ -1240,9 +1189,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         public void sendRegionHandshake(IClientAPI remoteClient)
         {
-            RegionHandshakeArgs args = new RegionHandshakeArgs();
+            RegionHandshakeArgs args = new RegionHandshakeArgs
+                                           {isEstateManager = m_scene.Permissions.IsGod(remoteClient.AgentId)};
 
-            args.isEstateManager = m_scene.Permissions.IsGod(remoteClient.AgentId);
             if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero && m_scene.RegionInfo.EstateSettings.EstateOwner == remoteClient.AgentId)
                 args.isEstateManager = true;
             else if (m_scene.RegionInfo.EstateSettings.IsEstateManager(remoteClient.AgentId))
@@ -1285,8 +1234,9 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 AssetBase paintAsset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture.ToString());
                 if (paintAsset == null)
                 {
-                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture, "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID, AssetType.Texture, UUID.Zero);
-                    paintAsset.Flags = AssetFlags.Deletable;
+                    paintAsset = new AssetBase(m_scene.RegionInfo.RegionSettings.PaintableTerrainTexture,
+                                               "PaintableTerrainTexture-" + m_scene.RegionInfo.RegionID,
+                                               AssetType.Texture, UUID.Zero) {Flags = AssetFlags.Deletable};
                     AssetBase defaultTexture = m_scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString());//Nice grass
                     if (defaultTexture == null)
                         //Erm... what to do!
@@ -1319,45 +1269,21 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 m_scene.RegionInfo.EstateSettings.SunPosition = (parms2 - 0x1800)/1024.0;
             }
 
-            if ((parms1 & 0x00000010) != 0)
-                m_scene.RegionInfo.EstateSettings.FixedSun = true;
-            else
-                m_scene.RegionInfo.EstateSettings.FixedSun = false;
+            m_scene.RegionInfo.EstateSettings.FixedSun = (parms1 & 0x00000010) != 0;
 
-            if ((parms1 & 0x00008000) != 0)
-                m_scene.RegionInfo.EstateSettings.PublicAccess = true;
-            else
-                m_scene.RegionInfo.EstateSettings.PublicAccess = false;
+            m_scene.RegionInfo.EstateSettings.PublicAccess = (parms1 & 0x00008000) != 0;
 
-            if ((parms1 & 0x10000000) != 0)
-                m_scene.RegionInfo.EstateSettings.AllowVoice = true;
-            else
-                m_scene.RegionInfo.EstateSettings.AllowVoice = false;
+            m_scene.RegionInfo.EstateSettings.AllowVoice = (parms1 & 0x10000000) != 0;
 
-            if ((parms1 & 0x00100000) != 0)
-                m_scene.RegionInfo.EstateSettings.AllowDirectTeleport = true;
-            else
-                m_scene.RegionInfo.EstateSettings.AllowDirectTeleport = false;
+            m_scene.RegionInfo.EstateSettings.AllowDirectTeleport = (parms1 & 0x00100000) != 0;
 
-            if ((parms1 & 0x00800000) != 0)
-                m_scene.RegionInfo.EstateSettings.DenyAnonymous = true;
-            else
-                m_scene.RegionInfo.EstateSettings.DenyAnonymous = false;
+            m_scene.RegionInfo.EstateSettings.DenyAnonymous = (parms1 & 0x00800000) != 0;
 
-            if ((parms1 & 0x01000000) != 0)
-                m_scene.RegionInfo.EstateSettings.DenyIdentified = true;
-            else
-                m_scene.RegionInfo.EstateSettings.DenyIdentified = false;
+            m_scene.RegionInfo.EstateSettings.DenyIdentified = (parms1 & 0x01000000) != 0;
 
-            if ((parms1 & 0x02000000) != 0)
-                m_scene.RegionInfo.EstateSettings.DenyTransacted = true;
-            else
-                m_scene.RegionInfo.EstateSettings.DenyTransacted = false;
+            m_scene.RegionInfo.EstateSettings.DenyTransacted = (parms1 & 0x02000000) != 0;
 
-            if ((parms1 & 0x40000000) != 0)
-                m_scene.RegionInfo.EstateSettings.DenyMinors = true;
-            else
-                m_scene.RegionInfo.EstateSettings.DenyMinors = false;
+            m_scene.RegionInfo.EstateSettings.DenyMinors = (parms1 & 0x40000000) != 0;
 
             m_scene.RegionInfo.RegionSettings.BlockShowInSearch = (parms1 & (uint)RegionFlags.BlockParcelSearch) == (uint)RegionFlags.BlockParcelSearch;
 

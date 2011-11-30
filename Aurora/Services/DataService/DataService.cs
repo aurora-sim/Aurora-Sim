@@ -27,24 +27,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using Aurora.DataManager.Migration;
-using log4net;
-using Nini.Config;
-using Aurora.Framework;
-using Aurora.DataManager;
-using Aurora.DataManager.MySQL;
 using Aurora.DataManager.MSSQL;
+using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
+using Aurora.Framework;
+using Nini.Config;
 using OpenSim.Framework;
 
 namespace Aurora.Services.DataService
 {
     public class LocalDataService
     {
-        private string StorageProvider = "";
         private string ConnectionString = "";
+        private string StorageProvider = "";
 
         public void Initialise(IConfigSource source, IRegistryCore simBase)
         {
@@ -69,7 +64,8 @@ namespace Aurora.Services.DataService
             }
 
             IGenericData DataConnector = null;
-            if (StorageProvider == "MySQL" || StorageProvider == "Aurora.DataManager.MySQL.dll") //Allow for fallback when AuroraData isn't set
+            if (StorageProvider == "MySQL" || StorageProvider == "Aurora.DataManager.MySQL.dll")
+                //Allow for fallback when AuroraData isn't set
             {
                 MySQLDataLoader GenericData = new MySQLDataLoader();
 
@@ -87,7 +83,8 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }
-            else if (StorageProvider == "SQLite" || StorageProvider == "Aurora.DataManager.SQLite.dll") //Allow for fallback when AuroraData isn't set
+            else if (StorageProvider == "SQLite" || StorageProvider == "Aurora.DataManager.SQLite.dll")
+                //Allow for fallback when AuroraData isn't set
             {
                 SQLiteLoader GenericData = new SQLiteLoader();
 

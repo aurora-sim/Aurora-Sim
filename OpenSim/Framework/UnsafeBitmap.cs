@@ -27,34 +27,21 @@
 
 //Downloaded from
 //Visual C# Kicks - http://www.vcskicks.com/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Imaging;
 
 namespace BitmapProcessing
 {
     //From http://www.vcskicks.com/fast-image-processing2.php
-    unsafe public class FastBitmap
+    public unsafe class FastBitmap
     {
-        private struct PixelData
-        {
-            public byte blue;
-            public byte green;
-            public byte red;
-            public byte alpha;
-
-            public override string ToString()
-            {
-                return "(" + alpha.ToString() + ", " + red.ToString() + ", " + green.ToString() + ", " + blue.ToString() + ")";
-            }
-        }
-
-        private Bitmap workingBitmap = null;
-        private int width = 0;
-        private BitmapData bitmapData = null;
+        private readonly Bitmap workingBitmap;
+        private BitmapData bitmapData;
         private Byte* pBase = null;
+        private PixelData* pixelData = null;
+        private int width;
 
         public FastBitmap(Bitmap inputBitmap)
         {
@@ -65,19 +52,17 @@ namespace BitmapProcessing
         {
             Rectangle bounds = new Rectangle(Point.Empty, workingBitmap.Size);
 
-            width = (int)(bounds.Width * sizeof(PixelData));
-            if (width % 4 != 0) width = 4 * (width / 4 + 1);
+            width = (bounds.Width*sizeof (PixelData));
+            if (width%4 != 0) width = 4*(width/4 + 1);
 
             //Lock Image
             bitmapData = workingBitmap.LockBits(bounds, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-            pBase = (Byte*)bitmapData.Scan0.ToPointer();
+            pBase = (Byte*) bitmapData.Scan0.ToPointer();
         }
-
-        private PixelData* pixelData = null;
 
         public Color GetPixel(int x, int y)
         {
-            pixelData = (PixelData*)(pBase + y * width + x * sizeof(PixelData));
+            pixelData = (PixelData*) (pBase + y*width + x*sizeof (PixelData));
             return Color.FromArgb(pixelData->alpha, pixelData->red, pixelData->green, pixelData->blue);
         }
 
@@ -89,7 +74,7 @@ namespace BitmapProcessing
 
         public void SetPixel(int x, int y, Color color)
         {
-            PixelData* data = (PixelData*)(pBase + y * width + x * sizeof(PixelData));
+            PixelData* data = (PixelData*) (pBase + y*width + x*sizeof (PixelData));
             data->alpha = color.A;
             data->red = color.R;
             data->green = color.G;
@@ -107,5 +92,23 @@ namespace BitmapProcessing
         {
             return workingBitmap;
         }
+
+        #region Nested type: PixelData
+
+        private struct PixelData
+        {
+            public byte alpha;
+            public byte blue;
+            public byte green;
+            public byte red;
+
+            public override string ToString()
+            {
+                return "(" + alpha.ToString() + ", " + red.ToString() + ", " + green.ToString() + ", " + blue.ToString() +
+                       ")";
+            }
+        }
+
+        #endregion
     }
 }

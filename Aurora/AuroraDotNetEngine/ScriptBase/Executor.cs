@@ -29,27 +29,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.Remoting.Lifetime;
-using System.Threading;
 using OpenMetaverse;
 using OpenSim.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
     public class Executor
     {
-        /// <summary>
-        /// Contains the script to execute functions in.
-        /// </summary>
-        protected IScript m_Script;
-
-        //Only use one copy please, it doesn't change
-        protected static Dictionary<string, scriptEvents> m_eventFlagsMap = new Dictionary<string, scriptEvents>();
-        protected Dictionary<Guid, IEnumerator> m_enumerators = new Dictionary<Guid, IEnumerator>();
+        #region scriptEvents enum
 
         [Flags]
         public enum scriptEvents : long
@@ -90,19 +77,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             sensor = 34359738368
         }
 
+        #endregion
+
+        protected static Dictionary<string, scriptEvents> m_eventFlagsMap = new Dictionary<string, scriptEvents>();
+
         // Cache functions by keeping a reference to them in a dictionary
-        private Dictionary<string, scriptEvents> m_stateEvents = new Dictionary<string, scriptEvents>();
+        private readonly Dictionary<string, scriptEvents> m_stateEvents = new Dictionary<string, scriptEvents>();
+
+        private bool InTimeSlice;
+
+        private Int32 MaxTimeSlice = 60; // script timeslice execution time in ms , hardwired for now
+        private int TimeSliceEnd;
+
+        /// <summary>
+        ///   Contains the script to execute functions in.
+        /// </summary>
+        protected IScript m_Script;
+
+        protected Dictionary<Guid, IEnumerator> m_enumerators = new Dictionary<Guid, IEnumerator>();
         private Type m_scriptType;
 
-        private bool InTimeSlice = false;
-        private int TimeSliceEnd = 0;
-
-        private Int32 MaxTimeSlice = 60;    // script timeslice execution time in ms , hardwired for now
-  
 
         public Executor(IScript script)
         {
-            InTimeSlice=false;
+            InTimeSlice = false;
             m_Script = script;
             initEventFlags();
         }
@@ -126,7 +124,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     evname += kvp.Key;
                     //m_log.Debug("Trying event "+evname);
 
-                    ev = m_scriptType.GetMethod (evname);
+                    ev = m_scriptType.GetMethod(evname);
                     if (ev != null)
                         //m_log.Debug("Found handler for " + kvp.Key);
                         eventFlags |= kvp.Value;
@@ -147,10 +145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void OpenTimeSlice(EnumeratorInfo Start)
         {
-            if(Start == null)
-                TimeSliceEnd = Util.EnvironmentTickCountAdd(MaxTimeSlice);
-            else
-                TimeSliceEnd = Util.EnvironmentTickCountAdd(MaxTimeSlice / 2);
+            TimeSliceEnd = Start == null ? Util.EnvironmentTickCountAdd(MaxTimeSlice) : Util.EnvironmentTickCountAdd(MaxTimeSlice/2);
             InTimeSlice = true;
         }
 
@@ -164,7 +159,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return TimeSliceEnd < Util.EnvironmentTickCount();
         }
 
-        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)
+        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start,
+                                           out Exception ex)
         {
             ex = null;
             string EventName = state == "" ? FunctionName : state + "_event_" + FunctionName;
@@ -183,10 +179,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 if (Start != null)
                 {
                     lock (m_enumerators)
-                        m_enumerators.TryGetValue (Start.Key, out thread);
+                        m_enumerators.TryGetValue(Start.Key, out thread);
                 }
                 else
-                    thread = m_Script.FireEvent (EventName, args);
+                    thread = m_Script.FireEvent(EventName, args);
 
                 if (thread != null)
                     running = thread.MoveNext();
@@ -200,10 +196,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 // FriendlyErrors depends on getting the whole exception!
                 //
                 if (!(tie is EventAbortException) &&
-                        !(tie is MinEventDelayException) &&
-                        !(tie.InnerException != null && 
-                        ((tie.InnerException.Message.Contains("EventAbortException")) ||
-                        (tie.InnerException.Message.Contains ("MinEventDelayException")))))
+                    !(tie is MinEventDelayException) &&
+                    !(tie.InnerException != null &&
+                      ((tie.InnerException.Message.Contains("EventAbortException")) ||
+                       (tie.InnerException.Message.Contains("MinEventDelayException")))))
                     ex = tie;
                 if (Start != null)
                 {
@@ -220,8 +216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             {
                 if (Start == null)
                 {
-                    Start = new EnumeratorInfo();
-                    Start.Key = UUID.Random().Guid;
+                    Start = new EnumeratorInfo {Key = UUID.Random().Guid};
                 }
                 lock (m_enumerators)
                 {
@@ -229,10 +224,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 }
 
                 if (thread.Current is DateTime)
-                    Start.SleepTo = (DateTime)thread.Current;
+                    Start.SleepTo = (DateTime) thread.Current;
                 else if (thread.Current is string)
                 {
-                    ex = new Exception((string)thread.Current);
+                    ex = new Exception((string) thread.Current);
                     running = false;
                     lock (m_enumerators)
                     {
@@ -278,7 +273,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_eventFlagsMap.Add("land_collision", scriptEvents.land_collision);
             m_eventFlagsMap.Add("land_collision_end", scriptEvents.land_collision_end);
             m_eventFlagsMap.Add("land_collision_start", scriptEvents.land_collision_start);
-            m_eventFlagsMap.Add("link_message",scriptEvents.link_message);
+            m_eventFlagsMap.Add("link_message", scriptEvents.link_message);
             m_eventFlagsMap.Add("listen", scriptEvents.listen);
             m_eventFlagsMap.Add("money", scriptEvents.money);
             m_eventFlagsMap.Add("moving_end", scriptEvents.moving_end);

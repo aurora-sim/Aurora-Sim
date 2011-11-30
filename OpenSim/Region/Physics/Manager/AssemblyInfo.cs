@@ -34,19 +34,19 @@ using System.Runtime.InteropServices;
 // change them to the information which is associated with the assembly
 // you compile.
 
-[assembly : AssemblyTitle("PhysicsManager")]
-[assembly : AssemblyDescription("")]
-[assembly : AssemblyConfiguration("")]
-[assembly : AssemblyCompany("http://opensimulator.org")]
-[assembly : AssemblyProduct("PhysicsManager")]
-[assembly : AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2009")]
-[assembly : AssemblyTrademark("")]
-[assembly : AssemblyCulture("")]
+[assembly: AssemblyTitle("PhysicsManager")]
+[assembly: AssemblyDescription("")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("http://opensimulator.org")]
+[assembly: AssemblyProduct("PhysicsManager")]
+[assembly: AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2009")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
 
 // This sets the default COM visibility of types in the assembly to invisible.
 // If you need to expose a type to COM, use [ComVisible(true)] on that type.
 
-[assembly : ComVisible(false)]
+[assembly: ComVisible(false)]
 
 // The assembly version has following format :
 //
@@ -55,4 +55,4 @@ using System.Runtime.InteropServices;
 // You can specify all values by your own or you can build default build and revision
 // numbers with the '*' character (the default):
 
-[assembly : AssemblyVersion("0.6.5.*")]
+[assembly: AssemblyVersion("0.6.5.*")]

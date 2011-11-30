@@ -25,20 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
-using OpenSim.Framework;
 
 namespace Aurora.Framework
 {
     public interface IWindLightSettingsModule
     {
+        bool EnableWindLight { get; }
         void SendWindlightProfileTargeted(RegionLightShareData wl, UUID pUUID);
         void SaveWindLightSettings(float MinEffectiveAltitude, RegionLightShareData wl);
-        RegionLightShareData FindRegionWindLight ();
-        bool EnableWindLight { get; }
+        RegionLightShareData FindRegionWindLight();
     }
 }

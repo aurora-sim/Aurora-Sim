@@ -25,20 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
 
 namespace Aurora.Framework
 {
     public class OfflineMessage
     {
-        public UUID ToUUID;
         public string Message;
+        public UUID ToUUID;
 
-        public OfflineMessage() { }
+        public OfflineMessage()
+        {
+        }
+
         public OfflineMessage(Dictionary<string, object> KVP)
         {
             ToUUID = new UUID(KVP["ToUUID"].ToString());

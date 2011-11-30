@@ -33,205 +33,206 @@ using OpenSim.Framework;
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Aurora-Sim Application Plugin framework interface
+    ///   Aurora-Sim Application Plugin framework interface
     /// </summary>
     public interface IApplicationPlugin
     {
         /// <summary>
-        /// Returns the plugin name
+        ///   Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        /// Initialize the Plugin
+        ///   Initialize the Plugin
         /// </summary>
-        /// <param name="openSim">The Application instance</param>
+        /// <param name = "openSim">The Application instance</param>
         void Initialize(ISimulationBase openSim);
 
         /// <summary>
-        /// Called when the application initialization is completed 
+        ///   Called when the application initialization is completed
         /// </summary>
         void PostInitialise();
 
         /// <summary>
-        /// Called when the application loading is completed 
+        ///   Called when the application loading is completed
         /// </summary>
         void Start();
 
         /// <summary>
-        /// Called when the application loading is completed 
+        ///   Called when the application loading is completed
         /// </summary>
         void PostStart();
 
         /// <summary>
-        /// Close out the module
+        ///   Close out the module
         /// </summary>
         void Close();
 
         /// <summary>
-        /// The configuration has changed, make sure that everything is updated with the new info
+        ///   The configuration has changed, make sure that everything is updated with the new info
         /// </summary>
-        /// <param name="m_config"></param>
+        /// <param name = "m_config"></param>
         void ReloadConfiguration(IConfigSource m_config);
     }
 }
+
 namespace Aurora.Framework
 {
     public interface IGenericData
     {
         /// <summary>
-        /// update 'table' set 'setRow' = 'setValue' WHERE 'keyRow' = 'keyValue'
+        ///   update 'table' set 'setRow' = 'setValue' WHERE 'keyRow' = 'keyValue'
         /// </summary>
-        bool Update (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
         /// <summary>
-        /// update 'table' set 'setRow' = setValue WHERE 'keyRow' = 'keyValue'
+        ///   update 'table' set 'setRow' = setValue WHERE 'keyRow' = 'keyValue'
         /// </summary>
-        bool DirectUpdate (string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' where 'whereClause'
+        ///   select 'wantedValue' from 'table' where 'whereClause'
         /// </summary>
         List<string> Query(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' 'whereClause'
+        ///   select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         List<string> QueryFullData(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' 'whereClause'
+        ///   select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         IDataReader QueryData(string whereClause, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
+        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
         /// </summary>
-        List<string> Query (string keyRow, object keyValue, string table, string wantedValue, string Order);
+        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         /// </summary>
-        List<string> Query (string[] keyRow, object[] keyValue, string table, string wantedValue);
+        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
         /// <summary>
-        /// select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        /// This gives the row names as well as the values
+        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        ///   This gives the row names as well as the values
         /// </summary>
-        Dictionary<string, List<string>> QueryNames (string[] keyRow, object[] keyValue, string table, string wantedValue);
+        Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
         /// <summary>
-        /// insert into 'table' values ('values')
+        ///   insert into 'table' values ('values')
         /// </summary>
         bool Insert(string table, object[] values);
-        
+
         /// <summary>
-        /// insert into 'table' where 'keys' = 'values'
+        ///   insert into 'table' where 'keys' = 'values'
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keys"></param>
-        /// <param name="values"></param>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
         /// <returns></returns>
         bool Insert(string table, string[] keys, object[] values);
 
         /// <summary>
-        /// delete from 'table' where 'keys' = 'values'
+        ///   delete from 'table' where 'keys' = 'values'
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keys"></param>
-        /// <param name="values"></param>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
         /// <returns></returns>
         bool Delete(string table, string[] keys, object[] values);
 
         /// <summary>
-        /// Formats a datetime string for the given time
-        /// 0 returns now()
+        ///   Formats a datetime string for the given time
+        ///   0 returns now()
         /// </summary>
-        /// <param name="time"></param>
+        /// <param name = "time"></param>
         /// <returns></returns>
         string FormatDateTimeString(int time);
 
         /// <summary>
-        /// delete from 'table' where 'key' < now()
+        ///   delete from 'table' where 'key' < now()
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keys"></param>
-        /// <param name="values"></param>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
         /// <returns></returns>
         bool DeleteByTime(string table, string keys);
 
         /// <summary>
-        /// delete from 'table' where whereclause
+        ///   delete from 'table' where whereclause
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="whereclause"></param>
+        /// <param name = "table"></param>
+        /// <param name = "whereclause"></param>
         /// <returns></returns>
         bool Delete(string table, string whereclause);
 
         /// <summary>
-        /// Replace into 'table' ('keys') values ('values')
+        ///   Replace into 'table' ('keys') values ('values')
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keys"></param>
-        /// <param name="values"></param>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
         /// <returns></returns>
         bool Replace(string table, string[] keys, object[] values);
 
         /// <summary>
-        /// Same as replace, but without any '' around the values
+        ///   Same as replace, but without any '' around the values
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="keys"></param>
-        /// <param name="values"></param>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
         /// <returns></returns>
         bool DirectReplace(string table, string[] keys, object[] values);
 
         /// <summary>
-        /// Inserts a row into the database 
-        /// insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
+        ///   Inserts a row into the database 
+        ///   insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
         /// </summary>
-        /// <param name="table">table name</param>
-        /// <param name="values">All values to be inserted in the correct table order</param>
-        /// <param name="updateKey">If a row is already existing, update this key</param>
-        /// <param name="updateValue">If a row is already existing, update this value</param>
+        /// <param name = "table">table name</param>
+        /// <param name = "values">All values to be inserted in the correct table order</param>
+        /// <param name = "updateKey">If a row is already existing, update this key</param>
+        /// <param name = "updateValue">If a row is already existing, update this value</param>
         /// <returns></returns>
         bool Insert(string table, object[] values, string updateKey, object updateValue);
-        
+
         /// <summary>
-        /// Connects to the database and then performs migrations
+        ///   Connects to the database and then performs migrations
         /// </summary>
-        /// <param name="connectionString"></param>
+        /// <param name = "connectionString"></param>
         void ConnectToDatabase(string connectionString, string migrationName, bool validateTables);
 
         /// <summary>
-        /// Makes a copy of the IGenericData plugin
+        ///   Makes a copy of the IGenericData plugin
         /// </summary>
         /// <returns></returns>
         IGenericData Copy();
 
         /// <summary>
-        /// Close the given database connection
+        ///   Close the given database connection
         /// </summary>
         void CloseDatabase();
 
         /// <summary>
-        /// Returns alternative value if field is null
+        ///   Returns alternative value if field is null
         /// </summary>
-        /// <param name="Field"></param>
-        /// <param name="defaultValue"></param>
+        /// <param name = "Field"></param>
+        /// <param name = "defaultValue"></param>
         /// <returns></returns>
         string IsNull(string Field, string defaultValue);
 
         /// <summary>
-        /// in the sql the strings will return joined fields
+        ///   in the sql the strings will return joined fields
         /// </summary>
-        /// <param name="toConCat"></param>
+        /// <param name = "toConCat"></param>
         /// <returns></returns>
         string ConCat(string[] toConCat);
     }
@@ -239,17 +240,18 @@ namespace Aurora.Framework
     public interface IAuroraDataPlugin
     {
         /// <summary>
-        /// Returns the plugin name
+        ///   Returns the plugin name
         /// </summary>
         /// <returns></returns>
         string Name { get; }
 
         /// <summary>
-        /// Starts the database plugin, performs migrations if needed
+        ///   Starts the database plugin, performs migrations if needed
         /// </summary>
-        /// <param name="GenericData">The Database Plugin</param>
-        /// <param name="source">Config if more parameters are needed</param>
-        /// <param name="DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString);
+        /// <param name = "GenericData">The Database Plugin</param>
+        /// <param name = "source">Config if more parameters are needed</param>
+        /// <param name = "DefaultConnectionString">The connection string to use</param>
+        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
+                        string DefaultConnectionString);
     }
 }

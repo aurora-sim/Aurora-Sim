@@ -25,26 +25,66 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
-using Aurora.DataManager;
-using Aurora.Framework;
-using Aurora.Services.DataService;
-using OpenSim.Framework;
+using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
     public class AgentInfoServiceConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
+
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
+        {
+            get { return "AgentInfoServerURI"; }
+        }
+
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry,
+                                                                                m_registry.RequestModuleInterface
+                                                                                    <IAgentInfoService>().InnerService,
+                                                                                SessionID);
+            server.AddStreamHandler(handler);
+        }
+
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
+        {
+            string url = "/agentinfo" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+
+            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry,
+                                                                                m_registry.RequestModuleInterface
+                                                                                    <IAgentInfoService>().InnerService,
+                                                                                SessionID);
+            server.AddStreamHandler(handler);
+
+            return url;
+        }
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
+        }
+
+        #endregion
+
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -63,39 +103,6 @@ namespace OpenSim.Services
 
         public void FinishedStartup()
         {
-        }
-
-        #region IGridRegistrationUrlModule Members
-
-        public string UrlName
-        {
-            get { return "AgentInfoServerURI"; }
-        }
-
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler(url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService>().InnerService, SessionID);
-            server.AddStreamHandler(handler);
-        }
-
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
-        {
-            string url = "/agentinfo" + UUID.Random();
-
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            AgentInfoServerPostHandler handler = new AgentInfoServerPostHandler (url, m_registry, m_registry.RequestModuleInterface<IAgentInfoService> ().InnerService, SessionID);
-            server.AddStreamHandler(handler);
-
-            return url;
-        }
-
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
         }
 
         #endregion

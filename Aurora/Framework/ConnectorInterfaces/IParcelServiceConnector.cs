@@ -25,10 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenMetaverse;
 using OpenSim.Framework;
 
@@ -37,41 +34,41 @@ namespace Aurora.Framework
     public interface IParcelServiceConnector : IAuroraDataPlugin
     {
         /// <summary>
-        /// Stores the changes to the parcel
+        ///   Stores the changes to the parcel
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name = "args"></param>
         void StoreLandObject(LandData args);
 
         /// <summary>
-        /// Gets the parcel data for the given parcel in the region
+        ///   Gets the parcel data for the given parcel in the region
         /// </summary>
-        /// <param name="ParcelID"></param>
+        /// <param name = "ParcelID"></param>
         /// <returns></returns>
         LandData GetLandData(UUID RegionID, UUID ParcelID);
 
         /// <summary>
-        /// Loads all parcels by region
+        ///   Loads all parcels by region
         /// </summary>
-        /// <param name="regionUUID"></param>
+        /// <param name = "regionUUID"></param>
         /// <returns></returns>
-        List<LandData> LoadLandObjects (UUID regionUUID);
+        List<LandData> LoadLandObjects(UUID regionUUID);
 
         /// <summary>
-        /// Removes a parcel
+        ///   Removes a parcel
         /// </summary>
-        /// <param name="ParcelID"></param>
-        void RemoveLandObject (UUID RegionID, UUID ParcelID);
+        /// <param name = "ParcelID"></param>
+        void RemoveLandObject(UUID RegionID, UUID ParcelID);
 
         /// <summary>
-        /// Removes all parcels
+        ///   Removes all parcels
         /// </summary>
-        /// <param name="ParcelID"></param>
-        void RemoveAllLandObjects (UUID RegionID);
+        /// <param name = "ParcelID"></param>
+        void RemoveAllLandObjects(UUID RegionID);
 
         /// <summary>
-        /// Removes a region
+        ///   Removes a region
         /// </summary>
-        /// <param name="ParcelID"></param>
+        /// <param name = "ParcelID"></param>
         void RemoveLandObject(UUID RegionID);
     }
 }

@@ -25,11 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using System.Text;
-using log4net;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
@@ -37,7 +35,7 @@ using OpenSim.Services.Interfaces;
 namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 {
     /// <summary>
-    /// Utility methods for inventory archiving
+    ///   Utility methods for inventory archiving
     /// </summary>
     public static class InventoryArchiveUtils
     {
@@ -49,27 +47,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         // The character used to separate inventory path components (different folders and items)
         public static readonly char PATH_DELIMITER = '/';
 
-        /// <summary>
-        /// Find a folder given a PATH_DELIMITER delimited path starting from a user's root folder
-        /// </summary>
+        ///<summary>
+        ///  Find a folder given a PATH_DELIMITER delimited path starting from a user's root folder
+        ///</summary>
+        ///This method does not handle paths that contain multiple delimitors
         ///
-        /// This method does not handle paths that contain multiple delimitors
+        ///FIXME: We have no way of distinguishing folders with the same path
         ///
-        /// FIXME: We have no way of distinguishing folders with the same path
-        ///
-        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///
-        /// <param name="inventoryService">
-        /// Inventory service to query
-        /// </param>
-        /// <param name="userId">
-        /// User id to search
-        /// </param>
-        /// <param name="path">
-        /// The path to the required folder.
-        /// It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
-        /// </param>
-        /// <returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
+        ///FIXME: Delimitors which occur in names themselves are not currently escapable.
+        ///<param name = "inventoryService">
+        ///  Inventory service to query
+        ///</param>
+        ///<param name = "userId">
+        ///  User id to search
+        ///</param>
+        ///<param name = "path">
+        ///  The path to the required folder.
+        ///  It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
+        ///</param>
+        ///<returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
         public static List<InventoryFolderBase> FindFolderByPath(
             IInventoryService inventoryService, UUID userId, string path)
         {
@@ -80,33 +76,31 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             return FindFolderByPath(inventoryService, rootFolder, path);
         }
-        
-        /// <summary>
-        /// Find a folder given a PATH_DELIMITER delimited path starting from this folder
-        /// </summary>
+
+        ///<summary>
+        ///  Find a folder given a PATH_DELIMITER delimited path starting from this folder
+        ///</summary>
+        ///This method does not handle paths that contain multiple delimitors
         ///
-        /// This method does not handle paths that contain multiple delimitors
+        ///FIXME: We have no way of distinguishing folders with the same path.
         ///
-        /// FIXME: We have no way of distinguishing folders with the same path.
-        ///
-        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
-        ///
-        /// <param name="inventoryService">
-        /// Inventory service to query
-        /// </param>
-        /// <param name="startFolder">
-        /// The folder from which the path starts
-        /// </param>
-        /// <param name="path">
-        /// The path to the required folder.
-        /// It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
-        /// </param>
-        /// <returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
+        ///FIXME: Delimitors which occur in names themselves are not currently escapable.
+        ///<param name = "inventoryService">
+        ///  Inventory service to query
+        ///</param>
+        ///<param name = "startFolder">
+        ///  The folder from which the path starts
+        ///</param>
+        ///<param name = "path">
+        ///  The path to the required folder.
+        ///  It this is empty or consists only of the PATH_DELIMTER then this folder itself is returned.
+        ///</param>
+        ///<returns>An empty list if the folder is not found, otherwise a list of all folders that match the name</returns>
         public static List<InventoryFolderBase> FindFolderByPath(
             IInventoryService inventoryService, InventoryFolderBase startFolder, string path)
         {
             List<InventoryFolderBase> foundFolders = new List<InventoryFolderBase>();
-            
+
             if (path == string.Empty)
             {
                 foundFolders.Add(startFolder);
@@ -120,54 +114,50 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 foundFolders.Add(startFolder);
                 return foundFolders;
             }
-                        
+
             // If the path isn't just / then trim any starting extraneous slashes
-            path = path.TrimStart(new char[] { PATH_DELIMITER });
-            
+            path = path.TrimStart(new[] {PATH_DELIMITER});
+
 //            m_log.DebugFormat("[INVENTORY ARCHIVE UTILS]: Adjusted path in FindFolderByPath() is [{0}]", path);
 
             string[] components = SplitEscapedPath(path);
             components[0] = UnescapePath(components[0]);
 
             //string[] components = path.Split(new string[] { PATH_DELIMITER.ToString() }, 2, StringSplitOptions.None);
-            
+
             InventoryCollection contents = inventoryService.GetFolderContent(startFolder.Owner, startFolder.ID);
 
-            foreach (InventoryFolderBase folder in contents.Folders)
+            foreach (InventoryFolderBase folder in contents.Folders.Where(folder => folder.Name == components[0]))
             {
-                if (folder.Name == components[0])
-                {
-                    if (components.Length > 1)
-                        foundFolders.AddRange(FindFolderByPath(inventoryService, folder, components[1]));
-                    else
-                        foundFolders.Add(folder);
-                }
+                if (components.Length > 1)
+                    foundFolders.AddRange(FindFolderByPath(inventoryService, folder, components[1]));
+                else
+                    foundFolders.Add(folder);
             }
 
             return foundFolders;
         }
 
-        /// <summary>
-        /// Find an item given a PATH_DELIMITOR delimited path starting from the user's root folder.
+        ///<summary>
+        ///  Find an item given a PATH_DELIMITOR delimited path starting from the user's root folder.
         ///
-        /// This method does not handle paths that contain multiple delimitors
+        ///  This method does not handle paths that contain multiple delimitors
         ///
-        /// FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
-        /// XPath like expression
+        ///  FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
+        ///  XPath like expression
         ///
-        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
-        /// </summary>
-        /// 
-        /// <param name="inventoryService">
-        /// Inventory service to query
-        /// </param>
-        /// <param name="userId">
-        /// The user to search
-        /// </param>
-        /// <param name="path">
-        /// The path to the required item.
-        /// </param>
-        /// <returns>null if the item is not found</returns>
+        ///  FIXME: Delimitors which occur in names themselves are not currently escapable.
+        ///</summary>
+        ///<param name = "inventoryService">
+        ///  Inventory service to query
+        ///</param>
+        ///<param name = "userId">
+        ///  The user to search
+        ///</param>
+        ///<param name = "path">
+        ///  The path to the required item.
+        ///</param>
+        ///<returns>null if the item is not found</returns>
         public static InventoryItemBase FindItemByPath(
             IInventoryService inventoryService, UUID userId, string path)
         {
@@ -178,38 +168,37 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             return FindItemByPath(inventoryService, rootFolder, path);
         }
-        
-        /// <summary>
-        /// Find an item given a PATH_DELIMITOR delimited path starting from this folder.
+
+        ///<summary>
+        ///  Find an item given a PATH_DELIMITOR delimited path starting from this folder.
         ///
-        /// This method does not handle paths that contain multiple delimitors
+        ///  This method does not handle paths that contain multiple delimitors
         ///
-        /// FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
-        /// XPath like expression
+        ///  FIXME: We do not yet handle situations where folders or items have the same name.  We could handle this by some
+        ///  XPath like expression
         ///
-        /// FIXME: Delimitors which occur in names themselves are not currently escapable.
-        /// </summary>
-        /// 
-        /// <param name="inventoryService">
-        /// Inventory service to query
-        /// </param>
-        /// <param name="startFolder">
-        /// The folder from which the path starts
-        /// </param>
-        /// <param name="path">
-        /// <param name="path">
-        /// The path to the required item.
-        /// </param>
-        /// <returns>null if the item is not found</returns>
+        ///  FIXME: Delimitors which occur in names themselves are not currently escapable.
+        ///</summary>
+        ///<param name = "inventoryService">
+        ///  Inventory service to query
+        ///</param>
+        ///<param name = "startFolder">
+        ///  The folder from which the path starts
+        ///</param>
+        ///<param name = "path">
+        ///  <param name = "path">
+        ///    The path to the required item.
+        ///  </param>
+        ///  <returns>null if the item is not found</returns>
         public static InventoryItemBase FindItemByPath(
             IInventoryService inventoryService, InventoryFolderBase startFolder, string path)
         {
             // If the path isn't just / then trim any starting extraneous slashes
-            path = path.TrimStart(new char[] { PATH_DELIMITER });
-            
+            path = path.TrimStart(new[] {PATH_DELIMITER});
+
             string[] components = SplitEscapedPath(path);
             components[0] = UnescapePath(components[0]);
-                            
+
             //string[] components = path.Split(new string[] { PATH_DELIMITER }, 2, StringSplitOptions.None);
 
             if (components.Length == 1)
@@ -217,30 +206,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 //                m_log.DebugFormat(
 //                    "FOUND SINGLE COMPONENT [{0}].  Looking for this in [{1}] {2}", 
 //                    components[0], startFolder.Name, startFolder.ID);
-                
+
                 List<InventoryItemBase> items = inventoryService.GetFolderItems(startFolder.Owner, startFolder.ID);
-                
+
 //                m_log.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
-                
-                foreach (InventoryItemBase item in items)
-                {
-//                    m_log.DebugFormat("[INVENTORY ARCHIVE UTILS]: Inspecting item {0} {1}", item.Name, item.ID);
-                    
-                    if (item.Name == components[0])
-                        return item;
-                }
+
+                return items.FirstOrDefault(item => item.Name == components[0]);
             }
             else
             {
 //                m_log.DebugFormat("FOUND COMPONENTS [{0}] and [{1}]", components[0], components[1]);
-                
+
                 InventoryCollection contents = inventoryService.GetFolderContent(startFolder.Owner, startFolder.ID);
-                
-                foreach (InventoryFolderBase folder in contents.Folders)
-                {
-                    if (folder.Name == components[0])
-                        return FindItemByPath(inventoryService, folder, components[1]);
-                }
+
+                return (from folder in contents.Folders
+                        where folder.Name == components[0]
+                        select FindItemByPath(inventoryService, folder, components[1])).FirstOrDefault();
             }
 
             // We didn't find an item or intermediate folder with the given name
@@ -248,20 +229,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         }
 
         /// <summary>
-        /// Split a human escaped path into two components if it contains an unescaped path delimiter, or one component
-        /// if no delimiter is present
+        ///   Split a human escaped path into two components if it contains an unescaped path delimiter, or one component
+        ///   if no delimiter is present
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name = "path"></param>
         /// <returns>
-        /// The split path.  We leave the components in their originally unescaped state (though we remove the delimiter
-        /// which originally split them if applicable).
+        ///   The split path.  We leave the components in their originally unescaped state (though we remove the delimiter
+        ///   which originally split them if applicable).
         /// </returns>
         public static string[] SplitEscapedPath(string path)
         {
 //            m_log.DebugFormat("SPLITTING PATH {0}", path);
-            
+
             bool singleEscapeChar = false;
-            
+
             for (int i = 0; i < path.Length; i++)
             {
                 if (path[i] == ESCAPE_CHARACTER && !singleEscapeChar)
@@ -271,57 +252,57 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 else
                 {
                     if (PATH_DELIMITER == path[i] && !singleEscapeChar)
-                        return new string[2] { path.Remove(i), path.Substring(i + 1) };
+                        return new string[2] {path.Remove(i), path.Substring(i + 1)};
                     else
                         singleEscapeChar = false;
                 }
             }
 
             // We didn't find a delimiter
-            return new string[1] { path };
+            return new string[1] {path};
         }
 
         /// <summary>
-        /// Unescapes a human escaped path.  This means that "\\" goes to "\", and "\/" goes to "/"
+        ///   Unescapes a human escaped path.  This means that "\\" goes to "\", and "\/" goes to "/"
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name = "path"></param>
         /// <returns></returns>
         public static string UnescapePath(string path)
         {
 //            m_log.DebugFormat("ESCAPING PATH {0}", path);
-            
+
             StringBuilder sb = new StringBuilder();
 
             bool singleEscapeChar = false;
-            for (int i = 0; i < path.Length; i++)
+            foreach (char t in path)
             {
-                if (path[i] == ESCAPE_CHARACTER && !singleEscapeChar)
+                if (t == ESCAPE_CHARACTER && !singleEscapeChar)
                     singleEscapeChar = true;
                 else
                     singleEscapeChar = false;
 
                 if (singleEscapeChar)
                 {
-                    if (PATH_DELIMITER == path[i])
+                    if (PATH_DELIMITER == t)
                         sb.Append(PATH_DELIMITER);
                 }
                 else
                 {
-                    sb.Append(path[i]);
+                    sb.Append(t);
                 }
             }
 
 //            m_log.DebugFormat("ESCAPED PATH TO {0}", sb);
-            
+
             return sb.ToString();
         }
 
         /// <summary>
-        /// Escape an archive path.
+        ///   Escape an archive path.
         /// </summary>
         /// This has to be done differently from human paths because we can't leave in any "/" characters (due to
         /// problems if the archive is built from or extracted to a filesystem
-        /// <param name="path"></param>
+        /// <param name = "path"></param>
         /// <returns></returns>
         public static string EscapeArchivePath(string path)
         {
@@ -330,9 +311,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         }
 
         /// <summary>
-        /// Unescape an archive path.
+        ///   Unescape an archive path.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name = "path"></param>
         /// <returns></returns>
         public static string UnescapeArchivePath(string path)
         {

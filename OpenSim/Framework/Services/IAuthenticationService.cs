@@ -25,7 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
@@ -54,7 +53,7 @@ namespace OpenSim.Services.Interfaces
         // Tokens expire after 30 minutes and can be refreshed by
         // re-verifying.
         //
-        bool Verify (UUID principalID, string authType, string token, int lifetime);
+        bool Verify(UUID principalID, string authType, string token, int lifetime);
 
         //////////////////////////////////////////////////////
         // Teardown
@@ -63,7 +62,7 @@ namespace OpenSim.Services.Interfaces
         // invalidates it and it can not subsequently be used
         // or refreshed.
         //
-        bool Release (UUID principalID, string authType, string token);
+        bool Release(UUID principalID, string authType, string token);
 
         //////////////////////////////////////////////////////
         // SetPassword for a principal
@@ -74,15 +73,15 @@ namespace OpenSim.Services.Interfaces
         // because it's a bit risky. Such handlers require
         // authentication/authorization.
         //
-        bool SetPassword (UUID principalID, string authType, string passwd);
-        bool SetPasswordHashed (UUID UUID, string authType, string passwd);
-        bool SetPlainPassword (UUID principalID, string authType, string passwd);
+        bool SetPassword(UUID principalID, string authType, string passwd);
+        bool SetPasswordHashed(UUID UUID, string authType, string passwd);
+        bool SetPlainPassword(UUID principalID, string authType, string passwd);
 
         /// <summary>
-        /// Check whether the given principalID has a password set
+        ///   Check whether the given principalID has a password set
         /// </summary>
-        /// <param name="principalID"></param>
-        /// <param name="authType"></param>
+        /// <param name = "principalID"></param>
+        /// <param name = "authType"></param>
         /// <returns></returns>
         bool CheckExists(UUID principalID, string authType);
 

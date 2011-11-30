@@ -25,18 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using log4net;
 using System;
-using System.IO;
-using System.Collections.Generic;
 using System.Reflection;
+using Aurora.Simulation.Base;
 using GlynnTucker.Cache;
 using Nini.Config;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
-using Aurora.Simulation.Base;
+using log4net;
 
 namespace OpenSim.Region.CoreModules.Asset
 {
@@ -45,15 +40,15 @@ namespace OpenSim.Region.CoreModules.Asset
         #region Declares
 
         private static readonly ILog m_log =
-                LogManager.GetLogger(
+            LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
         private ICache m_Cache;
+        private uint m_DebugRate;
         private ulong m_Hits;
         private ulong m_Requests;
 
         // Instrumentation
-        private uint m_DebugRate;
 
         public string Name
         {
@@ -75,14 +70,14 @@ namespace OpenSim.Region.CoreModules.Asset
 
                 if (name == Name)
                 {
-                    m_Cache = new GlynnTucker.Cache.SimpleMemoryCache();
-                    
+                    m_Cache = new SimpleMemoryCache();
+
                     m_log.Info("[ASSET CACHE]: GlynnTucker asset cache enabled");
 
                     // Instrumentation
                     IConfig cacheConfig = config.Configs["AssetCache"];
                     if (cacheConfig != null)
-                        m_DebugRate = (uint)cacheConfig.GetInt("DebugRate", 0);
+                        m_DebugRate = (uint) cacheConfig.GetInt("DebugRate", 0);
                     registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
@@ -117,7 +112,7 @@ namespace OpenSim.Region.CoreModules.Asset
 
             Debug(asset);
 
-            return (AssetBase)asset;
+            return (AssetBase) asset;
         }
 
         public void Expire(string id)
@@ -141,8 +136,9 @@ namespace OpenSim.Region.CoreModules.Asset
                 if (asset != null)
                     ++m_Hits;
 
-                if ((m_Requests % m_DebugRate) == 0)
-                    m_log.DebugFormat("[ASSET CACHE]: Hit Rate {0} / {1} == {2}%", m_Hits, m_Requests, ((float)m_Hits / (float)m_Requests) * 100.0f);
+                if ((m_Requests%m_DebugRate) == 0)
+                    m_log.DebugFormat("[ASSET CACHE]: Hit Rate {0} / {1} == {2}%", m_Hits, m_Requests,
+                                      (m_Hits/(float) m_Requests)*100.0f);
             }
             // End instrumentation
         }

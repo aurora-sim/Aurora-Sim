@@ -1,50 +1,51 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Amib.Threading.Internal
 {
     internal enum STPPerformanceCounterType
     {
         // Fields
-        ActiveThreads                = 0,
-        InUseThreads                = 1,
-        OverheadThreads                = 2,
-        OverheadThreadsPercent        = 3,
-        OverheadThreadsPercentBase    = 4,
+        ActiveThreads = 0,
+        InUseThreads = 1,
+        OverheadThreads = 2,
+        OverheadThreadsPercent = 3,
+        OverheadThreadsPercentBase = 4,
 
-        WorkItems                    = 5,
-        WorkItemsInQueue            = 6,
-        WorkItemsProcessed            = 7,
+        WorkItems = 5,
+        WorkItemsInQueue = 6,
+        WorkItemsProcessed = 7,
 
-        WorkItemsQueuedPerSecond    = 8,
-        WorkItemsProcessedPerSecond    = 9,
+        WorkItemsQueuedPerSecond = 8,
+        WorkItemsProcessedPerSecond = 9,
 
-        AvgWorkItemWaitTime            = 10,
-        AvgWorkItemWaitTimeBase        = 11,
+        AvgWorkItemWaitTime = 10,
+        AvgWorkItemWaitTimeBase = 11,
 
-        AvgWorkItemProcessTime        = 12,
-        AvgWorkItemProcessTimeBase    = 13,
+        AvgWorkItemProcessTime = 12,
+        AvgWorkItemProcessTimeBase = 13,
 
-        WorkItemsGroups                = 14,
+        WorkItemsGroups = 14,
 
-        LastCounter                    = 14,
+        LastCounter = 14,
     }
- 
+
 
     /// <summary>
-    /// Summary description for STPPerformanceCounter.
+    ///   Summary description for STPPerformanceCounter.
     /// </summary>
     internal class STPPerformanceCounter
     {
         // Fields
-        private PerformanceCounterType _pcType;
+        private readonly PerformanceCounterType _pcType;
         protected string _counterHelp;
         protected string _counterName;
 
         // Methods
         public STPPerformanceCounter(
-            string counterName, 
-            string counterHelp, 
+            string counterName,
+            string counterHelp,
             PerformanceCounterType pcType)
         {
             this._counterName = counterName;
@@ -52,79 +53,124 @@ namespace Amib.Threading.Internal
             this._pcType = pcType;
         }
 
-        public void AddCounterToCollection(CounterCreationDataCollection counterData)
-        {
-            CounterCreationData counterCreationData = new CounterCreationData(
-                _counterName, 
-                _counterHelp, 
-                _pcType);
-
-            counterData.Add(counterCreationData);
-        }
- 
         // Properties
         public string Name
         {
-            get
-            {
-                return _counterName;
-            }
+            get { return _counterName; }
+        }
+
+        public void AddCounterToCollection(CounterCreationDataCollection counterData)
+        {
+            CounterCreationData counterCreationData = new CounterCreationData(
+                _counterName,
+                _counterHelp,
+                _pcType);
+
+            counterData.Add(counterCreationData);
         }
     }
 
     internal class STPPerformanceCounters
     {
         // Fields
-        internal STPPerformanceCounter[] _stpPerformanceCounters;
-        private static STPPerformanceCounters _instance;
         internal const string _stpCategoryHelp = "SmartThreadPool performance counters";
         internal const string _stpCategoryName = "SmartThreadPool";
+        private static readonly STPPerformanceCounters _instance;
+        internal STPPerformanceCounter[] _stpPerformanceCounters;
 
         // Methods
         static STPPerformanceCounters()
         {
             _instance = new STPPerformanceCounters();
         }
- 
+
         private STPPerformanceCounters()
         {
-            STPPerformanceCounter[] stpPerformanceCounters = new STPPerformanceCounter[] 
-                { 
-                    new STPPerformanceCounter("Active threads", "The current number of available in the thread pool.", PerformanceCounterType.NumberOfItems32), 
-                    new STPPerformanceCounter("In use threads", "The current number of threads that execute a work item.", PerformanceCounterType.NumberOfItems32), 
-                    new STPPerformanceCounter("Overhead threads", "The current number of threads that are active, but are not in use.", PerformanceCounterType.NumberOfItems32), 
-                    new STPPerformanceCounter("% overhead threads", "The current number of threads that are active, but are not in use in percents.", PerformanceCounterType.RawFraction), 
-                    new STPPerformanceCounter("% overhead threads base", "The current number of threads that are active, but are not in use in percents.", PerformanceCounterType.RawBase), 
-
-                    new STPPerformanceCounter("Work Items", "The number of work items in the Smart Thread Pool. Both queued and processed.", PerformanceCounterType.NumberOfItems32), 
-                    new STPPerformanceCounter("Work Items in queue", "The current number of work items in the queue", PerformanceCounterType.NumberOfItems32), 
-                    new STPPerformanceCounter("Work Items processed", "The number of work items already processed", PerformanceCounterType.NumberOfItems32), 
-
-                    new STPPerformanceCounter("Work Items queued/sec", "The number of work items queued per second", PerformanceCounterType.RateOfCountsPerSecond32), 
-                    new STPPerformanceCounter("Work Items processed/sec", "The number of work items processed per second", PerformanceCounterType.RateOfCountsPerSecond32), 
-
-                    new STPPerformanceCounter("Avg. Work Item wait time/sec", "The average time a work item supends in the queue waiting for its turn to execute.", PerformanceCounterType.AverageCount64), 
-                    new STPPerformanceCounter("Avg. Work Item wait time base", "The average time a work item supends in the queue waiting for its turn to execute.", PerformanceCounterType.AverageBase), 
-
-                    new STPPerformanceCounter("Avg. Work Item process time/sec", "The average time it takes to process a work item.", PerformanceCounterType.AverageCount64), 
-                    new STPPerformanceCounter("Avg. Work Item process time base", "The average time it takes to process a work item.", PerformanceCounterType.AverageBase), 
-
-                    new STPPerformanceCounter("Work Items Groups", "The current number of work item groups associated with the Smart Thread Pool.", PerformanceCounterType.NumberOfItems32), 
-                };
+            STPPerformanceCounter[] stpPerformanceCounters = new[]
+                                                                 {
+                                                                     new STPPerformanceCounter("Active threads",
+                                                                                               "The current number of available in the thread pool.",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                     new STPPerformanceCounter("In use threads",
+                                                                                               "The current number of threads that execute a work item.",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                     new STPPerformanceCounter("Overhead threads",
+                                                                                               "The current number of threads that are active, but are not in use.",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                     new STPPerformanceCounter("% overhead threads",
+                                                                                               "The current number of threads that are active, but are not in use in percents.",
+                                                                                               PerformanceCounterType.
+                                                                                                   RawFraction),
+                                                                     new STPPerformanceCounter(
+                                                                         "% overhead threads base",
+                                                                         "The current number of threads that are active, but are not in use in percents.",
+                                                                         PerformanceCounterType.RawBase),
+                                                                     new STPPerformanceCounter("Work Items",
+                                                                                               "The number of work items in the Smart Thread Pool. Both queued and processed.",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                     new STPPerformanceCounter("Work Items in queue",
+                                                                                               "The current number of work items in the queue",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                     new STPPerformanceCounter("Work Items processed",
+                                                                                               "The number of work items already processed",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                     new STPPerformanceCounter("Work Items queued/sec",
+                                                                                               "The number of work items queued per second",
+                                                                                               PerformanceCounterType.
+                                                                                                   RateOfCountsPerSecond32)
+                                                                     ,
+                                                                     new STPPerformanceCounter(
+                                                                         "Work Items processed/sec",
+                                                                         "The number of work items processed per second",
+                                                                         PerformanceCounterType.RateOfCountsPerSecond32)
+                                                                     ,
+                                                                     new STPPerformanceCounter(
+                                                                         "Avg. Work Item wait time/sec",
+                                                                         "The average time a work item supends in the queue waiting for its turn to execute.",
+                                                                         PerformanceCounterType.AverageCount64),
+                                                                     new STPPerformanceCounter(
+                                                                         "Avg. Work Item wait time base",
+                                                                         "The average time a work item supends in the queue waiting for its turn to execute.",
+                                                                         PerformanceCounterType.AverageBase),
+                                                                     new STPPerformanceCounter(
+                                                                         "Avg. Work Item process time/sec",
+                                                                         "The average time it takes to process a work item.",
+                                                                         PerformanceCounterType.AverageCount64),
+                                                                     new STPPerformanceCounter(
+                                                                         "Avg. Work Item process time base",
+                                                                         "The average time it takes to process a work item.",
+                                                                         PerformanceCounterType.AverageBase),
+                                                                     new STPPerformanceCounter("Work Items Groups",
+                                                                                               "The current number of work item groups associated with the Smart Thread Pool.",
+                                                                                               PerformanceCounterType.
+                                                                                                   NumberOfItems32),
+                                                                 };
 
             _stpPerformanceCounters = stpPerformanceCounters;
             SetupCategory();
         }
- 
+
+        // Properties
+        public static STPPerformanceCounters Instance
+        {
+            get { return _instance; }
+        }
+
         private void SetupCategory()
         {
             if (!PerformanceCounterCategory.Exists(_stpCategoryName))
             {
                 CounterCreationDataCollection counters = new CounterCreationDataCollection();
 
-                for (int i = 0; i < _stpPerformanceCounters.Length; i++)
+                foreach (STPPerformanceCounter t in _stpPerformanceCounters)
                 {
-                    _stpPerformanceCounters[i].AddCounterToCollection(counters);
+                    t.AddCounterToCollection(counters);
                 }
 
 
@@ -133,25 +179,16 @@ namespace Amib.Threading.Internal
                 // of the method is deprecated in .NET 2.0. To use the correct 
                 // method overload, uncomment the third argument of
                 // the method.
-                #pragma warning disable 0618
+#pragma warning disable 0618
                 PerformanceCounterCategory.Create(
-                    _stpCategoryName, 
-                    _stpCategoryHelp, 
+                    _stpCategoryName,
+                    _stpCategoryHelp,
                     //PerformanceCounterCategoryType.MultiInstance,
                     counters);
-                #pragma warning restore 0618
+#pragma warning restore 0618
             }
         }
- 
-        // Properties
-        public static STPPerformanceCounters Instance
-        {
-            get
-            {
-                return _instance;
-            }
-        }
-     }
+    }
 
     internal class STPInstancePerformanceCounter : IDisposable
     {
@@ -164,17 +201,27 @@ namespace Amib.Threading.Internal
         }
 
         public STPInstancePerformanceCounter(
-            string instance, 
+            string instance,
             STPPerformanceCounterType spcType)
         {
             STPPerformanceCounters counters = STPPerformanceCounters.Instance;
             _pcs = new PerformanceCounter(
-                STPPerformanceCounters._stpCategoryName, 
-                counters._stpPerformanceCounters[(int) spcType].Name, 
-                instance, 
+                STPPerformanceCounters._stpCategoryName,
+                counters._stpPerformanceCounters[(int) spcType].Name,
+                instance,
                 false);
             _pcs.RawValue = _pcs.RawValue;
         }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            Close();
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
 
         ~STPInstancePerformanceCounter()
         {
@@ -190,18 +237,12 @@ namespace Amib.Threading.Internal
                 _pcs = null;
             }
         }
- 
-        public void Dispose()
-        {
-            Close();
-            GC.SuppressFinalize(this);
-        }
- 
+
         public virtual void Increment()
         {
             _pcs.Increment();
         }
- 
+
         public virtual void IncrementBy(long val)
         {
             _pcs.IncrementBy(val);
@@ -216,12 +257,19 @@ namespace Amib.Threading.Internal
     internal class STPInstanceNullPerformanceCounter : STPInstancePerformanceCounter
     {
         // Methods
-        public STPInstanceNullPerformanceCounter() {}
-        public override void Increment() {}
-        public override void IncrementBy(long value) {}
-        public override void Set(long val) {}
+        public override void Increment()
+        {
+        }
+
+        public override void IncrementBy(long value)
+        {
+        }
+
+        public override void Set(long val)
+        {
+        }
     }
-        
+
     internal interface ISTPInstancePerformanceCounters : IDisposable
     {
         void Close();
@@ -235,25 +283,25 @@ namespace Amib.Threading.Internal
     internal class STPInstancePerformanceCounters : ISTPInstancePerformanceCounters, IDisposable
     {
         // Fields
+        private static readonly STPInstancePerformanceCounter _stpInstanceNullPerformanceCounter;
         private STPInstancePerformanceCounter[] _pcs;
-        private static STPInstancePerformanceCounter _stpInstanceNullPerformanceCounter;
 
         // Methods
         static STPInstancePerformanceCounters()
         {
             _stpInstanceNullPerformanceCounter = new STPInstanceNullPerformanceCounter();
         }
- 
+
         public STPInstancePerformanceCounters(string instance)
         {
-            _pcs = new STPInstancePerformanceCounter[(int)STPPerformanceCounterType.LastCounter];
+            _pcs = new STPInstancePerformanceCounter[(int) STPPerformanceCounterType.LastCounter];
             // STPPerformanceCounters counters = STPPerformanceCounters.Instance;
             for (int i = 0; i < _pcs.Length; i++)
             {
                 if (instance != null)
                 {
                     _pcs[i] = new STPInstancePerformanceCounter(
-                        instance, 
+                        instance,
                         (STPPerformanceCounterType) i);
                 }
                 else
@@ -262,26 +310,19 @@ namespace Amib.Threading.Internal
                 }
             }
         }
- 
+
+        #region ISTPInstancePerformanceCounters Members
 
         public void Close()
         {
             if (null != _pcs)
             {
-                for (int i = 0; i < _pcs.Length; i++)
+                foreach (STPInstancePerformanceCounter t in _pcs.Where(t => null != t))
                 {
-                    if (null != _pcs[i])
-                    {
-                        _pcs[i].Close();
-                    }
+                    t.Close();
                 }
                 _pcs = null;
             }
-        }
-
-        ~STPInstancePerformanceCounters()
-        {
-            Close();
         }
 
         public void Dispose()
@@ -289,25 +330,20 @@ namespace Amib.Threading.Internal
             Close();
             GC.SuppressFinalize(this);
         }
- 
-        private STPInstancePerformanceCounter GetCounter(STPPerformanceCounterType spcType)
-        {
-            return _pcs[(int) spcType];
-        }
 
         public void SampleThreads(long activeThreads, long inUseThreads)
         {
             GetCounter(STPPerformanceCounterType.ActiveThreads).Set(activeThreads);
             GetCounter(STPPerformanceCounterType.InUseThreads).Set(inUseThreads);
-            GetCounter(STPPerformanceCounterType.OverheadThreads).Set(activeThreads-inUseThreads);
+            GetCounter(STPPerformanceCounterType.OverheadThreads).Set(activeThreads - inUseThreads);
 
-            GetCounter(STPPerformanceCounterType.OverheadThreadsPercentBase).Set(activeThreads-inUseThreads);
+            GetCounter(STPPerformanceCounterType.OverheadThreadsPercentBase).Set(activeThreads - inUseThreads);
             GetCounter(STPPerformanceCounterType.OverheadThreadsPercent).Set(inUseThreads);
         }
 
         public void SampleWorkItems(long workItemsQueued, long workItemsProcessed)
         {
-            GetCounter(STPPerformanceCounterType.WorkItems).Set(workItemsQueued+workItemsProcessed);
+            GetCounter(STPPerformanceCounterType.WorkItems).Set(workItemsQueued + workItemsProcessed);
             GetCounter(STPPerformanceCounterType.WorkItemsInQueue).Set(workItemsQueued);
             GetCounter(STPPerformanceCounterType.WorkItemsProcessed).Set(workItemsProcessed);
 
@@ -317,38 +353,71 @@ namespace Amib.Threading.Internal
 
         public void SampleWorkItemsWaitTime(TimeSpan workItemWaitTime)
         {
-            GetCounter(STPPerformanceCounterType.AvgWorkItemWaitTime).IncrementBy((long)workItemWaitTime.TotalMilliseconds);
+            GetCounter(STPPerformanceCounterType.AvgWorkItemWaitTime).IncrementBy(
+                (long) workItemWaitTime.TotalMilliseconds);
             GetCounter(STPPerformanceCounterType.AvgWorkItemWaitTimeBase).Increment();
         }
 
         public void SampleWorkItemsProcessTime(TimeSpan workItemProcessTime)
         {
-            GetCounter(STPPerformanceCounterType.AvgWorkItemProcessTime).IncrementBy((long)workItemProcessTime.TotalMilliseconds);
+            GetCounter(STPPerformanceCounterType.AvgWorkItemProcessTime).IncrementBy(
+                (long) workItemProcessTime.TotalMilliseconds);
             GetCounter(STPPerformanceCounterType.AvgWorkItemProcessTimeBase).Increment();
+        }
+
+        #endregion
+
+        ~STPInstancePerformanceCounters()
+        {
+            Close();
+        }
+
+        private STPInstancePerformanceCounter GetCounter(STPPerformanceCounterType spcType)
+        {
+            return _pcs[(int) spcType];
         }
     }
 
     internal class NullSTPInstancePerformanceCounters : ISTPInstancePerformanceCounters, IDisposable
     {
-        static NullSTPInstancePerformanceCounters()
+        private static readonly NullSTPInstancePerformanceCounters _instance =
+            new NullSTPInstancePerformanceCounters(null);
+
+        public NullSTPInstancePerformanceCounters(string instance)
         {
         }
-
-        private static NullSTPInstancePerformanceCounters _instance = new NullSTPInstancePerformanceCounters(null);
 
         public static NullSTPInstancePerformanceCounters Instance
         {
             get { return _instance; }
         }
 
-        public NullSTPInstancePerformanceCounters(string instance) {}
-         public void Close() {}
-        public void Dispose() {}
- 
-        public void SampleThreads(long activeThreads, long inUseThreads) {}
-        public void SampleWorkItems(long workItemsQueued, long workItemsProcessed) {}
-        public void SampleWorkItemsWaitTime(TimeSpan workItemWaitTime) {}
-        public void SampleWorkItemsProcessTime(TimeSpan workItemProcessTime) {}
-    }
+        #region ISTPInstancePerformanceCounters Members
 
+        public void Close()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void SampleThreads(long activeThreads, long inUseThreads)
+        {
+        }
+
+        public void SampleWorkItems(long workItemsQueued, long workItemsProcessed)
+        {
+        }
+
+        public void SampleWorkItemsWaitTime(TimeSpan workItemWaitTime)
+        {
+        }
+
+        public void SampleWorkItemsProcessTime(TimeSpan workItemProcessTime)
+        {
+        }
+
+        #endregion
+    }
 }

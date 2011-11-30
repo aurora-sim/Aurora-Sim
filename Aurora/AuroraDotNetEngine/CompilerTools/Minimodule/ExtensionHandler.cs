@@ -27,12 +27,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
-    class ExtensionHandler : IExtension 
+    internal class ExtensionHandler : IExtension
     {
         private readonly Dictionary<Type, object> m_instances;
 
@@ -41,6 +39,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             m_instances = instances;
         }
 
+        #region IExtension Members
+
         public T Get<T>()
         {
             return (T) m_instances[typeof (T)];
@@ -48,7 +48,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public bool TryGet<T>(out T extension)
         {
-            if (!m_instances.ContainsKey(typeof(T)))
+            if (!m_instances.ContainsKey(typeof (T)))
             {
                 extension = default(T);
                 return false;
@@ -62,5 +62,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             return m_instances.ContainsKey(typeof (T));
         }
+
+        #endregion
     }
 }

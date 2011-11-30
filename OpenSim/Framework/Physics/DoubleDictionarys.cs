@@ -28,32 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Aurora.Framework
 {
     public class DoubleValueDictionary<TKey, TValue1, TValue2>
     {
-        Dictionary<TKey, List<object>> Dictionary = new Dictionary<TKey, List<object>>();
-
-        public void Add(TKey key, TValue1 value1, TValue2 value2)
-        {
-            if (Dictionary.ContainsKey(key))
-                throw new ArgumentException("Key is already in the dictionary");
-
-            List<object> Values = new List<object>(2);
-            Values.Add(value1);
-            Values.Add(value2);
-            Dictionary.Add(key, Values);
-        }
-
-        public bool Remove(TKey key)
-        {
-            if (!Dictionary.ContainsKey(key))
-                return false;
-            Dictionary.Remove(key);
-            return true;
-        }
+        private readonly Dictionary<TKey, List<object>> Dictionary = new Dictionary<TKey, List<object>>();
 
         public TValue1 this[TKey key, TKey n]
         {
@@ -64,7 +44,7 @@ namespace Aurora.Framework
 
                 List<Object> Values = new List<object>();
                 Dictionary.TryGetValue(key, out Values);
-                return (TValue1)Values[0];
+                return (TValue1) Values[0];
             }
             set
             {
@@ -86,7 +66,7 @@ namespace Aurora.Framework
 
                 List<Object> Values = new List<object>();
                 Dictionary.TryGetValue(key, out Values);
-                return (TValue2)Values[1];
+                return (TValue2) Values[1];
             }
             set
             {
@@ -99,14 +79,31 @@ namespace Aurora.Framework
             }
         }
 
-        public void Clear()
-        {
-            Dictionary.Clear();
-        }
-
         public int Count
         {
             get { return Dictionary.Count; }
+        }
+
+        public void Add(TKey key, TValue1 value1, TValue2 value2)
+        {
+            if (Dictionary.ContainsKey(key))
+                throw new ArgumentException("Key is already in the dictionary");
+
+            List<object> Values = new List<object>(2) {value1, value2};
+            Dictionary.Add(key, Values);
+        }
+
+        public bool Remove(TKey key)
+        {
+            if (!Dictionary.ContainsKey(key))
+                return false;
+            Dictionary.Remove(key);
+            return true;
+        }
+
+        public void Clear()
+        {
+            Dictionary.Clear();
         }
 
         public bool ContainsKey(TKey key)
@@ -121,7 +118,7 @@ namespace Aurora.Framework
                 return false;
             List<object> Values = new List<object>();
             Dictionary.TryGetValue(key, out Values);
-            value = (TValue1)Values[0];
+            value = (TValue1) Values[0];
             return true;
         }
 
@@ -132,7 +129,7 @@ namespace Aurora.Framework
                 return false;
             List<object> Values = new List<object>();
             Dictionary.TryGetValue(key, out Values);
-            value = (TValue2)Values[1];
+            value = (TValue2) Values[1];
             return true;
         }
     }
@@ -140,16 +137,21 @@ namespace Aurora.Framework
     //Fixed version of the LibOMV class
     public class DoubleKeyDictionary<TKey1, TKey2, TValue>
     {
-        private object m_lock = new object();
-        Dictionary<TKey1, TValue> Dictionary1 = new Dictionary<TKey1, TValue>();
-        Dictionary<TKey2, TValue> Dictionary2 = new Dictionary<TKey2, TValue>();
+        private readonly Dictionary<TKey1, TValue> Dictionary1 = new Dictionary<TKey1, TValue>();
+        private readonly Dictionary<TKey2, TValue> Dictionary2 = new Dictionary<TKey2, TValue>();
+        private readonly object m_lock = new object();
+
+        public int Count
+        {
+            get { return Dictionary1.Count; }
+        }
 
         public void Add(TKey1 key1, TKey2 key2, TValue value)
         {
             lock (m_lock)
             {
-                if (Dictionary1.ContainsKey (key1))
-                    throw new ArgumentException ("Key1 (UUID, " + key1 + ") is already in the dictionary");
+                if (Dictionary1.ContainsKey(key1))
+                    throw new ArgumentException("Key1 (UUID, " + key1 + ") is already in the dictionary");
                 if (Dictionary2.ContainsKey(key2))
                     throw new ArgumentException("Key2 (LocalID, " + key2 + ") is already in the dictionary");
 
@@ -187,11 +189,6 @@ namespace Aurora.Framework
                 Dictionary1.Clear();
                 Dictionary2.Clear();
             }
-        }
-
-        public int Count
-        {
-            get { return Dictionary1.Count; }
         }
 
         public bool ContainsKey(TKey1 key)
@@ -259,10 +256,9 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                foreach (TValue value in Dictionary1.Values)
+                foreach (TValue value in Dictionary1.Values.Where(value => predicate(value)))
                 {
-                    if (predicate(value))
-                        return value;
+                    return value;
                 }
 
                 return default(TValue);
@@ -273,14 +269,7 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                IList<TValue> list = new List<TValue>();
-                foreach (TValue value in Dictionary1.Values)
-                {
-                    if (predicate(value))
-                        list.Add(value);
-                }
-
-                return list;
+                return Dictionary1.Values.Where(value => predicate(value)).ToList();
             }
         }
 
@@ -288,26 +277,19 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                IList<TKey1> list = new List<TKey1>();
-
-                foreach (KeyValuePair<TKey1, TValue> kvp in Dictionary1)
-                {
-                    if (predicate(kvp.Value))
-                        list.Add(kvp.Key);
-                }
+                IList<TKey1> list = (from kvp in Dictionary1 where predicate(kvp.Value) select kvp.Key).ToList();
 
                 IList<TKey2> list2 = new List<TKey2>(list.Count);
-                foreach (KeyValuePair<TKey2, TValue> kvp in Dictionary2)
+                foreach (KeyValuePair<TKey2, TValue> kvp in Dictionary2.Where(kvp => predicate(kvp.Value)))
                 {
-                    if (predicate(kvp.Value))
-                        list2.Add(kvp.Key);
+                    list2.Add(kvp.Key);
                 }
 
-                for (int i = 0; i < list.Count; i++)
-                    Dictionary1.Remove(list[i]);
+                foreach (TKey1 t in list)
+                    Dictionary1.Remove(t);
 
-                for (int i = 0; i < list2.Count; i++)
-                    Dictionary2.Remove(list2[i]);
+                foreach (TKey2 t in list2)
+                    Dictionary2.Remove(t);
 
                 return list.Count;
             }

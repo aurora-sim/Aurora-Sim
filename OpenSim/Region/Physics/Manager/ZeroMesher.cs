@@ -26,9 +26,9 @@
  */
 
 using System;
-using OpenSim.Framework;
-using OpenMetaverse;
 using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
 
 /*
  * This is the zero mesher.
@@ -45,6 +45,8 @@ namespace OpenSim.Region.Physics.Manager
 {
     public class ZeroMesherPlugin : IMeshingPlugin
     {
+        #region IMeshingPlugin Members
+
         public string GetName()
         {
             return "ZeroMesher";
@@ -54,10 +56,14 @@ namespace OpenSim.Region.Physics.Manager
         {
             return new ZeroMesher();
         }
+
+        #endregion
     }
 
     public class ZeroMesher : IMesher
     {
+        #region IMesher Members
+
         public IMesh CreateMesh(String primName, PrimitiveBaseShape primShape, Vector3 size, float lod, bool isPhysical)
         {
             // Remove the reference to the encoded JPEG2000 data so it can be GCed
@@ -70,8 +76,10 @@ namespace OpenSim.Region.Physics.Manager
         {
         }
 
-        public void FinishedMeshing ()
+        public void FinishedMeshing()
         {
         }
+
+        #endregion
     }
 }

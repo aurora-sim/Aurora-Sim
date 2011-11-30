@@ -26,36 +26,28 @@
  */
 
 using System;
-using System.Runtime.Remoting;
-using System.Runtime.Remoting.Lifetime;
-using System.Security.Permissions;
-using System.Threading;
-using System.Reflection;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using log4net;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Lifetime;
 using OpenSim.Framework;
-using Aurora.ScriptEngine.AuroraDotNetEngine;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
-using Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 {
     [Serializable]
     public partial class ScriptBaseClass : MarshalByRefObject, IScript, IDisposable
     {
-        private ScriptSponsor m_sponser;
+        private readonly ScriptSponsor m_sponser;
 
         public ISponsor Sponsor
         {
-            get
-            {
-                return m_sponser;
-            }
+            get { return m_sponser; }
         }
 
-        private bool m_stateSaveRequired = false;
+        private bool m_stateSaveRequired;
+
         public bool NeedsStateSaved
         {
             get
@@ -66,13 +58,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     return false;
                 if (m_lastStateSaveValues == null)
                     m_lastStateSaveValues = m_InitialValues;
-                Dictionary<string, object> vars = GetVars ();
-                foreach (KeyValuePair<string, object> kvp in vars)
-                {
-                    if (m_lastStateSaveValues[kvp.Key].ToString() != kvp.Value.ToString()) //Something changed!
-                        return true;
-                }
-                return false;
+                Dictionary<string, object> vars = GetVars();
+                return vars.Any(kvp => m_lastStateSaveValues[kvp.Key].ToString() != kvp.Value.ToString());
             }
             set
             {
@@ -80,17 +67,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 if (!m_useStateSaves)
                     return;
                 //Besides setting the value, if we don't need one, save the vars we have for the last state save as well
-                if(!value)
-                    m_lastStateSaveValues = GetVars ();
+                if (!value)
+                    m_lastStateSaveValues = GetVars();
             }
         }
 
-        private Dictionary<string, object> m_lastStateSaveValues = null;
-        public IScene Scene = null;
-        public ISceneChildEntity Object = null;
+        private Dictionary<string, object> m_lastStateSaveValues;
+        public IScene Scene;
+        public ISceneChildEntity Object;
         public bool m_useStateSaves = true;
 
-        public void SetSceneRefs (IScene scene, ISceneChildEntity child, bool useStateSaves)
+        public void SetSceneRefs(IScene scene, ISceneChildEntity child, bool useStateSaves)
         {
             Scene = scene;
             Object = child;
@@ -101,7 +88,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         {
             try
             {
-                ILease lease = (ILease)base.InitializeLifetimeService();
+                ILease lease = (ILease) base.InitializeLifetimeService();
 
                 if (lease.CurrentState == LeaseState.Initial)
                 {
@@ -121,19 +108,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public void UpdateLease(TimeSpan time)
         {
-            ILease lease = (ILease)RemotingServices.GetLifetimeService(this as MarshalByRefObject);
+            ILease lease = (ILease) RemotingServices.GetLifetimeService(this);
             if (lease != null)
                 lease.Renew(time);
         }
 
-        #if DEBUG
+#if DEBUG
         // For tracing GC while debugging
-        public static bool GCDummy = false;
+        public static bool GCDummy;
+
         ~ScriptBaseClass()
         {
             GCDummy = true;
         }
-        #endif
+#endif
 
         public ScriptBaseClass()
         {
@@ -142,25 +130,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_sponser = new ScriptSponsor();
         }
 
-        public Executor m_Executor = null;
+        public Executor m_Executor;
 
         public virtual long GetStateEventFlags(string state)
         {
-            return (long)m_Executor.GetStateEventFlags(state);
+            return (long) m_Executor.GetStateEventFlags(state);
         }
 
-        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start, out Exception ex)
+        public EnumeratorInfo ExecuteEvent(string state, string FunctionName, object[] args, EnumeratorInfo Start,
+                                           out Exception ex)
         {
             return m_Executor.ExecuteEvent(state, FunctionName, args, Start, out ex);
         }
 
         public bool CheckSlice()
         {
-            return m_Executor.CheckSlice ();
+            return m_Executor.CheckSlice();
         }
 
         private Dictionary<string, object> m_InitialValues =
-                new Dictionary<string, object>();
+            new Dictionary<string, object>();
+
         public Dictionary<string, IScriptApi> m_apis = new Dictionary<string, IScriptApi>();
 
         public void InitApi(IScriptApi data)
@@ -198,28 +188,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
             foreach (FieldInfo field in fields)
             {
-                if (field.FieldType == typeof(LSL_Types.list)) // ref type, copy
+                if (field.FieldType == typeof (LSL_Types.list)) // ref type, copy
                 {
-                    LSL_Types.list v = (LSL_Types.list)field.GetValue(this);
-                    if (((object)v) == null)
-                        continue;//Broken... :/
+                    LSL_Types.list v = (LSL_Types.list) field.GetValue(this);
+                    if (((object) v) == null)
+                        continue; //Broken... :/
                     Object[] data = new Object[v.Data.Length];
                     Array.Copy(v.Data, 0, data, 0, v.Data.Length);
-                    LSL_Types.list c = new LSL_Types.list();
-                    c.Data = data;
+                    LSL_Types.list c = new LSL_Types.list {Data = data};
                     vars[field.Name] = c;
                 }
-                else if (field.FieldType == typeof(LSL_Types.LSLInteger) ||
-                        field.FieldType == typeof(LSL_Types.LSLString) ||
-                        field.FieldType == typeof(LSL_Types.LSLFloat) ||
-                        field.FieldType == typeof(Int32) ||
-                        field.FieldType == typeof(Double) ||
-                        field.FieldType == typeof(Single) ||
-                        field.FieldType == typeof(String) ||
-                        field.FieldType == typeof(Byte) ||
-                        field.FieldType == typeof(short) ||
-                        field.FieldType == typeof(LSL_Types.Vector3) ||
-                        field.FieldType == typeof(LSL_Types.Quaternion))
+                else if (field.FieldType == typeof (LSL_Types.LSLInteger) ||
+                         field.FieldType == typeof (LSL_Types.LSLString) ||
+                         field.FieldType == typeof (LSL_Types.LSLFloat) ||
+                         field.FieldType == typeof (Int32) ||
+                         field.FieldType == typeof (Double) ||
+                         field.FieldType == typeof (Single) ||
+                         field.FieldType == typeof (String) ||
+                         field.FieldType == typeof (Byte) ||
+                         field.FieldType == typeof (short) ||
+                         field.FieldType == typeof (LSL_Types.Vector3) ||
+                         field.FieldType == typeof (LSL_Types.Quaternion))
                 {
                     vars[field.Name] = field.GetValue(this);
                 }
@@ -231,14 +220,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         /// <summary>
-        /// Note: this is just used for reset
+        ///   Note: this is just used for reset
         /// </summary>
-        /// <param name="vars"></param>
+        /// <param name = "vars"></param>
         public void SetVars(Dictionary<string, object> vars)
         {
             if (!m_useStateSaves)
                 return;
-            Type t = GetType ();
+            Type t = GetType();
             FieldInfo[] fields = t.GetFields(BindingFlags.NonPublic |
                                              BindingFlags.Public |
                                              BindingFlags.Instance |
@@ -246,32 +235,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
             foreach (FieldInfo field in fields)
             {
-                if (vars.ContainsKey (field.Name))
+                if (vars.ContainsKey(field.Name))
                 {
                     object newVal = vars[field.Name];
                     if (field.FieldType == typeof (LSL_Types.list))
                     {
-                        LSL_Types.list v = (LSL_Types.list)field.GetValue (this);
-                        Object[] data = ((LSL_Types.list)(newVal)).Data;
+                        LSL_Types.list v = (LSL_Types.list) field.GetValue(this);
+                        Object[] data = ((LSL_Types.list) (newVal)).Data;
                         v.Data = new Object[data.Length];
-                        Array.Copy (data, 0, v.Data, 0, data.Length);
-                        field.SetValue (this, v);
+                        Array.Copy(data, 0, v.Data, 0, data.Length);
+                        field.SetValue(this, v);
                     }
 
                     else if (field.FieldType == typeof (LSL_Types.LSLInteger) ||
-                            field.FieldType == typeof (LSL_Types.LSLString) ||
-                            field.FieldType == typeof (LSL_Types.LSLFloat) ||
-                            field.FieldType == typeof (Int32) ||
-                            field.FieldType == typeof (Double) ||
-                            field.FieldType == typeof (Single) ||
-                            field.FieldType == typeof (String) ||
-                            field.FieldType == typeof (Byte) ||
-                            field.FieldType == typeof (short) ||
-                            field.FieldType == typeof (LSL_Types.Vector3) ||
-                            field.FieldType == typeof (LSL_Types.Quaternion)
+                             field.FieldType == typeof (LSL_Types.LSLString) ||
+                             field.FieldType == typeof (LSL_Types.LSLFloat) ||
+                             field.FieldType == typeof (Int32) ||
+                             field.FieldType == typeof (Double) ||
+                             field.FieldType == typeof (Single) ||
+                             field.FieldType == typeof (String) ||
+                             field.FieldType == typeof (Byte) ||
+                             field.FieldType == typeof (short) ||
+                             field.FieldType == typeof (LSL_Types.Vector3) ||
+                             field.FieldType == typeof (LSL_Types.Quaternion)
                         )
                     {
-                        field.SetValue (this, newVal);
+                        field.SetValue(this, newVal);
                     }
                 }
             }
@@ -280,52 +269,52 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         }
 
         public string GetShortType(object o)
-            {
+        {
             string tmp = o.GetType().ToString();
             int i = tmp.LastIndexOf('+');
-            string type = tmp.Substring(i+1);
+            string type = tmp.Substring(i + 1);
             return type;
-            }
+        }
 
         public string ListToString(object o)
-            {
+        {
             string tmp = "";
             string cur = "";
-            LSL_Types.list v = (LSL_Types.list)o;
+            LSL_Types.list v = (LSL_Types.list) o;
             foreach (object ob in v.Data)
-                {
-                if (ob.GetType() == typeof(LSL_Types.LSLInteger))
-                    cur = "i" + ob.ToString();
-                else if (ob.GetType() == typeof(LSL_Types.LSLFloat))
-                    cur = "f" + ob.ToString();
-                else if (ob.GetType() == typeof(LSL_Types.Vector3))
-                    cur = "v" + ob.ToString();
-                else if (ob.GetType() == typeof(LSL_Types.Quaternion))
-                    cur = "q" + ob.ToString();
-                else if (ob.GetType() == typeof(LSL_Types.LSLString))
-                    cur = "\"" + ob.ToString() + "\"";
-                else if (ob.GetType() == typeof(LSL_Types.key))
-                    cur = "k\"" + ob.ToString() + "\"";
-                else if (o.GetType() == typeof(LSL_Types.list))
+            {
+                if (ob.GetType() == typeof (LSL_Types.LSLInteger))
+                    cur = "i" + ob;
+                else if (ob.GetType() == typeof (LSL_Types.LSLFloat))
+                    cur = "f" + ob;
+                else if (ob.GetType() == typeof (LSL_Types.Vector3))
+                    cur = "v" + ob;
+                else if (ob.GetType() == typeof (LSL_Types.Quaternion))
+                    cur = "q" + ob;
+                else if (ob.GetType() == typeof (LSL_Types.LSLString))
+                    cur = "\"" + ob + "\"";
+                else if (ob.GetType() == typeof (LSL_Types.key))
+                    cur = "k\"" + ob + "\"";
+                else if (o.GetType() == typeof (LSL_Types.list))
                     cur = "{" + ListToString(ob) + "}";
 
                 if (tmp == "")
                     tmp = cur;
                 else
                     tmp += ", " + cur;
-                }
-            return tmp;
             }
+            return tmp;
+        }
 
-        public Dictionary<string, object> GetStoreVars ()
+        public Dictionary<string, object> GetStoreVars()
         {
-            Dictionary<string, object> vars = new Dictionary<string, object> ();
+            Dictionary<string, object> vars = new Dictionary<string, object>();
             if (!m_useStateSaves)
                 return vars;
 
-            Type t = GetType ();
+            Type t = GetType();
 
-            FieldInfo[] fields = t.GetFields (BindingFlags.NonPublic |
+            FieldInfo[] fields = t.GetFields(BindingFlags.NonPublic |
                                              BindingFlags.Public |
                                              BindingFlags.Instance |
                                              BindingFlags.DeclaredOnly);
@@ -336,44 +325,44 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 {
                     string tmp = "";
                     string cur = "";
-                    LSL_Types.list v = (LSL_Types.list)field.GetValue (this);
+                    LSL_Types.list v = (LSL_Types.list) field.GetValue(this);
                     foreach (object o in v.Data)
                     {
-                        if (o.GetType () == typeof (LSL_Types.LSLInteger))
-                            cur = "i" + o.ToString ();
-                        else if (o.GetType () == typeof (LSL_Types.LSLFloat))
-                            cur = "f" + o.ToString ();
-                        else if (o.GetType () == typeof (LSL_Types.Vector3))
-                            cur = "v" + o.ToString ();
-                        else if (o.GetType () == typeof (LSL_Types.Quaternion))
-                            cur = "q" + o.ToString ();
-                        else if (o.GetType () == typeof (LSL_Types.LSLString))
-                            cur = "\"" + o.ToString () + "\"";
-                        else if (o.GetType () == typeof (LSL_Types.key))
-                            cur = "k\"" + o.ToString () + "\"";
-                        else if (o.GetType () == typeof (LSL_Types.list))
-                            cur = "{" + ListToString (o) + "}";
+                        if (o.GetType() == typeof (LSL_Types.LSLInteger))
+                            cur = "i" + o;
+                        else if (o.GetType() == typeof (LSL_Types.LSLFloat))
+                            cur = "f" + o;
+                        else if (o.GetType() == typeof (LSL_Types.Vector3))
+                            cur = "v" + o;
+                        else if (o.GetType() == typeof (LSL_Types.Quaternion))
+                            cur = "q" + o;
+                        else if (o.GetType() == typeof (LSL_Types.LSLString))
+                            cur = "\"" + o + "\"";
+                        else if (o.GetType() == typeof (LSL_Types.key))
+                            cur = "k\"" + o + "\"";
+                        else if (o.GetType() == typeof (LSL_Types.list))
+                            cur = "{" + ListToString(o) + "}";
 
                         if (tmp == "")
                             tmp = cur;
                         else
                             tmp += ", " + cur;
                     }
-                    vars[field.Name] = (Object)tmp;
+                    vars[field.Name] = tmp;
                 }
                 else if (field.FieldType == typeof (LSL_Types.LSLInteger) ||
-                        field.FieldType == typeof (LSL_Types.LSLString) ||
-                        field.FieldType == typeof (LSL_Types.LSLFloat) ||
-                        field.FieldType == typeof (Int32) ||
-                        field.FieldType == typeof (Double) ||
-                        field.FieldType == typeof (Single) ||
-                        field.FieldType == typeof (String) ||
-                        field.FieldType == typeof (Byte) ||
-                        field.FieldType == typeof (short) ||
-                        field.FieldType == typeof (LSL_Types.Vector3) ||
-                        field.FieldType == typeof (LSL_Types.Quaternion))
+                         field.FieldType == typeof (LSL_Types.LSLString) ||
+                         field.FieldType == typeof (LSL_Types.LSLFloat) ||
+                         field.FieldType == typeof (Int32) ||
+                         field.FieldType == typeof (Double) ||
+                         field.FieldType == typeof (Single) ||
+                         field.FieldType == typeof (String) ||
+                         field.FieldType == typeof (Byte) ||
+                         field.FieldType == typeof (short) ||
+                         field.FieldType == typeof (LSL_Types.Vector3) ||
+                         field.FieldType == typeof (LSL_Types.Quaternion))
                 {
-                    vars[field.Name] = field.GetValue (this).ToString ();
+                    vars[field.Name] = field.GetValue(this).ToString();
                 }
             }
             fields = null;
@@ -491,80 +480,81 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             if (!m_useStateSaves)
                 return;
             m_lastStateSaveValues = vars;
-            m_stateSaveRequired = false; //If something is setting the vars, we don't need to do a state save, as this came from a state save 
-            Type t = GetType ();
+            m_stateSaveRequired = false;
+                //If something is setting the vars, we don't need to do a state save, as this came from a state save 
+            Type t = GetType();
 
-            FieldInfo[] fields = t.GetFields (BindingFlags.NonPublic |
+            FieldInfo[] fields = t.GetFields(BindingFlags.NonPublic |
                                              BindingFlags.Public |
                                              BindingFlags.Instance |
                                              BindingFlags.DeclaredOnly);
 
             foreach (FieldInfo field in fields)
             {
-                if (vars.ContainsKey (field.Name))
+                if (vars.ContainsKey(field.Name))
                 {
                     object var = vars[field.Name];
                     if (field.FieldType == typeof (LSL_Types.list))
                     {
-                        string val = var.ToString ();
+                        string val = var.ToString();
                         int end;
-                        LSL_Types.list v = ParseValueToList (val, 0, out end);
-                        field.SetValue (this, v);
+                        LSL_Types.list v = ParseValueToList(val, 0, out end);
+                        field.SetValue(this, v);
                     }
                     else if (field.FieldType == typeof (LSL_Types.LSLInteger))
                     {
-                        int val = int.Parse (var.ToString ());
-                        field.SetValue (this, new LSL_Types.LSLInteger (val));
+                        int val = int.Parse(var.ToString());
+                        field.SetValue(this, new LSL_Types.LSLInteger(val));
                     }
                     else if (field.FieldType == typeof (LSL_Types.LSLString))
                     {
-                        string val = var.ToString ();
-                        field.SetValue (this, new LSL_Types.LSLString (val));
+                        string val = var.ToString();
+                        field.SetValue(this, new LSL_Types.LSLString(val));
                     }
                     else if (field.FieldType == typeof (LSL_Types.LSLFloat))
                     {
-                        float val = float.Parse (var.ToString ());
-                        field.SetValue (this, new LSL_Types.LSLFloat (val));
+                        float val = float.Parse(var.ToString());
+                        field.SetValue(this, new LSL_Types.LSLFloat(val));
                     }
                     else if (field.FieldType == typeof (Int32))
                     {
-                        Int32 val = Int32.Parse (var.ToString ());
-                        field.SetValue (this, val);
+                        Int32 val = Int32.Parse(var.ToString());
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (Double))
                     {
-                        Double val = Double.Parse (var.ToString ());
-                        field.SetValue (this, val);
+                        Double val = Double.Parse(var.ToString());
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (Single))
                     {
-                        Single val = Single.Parse (var.ToString ());
-                        field.SetValue (this, val);
+                        Single val = Single.Parse(var.ToString());
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (String))
                     {
-                        String val = var.ToString ();
-                        field.SetValue (this, val);
+                        String val = var.ToString();
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (Byte))
                     {
-                        Byte val = Byte.Parse (var.ToString ());
-                        field.SetValue (this, val);
+                        Byte val = Byte.Parse(var.ToString());
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (short))
                     {
-                        short val = short.Parse (var.ToString ());
-                        field.SetValue (this, val);
+                        short val = short.Parse(var.ToString());
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (LSL_Types.Quaternion))
                     {
-                        LSL_Types.Quaternion val = new LSL_Types.Quaternion (var.ToString ());
-                        field.SetValue (this, val);
+                        LSL_Types.Quaternion val = new LSL_Types.Quaternion(var.ToString());
+                        field.SetValue(this, val);
                     }
                     else if (field.FieldType == typeof (LSL_Types.Vector3))
                     {
-                        LSL_Types.Vector3 val = new LSL_Types.Vector3 (var.ToString ());
-                        field.SetValue (this, val);
+                        LSL_Types.Vector3 val = new LSL_Types.Vector3(var.ToString());
+                        field.SetValue(this, val);
                     }
                 }
             }
@@ -588,26 +578,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             // With a bit of luck the compiler may even optimize it out.
         }
 
-        public string Name 
+        public string Name
         {
-            get
-            {
-                return "ScriptBase";
-            }
+            get { return "ScriptBase"; }
         }
 
         public void Dispose()
         {
         }
 
-        private Type m_typeCache = null;//This shouldn't normally be used
-        public virtual IEnumerator FireEvent (string evName, object[] parameters)
+        private Type m_typeCache; //This shouldn't normally be used
+
+        public virtual IEnumerator FireEvent(string evName, object[] parameters)
         {
-            if(m_typeCache == null)
-                m_typeCache = GetType ();
-            MethodInfo ev = m_typeCache.GetMethod (evName);
-            if(ev != null)
-                ev.Invoke (this, parameters);
+            if (m_typeCache == null)
+                m_typeCache = GetType();
+            MethodInfo ev = m_typeCache.GetMethod(evName);
+            if (ev != null)
+                ev.Invoke(this, parameters);
 
             yield break;
         }
