@@ -24,13 +24,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- ﻿    
-    using System;
-    using System.IO;
-    using System.Net;
-    using System.Text;
-    using System.Diagnostics;
-    using Aurora.Framework;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Diagnostics;
+using Aurora.Framework;
 
 namespace Aurora.Configuration
 {
