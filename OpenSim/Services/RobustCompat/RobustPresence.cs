@@ -182,8 +182,7 @@ namespace OpenSim.Services.RobustCompat
             return "NonExistant";
         }
 
-        protected bool Set(Dictionary<string, object> sendData, string userID, UUID regionID, Vector3 position,
-                           Vector3 lookAt)
+        protected bool Set(Dictionary<string, object> sendData, string userID, UUID regionID, Vector3 position, Vector3 lookAt)
         {
             sendData["UserID"] = userID;
             sendData["RegionID"] = regionID.ToString();
@@ -194,21 +193,28 @@ namespace OpenSim.Services.RobustCompat
             // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
-                List<string> urls =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridUserServerURI");
-                foreach (Dictionary<string, object> replyData in urls.Select(url => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                              url,
-                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData.ContainsKey("result")))
+                List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridUserServerURI");
+                foreach (string url in urls)
                 {
-                    if (replyData["result"].ToString().ToLower() == "success")
-                        return true;
-                    else
-                        return false;
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                               url,
+                               reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData.ContainsKey("result"))
+                        {
+                            if (replyData["result"].ToString().ToLower() == "success")
+                                return true;
+                            else
+                                return false;
+                        }
+                    }
                 }
             }
             catch (Exception)
-            {
-            }
+            { }
 
             return false;
         }

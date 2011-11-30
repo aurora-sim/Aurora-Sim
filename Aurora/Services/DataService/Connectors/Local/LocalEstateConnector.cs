@@ -94,13 +94,18 @@ namespace Aurora.Services.DataService
             List<int> Estates = GetEstates(es.EstateName);
             if (Estates != null)
             {
-                if (Estates.Select(this.LoadEstateSettings).Any(otherEstate => otherEstate.EstateName == es.EstateName))
+                foreach (int otherEstateID in Estates)
                 {
-                    return new EstateSettings
-                               {
-                                   EstateID = 0,
-                                   EstateName = "Duplicate Estate Name. Please Change."
-                               };
+                    EstateSettings otherEstate = this.LoadEstateSettings(otherEstateID);
+                    if (otherEstate.EstateName == es.EstateName)
+                    { //Cant have two estates with the same name.
+                        //We set the estate name so that the region can get the error and so we don't have to spit out more junk to find it.
+                        return new EstateSettings()
+                        {
+                            EstateID = 0,
+                            EstateName = "Duplicate Estate Name. Please Change."
+                        };
+                    }
                 }
             }
 
@@ -163,31 +168,56 @@ namespace Aurora.Services.DataService
 
         public List<int> GetEstates(string search)
         {
+			List<int> result = new List<int>();
             List<string> RetVal = GD.Query("", "", "estates", "`Value`",
                                            " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateName</key><string>" +
                                            search.MySqlEscape() + "</string>%'");
             if (RetVal.Count == 0)
                 return null;
-            return (from estateInfo in RetVal.Select(OSDParser.DeserializeLLSDXml).OfType<OSDMap>() where estateInfo["EstateName"].AsString() == search select estateInfo["EstateID"].AsInteger()).ToList();
+            foreach (string val in RetVal)
+            {
+                OSD oval = OSDParser.DeserializeLLSDXml (val);
+                if (oval is OSDMap)
+                {
+                    OSDMap estateInfo = (OSDMap)oval;
+                    if (estateInfo["EstateName"].AsString () == search)
+                        result.Add (estateInfo["EstateID"].AsInteger ());
+                }
+            }
+            return result;
         }
 
         public List<UUID> GetRegions(uint estateID)
         {
-            List<string> RetVal = GD.Query(new[] {"`Key`", "`Value`"}, new object[] {"EstateID", estateID}, "estates",
-                                           "ID");
+            List<UUID> result = new List<UUID>();
+            List<string> RetVal = GD.Query(new string[]{"`Key`","`Value`"}, new object[]{"EstateID",estateID}, "estates", "ID");
             if (RetVal.Count == 0)
                 return null;
-            return RetVal.Select(UUID.Parse).ToList();
+            foreach (string val in RetVal)
+            {
+                result.Add(UUID.Parse(val));
+            }
+            return result;
         }
 
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
-            List<string> RetVal = GD.Query("", "", "estates", "`Value`",
-                                           " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateOwner</key><uuid>" +
-                                           OwnerID + "</uuid>%'");
+            List<EstateSettings> result = new List<EstateSettings>();
+            List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateOwner</key><uuid>" + OwnerID + "</uuid>%'");
             if (RetVal.Count == 0)
                 return null;
-            return RetVal.Select(OSDParser.DeserializeLLSDXml).OfType<OSDMap>().Select(estateInfo => LoadEstateSettings(estateInfo["EstateID"].AsInteger())).Where(es => es != null).ToList();
+            foreach (string val in RetVal)
+            {
+                OSD oval = OSDParser.DeserializeLLSDXml (val);
+                if (oval is OSDMap)
+                {
+                    OSDMap estateInfo = (OSDMap)oval;
+                    EstateSettings es = LoadEstateSettings (estateInfo["EstateID"].AsInteger ());
+                    if(es != null)
+                        result.Add (es);
+                }
+            }
+            return result;
         }
 
         public bool LinkRegion(UUID regionID, int estateID, string password)

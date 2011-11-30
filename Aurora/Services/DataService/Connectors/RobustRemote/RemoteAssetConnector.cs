@@ -105,18 +105,30 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                data.AddRange(
-                    m_ServerURIs.Select(
-                        m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)).Where(
-                            reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(
-                                replyData => replyData != null).SelectMany(replyData => replyData.Values,
-                                                                           (replyData, obj) => obj.ToString()));
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            foreach (object obj in replyData.Values)
+                            {
+                                data.Add (obj.ToString ());
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e);
+                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return data;
         }

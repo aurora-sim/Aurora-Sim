@@ -901,8 +901,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendGenericMessage(string method, List<string> message)
         {
-            List<byte[]> convertedmessage =
-                message.ConvertAll(Util.StringToBytes256);
+            List<byte[]> convertedmessage = message.ConvertAll<byte[]>(delegate(string item)
+            {
+                return Util.StringToBytes256(item);
+            });
             SendGenericMessage(method, convertedmessage);
         }
 

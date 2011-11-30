@@ -141,9 +141,14 @@ namespace Aurora.Modules
 
         #endregion
 
-        private IEnumerable<UserAccount> FixRemoteAccounts(List<UserAccount> list)
+        private IEnumerable<UserAccount> FixRemoteAccounts (List<UserAccount> list)
         {
-            return list.Select(FixRemoteAccount).ToList();
+            List<UserAccount> accounts = new List<UserAccount> ();
+            foreach (UserAccount account in list)
+            {
+                accounts.Add (FixRemoteAccount (account));
+            }
+            return accounts;
         }
 
         private UserAccount FixRemoteAccount(UserAccount userAccount)
