@@ -3857,7 +3857,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (m_TransferModule != null)
             {
-                m_TransferModule.SendInstantMessage(msg, delegate {});
+                m_TransferModule.SendInstantMessage(msg);
             }
             return PScriptSleep(2000);
       }

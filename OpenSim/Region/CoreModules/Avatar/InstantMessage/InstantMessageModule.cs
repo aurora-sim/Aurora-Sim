@@ -169,29 +169,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 else
                     im.fromAgentName = client.Name;
 
-                m_TransferModule.SendInstantMessage(im,
-                                                    delegate(bool success)
-                                                        {
-                                                            if (dialog == (uint) InstantMessageDialog.StartTyping ||
-                                                                dialog == (uint) InstantMessageDialog.StopTyping ||
-                                                                dialog == (uint) InstantMessageDialog.MessageFromObject)
-                                                            {
-                                                                return;
-                                                            }
-
-                                                            if ((client != null) && !success)
-                                                            {
-                                                                client.SendInstantMessage(
-                                                                    new GridInstantMessage(
-                                                                        null, im.fromAgentID, "System",
-                                                                        im.toAgentID,
-                                                                        (byte) InstantMessageDialog.BusyAutoResponse,
-                                                                        "Unable to send instant message. " +
-                                                                        "User is not logged in.", false,
-                                                                        new Vector3()));
-                                                            }
-                                                        }
-                    );
+                m_TransferModule.SendInstantMessage(im);
             }
         }
 

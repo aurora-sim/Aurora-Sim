@@ -1023,13 +1023,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 if (m_debugEnabled)
                     m_log.InfoFormat("[GROUPS]: MsgTo ({0}) is not local, delivering via TransferModule", msgTo);
-                m_msgTransferModule.SendInstantMessage(msg,
-                                                       delegate(bool success)
-                                                           {
-                                                               if (m_debugEnabled)
-                                                                   m_log.DebugFormat("[GROUPS]: Message Sent: {0}",
-                                                                                     success ? "Succeeded" : "Failed");
-                                                           });
+                m_msgTransferModule.SendInstantMessage(msg);
             }
         }
 

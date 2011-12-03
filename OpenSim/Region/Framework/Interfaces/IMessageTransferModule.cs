@@ -31,15 +31,11 @@ using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
-    public delegate void MessageResultNotification(bool success);
-
     public delegate void UndeliveredMessage(GridInstantMessage im, string reason);
 
     public interface IMessageTransferModule
     {
         event UndeliveredMessage OnUndeliveredMessage;
-
-        void SendInstantMessage(GridInstantMessage im, MessageResultNotification result);
 
         void SendInstantMessages(GridInstantMessage im, List<UUID> AgentsToSendTo);
 
