@@ -377,6 +377,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 IPrimCountModule primCount = m_scene.RequestModuleInterface<IPrimCountModule>();
                 if (primCount == null)
                     return;
+                List<ISceneEntity> entities = new List<ISceneEntity>();
                 foreach (ISceneEntity sog in from parcel in AllParcels()
                                              where parcel != null && parcel.LandData != null &&
                                                    parcel.LandData.OtherCleanTime != 0
@@ -395,9 +396,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                    parcel.LandData.OtherCleanTime * 60
                                              select sog)
                 {
-                    AddReturns(sog.OwnerID, sog.Name, sog.AbsolutePosition, "Auto Parcel Return",
-                               new List<ISceneEntity> {sog});
+                    entities.Add(sog);
                 }
+                if(entities.Count > 0)
+                    AddReturns(entities[0].OwnerID, entities[0].Name, entities[0].AbsolutePosition, "Auto Parcel Return",
+                           entities);
             }
             catch (Exception e)
             {
