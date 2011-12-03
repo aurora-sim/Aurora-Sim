@@ -96,9 +96,14 @@ namespace OpenSim.Services.RobustCompat
             return gridRegion;
         }
 
-        private List<GridRegion> FixGridRegions(List<GridRegion> list)
+        private List<GridRegion> FixGridRegions (List<GridRegion> list)
         {
-            return list.Select(FixGridRegion).ToList();
+            List<GridRegion> rs = new List<GridRegion> ();
+            foreach (GridRegion r in list)
+            {
+                rs.Add (FixGridRegion(r));
+            }
+            return rs;
         }
 
         public override void Initialize(IConfigSource config, IRegistryCore registry)

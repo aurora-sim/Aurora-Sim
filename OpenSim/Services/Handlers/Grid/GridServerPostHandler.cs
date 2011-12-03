@@ -748,7 +748,11 @@ namespace OpenSim.Services
         /// <returns></returns>
         private List<GridRegion> CleanRegions(List<GridRegion> regions)
         {
-            List<GridRegion> regionsToReturn = regions.Select(CleanRegion).ToList();
+            List<GridRegion> regionsToReturn = new List<GridRegion>();
+            foreach (GridRegion region in regions)
+            {
+                regionsToReturn.Add(CleanRegion(region));
+            }
             return regions;
         }
 

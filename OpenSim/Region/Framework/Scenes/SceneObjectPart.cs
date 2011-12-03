@@ -270,7 +270,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_ValidpartOOB = value;
                 // we need to invalidate grp oob
-                if (!m_ValidpartOOB && ParentID != 0)
+                if ((ParentGroup != null) && (!m_ValidpartOOB && ParentID != 0))
                     ParentGroup.ValidgrpOOB = false;
             }
         }

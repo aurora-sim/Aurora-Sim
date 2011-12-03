@@ -154,19 +154,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
-                                                                                           "RemoteServerURI", false);
-                foreach (Dictionary<string, object> replyData in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                              m_ServerURI,
-                                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData != null))
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(), "RemoteServerURI", false);
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    return replyData["groupTitle"].ToString();
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                            return replyData["groupTitle"].ToString();
+                    }
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return "No Title Could Be Found";
         }
@@ -184,19 +189,24 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
-                                                                                           "RemoteServerURI", false);
-                foreach (Dictionary<string, object> replyData in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                              m_ServerURI,
-                                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData != null))
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(), "RemoteServerURI", false);
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    return replyData["groupTitle"].ToString();
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                            return replyData["groupTitle"].ToString();
+                    }
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return "No Title Could Be Found";
         }
@@ -699,20 +709,27 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
-                        requestingAgentID.ToString(), "RemoteServerURI", false);
-                foreach (Dictionary<string, object> replyData in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                              m_ServerURI,
-                                                                                                                              reqString)).Where(reply => reply != string.Empty).Select(WebUtils.ParseXmlResponse).Where(replyData => replyData != null))
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService> ().FindValueOf (requestingAgentID.ToString (), "RemoteServerURI", false);
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    // Success
-                    return UUID.Parse(replyData["A"].ToString());
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            // Success
+                            return UUID.Parse(replyData["A"].ToString());
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return UUID.Zero;
