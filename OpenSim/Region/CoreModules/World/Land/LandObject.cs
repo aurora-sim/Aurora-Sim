@@ -454,50 +454,56 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) GroupPowers.LandManageAllowed))
                 return false;
 
-            if (LandData.ParcelAccessList.Count > 0)
+            if ((LandData.Flags & (uint)ParcelFlags.UsePassList) > 0 ||
+                (LandData.Flags & (uint)ParcelFlags.UseAccessList) > 0)
             {
-                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-                bool found = false;
-                foreach (ParcelManager.ParcelAccessEntry pae in LandData.ParcelAccessList.Where(pae => avatar == pae.AgentID && AccessList.Access == pae.Flags))
+                if (LandData.ParcelAccessList.Count > 0)
                 {
-                    found = true;
-                    entry = pae;
-                    break;
-                }
-
-                //If they are not on the access list and are not the owner
-                if (!found)
-                {
-                    if ((LandData.Flags & (uint) ParcelFlags.UseAccessGroup) > 0)
+                    ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                    bool found = false;
+                    foreach (ParcelManager.ParcelAccessEntry pae in LandData.ParcelAccessList.Where(pae => avatar == pae.AgentID && AccessList.Access == pae.Flags))
                     {
-                        IScenePresence SP = m_scene.GetScenePresence(avatar);
-                        if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
+                        found = true;
+                        entry = pae;
+                        break;
+                    }
+
+                    //If they are not on the access list and are not the owner
+                    if (!found)
+                    {
+                        if ((LandData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0)
                         {
-                            //They are a part of the group, let them in
-                            return false;
+                            IScenePresence SP = m_scene.GetScenePresence(avatar);
+                            if (SP != null && LandData.GroupID == SP.ControllingClient.ActiveGroupId)
+                            {
+                                //They are a part of the group, let them in
+                                return false;
+                            }
+                            else
+                            {
+                                //They are not allowed in this parcel, but not banned, so lets send them a notice about this parcel
+                                return true;
+                            }
                         }
                         else
                         {
-                            //They are not allowed in this parcel, but not banned, so lets send them a notice about this parcel
+                            //No group checking, not on the access list, restricted
                             return true;
                         }
                     }
                     else
                     {
-                        //No group checking, not on the access list, restricted
-                        return true;
+                        //If it does, we need to check the time
+                        if (entry.Time.Ticks < DateTime.Now.Ticks)
+                        {
+                            //Time expired, remove them
+                            LandData.ParcelAccessList.Remove(entry);
+                            return true;
+                        }
                     }
                 }
                 else
-                {
-                    //If it does, we need to check the time
-                    if (entry.Time.Ticks < DateTime.Now.Ticks)
-                    {
-                        //Time expired, remove them
-                        LandData.ParcelAccessList.Remove(entry);
-                        return true;
-                    }
-                }
+                    return true;
             }
             return false;
         }
