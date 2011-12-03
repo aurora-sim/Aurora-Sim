@@ -269,11 +269,14 @@ namespace OpenSim.Services.GridService
             {
                 if(urls.HostNames == null || urls.Ports == null ||
                     urls.URLS == null || urls.SessionID != SessionID ||
-                    !CheckModuleNames(urls))
+                    !CheckModuleNames(urls) || urls.VersionNumber < GridRegistrationURLs.CurrentVersionNumber)
                 {
-                    m_log.Warn ("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
-                        (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID +
-                        ", checkModuleNames: " + CheckModuleNames (urls));
+                    if (urls.VersionNumber == GridRegistrationURLs.CurrentVersionNumber)
+                    {
+                        m_log.Warn("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
+                            (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID +
+                            ", checkModuleNames: " + CheckModuleNames(urls));
+                    }
                     RemoveUrlsForClient(urls.SessionID);
                 }
                 else
@@ -427,11 +430,13 @@ namespace OpenSim.Services.GridService
 
         public class GridRegistrationURLs : IDataTransferable
         {
+            public static readonly int CurrentVersionNumber = 1;
             public OSDMap URLS;
             public string SessionID;
             public DateTime Expiration;
             public OSDMap HostNames;
             public OSDMap Ports;
+            public int VersionNumber;
 
             public override OSDMap ToOSD()
             {
@@ -441,6 +446,7 @@ namespace OpenSim.Services.GridService
                 retVal["Expiration"] = Expiration;
                 retVal["HostName"] = HostNames;
                 retVal["Port"] = Ports;
+                retVal["VersionNumber"] = CurrentVersionNumber;
                 return retVal;
             }
 
@@ -452,6 +458,10 @@ namespace OpenSim.Services.GridService
                 Expiration = Expiration.ToUniversalTime ();
                 HostNames = retVal["HostName"] as OSDMap;
                 Ports = retVal["Port"] as OSDMap;
+                if (!retVal.ContainsKey("VersionNumber"))
+                    VersionNumber = 0;
+                else
+                    VersionNumber = retVal["VersionNumber"].AsInteger();
             }
 
             public override IDataTransferable Duplicate()

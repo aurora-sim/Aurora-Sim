@@ -2345,6 +2345,11 @@ namespace OpenSim.Region.Framework.Scenes
                         AssetBase asset = m_scene.AssetService.Get(part.Shape.SculptTexture.ToString());
                         if (asset != null)
                             part.Shape.SculptData = asset.Data;
+                        else
+                        {
+                            part.Shape.SculptEntry = false;
+                            part.Shape.SculptData = new byte[0];
+                        }
                     }
                 }
             }
