@@ -308,7 +308,10 @@ namespace OpenSim.Services.GridService
             foreach (KeyValuePair<string, OSD> module in databaseSave)
             {
                 //Build the URL
-                retVal[module.Key] = hostnames[module.Key] + ":" + ports[module.Key] + module.Value.AsString ();
+                if (module.Value.AsString().StartsWith("http://") || module.Value.AsString().StartsWith("https://"))
+                    retVal[module.Key] = module.Value.AsString();
+                else
+                    retVal[module.Key] = hostnames[module.Key] + ":" + ports[module.Key] + module.Value.AsString ();
             }
 
             //Save into the database so that we can rebuild later if the server goes offline
