@@ -4035,13 +4035,28 @@ namespace OpenSim.Region.Framework.Scenes
             Quaternion partRotation = m_rootPart.RotationOffset;
             axDiff *= Quaternion.Inverse(partRotation);
             diff = axDiff;
-
-            foreach (SceneObjectPart obPart in m_partsList.Where(obPart => obPart.UUID != m_rootPart.UUID))
+            if (IsAttachment)
             {
-                obPart.FixOffsetPosition((obPart.OffsetPosition + diff), false);
+                m_rootPart.FixOffsetPosition((newPos), false);
+                foreach (SceneObjectPart obPart in m_partsList)
+                {
+                    if (obPart.UUID != m_rootPart.UUID)
+                    {
+                        obPart.OffsetPosition += diff;
+                        obPart.SetGroupPosition(AbsolutePosition);
+                    }
+                }
             }
+            else
+            {
+                foreach (SceneObjectPart obPart in m_partsList)
+                {
+                    if (obPart.UUID != m_rootPart.UUID)
+                        obPart.FixOffsetPosition((obPart.OffsetPosition + diff), false);
+                }
 
-            AbsolutePosition = newPos;
+                AbsolutePosition = newPos;
+            }
 
             HasGroupChanged = true;
             ScheduleGroupTerseUpdate();

@@ -911,7 +911,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (IsRoot)
                 {
                     if (IsAttachment)
-                        return AttachedPos;
+                        return OffsetPosition;
                     else
                         return AbsolutePosition;
                 }
