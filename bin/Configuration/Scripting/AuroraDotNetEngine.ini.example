@@ -247,6 +247,7 @@
     ;Allow_botSetPathMap = true
     ;Allow_botFindPath = true
     ;Allow_botSendChatMessage = true
+	;Allow_botSendIM = true
     ;; ### OS OpenSim Functions ###
     ;; *** Threat-Level=None
     ;Allow_osDrawEllipse = true

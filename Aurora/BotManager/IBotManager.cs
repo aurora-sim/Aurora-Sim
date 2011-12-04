@@ -73,6 +73,8 @@ namespace Aurora.BotManager
 
         void SendChatMessage(UUID botID, string message, int sayType, int channel, UUID userAttempting);
 
+        void SendIM(UUID botID, UUID toUser, string message, UUID userAttempting);
+
         #endregion
     }
 }

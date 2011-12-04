@@ -25,5 +25,6 @@ default
     {
         //Say the message to users
         botSendChatMessage (botID, message, channel, sayType);
+        botSendChatMessage (botID, llGetOwner(), message);
     }
 }

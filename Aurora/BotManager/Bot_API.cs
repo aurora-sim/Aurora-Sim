@@ -178,6 +178,15 @@ namespace Aurora.BotManager
                 manager.SendChatMessage(UUID.Parse(bot), message, sayType, channel, m_host.OwnerID);
         }
 
+        public void botSendIM(string bot, string user, string message)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "botSendIM", m_host, "bot", m_itemID))
+                return;
+            IBotManager manager = World.RequestModuleInterface<IBotManager>();
+            if (manager != null)
+                manager.SendIM(UUID.Parse(bot), UUID.Parse(user), message, m_host.OwnerID);
+        }
+
         public void botTouchObject(string bot, string objectID)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "botTouchObject", m_host, "bot", m_itemID))

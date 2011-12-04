@@ -47,6 +47,7 @@ namespace Aurora.BotManager
         void botFollowAvatar(string bot, string avatarName, LSL_Float startFollowDistance, LSL_Float endFollowDistance);
         void botStopFollowAvatar(string bot);
         void botSendChatMessage(string bot, string message, int sayType, int channel);
+        void botSendIM(string bot, string user, string message);
         void botSetShouldFly(string keyOfBot, int ShouldFly);
         void botSitObject(string bot, string objectID, LSL_Vector offset);
         void botStandUp(string bot);

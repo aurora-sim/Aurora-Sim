@@ -388,6 +388,36 @@ namespace Aurora.BotManager
             }
         }
 
+        /// <summary>
+        ///   Sends a chat message to all clients
+        /// </summary>
+        /// <param name = "Bot"></param>
+        /// <param name = "modifier"></param>
+        public void SendChatMessage(UUID botID, UUID toUser, string message, UUID userAttempting)
+        {
+            Bot bot;
+            if (m_bots.TryGetValue(botID, out bot))
+            {
+                if (!CheckPermission(bot, userAttempting))
+                    return;
+                bot.SendInstantMessage(new GridInstantMessage()
+                {
+                    binaryBucket = new byte[0],
+                    dialog = (byte)InstantMessageDialog.MessageFromAgent,
+                    message = message,
+                    fromAgentID = botID,
+                    fromAgentName = bot.Name,
+                    fromGroup = false,
+                    imSessionID = UUID.Random(), 
+                    offline = 0,
+                    ParentEstateID = 0,
+                    RegionID = bot.Scene.RegionInfo.RegionID,
+                    timestamp = (uint)Util.UnixTimeSinceEpoch(),
+                    toAgentID = toUser
+                });
+            }
+        }
+
         #endregion
     }
 }
