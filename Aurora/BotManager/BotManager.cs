@@ -393,7 +393,7 @@ namespace Aurora.BotManager
         /// </summary>
         /// <param name = "Bot"></param>
         /// <param name = "modifier"></param>
-        public void SendChatMessage(UUID botID, UUID toUser, string message, UUID userAttempting)
+        public void SendIM(UUID botID, UUID toUser, string message, UUID userAttempting)
         {
             Bot bot;
             if (m_bots.TryGetValue(botID, out bot))
