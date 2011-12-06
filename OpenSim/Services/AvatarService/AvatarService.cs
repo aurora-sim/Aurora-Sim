@@ -190,6 +190,7 @@ namespace OpenSim.Services.AvatarService
                 return;
             }
             ResetAvatar(acc.PrincipalID);
+            MainConsole.Instance.Output("Reset avatar's appearance successfully.", Level.Emergency);
         }
     }
 }

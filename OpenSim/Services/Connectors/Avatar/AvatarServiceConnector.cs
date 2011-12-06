@@ -115,6 +115,12 @@ namespace OpenSim.Services.Connectors
 
         public virtual bool SetAvatar(UUID userID, AvatarData avatar)
         {
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
+                                                                                                      new object[2]
+                                                                                                          {
+                                                                                                              userID,
+                                                                                                              avatar
+                                                                                                          });
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
             sendData["VERSIONMIN"] = ProtocolVersions.ClientProtocolVersionMin.ToString();

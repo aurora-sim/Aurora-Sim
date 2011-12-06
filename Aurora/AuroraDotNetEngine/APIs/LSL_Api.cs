@@ -2153,12 +2153,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(heightmap != null)
                 ground = heightmap.GetNormalizedGroundHeight((int)(float)targetPos.x, (int)(float)targetPos.y);
             if (part.ParentEntity == null)
-            {
-                if (ground != 0 && (targetPos.z < ground) && disable_underground_movement && m_host.AttachmentPoint == 0)
-                    targetPos.z = ground;
-                    LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
-                    part.UpdateOffSet(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z));
-            }
+                return;
             else if (part.ParentEntity.RootChild == part)
             {
                 ISceneEntity parent = part.ParentEntity;
@@ -2173,9 +2168,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else
             {
                 LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
-                part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)),true);
-                ISceneEntity parent = part.ParentEntity;
-                parent.ScheduleGroupTerseUpdate();
+                part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)), true);
             }
         }
 

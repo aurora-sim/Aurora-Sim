@@ -1,0 +1,65 @@
+[GrieferProtection]
+    ;; Should this module be enabled?
+    Enabled = true
+	
+	;;
+	;; IP Bans
+	;;
+	
+	;; Add any valid IPs that you wish to ban here seperated by commas
+	IPBans = ""
+	
+	;; Add any valid range bans that you want banned here (in the format of "126.0.0.0-128.0.0.0") seperated by commas
+    IPRangeBans = ""
+	
+    ;; Similarity checking
+    ;; This is a setting that runs through all of the users and corrolates the different parts of each other to each other.
+    ;; This is how agents are found to be similar to one another and is the basis behind the banning system
+    ;; There are two ways it is done, on login, or on a timer
+    ;; On login checks every time, but it can slow down logins, but it will update the settings every time
+    ;; On timer checks every x minutes (customizable below) and does not lag logins, but the settings may take a bit to update.
+
+    ;; Check for similarities on login
+    CheckForSimilaritiesOnLogin = true
+    ;; Check for similarities on a timer
+    CheckForSimilaritiesOnTimer = false
+    ;; Minutes between each timer check (if CheckForSimilaritiesOnTimer is enabled)
+    MinutesForTimerToCheck = 60
+
+    ;; This is the setting that blocks agents depending on what threat level they have been evaluated to be
+    ;; If it is "AllowCleanOnly", only agents that are not known to have caused any issues will be allowed in
+    ;; If it is "AllowSuspected", agents that are clean and agents that we think 'may' be people that have 
+    ;;   been set as bad agents under other names will be allowed in
+    ;; If it is "AllowKnown", all agents will be allowed in
+    ;; Default is AllowCleanOnly
+    GrieferAllowLevel = AllowCleanOnly
+    
+    ;;
+    ;; Viewer banning section
+    ;;
+    
+    ;; Should we check for whether a viewer can enter our sims?
+    ;; Default is true
+    Enabled = true
+    
+    ;; If instead of having a ban list, you would rather have an allowed viewers list, enable this object
+    ;; Default is false
+    UseAllowListInsteadOfBanList = false
+    
+    ;; If UseAllowListInsteadOfBanList is used, add all allowed viewers here
+    ;; Ex.  ViewersToAllow = "Astra"
+    ;; See http://phoenixviewer.com/app/client_list.xml for a full list of clients
+    ;; Default is ""
+    ViewersToAllow = "";
+
+    ;; If UseAllowListInsteadOfBanList is not used, add all banned viewers here
+    ;; Other viewers to ban from your sims.
+    ;; Note: Seperate banned viewers by ','
+    ;; Ex.  ViewersToBan = "Phoenix,LGG Proxy"
+    ;; See http://viewertags.com/client_list.php for a full list of clients
+    ;; Default is ""
+    ViewersToBan = ""
+    
+    ;; If you want to use a different URL than http://phoenixviewer.com/app/client_list.xml, which is the default, set the URL here
+    ;; Default is commented out
+    ;ViewerXMLURL = "http://phoenixviewer.com/app/client_list.xml"

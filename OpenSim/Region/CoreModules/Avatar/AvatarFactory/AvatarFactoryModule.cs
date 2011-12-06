@@ -349,15 +349,6 @@ textures 1
                         sp.SetHeight(appearance.Appearance.AvatarHeight);
                 }
 
-                // Process the baked texture array
-                if (textureEntry != null)
-                {
-                    //Check for banned clients here
-                    IBanViewersModule module = client.Scene.RequestModuleInterface<IBanViewersModule>();
-                    if (module != null)
-                        module.CheckForBannedViewer(client, textureEntry);
-                }
-
                 // If something changed in the appearance then queue an appearance save
                 if (texturesChanged || visualParamsChanged)
                 {

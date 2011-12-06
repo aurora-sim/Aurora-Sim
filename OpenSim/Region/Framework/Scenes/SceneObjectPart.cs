@@ -2121,6 +2121,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             StoreUndoState();
             m_offsetPosition = value;
+            if(ParentEntity != null)
+                ParentEntity.ScheduleGroupTerseUpdate();
             ValidpartOOB = false;
 
             if (ParentGroup != null && !ParentGroup.IsDeleted)
