@@ -14,11 +14,11 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
-    public class PresenceInfoMigrator_1 : Migrator
+    public class PresenceInfoMigrator_2 : Migrator
     {
-        public PresenceInfoMigrator_1()
+        public PresenceInfoMigrator_2()
         {
-            Version = new Version(0, 0, 1);
+            Version = new Version(0, 0, 2);
             MigrationName = "PresenceInfo";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
