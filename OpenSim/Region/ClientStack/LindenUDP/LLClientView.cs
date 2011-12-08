@@ -375,8 +375,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private UUID m_activeGroupID;
         private string m_activeGroupName = String.Empty;
         private ulong m_activeGroupPowers;
-        //Note:This firled is never used??
-        private int m_terrainCheckerCount;
         private uint m_agentFOVCounter;
 
         private readonly IAssetService m_assetService;
@@ -4053,7 +4051,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
-                int ii = 0;
 
 
                 //ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);

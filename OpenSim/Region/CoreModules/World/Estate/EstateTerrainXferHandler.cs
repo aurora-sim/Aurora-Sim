@@ -45,11 +45,10 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
         private TerrainUploadComplete handlerTerrainUploadDone;
         public ulong mXferID;
-        private sbyte type;
 
         public EstateTerrainXferHandler(IClientAPI pRemoteClient, string pClientFilename)
         {
-            m_asset = new AssetBase(UUID.Zero, pClientFilename, (AssetType) type, pRemoteClient.AgentId)
+            m_asset = new AssetBase(UUID.Zero, pClientFilename, AssetType.Texture, pRemoteClient.AgentId)
                           {Data = new byte[0], Description = "empty", Flags = AssetFlags.Temperary | AssetFlags.Local};
         }
 

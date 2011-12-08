@@ -223,9 +223,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                         where folder.Name == components[0]
                         select FindItemByPath(inventoryService, folder, components[1])).FirstOrDefault();
             }
-
-            // We didn't find an item or intermediate folder with the given name
-            return null;
         }
 
         /// <summary>

@@ -17,8 +17,6 @@ namespace OdeAPI
 
         #region Flags and Enumerations
 
-        #region AllocateODEDataFlags enum
-
         [Flags]
         public enum AllocateODEDataFlags : uint
         {
@@ -27,12 +25,14 @@ namespace OdeAPI
             All = ~0u
         }
 
-        #endregion
-
-        #region ContactFlags enum
+        [Flags]
+        public enum IniteODEFlags : uint
+        {
+            dInitFlagManualThreadCleanup = 0x00000001
+        }
 
         [Flags]
-        public enum ContactFlags
+        public enum ContactFlags : int
         {
             Mu2 = 0x001,
             FDir1 = 0x002,
@@ -50,11 +50,7 @@ namespace OdeAPI
             Approx1 = 0x3000
         }
 
-        #endregion
-
-        #region GeomClassID enum
-
-        public enum GeomClassID
+        public enum GeomClassID : int
         {
             SphereClass,
             BoxClass,
@@ -77,21 +73,23 @@ namespace OdeAPI
             MaxUserClasses = 4
         }
 
-        #endregion
-
-        #region IniteODEFlags enum
-
-        [Flags]
-        public enum IniteODEFlags : uint
+        public enum JointType : int
         {
-            dInitFlagManualThreadCleanup = 0x00000001
+            None,
+            Ball,
+            Hinge,
+            Slider,
+            Contact,
+            Universal,
+            Hinge2,
+            Fixed,
+            Null,
+            AMotor,
+            LMotor,
+            Plane2D
         }
 
-        #endregion
-
-        #region JointParam enum
-
-        public enum JointParam
+        public enum JointParam : int
         {
             LoStop,
             HiStop,
@@ -128,31 +126,7 @@ namespace OdeAPI
             SuspensionCFM3
         }
 
-        #endregion
-
-        #region JointType enum
-
-        public enum JointType
-        {
-            None,
-            Ball,
-            Hinge,
-            Slider,
-            Contact,
-            Universal,
-            Hinge2,
-            Fixed,
-            Null,
-            AMotor,
-            LMotor,
-            Plane2D
-        }
-
-        #endregion
-
-        #region dSweepAndPruneAxis enum
-
-        public enum dSweepAndPruneAxis
+        public enum dSweepAndPruneAxis : int
         {
             XYZ = ((0) | (1 << 2) | (2 << 4)),
             XZY = ((0) | (2 << 2) | (1 << 4)),
@@ -161,8 +135,6 @@ namespace OdeAPI
             ZXY = ((2) | (0 << 2) | (1 << 4)),
             ZYX = ((2) | (1 << 2) | (0 << 4))
         }
-
-        #endregion
 
         #endregion
 
@@ -175,13 +147,13 @@ namespace OdeAPI
         public delegate int ColliderFn(IntPtr o1, IntPtr o2, int flags, out ContactGeom contact, int skip);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void GeomDtorFn(IntPtr o);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void GetAABBFn(IntPtr geom, out AABB aabb);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate ColliderFn GetColliderFnFn(int num);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void GeomDtorFn(IntPtr o);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate dReal HeightfieldGetHeight(IntPtr p_user_data, int x, int z);
@@ -190,10 +162,10 @@ namespace OdeAPI
         public delegate void NearCallback(IntPtr data, IntPtr geom1, IntPtr geom2);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int TriArrayCallback(IntPtr trimesh, IntPtr refObject, int[] triangleIndex, int triCount);
+        public delegate int TriCallback(IntPtr trimesh, IntPtr refObject, int triangleIndex);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int TriCallback(IntPtr trimesh, IntPtr refObject, int triangleIndex);
+        public delegate int TriArrayCallback(IntPtr trimesh, IntPtr refObject, int[] triangleIndex, int triCount);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int TriRayCallback(IntPtr trimesh, IntPtr ray, int triangleIndex, dReal u, dReal v);
@@ -201,8 +173,6 @@ namespace OdeAPI
         #endregion
 
         #region Structs
-
-        #region Nested type: AABB
 
         [StructLayout(LayoutKind.Sequential)]
         public struct AABB
@@ -212,9 +182,6 @@ namespace OdeAPI
             public dReal MinZ, MaxZ;
         }
 
-        #endregion
-
-        #region Nested type: Contact
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Contact
@@ -222,12 +189,9 @@ namespace OdeAPI
             public SurfaceParameters surface;
             public ContactGeom geom;
             public Vector3 fdir1;
-            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof (ContactGeom));
+            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof(ContactGeom));
         }
 
-        #endregion
-
-        #region Nested type: ContactGeom
 
         [StructLayout(LayoutKind.Sequential)]
         public struct ContactGeom
@@ -239,12 +203,8 @@ namespace OdeAPI
             public IntPtr g2;
             public int side1;
             public int side2;
-            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof (ContactGeom));
+            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof(ContactGeom));
         }
-
-        #endregion
-
-        #region Nested type: GeomClass
 
         [StructLayout(LayoutKind.Sequential)]
         public struct GeomClass
@@ -256,9 +216,6 @@ namespace OdeAPI
             public GeomDtorFn dtor;
         }
 
-        #endregion
-
-        #region Nested type: JointFeedback
 
         [StructLayout(LayoutKind.Sequential)]
         public struct JointFeedback
@@ -269,9 +226,6 @@ namespace OdeAPI
             public Vector3 t2;
         }
 
-        #endregion
-
-        #region Nested type: Mass
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Mass
@@ -281,77 +235,42 @@ namespace OdeAPI
             public Matrix3 I;
         }
 
-        #endregion
-
-        #region Nested type: Matrix3
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Matrix3
         {
-            public Matrix3(dReal m00, dReal m10, dReal m20, dReal m01, dReal m11, dReal m21, dReal m02, dReal m12,
-                           dReal m22)
+            public Matrix3(dReal m00, dReal m10, dReal m20, dReal m01, dReal m11, dReal m21, dReal m02, dReal m12, dReal m22)
             {
-                M00 = m00;
-                M10 = m10;
-                M20 = m20;
-                _m30 = 0.0f;
-                M01 = m01;
-                M11 = m11;
-                M21 = m21;
-                _m31 = 0.0f;
-                M02 = m02;
-                M12 = m12;
-                M22 = m22;
-                _m32 = 0.0f;
+                M00 = m00; M10 = m10; M20 = m20; _m30 = 0.0f;
+                M01 = m01; M11 = m11; M21 = m21; _m31 = 0.0f;
+                M02 = m02; M12 = m12; M22 = m22; _m32 = 0.0f;
             }
-
             public dReal M00, M10, M20;
-            private readonly dReal _m30;
+            private dReal _m30;
             public dReal M01, M11, M21;
-            private readonly dReal _m31;
+            private dReal _m31;
             public dReal M02, M12, M22;
-            private readonly dReal _m32;
+            private dReal _m32;
         }
-
-        #endregion
-
-        #region Nested type: Matrix4
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Matrix4
         {
             public Matrix4(dReal m00, dReal m10, dReal m20, dReal m30,
-                           dReal m01, dReal m11, dReal m21, dReal m31,
-                           dReal m02, dReal m12, dReal m22, dReal m32,
-                           dReal m03, dReal m13, dReal m23, dReal m33)
+                dReal m01, dReal m11, dReal m21, dReal m31,
+                dReal m02, dReal m12, dReal m22, dReal m32,
+                dReal m03, dReal m13, dReal m23, dReal m33)
             {
-                M00 = m00;
-                M10 = m10;
-                M20 = m20;
-                M30 = m30;
-                M01 = m01;
-                M11 = m11;
-                M21 = m21;
-                M31 = m31;
-                M02 = m02;
-                M12 = m12;
-                M22 = m22;
-                M32 = m32;
-                M03 = m03;
-                M13 = m13;
-                M23 = m23;
-                M33 = m33;
+                M00 = m00; M10 = m10; M20 = m20; M30 = m30;
+                M01 = m01; M11 = m11; M21 = m21; M31 = m31;
+                M02 = m02; M12 = m12; M22 = m22; M32 = m32;
+                M03 = m03; M13 = m13; M23 = m23; M33 = m33;
             }
-
             public dReal M00, M10, M20, M30;
             public dReal M01, M11, M21, M31;
             public dReal M02, M12, M22, M32;
             public dReal M03, M13, M23, M33;
         }
-
-        #endregion
-
-        #region Nested type: Quaternion
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Quaternion
@@ -359,9 +278,6 @@ namespace OdeAPI
             public dReal W, X, Y, Z;
         }
 
-        #endregion
-
-        #region Nested type: SurfaceParameters
 
         [StructLayout(LayoutKind.Sequential)]
         public struct SurfaceParameters
@@ -380,44 +296,28 @@ namespace OdeAPI
             public dReal slip2;
         }
 
-        #endregion
-
-        #region Nested type: Vector3
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Vector3
         {
             public Vector3(dReal x, dReal y, dReal z)
             {
-                X = x;
-                Y = y;
-                Z = z;
-                _w = 0.0f;
+                X = x; Y = y; Z = z; _w = 0.0f;
             }
-
             public dReal X, Y, Z;
-            private readonly dReal _w;
+            private dReal _w;
         }
 
-        #endregion
-
-        #region Nested type: Vector4
 
         [StructLayout(LayoutKind.Sequential)]
         public struct Vector4
         {
             public Vector4(dReal x, dReal y, dReal z, dReal w)
             {
-                X = x;
-                Y = y;
-                Z = z;
-                W = w;
+                X = x; Y = y; Z = z; W = w;
             }
-
             public dReal X, Y, Z, W;
         }
-
-        #endregion
 
         #endregion
 
@@ -434,23 +334,19 @@ namespace OdeAPI
         public static extern void BodyAddForce(IntPtr body, dReal fx, dReal fy, dReal fz);
 
         [DllImport("ode", EntryPoint = "dBodyAddForceAtPos"), SuppressUnmanagedCodeSecurity]
-        public static extern void BodyAddForceAtPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py,
-                                                    dReal pz);
+        public static extern void BodyAddForceAtPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py, dReal pz);
 
         [DllImport("ode", EntryPoint = "dBodyAddForceAtRelPos"), SuppressUnmanagedCodeSecurity]
-        public static extern void BodyAddForceAtRelPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py,
-                                                       dReal pz);
+        public static extern void BodyAddForceAtRelPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py, dReal pz);
 
         [DllImport("ode", EntryPoint = "dBodyAddRelForce"), SuppressUnmanagedCodeSecurity]
         public static extern void BodyAddRelForce(IntPtr body, dReal fx, dReal fy, dReal fz);
 
         [DllImport("ode", EntryPoint = "dBodyAddRelForceAtPos"), SuppressUnmanagedCodeSecurity]
-        public static extern void BodyAddRelForceAtPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py,
-                                                       dReal pz);
+        public static extern void BodyAddRelForceAtPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py, dReal pz);
 
         [DllImport("ode", EntryPoint = "dBodyAddRelForceAtRelPos"), SuppressUnmanagedCodeSecurity]
-        public static extern void BodyAddRelForceAtRelPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py,
-                                                          dReal pz);
+        public static extern void BodyAddRelForceAtRelPos(IntPtr body, dReal fx, dReal fy, dReal fz, dReal px, dReal py, dReal pz);
 
         [DllImport("ode", EntryPoint = "dBodyAddRelTorque"), SuppressUnmanagedCodeSecurity]
         public static extern void BodyAddRelTorque(IntPtr body, dReal fx, dReal fy, dReal fz);
@@ -507,14 +403,10 @@ namespace OdeAPI
         public static extern dReal BodyGetAutoDisableTime(IntPtr body);
 
         [DllImport("ode", EntryPoint = "dBodyGetAngularVel"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* BodyGetAngularVelUnsafe(IntPtr body);
-
+        public extern unsafe static Vector3* BodyGetAngularVelUnsafe(IntPtr body);
         public static Vector3 BodyGetAngularVel(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetAngularVelUnsafe(body));
-            }
+            unsafe { return *(BodyGetAngularVelUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetData"), SuppressUnmanagedCodeSecurity]
@@ -527,14 +419,10 @@ namespace OdeAPI
         public static extern void BodyGetFiniteRotationAxis(IntPtr body, out Vector3 result);
 
         [DllImport("ode", EntryPoint = "dBodyGetForce"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* BodyGetForceUnsafe(IntPtr body);
-
+        public extern unsafe static Vector3* BodyGetForceUnsafe(IntPtr body);
         public static Vector3 BodyGetForce(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetForceUnsafe(body));
-            }
+            unsafe { return *(BodyGetForceUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetGravityMode"), SuppressUnmanagedCodeSecurity]
@@ -547,14 +435,10 @@ namespace OdeAPI
         public static extern IntPtr BodyGetJoint(IntPtr body, int index);
 
         [DllImport("ode", EntryPoint = "dBodyGetLinearVel"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* BodyGetLinearVelUnsafe(IntPtr body);
-
+        public extern unsafe static Vector3* BodyGetLinearVelUnsafe(IntPtr body);
         public static Vector3 BodyGetLinearVel(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetLinearVelUnsafe(body));
-            }
+            unsafe { return *(BodyGetLinearVelUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetMass"), SuppressUnmanagedCodeSecurity]
@@ -567,28 +451,20 @@ namespace OdeAPI
         public static extern void BodyGetPointVel(IntPtr body, dReal px, dReal py, dReal pz, out Vector3 result);
 
         [DllImport("ode", EntryPoint = "dBodyGetPosition"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* BodyGetPositionUnsafe(IntPtr body);
-
+        public extern unsafe static Vector3* BodyGetPositionUnsafe(IntPtr body);
         public static Vector3 BodyGetPosition(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetPositionUnsafe(body));
-            }
+            unsafe { return *(BodyGetPositionUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetPosRelPoint"), SuppressUnmanagedCodeSecurity]
         public static extern void BodyGetPosRelPoint(IntPtr body, dReal px, dReal py, dReal pz, out Vector3 result);
 
         [DllImport("ode", EntryPoint = "dBodyGetQuaternion"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Quaternion* BodyGetQuaternionUnsafe(IntPtr body);
-
+        public extern unsafe static Quaternion* BodyGetQuaternionUnsafe(IntPtr body);
         public static Quaternion BodyGetQuaternion(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetQuaternionUnsafe(body));
-            }
+            unsafe { return *(BodyGetQuaternionUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetRelPointPos"), SuppressUnmanagedCodeSecurity]
@@ -598,25 +474,17 @@ namespace OdeAPI
         public static extern void BodyGetRelPointVel(IntPtr body, dReal px, dReal py, dReal pz, out Vector3 result);
 
         [DllImport("ode", EntryPoint = "dBodyGetRotation"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Matrix3* BodyGetRotationUnsafe(IntPtr body);
-
+        public extern unsafe static Matrix3* BodyGetRotationUnsafe(IntPtr body);
         public static Matrix3 BodyGetRotation(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetRotationUnsafe(body));
-            }
+            unsafe { return *(BodyGetRotationUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetTorque"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* BodyGetTorqueUnsafe(IntPtr body);
-
+        public extern unsafe static Vector3* BodyGetTorqueUnsafe(IntPtr body);
         public static Vector3 BodyGetTorque(IntPtr body)
         {
-            unsafe
-            {
-                return *(BodyGetTorqueUnsafe(body));
-            }
+            unsafe { return *(BodyGetTorqueUnsafe(body)); }
         }
 
         [DllImport("ode", EntryPoint = "dBodyGetWorld"), SuppressUnmanagedCodeSecurity]
@@ -689,10 +557,10 @@ namespace OdeAPI
         public static extern void BodySetGravityMode(IntPtr body, bool mode);
 
         /// <summary>
-        ///   Sets the Gyroscopic term status on the body specified.
+        /// Sets the Gyroscopic term status on the body specified.
         /// </summary>
-        /// <param name = "body">Pointer to body</param>
-        /// <param name = "enabled">NonZero enabled, Zero disabled</param>
+        /// <param name="body">Pointer to body</param>
+        /// <param name="enabled">NonZero enabled, Zero disabled</param>
         [DllImport("ode", EntryPoint = "dBodySetGyroscopicMode"), SuppressUnmanagedCodeSecurity]
         public static extern void dBodySetGyroscopicMode(IntPtr body, int enabled);
 
@@ -728,47 +596,43 @@ namespace OdeAPI
 
         [DllImport("ode", EntryPoint = "dBoxBox"), SuppressUnmanagedCodeSecurity]
         public static extern void BoxBox(ref Vector3 p1, ref Matrix3 R1,
-                                         ref Vector3 side1, ref Vector3 p2,
-                                         ref Matrix3 R2, ref Vector3 side2,
-                                         ref Vector3 normal, out dReal depth, out int return_code,
-                                         int maxc, out ContactGeom contact, int skip);
+            ref Vector3 side1, ref Vector3 p2,
+            ref Matrix3 R2, ref Vector3 side2,
+            ref Vector3 normal, out dReal depth, out int return_code,
+            int maxc, out ContactGeom contact, int skip);
 
         [DllImport("ode", EntryPoint = "dBoxTouchesBox"), SuppressUnmanagedCodeSecurity]
         public static extern void BoxTouchesBox(ref Vector3 _p1, ref Matrix3 R1,
-                                                ref Vector3 side1, ref Vector3 _p2,
-                                                ref Matrix3 R2, ref Vector3 side2);
+            ref Vector3 side1, ref Vector3 _p2,
+            ref Matrix3 R2, ref Vector3 side2);
 
         [DllImport("ode", EntryPoint = "dCleanupODEAllDataForThread"), SuppressUnmanagedCodeSecurity]
         public static extern void CleanupODEAllDataForThread();
 
         [DllImport("ode", EntryPoint = "dClosestLineSegmentPoints"), SuppressUnmanagedCodeSecurity]
         public static extern void ClosestLineSegmentPoints(ref Vector3 a1, ref Vector3 a2,
-                                                           ref Vector3 b1, ref Vector3 b2,
-                                                           ref Vector3 cp1, ref Vector3 cp2);
+            ref Vector3 b1, ref Vector3 b2,
+            ref Vector3 cp1, ref Vector3 cp2);
 
         [DllImport("ode", EntryPoint = "dCloseODE"), SuppressUnmanagedCodeSecurity]
         public static extern void CloseODE();
 
         [DllImport("ode", EntryPoint = "dCollide"), SuppressUnmanagedCodeSecurity]
-        public static extern int Collide(IntPtr o1, IntPtr o2, int flags,
-                                         [In, Out] ContactGeom[] contactcontactgeomarray, int skip);
-
+        public static extern int Collide(IntPtr o1, IntPtr o2, int flags, [In, Out] ContactGeom[] contactcontactgeomarray, int skip);
         [DllImport("ode", EntryPoint = "dCollide"), SuppressUnmanagedCodeSecurity]
-        public static extern int CollidePtr([In] IntPtr o1, [In] IntPtr o2, [In] int flags, [In] IntPtr contactgeomarray,
-                                            [In] int skip);
+        public static extern int CollidePtr([In] IntPtr o1, [In] IntPtr o2, [In] int flags, [In] IntPtr contactgeomarray, [In] int skip);
 
         [DllImport("ode", EntryPoint = "dConnectingJoint"), SuppressUnmanagedCodeSecurity]
-        public static extern IntPtr ConnectingJoint([In] IntPtr j1, [In] IntPtr j2);
+        public static extern IntPtr ConnectingJoint([In] IntPtr j1, [In]  IntPtr j2);
 
         [DllImport("ode", EntryPoint = "dCreateBox"), SuppressUnmanagedCodeSecurity]
-        public static extern IntPtr CreateBox([In] IntPtr space, [In] dReal lx, [In] dReal ly, [In] dReal lz);
+        public static extern IntPtr CreateBox([In] IntPtr space, [In]  dReal lx, [In]  dReal ly, [In]  dReal lz);
 
         [DllImport("ode", EntryPoint = "dCreateCapsule"), SuppressUnmanagedCodeSecurity]
-        public static extern IntPtr CreateCapsule([In] IntPtr space, [In] dReal radius, [In] dReal length);
+        public static extern IntPtr CreateCapsule([In] IntPtr space, [In]  dReal radius, [In]  dReal length);
 
         [DllImport("ode", EntryPoint = "dCreateConvex"), SuppressUnmanagedCodeSecurity]
-        public static extern IntPtr CreateConvex([In] IntPtr space, [In] dReal[] planes, [In] int planeCount,
-                                                 [In] dReal[] points, [In] int pointCount, [In] int[] polygons);
+        public static extern IntPtr CreateConvex([In] IntPtr space, [In]  dReal[] planes, [In]  int planeCount, [In]  dReal[] points, [In]  int pointCount, [In]  int[] polygons);
 
         [DllImport("ode", EntryPoint = "dCreateCylinder"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr CreateCylinder(IntPtr space, dReal radius, dReal length);
@@ -796,8 +660,7 @@ namespace OdeAPI
 
         [DllImport("ode", EntryPoint = "dCreateTriMesh"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr CreateTriMesh(IntPtr space, IntPtr data,
-                                                  TriCallback callback, TriArrayCallback arrayCallback,
-                                                  TriRayCallback rayCallback);
+            TriCallback callback, TriArrayCallback arrayCallback, TriRayCallback rayCallback);
 
         [DllImport("ode", EntryPoint = "dDot"), SuppressUnmanagedCodeSecurity]
         public static extern dReal Dot(ref dReal X0, ref dReal X1, int n);
@@ -905,36 +768,24 @@ namespace OdeAPI
         public static extern IntPtr GeomGetData(IntPtr geom);
 
         [DllImport("ode", EntryPoint = "dGeomGetOffsetPosition"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* GeomGetOffsetPositionUnsafe(IntPtr geom);
-
+        public extern unsafe static Vector3* GeomGetOffsetPositionUnsafe(IntPtr geom);
         public static Vector3 GeomGetOffsetPosition(IntPtr geom)
         {
-            unsafe
-            {
-                return *(GeomGetOffsetPositionUnsafe(geom));
-            }
+            unsafe { return *(GeomGetOffsetPositionUnsafe(geom)); }
         }
 
         [DllImport("ode", EntryPoint = "dGeomGetOffsetRotation"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Matrix3* GeomGetOffsetRotationUnsafe(IntPtr geom);
-
+        public extern unsafe static Matrix3* GeomGetOffsetRotationUnsafe(IntPtr geom);
         public static Matrix3 GeomGetOffsetRotation(IntPtr geom)
         {
-            unsafe
-            {
-                return *(GeomGetOffsetRotationUnsafe(geom));
-            }
+            unsafe { return *(GeomGetOffsetRotationUnsafe(geom)); }
         }
 
         [DllImport("ode", EntryPoint = "dGeomGetPosition"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Vector3* GeomGetPositionUnsafe(IntPtr geom);
-
+        public extern unsafe static Vector3* GeomGetPositionUnsafe(IntPtr geom);
         public static Vector3 GeomGetPosition(IntPtr geom)
         {
-            unsafe
-            {
-                return *(GeomGetPositionUnsafe(geom));
-            }
+            unsafe { return *(GeomGetPositionUnsafe(geom)); }
         }
 
         [DllImport("ode", EntryPoint = "dGeomGetQuaternion"), SuppressUnmanagedCodeSecurity]
@@ -944,14 +795,10 @@ namespace OdeAPI
         public static extern void GeomCopyQuaternion(IntPtr geom, out dReal X);
 
         [DllImport("ode", EntryPoint = "dGeomGetRotation"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Matrix3* GeomGetRotationUnsafe(IntPtr geom);
-
+        public extern unsafe static Matrix3* GeomGetRotationUnsafe(IntPtr geom);
         public static Matrix3 GeomGetRotation(IntPtr geom)
         {
-            unsafe
-            {
-                return *(GeomGetRotationUnsafe(geom));
-            }
+            unsafe { return *(GeomGetRotationUnsafe(geom)); }
         }
 
         [DllImport("ode", EntryPoint = "dGeomGetSpace"), SuppressUnmanagedCodeSecurity]
@@ -959,64 +806,53 @@ namespace OdeAPI
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildByte"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildByte(IntPtr d, byte[] pHeightData, int bCopyHeightData,
-                                                               dReal width, dReal depth, int widthSamples,
-                                                               int depthSamples,
-                                                               dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildByte"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildByte(IntPtr d, IntPtr pHeightData, int bCopyHeightData,
-                                                               dReal width, dReal depth, int widthSamples,
-                                                               int depthSamples,
-                                                               dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildCallback"), SuppressUnmanagedCodeSecurity]
-        public static extern void GeomHeightfieldDataBuildCallback(IntPtr d, IntPtr pUserData,
-                                                                   HeightfieldGetHeight pCallback,
-                                                                   dReal width, dReal depth, int widthSamples,
-                                                                   int depthSamples,
-                                                                   dReal scale, dReal offset, dReal thickness, int bWrap);
+        public static extern void GeomHeightfieldDataBuildCallback(IntPtr d, IntPtr pUserData, HeightfieldGetHeight pCallback,
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildShort"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildShort(IntPtr d, ushort[] pHeightData, int bCopyHeightData,
-                                                                dReal width, dReal depth, int widthSamples,
-                                                                int depthSamples,
-                                                                dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildShort"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildShort(IntPtr d, short[] pHeightData, int bCopyHeightData,
-                                                                dReal width, dReal depth, int widthSamples,
-                                                                int depthSamples,
-                                                                dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildShort"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildShort(IntPtr d, IntPtr pHeightData, int bCopyHeightData,
-                                                                dReal width, dReal depth, int widthSamples,
-                                                                int depthSamples,
-                                                                dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildSingle"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildSingle(IntPtr d, float[] pHeightData, int bCopyHeightData,
-                                                                 dReal width, dReal depth, int widthSamples,
-                                                                 int depthSamples,
-                                                                 dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildSingle"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildSingle(IntPtr d, IntPtr pHeightData, int bCopyHeightData,
-                                                                 dReal width, dReal depth, int widthSamples,
-                                                                 int depthSamples,
-                                                                 dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildDouble"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildDouble(IntPtr d, double[] pHeightData, int bCopyHeightData,
-                                                                 dReal width, dReal depth, int widthSamples,
-                                                                 int depthSamples,
-                                                                 dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataBuildDouble"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomHeightfieldDataBuildDouble(IntPtr d, IntPtr pHeightData, int bCopyHeightData,
-                                                                 dReal width, dReal depth, int widthSamples,
-                                                                 int depthSamples,
-                                                                 dReal scale, dReal offset, dReal thickness, int bWrap);
+                dReal width, dReal depth, int widthSamples, int depthSamples,
+                dReal scale, dReal offset, dReal thickness, int bWrap);
 
         [DllImport("ode", EntryPoint = "dGeomHeightfieldDataCreate"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr GeomHeightfieldDataCreate();
@@ -1091,8 +927,7 @@ namespace OdeAPI
         public static extern void GeomSetCollideBits(IntPtr geom, int bits);
 
         [DllImport("ode", EntryPoint = "dGeomSetConvex"), SuppressUnmanagedCodeSecurity]
-        public static extern IntPtr GeomSetConvex(IntPtr geom, dReal[] planes, int planeCount, dReal[] points,
-                                                  int pointCount, int[] polygons);
+        public static extern IntPtr GeomSetConvex(IntPtr geom, dReal[] planes, int planeCount, dReal[] points, int pointCount, int[] polygons);
 
         [DllImport("ode", EntryPoint = "dGeomSetData"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomSetData(IntPtr geom, IntPtr data);
@@ -1171,69 +1006,69 @@ namespace OdeAPI
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildDouble"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildDouble(IntPtr d,
-                                                             double[] vertices, int vertexStride, int vertexCount,
-                                                             int[] indices, int indexCount, int triStride);
+            double[] vertices, int vertexStride, int vertexCount,
+            int[] indices, int indexCount, int triStride);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildDouble"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildDouble(IntPtr d,
-                                                             IntPtr vertices, int vertexStride, int vertexCount,
-                                                             IntPtr indices, int indexCount, int triStride);
+            IntPtr vertices, int vertexStride, int vertexCount,
+            IntPtr indices, int indexCount, int triStride);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildDouble1"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildDouble1(IntPtr d,
-                                                              double[] vertices, int vertexStride, int vertexCount,
-                                                              int[] indices, int indexCount, int triStride,
-                                                              double[] normals);
+            double[] vertices, int vertexStride, int vertexCount,
+            int[] indices, int indexCount, int triStride,
+            double[] normals);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildDouble1"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildDouble(IntPtr d,
-                                                             IntPtr vertices, int vertexStride, int vertexCount,
-                                                             IntPtr indices, int indexCount, int triStride,
-                                                             IntPtr normals);
+            IntPtr vertices, int vertexStride, int vertexCount,
+            IntPtr indices, int indexCount, int triStride,
+            IntPtr normals);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSimple"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSingle(IntPtr d,
-                                                             dReal[] vertices, int vertexStride, int vertexCount,
-                                                             int[] indices, int indexCount, int triStride);
+            dReal[] vertices, int vertexStride, int vertexCount,
+            int[] indices, int indexCount, int triStride);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSimple"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSingle(IntPtr d,
-                                                             IntPtr vertices, int vertexStride, int vertexCount,
-                                                             IntPtr indices, int indexCount, int triStride);
+            IntPtr vertices, int vertexStride, int vertexCount,
+            IntPtr indices, int indexCount, int triStride);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSimple1"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSingle1(IntPtr d,
-                                                              dReal[] vertices, int vertexStride, int vertexCount,
-                                                              int[] indices, int indexCount, int triStride,
-                                                              dReal[] normals);
+            dReal[] vertices, int vertexStride, int vertexCount,
+            int[] indices, int indexCount, int triStride,
+            dReal[] normals);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSimple1"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSingle1(IntPtr d,
-                                                              IntPtr vertices, int vertexStride, int vertexCount,
-                                                              IntPtr indices, int indexCount, int triStride,
-                                                              IntPtr normals);
+            IntPtr vertices, int vertexStride, int vertexCount,
+            IntPtr indices, int indexCount, int triStride,
+            IntPtr normals);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSingle"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSimple(IntPtr d,
-                                                             float[] vertices, int vertexStride, int vertexCount,
-                                                             int[] indices, int indexCount, int triStride);
+            float[] vertices, int vertexStride, int vertexCount,
+            int[] indices, int indexCount, int triStride);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSingle"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSimple(IntPtr d,
-                                                             IntPtr vertices, int vertexStride, int vertexCount,
-                                                             IntPtr indices, int indexCount, int triStride);
+            IntPtr vertices, int vertexStride, int vertexCount,
+            IntPtr indices, int indexCount, int triStride);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSingle1"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSimple1(IntPtr d,
-                                                              float[] vertices, int vertexStride, int vertexCount,
-                                                              int[] indices, int indexCount, int triStride,
-                                                              float[] normals);
+            float[] vertices, int vertexStride, int vertexCount,
+            int[] indices, int indexCount, int triStride,
+            float[] normals);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshDataBuildSingle1"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshDataBuildSimple1(IntPtr d,
-                                                              IntPtr vertices, int vertexStride, int vertexCount,
-                                                              IntPtr indices, int indexCount, int triStride,
-                                                              IntPtr normals);
+            IntPtr vertices, int vertexStride, int vertexCount,
+            IntPtr indices, int indexCount, int triStride,
+            IntPtr normals);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshClearTCCache"), SuppressUnmanagedCodeSecurity]
         public static extern void GeomTriMeshClearTCCache(IntPtr g);
@@ -1269,28 +1104,23 @@ namespace OdeAPI
         public static extern IntPtr GeomTriMeshGetData(IntPtr g);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshGetLastTransform"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe Matrix4* GeomTriMeshGetLastTransformUnsafe(IntPtr geom);
-
+        public extern unsafe static Matrix4* GeomTriMeshGetLastTransformUnsafe(IntPtr geom);
         public static Matrix4 GeomTriMeshGetLastTransform(IntPtr geom)
         {
-            unsafe
-            {
-                return *(GeomTriMeshGetLastTransformUnsafe(geom));
-            }
+            unsafe { return *(GeomTriMeshGetLastTransformUnsafe(geom)); }
         }
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshGetPoint"), SuppressUnmanagedCodeSecurity]
-        public static extern void GeomTriMeshGetPoint(IntPtr g, int index, dReal u, dReal v, ref Vector3 outVec);
+        public extern static void GeomTriMeshGetPoint(IntPtr g, int index, dReal u, dReal v, ref Vector3 outVec);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshGetRayCallback"), SuppressUnmanagedCodeSecurity]
         public static extern TriRayCallback GeomTriMeshGetRayCallback(IntPtr g);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshGetTriangle"), SuppressUnmanagedCodeSecurity]
-        public static extern void GeomTriMeshGetTriangle(IntPtr g, int index, ref Vector3 v0, ref Vector3 v1,
-                                                         ref Vector3 v2);
+        public extern static void GeomTriMeshGetTriangle(IntPtr g, int index, ref Vector3 v0, ref Vector3 v1, ref Vector3 v2);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshGetTriangleCount"), SuppressUnmanagedCodeSecurity]
-        public static extern int GeomTriMeshGetTriangleCount(IntPtr g);
+        public extern static int GeomTriMeshGetTriangleCount(IntPtr g);
 
         [DllImport("ode", EntryPoint = "dGeomTriMeshGetTriMeshDataID"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr GeomTriMeshGetTriMeshDataID(IntPtr g);
@@ -1437,14 +1267,10 @@ namespace OdeAPI
         public static extern IntPtr JointGetData(IntPtr j);
 
         [DllImport("ode", EntryPoint = "dJointGetFeedback"), SuppressUnmanagedCodeSecurity]
-        public static extern unsafe JointFeedback* JointGetFeedbackUnsafe(IntPtr j);
-
+        public extern unsafe static JointFeedback* JointGetFeedbackUnsafe(IntPtr j);
         public static JointFeedback JointGetFeedback(IntPtr j)
         {
-            unsafe
-            {
-                return *(JointGetFeedbackUnsafe(j));
-            }
+            unsafe { return *(JointGetFeedbackUnsafe(j)); }
         }
 
         [DllImport("ode", EntryPoint = "dJointGetHingeAnchor"), SuppressUnmanagedCodeSecurity]
@@ -1604,8 +1430,7 @@ namespace OdeAPI
         public static extern void JointSetHingeAnchor(IntPtr j, dReal x, dReal y, dReal z);
 
         [DllImport("ode", EntryPoint = "dJointSetHingeAnchorDelta"), SuppressUnmanagedCodeSecurity]
-        public static extern void JointSetHingeAnchorDelta(IntPtr j, dReal x, dReal y, dReal z, dReal ax, dReal ay,
-                                                           dReal az);
+        public static extern void JointSetHingeAnchorDelta(IntPtr j, dReal x, dReal y, dReal z, dReal ax, dReal ay, dReal az);
 
         [DllImport("ode", EntryPoint = "dJointSetHingeAxis"), SuppressUnmanagedCodeSecurity]
         public static extern void JointSetHingeAxis(IntPtr j, dReal x, dReal y, dReal z);
@@ -1659,8 +1484,7 @@ namespace OdeAPI
         public static extern void JointSetSliderAxis(IntPtr j, dReal x, dReal y, dReal z);
 
         [DllImport("ode", EntryPoint = "dJointSetSliderAxisDelta"), SuppressUnmanagedCodeSecurity]
-        public static extern void JointSetSliderAxisDelta(IntPtr j, dReal x, dReal y, dReal z, dReal ax, dReal ay,
-                                                          dReal az);
+        public static extern void JointSetSliderAxisDelta(IntPtr j, dReal x, dReal y, dReal z, dReal ax, dReal ay, dReal az);
 
         [DllImport("ode", EntryPoint = "dJointSetSliderParam"), SuppressUnmanagedCodeSecurity]
         public static extern void JointSetSliderParam(IntPtr j, int parameter, dReal value);
@@ -1705,22 +1529,19 @@ namespace OdeAPI
         public static extern void MassSetCapsule(out Mass mass, dReal density, int direction, dReal radius, dReal length);
 
         [DllImport("ode", EntryPoint = "dMassSetCapsuleTotal"), SuppressUnmanagedCodeSecurity]
-        public static extern void MassSetCapsuleTotal(out Mass mass, dReal total_mass, int direction, dReal radius,
-                                                      dReal length);
+        public static extern void MassSetCapsuleTotal(out Mass mass, dReal total_mass, int direction, dReal radius, dReal length);
 
         [DllImport("ode", EntryPoint = "dMassSetCylinder"), SuppressUnmanagedCodeSecurity]
-        public static extern void MassSetCylinder(out Mass mass, dReal density, int direction, dReal radius,
-                                                  dReal length);
+        public static extern void MassSetCylinder(out Mass mass, dReal density, int direction, dReal radius, dReal length);
 
         [DllImport("ode", EntryPoint = "dMassSetCylinderTotal"), SuppressUnmanagedCodeSecurity]
-        public static extern void MassSetCylinderTotal(out Mass mass, dReal total_mass, int direction, dReal radius,
-                                                       dReal length);
+        public static extern void MassSetCylinderTotal(out Mass mass, dReal total_mass, int direction, dReal radius, dReal length);
 
         [DllImport("ode", EntryPoint = "dMassSetParameters"), SuppressUnmanagedCodeSecurity]
         public static extern void MassSetParameters(out Mass mass, dReal themass,
-                                                    dReal cgx, dReal cgy, dReal cgz,
-                                                    dReal i11, dReal i22, dReal i33,
-                                                    dReal i12, dReal i13, dReal i23);
+             dReal cgx, dReal cgy, dReal cgz,
+             dReal i11, dReal i22, dReal i33,
+             dReal i12, dReal i13, dReal i23);
 
         [DllImport("ode", EntryPoint = "dMassSetSphere"), SuppressUnmanagedCodeSecurity]
         public static extern void MassSetSphere(out Mass mass, dReal density, dReal radius);
@@ -1930,12 +1751,10 @@ namespace OdeAPI
         public static extern dReal WorldGetMaxAngularSpeed(IntPtr world);
 
         [DllImport("ode", EntryPoint = "dWorldImpulseToForce"), SuppressUnmanagedCodeSecurity]
-        public static extern void WorldImpulseToForce(IntPtr world, dReal stepsize, dReal ix, dReal iy, dReal iz,
-                                                      out Vector3 force);
+        public static extern void WorldImpulseToForce(IntPtr world, dReal stepsize, dReal ix, dReal iy, dReal iz, out Vector3 force);
 
         [DllImport("ode", EntryPoint = "dWorldImpulseToForce"), SuppressUnmanagedCodeSecurity]
-        public static extern void WorldImpulseToForce(IntPtr world, dReal stepsize, dReal ix, dReal iy, dReal iz,
-                                                      out dReal forceX);
+        public static extern void WorldImpulseToForce(IntPtr world, dReal stepsize, dReal ix, dReal iy, dReal iz, out dReal forceX);
 
         [DllImport("ode", EntryPoint = "dWorldQuickStep"), SuppressUnmanagedCodeSecurity]
         public static extern void WorldQuickStep(IntPtr world, dReal stepsize);
@@ -2008,5 +1827,20 @@ namespace OdeAPI
 
         [DllImport("ode", EntryPoint = "dWorldExportDIF"), SuppressUnmanagedCodeSecurity]
         public static extern void WorldExportDIF(IntPtr world, string filename, bool append, string prefix);
+
+        public static void SetODEFile()
+        {
+            try
+            {
+                if (System.IO.File.Exists("ode.dll"))
+                    System.IO.File.Delete("ode.dll");
+                string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
+                System.IO.File.Copy(fileName, "ode.dll");
+            }
+            catch (Exception ex)
+            {
+                OpenSim.Framework.MainConsole.Instance.Output("[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
+            }
+        }
     }
 }

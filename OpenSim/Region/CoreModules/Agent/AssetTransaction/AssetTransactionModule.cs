@@ -45,7 +45,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             new Dictionary<UUID, AgentAssetTransactions>();
 
         private readonly Dictionary<UUID, IScene> RegisteredScenes = new Dictionary<UUID, IScene>();
-        private bool m_dumpAssetsToFile;
         private IScene m_scene;
 
         //[Obsolete] //As long as this is being used to get objects that are not region specific, this is fine to use
@@ -270,7 +269,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             {
                 if (!AgentTransactions.ContainsKey(userID))
                 {
-                    AgentAssetTransactions transactions = new AgentAssetTransactions(userID, this, m_dumpAssetsToFile);
+                    AgentAssetTransactions transactions = new AgentAssetTransactions(userID, this);
                     AgentTransactions.Add(userID, transactions);
                 }
 

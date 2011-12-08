@@ -481,9 +481,9 @@ namespace OpenSim.Data.MySQL
             {
                 r = c.ExecuteReader();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                m_log.Error("[REGION DB]: MySQL error in ExecuteReader: " + e.Message);
+                //m_log.Error("[REGION DB]: MySQL error in ExecuteReader: " + e.Message);
                 throw;
             }
 
@@ -496,9 +496,9 @@ namespace OpenSim.Data.MySQL
             {
                 c.ExecuteNonQuery();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                m_log.Error("[REGION DB]: MySQL error in ExecuteNonQuery: " + e.Message);
+                //m_log.Error("[REGION DB]: MySQL error in ExecuteNonQuery: " + e.Message);
                 throw;
             }
         }

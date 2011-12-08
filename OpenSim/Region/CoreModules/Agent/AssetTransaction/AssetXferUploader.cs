@@ -38,7 +38,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
     public class AssetXferUploader
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly bool m_dumpAssetToFile;
         private readonly AgentAssetTransactions m_userTransactions;
 
         private UUID InventFolder = UUID.Zero;
@@ -56,10 +55,9 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         private sbyte type;
         private byte wearableType;
 
-        public AssetXferUploader(AgentAssetTransactions transactions, bool dumpAssetToFile)
+        public AssetXferUploader(AgentAssetTransactions transactions)
         {
             m_userTransactions = transactions;
-            m_dumpAssetToFile = dumpAssetToFile;
         }
 
         /// <summary>
@@ -161,29 +159,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
             m_log.DebugFormat(
                 "[ASSET TRANSACTIONS]: Uploaded asset {0} for transaction {1}", m_asset.ID, TransactionID);
-
-            if (m_dumpAssetToFile)
-            {
-                DateTime now = DateTime.Now;
-                string filename =
-                    String.Format("{6}_{7}_{0:d2}{1:d2}{2:d2}_{3:d2}{4:d2}{5:d2}.dat", now.Year, now.Month, now.Day,
-                                  now.Hour, now.Minute, now.Second, m_asset.Name, m_asset.Type);
-                SaveAssetToFile(filename, m_asset.Data);
-            }
-        }
-
-        private void SaveAssetToFile(string filename, byte[] data)
-        {
-            string assetPath = "UserAssets";
-            if (!Directory.Exists(assetPath))
-            {
-                Directory.CreateDirectory(assetPath);
-            }
-            FileStream fs = File.Create(Path.Combine(assetPath, filename));
-            BinaryWriter bw = new BinaryWriter(fs);
-            bw.Write(data);
-            bw.Close();
-            fs.Close();
         }
 
         public void RequestCreateInventoryItem(IClientAPI remoteClient, UUID transactionID, UUID folderID,

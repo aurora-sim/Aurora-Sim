@@ -105,7 +105,6 @@ namespace RunTimeCompiler
         private List<string> GetReferences(XmlDocument doc, XmlNamespaceManager mgr)
         {
             XmlNodeList nodes;
-            List<string> references;
             nodes = doc.SelectNodes("/x:Project/x:ItemGroup/x:Reference", mgr);
             return (from XmlNode child in nodes select child.Attributes["Include"].InnerText).ToList();
         }

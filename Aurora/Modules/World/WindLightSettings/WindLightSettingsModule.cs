@@ -432,8 +432,6 @@ namespace Aurora.Modules
                         if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
                             innerMap = (OSDMap) map["WindLight"];
 
-                        const string removeThisMap = "";
-
                         foreach (KeyValuePair<string, OSD> kvp in innerMap)
                         {
                             OSDMap lsdMap = (OSDMap) kvp.Value;
@@ -447,9 +445,6 @@ namespace Aurora.Modules
                                 return responsedata;
                             }
                         }
-
-                        if (removeThisMap != "")
-                            innerMap.Remove(removeThisMap);
 
                         innerMap[lsd.minEffectiveAltitude.ToString()] = lsd.ToOSD();
 

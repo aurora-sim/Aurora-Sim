@@ -121,7 +121,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                             {
                                 try
                                 {
-                                    RegionManager manager = new RegionManager(true, false, m_openSim);
+                                    RegionManager manager = new RegionManager(true, true, m_openSim);
                                     Application.Run(manager);
                                     done = true;
                                 }

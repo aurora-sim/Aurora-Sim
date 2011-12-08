@@ -42,8 +42,6 @@ namespace OpenSim.Services.RobustCompat
             LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IRegistryCore m_registry;
-
         public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];

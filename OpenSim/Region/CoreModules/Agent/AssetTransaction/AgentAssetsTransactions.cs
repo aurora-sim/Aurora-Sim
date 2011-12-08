@@ -43,24 +43,22 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // Fields
-        private readonly bool m_dumpAssetsToFile;
         public AssetTransactionModule Manager;
         public UUID UserID;
         public Dictionary<UUID, AssetXferUploader> XferUploaders = new Dictionary<UUID, AssetXferUploader>();
 
         // Methods
-        public AgentAssetTransactions(UUID agentID, AssetTransactionModule manager, bool dumpAssetsToFile)
+        public AgentAssetTransactions(UUID agentID, AssetTransactionModule manager)
         {
             UserID = agentID;
             Manager = manager;
-            m_dumpAssetsToFile = dumpAssetsToFile;
         }
 
         public AssetXferUploader RequestXferUploader(UUID transactionID)
         {
             if (!XferUploaders.ContainsKey(transactionID))
             {
-                AssetXferUploader uploader = new AssetXferUploader(this, m_dumpAssetsToFile);
+                AssetXferUploader uploader = new AssetXferUploader(this);
 
                 lock (XferUploaders)
                 {

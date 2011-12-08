@@ -163,8 +163,6 @@ namespace OpenSim.Region.Framework.Scenes
         // Default AV Height
         private float m_avHeight = 1.56f;
 
-        private ulong crossingFromRegion;
-
         private readonly Vector3[] Dir_Vectors = new Vector3[12];
 
         /// <summary>
@@ -405,8 +403,6 @@ namespace OpenSim.Region.Framework.Scenes
         public bool Frozen { get; set; }
 
         public bool IsJumping { get; set; }
-
-        private bool ClientIsStarting = true;
 
         public bool SetAlwaysRun
         {

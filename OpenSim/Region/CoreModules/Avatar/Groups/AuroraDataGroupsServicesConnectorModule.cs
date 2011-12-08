@@ -57,7 +57,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private IUserAccountService m_accountService;
 
         private bool m_connectorEnabled;
-        private bool m_notConnectedBecauseOfMissing;
 
         #region IGroupsServicesConnector Members
 
@@ -403,7 +402,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
                 m_connectorEnabled = false;
-                m_notConnectedBecauseOfMissing = true;
             }
             if (m_connectorEnabled)
             {
