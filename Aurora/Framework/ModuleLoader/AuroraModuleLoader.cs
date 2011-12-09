@@ -37,7 +37,7 @@ namespace Aurora.Framework
 {
     public static class AuroraModuleLoader
     {
-        private const bool ALLOW_CACHE = true;
+        private static bool ALLOW_CACHE = true;
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static List<string> dllBlackList;
         private static readonly List<string> firstLoad = new List<string>();

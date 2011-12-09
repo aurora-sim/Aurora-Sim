@@ -219,6 +219,31 @@ namespace OpenSim.Services.UserAccountService
 
         #region Console commands
 
+        protected void HandleSetTitle(string[] cmdparams)
+        {
+            string firstName;
+            string lastName;
+            string title;
+
+            firstName = cmdparams.Length < 4 ? MainConsole.Instance.CmdPrompt("First name") : cmdparams[3];
+
+            lastName = cmdparams.Length < 5 ? MainConsole.Instance.CmdPrompt("Last name") : cmdparams[4];
+
+            UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
+            if (account == null)
+            {
+                m_log.Info("No such user");
+                return;
+            }
+            title = cmdparams.Length < 6 ? MainConsole.Instance.CmdPrompt("User Title") : Util.CombineParams(cmdparams, 5);
+            account.UserTitle = title;
+            bool success = StoreUserAccount(account);
+            if (!success)
+                m_log.InfoFormat("Unable to set user profile title for account {0} {1}.", firstName, lastName);
+            else
+                m_log.InfoFormat("User profile title set for user {0} {1} to {2}", firstName, lastName, title);
+        }
+
         protected void HandleSetUserLevel(string[] cmdparams)
         {
             string firstName;
@@ -398,10 +423,15 @@ namespace OpenSim.Services.UserAccountService
                 MainConsole.Instance.Commands.AddCommand(
                     "set user level",
                     "set user level [<first> [<last> [<level>]]]",
-                    "Set user level. If >= 200 and 'allow_grid_gods = true' in OpenSim.ini, "
+                    "Set user level. If the user's level is > 0, "
                     + "this account will be treated as god-moded. "
                     + "It will also affect the 'login level' command. ",
                     HandleSetUserLevel);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set user profile title",
+                    "set user profile title [<first> [<last> [<Title>]]]",
+                    "Sets the title (Normally resident) in a user's title to some custom value.",
+                    HandleSetTitle);
             }
             registry.RegisterModuleInterface<IUserAccountService>(this);
         }
