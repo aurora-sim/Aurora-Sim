@@ -270,25 +270,26 @@ namespace OpenSim.Services.CapsService
                     if (start >= texture.Data.Length)
                     {
                         response.StatusCode = (int)System.Net.HttpStatusCode.RequestedRangeNotSatisfiable;
-                        return;
                     }
-
-                    end = Utils.Clamp(end, 0, texture.Data.Length - 1);
-                    start = Utils.Clamp(start, 0, end);
-                    int len = end - start + 1;
-
-                    //m_log.Debug("Serving " + start + " to " + end + " of " + texture.Data.Length + " bytes for texture " + texture.ID);
-
-                    if (len < texture.Data.Length)
-                        response.StatusCode = (int)System.Net.HttpStatusCode.PartialContent;
                     else
-                        response.StatusCode = (int)System.Net.HttpStatusCode.OK;
+                    {
+                        end = Utils.Clamp(end, 0, texture.Data.Length - 1);
+                        start = Utils.Clamp(start, 0, end);
+                        int len = end - start + 1;
 
-                    response.ContentLength = len;
-                    response.ContentType = texture.TypeString;
-                    response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
+                        //m_log.Debug("Serving " + start + " to " + end + " of " + texture.Data.Length + " bytes for texture " + texture.ID);
 
-                    response.Body.Write(texture.Data, start, len);
+                        if (len < texture.Data.Length)
+                            response.StatusCode = (int)System.Net.HttpStatusCode.PartialContent;
+                        else
+                            response.StatusCode = (int)System.Net.HttpStatusCode.OK;
+
+                        response.ContentLength = len;
+                        response.ContentType = texture.TypeString;
+                        response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
+
+                        response.Body.Write(texture.Data, start, len);
+                    }
                 }
                 else
                 {
