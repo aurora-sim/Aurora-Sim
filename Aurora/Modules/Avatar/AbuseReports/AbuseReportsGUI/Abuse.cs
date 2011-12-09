@@ -154,7 +154,7 @@ namespace Aurora.Modules.AbuseReportsGUI
                 TextureID = Util.BLANK_TEXTURE_UUID;
 
             AssetBase asset = m_assetService.Get(TextureID.ToString());
-            if (asset == null)
+            if (asset == null || m_decoder == null)
                 return new Bitmap(1, 1);
             Image image = m_decoder.DecodeToImage(asset.Data);
             if (image != null)

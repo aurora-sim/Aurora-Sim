@@ -53,7 +53,7 @@ namespace OpenSim.Services.Connectors
             try
             {
                 List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportsServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
                     Dictionary<string, object> ar = abuse_report.ToKeyValuePairs();
@@ -77,7 +77,7 @@ namespace OpenSim.Services.Connectors
                 Dictionary<string, object> send = new Dictionary<string, object>
                                                       {{"Password", Password}, {"METHOD", "GetAbuseReport"}};
                 List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportsServerURI");
                 return new AbuseReport(WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                            m_ServerURIs[
                                                                                                                0],
@@ -104,7 +104,7 @@ namespace OpenSim.Services.Connectors
                                                           {"METHOD", "GetAbuseReports"}
                                                       };
                 List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportsServerURI");
                 Dictionary<string, object> ars =
                     WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                         m_ServerURIs[0],
@@ -126,7 +126,7 @@ namespace OpenSim.Services.Connectors
                 send.Add("Password", Password);
                 send.Add("METHOD", "AddAbuseReport");
                 List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportsServerURI");
                 SynchronousRestFormsRequester.MakeRequest("POST",
                                                           m_ServerURIs[0],
                                                           WebUtils.BuildQueryString(send));

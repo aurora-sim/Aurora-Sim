@@ -1,0 +1,21 @@
+[Modules]
+    ;; Select your preferred caching module
+    ;;
+    ;; This is the flotsam cache, it is the most developed cache and includes memory and disk caching support.
+    ;; This is the recommened asset cache
+    Include-FlotsamCache = AuroraServerConfiguration/AssetCache/FlotsamCache.ini
+
+    ;; The Cenome asset cache is a memory cache, and is configurable for how long and the maximum amount of memory usage.
+    ;Include-CenomeCache = AuroraServerConfiguration/AssetCache/CenomeCache.ini
+
+    ;; This is the core asset cache. It is EXTREMELY NOT recommended to use this cache, and can slow down your sim!
+    ;AssetCaching = CoreAssetCache;
+	
+[ImageDecoding]
+    ;; Use CSJ2K for layer boundary decoding if true, OpenJPEG is used if false
+    ;; Default is false
+    UseCSJ2K = false
+
+    ;; Use the J2K cache to store decoded textures
+    ;; NOT RECOMMENDED TO DISABLE
+    UseJ2KCache = true;

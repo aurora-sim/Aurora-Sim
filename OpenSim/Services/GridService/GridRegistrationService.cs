@@ -273,9 +273,12 @@ namespace OpenSim.Services.GridService
                 {
                     if (urls.VersionNumber == GridRegistrationURLs.CurrentVersionNumber)
                     {
-                        m_log.Warn("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
-                            (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID +
-                            ", checkModuleNames: " + CheckModuleNames(urls));
+                        if (CheckModuleNames(urls))
+                        {
+                            m_log.Warn("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
+                                (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID +
+                                ", checkModuleNames: " + CheckModuleNames(urls));
+                        }
                     }
                     RemoveUrlsForClient(urls.SessionID);
                 }

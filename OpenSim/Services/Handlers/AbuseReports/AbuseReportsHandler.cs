@@ -33,6 +33,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using Aurora.Simulation.Base;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using log4net;
@@ -44,11 +45,15 @@ namespace OpenSim.Services.Handlers.AbuseReports
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly IAbuseReports m_AbuseReportsService;
+        private readonly string m_SessionID;
+        private readonly IRegistryCore m_registry;
 
-        public AbuseReportsHandler(IAbuseReports service) :
-            base("POST", "/abusereport")
+        public AbuseReportsHandler(string url, IAbuseReports service, IRegistryCore reg, string SessionID) :
+            base("POST", url)
         {
             m_AbuseReportsService = service;
+            m_registry = reg;
+            m_SessionID = SessionID;
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -68,18 +73,32 @@ namespace OpenSim.Services.Handlers.AbuseReports
 
                 if (!request.ContainsKey("METHOD"))
                     return FailureResult();
+                IGridRegistrationService urlModule =
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
 
                 string method = request["METHOD"].ToString();
-
+                            
                 switch (method)
                 {
                     case "AddAbuseReport":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
+                                return FailureResult();
                         return AddAbuseReport(request);
                     case "GetAbuseReport":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
                         return GetAbuseReport(request);
                     case "UpdateAbuseReport":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
                         return UpdateAbuseReport(request);
                     case "UpdateAbuseReports":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
                         return GetAbuseReports(request);
                 }
                 m_log.DebugFormat("[ABUSEREPORT HANDLER]: unknown method {0} request {1}", method.Length, method);

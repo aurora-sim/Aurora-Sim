@@ -32,6 +32,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using Aurora.Modules.AbuseReportsGUI;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -41,6 +42,47 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
+    public class AbuseReportsGUIService : IService
+    {
+        #region IService Members
+
+        private IRegistryCore m_registry;
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand("open abusereportsGUI",
+                                                         "open abusereportsGUI",
+                                                         "Opens the abuse reports GUI", OpenGUI);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        #region GUI Code
+
+        protected void OpenGUI(string[] cmdparams)
+        {
+            Thread t = new Thread(ThreadProcARGUI);
+            t.Start();
+        }
+
+        public void ThreadProcARGUI()
+        {
+            Culture.SetCurrentCulture();
+            Application.Run(new Abuse(m_registry.RequestModuleInterface<IAssetService>(), m_registry.RequestModuleInterface<IJ2KDecoder>()));
+        }
+
+        #endregion
+    }
     /// <summary>
     ///   Enables the saving of abuse reports to the database
     /// </summary>
@@ -50,11 +92,6 @@ namespace Aurora.Modules
 
         private readonly List<IScene> m_SceneList = new List<IScene>();
         private bool m_enabled;
-
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
 
         #region ISharedRegionModule Members
 
@@ -76,10 +113,6 @@ namespace Aurora.Modules
                     m_SceneList.Add(scene);
             }
 
-            if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("open abusereportsGUI",
-                                                         "open abusereportsGUI",
-                                                         "Opens the abuse reports GUI", OpenGUI);
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
             //Disabled until complete
@@ -229,22 +262,6 @@ namespace Aurora.Modules
             if (conn != null)
                 conn.AddAbuseReport(report);
         }
-
-        #region GUI Code
-
-        protected void OpenGUI(string[] cmdparams)
-        {
-            Thread t = new Thread(ThreadProcARGUI);
-            t.Start();
-        }
-
-        public void ThreadProcARGUI()
-        {
-            Culture.SetCurrentCulture();
-            Application.Run(new Abuse(m_SceneList[0].AssetService, m_SceneList[0].RequestModuleInterface<IJ2KDecoder>()));
-        }
-
-        #endregion
 
         #region Disabled CAPS code
 

@@ -32,19 +32,19 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Aurora.Simulation.Base;
 using CSJ2K;
+using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenSim.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureSender
 {
     public delegate void J2KDecodeDelegate(UUID assetID);
 
-    public class J2KDecoderModule : ISharedRegionModule, IJ2KDecoder
+    public class J2KDecoderModule : IService, IJ2KDecoder
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -65,68 +65,8 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         /// </summary>
         private IImprovedAssetCache m_cache;
 
-        /// <summary>
-        ///   Reference to a scene (doesn't matter which one as long as it can load the cache module)
-        /// </summary>
-        private IScene m_scene;
-
         private bool m_useCache = true;
-
-        #region IRegionModule
-
         private bool m_useCSJ2K = true;
-
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
-
-        public string Name
-        {
-            get { return "J2KDecoderModule"; }
-        }
-
-        public void Initialise(IConfigSource source)
-        {
-            IConfig imageConfig = source.Configs["ImageDecoding"];
-            if (imageConfig != null)
-            {
-                m_useCSJ2K = imageConfig.GetBoolean("UseCSJ2K", m_useCSJ2K);
-                m_useCache = imageConfig.GetBoolean("UseJ2KCache", m_useCache);
-            }
-        }
-
-        public void AddRegion(IScene scene)
-        {
-            if (m_scene == null)
-                m_scene = scene;
-
-            scene.RegisterModuleInterface<IJ2KDecoder>(this);
-        }
-
-        public void RemoveRegion(IScene scene)
-        {
-        }
-
-        public void RegionLoaded(IScene scene)
-        {
-            m_cache = m_scene.RequestModuleInterface<IImprovedAssetCache>();
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        #endregion IRegionModule
 
         #region IJ2KDecoder
 
@@ -347,7 +287,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 string assetID = "j2kCache_" + AssetId.ToString();
 
                 AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, AssetType.Notecard,
-                                                           m_scene.RegionInfo.RegionID)
+                                                           UUID.Zero)
                                                  {Flags = AssetFlags.Local | AssetFlags.Temperary};
 
                 #region Serialize Layer Data
@@ -435,5 +375,29 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
             return false;
         }
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig imageConfig = config.Configs["ImageDecoding"];
+            if (imageConfig != null)
+            {
+                m_useCSJ2K = imageConfig.GetBoolean("UseCSJ2K", m_useCSJ2K);
+                m_useCache = imageConfig.GetBoolean("UseJ2KCache", m_useCache);
+            }
+            registry.RegisterModuleInterface<IJ2KDecoder>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_cache = registry.RequestModuleInterface<IImprovedAssetCache>();
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
     }
 }

@@ -213,17 +213,6 @@ namespace Flotsam.RegionModules.AssetCache
         {
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
-            IConfig moduleConfig = config.Configs["Modules"];
-
-            if (moduleConfig != null)
-            {
-                string name = moduleConfig.GetString("AssetCaching", String.Empty);
-
-                if (name == Name)
-                {
-                    registry.RegisterModuleInterface<IImprovedAssetCache>(this);
-                }
-            }
         }
 
         public void FinishedStartup()

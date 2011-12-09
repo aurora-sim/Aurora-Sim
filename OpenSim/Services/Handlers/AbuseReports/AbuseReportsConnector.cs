@@ -30,12 +30,14 @@ using Nini.Config;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using OpenMetaverse;
 
 namespace OpenSim.Services.Handlers.AbuseReports
 {
-    public class AbuseReportsConnector : IService
+    public class AbuseReportsConnector : IService, IGridRegistrationUrlModule
     {
         private IAbuseReports m_AbuseReportsService;
+        private IRegistryCore m_registry;
 
         public string Name
         {
@@ -50,6 +52,14 @@ namespace OpenSim.Services.Handlers.AbuseReports
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AbuseReportsInHandler", "") != Name)
+                return;
+
+            m_registry = registry;
+            m_AbuseReportsService = registry.RequestModuleInterface<IAbuseReports>();
+
+            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
         public void FinishedStartup()
@@ -58,26 +68,36 @@ namespace OpenSim.Services.Handlers.AbuseReports
 
         #endregion
 
-        public void PostInitialize(IConfigSource config, IRegistryCore registry)
+        #region IGridRegistrationUrlModule Members
+
+        public string UrlName
         {
-            m_AbuseReportsService = registry.RequestModuleInterface<IAbuseReports>();
+            get { return "AbuseReportsServerURI"; }
         }
 
-        public void PostStart(IConfigSource config, IRegistryCore registry)
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AbuseReportsInHandler", "") != Name)
-                return;
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
 
-            IHttpServer server =
-                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
-                    (uint) handlerConfig.GetInt("AbuseReportsInHandlerPort"));
-
-            server.AddStreamHandler(new AbuseReportsHandler(m_AbuseReportsService));
+            server.AddStreamHandler(new AbuseReportsHandler(url, m_AbuseReportsService, m_registry, SessionID));
         }
 
-        public void AddNewRegistry(IConfigSource config, IRegistryCore registry)
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
         {
+            string url = "/abusereport" + UUID.Random();
+
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.AddStreamHandler(new AbuseReportsHandler(url, m_AbuseReportsService, m_registry, SessionID));
+
+            return url;
         }
+
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
+        {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
+            server.RemoveHTTPHandler("POST", url);
+        }
+
+        #endregion
     }
 }
