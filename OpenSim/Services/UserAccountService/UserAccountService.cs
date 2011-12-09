@@ -237,6 +237,14 @@ namespace OpenSim.Services.UserAccountService
             }
             title = cmdparams.Length < 7 ? MainConsole.Instance.CmdPrompt("User Title") : Util.CombineParams(cmdparams, 6);
             account.UserTitle = title;
+            Aurora.Framework.IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IProfileConnector>();
+            if (profileConnector != null)
+            {
+                Aurora.Framework.IUserProfileInfo profile = profileConnector.GetUserProfile(account.PrincipalID);
+                profile.MembershipGroup = title;
+                profile.CustomType = title;
+                profileConnector.UpdateUserProfile(profile);
+            }
             bool success = StoreUserAccount(account);
             if (!success)
                 m_log.InfoFormat("Unable to set user profile title for account {0} {1}.", firstName, lastName);

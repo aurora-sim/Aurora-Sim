@@ -606,7 +606,7 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Get the avatar
                 //
-                AvatarAppearance avappearance = new AvatarAppearance(account.PrincipalID);
+                AvatarAppearance avappearance;
                 if (m_AvatarService != null)
                 {
                     avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
@@ -664,6 +664,8 @@ namespace OpenSim.Services.LLLoginService
                         }
                     }
                 }
+                else
+                    avappearance = new AvatarAppearance(account.PrincipalID);
 
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
