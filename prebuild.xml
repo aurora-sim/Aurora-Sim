@@ -684,7 +684,7 @@
 
       <Reference name="C5" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
-      <Reference name="Mono.Data.Sqlite"/>
+      <Reference name="System.Data.SQLite" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>

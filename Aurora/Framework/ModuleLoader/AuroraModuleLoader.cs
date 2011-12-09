@@ -172,6 +172,8 @@ namespace Aurora.Framework
                                            Path.Combine(dir.FullName, "SubversionSharp.dll"),
                                            Path.Combine(dir.FullName, "svn_client-1.dll"),
                                            Path.Combine(dir.FullName, "System.Data.SQLite.dll"),
+                                           Path.Combine(dir.FullName, "System.Data.SQLitex64.dll"),
+                                           Path.Combine(dir.FullName, "System.Data.SQLitex86.dll"),
                                            Path.Combine(dir.FullName, "Tools.dll"),
                                            Path.Combine(dir.FullName, "xunit.dll"),
                                            Path.Combine(dir.FullName, "XMLRPC.dll"),

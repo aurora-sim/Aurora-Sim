@@ -34,7 +34,7 @@ using System.Linq;
 using System.Reflection;
 using Aurora.DataManager.Migration;
 using Aurora.Framework;
-using Mono.Data.Sqlite;
+using System.Data.SQLite;
 using OpenMetaverse;
 using OpenSim.Framework;
 using log4net;
@@ -44,10 +44,27 @@ namespace Aurora.DataManager.SQLite
     public class SQLiteLoader : DataManagerBase
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private SqliteConnection m_Connection;
+        private SQLiteConnection m_Connection;
 
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
 
+        private static bool m_spammedmessage = false;
+        public SQLiteLoader()
+        {
+            try
+            {
+                if (System.IO.File.Exists("System.Data.SQLite.dll"))
+                    System.IO.File.Delete("System.Data.SQLite.dll");
+                string fileName = System.IntPtr.Size == 4 ? "System.Data.SQLitex86.dll" : "System.Data.SQLitex64.dll";
+                System.IO.File.Copy(fileName, "System.Data.SQLite.dll");
+            }
+            catch (Exception ex)
+            {
+                if(!m_spammedmessage)
+                    OpenSim.Framework.MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
+                m_spammedmessage = true;
+            }
+        }
 
         public override string Identifier
         {
@@ -56,29 +73,29 @@ namespace Aurora.DataManager.SQLite
 
         public override void ConnectToDatabase(string connectionString, string migratorName, bool validateTables)
         {
-            string[] s1 = connectionString.Split(new[] {"URI=file:", ","}, StringSplitOptions.RemoveEmptyEntries);
+            string[] s1 = connectionString.Split(new[] { "Data Source=", "," }, StringSplitOptions.RemoveEmptyEntries);
             if (Path.GetFileName(s1[0]) == s1[0]) //Only add this if we arn't an absolute path already
-                connectionString = connectionString.Replace("URI=file:", "URI=file:" + Util.BasePathCombine("") + "\\");
-            m_Connection = new SqliteConnection(connectionString);
+                connectionString = connectionString.Replace("Data Source=", "Data Source=" + Util.BasePathCombine("") + "\\");
+            m_Connection = new SQLiteConnection(connectionString);
             m_Connection.Open();
             var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
         }
 
-        protected IDataReader ExecuteReader(SqliteCommand cmd)
+        protected IDataReader ExecuteReader(SQLiteCommand cmd)
         {
             try
             {
                 var newConnection =
-                    (SqliteConnection) (m_Connection).Clone();
+                    (SQLiteConnection) (m_Connection).Clone();
                 if (newConnection.State != ConnectionState.Open)
                     newConnection.Open();
                 cmd.Connection = newConnection;
-                SqliteDataReader reader = cmd.ExecuteReader();
+                SQLiteDataReader reader = cmd.ExecuteReader();
                 return reader;
             }
-            catch (SqliteException ex)
+            catch (SQLiteException ex)
             {
                 m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
@@ -93,7 +110,7 @@ namespace Aurora.DataManager.SQLite
             return null;
         }
 
-        protected void PrepReader(ref SqliteCommand cmd)
+        protected void PrepReader(ref SQLiteCommand cmd)
         {
             try
             {
@@ -101,13 +118,13 @@ namespace Aurora.DataManager.SQLite
                 var newConnection = m_Connection;
 #else
                 var newConnection =
-                    (SqliteConnection)((ICloneable)m_Connection).Clone();
+                    (SQLiteConnection)((ICloneable)m_Connection).Clone();
 #endif
                 if (newConnection.State != ConnectionState.Open)
                     newConnection.Open();
                 cmd.Connection = newConnection;
             }
-            catch (SqliteException ex)
+            catch (SQLiteException ex)
             {
                 m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
@@ -121,7 +138,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        protected SqliteCommand PrepReader(string query)
+        protected SQLiteCommand PrepReader(string query)
         {
             try
             {
@@ -129,7 +146,7 @@ namespace Aurora.DataManager.SQLite
                 var newConnection = m_Connection;
 #else*/
                 var newConnection =
-                    (SqliteConnection) (m_Connection).Clone();
+                    (SQLiteConnection) (m_Connection).Clone();
 //#endif
                 if (newConnection.State != ConnectionState.Open)
                     newConnection.Open();
@@ -137,7 +154,7 @@ namespace Aurora.DataManager.SQLite
                 cmd.CommandText = query;
                 return cmd;
             }
-            catch (SqliteException)
+            catch (SQLiteException)
             {
                 //throw ex;
             }
@@ -148,7 +165,7 @@ namespace Aurora.DataManager.SQLite
             return null;
         }
 
-        protected int ExecuteNonQuery(SqliteCommand cmd)
+        protected int ExecuteNonQuery(SQLiteCommand cmd)
         {
             try
             {
@@ -158,7 +175,7 @@ namespace Aurora.DataManager.SQLite
                     var newConnection = m_Connection;
 #else*/
                     var newConnection =
-                        (SqliteConnection) (m_Connection).Clone();
+                        (SQLiteConnection) (m_Connection).Clone();
 //#endif
                     if (newConnection.State != ConnectionState.Open)
                         newConnection.Open();
@@ -167,7 +184,7 @@ namespace Aurora.DataManager.SQLite
                     return cmd.ExecuteNonQuery();
                 }
             }
-            catch (SqliteException ex)
+            catch (SQLiteException ex)
             {
                 m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
@@ -181,9 +198,9 @@ namespace Aurora.DataManager.SQLite
             return 0;
         }
 
-        private static void UnescapeSQL(SqliteCommand cmd)
+        private static void UnescapeSQL(SQLiteCommand cmd)
         {
-            foreach (SqliteParameter v in cmd.Parameters)
+            foreach (SQLiteParameter v in cmd.Parameters)
             {
                 if (v.Value.ToString().Contains("\\'"))
                 {
@@ -196,12 +213,12 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        protected IDataReader GetReader(SqliteCommand cmd)
+        protected IDataReader GetReader(SQLiteCommand cmd)
         {
             return ExecuteReader(cmd);
         }
 
-        protected void CloseReaderCommand(SqliteCommand cmd)
+        protected void CloseReaderCommand(SQLiteCommand cmd)
         {
             cmd.Connection.Close();
             cmd.Parameters.Clear();
@@ -223,7 +240,7 @@ namespace Aurora.DataManager.SQLite
                 query = String.Format("select {0} from {1} where {2} = :{3}",
                                       wantedValue, table, keyRow, keyRow.Replace("`", ""));
             }
-            SqliteCommand cmd = PrepReader(query);
+            SQLiteCommand cmd = PrepReader(query);
             AddParams(ref cmd, ps);
             using (IDataReader reader = cmd.ExecuteReader())
             {
@@ -250,7 +267,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        private void AddParams(ref SqliteCommand cmd, Dictionary<string, object> ps)
+        private void AddParams(ref SQLiteCommand cmd, Dictionary<string, object> ps)
         {
             foreach (KeyValuePair<string, object> p in ps)
                 cmd.Parameters.AddWithValue(p.Key, p.Value);
@@ -433,7 +450,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Insert(string table, object[] values)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
 
             string query = "";
             query = String.Format("insert into {0} values(", table);
@@ -458,7 +475,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Insert(string table, string[] keys, object[] values)
         {
-            SqliteCommand cmd = new SqliteCommand();
+            SQLiteCommand cmd = new SQLiteCommand();
 
             string query = "";
             query = String.Format("insert into {0} (", table);
@@ -493,7 +510,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Replace(string table, string[] keys, object[] values)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
 
             string query = "";
             query = String.Format("replace into {0} (", table);
@@ -537,7 +554,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Delete(string table, string[] keys, object[] values)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
 
             Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = String.Format("delete from {0} " + (keys.Length > 0 ? "where " : ""), table);
@@ -559,7 +576,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Delete(string table, string whereclause)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
 
             string query = String.Format("delete from {0} " + "where " + whereclause, table);
             cmd.CommandText = query;
@@ -570,7 +587,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool DeleteByTime(string table, string key)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
 
             string query = String.Format("delete from {0} " + "where '" + key + "' < datetime('now', 'localtime')",
                                          table);
@@ -600,7 +617,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
             Dictionary<string, object> ps = new Dictionary<string, object>();
 
             string query = "";
@@ -624,7 +641,7 @@ namespace Aurora.DataManager.SQLite
                 //Execute the update then...
             catch (Exception)
             {
-                cmd = new SqliteCommand();
+                cmd = new SQLiteCommand();
                 query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue);
                 cmd.CommandText = query;
                 ExecuteNonQuery(cmd);
@@ -642,7 +659,7 @@ namespace Aurora.DataManager.SQLite
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
                                     object[] keyValues)
         {
-            var cmd = new SqliteCommand();
+            var cmd = new SQLiteCommand();
             string query = String.Format("update {0} set ", table);
             int i = 0;
 
@@ -675,7 +692,7 @@ namespace Aurora.DataManager.SQLite
 
         public override bool TableExists(string tableName)
         {
-            var cmd = PrepReader("SELECT name FROM sqlite_master WHERE name='" + tableName + "'");
+            var cmd = PrepReader("SELECT name FROM SQLite_master WHERE name='" + tableName + "'");
             using (IDataReader rdr = cmd.ExecuteReader())
             {
                 if (rdr.Read())
@@ -730,7 +747,7 @@ namespace Aurora.DataManager.SQLite
             string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
                                          multiplePrimaryString);
 
-            var cmd = new SqliteCommand {CommandText = query};
+            var cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }
@@ -771,17 +788,17 @@ namespace Aurora.DataManager.SQLite
             }
             string query = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");";
 
-            var cmd = new SqliteCommand {CommandText = query};
+            var cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
             query = "INSERT INTO " + table + "__temp SELECT " + renamedTempTableColumn + " from " + table + ";";
-            cmd = new SqliteCommand {CommandText = query};
+            cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
             query = "drop table " + table;
-            cmd = new SqliteCommand {CommandText = query};
+            cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
@@ -815,7 +832,7 @@ namespace Aurora.DataManager.SQLite
 
             query = string.Format("create table " + table + " ( {0} {1}) ", newTableColumnDefinition,
                                   multiplePrimaryString);
-            cmd = new SqliteCommand {CommandText = query};
+            cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
@@ -840,13 +857,13 @@ namespace Aurora.DataManager.SQLite
             }
             query = "INSERT INTO " + table + " (" + InsertIntoFromTempTableColumnDefinition + ") SELECT " +
                     InsertFromTempTableColumnDefinition + " from " + table + "__temp;";
-            cmd = new SqliteCommand {CommandText = query};
+            cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
 
             query = "drop table " + table + "__temp";
-            cmd = new SqliteCommand {CommandText = query};
+            cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }
@@ -1019,14 +1036,14 @@ namespace Aurora.DataManager.SQLite
 
         public override void DropTable(string tableName)
         {
-            var cmd = new SqliteCommand {CommandText = string.Format("drop table {0}", tableName)};
+            var cmd = new SQLiteCommand {CommandText = string.Format("drop table {0}", tableName)};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }
 
         public override void ForceRenameTable(string oldTableName, string newTableName)
         {
-            var cmd = new SqliteCommand
+            var cmd = new SQLiteCommand
                           {
                               CommandText =
                                   string.Format("ALTER TABLE {0} RENAME TO {1}", oldTableName,
@@ -1041,7 +1058,7 @@ namespace Aurora.DataManager.SQLite
         protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
                                                                  ColumnDefinition[] columnDefinitions)
         {
-            var cmd = new SqliteCommand
+            var cmd = new SQLiteCommand
                           {
                               CommandText =
                                   string.Format("insert into {0} select * from {1}", destinationTableName,

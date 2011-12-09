@@ -2,35 +2,35 @@
 ;;
 [AuroraData]
     StorageProvider = SQLite
-    ConnectionString = "URI=file:Aurora.db,version=3"
+    ConnectionString = "Data Source=Aurora.db;version=3"
 
 [IScriptDataConnector]
-    ConnectionString = "URI=file:ScriptData.db,version=3"
+    ConnectionString = "Data Source=ScriptData.db;version=3"
 
 [DatabaseService]
     StorageProvider = Aurora.DataManager.SQLite.dll
-    ConnectionString = "URI=file:OpenSim.db,version=3,UseUTF16Encoding=True"
+    ConnectionString = "Data Source=OpenSim.db;version=3;UseUTF16Encoding=True"
 
 [IAvatarData]
-    ConnectionString = "URI=file:avatars.db,version=3,UseUTF16Encoding=True"
+    ConnectionString = "Data Source=avatars.db;version=3;UseUTF16Encoding=True"
 
 [IAssetDataPlugin]
-    ConnectionString = "URI=file:Asset.db,version=3"
+    ConnectionString = "Data Source=Asset.db;version=3"
 
 [SimulationDataStore]
-    ConnectionString = "URI=file:OpenSim.db,version=3"
+    ConnectionString = "Data Source=OpenSim.db;version=3"
 
 [EstateService]
-    ConnectionString = "URI=file:estates.db,version=3"
+    ConnectionString = "Data Source=estates.db;version=3"
 
 [AvatarService]
-    ConnectionString = "URI=file:avatars.db,version=3"
+    ConnectionString = "Data Source=avatars.db;version=3"
 
 [IUserAccountData]
-    ConnectionString = "URI=file:userprofiles.db,version=3"
+    ConnectionString = "Data Source=userprofiles.db;version=3"
 
 [FriendsService]
-    ConnectionString = "URI=file:friends.db,version=3"
+    ConnectionString = "Data Source=friends.db;version=3"
 
 [IInventoryData]
-    ConnectionString = "URI=file:inventory.db,version=3,UseUTF16Encoding=True"
+    ConnectionString = "Data Source=inventory.db;version=3;UseUTF16Encoding=True"
