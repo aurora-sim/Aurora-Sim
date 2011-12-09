@@ -225,9 +225,9 @@ namespace OpenSim.Services.UserAccountService
             string lastName;
             string title;
 
-            firstName = cmdparams.Length < 4 ? MainConsole.Instance.CmdPrompt("First name") : cmdparams[3];
+            firstName = cmdparams.Length < 5 ? MainConsole.Instance.CmdPrompt("First name") : cmdparams[4];
 
-            lastName = cmdparams.Length < 5 ? MainConsole.Instance.CmdPrompt("Last name") : cmdparams[4];
+            lastName = cmdparams.Length < 6 ? MainConsole.Instance.CmdPrompt("Last name") : cmdparams[5];
 
             UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
             if (account == null)
@@ -235,7 +235,7 @@ namespace OpenSim.Services.UserAccountService
                 m_log.Info("No such user");
                 return;
             }
-            title = cmdparams.Length < 6 ? MainConsole.Instance.CmdPrompt("User Title") : Util.CombineParams(cmdparams, 5);
+            title = cmdparams.Length < 7 ? MainConsole.Instance.CmdPrompt("User Title") : Util.CombineParams(cmdparams, 6);
             account.UserTitle = title;
             bool success = StoreUserAccount(account);
             if (!success)
