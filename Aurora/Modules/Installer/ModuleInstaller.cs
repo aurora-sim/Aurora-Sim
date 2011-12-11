@@ -101,7 +101,12 @@ namespace Aurora.Modules.Installer
 
         private void ConfigureModule(string installationPath, OSDMap map)
         {
-            string configDir = map["ConfigDirectory"];
+            bool standaloneSwitch = map["StandaloneSwitch"];
+            bool ConsoleConfiguration = map["ConsoleConfiguration"];
+            bool useConfigDirectory = true;
+            if(standaloneSwitch)
+                useConfigDirectory = MainConsole.Instance.CmdPrompt("Are you running this module in standalone or on Aurora.Server?", "Standalone", new List<string>(new[] { "Standalone", "Aurora.Server" })) == "Standalone";
+            string configDir = useConfigDirectory ? map["ConfigDirectory"] : map["ServerConfigDirectory"];
             string configurationFinished = map["ConfigurationFinished"];
             string configPath = Path.Combine(Environment.CurrentDirectory, configDir);
             OSDArray config = (OSDArray)map["Configs"];
@@ -113,6 +118,21 @@ namespace Aurora.Modules.Installer
                 }
                 catch
                 {
+                }
+            }
+            if (ConsoleConfiguration)
+            {
+                OSDMap ConsoleConfig = (OSDMap)map["ConsoleConfig"];
+                foreach (KeyValuePair<string, OSD> kvp in ConsoleConfig)
+                {
+                    string resp = MainConsole.Instance.CmdPrompt(kvp.Key);
+                    OSDMap configMap = (OSDMap)kvp.Value;
+                    string file = configMap["File"];
+                    string Section = configMap["Section"];
+                    string ConfigOption = configMap["ConfigOption"];
+                    Nini.Ini.IniDocument doc = new Nini.Ini.IniDocument(Path.Combine(configPath, file));
+                    doc.Sections[Section].Set(ConfigOption, resp);
+                    doc.Save(Path.Combine(configPath, file));
                 }
             }
             m_log.Warn(configurationFinished);
