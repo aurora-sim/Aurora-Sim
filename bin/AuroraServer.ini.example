@@ -150,7 +150,6 @@
     
     ;; Configuration with IWC and HG (not included) enabled
     ;Include-IWCHGMain = AuroraServerConfiguration/IWCHGMain.ini
-    
 	
     ;;Other .ini files to add...
     Include-Login = AuroraServerConfiguration/Login.ini
@@ -158,4 +157,4 @@
     Include-AutoConfiguration = AuroraServerConfiguration/AutoConfiguration.ini
     Include-Data = AuroraServerConfiguration/Data/Data.ini
 	Include-Protection = AuroraServerConfiguration/Protection.ini
-	Include-AssetCache = AuroraServerConfiguration/AssetCache.ini
+	Include-Modules = AuroraServerConfiguration/Modules/*.ini
