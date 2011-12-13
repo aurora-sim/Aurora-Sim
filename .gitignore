@@ -76,4 +76,5 @@ TAGS
 Makefile.local
 bin/.version
 compile.bat
+*.db-journal
 
