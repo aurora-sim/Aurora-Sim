@@ -42,6 +42,7 @@ namespace Aurora.Framework
         GridRegion Get(int x, int y, UUID ScopeID);
         List<GridRegion> Get(RegionFlags regionFlags);
         List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
+        List<GridRegion> Get(RegionFlags flags, bool? regionName, bool? locX, bool? locY);
 
         bool Store(GridRegion data);
 

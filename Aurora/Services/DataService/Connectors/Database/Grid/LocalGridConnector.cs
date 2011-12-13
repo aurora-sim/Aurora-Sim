@@ -139,6 +139,32 @@ namespace Aurora.Services.DataService
             return ParseQuery(query);
         }
 
+        public List<GridRegion> Get(RegionFlags flags, bool? regionName, bool? locX, bool? locY)
+        {
+            if (regionName.HasValue == false && locX.HasValue == false && locY.HasValue == false)
+            {
+                return Get(flags);
+            }
+            List<string> query;
+            List<string> sort = new List<string>();
+            if (regionName.HasValue)
+            {
+                sort.Add("RegionName " + (regionName.Value ? "DESC" : "ASC"));
+            }
+            if (locX.HasValue)
+            {
+                sort.Add("LocX " + (locX.Value ? "DESC" : "ASC"));
+            }
+            if (locY.HasValue)
+            {
+                sort.Add("LocY " + (locY.Value ? "DESC" : "ASC"));
+            }
+            
+            query = GD.Query("(Flags & '" + ((int)flags).ToString() + "') ORDER BY " + string.Join(", ", sort.ToArray()), m_realm, "*");
+
+            return ParseQuery(query);
+        }
+
         public bool Store(GridRegion region)
         {
             List<string> keys = new List<string>();
