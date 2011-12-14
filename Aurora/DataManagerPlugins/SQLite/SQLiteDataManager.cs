@@ -60,9 +60,9 @@ namespace Aurora.DataManager.SQLite
             }
             catch (Exception ex)
             {
-                if(!m_spammedmessage)
-                    OpenSim.Framework.MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
-                m_spammedmessage = true;
+//                if(!m_spammedmessage)
+//                    OpenSim.Framework.MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
+//                m_spammedmessage = true;
             }
         }
 
