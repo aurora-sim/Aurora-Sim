@@ -557,6 +557,30 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public List<GroupRecord> GetGroupRecords(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["METHOD"] = "FindGroups";
+            sendData["start"] = start;
+            sendData["count"] = count;
+            sendData["sort"] = sort;
+            sendData["boolFields"] = boolFields;
+
+            string reqString = WebUtils.BuildXmlResponse(sendData);
+
+            try
+            {
+                //  I don't know what to do here :( ~SignpostMarv.
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+            }
+
+            return new List<GroupRecord>();
+        }
+
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
