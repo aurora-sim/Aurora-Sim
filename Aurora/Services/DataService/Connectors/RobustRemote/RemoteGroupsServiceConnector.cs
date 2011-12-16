@@ -571,7 +571,19 @@ namespace Aurora.Services.DataService
 
             try
             {
-                //  I don't know what to do here :( ~SignpostMarv.
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs
+                                                                                   select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                         m_ServerURI,
+                                                                                                         reqString) into reply
+                                                                                   where reply != string.Empty
+                                                                                   select WebUtils.ParseXmlResponse(reply) into replyData
+                                                                                   where replyData != null
+                                                                                   select replyData.Values)
+                {
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRecord(f)).ToList();
+                }
             }
             catch (Exception e)
             {
