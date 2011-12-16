@@ -561,7 +561,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["METHOD"] = "FindGroups";
+            sendData["METHOD"] = "GetGroupRecords";
             sendData["start"] = start;
             sendData["count"] = count;
             sendData["sort"] = sort;
