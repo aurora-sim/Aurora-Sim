@@ -346,6 +346,80 @@ namespace Aurora.Services.DataService
             return record;
         }
 
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        {
+            string whereClause = "1=1";
+            List<string> filter = new List<string>();
+
+            string[] sortAndBool = { "OpenEnrollment", "MaturePublish" };
+            string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
+            string[] SortFields = { "Name", "MembershipFee", "OpenEnrollment", "MaturePublish" };
+
+            foreach (string field in sortAndBool)
+            {
+                if (boolFields.ContainsKey(field) == true && sort.ContainsKey(field) == true)
+                {
+                    sort.Remove(field);
+                }
+            }
+            foreach (string field in BoolFields)
+            {
+                if (boolFields.ContainsKey(field) == true)
+                {
+                    filter.Add(string.Format("{0} = '{1}'", field, boolFields[field] ? 1 : 0));
+                }
+            }
+            if (filter.Count > 0)
+            {
+                whereClause = string.Join(" AND ", filter.ToArray());
+            }
+
+            filter = new List<string>();
+            foreach (string field in SortFields)
+            {
+                if (sort.ContainsKey(field) == true)
+                {
+                    filter.Add(string.Format("{0} {1}", field, sort[field] ? "ASC" : "DESC"));
+                }
+            }
+
+            if (filter.Count > 0)
+            {
+                whereClause += " ORDER BY " + string.Join(", ", filter.ToArray());
+            }
+
+            whereClause += string.Format(" LIMIT {0},{1}", start, count);
+
+
+            List<GroupRecord> Reply = new List<GroupRecord>();
+            GroupRecord group;
+            Dictionary<string, object> groupDict;
+
+            List<string> osgroupsData = data.Query(whereClause, "osgroup", "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
+            if (osgroupsData.Count < 11)
+            {
+                return Reply;
+            }
+            for (int i = 0; i < osgroupsData.Count; )
+            {
+                groupDict = new Dictionary<string, object>();
+                groupDict["GroupID"] = osgroupsData[i++];
+                groupDict["GroupName"] = osgroupsData[i++];
+                groupDict["Charter"] = osgroupsData[i++];
+                groupDict["GroupPicture"] = osgroupsData[i++];
+                groupDict["FounderID"] = osgroupsData[i++];
+                groupDict["MembershipFee"] = osgroupsData[i++];
+                groupDict["OpenEnrollment"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
+                groupDict["ShowInList"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
+                groupDict["AllowPublish"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
+                groupDict["MaturePublish"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
+                groupDict["OwnerRoleID"] = osgroupsData[i++];
+                group = new GroupRecord(groupDict);
+                Reply.Add(group);
+            }
+            return Reply;
+        }
+
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.MemberVisible))

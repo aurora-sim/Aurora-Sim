@@ -113,7 +113,7 @@ namespace Aurora.Services.DataService
             List<AbuseReport> rv = new List<AbuseReport>();
             IDataReader dr =
                 GD.QueryData(
-                    "where CONVERT(number, UNSIGNED) >= " + start.ToString() + " and " + filter + " LIMIT 0, 10",
+                    "where CAST(number AS UNSIGNED) >= " + start.ToString() + " and " + filter + " LIMIT 0, 10",
                     "abusereports", "*");
             try
             {

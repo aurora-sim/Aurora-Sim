@@ -557,6 +557,52 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["METHOD"] = "GetGroupRecords";
+            sendData["requestingAgentID"] = requestingAgentID;
+            sendData["start"] = start;
+            sendData["count"] = count;
+            Dictionary<string, object> ssort = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, bool> kvp in sort)
+                ssort.Add(kvp.Key, kvp.Value);
+            Dictionary<string, object> bboolFields = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, bool> kvp in boolFields)
+                bboolFields.Add(kvp.Key, kvp.Value);
+            sendData["sort"] = WebUtils.BuildXmlResponse(ssort);
+            sendData["boolFields"] = WebUtils.BuildXmlResponse(bboolFields);
+
+            List<GroupRecord> groups = new List<GroupRecord>();
+            string reqString = WebUtils.BuildXmlResponse(sendData);
+
+            try
+            {
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        requestingAgentID.ToString(), "RemoteServerURI", false);
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs
+                                                                                   select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                         m_ServerURI,
+                                                                                                         reqString) into reply
+                                                                                   where reply != string.Empty
+                                                                                   select WebUtils.ParseXmlResponse(reply) into replyData
+                                                                                   where replyData != null
+                                                                                   select replyData.Values)
+                {
+                    // Success
+                    return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRecord(f)).ToList();
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+            }
+
+            return groups;
+        }
+
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
