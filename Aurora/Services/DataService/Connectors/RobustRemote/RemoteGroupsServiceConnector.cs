@@ -1165,6 +1165,47 @@ namespace Aurora.Services.DataService
         {
         }
 
+        public uint GetNumberOfGroups()
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["METHOD"] = "GetNumberOfGroups";
+
+            string reqString = WebUtils.BuildXmlResponse(sendData);
+
+            try
+            {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                             m_ServerURI,
+                                                                             reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            uint numGroups = 0;
+                            foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numGroups)))
+                            {
+                                break;
+                            }
+                            // Success
+                            return numGroups;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+            }
+            return 0;
+        }
+
         #endregion
 
         public void Dispose()

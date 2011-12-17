@@ -1032,6 +1032,12 @@ namespace Aurora.Services.DataService
             GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
         }
 
+        public uint GetNumberOfGroups()
+        {
+            List<string> numGroups = data.Query("1=1", "osgroup", "COUNT(GroupID)");
+            return uint.Parse(numGroups[0]);
+        }
+
         #endregion
 
         public void Dispose()

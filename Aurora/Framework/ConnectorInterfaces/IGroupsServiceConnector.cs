@@ -83,5 +83,7 @@ namespace Aurora.Framework
         List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
+
+        uint GetNumberOfGroups();
     }
 }
