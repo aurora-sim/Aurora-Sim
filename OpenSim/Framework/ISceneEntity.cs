@@ -648,8 +648,10 @@ namespace OpenSim.Framework
             Both = 192
         }
         public int CurrentAnimationPosition = 0;
+        public bool PingPongForwardMotion = true;
         public Modes CurrentMode = Modes.Forward;
         public int[] TimeList = new int[0];
+        public Vector3 InitialPosition = Vector3.Zero;
         public Vector3[] PositionList = new Vector3[0];
         public Quaternion[] RotationList = new Quaternion[0];
 

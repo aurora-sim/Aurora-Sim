@@ -11985,7 +11985,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llSetKeyframedMotion(LSL_List keyframes, LSL_List options)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
-
+            if (!m_host.IsRoot)
+            {
+                ShoutError("Must be used in the root object!");
+                return;
+            }
             KeyframeAnimation.Data dataType = KeyframeAnimation.Data.Both;
             KeyframeAnimation.Modes currentMode = KeyframeAnimation.Modes.Forward;
             for (int i = 0; i < options.Length; i += 2)
@@ -12032,7 +12036,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 PositionList = positions.ToArray(),
                 RotationList = rotations.ToArray(),
                 TimeList = times.ToArray(),
-                CurrentAnimationPosition = 0
+                CurrentAnimationPosition = 0,
+                InitialPosition = m_host.AbsolutePosition
             };
             m_host.ParentEntity.AddKeyframedMotion(animation, KeyframeAnimation.Commands.Play);
         }

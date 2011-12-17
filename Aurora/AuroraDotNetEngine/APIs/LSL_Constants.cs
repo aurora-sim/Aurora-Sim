@@ -341,8 +341,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger PRIM_TEXGEN_PLANAR = 1;
 
         public static readonly LSL_Types.LSLInteger PRIM_PHYSICS_SHAPE_PRIM = 0;
-        public static readonly LSL_Types.LSLInteger PRIM_PHYSICS_SHAPE_CONVEX = 1;
-        public static readonly LSL_Types.LSLInteger PRIM_PHYSICS_SHAPE_NONE = 2;
+        public static readonly LSL_Types.LSLInteger PRIM_PHYSICS_SHAPE_CONVEX = 2;
+        public static readonly LSL_Types.LSLInteger PRIM_PHYSICS_SHAPE_NONE = 1;
 
         public static readonly LSL_Types.LSLInteger DENSITY = 0;
         public static readonly LSL_Types.LSLInteger FRICTION = 1;

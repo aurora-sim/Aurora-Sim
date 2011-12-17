@@ -189,7 +189,10 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 m_KeyframeAnimation = value;
-                m_rootPart.SetComponentState("KeyframeAnimation", m_KeyframeAnimation.ToOSD());
+                if (m_KeyframeAnimation == null)
+                    m_rootPart.RemoveComponentState("KeyframeAnimation");
+                else
+                    m_rootPart.SetComponentState("KeyframeAnimation", m_KeyframeAnimation.ToOSD());
             }
         }
 
@@ -2203,6 +2206,104 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void moveKeyframeMotion()
         {
+            if (m_KeyframeAnimation == null || m_KeyframeAnimation.TimeList.Length == 0)
+            {
+                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+                return;
+            }
+            try
+            {
+                int currentTime = m_KeyframeAnimation.TimeList[m_KeyframeAnimation.CurrentAnimationPosition];
+                if (m_KeyframeAnimation.PositionList.Length != 0)
+                {
+                    Vector3 currentTarget = m_KeyframeAnimation.PositionList[m_KeyframeAnimation.CurrentAnimationPosition];
+                    Vector3 _target_velocity =
+                                new Vector3(
+                                    ((m_KeyframeAnimation.InitialPosition.X + currentTarget.X) - m_KeyframeAnimation.InitialPosition.X) * (1f / (float)currentTime),
+                                    ((m_KeyframeAnimation.InitialPosition.Y + currentTarget.Y) - m_KeyframeAnimation.InitialPosition.Y) * (1f / (float)currentTime),
+                                    ((m_KeyframeAnimation.InitialPosition.Z + currentTarget.Z) - m_KeyframeAnimation.InitialPosition.Z) * (1f / (float)currentTime)
+                                    );
+                    if ((m_KeyframeAnimation.InitialPosition + currentTarget).ApproxEquals(AbsolutePosition, 1f))
+                    {
+                        if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Forward)
+                        {
+                            m_KeyframeAnimation.CurrentAnimationPosition += 1;
+                            if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                            {
+                                //All done moving...
+                                Velocity = Vector3.Zero;
+                                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+                                return;
+                            }
+                        }
+                        else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Reverse)
+                        {
+                            m_KeyframeAnimation.CurrentAnimationPosition -= 1;
+                            if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
+                            {
+                                //All done moving...
+                                Velocity = Vector3.Zero;
+                                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+                                return;
+                            }
+                        }
+                        else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Loop)
+                        {
+                            m_KeyframeAnimation.CurrentAnimationPosition += 1;
+                            if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                                m_KeyframeAnimation.CurrentAnimationPosition = 0;
+                        }
+                        else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.PingPong)
+                        {
+                            if (m_KeyframeAnimation.PingPongForwardMotion)
+                            {
+                                m_KeyframeAnimation.CurrentAnimationPosition += 1;
+                                if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                                {
+                                    m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
+                                    m_KeyframeAnimation.CurrentAnimationPosition -= 2;
+                                }
+                            }
+                            else
+                            {
+                                m_KeyframeAnimation.CurrentAnimationPosition -= 1;
+                                if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
+                                {
+                                    m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
+                                    m_KeyframeAnimation.CurrentAnimationPosition += 2;
+                                }
+                            }
+                        }
+                        SetAbsolutePosition(true, m_KeyframeAnimation.InitialPosition + currentTarget);
+                        m_KeyframeAnimation.InitialPosition = AbsolutePosition;
+                    }
+                    else
+                    {
+                        SetAbsolutePosition(true, m_rootPart.AbsolutePosition + _target_velocity);
+                        m_rootPart.Velocity = _target_velocity / 45f;
+                    }
+                }
+                if (m_KeyframeAnimation.RotationList.Length != 0)
+                {
+                    Quaternion currentRot = m_KeyframeAnimation.RotationList[m_KeyframeAnimation.CurrentAnimationPosition];
+                    Quaternion rot = RootPart.RotationOffset;
+                    Quaternion dir = (rot - currentRot);
+                    float speed = (float)(Math.PI / 180.0f);
+                    if (dir.Z > speed)
+                        rot.Z -= speed;
+
+                    if (dir.Z < -speed)
+                        rot.Z += speed;
+
+                    rot.Normalize();
+                    m_rootPart.UpdateRotation(rot);
+                }
+            }
+            catch
+            {
+                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+            }
+            ScheduleGroupTerseUpdate();
         }
 
         public void checkAtTargets()
