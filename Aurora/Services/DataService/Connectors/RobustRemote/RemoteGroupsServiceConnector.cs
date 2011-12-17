@@ -557,11 +557,12 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public List<GroupRecord> GetGroupRecords(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["METHOD"] = "GetGroupRecords";
+            sendData["requestingAgentID"] = requestingAgentID.ToString();
             sendData["start"] = start;
             sendData["count"] = count;
             sendData["sort"] = sort;

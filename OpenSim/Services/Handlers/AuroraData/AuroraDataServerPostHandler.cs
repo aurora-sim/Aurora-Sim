@@ -51,7 +51,7 @@ namespace OpenSim.Services
         private readonly AssetHandler AssetHandler = new AssetHandler();
         private readonly DirectoryInfoHandler DirectoryHandler = new DirectoryInfoHandler();
         private readonly EstateInfoHandler EstateHandler = new EstateInfoHandler();
-        private readonly GroupsServiceHandler GroupsHandler = new GroupsServiceHandler();
+        private readonly GroupsServiceHandler GroupsHandler;
         private readonly MuteInfoHandler MuteHandler = new MuteInfoHandler();
         private OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
         private TelehubInfoHandler TelehubHandler = new TelehubInfoHandler();
@@ -64,6 +64,7 @@ namespace OpenSim.Services
         {
             m_SessionID = SessionID;
             m_registry = registry;
+            GroupsHandler = new GroupsServiceHandler(registry);
         }
 
         public override byte[] Handle(string path, Stream requestData,
@@ -584,10 +585,12 @@ namespace OpenSim.Services
     public class GroupsServiceHandler
     {
         private readonly IGroupsServiceConnector GroupsServiceConnector;
+        private readonly IUserAccountService UserServiceConnector;
 
-        public GroupsServiceHandler()
+        public GroupsServiceHandler(IRegistryCore registry)
         {
             GroupsServiceConnector = DataManager.RequestPlugin<IGroupsServiceConnector>("IGroupsServiceConnectorLocal");
+            UserServiceConnector = registry.RequestModuleInterface<IUserAccountService>();
         }
 
         public byte[] CreateGroup(Dictionary<string, object> request)
@@ -962,17 +965,23 @@ namespace OpenSim.Services
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
-            uint start = uint.Parse(request["start"].ToString());
-            uint count = uint.Parse(request["count"].ToString());
-            Dictionary<string, object> ssort = WebUtils.ParseXmlResponse(request["sort"].ToString());
-            Dictionary<string, object> bboolFields = WebUtils.ParseXmlResponse(request["boolFields"].ToString());
-            Dictionary<string, bool> sort = new Dictionary<string, bool>();
-            foreach (KeyValuePair<string, object> kvp in ssort)
-                sort.Add(kvp.Key, (bool)kvp.Value);
-            Dictionary<string, bool> boolFields = new Dictionary<string, bool>();
-            foreach (KeyValuePair<string, object> kvp in bboolFields)
-                boolFields.Add(kvp.Key, (bool)kvp.Value);
-            List<GroupRecord> rs = GroupsServiceConnector.GetGroupRecords(start, count, sort, boolFields);
+            UserAccount requestingAgent = UserServiceConnector.GetUserAccount(UUID.Zero, requestingAgentID);
+            List<GroupRecord> rs = new List<GroupRecord>();
+            if (requestingAgent.UserLevel > 0)
+            {
+                uint start = uint.Parse(request["start"].ToString());
+                uint count = uint.Parse(request["count"].ToString());
+                Dictionary<string, object> ssort = WebUtils.ParseXmlResponse(request["sort"].ToString());
+                Dictionary<string, object> bboolFields = WebUtils.ParseXmlResponse(request["boolFields"].ToString());
+                Dictionary<string, bool> sort = new Dictionary<string, bool>();
+                foreach (KeyValuePair<string, object> kvp in ssort)
+                    sort.Add(kvp.Key, (bool)kvp.Value);
+                Dictionary<string, bool> boolFields = new Dictionary<string, bool>();
+                foreach (KeyValuePair<string, object> kvp in bboolFields)
+                    boolFields.Add(kvp.Key, (bool)kvp.Value);
+                rs = GroupsServiceConnector.GetGroupRecords(requestingAgentID, start, count, sort, boolFields);
+            }
+
             int i = 0;
             foreach (GroupRecord r in rs)
             {

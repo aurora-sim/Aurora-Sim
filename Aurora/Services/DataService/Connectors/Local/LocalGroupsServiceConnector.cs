@@ -346,7 +346,7 @@ namespace Aurora.Services.DataService
             return record;
         }
 
-        public List<GroupRecord> GetGroupRecords(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
             string whereClause = "1=1";
             List<string> filter = new List<string>();
