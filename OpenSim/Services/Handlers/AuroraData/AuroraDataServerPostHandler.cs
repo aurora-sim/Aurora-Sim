@@ -346,6 +346,11 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
                                 return FailureResult();
                         return GroupsHandler.GetAgentGroupMemberships(request);
+                    case "GetGroupRecords":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
+                                return FailureResult();
+                        return GroupsHandler.GetGroupRecords(request);
                     case "FindGroups":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
@@ -941,6 +946,35 @@ namespace OpenSim.Services
             List<GroupMembershipData> rs = GroupsServiceConnector.GetAgentGroupMemberships(requestingAgentID, AgentID);
             int i = 0;
             foreach (GroupMembershipData r in rs)
+            {
+                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                i++;
+            }
+
+            string xmlString = WebUtils.BuildXmlResponse(result);
+            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        public byte[] GetGroupRecords(Dictionary<string, object> request)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
+            uint start = uint.Parse(request["start"].ToString());
+            uint count = uint.Parse(request["count"].ToString());
+            Dictionary<string, object> ssort = WebUtils.ParseXmlResponse(request["sort"].ToString());
+            Dictionary<string, object> bboolFields = WebUtils.ParseXmlResponse(request["boolFields"].ToString());
+            Dictionary<string, bool> sort = new Dictionary<string, bool>();
+            foreach (KeyValuePair<string, object> kvp in ssort)
+                sort.Add(kvp.Key, (bool)kvp.Value);
+            Dictionary<string, bool> boolFields = new Dictionary<string, bool>();
+            foreach (KeyValuePair<string, object> kvp in bboolFields)
+                boolFields.Add(kvp.Key, (bool)kvp.Value);
+            List<GroupRecord> rs = GroupsServiceConnector.GetGroupRecords(requestingAgentID, start, count, sort, boolFields);
+            int i = 0;
+            foreach (GroupRecord r in rs)
             {
                 result.Add(ConvertDecString(i), r.ToKeyValuePairs());
                 i++;

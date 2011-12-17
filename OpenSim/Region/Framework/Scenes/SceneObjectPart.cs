@@ -1196,6 +1196,7 @@ namespace OpenSim.Region.Framework.Scenes
             set { SetRotationOffset(true, value, true); }
         }
 
+        private Vector3 m_tempVelocity = Vector3.Zero;
         /// <summary>
         /// </summary>
         public Vector3 Velocity
@@ -1211,7 +1212,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                return Vector3.Zero;
+                return m_tempVelocity;
             }
 
             set
@@ -1223,8 +1224,13 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         actor.Velocity = value;
                         m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
+                        m_tempVelocity = Vector3.Zero;
                     }
+                    else
+                        m_tempVelocity = value;
                 }
+                else
+                    m_tempVelocity = value;
             }
         }
 

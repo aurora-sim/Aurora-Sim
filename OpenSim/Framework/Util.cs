@@ -1838,6 +1838,8 @@ namespace OpenSim.Framework
         /// <returns></returns>
         public static IPAddress ResolveAddressForClient(IPAddress iPAddress, IPEndPoint clientIP)
         {
+            if (iPAddress == null)
+                return clientIP.Address;
             if (iPAddress.Equals(clientIP.Address))
             {
                 if (useLocalhostLoopback)

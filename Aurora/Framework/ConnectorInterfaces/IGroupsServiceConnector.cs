@@ -65,7 +65,7 @@ namespace Aurora.Framework
         void RemoveAgentFromRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
 
         GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName);
-        List<GroupRecord> GetGroupRecords(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields);
+        List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields);
         GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID);
         GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID);
         bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID);

@@ -566,7 +566,6 @@ namespace Aurora.Services.DataService
             sendData["count"] = count;
             sendData["sort"] = sort;
             sendData["boolFields"] = boolFields;
-
             string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try

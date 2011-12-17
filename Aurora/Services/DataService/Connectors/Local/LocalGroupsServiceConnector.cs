@@ -873,7 +873,7 @@ namespace Aurora.Services.DataService
                                                  "AcceptNotices, Contribution, ListInProfile, SelectedRoleID");
             if (Membership.Count == 0)
                 return null;
-            List<string> GroupRole = data.Query(new[] {"RoleID"}, new object[] {Membership[3]}, "osrole",
+            List<string> GroupRole = data.Query(new[] { "RoleID", "GroupID" }, new object[] { Membership[3], GroupID }, "osrole",
                                                 "Title, Powers");
             if (GroupRole.Count == 0)
                 return null;
