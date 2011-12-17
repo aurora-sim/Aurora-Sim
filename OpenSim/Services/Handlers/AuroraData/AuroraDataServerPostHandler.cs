@@ -972,7 +972,7 @@ namespace OpenSim.Services
             Dictionary<string, bool> boolFields = new Dictionary<string, bool>();
             foreach (KeyValuePair<string, object> kvp in bboolFields)
                 boolFields.Add(kvp.Key, (bool)kvp.Value);
-            List<GroupRecord> rs = GroupsServiceConnector.GetGroupRecords(requestingAgentID, start, count, sort, boolFields);
+            List<GroupRecord> rs = GroupsServiceConnector.GetGroupRecords(start, count, sort, boolFields);
             int i = 0;
             foreach (GroupRecord r in rs)
             {
