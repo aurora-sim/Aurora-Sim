@@ -258,7 +258,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     if (m_scene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                     {
                         //Only deal with attachments!
-                        UpdateAttachmentPosition(remoteClient, group.RootChild.FromUserInventoryItemID, pos);
+                        UpdateAttachmentPosition(remoteClient, group, objectLocalID, pos);
                     }
                 }
             }
@@ -489,12 +489,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         /// <param name="client"></param>
         /// <param name="ItemID"></param>
         /// <param name="pos"></param>
-        public void UpdateAttachmentPosition(IClientAPI client, UUID ItemID, Vector3 pos)
+        public void UpdateAttachmentPosition(IClientAPI client, ISceneEntity sog, uint localID, Vector3 pos)
         {
-            ISceneEntity[] attachments = GetAttachmentsForAvatar (client.AgentId);
-            ISceneEntity sog = attachments.FirstOrDefault(grp => grp.RootChild.FromUserInventoryItemID == ItemID);
-            //Find the attachment we are trying to edit by ItemID
-
             if (sog != null)
             {
                 // If this is an attachment, then we need to save the modified
@@ -508,10 +504,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 // entry. Finally, we restore the object's attachment status.
                 byte attachmentPoint = (byte)sog.RootChild.AttachmentPoint;
                 sog.UpdateGroupPosition(pos, true);
-                sog.RootChild.IsAttachment = false;
                 sog.RootChild.AttachedPos = pos;
-                sog.AbsolutePosition = sog.RootChild.AttachedPos;
+                sog.RootChild.FixOffsetPosition((pos), false);
+                //sog.AbsolutePosition = sog.RootChild.AttachedPos;
                 sog.SetAttachmentPoint(attachmentPoint);
+                sog.ScheduleGroupUpdate(PrimUpdateFlags.TerseUpdate);
                 //Don't update right now, wait until logout
                 //UpdateKnownItem(client, sog, sog.GetFromItemID(), sog.OwnerID);
             }

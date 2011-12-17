@@ -39,8 +39,8 @@ namespace OpenSim.Services.Interfaces
     {
         public int Created;
         public string Email;
-        public OSDMap GenericData = new OSDMap();
         public string Name;
+        public OSDMap GenericData = new OSDMap();
         public UUID PrincipalID;
         public UUID ScopeID;
         public Dictionary<string, object> ServiceURLs;

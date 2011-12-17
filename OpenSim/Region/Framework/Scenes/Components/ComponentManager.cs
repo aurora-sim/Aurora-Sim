@@ -455,6 +455,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("PIDHoverActive", 0);
             RegisterComponent(com);
+            com = new DefaultComponents("KeyframeAnimation", null);
+            RegisterComponent(com);
         }
     }
 

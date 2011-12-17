@@ -11955,6 +11955,87 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
         }
+
+        public LSL_Integer llManageEstateAccess(LSL_Integer action, LSL_String avatar)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return LSL_Integer.FALSE;
+            if (World.Permissions.IsAdministrator(m_host.OwnerID))
+            {
+                if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_ADD)
+                    World.RegionInfo.EstateSettings.AddEstateUser(UUID.Parse(avatar));
+                else if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_REMOVE)
+                    World.RegionInfo.EstateSettings.RemoveEstateUser(UUID.Parse(avatar));
+                else if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_GROUP_ADD)
+                    World.RegionInfo.EstateSettings.AddEstateGroup(UUID.Parse(avatar));
+                else if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_GROUP_REMOVE)
+                    World.RegionInfo.EstateSettings.RemoveEstateGroup(UUID.Parse(avatar));
+                else if (action == ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_ADD)
+                    World.RegionInfo.EstateSettings.AddBan(new EstateBan()
+                    {
+                        EstateID = World.RegionInfo.EstateSettings.EstateID,
+                        BannedUserID = UUID.Parse(avatar)
+                    });
+                else if (action == ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_REMOVE)
+                    World.RegionInfo.EstateSettings.RemoveBan(UUID.Parse(avatar));
+                return LSL_Integer.TRUE;
+            }
+            return LSL_Integer.FALSE;
+        }
+
+        public void llSetKeyframedMotion(LSL_List keyframes, LSL_List options)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
+
+            KeyframeAnimation.Data dataType = KeyframeAnimation.Data.Both;
+            KeyframeAnimation.Modes currentMode = KeyframeAnimation.Modes.Forward;
+            for (int i = 0; i < options.Length; i += 2)
+            {
+                LSL_Integer option = options.GetLSLIntegerItem(i);
+                LSL_Integer value = options.GetLSLIntegerItem(i + 1);
+                if (option == ScriptBaseClass.KFM_COMMAND)
+                {
+                    m_host.ParentEntity.AddKeyframedMotion(null, (KeyframeAnimation.Commands)value.value);
+                    break;//Its supposed to be the only option in the list
+                }
+                else if (option == ScriptBaseClass.KFM_MODE)
+                {
+                    currentMode = (KeyframeAnimation.Modes)value.value;
+                }
+                else if (option == ScriptBaseClass.KFM_DATA)
+                {
+                    dataType = (KeyframeAnimation.Data)value.value;
+                }
+            }
+            List<Vector3> positions = new List<Vector3>();
+            List<Quaternion> rotations = new List<Quaternion>();
+            List<int> times = new List<int>();
+            for (int i = 0; i < keyframes.Length; i += (dataType == KeyframeAnimation.Data.Both ? 3 : 2))
+            {
+                if (dataType == KeyframeAnimation.Data.Both ||
+                    dataType == KeyframeAnimation.Data.Translation)
+                {
+                    LSL_Vector pos = keyframes.GetVector3Item(i);
+                    positions.Add(pos.ToVector3());
+                }
+                if (dataType == KeyframeAnimation.Data.Both ||
+                    dataType == KeyframeAnimation.Data.Rotation)
+                {
+                    LSL_Rotation rot = keyframes.GetQuaternionItem(i + (dataType == KeyframeAnimation.Data.Both ? 1 : 0));
+                    rotations.Add(rot.ToQuaternion());
+                }
+                int time = keyframes.GetLSLIntegerItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
+                times.Add(time);
+            }
+            KeyframeAnimation animation = new KeyframeAnimation()
+            {
+                CurrentMode = currentMode,
+                PositionList = positions.ToArray(),
+                RotationList = rotations.ToArray(),
+                TimeList = times.ToArray(),
+                CurrentAnimationPosition = 0
+            };
+            m_host.ParentEntity.AddKeyframedMotion(animation, KeyframeAnimation.Commands.Play);
+        }
     }
 
     public class NotecardCache

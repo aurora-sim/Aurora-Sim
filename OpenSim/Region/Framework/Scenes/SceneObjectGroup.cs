@@ -176,6 +176,23 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public KeyframeAnimation m_KeyframeAnimation = null;
+        public KeyframeAnimation KeyframeAnimation
+        {
+            get 
+            {
+                OSDMap map = (OSDMap)m_rootPart.GetComponentState("KeyframeAnimation");
+                m_KeyframeAnimation = new KeyframeAnimation();
+                m_KeyframeAnimation.FromOSD(map);
+                return m_KeyframeAnimation;
+            }
+            set
+            {
+                m_KeyframeAnimation = value;
+                m_rootPart.SetComponentState("KeyframeAnimation", m_KeyframeAnimation.ToOSD());
+            }
+        }
+
         public string Text
         {
             get
@@ -2169,6 +2186,25 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.EventManager.OnFrame -= checkAtTargets;
         }
 
+        public void AddKeyframedMotion(KeyframeAnimation animation, KeyframeAnimation.Commands command)
+        {
+            if (command == KeyframeAnimation.Commands.Play)
+            {
+                KeyframeAnimation = animation;
+                m_scene.EventManager.OnFrame += moveKeyframeMotion;
+            }
+            else
+            {
+                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+                if (command == KeyframeAnimation.Commands.Stop)
+                    KeyframeAnimation = null;
+            }
+        }
+
+        public void moveKeyframeMotion()
+        {
+        }
+
         public void checkAtTargets()
         {
             if (m_scriptListens_atTarget || m_scriptListens_notAtTarget)
@@ -4021,7 +4057,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///<summary>
         ///</summary>
         ///<param name = "pos"></param>
-        private void UpdateRootPosition(Vector3 pos)
+        public void UpdateRootPosition(Vector3 pos)
         {
             foreach (SceneObjectPart part in ChildrenList)
             {

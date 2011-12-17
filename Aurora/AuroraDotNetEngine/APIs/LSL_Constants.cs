@@ -692,5 +692,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
 
         public static readonly LSL_Types.LSLInteger PROFILE_NONE = 0;
         public static readonly LSL_Types.LSLInteger PROFILE_SCRIPT_MEMORY = 1;
+
+        public static readonly LSL_Types.LSLInteger ESTATE_ACCESS_ALLOWED_AGENT_ADD = 0;
+        public static readonly LSL_Types.LSLInteger ESTATE_ACCESS_ALLOWED_AGENT_REMOVE = 1;
+        public static readonly LSL_Types.LSLInteger ESTATE_ACCESS_ALLOWED_GROUP_ADD = 2;
+        public static readonly LSL_Types.LSLInteger ESTATE_ACCESS_ALLOWED_GROUP_REMOVE = 3;
+        public static readonly LSL_Types.LSLInteger ESTATE_ACCESS_BANNED_AGENT_ADD = 4;
+        public static readonly LSL_Types.LSLInteger ESTATE_ACCESS_BANNED_AGENT_REMOVE = 5;
+
+        public static readonly LSL_Types.LSLInteger KFM_MODE = 2;
+        public static readonly LSL_Types.LSLInteger KFM_LOOP = 4;
+        public static readonly LSL_Types.LSLInteger KFM_REVERSE = 8;
+        public static readonly LSL_Types.LSLInteger KFM_FORWARD = 16;
+        public static readonly LSL_Types.LSLInteger KFM_PING_PONG = 32;
+        public static readonly LSL_Types.LSLInteger KFM_TRANSLATION = 64;
+        public static readonly LSL_Types.LSLInteger KFM_ROTATION = 128;
+        public static readonly LSL_Types.LSLInteger KFM_COMMAND = 256;
+        public static readonly LSL_Types.LSLInteger KFM_CMD_STOP = 512;
+        public static readonly LSL_Types.LSLInteger KFM_CMD_PLAY = 1024;
+        public static readonly LSL_Types.LSLInteger KFM_CMD_PAUSE = 2048;
+        public static readonly LSL_Types.LSLInteger KFM_DATA = 4096;
     }
 }

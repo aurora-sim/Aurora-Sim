@@ -620,6 +620,79 @@ namespace OpenSim.Framework
         void RemoveScriptInstances (bool p);
 
         float GetMass ();
+
+        void AddKeyframedMotion(KeyframeAnimation animation, KeyframeAnimation.Commands command);
+
+        void UpdateRootPosition(Vector3 pos);
+    }
+
+    public class KeyframeAnimation
+    {
+        public enum Modes
+        {
+            Loop = 4,
+            Forward = 16,
+            Reverse = 8,
+            PingPong = 32
+        }
+        public enum Commands
+        {
+            Pause = 2048,
+            Play = 1024,
+            Stop = 512
+        }
+        public enum Data
+        {
+            Translation = 64,
+            Rotation = 128,
+            Both = 192
+        }
+        public int CurrentAnimationPosition = 0;
+        public Modes CurrentMode = Modes.Forward;
+        public int[] TimeList = new int[0];
+        public Vector3[] PositionList = new Vector3[0];
+        public Quaternion[] RotationList = new Quaternion[0];
+
+        public OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["CurrentAnimationPosition"] = CurrentAnimationPosition;
+            map["CurrentMode"] = (int)CurrentMode;
+            OSDArray times = new OSDArray();
+            foreach (int time in TimeList)
+                times.Add(time);
+            map["TimeList"] = times;
+            OSDArray positions = new OSDArray();
+            foreach (Vector3 v in PositionList)
+                positions.Add(v);
+            map["PositionList"] = positions;
+            OSDArray rotations = new OSDArray();
+            foreach (Quaternion v in RotationList)
+                rotations.Add(v);
+            map["RotationList"] = rotations;
+            return map;
+        }
+
+        public void FromOSD(OSDMap map)
+        {
+            CurrentAnimationPosition = map["CurrentAnimationPosition"];
+            CurrentMode = (Modes)(int)map["CurrentMode"];
+            OSDArray positions = (OSDArray)map["PositionList"];
+            List<Vector3> pos = new List<Vector3>();
+            foreach (OSD o in positions)
+                pos.Add(o);
+            PositionList = pos.ToArray();
+            OSDArray rotations = (OSDArray)map["RotationList"];
+            List<Quaternion> rot = new List<Quaternion>();
+            foreach (OSD o in rotations)
+                rot.Add(o);
+            RotationList = rot.ToArray();
+            OSDArray times = (OSDArray)map["TimeList"];
+            List<int> time = new List<int>();
+            foreach (OSD o in times)
+                time.Add(o);
+            TimeList = time.ToArray();
+        }
     }
 
     public interface IEntity

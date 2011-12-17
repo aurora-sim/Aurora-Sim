@@ -250,7 +250,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         DateTime llMakeSmoke(int particles, double scale, double vel, double lifetime, double arc, string texture,
                              LSL_Vector offset);
-
+        LSL_Integer llManageEstateAccess(LSL_Integer action, LSL_String avatar);
         DateTime llMapDestination(string simname, LSL_Vector pos, LSL_Vector look_at);
         LSL_String llMD5String(string src, int nonce);
         LSL_String llSHA1String(string src);
@@ -338,6 +338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void llSetForceAndTorque(LSL_Vector force, LSL_Vector torque, int local);
         void llSetHoverHeight(double height, int water, double tau);
         void llSetInventoryPermMask(string item, int mask, int value);
+        void llSetKeyframedMotion(LSL_List keyframes, LSL_List options);
         void llSetLinkAlpha(int linknumber, double alpha, int face);
         void llSetLinkColor(int linknumber, LSL_Vector color, int face);
         LSL_Integer llSetLinkMedia(LSL_Integer link, LSL_Integer face, LSL_List rules);

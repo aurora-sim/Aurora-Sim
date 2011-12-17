@@ -288,6 +288,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return new Vector3(0, 0, 0);
             }
 
+            public OpenMetaverse.Vector3 ToVector3()
+            {
+                return new OpenMetaverse.Vector3((float)x.value, (float)y.value, (float)z.value);
+            }
+
             #endregion
         }
 
@@ -436,6 +441,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 c.z = a.s * b.z + a.z * b.s + a.x * b.y - a.y * b.x;
                 c.s = a.s * b.s - a.x * b.x - a.y * b.y - a.z * b.z;
                 return c;
+            }
+
+            public OpenMetaverse.Quaternion ToQuaternion()
+            {
+                return new OpenMetaverse.Quaternion((float)x, (float)y, (float)z, (float)s);
             }
         }
 
@@ -1611,6 +1621,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public struct LSLInteger
         {
             public int value;
+            public static LSLInteger TRUE = new LSLInteger(1);
+            public static LSLInteger FALSE = new LSLInteger(0);
             private static readonly Regex castRegex = new Regex (@"(^[ ]*0[xX][0-9A-Fa-f][0-9A-Fa-f]*)|(^[ ]*(-?|\+?)[0-9][0-9]*)");
 
             #region Constructors

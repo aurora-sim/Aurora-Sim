@@ -78,9 +78,10 @@ namespace OpenSim.Region.Framework.Interfaces
         ///   Update the position of an attachment
         /// </summary>
         /// <param name = "client">The client whose attachment we are to move</param>
-        /// <param name = "ItemID">The itemID of the object to move</param>
+        /// <param name = "sog">The object to move</param>
+        /// <param name = "localID">The localID of the object to move</param>
         /// <param name = "pos">The new position of the attachment</param>
-        void UpdateAttachmentPosition(IClientAPI client, UUID ItemID, Vector3 pos);
+        void UpdateAttachmentPosition(IClientAPI client, ISceneEntity sog, uint localID, Vector3 pos);
 
         /// <summary>
         ///   Get a list of the given avatar's attachments
