@@ -549,10 +549,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     {
                         if (stream != null) stream.Close();
                         stream = null;
-                        if (tryCount <= 2)
+                        if (tryCount <= 1)
                         {
-                            Thread.Sleep(4000);
-                            WriteFile(assetid, data, ++tryCount);
+                            Thread.Sleep(500);
+                            tryCount = tryCount + 1;
+                            WriteFile(assetid, data, tryCount);
                         }
                         else
                         {
@@ -619,9 +620,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
 
             // we have to do this stuff after the try catch final to ensure stream is closed
-            if ((wasErrorLoading) && (!waserror)) 
+            if ((wasErrorLoading) && (!waserror))
                 return RestoreBackup(hashCode) ? LoadFile(hashCode, true) : null;
-            if (wasErrorLoading) 
+            if (wasErrorLoading)
                 return null;
 
             // check the files results with hash.. see if they match
@@ -630,7 +631,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 // seen this happen a couple times.. recovery seems to work good..
                 if (!waserror)
                 {
-                    if (RestoreBackup(hashCode)) 
+                    if (RestoreBackup(hashCode))
                         return LoadFile(hashCode, true);
                     m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery");
                 }
@@ -644,14 +645,38 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private bool RestoreBackup(string hashCode)
         {
+            return RestoreBackup(hashCode, 0);
+        }
+
+        private bool RestoreBackup(string hashCode, int trycount)
+        {
             string backupfile = GetFileName(hashCode, true) + ".7z";
             string file = GetFileName(hashCode, false);
-            if (File.Exists(backupfile))
+            // ever now and then getting system io exceptions because the file already exist
+            try
             {
-                File.Move(file, file + ".corrupt");
-                Util.UnCompress7ZipFile(backupfile, Path.GetDirectoryName(file));
-                m_Log.Info("[AssetDataPlugin]: Restored backup asset file " + file);
-                return true;
+                if (File.Exists(backupfile))
+                {
+                    if (File.Exists(file))
+                    {
+                        if (File.Exists(file + ".corrupt"))
+                            File.Delete(file + ".corrupt");
+                        File.Move(file, file + ".corrupt");
+                    }
+                    Util.UnCompress7ZipFile(backupfile, Path.GetDirectoryName(file));
+                    m_Log.Info("[AssetDataPlugin] Restored backup asset file " + file);
+                    return true;
+                }
+            }
+            catch (IOException e)
+            {
+                if (trycount <= 1)
+                {
+                    Thread.Sleep(500);
+                    trycount = trycount + 1;
+                    return RestoreBackup(hashCode, trycount);
+                }
+                m_Log.Error("[AssetDataPlugin] Restore back error:", e);
             }
             return false;
         }
