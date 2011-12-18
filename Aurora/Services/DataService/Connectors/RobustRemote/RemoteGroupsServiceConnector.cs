@@ -1165,11 +1165,13 @@ namespace Aurora.Services.DataService
         {
         }
 
-        public uint GetNumberOfGroups()
+        public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["METHOD"] = "GetNumberOfGroups";
+            sendData["requestingAgentID"] = requestingAgentID.ToString();
+            sendData["boolFields"] = boolFields;
 
             string reqString = WebUtils.BuildXmlResponse(sendData);
 

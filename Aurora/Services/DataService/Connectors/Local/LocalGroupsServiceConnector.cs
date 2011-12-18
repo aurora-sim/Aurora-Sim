@@ -366,7 +366,7 @@ namespace Aurora.Services.DataService
             {
                 if (boolFields.ContainsKey(field) == true)
                 {
-                    filter.Add(string.Format("{0} = '{1}'", field, boolFields[field] ? 1 : 0));
+                    filter.Add(string.Format("{0} = {1}", field, boolFields[field] ? "1" : "0"));
                 }
             }
             if (filter.Count > 0)
@@ -1032,9 +1032,25 @@ namespace Aurora.Services.DataService
             GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
         }
 
-        public uint GetNumberOfGroups()
+        public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
         {
-            List<string> numGroups = data.Query("1=1", "osgroup", "COUNT(GroupID)");
+            string whereClause = "1=1";
+            List<string> filter = new List<string>();
+            string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
+            foreach (string field in BoolFields)
+            {
+                if (boolFields.ContainsKey(field) == true)
+                {
+                    filter.Add(string.Format("{0} = {1}", field, boolFields[field] ? "1" : "0"));
+                }
+            }
+            if (filter.Count > 0)
+            {
+                whereClause = string.Join(" AND ", filter.ToArray());
+            }
+
+
+            List<string> numGroups = data.Query(whereClause, "osgroup", "COUNT(GroupID)");
             return uint.Parse(numGroups[0]);
         }
 
