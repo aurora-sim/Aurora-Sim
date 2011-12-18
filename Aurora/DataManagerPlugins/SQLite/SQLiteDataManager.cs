@@ -48,7 +48,7 @@ namespace Aurora.DataManager.SQLite
 
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
 
-        private static bool m_spammedmessage = false;
+//        private static bool m_spammedmessage = false;
         public SQLiteLoader()
         {
             try
@@ -58,7 +58,8 @@ namespace Aurora.DataManager.SQLite
                 string fileName = System.IntPtr.Size == 4 ? "System.Data.SQLitex86.dll" : "System.Data.SQLitex64.dll";
                 System.IO.File.Copy(fileName, "System.Data.SQLite.dll",true);
             }
-            catch (Exception ex)
+            catch
+//            catch (Exception ex)
             {
 //                if(!m_spammedmessage)
 //                    OpenSim.Framework.MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
