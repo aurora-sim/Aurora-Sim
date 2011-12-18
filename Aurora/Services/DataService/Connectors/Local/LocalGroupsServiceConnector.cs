@@ -516,7 +516,7 @@ namespace Aurora.Services.DataService
                                                         {
                                                             AgentID
                                                         }, "osgroupmembership", "GroupID");
-            return Groups.Select(GroupID => GetGroupMembershipData(requestingAgentID, UUID.Parse(GroupID), AgentID)).ToList();
+            return Groups.Select(GroupID => GetGroupMembershipData(requestingAgentID, UUID.Parse(GroupID), AgentID)).Where(temp => temp != null).ToList();
         }
 
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices,
