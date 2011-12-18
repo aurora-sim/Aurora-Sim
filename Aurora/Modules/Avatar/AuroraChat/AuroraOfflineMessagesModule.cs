@@ -200,7 +200,7 @@ namespace Aurora.Modules
                 return;
             if (!OfflineMessagesConnector.AddOfflineMessage (im))
             {
-                if (!im.fromGroup)
+                if ((!im.fromGroup) && (reason != "User does not exist."))
                     client.SendInstantMessage (new GridInstantMessage (
                             null, im.toAgentID,
                             "System", im.fromAgentID,
