@@ -411,8 +411,8 @@ namespace Aurora.Services.DataService
                                                    "inventoryGroupPermissions"
                                                }, new object[20]
                                                       {
-                                                          item.AssetID, item.AssetType, item.Name.MySqlEscape(),
-                                                          item.Description.MySqlEscape(), item.NextPermissions,
+                                                          item.AssetID, item.AssetType, item.Name.MySqlEscape(64),
+                                                          item.Description.MySqlEscape(128), item.NextPermissions,
                                                           item.CurrentPermissions,
                                                           item.InvType, item.CreatorIdentification, item.BasePermissions
                                                           , item.EveryOnePermissions, item.SalePrice, item.SaleType,

@@ -1687,6 +1687,17 @@ namespace OpenSim.Framework
     {
         public static string MySqlEscape(this string usString)
         {
+            return MySqlEscape(usString, 0);
+        }
+
+        /// <summary>
+        /// Because Escaping the sql might cause it to go over the max length
+        /// </summary>
+        /// <param name="usString"></param>
+        /// <param name="maxLength"></param>
+        /// <returns></returns>
+        public static string MySqlEscape(this string usString, int maxLength)
+        {
             if (usString == null)
             {
                 return null;
@@ -1694,7 +1705,10 @@ namespace OpenSim.Framework
             // SQL Encoding for MySQL Recommended here:
             // http://au.php.net/manual/en/function.mysql-real-escape-string.php
             // it escapes \r, \n, \x00, \x1a, baskslash, single quotes, and double quotes
-            return Regex.Replace(usString, @"[\r\n\x00\x1a\\'""]", @"\$0");
+            string returnvalue = Regex.Replace(usString, @"[\r\n\x00\x1a\\'""]", @"\$0");
+            if ((maxLength != 0) && (returnvalue.Length > maxLength))
+                returnvalue = returnvalue.Substring(0, maxLength);
+            return returnvalue;
         }
     }
 
