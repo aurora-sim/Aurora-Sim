@@ -387,8 +387,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     (asset.ID == asset.ParentID)
                                         ? ""
                                         : (UUID.Zero == asset.ParentID) ? "" : asset.ParentID.ToString(),
-                                    (asset.CreatorID == UUID.Zero) ? "" : asset.CreatorID.ToString(), asset.Name,
-                                    asset.Description, (int) asset.TypeAsset,
+                                    (asset.CreatorID == UUID.Zero) ? "" : asset.CreatorID.ToString(), asset.Name.MySqlEscape(64),
+                                    asset.Description.MySqlEscape(128), (int) asset.TypeAsset,
                                     Util.ToUnixTime(asset.CreationDate), Util.ToUnixTime(DateTime.UtcNow)
                                     , (int) asset.Flags, asset.HostUri
                                 });
