@@ -636,44 +636,44 @@ namespace Aurora.Configuration
         {
             if (mode.Equals("2"))
             {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("====================================================================\n");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Your world is ");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(worldName);
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("\nYour loginuri is ");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("http://" + ipAddress + ":8002/");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("\nThis is the Registration URL: ");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("http://" + ipAddress + ":8003/");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("\nNow press any key to start AuroraServer.exe \nthen press any key to start Aurora.exe.\nUse this name for your Welcome Land: ");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(regionFlag);
-            Console.ForegroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("====================================================================\n");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("Your world is ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(worldName);
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("\nYour loginuri is ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("http://" + ipAddress + ":8002/");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("\nThis is the Registration URL: ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("http://" + ipAddress + ":8003/");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("\nNow press any key to start AuroraServer.exe \nthen press any key to start Aurora.exe.\nUse this name for your Welcome Land: ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(regionFlag);
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine(auroraReconfig
                                       ? "\nNOTE: Aurora-Sim has been reconfigured as Grid Mode.\nPrevious configurations are marked *.old.\nPlease revise the new configurations.\n"
                                       : "Your Aurora-Sim's configuration is complete.\nPlease revise it.");
                 Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("====================================================================\n");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora.Server>");
-            Console.ReadLine();
-            Process AuroraServer = new Process();
-            Process Aurora = new Process();
+                Console.WriteLine("====================================================================\n");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora.Server>");
+                Console.ReadLine();
+                Process AuroraServer = new Process();
+                Process Aurora = new Process();
 
-            AuroraServer.StartInfo.FileName   = "Aurora.Server.exe";
-            Aurora.StartInfo.FileName = "Aurora.exe";
-                
-            AuroraServer.Start();
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Press any key to start the region...");
-            Console.Read();
-            Aurora.Start();
+                AuroraServer.StartInfo.FileName = "Aurora.Server.exe";
+                Aurora.StartInfo.FileName = "Aurora.exe";
+
+                AuroraServer.Start();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("Press any key to start the region...");
+                Console.Read();
+                Aurora.Start();
 
             }
             else if (mode.Equals("1"))
@@ -701,7 +701,7 @@ namespace Aurora.Configuration
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora>");
                 Console.ReadLine();
-                Process Aurora = new Process {StartInfo = {FileName = "Aurora.exe"}};
+                Process Aurora = new Process { StartInfo = { FileName = "Aurora.exe" } };
 
 
                 Aurora.Start();
@@ -716,7 +716,7 @@ namespace Aurora.Configuration
             Console.WriteLine("========================= AURORA CONFIGURATOR ======================\n");
             Console.WriteLine("====================================================================\n");
             Console.ResetColor();
-            
+
             Console.Write("This installation is going to run in \n");
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("[1] Standalone Mode \n[2] Grid Mode");
@@ -745,44 +745,44 @@ namespace Aurora.Configuration
             Console.ResetColor();
             Console.Write("Name of your Aurora-Sim: ");
             Console.ForegroundColor = ConsoleColor.Green;
-            
+
             worldName = Console.ReadLine();
             if (worldName != null) worldName = worldName == string.Empty ? "My Aurora" : worldName.Trim();
             Console.ResetColor();
             if (dbregion != null && dbregion.Equals("1"))
             {
-            Console.Write("MySql database name for your region: [aurora]");
-            Console.ForegroundColor = ConsoleColor.Green;
-            
-            string str = Console.ReadLine();
-            if (str != string.Empty)
-            {
-                dbSchema = str;
-            }
-            
-            Console.ResetColor();
-            Console.Write("MySql database IP: [localhost]");
-            Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("MySql database name for your region: [aurora]");
+                Console.ForegroundColor = ConsoleColor.Green;
 
-            str = Console.ReadLine();
-            if (str != string.Empty)
-            {
-                dbSource = str;
-            }
-            Console.ResetColor();
-            Console.Write("MySql database user account: [aurora]");
-            Console.ForegroundColor = ConsoleColor.Green;
-            
-            str = Console.ReadLine();
-            if (str != string.Empty)
-            {
-                dbUser = str;
-            }
-            Console.ResetColor();
-            Console.Write("MySql database password for that account: ");
-            Console.ForegroundColor = ConsoleColor.Green;
-            
-            dbPasswd = Console.ReadLine();
+                string str = Console.ReadLine();
+                if (str != string.Empty)
+                {
+                    dbSchema = str;
+                }
+
+                Console.ResetColor();
+                Console.Write("MySql database IP: [localhost]");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                str = Console.ReadLine();
+                if (str != string.Empty)
+                {
+                    dbSource = str;
+                }
+                Console.ResetColor();
+                Console.Write("MySql database user account: [aurora]");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                str = Console.ReadLine();
+                if (str != string.Empty)
+                {
+                    dbUser = str;
+                }
+                Console.ResetColor();
+                Console.Write("MySql database password for that account: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                dbPasswd = Console.ReadLine();
             }
             if (mode != null && mode.Equals("2"))
             {
@@ -821,9 +821,9 @@ namespace Aurora.Configuration
                 dbPasswd = Console.ReadLine();
             }
             Console.ResetColor();
-            Console.Write("Your external domain name (preferred) or IP address: [" +Framework.Utilities.GetExternalIp()+"]");
+            Console.Write("Your external domain name (preferred) or IP address: [" + Framework.Utilities.GetExternalIp() + "]");
             Console.ForegroundColor = ConsoleColor.Green;
-            
+
             ipAddress = Console.ReadLine();
             if (ipAddress == string.Empty)
             {
@@ -832,7 +832,7 @@ namespace Aurora.Configuration
             Console.ResetColor();
             Console.Write("The name you will use for your Welcome Land: ");
             Console.ForegroundColor = ConsoleColor.Green;
-            
+
             regionFlag = Console.ReadLine();
             if (regionFlag == string.Empty)
             {
@@ -845,7 +845,7 @@ namespace Aurora.Configuration
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("\nChoose 1 or 2 [1]: ");
             Console.ForegroundColor = ConsoleColor.Green;
-            
+
             platform = Console.ReadLine();
             if (platform == string.Empty)
             {
@@ -856,20 +856,20 @@ namespace Aurora.Configuration
 
         public static void Main(string[] args)
         {
-                GetUserInput();
-                ConfigureAuroraini();
-                ConfigureAuroraServer();
-                ConfigureAuroraData();
-                ConfigureAuroraMySql();
-                ConfigureAuroraMain();
-                ConfigureAuroraGridCommon();
-                ConfigureAuroraServerData();
-                ConfigureAuroraServerMySQL();
-                ConfigureAuroraLogin();
-                ConfigureAuroraGridInfoService();
-                ConfigureAuroraCommon();
-                DisplayInfo();
-            
+            GetUserInput();
+            ConfigureAuroraini();
+            ConfigureAuroraServer();
+            ConfigureAuroraData();
+            ConfigureAuroraMySql();
+            ConfigureAuroraMain();
+            ConfigureAuroraGridCommon();
+            ConfigureAuroraServerData();
+            ConfigureAuroraServerMySQL();
+            ConfigureAuroraLogin();
+            ConfigureAuroraGridInfoService();
+            ConfigureAuroraCommon();
+            DisplayInfo();
+
         }
 
 
