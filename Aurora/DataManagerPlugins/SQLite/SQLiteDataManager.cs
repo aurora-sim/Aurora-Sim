@@ -49,14 +49,19 @@ namespace Aurora.DataManager.SQLite
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
 
 //        private static bool m_spammedmessage = false;
+        private static bool m_copiedFile = false;
         public SQLiteLoader()
         {
             try
             {
-                if (System.IO.File.Exists("System.Data.SQLite.dll"))
-                   System.IO.File.Delete("System.Data.SQLite.dll");
-                string fileName = System.IntPtr.Size == 4 ? "System.Data.SQLitex86.dll" : "System.Data.SQLitex64.dll";
-                System.IO.File.Copy(fileName, "System.Data.SQLite.dll",true);
+                if (!m_copiedFile)
+                {
+                    m_copiedFile = true;
+                    if (System.IO.File.Exists("System.Data.SQLite.dll"))
+                        System.IO.File.Delete("System.Data.SQLite.dll");
+                    string fileName = System.IntPtr.Size == 4 ? "System.Data.SQLitex86.dll" : "System.Data.SQLitex64.dll";
+                    System.IO.File.Copy(fileName, "System.Data.SQLite.dll", true);
+                }
             }
             catch
 //            catch (Exception ex)
