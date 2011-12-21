@@ -100,7 +100,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                         },
                                     new object[]
                                         {
-                                            asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(),
+                                            asset.ID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
                                             (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
                                             (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
                                             (int) asset.Flags, asset.CreatorID, asset.Data
@@ -118,7 +118,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                         },
                                     new object[]
                                         {
-                                            asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(),
+                                            asset.ID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
                                             (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
                                             (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
                                             (int) asset.Flags, asset.CreatorID, asset.Data
@@ -135,7 +135,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     },
                                 new object[]
                                     {
-                                        asset.ID, asset.Name.MySqlEscape(), asset.Description.MySqlEscape(),
+                                        asset.ID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
                                         (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
                                         (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
                                         (int) asset.Flags, asset.CreatorID, asset.Data

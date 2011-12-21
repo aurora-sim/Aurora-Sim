@@ -64,22 +64,22 @@ namespace Aurora.Services.DataService
 
         public void UpdateLSLData(string token, string key, string value)
         {
-            List<string> Test = GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(), key.MySqlEscape()},
+            List<string> Test = GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(50), key.MySqlEscape(50)},
                                          "lslgenericdata", "*");
             if (Test.Count == 0)
             {
-                GD.Insert("lslgenericdata", new[] {token.MySqlEscape(), key.MySqlEscape(), value.MySqlEscape()});
+                GD.Insert("lslgenericdata", new[] {token.MySqlEscape(50), key.MySqlEscape(50), value.MySqlEscape(50)});
             }
             else
             {
-                GD.Update("lslgenericdata", new object[] {value.MySqlEscape()}, new[] {"ValueSetting"},
-                          new[] {"KeySetting"}, new object[] {key.MySqlEscape()});
+                GD.Update("lslgenericdata", new object[] {value.MySqlEscape(50)}, new[] {"ValueSetting"},
+                          new[] {"KeySetting"}, new object[] {key.MySqlEscape(50)});
             }
         }
 
         public List<string> FindLSLData(string token, string key)
         {
-            return GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(), key.MySqlEscape()},
+            return GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(50), key.MySqlEscape(50)},
                             "lslgenericdata", "*");
         }
 

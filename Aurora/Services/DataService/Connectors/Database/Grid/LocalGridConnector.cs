@@ -187,7 +187,7 @@ namespace Aurora.Services.DataService
 
             values.Add(region.ScopeID);
             values.Add(region.RegionID);
-            values.Add(region.RegionName.MySqlEscape());
+            values.Add(region.RegionName.MySqlEscape(50));
             values.Add(region.RegionLocX);
             values.Add(region.RegionLocY);
             values.Add(region.RegionLocZ);

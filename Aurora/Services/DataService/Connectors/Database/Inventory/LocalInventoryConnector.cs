@@ -392,12 +392,12 @@ namespace Aurora.Services.DataService
                              new string[6] {"folderName", "type", "version", "folderID", "agentID", "parentFolderID"},
                              new object[6]
                                  {
-                                     folder.Name.MySqlEscape(), folder.Type, folder.Version, folder.ID, folder.Owner,
+                                     folder.Name.MySqlEscape(64), folder.Type, folder.Version, folder.ID, folder.Owner,
                                      folder.ParentID
                                  });
         }
 
-        public virtual bool StoreItem(InventoryItemBase item)
+        1
         {
             GD.Delete(m_itemsrealm, new string[1] {"inventoryID"}, new object[1] {item.ID});
             return GD.Insert(m_itemsrealm, new string[20]

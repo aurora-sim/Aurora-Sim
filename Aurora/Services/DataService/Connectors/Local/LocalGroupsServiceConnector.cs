@@ -92,8 +92,8 @@ namespace Aurora.Services.DataService
             List<Object> Values = new List<object>
                                       {
                                           groupID,
-                                          name.MySqlEscape(),
-                                          charter.MySqlEscape(),
+                                          name.MySqlEscape(50),
+                                          charter.MySqlEscape(50),
                                           insigniaID,
                                           founderID,
                                           membershipFee,
@@ -210,7 +210,7 @@ namespace Aurora.Services.DataService
                 return;
             List<string> Keys = new List<string> {"GroupID", "RoleID", "Name", "Description", "Title", "Powers"};
             List<Object> Values = new List<object>
-                                      {GroupID, RoleID, Name.MySqlEscape(), Description.MySqlEscape(), Title, Powers};
+                                      {GroupID, RoleID, Name.MySqlEscape(50), Description.MySqlEscape(50), Title, Powers};
             data.Insert("osrole", Keys.ToArray(), Values.ToArray());
         }
 
@@ -223,7 +223,7 @@ namespace Aurora.Services.DataService
                 return;
             data.Update("osgroup", new object[]
                                        {
-                                           charter.MySqlEscape(),
+                                           charter.MySqlEscape(50),
                                            insigniaID,
                                            membershipFee,
                                            openEnrollment,
@@ -292,11 +292,11 @@ namespace Aurora.Services.DataService
 
             List<object> Values = new List<object> {RoleID};
             if (Name != null)
-                Values.Add(Name.MySqlEscape());
+                Values.Add(Name.MySqlEscape(512));
             if (Desc != null)
-                Values.Add(Desc.MySqlEscape());
+                Values.Add(Desc.MySqlEscape(512));
             if (Title != null)
-                Values.Add(Title.MySqlEscape());
+                Values.Add(Title.MySqlEscape(512));
 
             Values.Add(Powers);
 
@@ -325,7 +325,7 @@ namespace Aurora.Services.DataService
             if (!string.IsNullOrEmpty(GroupName))
             {
                 Keys.Add("Name");
-                Values.Add(GroupName.MySqlEscape());
+                Values.Add(GroupName.MySqlEscape(50));
             }
             List<string> osgroupsData = data.Query(Keys.ToArray(), Values.ToArray(), "osgroup",
                                                    "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
@@ -575,7 +575,7 @@ namespace Aurora.Services.DataService
                                                         roleID,
                                                         AgentID,
                                                         Util.UnixTimeSinceEpoch(),
-                                                        FromAgentName.MySqlEscape()
+                                                        FromAgentName.MySqlEscape(50)
                                                     });
         }
 
@@ -747,7 +747,7 @@ namespace Aurora.Services.DataService
         public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery,
                                                    uint queryflags)
         {
-            string whereClause = " Name LIKE '%" + search.MySqlEscape() + "%' LIMIT " + StartQuery + ",50 ";
+            string whereClause = " Name LIKE '%" + search.MySqlEscape(50) + "%' LIMIT " + StartQuery + ",50 ";
             List<string> retVal = data.Query(whereClause, "osgroup",
                                              "GroupID,Name,ShowInList,AllowPublish,MaturePublish");
 
@@ -1015,13 +1015,13 @@ namespace Aurora.Services.DataService
                                           groupID,
                                           noticeID,
                                           ((uint) Util.UnixTimeSinceEpoch()),
-                                          fromName.MySqlEscape(),
-                                          subject.MySqlEscape(),
-                                          message.MySqlEscape(),
+                                          fromName.MySqlEscape(50),
+                                          subject.MySqlEscape(50),
+                                          message.MySqlEscape(1024),
                                           (ItemID != UUID.Zero) ? 1 : 0,
                                           ItemID,
                                           AssetType,
-                                          ItemName.MySqlEscape()
+                                          ItemName.MySqlEscape(50)
                                       };
 
             data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());

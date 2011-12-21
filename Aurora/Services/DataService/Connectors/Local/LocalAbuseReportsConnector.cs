@@ -159,17 +159,17 @@ namespace Aurora.Services.DataService
         {
             List<object> InsertValues = new List<object>
                                             {
-                                                report.Category.ToString().MySqlEscape(),
-                                                report.ReporterName.MySqlEscape(),
-                                                report.ObjectName.MySqlEscape(),
+                                                report.Category.ToString().MySqlEscape(100),
+                                                report.ReporterName.MySqlEscape(100),
+                                                report.ObjectName.MySqlEscape(100),
                                                 report.ObjectUUID,
-                                                report.AbuserName.MySqlEscape(),
-                                                report.AbuseLocation.MySqlEscape(),
-                                                report.AbuseDetails.MySqlEscape(),
-                                                report.ObjectPosition.MySqlEscape(),
-                                                report.RegionName.MySqlEscape(),
+                                                report.AbuserName.MySqlEscape(100),
+                                                report.AbuseLocation.MySqlEscape(100),
+                                                report.AbuseDetails.MySqlEscape(512),
+                                                report.ObjectPosition.MySqlEscape(100),
+                                                report.RegionName.MySqlEscape(100),
                                                 report.ScreenshotID,
-                                                report.AbuseSummary.MySqlEscape()
+                                                report.AbuseSummary.MySqlEscape(100)
                                             };
 
             //We do not trust the number sent by the region. Always find it ourselves
@@ -180,10 +180,10 @@ namespace Aurora.Services.DataService
 
             InsertValues.Add(report.Number);
 
-            InsertValues.Add(report.AssignedTo.MySqlEscape());
+            InsertValues.Add(report.AssignedTo.MySqlEscape(100));
             InsertValues.Add(report.Active ? 1 : 0);
             InsertValues.Add(report.Checked ? 1 : 0);
-            InsertValues.Add(report.Notes.MySqlEscape());
+            InsertValues.Add(report.Notes.MySqlEscape(1024));
 
             GD.Insert("abusereports", InsertValues.ToArray());
         }
@@ -200,22 +200,22 @@ namespace Aurora.Services.DataService
             //This is update, so we trust the number as it should know the number it's updating now.
             List<object> InsertValues = new List<object>
                                             {
-                                                report.Category.ToString().MySqlEscape(),
-                                                report.ReporterName.MySqlEscape(),
-                                                report.ObjectName.MySqlEscape(),
+                                                report.Category.ToString().MySqlEscape(100),
+                                                report.ReporterName.MySqlEscape(100),
+                                                report.ObjectName.MySqlEscape(100),
                                                 report.ObjectUUID,
-                                                report.AbuserName.MySqlEscape(),
-                                                report.AbuseLocation.MySqlEscape(),
-                                                report.AbuseDetails.MySqlEscape(),
-                                                report.ObjectPosition.MySqlEscape(),
-                                                report.RegionName.MySqlEscape(),
+                                                report.AbuserName.MySqlEscape(100),
+                                                report.AbuseLocation.MySqlEscape(100),
+                                                report.AbuseDetails.MySqlEscape(512),
+                                                report.ObjectPosition.MySqlEscape(100),
+                                                report.RegionName.MySqlEscape(100),
                                                 report.ScreenshotID,
-                                                report.AbuseSummary.MySqlEscape(),
+                                                report.AbuseSummary.MySqlEscape(100),
                                                 report.Number,
-                                                report.AssignedTo.MySqlEscape(),
+                                                report.AssignedTo.MySqlEscape(100),
                                                 report.Active ? 1 : 0,
                                                 report.Checked ? 1 : 0,
-                                                report.Notes.MySqlEscape()
+                                                report.Notes.MySqlEscape(1024)
                                             };
 
             List<string> InsertKeys = new List<string>

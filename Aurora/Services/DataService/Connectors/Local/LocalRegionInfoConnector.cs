@@ -70,7 +70,7 @@ namespace Aurora.Services.DataService
             List<object> Values = new List<object>
                                       {
                                           region.RegionID,
-                                          region.RegionName.MySqlEscape(),
+                                          region.RegionName.MySqlEscape(50),
                                           OSDParser.SerializeJsonString(region.PackRegionInfoData(true)),
                                           region.Disabled ? 1 : 0
                                       };
@@ -121,7 +121,7 @@ namespace Aurora.Services.DataService
 
         public RegionInfo GetRegionInfo (string regionName)
         {
-            List<string> RetVal = GD.Query("RegionName", regionName.MySqlEscape(), "simulator", "RegionInfo");
+            List<string> RetVal = GD.Query("RegionName", regionName.MySqlEscape(50), "simulator", "RegionInfo");
             RegionInfo replyData = new RegionInfo();
             if (RetVal.Count == 0)
                 return null;

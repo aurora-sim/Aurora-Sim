@@ -79,12 +79,12 @@ namespace Aurora.Services.DataService
                 if (data.Data.ElementAt(i).Key == "Textures")
                     GD.Insert(m_realm,
                               new object[3]
-                                  {PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(), data.Data.ElementAt(i).Value});
+                                  {PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(32), data.Data.ElementAt(i).Value.MySqlEscape()});
                 else
                     GD.Insert(m_realm,
                               new object[3]
                                   {
-                                      PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(),
+                                      PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(32),
                                       data.Data.ElementAt(i).Value.MySqlEscape()
                                   });
             }

@@ -94,13 +94,14 @@ namespace Aurora.Services.DataService
                                           }, new object[]
                                                  {
                                                      data.PrincipalID,
-                                                     data.PasswordHash.MySqlEscape(), data.PasswordSalt.MySqlEscape(),
-                                                     data.AccountType.MySqlEscape()
+                                                     data.PasswordHash.MySqlEscape(1024), data.PasswordSalt.MySqlEscape(1024),
+                                                     data.AccountType.MySqlEscape(32)
                                                  });
         }
 
         public bool SetDataItem(UUID principalID, string item, string value)
         {
+			// I don't think this is used anywhere
             return GD.Update(m_realm, new object[1] {value}, new string[1] {item.MySqlEscape()},
                              new string[1] {"UUID"}, new object[1] {principalID});
         }

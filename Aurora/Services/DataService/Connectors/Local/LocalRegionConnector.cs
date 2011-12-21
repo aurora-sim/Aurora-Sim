@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
                                               telehub.TelehubRotZ,
                                               telehub.BuildFromList(telehub.SpawnPos),
                                               telehub.ObjectUUID,
-                                              telehub.Name.MySqlEscape()
+                                              telehub.Name.MySqlEscape(50)
                                           }, new[]
                                                  {
                                                      "TelehubLocX",
@@ -113,7 +113,7 @@ namespace Aurora.Services.DataService
                                               telehub.TelehubRotZ,
                                               telehub.BuildFromList(telehub.SpawnPos),
                                               telehub.ObjectUUID,
-                                              telehub.Name.MySqlEscape()
+                                              telehub.Name.MySqlEscape(50)
                                           };
                 GD.Insert("telehubs", values.ToArray());
             }
