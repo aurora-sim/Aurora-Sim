@@ -49,7 +49,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         /// <summary>
         ///   Setting this to false for now... it seems to contribute to the HTTP server freaking out and crashing
         /// </summary>
-        private static bool m_useAsync;
+        private static bool m_useAsync=false;
 
         ///<summary>
         ///  Perform an asynchronous REST request.
