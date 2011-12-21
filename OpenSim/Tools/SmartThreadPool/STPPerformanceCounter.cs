@@ -317,10 +317,18 @@ namespace Amib.Threading.Internal
         {
             if (null != _pcs)
             {
-                foreach (STPInstancePerformanceCounter t in _pcs.Where(t => null != t))
+#if (!ISWIN)
+                foreach (STPInstancePerformanceCounter t in _pcs)
                 {
-                    t.Close();
+                    if (null != t)
+                    {
+                        t.Close();
+                    }
                 }
+#else
+                foreach (STPInstancePerformanceCounter t in _pcs.Where(t => null != t))
+                    t.Close();
+#endif
                 _pcs = null;
             }
         }
