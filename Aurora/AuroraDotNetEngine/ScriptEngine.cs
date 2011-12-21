@@ -453,7 +453,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptProtection.Reset(true);
                 //Delete all assemblies
                 Compiler.RecreateDirectory();
-                MaintenanceThread.StartScripts(scripts.Select(ID => new LUStruct {Action = LUType.Load, ID = ID}).ToArray());
+#if (!ISWIN)
+                List<LUStruct> list = new List<LUStruct>();
+                foreach (ScriptData id in scripts)
+                    list.Add(new LUStruct {Action = LUType.Load, ID = id});
+                MaintenanceThread.StartScripts(list.ToArray());
+#else
+                MaintenanceThread.StartScripts(scripts.Select(ID => new LUStruct { Action = LUType.Load, ID = ID }).ToArray());
+#endif
                 m_log.Warn("[ADNE]: All scripts have been restarted.");
             }
             else
@@ -1357,12 +1364,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public ISceneChildEntity findPrim(UUID objectID)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_Scenes)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(objectID);
+                if (part != null) return part;
+            }
+            return null;
+#else
             return m_Scenes.Select(s => s.GetSceneObjectPart(objectID)).FirstOrDefault(part => part != null);
+#endif
         }
 
         public ISceneChildEntity findPrim(uint localID)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_Scenes)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(localID);
+                if (part != null) return part;
+            }
+            return null;
+#else
             return m_Scenes.Select(s => s.GetSceneObjectPart(localID)).FirstOrDefault(part => part != null);
+#endif
         }
 
         public IScene findPrimsScene(uint localID)

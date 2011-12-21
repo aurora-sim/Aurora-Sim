@@ -131,6 +131,20 @@ namespace Aurora.Services.DataService
 
         private OSDMap PostData(UUID userID, NameValueCollection nvc)
         {
+#if (!ISWIN)
+            foreach (string mServerUri in m_ServerURIs)
+            {
+                OSDMap response = WebUtils.PostToService(mServerUri, nvc);
+                if (response["Success"].AsBoolean() && response["User"] is OSDMap)
+                {
+                    return (OSDMap) response["User"];
+                }
+                else
+                {
+                    m_log.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
+                }
+            }
+#else
             foreach (OSDMap response in m_ServerURIs.Select(m_ServerURI => WebUtils.PostToService(m_ServerURI, nvc)))
             {
                 if (response["Success"].AsBoolean() && response["User"] is OSDMap)
@@ -143,6 +157,7 @@ namespace Aurora.Services.DataService
                                 response["Message"].AsString());
                 }
             }
+#endif
 
             return null;
         }

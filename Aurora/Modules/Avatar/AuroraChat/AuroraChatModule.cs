@@ -906,7 +906,19 @@ namespace Aurora.Modules
         /// <returns></returns>
         public IScenePresence findScenePresence(UUID avID)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_scenes)
+            {
+                IScenePresence SP = s.GetScenePresence(avID);
+                if (SP != null)
+                {
+                    return SP;
+                }
+            }
+            return null;
+#else
             return m_scenes.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
+#endif
         }
 
         private void OnGridInstantMessage(GridInstantMessage msg)

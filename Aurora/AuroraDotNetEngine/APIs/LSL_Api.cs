@@ -8790,7 +8790,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List res = new LSL_List();
 
+#if (!ISWIN)
+            LSL_List result = res;
+            foreach (ISceneChildEntity part in parts)
+            {
+                LSL_List list = GetLinkPrimitiveParams(part, rules);
+                result = result + list;
+            }
+            return result;
+#else
             return parts.Select(part => GetLinkPrimitiveParams(part, rules)).Aggregate(res, (current, partRes) => current + partRes);
+#endif
         }
 
         public LSL_List GetLinkPrimitiveParams (ISceneChildEntity part, LSL_List rules)
@@ -10427,9 +10437,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return new LSL_List();
             LSL_List res = new LSL_List();
 
+#if (!ISWIN)
+            LSL_List result = res;
+            foreach (ISceneChildEntity part in entities)
+            {
+                LSL_List list = GetPrimMediaParams(part, face, rules);
+                result = result + list;
+            }
+            return result;
+#else
             return entities.Select(part => GetPrimMediaParams(part, face, rules)).Aggregate(res,
                                                                                             (current, partRes) =>
                                                                                             current + partRes);
+#endif
         }
 
         private LSL_List GetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
@@ -11126,7 +11146,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             IHttpRequestModule httpScriptMod =
                 World.RequestModuleInterface<IHttpRequestModule>();
+#if (!ISWIN)
+            List<string> param = new List<string>();
+            foreach (object o in parameters.Data)
+                param.Add(o.ToString());
+#else
             List<string> param = parameters.Data.Select(o => o.ToString()).ToList();
+#endif
 
             Vector3 position = m_host.AbsolutePosition;
             Vector3 velocity = m_host.Velocity;

@@ -852,7 +852,14 @@ namespace Aurora.Services.DataService
                 return new List<GroupMembersData>();
 
             List<string> Agents = data.Query("GroupID", GroupID, "osgroupmembership", "AgentID");
+#if (!ISWIN)
+            List<GroupMembersData> list = new List<GroupMembersData>();
+            foreach (string agent in Agents)
+                list.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent)));
+            return list;
+#else
             return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();
+#endif
         }
 
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)

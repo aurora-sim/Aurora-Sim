@@ -105,8 +105,17 @@ namespace Aurora.Modules
 
             IEventQueueService eqs = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eqs != null)
+            {
+#if (!ISWIN)
+                List<ISceneChildEntity> list = new List<ISceneChildEntity>();
+                foreach (OSD key in keys)
+                    list.Add(m_scene.GetSceneObjectPart(key.AsUUID()));
+                eqs.ObjectPhysicsProperties(list.ToArray(),
+                                            agentID, m_scene.RegionInfo.RegionHandle);
+#else
                 eqs.ObjectPhysicsProperties(keys.Select(key => m_scene.GetSceneObjectPart(key.AsUUID())).ToArray(), agentID, m_scene.RegionInfo.RegionHandle);
-
+#endif
+            }
             //Send back data
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;

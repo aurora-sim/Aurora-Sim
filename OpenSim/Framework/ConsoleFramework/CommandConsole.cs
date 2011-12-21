@@ -428,14 +428,28 @@ namespace OpenSim.Framework
                     help.Add("------- Help Sets (type the name and help to get more info about that set) -------");
                     help.Add("");
                 }
+#if (!ISWIN)
+                foreach (CommandSet set in commandsets.Values)
+                {
+                    help.Add(string.Format("-- Help Set: {0}", set.Path));
+                }
+#else
                 help.AddRange(commandsets.Values.Select(set => string.Format("-- Help Set: {0}", set.Path)));
+#endif
                 if (help.Count != 0)
                 {
                     help.Add("");
                     help.Add("------- Help options -------");
                     help.Add("");
                 }
+#if (!ISWIN)
+                foreach (CommandInfo command in commands.Values)
+                {
+                    help.Add(string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
+                }
+#else
                 help.AddRange(commands.Values.Select(command => string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
+#endif
                 return help;
             }
         }

@@ -678,7 +678,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 convIndices.Add(indices[ii]);
             }
+#if (!ISWIN)
+            List<float3> convVertices = new List<float3>();
+            foreach (Vector3 vv in vertices)
+                convVertices.Add(new float3(vv.X, vv.Y, vv.Z));
+#else
             List<float3> convVertices = vertices.Select(vv => new float3(vv.X, vv.Y, vv.Z)).ToList();
+#endif
 
             // setup and do convex hull conversion
             _hulls = new List<ConvexResult>();

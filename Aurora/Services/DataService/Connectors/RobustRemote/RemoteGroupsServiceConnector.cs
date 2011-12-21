@@ -1031,7 +1031,13 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             // Success
-                            return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupMembershipData(f)).ToList();
+                            List<GroupMembershipData> list = new List<GroupMembershipData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupMembershipData(f));
+                            }
+                            return list;
                         }
                     }
                 }
@@ -1082,7 +1088,13 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             // Success
-                            return replyvalues.OfType<Dictionary<string, object>>().Select(f => new DirGroupsReplyData(f)).ToList();
+                            List<DirGroupsReplyData> list = new List<DirGroupsReplyData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new DirGroupsReplyData(f));
+                            }
+                            return list;
                         }
                     }
                 }
@@ -1131,7 +1143,13 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             // Success
-                            return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRolesData(f)).ToList();
+                            List<GroupRolesData> list = new List<GroupRolesData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupRolesData(f));
+                            }
+                            return list;
                         }
                     }
                 }

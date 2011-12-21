@@ -673,7 +673,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             Dictionary<string, OSDMap> GroupMemberShips;
             if (SimianGetGenericEntries(agentID, "GroupMember", out GroupMemberShips))
             {
+#if (!ISWIN)
+                foreach (string key in GroupMemberShips.Keys)
+                {
+                    memberships.Add(GetAgentGroupMembership(requestingAgentID, agentID, UUID.Parse(key)));
+                }
+#else
                 memberships.AddRange(GroupMemberShips.Keys.Select(key => GetAgentGroupMembership(requestingAgentID, agentID, UUID.Parse(key))));
+#endif
             }
 
             return memberships;

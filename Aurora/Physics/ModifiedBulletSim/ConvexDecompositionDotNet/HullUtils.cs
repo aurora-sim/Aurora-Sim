@@ -1024,7 +1024,13 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             int i;
             for (i = 0; i < planes_count; i++)
             {
-                float d = convex.vertices.Select(t => float3.dot(t, planes[i].normal) + planes[i].dist).Concat(new float[] {0}).Max();
+#if (!ISWIN)
+                float d = 0;
+                foreach (float3 t in convex.vertices)
+                    d = Math.Max(d, float3.dot(t, planes[i].normal) + planes[i].dist);
+#else
+                float d = convex.vertices.Select(t => float3.dot(t, planes[i].normal) + planes[i].dist).Concat(new float[] { 0 }).Max();
+#endif
                 if (i == 0 || d > md)
                 {
                     p = i;

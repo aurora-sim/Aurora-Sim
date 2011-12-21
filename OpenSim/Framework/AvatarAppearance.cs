@@ -516,10 +516,23 @@ namespace OpenSim.Framework
 
         public int GetAttachpoint(UUID itemID)
         {
+#if (!ISWIN)
+            foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
+            {
+                int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
+                if (index >= 0)
+                {
+                    int i = kvp.Key;
+                    return i;
+                }
+            }
+            return 0;
+#else
             return (m_attachments.Select(
                 kvp =>
                 new {kvp, index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; })}).
                 Where(@t => @t.index >= 0).Select(@t => @t.kvp.Key)).FirstOrDefault();
+#endif
         }
 
         public bool DetachAttachment(UUID itemID)

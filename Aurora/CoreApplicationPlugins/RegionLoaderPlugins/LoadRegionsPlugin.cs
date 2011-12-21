@@ -107,10 +107,18 @@ namespace OpenSim.CoreApplicationPlugins
                     regions.Add(regionsToLoad);
                 }
             }
+#if (!ISWIN)
+            foreach (RegionInfo[] regionsToLoad in regions)
+                foreach (RegionInfo t in regionsToLoad)
+                {
+                    manager.StartNewRegion(t);
+                }
+#else
             foreach (RegionInfo t in regions.SelectMany(regionsToLoad => regionsToLoad))
             {
                 manager.StartNewRegion(t);
             }
+#endif
         }
 
         public void Close()

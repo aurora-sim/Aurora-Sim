@@ -1207,7 +1207,12 @@ namespace OpenSim.Framework
 
                     if (dirs.Length != 0)
                     {
+#if (!ISWIN)
+                        foreach (string dir in dirs)
+                            addpaths.Add(Path.Combine(path, dir));
+#else
                         addpaths.AddRange(dirs.Select(dir => Path.Combine(path, dir)));
+#endif
                     }
 
                     // Only add files if that is the last path component

@@ -474,11 +474,20 @@ namespace Aurora.DataManager.MySQL
             string query = String.Format("update {0} set ", table);
             int i = 0;
             Dictionary<string, object> parameters = new Dictionary<string, object>();
+#if (!ISWIN)
+            foreach (object value in setValues)
+            {
+                string valueSTR = value.ToString();
+                query += string.Format("{0} = {1},", setRows[i], valueSTR);
+                i++;
+            }
+#else
             foreach (string valueSTR in setValues.Select(value => value.ToString()))
             {
                 query += string.Format("{0} = {1},", setRows[i], valueSTR);
                 i++;
             }
+#endif
             i = 0;
             query = query.Remove(query.Length - 1);
             query += " where ";
@@ -829,6 +838,26 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
+#if (!ISWIN)
+                foreach (ColumnDefinition column in addedColumns.Values)
+                {
+                    string addedColumnsQuery = "add `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + " ";
+                    string query = string.Format("alter table " + table + " " + addedColumnsQuery);
+                    ExecuteNonQuery(query, new Dictionary<string, object>());
+                }
+                foreach (ColumnDefinition column in modifiedColumns.Values)
+                {
+                    string modifiedColumnsQuery = "modify column `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + " ";
+                    string query = string.Format("alter table " + table + " " + modifiedColumnsQuery);
+                    ExecuteNonQuery(query, new Dictionary<string, object>());
+                }
+                foreach (ColumnDefinition column in removedColumns.Values)
+                {
+                    string droppedColumnsQuery = "drop `" + column.Name + "` ";
+                    string query = string.Format("alter table " + table + " " + droppedColumnsQuery);
+                    ExecuteNonQuery(query, new Dictionary<string, object>());
+                }
+#else
                 foreach (string query in addedColumns.Values.Select(column => "add `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) +
                                                                               " ").Select(addedColumnsQuery => string.Format("alter table " + table + " " + addedColumnsQuery)))
                 {
@@ -843,6 +872,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
+#endif
             }
             catch (Exception e)
             {

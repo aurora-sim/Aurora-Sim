@@ -1788,7 +1788,13 @@ namespace OpenSim.Region.Framework.Scenes
             if (returnobjects.Length == 0)
                 return true;
             //AddReturns(returnobjects[0].OwnerID, returnobjects[0].Name, returnobjects.Length, returnobjects[0].AbsolutePosition, "parcel owner return");
+#if (!ISWIN)
+            List<uint> IDs = new List<uint>();
+            foreach (ISceneEntity grp in returnobjects)
+                IDs.Add(grp.LocalId);
+#else
             List<uint> IDs = returnobjects.Select(grp => grp.LocalId).ToList();
+#endif
             IClientAPI client;
             m_scene.ClientManager.TryGetValue(AgentId, out client);
             //Its ok if the client is null, its taken care of
