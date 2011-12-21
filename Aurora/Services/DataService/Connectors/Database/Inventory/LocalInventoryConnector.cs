@@ -397,7 +397,7 @@ namespace Aurora.Services.DataService
                                  });
         }
 
-        1
+        public virtual bool StoreItem(InventoryItemBase item)
         {
             GD.Delete(m_itemsrealm, new string[1] {"inventoryID"}, new object[1] {item.ID});
             return GD.Insert(m_itemsrealm, new string[20]
