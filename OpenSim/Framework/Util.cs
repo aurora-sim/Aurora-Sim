@@ -996,70 +996,58 @@ namespace OpenSim.Framework
             Type settingsType = settingsClass.GetType();
 
             FieldInfo[] fieldInfos = settingsType.GetFields();
-            foreach (FieldInfo fieldInfo in fieldInfos.Where(fieldInfo => !fieldInfo.IsStatic))
+            foreach (FieldInfo fieldInfo in fieldInfos)
             {
-                if (fieldInfo.FieldType == typeof(String))
+                if (!fieldInfo.IsStatic)
                 {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.Get(fieldInfo.Name, (string)fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof(Boolean))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.GetBoolean(fieldInfo.Name, (bool)fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof(Int32))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.GetInt(fieldInfo.Name, (int)fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof(Single))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.GetFloat(fieldInfo.Name, (float)fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof(UInt32))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       Convert.ToUInt32(config.Get(fieldInfo.Name,
-                                                                   ((uint)fieldInfo.GetValue(settingsClass)).
-                                                                       ToString())));
+                    if (fieldInfo.FieldType == typeof (String))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (Boolean))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (Int32))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (Single))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (UInt32))
+                    {
+                        fieldInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(fieldInfo.Name, ((uint) fieldInfo.GetValue(settingsClass)).ToString())));
+                    }
                 }
             }
 
             PropertyInfo[] propertyInfos = settingsType.GetProperties();
-            foreach (PropertyInfo propInfo in propertyInfos.Where(propInfo => (propInfo.CanRead) && (propInfo.CanWrite)))
+            foreach (PropertyInfo propInfo in propertyInfos)
             {
-                if (propInfo.PropertyType == typeof(String))
+                if ((propInfo.CanRead) && (propInfo.CanWrite))
                 {
-                    propInfo.SetValue(settingsClass,
-                                      config.Get(propInfo.Name, (string)propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                else if (propInfo.PropertyType == typeof(Boolean))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      config.GetBoolean(propInfo.Name, (bool)propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                else if (propInfo.PropertyType == typeof(Int32))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      config.GetInt(propInfo.Name, (int)propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                else if (propInfo.PropertyType == typeof(Single))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      config.GetFloat(propInfo.Name, (float)propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                if (propInfo.PropertyType == typeof(UInt32))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      Convert.ToUInt32(config.Get(propInfo.Name,
-                                                                  ((uint)propInfo.GetValue(settingsClass, null)).
-                                                                      ToString())), null);
+                    if (propInfo.PropertyType == typeof (String))
+                    {
+                        propInfo.SetValue(settingsClass, config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    else if (propInfo.PropertyType == typeof (Boolean))
+                    {
+                        propInfo.SetValue(settingsClass, config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    else if (propInfo.PropertyType == typeof (Int32))
+                    {
+                        propInfo.SetValue(settingsClass, config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    else if (propInfo.PropertyType == typeof (Single))
+                    {
+                        propInfo.SetValue(settingsClass, config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    if (propInfo.PropertyType == typeof (UInt32))
+                    {
+                        propInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(propInfo.Name, ((uint) propInfo.GetValue(settingsClass, null)).ToString())), null);
+                    }
                 }
             }
 
@@ -1984,11 +1972,22 @@ namespace OpenSim.Framework
 
             if (hosts != null)
             {
+#if (!ISWIN)
+                foreach (IPAddress host in hosts)
+                {
+                    if (host.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
+                        return host;
+                    }
+                }
+#else
                 foreach (IPAddress host in hosts.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
                     m_dnsCache.Add(dnsAddress, host, 30 * 60 /*30mins*/);
                     return host;
                 }
+#endif
 
                 if (hosts.Length > 0)
                 {
@@ -2037,17 +2036,37 @@ namespace OpenSim.Framework
                 }
             }
 
+#if (!ISWIN)
+            foreach (IPAddress host in iplist)
+            {
+                if (!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return host;
+                }
+            }
+#else
             foreach (IPAddress host in iplist.Where(host => !IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork))
             {
                 return host;
             }
+#endif
 
             if (iplist.Length > 0)
             {
+#if (!ISWIN)
+                foreach (IPAddress host in iplist)
+                {
+                    if (host.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return host;
+                    }
+                }
+#else
                 foreach (IPAddress host in iplist.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
                     return host;
                 }
+#endif
                 // Well all else failed...
                 return iplist[0];
             }
