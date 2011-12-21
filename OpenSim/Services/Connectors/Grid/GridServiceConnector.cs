@@ -409,11 +409,24 @@ namespace OpenSim.Services.Connectors
                         if (replyData != null)
                         {
                             Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                            foreach (object o in rinfosList)
+                            {
+                                Dictionary<string, object> r = o as Dictionary<string, object>;
+                                if (r != null)
+                                {
+                                    GridRegion rinfo = new GridRegion(r);
+                                    rinfo.GenericMap["URL"] = m_ServerURI;
+                                    rinfos.Add(rinfo);
+                                }
+                            }
+#else
                             foreach (GridRegion rinfo in rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)))
                             {
                                 rinfo.GenericMap["URL"] = m_ServerURI;
                                 rinfos.Add(rinfo);
                             }
+#endif
                         }
                         else
                             m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
@@ -463,11 +476,24 @@ namespace OpenSim.Services.Connectors
                         if (replyData != null)
                         {
                             Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                            foreach (object o in rinfosList)
+                            {
+                                Dictionary<string, object> r = o as Dictionary<string, object>;
+                                if (r != null)
+                                {
+                                    GridRegion rinfo = new GridRegion(r);
+                                    rinfo.GenericMap["URL"] = m_ServerURI;
+                                    rinfos.Add(rinfo);
+                                }
+                            }
+#else
                             foreach (GridRegion rinfo in rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)))
                             {
                                 rinfo.GenericMap["URL"] = m_ServerURI;
                                 rinfos.Add(rinfo);
                             }
+#endif
                         }
                         else
                             m_log.DebugFormat(
@@ -525,7 +551,18 @@ namespace OpenSim.Services.Connectors
                 if (replyData != null)
                 {
                     Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object r in rinfosList)
+                    {
+                        if (r is Dictionary<string, object>)
+                        {
+                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                            rinfos.Add(rinfo);
+                        }
+                    }
+#else
                     rinfos.AddRange(rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)));
+#endif
                 }
                 else
                     m_log.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions {0} received null response",
@@ -575,7 +612,18 @@ namespace OpenSim.Services.Connectors
                 if (replyData != null)
                 {
                     Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object r in rinfosList)
+                    {
+                        if (r is Dictionary<string, object>)
+                        {
+                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                            rinfos.Add(rinfo);
+                        }
+                    }
+#else
                     rinfos.AddRange(rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)));
+#endif
                 }
                 else
                     m_log.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions {0}, {1}-{2} received null response",
@@ -625,7 +673,19 @@ namespace OpenSim.Services.Connectors
                 if (replyData != null)
                 {
                     Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object r in rinfosList)
+                    {
+                        if (r is Dictionary<string, object>)
+                        {
+                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                            rinfos.Add(rinfo);
+                        }
+                    }
+#else
                     rinfos.AddRange(rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)));
+#endif
+
                 }
                 else
                     m_log.DebugFormat("[GRID CONNECTOR]: GetSafeRegions {0}, {1}-{2} received null response",

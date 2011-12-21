@@ -4383,10 +4383,48 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             ObjectPropertiesPacket proper =
                 (ObjectPropertiesPacket) PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
 
+#if (!ISWIN)
+            List<ObjectPropertiesPacket.ObjectDataBlock> list = new List<ObjectPropertiesPacket.ObjectDataBlock>();
+            foreach (IEntity part in parts)
+            {
+                ISceneChildEntity entity = part as ISceneChildEntity;
+                if (entity != null)
+                {
+                    ISceneChildEntity part1 = entity as ISceneChildEntity;
+                    list.Add(new ObjectPropertiesPacket.ObjectDataBlock
+                                 {
+                                     ItemID = part1.FromUserInventoryItemID,
+                                     CreationDate = (ulong) part1.CreationDate*1000000,
+                                     CreatorID = part1.CreatorID,
+                                     FolderID = UUID.Zero,
+                                     FromTaskID = UUID.Zero,
+                                     GroupID = part1.GroupID,
+                                     InventorySerial = (short) part1.InventorySerial,
+                                     LastOwnerID = part1.LastOwnerID,
+                                     ObjectID = part1.UUID,
+                                     OwnerID = part1.OwnerID == part1.GroupID ? UUID.Zero : part1.OwnerID,
+                                     TouchName = Util.StringToBytes256(part1.ParentEntity.RootChild.TouchName),
+                                     TextureID = new byte[0],
+                                     SitName = Util.StringToBytes256(part1.ParentEntity.RootChild.SitName),
+                                     Name = Util.StringToBytes256(part1.Name),
+                                     Description = Util.StringToBytes256(part1.Description),
+                                     OwnerMask = part1.ParentEntity.RootChild.OwnerMask,
+                                     NextOwnerMask = part1.ParentEntity.RootChild.NextOwnerMask,
+                                     GroupMask = part1.ParentEntity.RootChild.GroupMask,
+                                     EveryoneMask = part1.ParentEntity.RootChild.EveryoneMask,
+                                     BaseMask = part1.ParentEntity.RootChild.BaseMask,
+                                     SaleType = part1.ParentEntity.RootChild.ObjectSaleType,
+                                     SalePrice = part1.ParentEntity.RootChild.SalePrice
+                                 });
+                }
+            }
+            proper.ObjectData = list.ToArray();
+#else
             proper.ObjectData = parts.OfType<ISceneChildEntity>().Select(entity => entity as ISceneChildEntity).Select(part => new ObjectPropertiesPacket.ObjectDataBlock
                                                                                                                                    {
                                                                                                                                        ItemID = part.FromUserInventoryItemID, CreationDate = (ulong) part.CreationDate*1000000, CreatorID = part.CreatorID, FolderID = UUID.Zero, FromTaskID = UUID.Zero, GroupID = part.GroupID, InventorySerial = (short) part.InventorySerial, LastOwnerID = part.LastOwnerID, ObjectID = part.UUID, OwnerID = part.OwnerID == part.GroupID ? UUID.Zero : part.OwnerID, TouchName = Util.StringToBytes256(part.ParentEntity.RootChild.TouchName), TextureID = new byte[0], SitName = Util.StringToBytes256(part.ParentEntity.RootChild.SitName), Name = Util.StringToBytes256(part.Name), Description = Util.StringToBytes256(part.Description), OwnerMask = part.ParentEntity.RootChild.OwnerMask, NextOwnerMask = part.ParentEntity.RootChild.NextOwnerMask, GroupMask = part.ParentEntity.RootChild.GroupMask, EveryoneMask = part.ParentEntity.RootChild.EveryoneMask, BaseMask = part.ParentEntity.RootChild.BaseMask, SaleType = part.ParentEntity.RootChild.ObjectSaleType, SalePrice = part.ParentEntity.RootChild.SalePrice
                                                                                                                                    }).ToArray();
+#endif
 
             proper.Header.Zerocoded = true;
             bool hasFinishedSending = false; //Since this packet will be split up, we only want to finish sending once

@@ -198,7 +198,22 @@ namespace Aurora.Services.DataService
                     {
                         if (!replyData.ContainsKey("result"))
                             return Estates;
-                        Estates.AddRange(from obj in replyData.Values.OfType<Dictionary<string, object>>() from object value in obj as Dictionary<string, object> select (KeyValuePair<string, object>) value into valuevalue select int.Parse(valuevalue.Value.ToString()));
+#if (!ISWIN)
+                        foreach (object obj in replyData.Values)
+                        {
+                            if (obj is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
+                                foreach (object value in dictionary)
+                                {
+                                    KeyValuePair<string, object> valuevalue = (KeyValuePair<string, object>)value;
+                                    Estates.Add(int.Parse(valuevalue.Value.ToString()));
+                                }
+                            }
+                        }
+#else
+                        Estates.AddRange(from obj in replyData.Values.OfType<Dictionary<string, object>>() from object value in obj as Dictionary<string, object> select (KeyValuePair<string, object>)value into valuevalue select int.Parse(valuevalue.Value.ToString()));
+#endif
                         return Estates;
                     }
 
@@ -232,28 +247,44 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                foreach (Dictionary<string, object> replyData in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                                   m_ServerURI,
-                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply))
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    if (replyData != null)
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+                    if (reply != string.Empty)
                     {
-                        if (!replyData.ContainsKey("result"))
-                            return Estates;
-                        Estates.AddRange(from obj in replyData.Values.OfType<Dictionary<string, object>>() select obj as Dictionary<string, object> into dictionary from objobj in dictionary.Values select new EstateSettings(objobj as Dictionary<string, object>));
-                        return Estates;
-                    }
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
 
-                    else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
-                                          owner);
+                        if (replyData != null)
+                        {
+                            if (!replyData.ContainsKey("result"))
+                                return Estates;
+                            foreach (object obj in replyData.Values)
+                            {
+                                if (obj is Dictionary<string, object>)
+                                {
+                                    Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
+                                    foreach (object objobj in dictionary.Values)
+                                    {
+                                        EstateSettings es = new EstateSettings(objobj as Dictionary<string, object>);
+                                        Estates.Add(es);
+                                    }
+                                }
+                            }
+                            return Estates;
+                        }
+
+                        else
+                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                                owner);
+                    }
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
