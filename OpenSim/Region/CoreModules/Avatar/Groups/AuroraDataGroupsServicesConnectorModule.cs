@@ -224,7 +224,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public GroupMembershipData GetAgentActiveMembership(UUID requestingAgentID, UUID AgentID)
         {
             return GroupsConnector.GetGroupMembershipData(requestingAgentID,
-                                                          GroupsConnector.GetAgentActiveGroup(requestingAgentID, AgentID),
+                                                          UUID.Zero, 
                                                           AgentID);
         }
 

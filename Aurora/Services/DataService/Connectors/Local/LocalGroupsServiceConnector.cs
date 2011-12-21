@@ -467,6 +467,8 @@ namespace Aurora.Services.DataService
         public GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             GroupMembershipData GMD = new GroupMembershipData();
+            if (GroupID == UUID.Zero)
+                GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
             List<string> Membership = data.Query(new[]
                                                      {

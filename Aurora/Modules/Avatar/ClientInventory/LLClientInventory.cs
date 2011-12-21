@@ -559,11 +559,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             InventoryFolderBase f = new InventoryFolderBase(folderID, remoteClient.AgentId);
-            InventoryFolderBase folder = m_scene.InventoryService.GetFolder(f);
-
-            if (folder == null || folder.Owner != remoteClient.AgentId)
-                return;
-
+            
             if (transactionID == UUID.Zero)
             {
                 IScenePresence presence;

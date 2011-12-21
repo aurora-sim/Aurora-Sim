@@ -227,7 +227,7 @@ namespace OpenSim.Services.InventoryService
                     defaultShape.AssetID = asset.ID;
                     defaultShape.Folder = bodypartFolder.ID;
                     defaultShape.CreatorId = UUID.Zero.ToString();
-                    AddItem(defaultShape);
+                    AddItem(defaultShape, false);
                 }
 
                 InventoryItemBase defaultSkin = new InventoryItemBase
@@ -253,7 +253,7 @@ namespace OpenSim.Services.InventoryService
                     defaultSkin.CurrentPermissions = (uint) PermissionMask.All;
                     defaultSkin.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultSkin.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultSkin);
+                    AddItem(defaultSkin, false);
                 }
 
                 InventoryItemBase defaultHair = new InventoryItemBase
@@ -279,7 +279,7 @@ namespace OpenSim.Services.InventoryService
                     defaultHair.CurrentPermissions = (uint) PermissionMask.All;
                     defaultHair.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultHair.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultHair);
+                    AddItem(defaultHair, false);
                 }
 
                 InventoryItemBase defaultEyes = new InventoryItemBase
@@ -305,7 +305,7 @@ namespace OpenSim.Services.InventoryService
                     defaultEyes.CurrentPermissions = (uint) PermissionMask.All;
                     defaultEyes.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultEyes.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultEyes);
+                    AddItem(defaultEyes, false);
                 }
 
                 InventoryItemBase defaultShirt = new InventoryItemBase
@@ -331,7 +331,7 @@ namespace OpenSim.Services.InventoryService
                     defaultShirt.CurrentPermissions = (uint) PermissionMask.All;
                     defaultShirt.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultShirt.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultShirt);
+                    AddItem(defaultShirt, false);
                 }
 
                 InventoryItemBase defaultPants = new InventoryItemBase
@@ -357,7 +357,7 @@ namespace OpenSim.Services.InventoryService
                     defaultPants.CurrentPermissions = (uint) PermissionMask.All;
                     defaultPants.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultPants.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultPants);
+                    AddItem(defaultPants, false);
                 }
             }
 
@@ -608,9 +608,21 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool AddItem(InventoryItemBase item)
         {
+            return AddItem(item, true);
+        }
+
+        public virtual bool AddItem(InventoryItemBase item, bool doParentFolderCheck)
+        {
 //            m_log.DebugFormat(
 //                "[XINVENTORY SERVICE]: Adding item {0} to folder {1} for {2}", item.ID, item.Folder, item.Owner);
 
+            if (doParentFolderCheck)
+            {
+                InventoryFolderBase folder = GetFolder(new InventoryFolderBase(item.Folder));
+
+                if (folder == null || folder.Owner != item.Owner)
+                    return false;
+            }
             m_Database.IncrementFolder(item.Folder);
             return m_Database.StoreItem(item);
         }
