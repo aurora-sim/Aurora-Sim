@@ -25,10 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 ﻿using System;
-using System.IO;
+
 using System.Net;
-using System.Text;
-using System.Diagnostics;
+
 using Aurora.Framework;
 
 namespace Aurora.Configuration
@@ -49,10 +48,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigHostName()
         {
-            if (!File.Exists("Aurora.ini")) return;
+            if (!System.IO.File.Exists("Aurora.ini")) return;
             try
             {
-                File.Move("Aurora.ini", "Aurora.ini.old");
+                System.IO.File.Move("Aurora.ini", "Aurora.ini.old");
             }
             catch
             {
@@ -62,10 +61,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigData()
         {
-            if (!File.Exists("Configuration/Data/Data.ini")) return;
+            if (!System.IO.File.Exists("Configuration/Data/Data.ini")) return;
             try
             {
-                File.Move("Configuration/Data/Data.ini", "Configuration/Data/Data.ini.old");
+                System.IO.File.Move("Configuration/Data/Data.ini", "Configuration/Data/Data.ini.old");
             }
             catch
             {
@@ -75,10 +74,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraServerConfigData()
         {
-            if (!File.Exists("AuroraServerConfiguration/Data/Data.ini")) return;
+            if (!System.IO.File.Exists("AuroraServerConfiguration/Data/Data.ini")) return;
             try
             {
-                File.Move("AuroraServerConfiguration/Data/Data.ini", "AuroraServerConfiguration/Data/Data.ini.old");
+                System.IO.File.Move("AuroraServerConfiguration/Data/Data.ini", "AuroraServerConfiguration/Data/Data.ini.old");
             }
             catch
             {
@@ -88,10 +87,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigMySql()
         {
-            if (!File.Exists("Configuration/Data/MySql.ini")) return;
+            if (!System.IO.File.Exists("Configuration/Data/MySql.ini")) return;
             try
             {
-                File.Move("Configuration/Data/MySql.ini", "Configuration/Data/MySql.ini.old");
+                System.IO.File.Move("Configuration/Data/MySql.ini", "Configuration/Data/MySql.ini.old");
             }
             catch
             {
@@ -101,10 +100,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraServerMySQL()
         {
-            if (!File.Exists("AuroraServerConfiguration/Data/MySQL.ini")) return;
+            if (!System.IO.File.Exists("AuroraServerConfiguration/Data/MySQL.ini")) return;
             try
             {
-                File.Move("AuroraServerConfiguration/Data/MySQL.ini", "AuroraServerConfiguration/Data/MySQL.ini.old");
+                System.IO.File.Move("AuroraServerConfiguration/Data/MySQL.ini", "AuroraServerConfiguration/Data/MySQL.ini.old");
             }
             catch
             {
@@ -114,10 +113,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigMain()
         {
-            if (!File.Exists("Configuration/Main.ini")) return;
+            if (!System.IO.File.Exists("Configuration/Main.ini")) return;
             try
             {
-                File.Move("Configuration/Main.ini", "Configuration/Main.ini.old");
+                System.IO.File.Move("Configuration/Main.ini", "Configuration/Main.ini.old");
             }
             catch
             {
@@ -127,10 +126,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigCommon()
         {
-            if (!File.Exists("Configuration/Standalone/StandaloneCommon.ini")) return;
+            if (!System.IO.File.Exists("Configuration/Standalone/StandaloneCommon.ini")) return;
             try
             {
-                File.Move("Configuration/Standalone/StandaloneCommon.ini", "Configuration/Standalone/StandaloneCommon.ini.old");
+                System.IO.File.Move("Configuration/Standalone/StandaloneCommon.ini", "Configuration/Standalone/StandaloneCommon.ini.old");
             }
             catch
             {
@@ -140,10 +139,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraGridCommon()
         {
-            if (!File.Exists("Configuration/Grid/AuroraGridCommon.ini")) return;
+            if (!System.IO.File.Exists("Configuration/Grid/AuroraGridCommon.ini")) return;
             try
             {
-                File.Move("Configuration/Grid/AuroraGridCommon.ini", "Configuration/Grid/AuroraGridCommon.ini.old");
+                System.IO.File.Move("Configuration/Grid/AuroraGridCommon.ini", "Configuration/Grid/AuroraGridCommon.ini.old");
             }
             catch
             {
@@ -153,10 +152,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraLogin()
         {
-            if (!File.Exists("AuroraServerConfiguration/Login.ini")) return;
+            if (!System.IO.File.Exists("AuroraServerConfiguration/Login.ini")) return;
             try
             {
-                File.Move("AuroraServerConfiguration/Login.ini", "AuroraServerConfiguration/Login.ini.old");
+                System.IO.File.Move("AuroraServerConfiguration/Login.ini", "AuroraServerConfiguration/Login.ini.old");
             }
             catch
             {
@@ -166,10 +165,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraGridInfoService()
         {
-            if (!File.Exists("AuroraServerConfiguration/GridInfoService.ini")) return;
+            if (!System.IO.File.Exists("AuroraServerConfiguration/GridInfoService.ini")) return;
             try
             {
-                File.Move("AuroraServerConfiguration/GridInfoService.ini", "AuroraServerConfiguration/GridInfoService.ini.old");
+                System.IO.File.Move("AuroraServerConfiguration/GridInfoService.ini", "AuroraServerConfiguration/GridInfoService.ini.old");
             }
             catch
             {
@@ -179,10 +178,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraServer()
         {
-            if (!File.Exists("AuroraServer.ini")) return;
+            if (!System.IO.File.Exists("AuroraServer.ini")) return;
             try
             {
-                File.Move("AuroraServer.ini", "AuroraServer.ini.old");
+                System.IO.File.Move("AuroraServer.ini", "AuroraServer.ini.old");
             }
             catch
             {
@@ -196,9 +195,9 @@ namespace Aurora.Configuration
             string str = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
             try
             {
-                using (TextReader reader = new StreamReader("Aurora.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("Aurora.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Aurora.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("Aurora.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -252,9 +251,9 @@ namespace Aurora.Configuration
             string str = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
             try
             {
-                using (TextReader reader = new StreamReader("AuroraServer.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("AuroraServer.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServer.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("AuroraServer.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -291,9 +290,9 @@ namespace Aurora.Configuration
             CheckAuroraConfigData();
             try
             {
-                using (TextReader reader = new StreamReader("Configuration/Data/Data.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("Configuration/Data/Data.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Configuration/Data/Data.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("Configuration/Data/Data.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -327,9 +326,9 @@ namespace Aurora.Configuration
             CheckAuroraServerConfigData();
             try
             {
-                using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/Data.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("AuroraServerConfiguration/Data/Data.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/Data.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("AuroraServerConfiguration/Data/Data.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -363,9 +362,9 @@ namespace Aurora.Configuration
             CheckAuroraConfigMain();
             try
             {
-                using (TextReader reader = new StreamReader("Configuration/Main.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("Configuration/Main.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Configuration/Main.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("Configuration/Main.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -398,9 +397,9 @@ namespace Aurora.Configuration
             CheckAuroraConfigCommon();
             try
             {
-                using (TextReader reader = new StreamReader("Configuration/Standalone/StandaloneCommon.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("Configuration/Standalone/StandaloneCommon.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Configuration/Standalone/StandaloneCommon.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("Configuration/Standalone/StandaloneCommon.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -453,9 +452,9 @@ namespace Aurora.Configuration
             CheckAuroraGridCommon();
             try
             {
-                using (TextReader reader = new StreamReader("Configuration/Grid/AuroraGridCommon.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("Configuration/Grid/AuroraGridCommon.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Configuration/Grid/AuroraGridCommon.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("Configuration/Grid/AuroraGridCommon.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -485,9 +484,9 @@ namespace Aurora.Configuration
             CheckAuroraConfigMySql();
             try
             {
-                using (TextReader reader = new StreamReader("Configuration/Data/MySql.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("Configuration/Data/MySql.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Configuration/Data/MySql.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("Configuration/Data/MySql.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -521,9 +520,9 @@ namespace Aurora.Configuration
             CheckAuroraServerMySQL();
             try
             {
-                using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/MySQL.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("AuroraServerConfiguration/Data/MySQL.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -557,9 +556,9 @@ namespace Aurora.Configuration
             CheckAuroraLogin();
             try
             {
-                using (TextReader reader = new StreamReader("AuroraServerConfiguration/Login.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("AuroraServerConfiguration/Login.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Login.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("AuroraServerConfiguration/Login.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -597,9 +596,9 @@ namespace Aurora.Configuration
             CheckAuroraGridInfoService();
             try
             {
-                using (TextReader reader = new StreamReader("AuroraServerConfiguration/GridInfoService.ini.example"))
+                using (System.IO.TextReader reader = new System.IO.StreamReader("AuroraServerConfiguration/GridInfoService.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/GridInfoService.ini"))
+                    using (System.IO.TextWriter writer = new System.IO.StreamWriter("AuroraServerConfiguration/GridInfoService.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -663,8 +662,8 @@ namespace Aurora.Configuration
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora.Server>");
             Console.ReadLine();
-            Process AuroraServer = new Process();
-            Process Aurora = new Process();
+            System.Diagnostics.Process AuroraServer = new System.Diagnostics.Process();
+            System.Diagnostics.Process Aurora = new System.Diagnostics.Process();
 
             AuroraServer.StartInfo.FileName   = "Aurora.Server.exe";
             Aurora.StartInfo.FileName = "Aurora.exe";
@@ -701,7 +700,7 @@ namespace Aurora.Configuration
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora>");
                 Console.ReadLine();
-                Process Aurora = new Process {StartInfo = {FileName = "Aurora.exe"}};
+                System.Diagnostics.Process Aurora = new System.Diagnostics.Process { StartInfo = { FileName = "Aurora.exe" } };
 
 
                 Aurora.Start();
