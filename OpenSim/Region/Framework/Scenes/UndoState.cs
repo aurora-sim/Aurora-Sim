@@ -105,10 +105,20 @@ namespace OpenSim.Region.Framework.Scenes
                         part.Scale = Scale;
                     }
 
+#if (!ISWIN)
+                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList)
+                    {
+                        if (child.UUID != part.UUID)
+                        {
+                            child.Undo(); //No updates here, child undo will do it on their own
+                        }
+                    }
+#else
                     foreach (SceneObjectPart child in part.ParentGroup.ChildrenList.Where(child => child.UUID != part.UUID))
                     {
                         child.Undo(); //No updates here, child undo will do it on their own
                     }
+#endif
                 }
                 else
                 {
@@ -159,10 +169,20 @@ namespace OpenSim.Region.Framework.Scenes
                         part.Resize(Scale);
                     }
 
+#if (!ISWIN)
+                    foreach (SceneObjectPart child in part.ParentGroup.ChildrenList)
+                    {
+                        if (child.UUID != part.UUID)
+                        {
+                            child.Redo(); //No updates here, child redo will do it on their own
+                        }
+                    }
+#else
                     foreach (SceneObjectPart child in part.ParentGroup.ChildrenList.Where(child => child.UUID != part.UUID))
                     {
                         child.Redo(); //No updates here, child redo will do it on their own
                     }
+#endif
                 }
                 else
                 {

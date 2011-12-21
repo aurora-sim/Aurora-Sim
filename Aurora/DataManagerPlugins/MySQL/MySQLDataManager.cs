@@ -789,6 +789,27 @@ namespace Aurora.DataManager.MySQL
 
             Dictionary<string, ColumnDefinition> removedColumns = new Dictionary<string, ColumnDefinition>();
             Dictionary<string, ColumnDefinition> modifiedColumns = new Dictionary<string, ColumnDefinition>();
+#if (!ISWIN)
+            Dictionary<string, ColumnDefinition> addedColumns = new Dictionary<string, ColumnDefinition>();
+            foreach (ColumnDefinition column in columns)
+            {
+                if (!oldColumns.Contains(column)) addedColumns.Add(column.Name.ToLower(), column);
+            }
+            foreach (ColumnDefinition column in oldColumns)
+            {
+                if (!columns.Contains(column))
+                {
+                    if (addedColumns.ContainsKey(column.Name.ToLower()))
+                    {
+                        if (column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() || column.Type != addedColumns[column.Name.ToLower()].Type)
+                            modifiedColumns.Add(column.Name.ToLower(), addedColumns[column.Name.ToLower()]);
+                        addedColumns.Remove(column.Name.ToLower());
+                    }
+                    else
+                        removedColumns.Add(column.Name.ToLower(), column);
+                }
+            }
+#else
             Dictionary<string, ColumnDefinition> addedColumns =
                 columns.Where(column => !oldColumns.Contains(column)).ToDictionary(column => column.Name.ToLower());
             foreach (ColumnDefinition column in oldColumns.Where(column => !columns.Contains(column)))
@@ -803,6 +824,8 @@ namespace Aurora.DataManager.MySQL
                 else
                     removedColumns.Add(column.Name.ToLower(), column);
             }
+#endif
+
 
             try
             {

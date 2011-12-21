@@ -282,11 +282,22 @@ namespace OpenSim.Region.Framework.Scenes
                 MainConsole.Instance.ConsoleScene = null;
                 return true;
             }
+#if (!ISWIN)
+            foreach (IScene scene in m_localScenes)
+            {
+                if (String.Compare(scene.RegionInfo.RegionName, regionName, true) == 0)
+                {
+                    MainConsole.Instance.ConsoleScene = scene;
+                    return true;
+                }
+            }
+#else
             foreach (IScene scene in m_localScenes.Where(scene => String.Compare(scene.RegionInfo.RegionName, regionName, true) == 0))
             {
                 MainConsole.Instance.ConsoleScene = scene;
                 return true;
             }
+#endif
 
             return false;
         }

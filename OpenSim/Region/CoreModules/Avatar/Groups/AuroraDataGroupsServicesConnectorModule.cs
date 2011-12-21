@@ -342,10 +342,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (session == null)
                 return null;
             ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
+#if (!ISWIN)
+            foreach (ChatSessionMember testmember in session.Members)
+            {
+                if (testmember.AvatarKey == Agent)
+                {
+                    thismember = testmember;
+                }
+            }
+#else
             foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == Agent))
             {
                 thismember = testmember;
             }
+#endif
             return thismember;
         }
 

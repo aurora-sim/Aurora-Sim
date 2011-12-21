@@ -72,8 +72,15 @@ namespace Aurora.Modules
 
             string localAssetHandler = handlerConfig.GetString("LocalAgentInfoHandler", "AgentInfoService");
             List<IAgentInfoService> services = AuroraModuleLoader.PickupModules<IAgentInfoService>();
-            foreach (IAgentInfoService s in services.Where(s => s.GetType().Name == localAssetHandler))
+#if (!ISWIN)
+            foreach (IAgentInfoService s in services)
+            {
+                if (s.GetType().Name == localAssetHandler) m_localService = s;
+            }
+#else
+                foreach (IAgentInfoService s in services.Where(s => s.GetType().Name == localAssetHandler))
                 m_localService = s;
+#endif
             if (m_localService == null)
                 m_localService = new AgentInfoService();
             m_localService.Initialize(config, registry);

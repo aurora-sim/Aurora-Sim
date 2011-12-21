@@ -188,10 +188,20 @@ namespace Aurora.Modules
                         foreach (IScene scene in m_scenes)
                         {
                             bool found = false;
+#if (!ISWIN)
+                            foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
+                            {
+                                if (ban.BannedUserID == BanID)
+                                {
+                                    found = true;
+                                }
+                            }
+#else
                             foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans.Where(ban => ban.BannedUserID == BanID))
                             {
                                 found = true;
                             }
+#endif
                             if (!found)
                             {
                                 scene.RegionInfo.EstateSettings.EstateBans[

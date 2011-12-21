@@ -174,6 +174,18 @@ namespace Aurora.Modules.World.Auction
                     noteCardAsset.Decode();
                     bool found = false;
                     UUID lastOwnerID = UUID.Zero;
+#if (!ISWIN)
+                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems)
+                    {
+                        if (notecardObjectItem.UUID == ItemID)
+                        {
+                            //Make sure that it exists
+                            found = true;
+                            lastOwnerID = notecardObjectItem.OwnerID;
+                            break;
+                        }
+                    }
+#else
                     foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
                     {
                         //Make sure that it exists
@@ -181,6 +193,7 @@ namespace Aurora.Modules.World.Auction
                         lastOwnerID = notecardObjectItem.OwnerID;
                         break;
                     }
+#endif
                     if (found)
                     {
                         InventoryItemBase item = null;

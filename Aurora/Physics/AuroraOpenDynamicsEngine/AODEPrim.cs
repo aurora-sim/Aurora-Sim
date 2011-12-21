@@ -158,8 +158,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public d.Mass primdMass; // prim inertia information on it's own referencial
         private Quaternion showorientation; // tmp hack see showposition
         private Vector3 showposition; // a temp hack for now rest of code expects position to be changed imediatly
-        private bool testRealGravity;
-        private int throttleCounter;
 
         public AuroraODEPhysicsScene.ContactParameter vehicleContactParam = new AuroraODEPhysicsScene.ContactParameter(
             0, 0);
@@ -1014,10 +1012,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 lock (childrenPrim)
                 {
+#if (!ISWIN)
+                    foreach (AuroraODEPrim prm in prim.childrenPrim)
+                    {
+                        if (!childrenPrim.Contains(prm))
+                        {
+                            childrenPrim.Add(prm);
+                        }
+                    }
+#else
                     foreach (AuroraODEPrim prm in prim.childrenPrim.Where(prm => !childrenPrim.Contains(prm)))
                     {
                         childrenPrim.Add(prm);
                     }
+#endif
                     if (!childrenPrim.Contains(prim)) // must allow full reconstruction
                         childrenPrim.Add(prim);
                 }
@@ -3301,6 +3309,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         #endregion
+
+        public int throttleCounter { get; set; }
 
         #region Nested type: strVehicleVectorParam
 

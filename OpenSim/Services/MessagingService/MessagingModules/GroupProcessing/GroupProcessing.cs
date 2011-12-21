@@ -104,36 +104,46 @@ namespace OpenSim.Services.MessagingService
                 List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
                 List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
                 GroupRolesData everyone = null;
+#if (!ISWIN)
+                foreach (GroupRolesData role in roles)
+                {
+                    if (role.Name == "Everyone") everyone = role;
+                }
+#else
                 foreach (GroupRolesData role in roles.Where(role => role.Name == "Everyone"))
                     everyone = role;
+#endif
 
                 List<ulong> regionsToBeUpdated = new List<ulong>();
-                foreach (GroupRoleMembersData data in members.Where(data => data.RoleID == roleID))
+                foreach (GroupRoleMembersData data in members)
                 {
-                    //They were affected by the change
-                    switch ((GroupRoleUpdate) type)
+                    if (data.RoleID == roleID)
                     {
-                        case GroupRoleUpdate.Create:
-                        case GroupRoleUpdate.NoUpdate:
-                            //No changes...
-                            break;
+                        //They were affected by the change
+                        switch ((GroupRoleUpdate) type)
+                        {
+                            case GroupRoleUpdate.Create:
+                            case GroupRoleUpdate.NoUpdate:
+                                //No changes...
+                                break;
 
-                        case GroupRoleUpdate.UpdatePowers: //Possible we don't need to send this?
-                        case GroupRoleUpdate.UpdateAll:
-                        case GroupRoleUpdate.UpdateData:
-                        case GroupRoleUpdate.Delete:
-                            if (type == (byte) GroupRoleUpdate.Delete)
-                                //Set them to the most limited role since their role is gone
-                                con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
-                            //Need to update their title inworld
-                            ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
-                            if (caps != null)
-                            {
-                                IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
-                                if (clientCaps != null && clientCaps.GetRootCapsService() != null)
-                                    regionsToBeUpdated.Add(clientCaps.GetRootCapsService().RegionHandle);
-                            }
-                            break;
+                            case GroupRoleUpdate.UpdatePowers: //Possible we don't need to send this?
+                            case GroupRoleUpdate.UpdateAll:
+                            case GroupRoleUpdate.UpdateData:
+                            case GroupRoleUpdate.Delete:
+                                if (type == (byte) GroupRoleUpdate.Delete)
+                                    //Set them to the most limited role since their role is gone
+                                    con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
+                                //Need to update their title inworld
+                                ICapsService caps = m_registry.RequestModuleInterface<ICapsService>();
+                                if (caps != null)
+                                {
+                                    IClientCapsService clientCaps = caps.GetClientCapsService(agentID);
+                                    if (clientCaps != null && clientCaps.GetRootCapsService() != null)
+                                        regionsToBeUpdated.Add(clientCaps.GetRootCapsService().RegionHandle);
+                                }
+                                break;
+                        }
                     }
                 }
                 if (regionsToBeUpdated.Count != 0)

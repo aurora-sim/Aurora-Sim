@@ -212,10 +212,20 @@ namespace OpenSim.Framework
                             //Only one command after our path, its ours
                             if (commands.ContainsKey(com))
                             {
+#if (!ISWIN)
+                                foreach (CommandDelegate fn in commands[com].fn)
+                                {
+                                    if (fn != null)
+                                    {
+                                        fn(command);
+                                    }
+                                }
+#else
                                 foreach (CommandDelegate fn in commands[com].fn.Where(fn => fn != null))
                                 {
                                     fn(command);
                                 }
+#endif
                                 return new string[0];
                             }
                             else if (commandPath[0] == "help")
@@ -228,6 +238,34 @@ namespace OpenSim.Framework
                             }
                             else
                             {
+#if (!ISWIN)
+                                foreach (KeyValuePair<string, CommandInfo> cmd in commands)
+                                {
+                                    string[] cmdSplit = cmd.Key.Split(' ');
+                                    if (cmdSplit.Length == command.Length)
+                                    {
+                                        bool any = false;
+                                        for (int k = 0; k < command.Length; k++)
+                                            if (!cmdSplit[k].StartsWith(command[k]))
+                                            {
+                                                any = true;
+                                                break;
+                                            }
+                                        bool same = !any;
+                                        if (same)
+                                        {
+                                            foreach (CommandDelegate fn in cmd.Value.fn)
+                                            {
+                                                if (fn != null)
+                                                {
+                                                    fn(command);
+                                                }
+                                            }
+                                            return new string[0];
+                                        }
+                                    }
+                                }
+#else
                                 foreach (KeyValuePair<string, CommandInfo> cmd in from cmd in commands let cmdSplit = cmd.Key.Split(' ') where cmdSplit.Length == command.Length let same = !command.Where((t, k) => !cmdSplit[k].StartsWith(t)).Any() where same select cmd)
                                 {
                                     foreach (CommandDelegate fn in cmd.Value.fn.Where(fn => fn != null))
@@ -236,6 +274,7 @@ namespace OpenSim.Framework
                                     }
                                     return new string[0];
                                 }
+#endif
                             }
                         }
                     }
@@ -255,16 +294,36 @@ namespace OpenSim.Framework
                         else
                         {
                             //See if this is part of a word, and if it is part of a word, execute it
+#if (!ISWIN)
+                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
+                            {
+                                if (cmd.Key.StartsWith(commandPath[0]))
+                                {
+                                    return cmd.Value.ExecuteCommand(commandPath);
+                                }
+                            }
+#else
                             foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
                             {
                                 return cmd.Value.ExecuteCommand(commandPath);
                             }
+#endif
                             if (commands.ContainsKey(cmdToExecute))
                             {
+#if (!ISWIN)
+                                foreach (CommandDelegate fn in commands[cmdToExecute].fn)
+                                {
+                                    if (fn != null)
+                                    {
+                                        fn(command);
+                                    }
+                                }
+#else
                                 foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
                                 {
                                     fn(command);
                                 }
+#endif
                                 return new string[0];
                             }
                         }
@@ -306,10 +365,20 @@ namespace OpenSim.Framework
                             else
                             {
                                 //See if this is part of a word, and if it is part of a word, execute it
+#if (!ISWIN)
+                                foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
+                                {
+                                    if (cmd.Key.StartsWith(cmdToExecute))
+                                    {
+                                        values.AddRange(cmd.Value.FindCommands(commandPath));
+                                    }
+                                }
+#else
                                 foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                                 {
                                     values.AddRange(cmd.Value.FindCommands(commandPath));
                                 }
+#endif
                             }
                         }
                     }
@@ -329,10 +398,20 @@ namespace OpenSim.Framework
                         else
                         {
                             //See if this is part of a word, and if it is part of a word, execute it
+#if (!ISWIN)
+                            foreach (KeyValuePair<string, CommandSet> cmd in commandsets)
+                            {
+                                if (cmd.Key.StartsWith(cmdToExecute))
+                                {
+                                    return cmd.Value.FindCommands(commandPath);
+                                }
+                            }
+#else
                             foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(cmdToExecute)))
                             {
                                 return cmd.Value.FindCommands(commandPath);
                             }
+#endif
                         }
                     }
                 }
@@ -381,7 +460,15 @@ namespace OpenSim.Framework
                 if (index%2 == 0)
                 {
                     string[] words = unquoted[index].Split(new[] {' '});
+#if (!ISWIN)
+                    foreach (string w in words)
+                    {
+                        if (w != String.Empty)
+                            result.Add(w);
+                    }
+#else
                     result.AddRange(words.Where(w => w != String.Empty));
+#endif
                 }
                 else
                 {
@@ -509,11 +596,22 @@ namespace OpenSim.Framework
                 ret = CmdPrompt(p);
 
                 string ret1 = ret;
+#if (!ISWIN)
+                foreach (char c in excludedCharacters)
+                {
+                    if (ret1.Contains(c.ToString()))
+                    {
+                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                        itisdone = false;
+                    }
+                }
+#else
                 foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
                 {
                     Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
                     itisdone = false;
                 }
+#endif
             }
 
             m_isPrompting = false;
@@ -537,11 +635,22 @@ namespace OpenSim.Framework
                 else
                 {
                     string ret1 = ret;
+#if (!ISWIN)
+                    foreach (char c in excludedCharacters)
+                    {
+                        if (ret1.Contains(c.ToString()))
+                        {
+                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                            itisdone = false;
+                        }
+                    }
+#else
                     foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
                     {
                         Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
                         itisdone = false;
                     }
+#endif
                 }
             }
             m_isPrompting = false;

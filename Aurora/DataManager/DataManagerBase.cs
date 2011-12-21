@@ -101,10 +101,24 @@ namespace Aurora.DataManager
             if (results.Count > 0)
             {
                 Version[] highestVersion = {null};
+#if (!ISWIN)
+                foreach (string result in results)
+                {
+                    if (result.Trim() != string.Empty)
+                    {
+                        var version = new Version(result);
+                        if (highestVersion[0] == null || version > highestVersion[0])
+                        {
+                            highestVersion[0] = version;
+                        }
+                    }
+                }
+#else
                 foreach (var version in results.Where(result => result.Trim() != string.Empty).Select(result => new Version(result)).Where(version => highestVersion[0] == null || version > highestVersion[0]))
                 {
                     highestVersion[0] = version;
                 }
+#endif
                 return highestVersion[0];
             }
 

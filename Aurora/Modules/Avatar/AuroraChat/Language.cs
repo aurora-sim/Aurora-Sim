@@ -597,11 +597,21 @@ namespace Aurora.GoogleAPIs
 
         public static Language GetValue(string p)
         {
+#if (!ISWIN)
+            foreach (Language lang in TranslatableList)
+            {
+                if (lang.Name.StartsWith(p, StringComparison.CurrentCultureIgnoreCase) || lang.Value.StartsWith(p, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return lang;
+                }
+            }
+#else
             foreach (Language lang in TranslatableList.Where(lang => lang.Name.StartsWith(p, StringComparison.CurrentCultureIgnoreCase)
                                                                      || lang.Value.StartsWith(p, StringComparison.CurrentCultureIgnoreCase)))
             {
                 return lang;
             }
+#endif
             return Unknown;
         }
     }

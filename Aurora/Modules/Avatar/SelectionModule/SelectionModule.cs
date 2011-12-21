@@ -312,10 +312,20 @@ namespace Aurora.Modules
                     }
                 }
 
+#if (!ISWIN)
+                foreach (IScenePresence client in scene.GetScenePresences())
+                {
+                    if (client.ControllingClient.AgentId != remoteClient.AgentId)
+                    {
+                        client.ControllingClient.SendViewerEffect(effectBlockArray);
+                    }
+                }
+#else
                 foreach (IScenePresence client in scene.GetScenePresences().Where(client => client.ControllingClient.AgentId != remoteClient.AgentId))
                 {
                     client.ControllingClient.SendViewerEffect(effectBlockArray);
                 }
+#endif
             }
         }
 

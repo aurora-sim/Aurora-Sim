@@ -715,10 +715,20 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             bool group = false;
+#if (!ISWIN)
+                            foreach (object f in replyvalues)
+                            {
+                                if (bool.TryParse(f.ToString(), out group))
+                                {
+                                    break;
+                                }
+                            }
+#else
                             foreach (object f in replyvalues.Where(f => bool.TryParse(f.ToString(), out group)))
                             {
                                 break;
                             }
+#endif
                             // Success
                             return group;
                         }
@@ -1191,10 +1201,20 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             uint numGroups = 0;
+#if (!ISWIN)
+                            foreach (object f in replyvalues)
+                            {
+                                if (uint.TryParse(f.ToString(), out numGroups))
+                                {
+                                    break;
+                                }
+                            }
+#else
                             foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numGroups)))
                             {
                                 break;
                             }
+#endif
                             // Success
                             return numGroups;
                         }

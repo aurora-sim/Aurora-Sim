@@ -535,6 +535,31 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
                 OSDArray entryArray = (OSDArray) response["Entries"];
+#if (!ISWIN)
+                foreach (OSDMap entryMap in entryArray)
+                {
+                    if (entryMap["AllowPublish"].AsBoolean() != false)
+                    {
+                        if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) != (uint) DirectoryManager.DirFindFlags.IncludeMature)
+                            if (entryMap["MaturePublish"].AsBoolean()) // Check for pg,mature
+                                continue; //Block mature
+
+                        DirGroupsReplyData data = new DirGroupsReplyData
+                                                      {
+                                                          groupID = entryMap["OwnerID"].AsUUID(), groupName = entryMap["Key"].AsString()
+                                                      };
+
+                        // TODO: is there a better way to do this?
+                        Dictionary<UUID, OSDMap> Members;
+                        data.members = SimianGetGenericEntries("GroupMember", data.groupID.ToString(), out Members) ? Members.Count : 0;
+
+                        // TODO: sort results?
+                        // data.searchOrder = order;
+
+                        findings.Add(data);
+                    }
+                }
+#else
                 foreach (OSDMap entryMap in entryArray.Cast<OSDMap>().Where(entryMap => entryMap["AllowPublish"].AsBoolean() != false))
                 {
                     if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) !=
@@ -557,6 +582,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                     findings.Add(data);
                 }
+#endif
             }
 
 

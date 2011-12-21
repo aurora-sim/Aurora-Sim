@@ -131,10 +131,21 @@ namespace OpenSim.Data.MySQL
             #region SceneObjectGroup Creation
 
             // Create all of the SOGs from the root prims first
+#if (!ISWIN)
+            foreach (SceneObjectPart prim in prims.Values)
+            {
+                if (prim.ParentUUID == UUID.Zero)
+                {
+                    objects[prim.UUID] = new SceneObjectGroup(prim, scene);
+                }
+            }
+#else
             foreach (SceneObjectPart prim in prims.Values.Where(prim => prim.ParentUUID == UUID.Zero))
             {
                 objects[prim.UUID] = new SceneObjectGroup(prim, scene);
             }
+#endif
+
 
             List<uint> foundLocalIDs = new List<uint>();
             // Add all of the children objects to the SOGs

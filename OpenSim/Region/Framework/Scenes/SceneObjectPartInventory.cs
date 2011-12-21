@@ -294,7 +294,19 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_items)
             {
-                ret.AddRange(m_items.Values.Where(item => item.InvType == (int) InventoryType.LSL).Where(item => m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID)));
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                {
+                    if (item.InvType == (int)InventoryType.LSL)
+                    {
+                        if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
+                            continue;
+                        ret.Add(item);
+                    }
+                }
+#else
+                ret.AddRange(m_items.Values.Where(item => item.InvType == (int)InventoryType.LSL).Where(item => m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID)));
+#endif
             }
 
             return ret;

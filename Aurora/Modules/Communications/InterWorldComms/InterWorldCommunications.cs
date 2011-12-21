@@ -175,10 +175,20 @@ namespace Aurora.Modules
                     if (service != null)
                     {
                         List<GridRegion> regions = service.GetRegionsByName(UUID.Zero, regionName, 3);
+#if (!ISWIN)
+                        foreach (GridRegion t in regions)
+                        {
+                            if (t.RegionName == regionName)
+                            {
+                                return t;
+                            }
+                        }
+#else
                         foreach (GridRegion t in regions.Where(t => t.RegionName == regionName))
                         {
                             return t;
                         }
+#endif
                         if (regions.Count > 0)
                             return regions[0];
                     }

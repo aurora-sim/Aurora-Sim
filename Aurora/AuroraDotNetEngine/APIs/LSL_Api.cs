@@ -6239,10 +6239,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (att.Length > 0)
                 {
                     flags |= ScriptBaseClass.AGENT_ATTACHMENTS;
+#if (!ISWIN)
+                    foreach (ISceneEntity gobj in att)
+                    {
+                        if (gobj != null)
+                        {
+                            if (gobj.RootChild.Inventory.ContainsScripts())
+                            {
+                                flags |= ScriptBaseClass.AGENT_SCRIPTED;
+                                break;
+                            }
+                        }
+                    }
+#else
                     if (att.Where(gobj => gobj != null).Any(gobj => gobj.RootChild.Inventory.ContainsScripts()))
                     {
                         flags |= ScriptBaseClass.AGENT_SCRIPTED;
                     }
+#endif
                 }
             }
 

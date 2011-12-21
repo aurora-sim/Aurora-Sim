@@ -411,7 +411,15 @@ namespace OpenSim.Data.SQLite
                     landRow.Delete();
                     land.Rows.Remove(landRow);
                 }
+#if (!ISWIN)
+                List<DataRow> rowsToDelete = new List<DataRow>();
+                foreach (DataRow rowToCheck in landaccesslist.Rows)
+                {
+                    if (rowToCheck["RegionUUID"].ToString() == regionUUID.ToString()) rowsToDelete.Add(rowToCheck);
+                }
+#else
                 List<DataRow> rowsToDelete = landaccesslist.Rows.Cast<DataRow>().Where(rowToCheck => rowToCheck["RegionUUID"].ToString() == regionUUID.ToString()).ToList();
+#endif
                 foreach (DataRow t in rowsToDelete)
                 {
                     t.Delete();
@@ -727,7 +735,15 @@ namespace OpenSim.Data.SQLite
                     landRow.Delete();
                     land.Rows.Remove(landRow);
                 }
+#if (!ISWIN)
+                List<DataRow> rowsToDelete = new List<DataRow>();
+                foreach (DataRow rowToCheck in landaccesslist.Rows)
+                {
+                    if (rowToCheck["LandUUID"].ToString() == globalID.ToString()) rowsToDelete.Add(rowToCheck);
+                }
+#else
                 List<DataRow> rowsToDelete = landaccesslist.Rows.Cast<DataRow>().Where(rowToCheck => rowToCheck["LandUUID"].ToString() == globalID.ToString()).ToList();
+#endif
                 foreach (DataRow t in rowsToDelete)
                 {
                     t.Delete();

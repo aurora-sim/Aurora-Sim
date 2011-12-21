@@ -343,10 +343,20 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_rootPart.PhysActor.Selected = value;
                     // Pass it on to the children.
+#if (!ISWIN)
+                    foreach (SceneObjectPart child in ChildrenList)
+                    {
+                        if (child.PhysActor != null)
+                        {
+                            child.PhysActor.Selected = value;
+                        }
+                    }
+#else
                     foreach (SceneObjectPart child in ChildrenList.Where(child => child.PhysActor != null))
                     {
                         child.PhysActor.Selected = value;
                     }
+#endif
                 }
             }
         }
@@ -1498,7 +1508,15 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // calculate things that ended colliding
+#if (!ISWIN)
+            List<uint> endedColliders = new List<uint>();
+            foreach (uint localId in m_lastColliders)
+            {
+                if (!thisHitColliders.Contains(localId)) endedColliders.Add(localId);
+            }
+#else
             List<uint> endedColliders = m_lastColliders.Where(localID => !thisHitColliders.Contains(localID)).ToList();
+#endif
 
             //add the items that started colliding this time to the last colliders list.
             foreach (uint localID in startedColliders)
@@ -1534,103 +1552,76 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ColliderArgs StartCollidingMessage = new ColliderArgs();
                     List<DetectedObject> colliding = new List<DetectedObject>();
-                    foreach (uint localId in startedColliders.Where(localId => localId != 0))
+                    foreach (uint localId in startedColliders)
                     {
-                        if (Scene == null)
-                            return;
+                        if (localId != 0)
+                        {
+                            if (Scene == null)
+                                return;
 
-                        ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
-                        string data = "";
-                        if (obj != null)
-                        {
-                            if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) ||
-                                RootPart.CollisionFilter.ContainsValue(obj.Name))
+                            ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
+                            string data = "";
+                            if (obj != null)
                             {
-                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                //If it is 1, it is to accept ONLY collisions from this object
-                                if (found)
-                                {
-                                    DetectedObject detobj = new DetectedObject
-                                                                {
-                                                                    keyUUID = obj.UUID,
-                                                                    nameStr = obj.Name,
-                                                                    ownerUUID = obj.OwnerID,
-                                                                    posVector = obj.AbsolutePosition,
-                                                                    rotQuat = obj.GetWorldRotation(),
-                                                                    velVector = obj.Velocity,
-                                                                    colliderType = 0,
-                                                                    groupUUID = obj.GroupID
-                                                                };
-                                    colliding.Add(detobj);
-                                }
-                                    //If it is 0, it is to not accept collisions from this object
-                            }
-                            else
-                            {
-                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
-                                if (!found)
-                                {
-                                    DetectedObject detobj = new DetectedObject
-                                                                {
-                                                                    keyUUID = obj.UUID,
-                                                                    nameStr = obj.Name,
-                                                                    ownerUUID = obj.OwnerID,
-                                                                    posVector = obj.AbsolutePosition,
-                                                                    rotQuat = obj.GetWorldRotation(),
-                                                                    velVector = obj.Velocity,
-                                                                    colliderType = 0,
-                                                                    groupUUID = obj.GroupID
-                                                                };
-                                    colliding.Add(detobj);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            IScenePresence av = Scene.GetScenePresence(localId);
-                            if (av.LocalId == localId)
-                            {
-                                if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) ||
-                                    RootPart.CollisionFilter.ContainsValue(av.Name))
+                                if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(obj.Name))
                                 {
                                     bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                    //If it is 1, it is to accept ONLY collisions from this avatar
+                                    //If it is 1, it is to accept ONLY collisions from this object
                                     if (found)
                                     {
                                         DetectedObject detobj = new DetectedObject
                                                                     {
-                                                                        keyUUID = av.UUID,
-                                                                        nameStr = av.ControllingClient.Name,
-                                                                        ownerUUID = av.UUID,
-                                                                        posVector = av.AbsolutePosition,
-                                                                        rotQuat = av.Rotation,
-                                                                        velVector = av.Velocity,
-                                                                        colliderType = 0,
-                                                                        groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
                                                                     };
                                         colliding.Add(detobj);
                                     }
-                                        //If it is 0, it is to not accept collisions from this avatar
+                                    //If it is 0, it is to not accept collisions from this object
                                 }
                                 else
                                 {
                                     bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                    //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                    //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
                                     if (!found)
                                     {
                                         DetectedObject detobj = new DetectedObject
                                                                     {
-                                                                        keyUUID = av.UUID,
-                                                                        nameStr = av.ControllingClient.Name,
-                                                                        ownerUUID = av.UUID,
-                                                                        posVector = av.AbsolutePosition,
-                                                                        rotQuat = av.Rotation,
-                                                                        velVector = av.Velocity,
-                                                                        colliderType = 0,
-                                                                        groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
                                                                     };
                                         colliding.Add(detobj);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                IScenePresence av = Scene.GetScenePresence(localId);
+                                if (av.LocalId == localId)
+                                {
+                                    if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
+                                    {
+                                        bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                        //If it is 1, it is to accept ONLY collisions from this avatar
+                                        if (found)
+                                        {
+                                            DetectedObject detobj = new DetectedObject
+                                                                        {
+                                                                            keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        };
+                                            colliding.Add(detobj);
+                                        }
+                                        //If it is 0, it is to not accept collisions from this avatar
+                                    }
+                                    else
+                                    {
+                                        bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                        //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                        if (!found)
+                                        {
+                                            DetectedObject detobj = new DetectedObject
+                                                                        {
+                                                                            keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        };
+                                            colliding.Add(detobj);
+                                        }
                                     }
                                 }
                             }
@@ -1654,103 +1645,76 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ColliderArgs CollidingMessage = new ColliderArgs();
                     List<DetectedObject> colliding = new List<DetectedObject>();
-                    foreach (uint localId in m_lastColliders.Where(localId => localId != 0))
+                    foreach (uint localId in m_lastColliders)
                     {
-                        if (Scene == null)
-                            return;
+                        if (localId != 0)
+                        {
+                            if (Scene == null)
+                                return;
 
-                        ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
-                        string data = "";
-                        if (obj != null)
-                        {
-                            if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) ||
-                                RootPart.CollisionFilter.ContainsValue(obj.Name))
+                            ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
+                            string data = "";
+                            if (obj != null)
                             {
-                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                //If it is 1, it is to accept ONLY collisions from this object
-                                if (found)
-                                {
-                                    DetectedObject detobj = new DetectedObject
-                                                                {
-                                                                    keyUUID = obj.UUID,
-                                                                    nameStr = obj.Name,
-                                                                    ownerUUID = obj.OwnerID,
-                                                                    posVector = obj.AbsolutePosition,
-                                                                    rotQuat = obj.GetWorldRotation(),
-                                                                    velVector = obj.Velocity,
-                                                                    colliderType = 0,
-                                                                    groupUUID = obj.GroupID
-                                                                };
-                                    colliding.Add(detobj);
-                                }
-                                    //If it is 0, it is to not accept collisions from this object
-                            }
-                            else
-                            {
-                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
-                                if (!found)
-                                {
-                                    DetectedObject detobj = new DetectedObject
-                                                                {
-                                                                    keyUUID = obj.UUID,
-                                                                    nameStr = obj.Name,
-                                                                    ownerUUID = obj.OwnerID,
-                                                                    posVector = obj.AbsolutePosition,
-                                                                    rotQuat = obj.GetWorldRotation(),
-                                                                    velVector = obj.Velocity,
-                                                                    colliderType = 0,
-                                                                    groupUUID = obj.GroupID
-                                                                };
-                                    colliding.Add(detobj);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            IScenePresence av = Scene.GetScenePresence(localId);
-                            if (av.LocalId == localId)
-                            {
-                                if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) ||
-                                    RootPart.CollisionFilter.ContainsValue(av.Name))
+                                if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(obj.Name))
                                 {
                                     bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                    //If it is 1, it is to accept ONLY collisions from this avatar
+                                    //If it is 1, it is to accept ONLY collisions from this object
                                     if (found)
                                     {
                                         DetectedObject detobj = new DetectedObject
                                                                     {
-                                                                        keyUUID = av.UUID,
-                                                                        nameStr = av.ControllingClient.Name,
-                                                                        ownerUUID = av.UUID,
-                                                                        posVector = av.AbsolutePosition,
-                                                                        rotQuat = av.Rotation,
-                                                                        velVector = av.Velocity,
-                                                                        colliderType = 0,
-                                                                        groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
                                                                     };
                                         colliding.Add(detobj);
                                     }
-                                        //If it is 0, it is to not accept collisions from this avatar
+                                    //If it is 0, it is to not accept collisions from this object
                                 }
                                 else
                                 {
                                     bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                    //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                    //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
                                     if (!found)
                                     {
                                         DetectedObject detobj = new DetectedObject
                                                                     {
-                                                                        keyUUID = av.UUID,
-                                                                        nameStr = av.ControllingClient.Name,
-                                                                        ownerUUID = av.UUID,
-                                                                        posVector = av.AbsolutePosition,
-                                                                        rotQuat = av.Rotation,
-                                                                        velVector = av.Velocity,
-                                                                        colliderType = 0,
-                                                                        groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
                                                                     };
                                         colliding.Add(detobj);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                IScenePresence av = Scene.GetScenePresence(localId);
+                                if (av.LocalId == localId)
+                                {
+                                    if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
+                                    {
+                                        bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                        //If it is 1, it is to accept ONLY collisions from this avatar
+                                        if (found)
+                                        {
+                                            DetectedObject detobj = new DetectedObject
+                                                                        {
+                                                                            keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        };
+                                            colliding.Add(detobj);
+                                        }
+                                        //If it is 0, it is to not accept collisions from this avatar
+                                    }
+                                    else
+                                    {
+                                        bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                        //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                        if (!found)
+                                        {
+                                            DetectedObject detobj = new DetectedObject
+                                                                        {
+                                                                            keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        };
+                                            colliding.Add(detobj);
+                                        }
                                     }
                                 }
                             }
@@ -1774,103 +1738,76 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     ColliderArgs EndCollidingMessage = new ColliderArgs();
                     List<DetectedObject> colliding = new List<DetectedObject>();
-                    foreach (uint localId in endedColliders.Where(localId => localId != 0))
+                    foreach (uint localId in endedColliders)
                     {
-                        // always running this check because if the user deletes the object it would return a null reference.
-                        if (Scene == null)
-                            return;
-                        ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
-                        string data = "";
-                        if (obj != null)
+                        if (localId != 0)
                         {
-                            if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) ||
-                                RootPart.CollisionFilter.ContainsValue(obj.Name))
+                            // always running this check because if the user deletes the object it would return a null reference.
+                            if (Scene == null)
+                                return;
+                            ISceneChildEntity obj = Scene.GetSceneObjectPart(localId);
+                            string data = "";
+                            if (obj != null)
                             {
-                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                //If it is 1, it is to accept ONLY collisions from this object
-                                if (found)
-                                {
-                                    DetectedObject detobj = new DetectedObject
-                                                                {
-                                                                    keyUUID = obj.UUID,
-                                                                    nameStr = obj.Name,
-                                                                    ownerUUID = obj.OwnerID,
-                                                                    posVector = obj.AbsolutePosition,
-                                                                    rotQuat = obj.GetWorldRotation(),
-                                                                    velVector = obj.Velocity,
-                                                                    colliderType = 0,
-                                                                    groupUUID = obj.GroupID
-                                                                };
-                                    colliding.Add(detobj);
-                                }
-                                    //If it is 0, it is to not accept collisions from this object
-                            }
-                            else
-                            {
-                                bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
-                                if (!found)
-                                {
-                                    DetectedObject detobj = new DetectedObject
-                                                                {
-                                                                    keyUUID = obj.UUID,
-                                                                    nameStr = obj.Name,
-                                                                    ownerUUID = obj.OwnerID,
-                                                                    posVector = obj.AbsolutePosition,
-                                                                    rotQuat = obj.GetWorldRotation(),
-                                                                    velVector = obj.Velocity,
-                                                                    colliderType = 0,
-                                                                    groupUUID = obj.GroupID
-                                                                };
-                                    colliding.Add(detobj);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            IScenePresence av = Scene.GetScenePresence(localId);
-                            if (av.LocalId == localId)
-                            {
-                                if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) ||
-                                    RootPart.CollisionFilter.ContainsValue(av.Name))
+                                if (RootPart.CollisionFilter.ContainsValue(obj.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(obj.Name))
                                 {
                                     bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                    //If it is 1, it is to accept ONLY collisions from this avatar
+                                    //If it is 1, it is to accept ONLY collisions from this object
                                     if (found)
                                     {
                                         DetectedObject detobj = new DetectedObject
                                                                     {
-                                                                        keyUUID = av.UUID,
-                                                                        nameStr = av.ControllingClient.Name,
-                                                                        ownerUUID = av.UUID,
-                                                                        posVector = av.AbsolutePosition,
-                                                                        rotQuat = av.Rotation,
-                                                                        velVector = av.Velocity,
-                                                                        colliderType = 0,
-                                                                        groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
                                                                     };
                                         colliding.Add(detobj);
                                     }
-                                        //If it is 0, it is to not accept collisions from this avatar
+                                    //If it is 0, it is to not accept collisions from this object
                                 }
                                 else
                                 {
                                     bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
-                                    //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                    //If it is 1, it is to accept ONLY collisions from this object, so this other object will not work
                                     if (!found)
                                     {
                                         DetectedObject detobj = new DetectedObject
                                                                     {
-                                                                        keyUUID = av.UUID,
-                                                                        nameStr = av.ControllingClient.Name,
-                                                                        ownerUUID = av.UUID,
-                                                                        posVector = av.AbsolutePosition,
-                                                                        rotQuat = av.Rotation,
-                                                                        velVector = av.Velocity,
-                                                                        colliderType = 0,
-                                                                        groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        keyUUID = obj.UUID, nameStr = obj.Name, ownerUUID = obj.OwnerID, posVector = obj.AbsolutePosition, rotQuat = obj.GetWorldRotation(), velVector = obj.Velocity, colliderType = 0, groupUUID = obj.GroupID
                                                                     };
                                         colliding.Add(detobj);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                IScenePresence av = Scene.GetScenePresence(localId);
+                                if (av.LocalId == localId)
+                                {
+                                    if (RootPart.CollisionFilter.ContainsValue(av.UUID.ToString()) || RootPart.CollisionFilter.ContainsValue(av.Name))
+                                    {
+                                        bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                        //If it is 1, it is to accept ONLY collisions from this avatar
+                                        if (found)
+                                        {
+                                            DetectedObject detobj = new DetectedObject
+                                                                        {
+                                                                            keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        };
+                                            colliding.Add(detobj);
+                                        }
+                                        //If it is 0, it is to not accept collisions from this avatar
+                                    }
+                                    else
+                                    {
+                                        bool found = RootPart.CollisionFilter.TryGetValue(1, out data);
+                                        //If it is 1, it is to accept ONLY collisions from this avatar, so this other avatar will not work
+                                        if (!found)
+                                        {
+                                            DetectedObject detobj = new DetectedObject
+                                                                        {
+                                                                            keyUUID = av.UUID, nameStr = av.ControllingClient.Name, ownerUUID = av.UUID, posVector = av.AbsolutePosition, rotQuat = av.Rotation, velVector = av.Velocity, colliderType = 0, groupUUID = av.ControllingClient.ActiveGroupId
+                                                                        };
+                                            colliding.Add(detobj);
+                                        }
                                     }
                                 }
                             }
@@ -2054,12 +1991,24 @@ namespace OpenSim.Region.Framework.Scenes
 
             scriptEvents aggregateScriptEvents = 0;
 
+#if (!ISWIN)
+            foreach (SceneObjectPart part in m_partsList)
+            {
+                if (part != null)
+                {
+                    if (part != RootPart)
+                        part.Flags = objectflagupdate;
+                    aggregateScriptEvents |= part.AggregateScriptEvents;
+                }
+            }
+#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != null))
             {
                 if (part != RootPart)
                     part.Flags = objectflagupdate;
                 aggregateScriptEvents |= part.AggregateScriptEvents;
             }
+#endif
 
             m_scriptListens_atTarget = ((aggregateScriptEvents & scriptEvents.at_target) != 0);
             m_scriptListens_notAtTarget = ((aggregateScriptEvents & scriptEvents.not_at_target) != 0);
@@ -3104,10 +3053,20 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             presence.AddUpdateToAvatar(RootPart, UpdateFlags);
 
+#if (!ISWIN)
+            foreach (SceneObjectPart part in m_partsList)
+            {
+                if (part != RootPart)
+                {
+                    presence.AddUpdateToAvatar(part, UpdateFlags);
+                }
+            }
+#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != RootPart))
             {
                 presence.AddUpdateToAvatar(part, UpdateFlags);
             }
+#endif
         }
 
         /// <summary>
@@ -3119,10 +3078,20 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleUpdate(UpdateFlags);
 
+#if (!ISWIN)
+            foreach (SceneObjectPart part in m_partsList)
+            {
+                if (part != RootPart)
+                {
+                    part.ScheduleUpdate(UpdateFlags);
+                }
+            }
+#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != RootPart))
             {
                 part.ScheduleUpdate(UpdateFlags);
             }
+#endif
         }
 
         /// <summary>
@@ -3133,10 +3102,20 @@ namespace OpenSim.Region.Framework.Scenes
             //We have to send the root part first as the client wants it that way
             RootPart.ScheduleTerseUpdate();
 
+#if (!ISWIN)
+            foreach (SceneObjectPart part in m_partsList)
+            {
+                if (part != RootPart)
+                {
+                    part.ScheduleTerseUpdate();
+                }
+            }
+#else
             foreach (SceneObjectPart part in m_partsList.Where(part => part != RootPart))
             {
                 part.ScheduleTerseUpdate();
             }
+#endif
         }
 
         public void Update()
@@ -3186,10 +3165,20 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parts.Count == 1)
                     return RootPart;
+#if (!ISWIN)
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    if (part.LinkNum == linknum)
+                    {
+                        return part;
+                    }
+                }
+#else
                 foreach (SceneObjectPart part in m_partsList.Where(part => part.LinkNum == linknum))
                 {
                     return part;
                 }
+#endif
             }
             //Check sitting avatars
             lock (SitTargetAvatar)
@@ -3324,6 +3313,21 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 //rest of parts
+#if (!ISWIN)
+                foreach (SceneObjectPart part in objectGroupChildren)
+                {
+                    if (part.UUID != objectGroup.m_rootPart.UUID)
+                    {
+                        LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
+                        part.FixOffsetPosition(part.OffsetPosition, true);
+                        if (part.PhysActor != null && m_rootPart.PhysActor != null)
+                        {
+                            part.PhysActor.link(m_rootPart.PhysActor);
+                            Scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
+                        }
+                    }
+                }
+#else
                 foreach (SceneObjectPart part in objectGroupChildren.Where(part => part.UUID != objectGroup.m_rootPart.UUID))
                 {
                     LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
@@ -3334,6 +3338,7 @@ namespace OpenSim.Region.Framework.Scenes
                         Scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
                     }
                 }
+#endif
             }
             // Here's the deal, this is ABSOLUTELY CRITICAL so the physics scene gets the update about the 
             // position of linkset prims.  IF YOU CHANGE THIS, YOU MUST TEST colliding with just linked and 
@@ -3706,6 +3711,18 @@ namespace OpenSim.Region.Framework.Scenes
                 bool needsPhysicalRebuild = ((SceneObjectPart) selectionPart).UpdatePrimFlags(UsePhysics, IsTemporary,
                                                                                               IsPhantom, IsVolumeDetect,
                                                                                               blocks);
+#if (!ISWIN)
+                foreach (SceneObjectPart part in m_partsList)
+                {
+                    if (selectionPart != part)
+                    {
+                        if (needsPhysicalRebuild)
+                            part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                        else
+                            needsPhysicalRebuild = part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, IsVolumeDetect, null);
+                    }
+                }
+#else
                 foreach (SceneObjectPart part in m_partsList.Where(part => selectionPart != part))
                 {
                     if (needsPhysicalRebuild)
@@ -3714,6 +3731,7 @@ namespace OpenSim.Region.Framework.Scenes
                         needsPhysicalRebuild = part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom,
                                                                     IsVolumeDetect, null);
                 }
+#endif
                 if (needsPhysicalRebuild)
                     RebuildPhysicalRepresentation(true);
             }
@@ -3898,6 +3916,26 @@ namespace OpenSim.Region.Framework.Scenes
                 prevScale.Z *= z;
                 part.Resize(prevScale);
 
+#if (!ISWIN)
+                foreach (SceneObjectPart obPart in m_partsList)
+                {
+                    if (obPart.UUID != m_rootPart.UUID)
+                    {
+                        obPart.IgnoreUndoUpdate = true;
+                        Vector3 currentpos = new Vector3(obPart.OffsetPosition);
+                        currentpos.X *= x;
+                        currentpos.Y *= y;
+                        currentpos.Z *= z;
+                        Vector3 newSize = new Vector3(obPart.Scale);
+                        newSize.X *= x;
+                        newSize.Y *= y;
+                        newSize.Z *= z;
+                        obPart.Resize(newSize);
+                        obPart.UpdateOffSet(currentpos);
+                        obPart.IgnoreUndoUpdate = false;
+                    }
+                }
+#else
                 foreach (SceneObjectPart obPart in m_partsList.Where(obPart => obPart.UUID != m_rootPart.UUID))
                 {
                     obPart.IgnoreUndoUpdate = true;
@@ -3913,6 +3951,7 @@ namespace OpenSim.Region.Framework.Scenes
                     obPart.UpdateOffSet(currentpos);
                     obPart.IgnoreUndoUpdate = false;
                 }
+#endif
 
                 if (part.PhysActor != null)
                 {
@@ -4324,6 +4363,35 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.PhysicsScene.AddPhysicsActorTaint(m_rootPart.PhysActor);
             }
 
+#if (!ISWIN)
+            foreach (SceneObjectPart childPrim in m_partsList)
+            {
+                if (childPrim.UUID != m_rootPart.UUID)
+                {
+                    childPrim.StoreUndoState();
+                    childPrim.IgnoreUndoUpdate = true;
+
+                    // fix rotation
+                    // get in world coords
+                    Quaternion primsRot = old_global_group_rot*childPrim.RotationOffset;
+                    // set new offset as inverse of the one on root
+                    // so world is right
+                    primsRot = Quaternion.Inverse(new_global_group_rot)*primsRot;
+                    // just store it
+                    childPrim.SetRotationOffset(false, primsRot, false);
+
+                    // fix position offset
+                    Vector3 axPos = childPrim.OffsetPosition;
+                    axPos *= old_global_group_rot;
+                    axPos *= Quaternion.Inverse(new_global_group_rot);
+                    // store it and let physics know about both changes
+                    childPrim.FixOffsetPosition(axPos, true);
+
+                    childPrim.ScheduleTerseUpdate();
+                    childPrim.IgnoreUndoUpdate = false;
+                }
+            }
+#else
             foreach (SceneObjectPart childPrim in m_partsList.Where(childPrim => childPrim.UUID != m_rootPart.UUID))
             {
                 childPrim.StoreUndoState();
@@ -4331,10 +4399,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // fix rotation
                 // get in world coords
-                Quaternion primsRot = old_global_group_rot*childPrim.RotationOffset;
+                Quaternion primsRot = old_global_group_rot * childPrim.RotationOffset;
                 // set new offset as inverse of the one on root
                 // so world is right
-                primsRot = Quaternion.Inverse(new_global_group_rot)*primsRot;
+                primsRot = Quaternion.Inverse(new_global_group_rot) * primsRot;
                 // just store it
                 childPrim.SetRotationOffset(false, primsRot, false);
 
@@ -4348,6 +4416,7 @@ namespace OpenSim.Region.Framework.Scenes
                 childPrim.ScheduleTerseUpdate();
                 childPrim.IgnoreUndoUpdate = false;
             }
+#endif
 
             m_rootPart.ScheduleTerseUpdate();
         }

@@ -317,7 +317,26 @@ namespace Aurora.Framework
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+#if (!ISWIN)
+                foreach (Type pluginType in pluginAssembly.GetTypes())
+                {
+                    if (pluginType.IsPublic)
+                    {
+                        try
+                        {
+                            Type typeInterface = pluginType.GetInterface(type, true);
 
+                            if (typeInterface != null)
+                            {
+                                return (T)Activator.CreateInstance(pluginType);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+#else
                 foreach (Type pluginType in pluginAssembly.GetTypes().Where(pluginType => pluginType.IsPublic))
                 {
                     try
@@ -333,6 +352,7 @@ namespace Aurora.Framework
                     {
                     }
                 }
+#endif
             }
             catch (ReflectionTypeLoadException e)
             {
@@ -359,7 +379,26 @@ namespace Aurora.Framework
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+#if (!ISWIN)
+                foreach (Type pluginType in pluginAssembly.GetTypes())
+                {
+                    if (pluginType.IsPublic)
+                    {
+                        try
+                        {
+                            Type typeInterface = pluginType.GetInterface(type, true);
 
+                            if (typeInterface != null)
+                            {
+                                plugins.Add((T)Activator.CreateInstance(pluginType));
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+#else
                 foreach (Type pluginType in pluginAssembly.GetTypes().Where(pluginType => pluginType.IsPublic))
                 {
                     try
@@ -375,6 +414,8 @@ namespace Aurora.Framework
                     {
                     }
                 }
+#endif
+                
             }
             catch (ReflectionTypeLoadException e)
             {

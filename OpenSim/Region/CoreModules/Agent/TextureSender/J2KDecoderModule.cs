@@ -220,10 +220,20 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                         {
                             if (m_notifyList.ContainsKey(assetID))
                             {
+#if (!ISWIN)
+                                foreach (DecodedCallback d in m_notifyList[assetID])
+                                {
+                                    if (d != null)
+                                    {
+                                        d.DynamicInvoke(assetID, layers);
+                                    }
+                                }
+#else
                                 foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                                 {
                                     d.DynamicInvoke(assetID, layers);
                                 }
+#endif
                                 m_notifyList.Remove(assetID);
                             }
                         }
@@ -242,10 +252,20 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             {
                 if (m_notifyList.ContainsKey(assetID))
                 {
+#if (!ISWIN)
+                    foreach (DecodedCallback d in m_notifyList[assetID])
+                    {
+                        if (d != null)
+                        {
+                            d.DynamicInvoke(assetID, layers);
+                        }
+                    }
+#else
                     foreach (DecodedCallback d in m_notifyList[assetID].Where(d => d != null))
                     {
                         d.DynamicInvoke(assetID, layers);
                     }
+#endif
                     m_notifyList.Remove(assetID);
                 }
             }

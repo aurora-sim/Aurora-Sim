@@ -1670,11 +1670,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int count = kill.ObjectData.Count(block => block != null);
                 i = 0;
                 KillObjectPacket.ObjectDataBlock[] bk = new KillObjectPacket.ObjectDataBlock[count];
+#if (!ISWIN)
+                foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData)
+                {
+                    if (block != null)
+                    {
+                        bk[i] = block;
+                        i++;
+                    }
+                }
+#else
                 foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData.Where(block => block != null))
                 {
                     bk[i] = block;
                     i++;
                 }
+#endif
                 kill.ObjectData = bk;
             }
 

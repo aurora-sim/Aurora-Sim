@@ -243,11 +243,22 @@ namespace OpenSim.Framework
         {
             UUID itemID = UUID.Zero;
 
+#if (!ISWIN)
+            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
+            {
+                if (kvp.Value == assetID)
+                {
+                    itemID = kvp.Key;
+                    break;
+                }
+            }
+#else
             foreach (KeyValuePair<UUID, UUID> kvp in m_items.Where(kvp => kvp.Value == assetID))
             {
                 itemID = kvp.Key;
                 break;
             }
+#endif
 
             if (itemID != UUID.Zero)
             {
@@ -267,10 +278,20 @@ namespace OpenSim.Framework
         {
             if (!m_items.ContainsValue(assetID))
                 return UUID.Zero;
+#if (!ISWIN)
+            foreach (KeyValuePair<UUID, UUID> kvp in m_items)
+            {
+                if (kvp.Value == assetID)
+                {
+                    return kvp.Key;
+                }
+            }
+#else
             foreach (KeyValuePair<UUID, UUID> kvp in m_items.Where(kvp => kvp.Value == assetID))
             {
                 return kvp.Key;
             }
+#endif
             return UUID.Zero;
         }
     }

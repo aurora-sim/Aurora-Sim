@@ -197,6 +197,20 @@ namespace Aurora.Services.DataService
 
             bool[,] tempConvertMap = new bool[r.RegionSizeX/4,r.RegionSizeX/4];
             tempConvertMap.Initialize();
+#if (!ISWIN)
+            foreach (LandData land in Lands)
+            {
+                if (land.Bitmap != null)
+                {
+                    ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
+                    if (tempConvertMap[X/64, Y/64])
+                    {
+                        LandData = land;
+                        break;
+                    }
+                }
+            }
+#else
             foreach (LandData land in Lands.Where(land => land.Bitmap != null))
             {
                 ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
@@ -206,6 +220,7 @@ namespace Aurora.Services.DataService
                     break;
                 }
             }
+#endif
             if (LandData == null && Lands.Count != 0)
                 LandData = Lands[0];
             return LandData;

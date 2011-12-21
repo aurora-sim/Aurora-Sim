@@ -88,10 +88,20 @@ namespace OpenSim.Framework
         {
             lock (AgentCircuits)
             {
+#if (!ISWIN)
+                foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
+                {
+                    if (circuitData.AgentID == agentID)
+                    {
+                        AgentCircuits.Remove(circuitData.circuitcode);
+                    }
+                }
+#else
                 foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values).Where(circuitData => circuitData.AgentID == agentID))
                 {
                     AgentCircuits.Remove(circuitData.circuitcode);
                 }
+#endif
             }
         }
 

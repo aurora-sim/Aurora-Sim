@@ -187,7 +187,24 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             ISceneEntity[] entityList = scene.Entities.GetEntities ();
 
+#if (!ISWIN)
+            List<ISceneEntity> primList = new List<ISceneEntity>();
+
+            foreach (ISceneEntity ent in entityList)
+            {
+                if (ent is SceneObjectGroup)
+                {
+                    if (ent.Name == primName)
+                    {
+                        primList.Add(ent);
+                    }
+                }
+            }
+
+            SavePrimListToXml2(primList.ToArray(), fileName);
+#else
             SavePrimListToXml2(entityList.OfType<SceneObjectGroup>().Where(ent => ent.Name == primName).Cast<ISceneEntity>().ToArray(), fileName);
+#endif
         }
 
         public static void SavePrimListToXml2 (ISceneEntity[] entityList, string fileName)

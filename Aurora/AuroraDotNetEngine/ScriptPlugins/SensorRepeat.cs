@@ -76,7 +76,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             // Remove from timer
             lock (SenseRepeatListLock)
             {
+#if (!ISWIN)
+                List<SenseRepeatClass> NewSensors = new List<SenseRepeatClass>();
+                foreach (SenseRepeatClass ts in SenseRepeaters)
+                {
+                    if (ts.objectID != objectID && ts.itemID != m_itemID) NewSensors.Add(ts);
+                }
+#else
                 List<SenseRepeatClass> NewSensors = SenseRepeaters.Where(ts => ts.objectID != objectID && ts.itemID != m_itemID).ToList();
+#endif
                 SenseRepeaters.Clear();
                 SenseRepeaters = NewSensors;
             }
@@ -92,12 +100,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 // Go through all timers
                 DateTime UniversalTime = DateTime.Now.ToUniversalTime();
+#if (!ISWIN)
+                foreach (SenseRepeatClass ts in SenseRepeaters)
+                {
+                    if (ts.next.ToUniversalTime() < UniversalTime)
+                    {
+                        SensorSweep(ts);
+                        // set next interval
+                        ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
+                    }
+                }
+#else
                 foreach (SenseRepeatClass ts in SenseRepeaters.Where(ts => ts.next.ToUniversalTime() < UniversalTime))
                 {
                     SensorSweep(ts);
                     // set next interval
                     ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
                 }
+#endif
             } // lock
             return SenseRepeaters.Count > 0;
         }

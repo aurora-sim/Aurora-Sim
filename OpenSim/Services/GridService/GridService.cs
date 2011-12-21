@@ -155,7 +155,15 @@ namespace OpenSim.Services.GridService
         {
             List<GridRegion> regions = m_Database.GetDefaultRegions(scopeID);
 
-            List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
+#if (!ISWIN)
+            List<GridRegion> ret = new List<GridRegion>();
+            foreach (GridRegion r in regions)
+            {
+                if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
+            }
+#else
+            List<GridRegion> ret = regions.Where(r => (r.Flags & (int)RegionFlags.RegionOnline) != 0).ToList();
+#endif
 
             m_log.DebugFormat("[GRID SERVICE]: GetDefaultRegions returning {0} regions", ret.Count);
             return ret;
@@ -213,7 +221,15 @@ namespace OpenSim.Services.GridService
         {
             List<GridRegion> regions = m_Database.GetFallbackRegions(scopeID, x, y);
 
+#if (!ISWIN)
+            List<GridRegion> ret = new List<GridRegion>();
+            foreach (GridRegion r in regions)
+            {
+                if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
+            }
+#else
             List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
+#endif
 
             m_log.DebugFormat("[GRID SERVICE]: Fallback returned {0} regions", ret.Count);
             return ret;
@@ -573,7 +589,17 @@ namespace OpenSim.Services.GridService
                 rdatas.Sort(new RegionDataComparison(name));
                 //Results are backwards... so it needs reversed
                 rdatas.Reverse();
+#if (!ISWIN)
+                foreach (GridRegion rdata in rdatas)
+                {
+                    if (count++ < maxNumber)
+                    {
+                        rinfos.Add(rdata);
+                    }
+                }
+#else
                 rinfos.AddRange(rdatas.Where(rdata => count++ < maxNumber));
+#endif
             }
 
             return rinfos;

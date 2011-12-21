@@ -363,12 +363,24 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_objectPropertiesToSendLock)
             {
+#if (!ISWIN)
+                foreach (ISceneChildEntity entity in entities)
+                {
+                    if (m_culler == null || m_culler.ShowEntityToClient(m_presence, entity.ParentEntity, m_scene))
+                    {
+                        m_objectPropertiesToSend.Remove(entity.UUID);
+                        //Insert at the end
+                        m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
+                    }
+                }
+#else
                 foreach (ISceneChildEntity entity in entities.Where(entity => m_culler == null || m_culler.ShowEntityToClient(m_presence, entity.ParentEntity, m_scene)))
                 {
                     m_objectPropertiesToSend.Remove(entity.UUID);
                     //Insert at the end
                     m_objectPropertiesToSend.Insert(m_objectPropertiesToSend.Count, entity.UUID, entity);
                 }
+#endif
             }
         }
 
@@ -408,10 +420,20 @@ namespace OpenSim.Region.Framework.Scenes
                                            foreach (ISceneEntity entity in entities)
                                            {
                                                QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
+#if (!ISWIN)
+                                               foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                                               {
+                                                   if (!child.IsRoot)
+                                                   {
+                                                       QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                                                   }
+                                               }
+#else
                                                foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
                                                {
                                                    QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
                                                }
+#endif
                                            }
                                        }
                                    });
@@ -505,6 +527,26 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Check for scenepresences as well
             List<IScenePresence> presences = new List<IScenePresence>(m_presence.Scene.Entities.GetPresences());
+#if (!ISWIN)
+            foreach (IScenePresence presence in presences)
+            {
+                if (presence != null && presence.UUID != m_presence.UUID)
+                {
+                    lock (m_lastPresencesInViewLock)
+                        if (lastPresencesDInView.ContainsKey(presence.UUID))
+                            continue; //Don't resend the update
+
+                    //Check for culling here!
+                    if (!m_culler.ShowEntityToClient(m_presence, presence, m_scene, time))
+                        continue; // if 2 far ignore
+
+                    lock (m_lastPresencesInViewLock)
+                        lastPresencesDInView.Add(presence.UUID, presence);
+
+                    SendFullUpdateForPresence(presence);
+                }
+            }
+#else
             foreach (IScenePresence presence in presences.Where(presence => presence != null && presence.UUID != m_presence.UUID))
             {
                 lock (m_lastPresencesInViewLock)
@@ -520,6 +562,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 SendFullUpdateForPresence(presence);
             }
+#endif
             presences = null;
         }
 
@@ -832,11 +875,22 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     EntityUpdate update = new EntityUpdate(t.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     QueueEntityUpdate(update);
+#if (!ISWIN)
+                    foreach (ISceneChildEntity child in t.ChildrenEntities())
+                    {
+                        if (!child.IsRoot)
+                        {
+                            update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                            QueueEntityUpdate(update);
+                        }
+                    }
+#else
                     foreach (ISceneChildEntity child in t.ChildrenEntities().Where(child => !child.IsRoot))
                     {
                         update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
                         QueueEntityUpdate(update);
                     }
+#endif
                 }
             }
 

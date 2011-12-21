@@ -559,8 +559,15 @@ namespace OpenSim.Framework
 
         public void RemoveBan(UUID avatarID)
         {
+#if (!ISWIN)
+            foreach (EstateBan ban in new List<EstateBan>(l_EstateBans))
+            {
+                if (ban.BannedUserID == avatarID) l_EstateBans.Remove(ban);
+            }
+#else
             foreach (EstateBan ban in new List<EstateBan>(l_EstateBans).Where(ban => ban.BannedUserID == avatarID))
                 l_EstateBans.Remove(ban);
+#endif
         }
 
         public bool HasAccess(UUID user)

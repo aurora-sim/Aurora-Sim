@@ -162,11 +162,22 @@ namespace Aurora.DataManager.Migration
                                                    out Rec<string, ColumnDefinition[]> reason)
         {
             reason = new Rec<string, ColumnDefinition[]>();
+#if (!ISWIN)
+            foreach (var s in schema)
+            {
+                if (!genericData.VerifyTableExists(s.X1, s.X2))
+                {
+                    reason = s;
+                    return false;
+                }
+            }
+#else
             foreach (var s in schema.Where(s => !genericData.VerifyTableExists(s.X1, s.X2)))
             {
                 reason = s;
                 return false;
             }
+#endif
             return true;
         }
 

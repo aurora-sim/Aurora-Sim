@@ -412,10 +412,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (File.Exists(Dir))
             {
                 string defaultScript = File.ReadAllText(Dir);
+#if (!ISWIN)
+                foreach (IScene scene in m_Scenes)
+                {
+                    ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
+                    if (inventoryModule != null)
+                    {
+                        inventoryModule.DefaultLSLScript = defaultScript;
+                    }
+                }
+#else
                 foreach (ILLClientInventory inventoryModule in m_Scenes.Select(scene => scene.RequestModuleInterface<ILLClientInventory>()).Where(inventoryModule => inventoryModule != null))
                 {
                     inventoryModule.DefaultLSLScript = defaultScript;
                 }
+#endif
             }
         }
 
@@ -1171,7 +1182,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 m_APIs = AuroraModuleLoader.PickupModules<IScriptApi>().ToArray();
                 //Only add Apis that are considered safe
+#if (!ISWIN)
+                List<IScriptApi> list = new List<IScriptApi>();
+                foreach (IScriptApi api in m_APIs)
+                {
+                    if (ScriptProtection.CheckAPI(api.Name)) list.Add(api);
+                }
+                m_APIs = list.ToArray();
+#else
                 m_APIs = m_APIs.Where(api => ScriptProtection.CheckAPI(api.Name)).ToArray();
+#endif
             }
             IScriptApi[] apis = new IScriptApi[m_APIs.Length];
             int i = 0;
@@ -1192,10 +1212,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             IScriptApi[] apis = m_APIs.Length == 0 ? GetAPIs() : m_APIs;
             foreach (IScriptApi api in apis)
             {
+#if (!ISWIN)
+                foreach (string functionName in GetFunctionNames(api))
+                {
+                    if (!FunctionNames.ContainsKey(functionName))
+                    {
+                        FunctionNames.Add(functionName, api);
+                    }
+                }
+#else
                 foreach (string functionName in GetFunctionNames(api).Where(functionName => !FunctionNames.ContainsKey(functionName)))
                 {
                     FunctionNames.Add(functionName, api);
                 }
+#endif
             }
             m_apiFunctionNamesCache = FunctionNames;
             return FunctionNames;

@@ -1075,11 +1075,22 @@ namespace OpenSim.Services
 
             List<GroupMembersData> rs = GroupsServiceConnector.GetGroupMembers(requestingAgentID, GroupID);
             int i = 0;
+#if (!ISWIN)
+            foreach (GroupMembersData r in rs)
+            {
+                if (r != null)
+                {
+                    result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                    i++;
+                }
+            }
+#else
             foreach (GroupMembersData r in rs.Where(r => r != null))
             {
                 result.Add(ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
+#endif
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);

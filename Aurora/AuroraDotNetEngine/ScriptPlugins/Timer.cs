@@ -75,6 +75,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 // Go through all timers
                 int TickCount = Environment.TickCount;
+#if (!ISWIN)
+                foreach (TimerClass ts in Timers.Values)
+                {
+                    if (ts.next < TickCount)
+                    {
+                        // Add it to queue
+                        m_ScriptEngine.PostScriptEvent(ts.itemID, ts.ID, new EventParams("timer", new Object[0], new DetectParams[0]), EventPriority.Continued);
+                        // set next interval
+
+                        ts.next = TickCount + ts.interval;
+                    }
+                }
+#else
                 foreach (TimerClass ts in Timers.Values.Where(ts => ts.next < TickCount))
                 {
                     // Add it to queue
@@ -85,6 +98,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                     ts.next = TickCount + ts.interval;
                 }
+#endif
             }
             return Timers.Count > 0;
         }

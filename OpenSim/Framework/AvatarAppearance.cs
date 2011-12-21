@@ -483,10 +483,20 @@ namespace OpenSim.Framework
                 return true;
             if (m_attachments.ContainsKey(attPnt))
             {
+#if (!ISWIN)
+                foreach (AvatarAttachment a in m_attachments[attPnt])
+                {
+                    if (a.ItemID == item)
+                    {
+                        return !(a.AssetID == assetID);
+                    }
+                }
+#else
                 foreach (AvatarAttachment a in m_attachments[attPnt].Where(a => a.ItemID == item))
                 {
                     return !(a.AssetID == assetID);
                 }
+#endif
             }
             return true;
         }

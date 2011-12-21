@@ -95,6 +95,25 @@ namespace OpenSim.Services.CapsService
 
             message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[i];
             i = 0;
+#if (!ISWIN)
+            foreach (ISceneChildEntity entity in entities)
+            {
+                if (entity != null)
+                {
+                    message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties
+                                                             {
+                                                                 Density = entity.Density,
+                                                                 Friction = entity.Friction,
+                                                                 GravityMultiplier = entity.GravityMultiplier,
+                                                                 LocalID = entity.LocalId,
+                                                                 PhysicsShapeType =
+                                                                     (PhysicsShapeType) entity.PhysicsType,
+                                                                 Restitution = entity.Restitution
+                                                             };
+                    i++;
+                }
+            }
+#else
             foreach (ISceneChildEntity entity in entities.Where(entity => entity != null))
             {
                 message.ObjectPhysicsProperties[i] = new Primitive.PhysicsProperties
@@ -108,6 +127,7 @@ namespace OpenSim.Services.CapsService
                                                          };
                 i++;
             }
+#endif
 
             OSDMap m = new OSDMap {{"message", OSD.FromString("ObjectPhysicsProperties")}};
             OSD message_body = message.Serialize();

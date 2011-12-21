@@ -40,8 +40,15 @@ namespace OpenSim.Services.RobustCompat
 
             Dictionary<string, object> structData = avatar.ToKeyValuePairs();
 
+#if (!ISWIN)
+            foreach (KeyValuePair<string, object> kvp in structData)
+            {
+                if (kvp.Key != "Textures") sendData[kvp.Key] = kvp.Value.ToString();
+            }
+#else
             foreach (KeyValuePair<string, object> kvp in structData.Where(kvp => kvp.Key != "Textures"))
                 sendData[kvp.Key] = kvp.Value.ToString();
+#endif
 
             ResetAvatar(userID);
             string reqString = WebUtils.BuildQueryString(sendData);
