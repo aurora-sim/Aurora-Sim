@@ -535,10 +535,21 @@ namespace Amib.Threading.Internal
         /// <param name = "workItemResults">An array of work item results</param>
         private static void ReleaseWaitHandles(IWorkItemResult[] workItemResults)
         {
+#if (!ISWIN)
+            foreach (IWorkItemResult result in workItemResults)
+            {
+                WorkItemResult wir = result as WorkItemResult;
+                if (wir != null)
+                {
+                    wir.GetWorkItem().ReleaseWaitHandle();
+                }
+            }
+#else
             foreach (WorkItemResult wir in workItemResults.OfType<WorkItemResult>())
             {
                 wir.GetWorkItem().ReleaseWaitHandle();
             }
+#endif
         }
 
         #endregion

@@ -1045,6 +1045,28 @@ namespace Amib.Threading
             if (timeout && forceAbort)
             {
                 // Abort the threads in the pool
+#if (!ISWIN)
+                foreach (Thread thread in threads)
+                {
+                    if ((thread != null) && thread.IsAlive)
+                    {
+                        try
+                        {
+                            thread.Abort("Shutdown");
+                        }
+                        catch (SecurityException e)
+                        {
+                            e.GetHashCode();
+                        }
+                        catch (ThreadStateException ex)
+                        {
+                            ex.GetHashCode();
+                            // In case the thread has been terminated 
+                            // after the check if it is alive.
+                        }
+                    }
+                }
+#else
                 foreach (Thread thread in threads.Where(thread => (thread != null) && thread.IsAlive))
                 {
                     try
@@ -1062,6 +1084,7 @@ namespace Amib.Threading
                         // after the check if it is alive.
                     }
                 }
+#endif
             }
 
             // Dispose of the performance counters
