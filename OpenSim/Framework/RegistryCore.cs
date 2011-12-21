@@ -131,10 +131,11 @@ namespace OpenSim.Framework
             if (ModuleInterfaces.ContainsKey(typeof (T)))
             {
 #if (!ISWIN)
-                List<T> list = new List<T>();
-                foreach (object o in ModuleInterfaces[typeof (T)])
-                    list.Add(o);
-                return list.ToArray();
+                List<T> ret = new List<T>();
+
+                foreach (Object o in ModuleInterfaces[typeof(T)])
+                    ret.Add((T)o);
+                return ret.ToArray();
 #else
                 return ModuleInterfaces[typeof (T)].Select(o => (T) o).ToArray();
 #endif
