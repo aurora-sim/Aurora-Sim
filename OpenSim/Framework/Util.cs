@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -1710,7 +1710,7 @@ namespace OpenSim.Framework
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool m_noInternetConnection;
         private static int m_nextInternetConnectionCheck;
-        private static bool useLocalhostLoopback;
+        private static bool useLocalhostLoopback=false;
         private static readonly ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress>();
 
         public static IPEndPoint ResolveEndPoint(string hostName, int port)
