@@ -29,7 +29,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
 using System.Threading;
@@ -2922,11 +2921,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             TaskInventoryItem item = m_host.TaskInventory[invItemID];
 
-            lock (m_host.TaskInventory)
-            {
-                item = m_host.TaskInventory[invItemID];
-            }
-
             if (item.PermsGranter == UUID.Zero)
                 return 0;
 
@@ -3428,7 +3422,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // center is on average of all positions
                         // less root prim position
 
-                        Vector3 offset = partList.Aggregate(Vector3.Zero, (current, child) => current + child.AbsolutePosition);
+                        Vector3 offset = Vector3.Zero;
+                        foreach (ISceneChildEntity child in partList)
+                        {
+                            offset += child.AbsolutePosition;
+                        }
                         offset /= partList.Count;
                         offset -= group.AbsolutePosition;
                         offset += pos;
@@ -7384,7 +7382,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return String.Empty;
             }
-            string ret = src.Data.Aggregate(String.Empty, (current, o) => current + o.ToString() + seperator);
+            string ret = "";
+            foreach (object o in src.Data)
+                ret += o.ToString() + seperator;
+
             ret = ret.Substring(0, ret.Length - seperator.Length);
             return ret;
         }
@@ -12096,6 +12097,49 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 InitialPosition = m_host.AbsolutePosition
             };
             m_host.ParentEntity.AddKeyframedMotion(animation, KeyframeAnimation.Commands.Play);
+        }
+
+        public LSL_String llGetParcelMusicURL()
+        {
+            ILandObject parcel = m_host.ParentEntity.Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(m_host.ParentEntity.LastParcelUUID);
+            return new LSL_String(parcel.LandData.MusicURL);
+        }
+
+        public LSL_String llTransferLindenDollars(LSL_String destination, LSL_Integer amt)
+        {
+            LSL_String transferID = UUID.Random().ToString();
+            IMoneyModule moneyMod = World.RequestModuleInterface<IMoneyModule>();
+            LSL_String data = "";
+            LSL_Integer success = LSL_Integer.FALSE;
+            TaskInventoryItem item = m_host.TaskInventory[m_itemID];
+            UUID destID;
+            if (item.PermsGranter == UUID.Zero || (item.PermsMask & ScriptBaseClass.PERMISSION_DEBIT) == 0)
+                data = llList2CSV(new LSL_Types.list("MISSING_PERMISSION_DEBIT"));
+            else if (!UUID.TryParse(destination, out destID))
+                data = llList2CSV(new LSL_Types.list("INVALID_AGENT"));
+            else if (amt <= 0)
+                data = llList2CSV(new LSL_Types.list("INVALID_AMOUNT"));
+            else if (World.UserAccountService.GetUserAccount(UUID.Zero, destID) == null)
+                data = llList2CSV(new LSL_Types.list("LINDENDOLLAR_ENTITYDOESNOTEXIST"));
+            else if (m_host.ParentEntity.OwnerID == m_host.ParentEntity.GroupID)
+                data = llList2CSV(new LSL_Types.list("GROUP_OWNED"));
+            else if(moneyMod != null)
+            {
+                success = moneyMod.Transfer(UUID.Parse(destination), m_host.OwnerID, amt, "");
+                if (success)
+                    data = llList2CSV(new LSL_List(destination, amt));
+                else
+                    data = llList2CSV(new LSL_Types.list("LINDENDOLLAR_INSUFFICIENTFUNDS"));
+            }
+            else
+                data = llList2CSV(new LSL_Types.list("SERVICE_ERROR"));
+            
+            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, new EventParams(
+                    "transaction_result", new Object[] {
+                    transferID, success, data},
+                    new DetectParams[0]), EventPriority.FirstStart);
+
+            return transferID;
         }
     }
 
