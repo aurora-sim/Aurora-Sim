@@ -701,6 +701,7 @@ namespace Aurora.Simulation.Base
             catch (Exception ex)
             {
                 m_log.Warn("[WebUtils]: exception on parse of REST message " + ex);
+                m_log.Warn("[WebUtils]: bad data: " + data);
                 return null;
             }
         }
