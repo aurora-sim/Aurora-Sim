@@ -404,10 +404,17 @@ namespace OpenSim.Region.Physics.Meshing
             String fileName = name + "_" + title + ".raw";
             String completePath = Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
+#if (!ISWIN)
+            foreach (Triangle s in m_triangles)
+            {
+                sw.WriteLine(s.ToStringRaw());
+            }
+#else
             foreach (string s in m_triangles.Select(t => t.ToStringRaw()))
             {
                 sw.WriteLine(s);
             }
+#endif
             sw.Close();
         }
 

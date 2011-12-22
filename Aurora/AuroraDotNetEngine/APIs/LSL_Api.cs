@@ -4627,7 +4627,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.TaskInventory)
             {
-                count += m_host.TaskInventory.Count(inv => inv.Value.Type == type || type == -1);
+                foreach (TaskInventoryItem item in m_host.TaskInventory.Values)
+                    if (item.Type == type || type == -1)
+                        count++;
             }
 
             return count;
@@ -6199,7 +6201,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int neighborX = World.RegionInfo.RegionLocX + (int)dir.x;
             int neighborY = World.RegionInfo.RegionLocY + (int)dir.y;
 
-            return neighbors.Any(sri => sri.RegionLocX == neighborX && sri.RegionLocY == neighborY) ? 0 : 1;
+            foreach (GridRegion neighbor in neighbors)
+                if (neighbor.RegionLocX == neighborX && neighbor.RegionLocY == neighborY)
+                    return LSL_Integer.TRUE;
+            return LSL_Integer.FALSE;
         }
 
         /// <summary>
@@ -7980,7 +7985,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
         {
             List<ISceneChildEntity> Parts = GetLinkParts (LinkNum);
-            int faces = Parts.Sum(part => GetNumberOfSides(part));
+            int faces = 0;
+            foreach (ISceneChildEntity part in Parts)
+                faces += GetNumberOfSides(part);
             return new LSL_Integer(faces);
         }
 
@@ -10881,10 +10888,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (module != null)
                 {
                     bool cached = false; //Unneeded
-                    if (module.GetMutes(avatar.UUID, out cached).Any(mute => mute.MuteID == m_host.OwnerID))
-                    {
-                        return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
-                    }
+                    foreach(MuteList mute in  module.GetMutes(avatar.UUID, out cached))
+                        if (mute.MuteID == m_host.OwnerID)
+                            return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
                 }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
                                                                    new Vector3((float)pos.x, (float)pos.y, (float)pos.z),
@@ -11478,13 +11484,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int activeScripts = modules.Sum(module => module.GetActiveScripts(av));
+                            int activeScripts = 0;
+                            foreach (IScriptModule mod in modules)
+                                activeScripts += mod.GetActiveScripts(av);
                             ret.Add(activeScripts);
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int totalScripts = modules.Sum(module => module.GetTotalScripts(av));
+                            int totalScripts = 0;
+                            foreach (IScriptModule mod in modules)
+                                totalScripts += mod.GetTotalScripts(av);
                             ret.Add(totalScripts);
                         }
                         else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -11494,7 +11504,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_TIME)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int scriptTime = modules.Sum(module => module.GetScriptTime(m_itemID));
+                            int scriptTime = 0;
+                            foreach (IScriptModule mod in modules)
+                                scriptTime += mod.GetScriptTime(m_itemID);
                             ret.Add(scriptTime);
                         }
                         else
@@ -11547,13 +11559,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int activeScripts = modules.Sum(module => module.GetActiveScripts(obj));
+                            int activeScripts = 0;
+                            foreach (IScriptModule mod in modules)
+                                activeScripts += mod.GetActiveScripts(obj);
                             ret.Add(new LSL_Integer(activeScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
-                            int totalScripts = modules.Sum(module => module.GetTotalScripts(obj));
+                            int totalScripts = 0;
+                            foreach (IScriptModule mod in modules)
+                                totalScripts += mod.GetTotalScripts(obj);
                             ret.Add(new LSL_Integer(totalScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -11700,9 +11716,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<ContactResult> newResults = new List<ContactResult> ();
             foreach (ContactResult result in results)
             {
-                bool found = newResults.Any(r => r.ConsumerID == result.ConsumerID);
-                if (!found)
-                    newResults.Add (result);
+                foreach (ContactResult r in newResults)
+                    if (r.ConsumerID == result.ConsumerID)
+                        newResults.Add(result);
             }
             castRaySort (startvector, ref newResults);
             foreach (ContactResult result in newResults)

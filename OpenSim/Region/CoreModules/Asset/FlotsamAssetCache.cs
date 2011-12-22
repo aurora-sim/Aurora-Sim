@@ -598,7 +598,14 @@ namespace Flotsam.RegionModules.AssetCache
                         // Now that it's written, rename it so that it can be found.
                         if (File.Exists(filename))
                             File.Delete(filename);
-                        File.Move(tempname, filename);
+                        try
+                        {
+                            File.Move(tempname, filename);
+                        }
+                        catch
+                        {
+                            File.Delete(tempname);
+                        }
                     }
 
                     if (m_LogLevel >= 2)
@@ -641,7 +648,8 @@ namespace Flotsam.RegionModules.AssetCache
             string[] text = e.ToString().Split(new[] {'\n'});
             foreach (string t in text)
             {
-                m_log.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
+                if(t.Trim() != "")
+                    m_log.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
             }
         }
 
