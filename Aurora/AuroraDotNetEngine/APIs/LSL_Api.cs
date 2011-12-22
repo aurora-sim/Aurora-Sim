@@ -337,7 +337,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity != null)
                 {
                     List<ISceneChildEntity> parts = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
+#if (!ISWIN)
+                    return parts.ConvertAll<IEntity>(new Converter<ISceneChildEntity, IEntity>(delegate(ISceneChildEntity part)
+                    {
+                        return (IEntity)part;
+                    }));
+#else
                     return parts.ConvertAll (part => (IEntity) part);
+#endif
                 }
                 return ret;
             }
@@ -357,7 +364,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity == null)
                     return new List<IEntity> ();
                 List<ISceneChildEntity> sceneobjectparts = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
+#if (!ISWIN)
+                ret = sceneobjectparts.ConvertAll<IEntity>(new Converter<ISceneChildEntity, IEntity>(delegate(ISceneChildEntity part)
+                {
+                    return (IEntity)part;
+                }));
+#else
                 ret = sceneobjectparts.ConvertAll (part => (IEntity) part);
+#endif
                 if (ret.Contains(m_host))
                     ret.Remove(m_host);
                 return ret;
@@ -368,7 +382,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (m_host.ParentEntity == null)
                     return new List<IEntity> ();
                 List<ISceneChildEntity> children = new List<ISceneChildEntity> (m_host.ParentEntity.ChildrenEntities ());
+#if (!ISWIN)
+                ret = children.ConvertAll<IEntity>(new Converter<ISceneChildEntity, IEntity>(delegate(ISceneChildEntity part)
+                {
+                    return (IEntity)part;
+                }));
+#else
                 ret = children.ConvertAll (part => (IEntity) part);
+#endif
                 if (ret.Contains (m_host.ParentEntity.RootChild))
                     ret.Remove (m_host.ParentEntity.RootChild);
                 return ret;
@@ -10688,8 +10709,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     string[] rawWhiteListUrls = rules.GetLSLStringItem(i++).ToString().Split(new[] { ',' });
                     List<string> whiteListUrls = new List<string>();
+#if (!ISWIN)
+                    Array.ForEach(
+                        rawWhiteListUrls, delegate(string rawUrl) { whiteListUrls.Add(rawUrl.Trim()); });
+#else
                     Array.ForEach(
                         rawWhiteListUrls, rawUrl => whiteListUrls.Add(rawUrl.Trim()));
+#endif
                     me.WhiteList = whiteListUrls.ToArray();
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT)
@@ -11780,7 +11806,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private void castRaySort (Vector3 pos, ref List<ContactResult> list)
         {
+#if (!ISWIN)
+            list.Sort(delegate(ContactResult a, ContactResult b)
+            {
+                return Vector3.DistanceSquared(a.Pos, pos).CompareTo(Vector3.DistanceSquared(b.Pos, pos));
+            });
+#else
             list.Sort ((a, b) => Vector3.DistanceSquared(a.Pos, pos).CompareTo(Vector3.DistanceSquared(b.Pos, pos)));
+#endif
         }
 
         public LSL_Key llGetNumberOfNotecardLines(string name)

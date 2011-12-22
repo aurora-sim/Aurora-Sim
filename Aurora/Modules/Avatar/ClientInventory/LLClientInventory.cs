@@ -1989,20 +1989,39 @@ namespace OpenSim.Region.Framework.Scenes
             retVal["UpdateScriptTask"] = retVal["UpdateScriptTaskInventory"];
 
             //Region Server bound
+#if (!ISWIN)
+            IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
+                delegate(string request, string path, string param,
+                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                {
+                    return ScriptTaskInventory(agentID, request, path, param,
+                        httpRequest, httpResponse);
+                });
+#else
             IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
                                                             (request, path, param, httpRequest, httpResponse) =>
                                                             ScriptTaskInventory(agentID, request, path, param,
                                                                                 httpRequest, httpResponse));
+#endif
             server.AddStreamHandler(handler);
 
             retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
             retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
             retVal["UpdateScriptAgent"] = retVal["UpdateNotecardAgentInventory"];
             //Unless the script engine goes, region server bound
+#if (!ISWIN)
+            handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(string request, string path, string param,
+                                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return NoteCardAgentInventory(agentID, request, path, param,
+                    httpRequest, httpResponse);
+            });
+#else
             handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"],
                                             (request, path, param, httpRequest, httpResponse) =>
                                             NoteCardAgentInventory(agentID, request, path, param,
                                                                    httpRequest, httpResponse));
+#endif
             server.AddStreamHandler(handler);
             return retVal;
         }

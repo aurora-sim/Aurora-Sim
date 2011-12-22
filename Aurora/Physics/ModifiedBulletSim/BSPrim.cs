@@ -204,8 +204,16 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _position = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position, _orientation);
+                    // m_log.DebugFormat("{0}: setPosition: id={1}, position={2}", LogHeader, _localID, _position);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position,
                                                                              _orientation));
+#endif
             }
         }
 
@@ -220,7 +228,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _force = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force));
+#endif
             }
         }
 
@@ -235,7 +250,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _velocity = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectVelocity(_scene.WorldID, LocalID, _velocity);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectVelocity(_scene.WorldID, LocalID, _velocity));
+#endif
             }
         }
 
@@ -263,8 +285,16 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 _orientation = value;
                 // m_log.DebugFormat("{0}: set orientation: id={1}, ori={2}", LogHeader, LocalID, _orientation);
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    // _position = BulletSimAPI.GetObjectPosition(_scene.WorldID, _localID);
+                    BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position, _orientation);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position,
                                                                              _orientation));
+#endif
             }
         }
 
@@ -358,8 +388,15 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 _rotationalVelocity = value;
                 // m_log.DebugFormat("{0}: RotationalVelocity={1}", LogHeader, _rotationalVelocity);
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectAngularVelocity(_scene.WorldID, LocalID, _rotationalVelocity);
+                });
+#else
                 _scene.TaintedObject(
                     () => BulletSimAPI.SetObjectAngularVelocity(_scene.WorldID, LocalID, _rotationalVelocity));
+#endif
             }
         }
 
@@ -375,8 +412,15 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _buoyancy = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, _localID, 1 - _buoyancy);//Bullet has no change as 0, instead of 1
+                });
+#else
                 _scene.TaintedObject(
                     () => BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, _localID, 1 - _buoyancy));
+#endif
             }
         }
 
@@ -453,7 +497,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             // Undo any vehicle properties
             _vehicle.ProcessTypeChange(Vehicle.TYPE_NONE);
             _scene.RemoveVehiclePrim(this); // just to make sure
+#if (!ISWIN)
+            _scene.TaintedObject(delegate()
+            {
+                BulletSimAPI.DestroyObject(_scene.WorldID, _localID);
+            });
+#else
             _scene.TaintedObject(() => BulletSimAPI.DestroyObject(_scene.WorldID, _localID));
+#endif
         }
 
         public override void CrossingFailure()
@@ -591,7 +642,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 m_log.WarnFormat("{0}: Got a NaN force applied to a Prim", LogHeader);
             }
+#if (!ISWIN)
+            _scene.TaintedObject(delegate()
+            {
+                BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force);
+            });
+#else
             _scene.TaintedObject(() => BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force));
+#endif
         }
 
         public override void AddAngularForce(Vector3 force, bool pushforce)
@@ -1356,7 +1414,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
             if (IsRootOfLinkset)
             {
+#if (!ISWIN)
+                float sum = 0;
+                foreach (BSPrim prim in _childrenPrims)
+                    sum += prim.CalculateMass();
+                returnMass += sum;
+#else
                 returnMass += _childrenPrims.Sum(prim => prim.CalculateMass());
+#endif
             }
 
             if (returnMass <= 0)

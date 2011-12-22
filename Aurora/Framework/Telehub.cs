@@ -80,7 +80,14 @@ namespace Aurora.Framework
 
         public string BuildFromList(List<Vector3> SpawnPos)
         {
+#if (!ISWIN)
+            string result = "";
+            foreach (Vector3 po in SpawnPos)
+                result = result + (po.ToString() + "\n");
+            return result;
+#else
             return SpawnPos.Aggregate("", (current, Pos) => current + (Pos.ToString() + "\n"));
+#endif
         }
 
         public List<Vector3> BuildToList(string SpawnPos)

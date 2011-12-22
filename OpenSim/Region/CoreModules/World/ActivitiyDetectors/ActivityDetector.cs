@@ -109,11 +109,20 @@ namespace OpenSim.Region.CoreModules
             IAgentInfoService service = m_scenes[0].RequestModuleInterface<IAgentInfoService>();
             if (service == null)
                 return;
+#if (!ISWIN)
+            foreach (IScene scene in m_scenes)
+                foreach (IScenePresence sp in scene.GetScenePresences())
+                {
+                    //This causes the last pos to be updated in the database, along with the last seen time
+                    sp.AddChildAgentUpdateTaint(1);
+                }
+#else
             foreach (IScenePresence sp in m_scenes.SelectMany(scene => scene.GetScenePresences()))
             {
                 //This causes the last pos to be updated in the database, along with the last seen time
                 sp.AddChildAgentUpdateTaint(1);
             }
+#endif
         }
 
         private void EventManager_OnStartupFullyComplete(IScene scene, List<string> data)

@@ -2085,7 +2085,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
+#if (!ISWIN)
+            string supportedFileExtensions = "";
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                supportedFileExtensions = supportedFileExtensions + (" " + loader.Key + " (" + loader.Value + ")");
+#else
             string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
+#endif
 
             m_log.Info(
                 "terrain load <FileName> - Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
@@ -2124,7 +2130,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void AddConsoleCommands()
         {
             // Load / Save
+#if (!ISWIN)
+            string supportedFileExtensions = "";
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                supportedFileExtensions = supportedFileExtensions + (" " + loader.Key + " (" + loader.Value + ")");
+#else
             string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
+#endif
 
             if (MainConsole.Instance != null)
             {

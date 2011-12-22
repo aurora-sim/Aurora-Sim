@@ -126,7 +126,18 @@ namespace Aurora.DataManager.Migration
                 return null;
             }
 
+#if (!ISWIN)
+            foreach (Migrator migrator in (from m in migrators orderby m.Version ascending select m))
+            {
+                if (migrator.Version > version)
+                {
+                    return migrator;
+                }
+            }
+            return null;
+#else
             return (from m in migrators orderby m.Version ascending select m).FirstOrDefault(migrator => migrator.Version > version);
+#endif
         }
 
         private Migrator GetLatestVersionMigrator()

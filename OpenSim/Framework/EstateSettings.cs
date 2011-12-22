@@ -590,7 +590,15 @@ namespace OpenSim.Framework
 
         public bool IsBanned(UUID avatarID)
         {
+#if (!ISWIN)
+            foreach (EstateBan ban in l_EstateBans)
+            {
+                if (ban.BannedUserID == avatarID) return true;
+            }
+            return false;
+#else
             return l_EstateBans.Any(ban => ban.BannedUserID == avatarID);
+#endif
         }
 
         public void AddBan(EstateBan ban)

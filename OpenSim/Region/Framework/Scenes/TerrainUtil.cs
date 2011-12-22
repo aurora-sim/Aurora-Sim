@@ -133,7 +133,15 @@ namespace OpenSim.Region.Framework.Scenes
         {
             int RegX = map.Scene.RegionInfo.RegionLocX + X;
             int RegY = map.Scene.RegionInfo.RegionLocY + Y;
+#if (!ISWIN)
+            foreach (IScene scene in scenes)
+            {
+                if (scene.RegionInfo.RegionLocX == RegX && scene.RegionInfo.RegionLocY == RegY) return scene;
+            }
+            return null;
+#else
             return scenes.FirstOrDefault(scene => scene.RegionInfo.RegionLocX == RegX && scene.RegionInfo.RegionLocY == RegY);
+#endif
         }
 
         private static float Noise(float x, float y)

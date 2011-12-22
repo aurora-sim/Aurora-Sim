@@ -71,7 +71,14 @@ namespace OpenSim.Framework
         {
             get
             {
+#if (!ISWIN)
+                int result = Items.Count;
+                foreach (InventoryFolderImpl value in m_childFolders.Values)
+                    result = result + value.TotalCount;
+                return result;
+#else
                 return m_childFolders.Values.Aggregate(Items.Count, (current, folder) => current + folder.TotalCount);
+#endif
             }
         }
 

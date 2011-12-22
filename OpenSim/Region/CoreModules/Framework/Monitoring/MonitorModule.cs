@@ -833,6 +833,39 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
+#if (!ISWIN)
+                manager.ForEachScene(
+                    delegate(IScene scene)
+                    {
+                        scene.ForEachClient(
+                            delegate(IClientAPI client)
+                            {
+                                if (client is IStatsCollector)
+                                {
+                                    IScenePresence SP = scene.GetScenePresence(client.AgentId);
+                                    if (SP == null || (SP.IsChildAgent && !showChildren))
+                                        return;
+
+                                    string name = client.Name;
+                                    string regionName = scene.RegionInfo.RegionName;
+
+                                    report.AppendFormat(
+                                        "{0,-" + maxNameLength + "}{1,-" + columnPadding + "}",
+                                        name.Length > maxNameLength ? name.Substring(0, maxNameLength) : name, "");
+                                    report.AppendFormat(
+                                        "{0,-" + maxRegionNameLength + "}{1,-" + columnPadding + "}",
+                                        regionName.Length > maxRegionNameLength ? regionName.Substring(0, maxRegionNameLength) : regionName, "");
+                                    report.AppendFormat(
+                                        "{0,-" + maxTypeLength + "}{1,-" + columnPadding + "}",
+                                        SP.IsChildAgent ? "Child" : "Root", "");
+
+                                    IStatsCollector stats = (IStatsCollector)client;
+
+                                    report.AppendLine(stats.Report());
+                                }
+                            });
+                    });
+#else
                 manager.ForEachScene(
                     scene => scene.ForEachClient(
                         delegate(IClientAPI client)
@@ -864,6 +897,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
                                     report.AppendLine(stats.Report());
                                 }
                             }));
+#endif
             }
 
             return report.ToString();

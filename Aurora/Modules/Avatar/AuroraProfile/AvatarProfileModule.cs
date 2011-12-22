@@ -205,7 +205,13 @@ namespace Aurora.Modules
             IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
+#if (!ISWIN)
+            Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
+            foreach (Classified classified in ProfileFrontend.GetClassifieds(requestedUUID))
+                classifieds.Add(classified.ClassifiedUUID, classified.Name);
+#else
             Dictionary<UUID, string> classifieds = ProfileFrontend.GetClassifieds(requestedUUID).ToDictionary(classified => classified.ClassifiedUUID, classified => classified.Name);
+#endif
 
             remoteClient.SendAvatarClassifiedReply(requestedUUID, classifieds);
         }
@@ -321,7 +327,13 @@ namespace Aurora.Modules
             IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
+#if (!ISWIN)
+            Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
+            foreach (ProfilePickInfo pick in ProfileFrontend.GetPicks(requestedUUID))
+                picks.Add(pick.PickUUID, pick.Name);
+#else
             Dictionary<UUID, string> picks = ProfileFrontend.GetPicks(requestedUUID).ToDictionary(Pick => Pick.PickUUID, Pick => Pick.Name);
+#endif
             remoteClient.SendAvatarPicksReply(requestedUUID, picks);
         }
 
@@ -652,7 +664,15 @@ namespace Aurora.Modules
 
         private IScene GetRegionUserIsIn(UUID uUID)
         {
+#if (!ISWIN)
+            foreach (IScene scene in m_Scenes)
+            {
+                if (scene.GetScenePresence(uUID) != null) return scene;
+            }
+            return null;
+#else
             return m_Scenes.FirstOrDefault(scene => scene.GetScenePresence(uUID) != null);
+#endif
         }
 
         private bool IsFriendOfUser(UUID friend, UUID requested)

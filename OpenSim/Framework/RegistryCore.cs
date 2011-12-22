@@ -149,7 +149,14 @@ namespace OpenSim.Framework
         public Dictionary<Type, List<object>> GetInterfaces()
         {
             //Flatten the array
+#if (!ISWIN)
+            Dictionary<Type, List<object>> dictionary = new Dictionary<Type, List<object>>();
+            foreach (KeyValuePair<Type, List<object>> @interface in ModuleInterfaces)
+                dictionary.Add(@interface.Key, @interface.Value);
+            return dictionary;
+#else
             return ModuleInterfaces.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+#endif
         }
 
         public void RemoveAllInterfaces()

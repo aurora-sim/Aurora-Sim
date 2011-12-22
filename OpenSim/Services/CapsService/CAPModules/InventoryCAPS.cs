@@ -59,9 +59,17 @@ namespace OpenSim.Services.CapsService
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
 
+#if (!ISWIN)
+            RestBytesMethod method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
+            };
+#else
             RestBytesMethod method =
                 (request, path, param, httpRequest, httpResponse) =>
                 HandleWebFetchInventoryDescendents(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("WebFetchInventoryDescendents",
                                      new RestBytesStreamHandler("POST",
                                                                 service.CreateCAPS("WebFetchInventoryDescendents", ""),
@@ -75,9 +83,17 @@ namespace OpenSim.Services.CapsService
                                                                 service.CreateCAPS("FetchInventoryDescendents2", ""),
                                                                 method));
 
+#if (!ISWIN)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchLibDescendents(request, m_service.AgentID);
+            };
+#else
             method =
                 (request, path, param, httpRequest, httpResponse) =>
                 HandleFetchLibDescendents(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("FetchLibDescendents",
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
                                                                 method));
@@ -85,8 +101,16 @@ namespace OpenSim.Services.CapsService
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
                                                                 method));
 
+#if (!ISWIN)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchInventory(request, m_service.AgentID);
+            };
+#else
             method =
                 (request, path, param, httpRequest, httpResponse) => HandleFetchInventory(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("FetchInventory",
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
                                                                 method));
@@ -94,7 +118,15 @@ namespace OpenSim.Services.CapsService
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
                                                                 method));
 
+#if (!ISWIN)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchLib(request, m_service.AgentID);
+            };
+#else
             method = (request, path, param, httpRequest, httpResponse) => HandleFetchLib(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("FetchLib",
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
                                                                 method));

@@ -91,7 +91,15 @@ namespace OpenSim.Services.CapsService
         public static OSD ObjectPhysicsProperties(ISceneChildEntity[] entities)
         {
             ObjectPhysicsPropertiesMessage message = new ObjectPhysicsPropertiesMessage();
+#if (!ISWIN)
+            int i = 0;
+            foreach (ISceneChildEntity entity in entities)
+            {
+                if (entity != null) i++;
+            }
+#else
             int i = entities.Count(entity => entity != null);
+#endif
 
             message.ObjectPhysicsProperties = new Primitive.PhysicsProperties[i];
             i = 0;

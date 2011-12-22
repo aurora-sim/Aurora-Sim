@@ -2207,12 +2207,24 @@ namespace OpenSim.Region.Framework.Scenes
                             m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int)(TargetX - 256), (int)(TargetX + 256),
                                 (int)(TargetY - 256), (int)(TargetY + 256));
                         }
+#if (!ISWIN)
+                        GridRegion neighborRegion = null;
+                        foreach (GridRegion region in m_nearbyInfiniteRegions)
+                        {
+                            if (TargetX >= region.RegionLocX && TargetY >= region.RegionLocY && TargetX < region.RegionLocX + region.RegionSizeX && TargetY < region.RegionLocY + region.RegionSizeY)
+                            {
+                                neighborRegion = region;
+                                break;
+                            }
+                        }
+#else
                         GridRegion neighborRegion =
                             m_nearbyInfiniteRegions.FirstOrDefault(
                                 region =>
                                 TargetX >= region.RegionLocX && TargetY >= region.RegionLocY &&
                                 TargetX < region.RegionLocX + region.RegionSizeX &&
                                 TargetY < region.RegionLocY + region.RegionSizeY);
+#endif
 
                         if(neighborRegion != null)
                         {

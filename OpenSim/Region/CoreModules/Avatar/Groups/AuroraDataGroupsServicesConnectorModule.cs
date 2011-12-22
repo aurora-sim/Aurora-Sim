@@ -456,7 +456,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private int GetMemeberCount(ChatSession session)
         {
+#if (!ISWIN)
+            int count = 0;
+            foreach (ChatSessionMember member in session.Members)
+            {
+                if (member.HasBeenAdded) count++;
+            }
+            return count;
+#else
             return session.Members.Count(member => member.HasBeenAdded);
+#endif
         }
 
         /// <summary>

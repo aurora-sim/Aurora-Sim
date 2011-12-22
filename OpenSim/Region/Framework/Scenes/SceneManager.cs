@@ -417,11 +417,21 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Get the new scene from the interface
             IScene scene = sceneLoader.CreateScene (regionInfo);
+#if (!ISWIN)
+            foreach (IScene loadedScene in m_localScenes)
+            {
+                if (loadedScene.RegionInfo.RegionName == regionInfo.RegionName && loadedScene.RegionInfo.RegionHandle == regionInfo.RegionHandle)
+                {
+                    throw new Exception("Duplicate region!");
+                }
+            }
+#else
             if (m_localScenes.Any(loadedScene => loadedScene.RegionInfo.RegionName == regionInfo.RegionName &&
                                                  loadedScene.RegionInfo.RegionHandle == regionInfo.RegionHandle))
             {
                 throw new Exception("Duplicate region!");
             }
+#endif
             StartNewRegion (scene);
             return scene;
         }
@@ -534,8 +544,15 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 Timer t = new Timer (seconds * 1000);//Millisecond conversion
+#if (!ISWIN)
                 t.Elapsed +=
-                    (sender, e) => CloseRegion(scene, ShutdownType.Immediate, 0);
+                    delegate(object sender, ElapsedEventArgs e)
+                    {
+                        CloseRegion(scene, ShutdownType.Immediate, 0);
+                    };
+#else
+                t.Elapsed += (sender, e) => CloseRegion(scene, ShutdownType.Immediate, 0);
+#endif
                 t.AutoReset = false;
                 t.Start ();
             }

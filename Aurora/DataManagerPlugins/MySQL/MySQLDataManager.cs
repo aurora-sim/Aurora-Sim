@@ -549,7 +549,12 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 1);
             query += ") values (";
 
+#if (!ISWIN)
+            foreach (string key in keys)
+                query = query + String.Format("?{0},", key);
+#else
             query = keys.Aggregate(query, (current, key) => current + String.Format("?{0},", key));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
 
@@ -621,7 +626,12 @@ namespace Aurora.DataManager.MySQL
             query = query.Remove(query.Length - 1);
             query += ") values (";
 
+#if (!ISWIN)
+            foreach (object value in values)
+                query = query + String.Format("{0},", value.ToString());
+#else
             query = values.Aggregate(query, (current, key) => current + String.Format("{0},", key.ToString()));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
 
@@ -701,7 +711,13 @@ namespace Aurora.DataManager.MySQL
 
         public override string ConCat(string[] toConcat)
         {
+#if (!ISWIN)
+            string returnValue = "concat(";
+            foreach (string s in toConcat)
+                returnValue = returnValue + (s + ",");
+#else
             string returnValue = toConcat.Aggregate("concat(", (current, s) => current + (s + ","));
+#endif
             return returnValue.Substring(0, returnValue.Length - 1) + ")";
         }
 

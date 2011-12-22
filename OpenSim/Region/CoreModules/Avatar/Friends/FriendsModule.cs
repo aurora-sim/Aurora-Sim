@@ -702,9 +702,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 lock (m_Friends)
                 {
 #if (!ISWIN)
-                    foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == friendID.ToString()))
+                    foreach (FriendInfo finfo in friends)
                     {
-                        finfo.MyFlags = rights;
+                        if (finfo.Friend == friendID.ToString())
+                        {
+                            finfo.MyFlags = rights;
+                        }
                     }
 #else
                     foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == friendID.ToString()))
@@ -748,7 +751,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             public bool IsFriend(string friend)
             {
+#if (!ISWIN)
+                foreach (FriendInfo fi in Friends)
+                {
+                    if (fi.Friend == friend) return true;
+                }
+                return false;
+#else
                 return Friends.Any(fi => fi.Friend == friend);
+#endif
             }
         }
 

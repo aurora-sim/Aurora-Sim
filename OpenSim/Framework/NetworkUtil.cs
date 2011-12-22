@@ -261,7 +261,15 @@ namespace OpenSim.Framework
             if (IPAddress.TryParse(defaultHostname, out ia))
                 return ia;
 
+#if (!ISWIN)
+            foreach (IPAddress adr in Dns.GetHostAddresses(defaultHostname))
+            {
+                if (adr.AddressFamily == AddressFamily.InterNetwork) return adr;
+            }
+            return null;
+#else
             return Dns.GetHostAddresses(defaultHostname).FirstOrDefault(Adr => Adr.AddressFamily == AddressFamily.InterNetwork);
+#endif
         }
 
         public static string GetHostFor(IPAddress user, string defaultHostname)

@@ -322,7 +322,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void RemoveClient(IClientAPI client)
         {
+#if (!ISWIN)
+            m_currentClients.RemoveAll(delegate(IClientAPI testClient)
+            {
+                return client.AgentId == testClient.AgentId;
+            });
+#else
             m_currentClients.RemoveAll(testClient => client.AgentId == testClient.AgentId);
+#endif
         }
 
         #endregion

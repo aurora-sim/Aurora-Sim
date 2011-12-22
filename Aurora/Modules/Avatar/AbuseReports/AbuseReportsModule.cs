@@ -269,12 +269,21 @@ namespace Aurora.Modules
         {
             UUID capuuid = UUID.Random();
 
+#if (!ISWIN)
+            caps.AddStreamHandler("SendUserReportWithScreenshot",
+                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessSendUserReportWithScreenshot(m_dhttpMethod, capuuid, agentID);
+                                                      }));
+#else
             caps.AddStreamHandler("SendUserReportWithScreenshot",
                                   new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       m_dhttpMethod =>
                                                       ProcessSendUserReportWithScreenshot(m_dhttpMethod,
                                                                                           capuuid,
                                                                                           agentID)));
+#endif
         }
 
         private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)

@@ -762,8 +762,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void SendKillEntity(ISceneChildEntity rootPart)
         {
+#if (!ISWIN)
+            m_scene.ForEachClient(delegate(IClientAPI client)
+            {
+                client.SendKillObject(m_scene.RegionInfo.RegionHandle, new IEntity[] { rootPart });
+            });
+#else
             m_scene.ForEachClient(
                 client => client.SendKillObject(m_scene.RegionInfo.RegionHandle, new IEntity[] {rootPart}));
+#endif
         }
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.

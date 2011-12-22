@@ -339,7 +339,19 @@ namespace OpenSim.Services.GridService
 #if (!ISWIN)
             foreach (string urlName in m_modules.Keys)
             {
+#if (!ISWIN)
+                bool found = false;
+                foreach (string o in urls.URLS.Keys)
+                {
+                    if (o == urlName)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+#else
                 bool found = urls.URLS.Keys.Any(o => o == urlName);
+#endif
                 if (!found) return false;
             }
             return true;

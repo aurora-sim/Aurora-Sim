@@ -61,6 +61,22 @@ namespace Aurora.Services.DataService
         {
             List<MuteList> Mutes = new List<MuteList>();
             Dictionary<string, OSDMap> Map = null;
+#if (!ISWIN)
+            foreach (string mServerUri in m_ServerURIs)
+            {
+                if (SimianUtils.GetGenericEntries(PrincipalID, "MuteList", mServerUri, out Map))
+                {
+                    foreach (object OSDMap in Map.Values)
+                    {
+                        MuteList mute = new MuteList();
+                        mute.FromOSD((OSDMap) OSDMap);
+                        Mutes.Add(mute);
+                    }
+
+                    return Mutes.ToArray();
+                }
+            }
+#else
             if (m_ServerURIs.Any(m_ServerURI => SimianUtils.GetGenericEntries(PrincipalID, "MuteList", m_ServerURI, out Map)))
             {
                 foreach (object OSDMap in Map.Values)
@@ -72,6 +88,7 @@ namespace Aurora.Services.DataService
 
                 return Mutes.ToArray();
             }
+#endif
             return null;
         }
 

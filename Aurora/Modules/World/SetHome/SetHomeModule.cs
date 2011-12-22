@@ -109,21 +109,45 @@ namespace Aurora.Modules.World.Auction
             OSDMap retVal = new OSDMap();
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
                                                         m_dhttpMethod =>
                                                         ProcessServerReleaseNotes(m_dhttpMethod, agentID)));
+#endif
 
             retVal["CopyInventoryFromNotecard"] = CapsUtil.CreateCAPS("CopyInventoryFromNotecard", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["CopyInventoryFromNotecard"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["CopyInventoryFromNotecard"],
                                                         m_dhttpMethod =>
                                                         CopyInventoryFromNotecard(m_dhttpMethod, agentID)));
+#endif
 
+            // note: this seems to be pointed to the CopyInventoryFromNotecard function?? I looked but didn't find anything similar
             retVal["ExportObject"] = CapsUtil.CreateCAPS("ExportObject", "");
-
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ExportObject"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ExportObject"],
                                                         m_dhttpMethod =>
                                                         CopyInventoryFromNotecard(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

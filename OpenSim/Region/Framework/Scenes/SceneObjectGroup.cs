@@ -3240,7 +3240,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if a child part with the primID was not found</returns>
         public ISceneChildEntity GetChildPart(uint primID)
         {
+#if (!ISWIN)
+            foreach (ISceneChildEntity part in m_partsList)
+            {
+                if (part.LocalId == primID) return part;
+            }
+            return null;
+#else
             return m_partsList.Cast<ISceneChildEntity>().FirstOrDefault(part => part.LocalId == primID);
+#endif
         }
 
         #endregion
@@ -4056,7 +4064,19 @@ namespace OpenSim.Region.Framework.Scenes
                                                                                        (int) (TargetY - 256),
                                                                                        (int) (TargetY + 256));
                         }
+#if (!ISWIN)
+                        GridRegion neighborRegion = null;
+                        foreach (GridRegion region in m_nearbyInfiniteRegions)
+                        {
+                            if (TargetX >= region.RegionLocX && TargetY >= region.RegionLocY && TargetX < (region.RegionLocX + region.RegionSizeX) && TargetY < (region.RegionLocY + region.RegionSizeY))
+                            {
+                                neighborRegion = region;
+                                break;
+                            }
+                        }
+#else
                         GridRegion neighborRegion = m_nearbyInfiniteRegions.FirstOrDefault(region => TargetX >= region.RegionLocX && TargetY >= region.RegionLocY && TargetX < (region.RegionLocX + region.RegionSizeX) && TargetY < (region.RegionLocY + region.RegionSizeY));
+#endif
 
                         if (neighborRegion != null)
                         {
@@ -4100,7 +4120,19 @@ namespace OpenSim.Region.Framework.Scenes
                             RegionCrossX += Scene.RegionInfo.RegionSizeX;
                         if (val.Y > Scene.RegionInfo.RegionSizeY)
                             RegionCrossY += Scene.RegionInfo.RegionSizeY;
+#if (!ISWIN)
+                        GridRegion neighborRegion = null;
+                        foreach (GridRegion region in neighbors)
+                        {
+                            if (region.RegionLocX == RegionCrossX && region.RegionLocY == RegionCrossY)
+                            {
+                                neighborRegion = region;
+                                break;
+                            }
+                        }
+#else
                         GridRegion neighborRegion = neighbors.FirstOrDefault(region => region.RegionLocX == RegionCrossX && region.RegionLocY == RegionCrossY);
+#endif
 
                         if (neighborRegion != null)
                         {

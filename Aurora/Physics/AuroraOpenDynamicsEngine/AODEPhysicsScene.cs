@@ -201,9 +201,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             get
             {
+                
+#if (!ISWIN)
                 return
                     new List<AuroraODEPrim>(_activeprims).ConvertAll<PhysicsObject>(
-                        prim => prim);
+                        delegate(AuroraODEPrim prim) { return prim; });
+#else
+                    return new List<AuroraODEPrim>(_activeprims).ConvertAll<PhysicsObject>(prim => prim);
+#endif
             }
         }
 
@@ -2544,8 +2549,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #endif
             }
             //Sort them by their score
+#if (!ISWIN)
+            collidingPrims.Sort(delegate(AuroraODEPrim a, AuroraODEPrim b)
+            {
+                return b.CollisionScore.CompareTo(a.CollisionScore);
+            });
+#else
             collidingPrims.Sort(
                 (a, b) => b.CollisionScore.CompareTo(a.CollisionScore));
+#endif
             //Limit to 25
             if (collidingPrims.Count > 25)
                 collidingPrims.RemoveRange(25, collidingPrims.Count - 25);

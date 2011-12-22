@@ -936,7 +936,15 @@ namespace Aurora.Modules
             {
                 List<UUID> esGroups = new List<UUID>(ES.EstateGroups);
                 GroupMembershipData[] gmds = gm.GetMembershipData(agent.AgentID);
+#if (!ISWIN)
+                foreach (GroupMembershipData gmd in gmds)
+                {
+                    if (esGroups.Contains(gmd.GroupID)) return true;
+                }
+                return false;
+#else
                 return gmds.Any(gmd => esGroups.Contains(gmd.GroupID));
+#endif
             }
             return false;
         }
@@ -962,12 +970,15 @@ namespace Aurora.Modules
                 {
                     bool FoundParcel = false;
 #if (!ISWIN)
-                    foreach (ILandObject lo in Parcels.Where(lo => !lo.IsEitherBannedOrRestricted(AgentID)))
+                    foreach (ILandObject lo in Parcels)
                     {
-                        newPosition = lo.LandData.UserLocation;
-                        ILO = lo; //Update the parcel settings
-                        FoundParcel = true;
-                        break;
+                        if (!lo.IsEitherBannedOrRestricted(AgentID))
+                        {
+                            newPosition = lo.LandData.UserLocation;
+                            ILO = lo; //Update the parcel settings
+                            FoundParcel = true;
+                            break;
+                        }
                     }
 #else
                     foreach (ILandObject lo in Parcels.Where(lo => !lo.IsEitherBannedOrRestricted(AgentID)))

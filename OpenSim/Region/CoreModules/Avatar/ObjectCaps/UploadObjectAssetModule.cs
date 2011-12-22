@@ -91,8 +91,16 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             OSDMap retVal = new OSDMap();
             retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
+                                                       delegate(Hashtable m_dhttpMethod)
+                                                       {
+                                                           return ProcessAdd(m_dhttpMethod, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
                                                         m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

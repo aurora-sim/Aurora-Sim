@@ -192,7 +192,13 @@ namespace OpenSim.Framework.Serialization
             // check sum for header block (8) [calculated last]
             Array.Copy(m_asciiEncoding.GetBytes("        "), 0, header, 148, 8);
 
+#if (!ISWIN)
+            int checksum = 0;
+            foreach (byte b in header)
+                checksum = checksum + b;
+#else
             int checksum = header.Aggregate(0, (current, b) => current + b);
+#endif
 
             //m_log.DebugFormat("[TAR ARCHIVE WRITER]: Decimal header checksum is {0}", checksum);
 

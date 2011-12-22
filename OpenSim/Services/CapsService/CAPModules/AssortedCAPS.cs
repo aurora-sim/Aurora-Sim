@@ -77,21 +77,54 @@ namespace OpenSim.Services.CapsService
             m_service = service;
             m_agentInfoService = service.Registry.RequestModuleInterface<IAgentInfoService>();
             m_agentProcessing = service.Registry.RequestModuleInterface<IAgentProcessing>();
-            
+
+#if (!ISWIN)
+            GenericHTTPMethod method = delegate(Hashtable httpMethod)
+            {
+                return ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
+            };
+#else
             GenericHTTPMethod method = httpMethod => ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
+#endif  
             service.AddStreamHandler("UpdateAgentLanguage", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
                                                       method));
+
+
+#if (!ISWIN)
+            method = delegate(Hashtable httpMethod)
+            {
+                return ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
+            };
+#else
             method = httpMethod => ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
+#endif
             service.AddStreamHandler("UpdateAgentInformation", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
                                 method));
 
             service.AddStreamHandler ("AvatarPickerSearch", new StreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
                                                       ProcessAvatarPickerSearch));
 
+#if (!ISWIN)
+            method = delegate(Hashtable httpMethod)
+            {
+                return HomeLocation(httpMethod, m_service.AgentID);
+            };
+#else
             method = httpMethod => HomeLocation(httpMethod, m_service.AgentID);
+#endif
+
             service.AddStreamHandler("HomeLocation", new RestHTTPHandler("POST", service.CreateCAPS("HomeLocation", ""),
                                                       method));
+
+#if (!ISWIN)
+            method = delegate(Hashtable httpMethod)
+            {
+                return TeleportLocation(httpMethod, m_service.AgentID);
+            };
+#else
             method = httpMethod => TeleportLocation(httpMethod, m_service.AgentID);
+#endif
+
             service.AddStreamHandler("TeleportLocation", new RestHTTPHandler("POST", service.CreateCAPS("TeleportLocation", ""),
                                                       method));
         }

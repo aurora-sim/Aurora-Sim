@@ -500,8 +500,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (grant.Length > 0)
             {
 #if (!ISWIN)
-                foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
+                foreach (string uuidl in grant.Split(','))
                 {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
                     GrantAScript.Add(uuid, true);
                 }
 #else

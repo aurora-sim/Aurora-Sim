@@ -222,9 +222,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
             OSDMap retVal = new OSDMap();
             retVal["UntrustedSimulatorMessage"] = CapsUtil.CreateCAPS("UntrustedSimulatorMessage", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UntrustedSimulatorMessage"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return UntrustedSimulatorMessage(agentID, m_dhttpMethod);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UntrustedSimulatorMessage"],
                                                         m_dhttpMethod =>
                                                         UntrustedSimulatorMessage(agentID, m_dhttpMethod)));
+#endif
             return retVal;
         }
 

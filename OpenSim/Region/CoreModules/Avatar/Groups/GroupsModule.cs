@@ -891,9 +891,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             IScenePresence presence1 = presence;
                             IScene scene1 = scene;
 #if (!ISWIN)
-                            foreach (IScenePresence sp in scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1)))
+                            foreach (IScenePresence sp in scene.GetScenePresences())
                             {
-                                sp.ControllingClient.SendAvatarDataImmediate(presence);
+                                if (sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1))
+                                {
+                                    sp.ControllingClient.SendAvatarDataImmediate(presence);
+                                }
                             }
 #else
                             foreach (IScenePresence sp in scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1)))
@@ -936,8 +939,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                 GroupMembershipData[] membershipArray;
                                                 if (client.AgentId != dataForAgentID)
                                                 {
+#if (!ISWIN)
+                                                    Predicate<GroupMembershipData> showInProfile = delegate(GroupMembershipData membership)
+                                                    {
+                                                        return membership.ListInProfile;
+                                                    };
+#else
                                                     Predicate<GroupMembershipData> showInProfile =
                                                         membership => membership.ListInProfile;
+#endif
                                                     membershipArray = membershipData.FindAll(showInProfile).ToArray();
                                                 }
                                                 else
@@ -993,8 +1003,15 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             if (requestingClient.AgentId != dataForAgentID)
             {
+#if (!ISWIN)
+                Predicate<GroupMembershipData> showInProfile = delegate(GroupMembershipData membership)
+                {
+                    return membership.ListInProfile;
+                };
+#else
                 Predicate<GroupMembershipData> showInProfile =
                     membership => membership.ListInProfile;
+#endif
 
                 membershipArray = membershipData.FindAll(showInProfile).ToArray();
             }
@@ -1735,13 +1752,31 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             OSDMap retVal = new OSDMap();
             retVal["GroupProposalBallot"] = CapsUtil.CreateCAPS("GroupProposalBallot", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["GroupProposalBallot"],
+                                                      delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                      {
+                                                          return GroupProposalBallot(request, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["GroupProposalBallot"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           GroupProposalBallot(request, agentID)));
+#endif
             retVal["StartGroupProposal"] = CapsUtil.CreateCAPS("StartGroupProposal", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["StartGroupProposal"],
+                                                      delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                      {
+                                                          return StartGroupProposal(request, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["StartGroupProposal"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           StartGroupProposal(request, agentID)));
+#endif
             return retVal;
         }
 

@@ -92,8 +92,16 @@ namespace Aurora.Modules
             OSDMap retVal = new OSDMap();
             retVal["GetObjectPhysicsData"] = CapsUtil.CreateCAPS("GetObjectPhysicsData", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["GetObjectPhysicsData"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return GetObjectPhysicsData(agentID, m_dhttpMethod);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["GetObjectPhysicsData"],
                                                         m_dhttpMethod => GetObjectPhysicsData(agentID, m_dhttpMethod)));
+#endif
             return retVal;
         }
 

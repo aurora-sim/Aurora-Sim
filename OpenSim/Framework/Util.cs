@@ -499,7 +499,19 @@ namespace OpenSim.Framework
             if (bytes.Length == 0) return String.Empty;
 
             StringBuilder output = new StringBuilder();
+#if (!ISWIN)
+            bool printable = true;
+            foreach (byte t in bytes)
+            {
+                if ((t < 0x20 || t > 0x7E) && t != 0x09 && t != 0x0D && t != 0x0A && t != 0x00)
+                {
+                    printable = false;
+                    break;
+                }
+            }
+#else
             bool printable = bytes.All(t => (t >= 0x20 && t <= 0x7E) || t == 0x09 || t == 0x0D || t == 0x0A || t == 0x00);
+#endif
 
             if (printable)
             {
@@ -1244,7 +1256,15 @@ namespace OpenSim.Framework
             }
             paths.Add(baseDir);
 
+#if (!ISWIN)
+            List<string> list = new List<string>();
+            foreach (string p in paths)
+                foreach (string file in Directory.GetFiles(p, endFind))
+                    list.Add(file);
+            return list.ToArray();
+#else
             return paths.SelectMany(p => Directory.GetFiles(p, endFind)).ToArray();
+#endif
         }
 
         public static byte[] StringToBytes256(string str, params object[] args)

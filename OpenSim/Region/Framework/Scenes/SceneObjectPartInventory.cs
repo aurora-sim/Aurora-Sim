@@ -484,10 +484,20 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_itemsLock)
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                {
+                    if (item.Name == name)
+                    {
+                        return true;
+                    }
+                }
+#else
                 if (m_items.Values.Any(item => item.Name == name))
                 {
                     return true;
                 }
+#endif
             }
             return false;
         }
@@ -1074,10 +1084,20 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_itemsLock)
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                {
+                    if (item.InvType == (int) InventoryType.LSL)
+                    {
+                        return true;
+                    }
+                }
+#else
                 if (m_items.Values.Any(item => item.InvType == (int)InventoryType.LSL))
                 {
                     return true;
                 }
+#endif
             }
 
             return false;

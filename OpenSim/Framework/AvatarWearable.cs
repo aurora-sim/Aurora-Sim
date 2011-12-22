@@ -169,7 +169,14 @@ namespace OpenSim.Framework
 
         public Dictionary<UUID, UUID> GetItems()
         {
+#if (!ISWIN)
+            Dictionary<UUID, UUID> dictionary = new Dictionary<UUID, UUID>();
+            foreach (KeyValuePair<UUID, UUID> item in m_items)
+                dictionary.Add(item.Key, item.Value);
+            return dictionary;
+#else
             return m_items.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+#endif
         }
 
         public OSD Pack()

@@ -359,7 +359,15 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (string firstName, string lastName)
         {
             List<IScenePresence> presences = GetScenePresences ();
+#if (!ISWIN)
+            foreach (IScenePresence presence in presences)
+            {
+                if (presence.Firstname == firstName && presence.Lastname == lastName) return presence;
+            }
+            return null;
+#else
             return presences.FirstOrDefault(presence => presence.Firstname == firstName && presence.Lastname == lastName);
+#endif
         }
 
         /// <summary>
@@ -370,7 +378,15 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (uint localID)
         {
             List<IScenePresence> presences = GetScenePresences ();
+#if (!ISWIN)
+            foreach (IScenePresence presence in presences)
+            {
+                if (presence.LocalId == localID) return presence;
+            }
+            return null;
+#else
             return presences.FirstOrDefault(presence => presence.LocalId == localID);
+#endif
         }
 
         protected internal bool TryGetScenePresence (UUID agentID, out IScenePresence avatar)
@@ -380,7 +396,19 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal bool TryGetAvatarByName (string name, out IScenePresence avatar)
         {
+#if (!ISWIN)
+            avatar = null;
+            foreach (IScenePresence presence in GetScenePresences())
+            {
+                if (String.Compare(name, presence.ControllingClient.Name, true) == 0)
+                {
+                    avatar = presence;
+                    break;
+                }
+            }
+#else
             avatar = GetScenePresences().FirstOrDefault(presence => String.Compare(name, presence.ControllingClient.Name, true) == 0);
+#endif
             return (avatar != null);
         }
 
@@ -468,7 +496,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //TODO
             }
+#if (!ISWIN)
+            result.Sort(delegate(EntityIntersection a, EntityIntersection b)
+            {
+                return a.distance.CompareTo(b.distance);
+            });
+#else
             result.Sort((a, b) => a.distance.CompareTo(b.distance));
+#endif
             if(result.Count > count)
                 result.RemoveRange(count, result.Count - count);
             return result;
@@ -1676,7 +1711,13 @@ namespace OpenSim.Region.Framework.Scenes
                 client.SendAlertMessage("Permissions: Cannot link, not enough permissions.");
                 return;
             }
+#if (!ISWIN)
+            int LinkCount = 0;
+            foreach (SceneObjectPart part in children)
+                LinkCount += part.ParentGroup.ChildrenList.Count;
+#else
             int LinkCount = children.Cast<SceneObjectPart>().Sum(part => part.ParentGroup.ChildrenList.Count);
+#endif
 
             IOpenRegionSettingsModule module = m_parentScene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)

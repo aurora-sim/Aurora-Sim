@@ -92,13 +92,29 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             OSDMap retVal = new OSDMap();
             retVal["ObjectAdd"] = CapsUtil.CreateCAPS("ObjectAdd", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ObjectAdd"],
+                                                       delegate(Hashtable m_dhttpMethod)
+                                                       {
+                                                           return ProcessAdd(m_dhttpMethod, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ObjectAdd"],
                                                         m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
+#endif
 
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
                                                         m_dhttpMethod =>
                                                         ProcessServerReleaseNotes(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

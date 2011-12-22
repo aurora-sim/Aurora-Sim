@@ -376,12 +376,23 @@ namespace OpenSim.Services.GridService
                 List<GridRegion> dupe = m_Database.Get(regionInfos.RegionName, regionInfos.ScopeID);
                 if (dupe != null && dupe.Count > 0)
                 {
+#if (!ISWIN)
+                    foreach (GridRegion d in dupe)
+                    {
+                        if (d.RegionID != regionInfos.RegionID)
+                        {
+                            m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.", regionInfos.RegionName, regionInfos.RegionID);
+                            return "Duplicate region name";
+                        }
+                    }
+#else
                     if (dupe.Any(d => d.RegionID != regionInfos.RegionID))
                     {
                         m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
                                          regionInfos.RegionName, regionInfos.RegionID);
                         return "Duplicate region name";
                     }
+#endif
                 }
             }
 

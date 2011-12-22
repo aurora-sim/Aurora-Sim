@@ -114,7 +114,15 @@ namespace OpenSim.Framework
 
         public AgentCircuitData GetAgentCircuitData(UUID agentID)
         {
+#if (!ISWIN)
+            foreach (AgentCircuitData circuitData in new List<AgentCircuitData>(AgentCircuits.Values))
+            {
+                if (circuitData.AgentID == agentID) return circuitData;
+            }
+            return null;
+#else
             return new List<AgentCircuitData>(AgentCircuits.Values).FirstOrDefault(circuitData => circuitData.AgentID == agentID);
+#endif
         }
 
         public void UpdateAgentData(AgentCircuitData agentData)

@@ -539,7 +539,11 @@ namespace OpenSim.Framework
         {
             foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
             {
+#if (!ISWIN)
+                int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
+#else
                 int index = kvp.Value.FindIndex(a => a.ItemID == itemID);
+#endif
                 if (index >= 0)
                 {
                     // Remove it from the list of attachments at that attach point

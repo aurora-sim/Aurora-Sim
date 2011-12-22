@@ -109,7 +109,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                       };
 
             // do actual create at taint time
+#if (!ISWIN)
+            _scene.TaintedObject(delegate()
+            {
+                BulletSimAPI.CreateObject(parent_scene.WorldID, shapeData);
+            });
+#else
             _scene.TaintedObject(() => BulletSimAPI.CreateObject(parent_scene.WorldID, shapeData));
+#endif
 
             return;
         }
@@ -138,8 +145,15 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _position = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position, _orientation);
+                });
+#else
                 _scene.TaintedObject(
                     () => BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position, _orientation));
+#endif
             }
         }
 
@@ -155,7 +169,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 _force = value;
                 // m_log.DebugFormat("{0}: Force = {1}", LogHeader, _force);
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force));
+#endif
             }
         }
 
@@ -170,7 +191,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _velocity = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectVelocity(_scene.WorldID, _localID, _velocity);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectVelocity(_scene.WorldID, _localID, _velocity));
+#endif
             }
         }
 
@@ -184,8 +212,16 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _orientation = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    // _position = BulletSimAPI.GetObjectPosition(_scene.WorldID, _localID);
+                    BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position, _orientation);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position,
                                                                              _orientation));
+#endif
             }
         }
 
@@ -209,8 +245,16 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 {
                     _flying = value;
                     ChangeFlying();
+#if (!ISWIN)
+                    _scene.TaintedObject(delegate()
+                    {
+                        // simulate flying by changing the effect of gravity
+                        BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, LocalID, _flying ? 1f : 0f);
+                    });
+#else
                     _scene.TaintedObject(() => BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, LocalID,
                                                                               _flying ? 1f : 0f));
+#endif
                 }
             }
         }
@@ -255,7 +299,15 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _buoyancy = value;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    // simulate flying by changing the effect of gravity
+                    BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, LocalID, _buoyancy);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, LocalID, _buoyancy));
+#endif
             }
         }
 
@@ -277,7 +329,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public void Destroy()
         {
+#if (!ISWIN)
+            _scene.TaintedObject(delegate()
+            {
+                BulletSimAPI.DestroyObject(_scene.WorldID, _localID);
+            });
+#else
             _scene.TaintedObject(() => BulletSimAPI.DestroyObject(_scene.WorldID, _localID));
+#endif
         }
 
         public override void AddForce(Vector3 force, bool pushforce)
@@ -287,7 +346,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 _force.X += force.X;
                 _force.Y += force.Y;
                 _force.Z += force.Z;
+#if (!ISWIN)
+                _scene.TaintedObject(delegate()
+                {
+                    BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force);
+                });
+#else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectForce(_scene.WorldID, _localID, _force));
+#endif
             }
             else
             {

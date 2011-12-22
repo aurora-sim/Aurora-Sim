@@ -2226,7 +2226,19 @@ namespace OpenSim.Region.Framework.Scenes
                             m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int)(TargetX - 256), (int)(TargetX + 256),
                                 (int)(TargetY - 256), (int)(TargetY + 256));
                         }
+#if (!ISWIN)
+                        GridRegion neighborRegion = null;
+                        foreach (GridRegion region in m_nearbyInfiniteRegions)
+                        {
+                            if (TargetX >= (double) region.RegionLocX && TargetY >= (double) region.RegionLocY && TargetX < (double) (region.RegionLocX + region.RegionSizeX) && TargetY < (double) (region.RegionLocY + region.RegionSizeY))
+                            {
+                                neighborRegion = region;
+                                break;
+                            }
+                        }
+#else
                         GridRegion neighborRegion = m_nearbyInfiniteRegions.FirstOrDefault(region => TargetX >= (double) region.RegionLocX && TargetY >= (double) region.RegionLocY && TargetX < (double) (region.RegionLocX + region.RegionSizeX) && TargetY < (double) (region.RegionLocY + region.RegionSizeY));
+#endif
 
                         if (neighborRegion != null)
                         {
@@ -2264,7 +2276,19 @@ namespace OpenSim.Region.Framework.Scenes
                             double TargetX = Scene.RegionInfo.RegionLocX + (double)pos2.X;
                             double TargetY = Scene.RegionInfo.RegionLocY + (double)pos2.Y;
 
+#if (!ISWIN)
+                            GridRegion neighborRegion = null;
+                            foreach (GridRegion region in neighbors)
+                            {
+                                if (TargetX >= (double)region.RegionLocX && TargetY >= (double)region.RegionLocY && TargetX < (double)(region.RegionLocX + region.RegionSizeX) && TargetY < (double)(region.RegionLocY + region.RegionSizeY))
+                                {
+                                    neighborRegion = region;
+                                    break;
+                                }
+                            }
+#else
                             GridRegion neighborRegion = neighbors.FirstOrDefault(region => TargetX >= (double) region.RegionLocX && TargetY >= (double) region.RegionLocY && TargetX < (double) (region.RegionLocX + region.RegionSizeX) && TargetY < (double) (region.RegionLocY + region.RegionSizeY));
+#endif
 
                             if (neighborRegion != null)
                             {

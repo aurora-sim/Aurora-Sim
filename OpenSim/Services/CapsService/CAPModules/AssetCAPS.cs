@@ -392,7 +392,15 @@ namespace OpenSim.Services.CapsService
         private static ImageCodecInfo GetEncoderInfo(String mimeType)
         {
             ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders();
+#if (!ISWIN)
+            foreach (ImageCodecInfo t in encoders)
+            {
+                if (t.MimeType == mimeType) return t;
+            }
+            return null;
+#else
             return encoders.FirstOrDefault(t => t.MimeType == mimeType);
+#endif
         }
 
         #endregion

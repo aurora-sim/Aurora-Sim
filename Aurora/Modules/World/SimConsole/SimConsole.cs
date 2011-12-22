@@ -146,9 +146,17 @@ namespace Aurora.Modules.World.SimConsole
             OSDMap retVal = new OSDMap();
             retVal["SimConsoleAsync"] = CapsUtil.CreateCAPS("SimConsoleAsync", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsoleAsync"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return SimConsoleAsyncResponder(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsoleAsync"],
                                                         m_dhttpMethod =>
                                                         SimConsoleAsyncResponder(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

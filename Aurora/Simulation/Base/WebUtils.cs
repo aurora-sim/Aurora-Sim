@@ -217,7 +217,13 @@ namespace Aurora.Simulation.Base
                         type.Value = "List";
 
                         elem.Attributes.Append(type);
+#if (!ISWIN)
+                        Dictionary<string, object> value = new Dictionary<string, object>();
+                        foreach (KeyValuePair<string, string> pair in ((Dictionary<string, string>) kvp.Value))
+                            value.Add(pair.Key, pair.Value);
+#else
                         Dictionary<string, object> value = ((Dictionary<string, string>) kvp.Value).ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key, pair => pair.Value);
+#endif
                         BuildXmlData(elem, value);
                     }
                     else
@@ -596,7 +602,11 @@ namespace Aurora.Simulation.Base
             if (types.Length > 0)
             {
                 List<string> list = new List<string>(types);
+#if (!ISWIN)
+                list.RemoveAll(delegate(string s) { return !s.ToLower().StartsWith("image"); });
+#else
                 list.RemoveAll(s => !s.ToLower().StartsWith("image"));
+#endif
                 ArrayList tlist = new ArrayList(list);
                 tlist.Sort(new QBasedComparer());
 

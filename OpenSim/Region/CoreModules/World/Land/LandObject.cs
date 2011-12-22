@@ -925,7 +925,19 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     if (flags == 4)
                     {
+#if (!ISWIN)
+                        bool containsScripts = false;
+                        foreach (ISceneChildEntity child in obj.ChildrenEntities())
+                        {
+                            if (child.Inventory.ContainsScripts())
+                            {
+                                containsScripts = true;
+                                break;
+                            }
+                        }
+#else
                         bool containsScripts = obj.ChildrenEntities().Any(child => child.Inventory.ContainsScripts());
+#endif
                         if (!containsScripts)
                             continue;
                     }

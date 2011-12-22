@@ -534,7 +534,15 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public ILandObject GetLandObject(UUID GlobalID)
         {
+#if (!ISWIN)
+            foreach (ILandObject land in AllParcels())
+            {
+                if (land.LandData.GlobalID == GlobalID) return land;
+            }
+            return null;
+#else
             return AllParcels().FirstOrDefault(land => land.LandData.GlobalID == GlobalID);
+#endif
         }
 
         public ILandObject GetLandObject(float x, float y)
@@ -1193,6 +1201,16 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             ILandObject masterLandObject = selectedLandObjects[0];
 
+#if (!ISWIN)
+            foreach (ILandObject p in selectedLandObjects)
+            {
+                if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) || (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide && !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false)))
+                {
+                    client.SendAlertMessage("Permissions: you cannot join these parcels");
+                    return;
+                }
+            }
+#else
             if (selectedLandObjects.Any(p => !m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) ||
                                              (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
                                               !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false))))
@@ -1200,6 +1218,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 client.SendAlertMessage("Permissions: you cannot join these parcels");
                 return;
             }
+#endif
 
             m_hasSentParcelOverLay.Clear(); //Clear everyone out
             selectedLandObjects.RemoveAt(0);
@@ -1753,20 +1772,47 @@ namespace OpenSim.Region.CoreModules.World.Land
             OSDMap retVal = new OSDMap();
             retVal["RemoteParcelRequest"] = CapsUtil.CreateCAPS("RemoteParcelRequest", remoteParcelRequestPath);
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return RemoteParcelRequest(request, path, param, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           RemoteParcelRequest(request, path, param,
                                                                               agentID)));
+#endif
             retVal["ParcelPropertiesUpdate"] = CapsUtil.CreateCAPS("ParcelPropertiesUpdate", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return ProcessPropertiesUpdate(request, path, param, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           ProcessPropertiesUpdate(request, path, param,
                                                                                   agentID)));
+#endif
             retVal["ParcelMediaURLFilterList"] = CapsUtil.CreateCAPS("ParcelMediaURLFilterList", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return ProcessParcelMediaURLFilterList(request, path, param, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           ProcessParcelMediaURLFilterList(request, path,
                                                                                           param, agentID)));
+#endif
 
 
             return retVal;

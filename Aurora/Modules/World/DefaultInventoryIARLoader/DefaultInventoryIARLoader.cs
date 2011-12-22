@@ -128,7 +128,19 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
             List<InventoryFolderBase> rootFolders = m_MockScene.InventoryService.GetFolderFolders(uinfo.PrincipalID,
                                                                                                   UUID.Zero);
+#if (!ISWIN)
+            bool alreadyExists = false;
+            foreach (InventoryFolderBase folder in rootFolders)
+            {
+                if (folder.Name == iarFileName)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+#else
             bool alreadyExists = rootFolders.Any(folder => folder.Name == iarFileName);
+#endif
             if (alreadyExists)
             {
                 m_log.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);

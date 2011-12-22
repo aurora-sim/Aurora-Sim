@@ -155,7 +155,15 @@ namespace Aurora.DataManager.Migration
 
         protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
+#if (!ISWIN)
+            foreach (Rec<string, ColumnDefinition[]> s in schema)
+            {
+                if (!genericData.VerifyTableExists(s.X1, s.X2)) return false;
+            }
+            return true;
+#else
             return schema.All(s => genericData.VerifyTableExists(s.X1, s.X2));
+#endif
         }
 
         public bool DebugTestThatAllTablesValidate(IDataConnector genericData,

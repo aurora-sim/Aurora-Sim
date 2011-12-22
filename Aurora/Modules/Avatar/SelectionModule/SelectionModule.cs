@@ -429,9 +429,18 @@ namespace Aurora.Modules
                 effect.TypeData = part;
                 effectBlockArray[0] = effect;
 
+#if (!ISWIN)
+                m_presence.Scene.ForEachClient(
+                    delegate(IClientAPI client)
+                    {
+                        client.SendViewerEffect(effectBlockArray);
+                    }
+                );
+#else
                 m_presence.Scene.ForEachClient(
                     client => client.SendViewerEffect(effectBlockArray)
                     );
+#endif
             }
         }
 

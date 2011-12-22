@@ -126,7 +126,14 @@ namespace OpenSim.Services.RobustCompat
                 WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
                 presence.CallbackURI = null;
             }
+#if (!ISWIN)
+            Util.FireAndForget(delegate(object o)
+            {
+                DoPresenceUpdate(presence);
+            });
+#else
             Util.FireAndForget(o => DoPresenceUpdate(presence));
+#endif
         }
 
         private void DoPresenceUpdate(IScenePresence presence)
@@ -199,7 +206,15 @@ namespace OpenSim.Services.RobustCompat
 
         private bool IsLocal(UserInfo u, IScenePresence presence)
         {
+#if (!ISWIN)
+            foreach (IScene scene in presence.Scene.RequestModuleInterface<SceneManager>().Scenes)
+            {
+                if (scene.GetScenePresence(UUID.Parse(u.UserID)) != null) return true;
+            }
+            return false;
+#else
             return presence.Scene.RequestModuleInterface<SceneManager>().Scenes.Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
+#endif
         }
 
         private void ReportAgent(IScenePresence presence)
@@ -330,6 +345,15 @@ namespace OpenSim.Services.RobustCompat
         private void AddCapsHandler(AgentCircuitData circuit)
         {
             //Used by incoming (home) agents from HG
+#if (!ISWIN)
+            MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
+                delegate(string request, string path, string param2,
+                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                    {
+                        return CapsRequest(request, path, param2, httpRequest, httpResponse,
+                                           circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
+                    }));
+#else
             MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
                                                                        (request, path, param2, httpRequest, httpResponse)
                                                                        =>
@@ -337,6 +361,7 @@ namespace OpenSim.Services.RobustCompat
                                                                                    httpResponse,
                                                                                    circuit.ServiceURLs[
                                                                                        "IncomingCAPSHandler"].ToString())));
+#endif
         }
 
         public void RegionLoaded (IScene scene)

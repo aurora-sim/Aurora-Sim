@@ -679,7 +679,13 @@ namespace OpenSim.Framework
             m_promptOptions = new List<string>(options);
 
             bool itisdone = false;
+#if (!ISWIN)
+            string optstr = String.Empty;
+            foreach (string option in options)
+                optstr = optstr + (" " + option);
+#else
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
+#endif
 
             string temp = CmdPrompt(prompt, defaultresponse);
             while (itisdone == false)

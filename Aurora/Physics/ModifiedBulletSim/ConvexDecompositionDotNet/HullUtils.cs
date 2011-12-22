@@ -463,7 +463,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static int SplitTest(ref ConvexH convex, Plane plane, float planetestepsilon)
         {
+#if (!ISWIN)
+            int result = 0;
+            foreach (float3 vertex in convex.vertices)
+                result = result | PlaneTest(plane, vertex, planetestepsilon);
+            return result;
+#else
             return convex.vertices.Aggregate(0, (current, t) => current | PlaneTest(plane, t, planetestepsilon));
+#endif
         }
 
         public static Quaternion VirtualTrackBall(float3 cop, float3 cor, float3 dir1, float3 dir2)

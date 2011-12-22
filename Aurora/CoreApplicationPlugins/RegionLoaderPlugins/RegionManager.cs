@@ -197,7 +197,11 @@ namespace Aurora.Modules.RegionLoader
             else
                 textBox4.Text = "Adult";
             DisabledEdit.Checked = region.Disabled;
+#if (!ISWIN)
+            textBox7.Text = string.Join(", ", region.UDPPorts.ConvertAll<string>(delegate(int i) { return i.ToString(); }).ToArray());
+#else
             textBox7.Text = string.Join (", ", region.UDPPorts.ConvertAll (i => i.ToString()).ToArray ());
+#endif
             textBox3.Text = (region.RegionLocX / Constants.RegionSize).ToString ();
             textBox5.Text = (region.RegionLocY / Constants.RegionSize).ToString ();
             textBox1.Text = region.RegionName;

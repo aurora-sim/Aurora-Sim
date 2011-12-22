@@ -1724,7 +1724,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //If the # of entities is not correct, we have to rebuild the entire packet
             if (brokenUpdate)
             {
+#if (!ISWIN)
+                int count = 0;
+                foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData)
+                {
+                    if (block != null) count++;
+                }
+#else
                 int count = kill.ObjectData.Count(block => block != null);
+#endif
                 i = 0;
                 KillObjectPacket.ObjectDataBlock[] bk = new KillObjectPacket.ObjectDataBlock[count];
 #if (!ISWIN)
@@ -3656,7 +3664,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             aw.AgentData.SerialNum = (uint) serial;
             aw.AgentData.SessionID = m_sessionId;
 
+#if (!ISWIN)
+            int count = 0;
+            foreach (AvatarWearable t in wearables)
+                count += t.Count;
+#else
             int count = wearables.Sum(t => t.Count);
+#endif
 
             // TODO: don't create new blocks if recycling an old packet
             aw.WearableData = new AgentWearablesUpdatePacket.WearableDataBlock[count];
@@ -3858,6 +3872,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
+#if (!ISWIN)
+                OutPacket(packet, ThrottleOutPacketType.AvatarInfo, true, delegate(OutgoingPacket p)
+                {
+                    ResendPrimUpdates(terseUpdates, p);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
+                });
+#else
                 OutPacket(packet, ThrottleOutPacketType.AvatarInfo, true,
                           p => ResendPrimUpdates(terseUpdates, p),
                           delegate
@@ -3866,6 +3892,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
                               });
+#endif
             }
         }
 
@@ -4148,6 +4175,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 //ObjectUpdatePacket oo = new ObjectUpdatePacket(packet.ToBytes(), ref ii);
 
+#if (!ISWIN)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
+                {
+                    ResendPrimUpdates(fullUpdates, p);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedEntityPacketSend(fullUpdates);
+                });
+#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(fullUpdates, p),
                           delegate
@@ -4156,6 +4195,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(fullUpdates);
                               });
+#endif
             }
 
             if (compressedUpdateBlocks.IsValueCreated)
@@ -4172,6 +4212,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
+#if (!ISWIN)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
+                {
+                    ResendPrimUpdates(compressedUpdates, p);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedEntityPacketSend(compressedUpdates);
+                });
+#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(compressedUpdates, p),
                           delegate
@@ -4180,6 +4232,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(compressedUpdates);
                               });
+#endif
             }
 
             if (cachedUpdateBlocks.IsValueCreated)
@@ -4195,6 +4248,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
+#if (!ISWIN)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
+                {
+                    ResendPrimUpdates(cachedUpdates, p);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedEntityPacketSend(cachedUpdates);
+                });
+#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(cachedUpdates, p),
                           delegate
@@ -4203,6 +4268,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(cachedUpdates);
                               });
+#endif
             }
 
             if (terseUpdateBlocks.IsValueCreated)
@@ -4224,6 +4290,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 for (int i = 0; i < blocks.Count; i++)
                     packet.ObjectData[i] = blocks[i];
 
+#if (!ISWIN)
+                OutPacket(packet, ThrottleOutPacketType.Task, true, delegate(OutgoingPacket p)
+                {
+                    ResendPrimUpdates(terseUpdates, p);
+                },
+                delegate(OutgoingPacket p)
+                {
+                    IScenePresence presence = m_scene.GetScenePresence(AgentId);
+                    if (presence != null)
+                        presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
+                });
+#else
                 OutPacket(packet, ThrottleOutPacketType.Task, true,
                           p => ResendPrimUpdates(terseUpdates, p),
                           delegate
@@ -4232,6 +4310,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   if (presence != null)
                                       presence.SceneViewer.FinishedEntityPacketSend(terseUpdates);
                               });
+#endif
             }
         }
 
@@ -6324,12 +6403,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
                 if (handlerPreSendInstantMessage != null)
                 {
-                    if (
-                        handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
+#if (!ISWIN)
+                    foreach (PreSendImprovedInstantMessage d in handlerPreSendInstantMessage.GetInvocationList())
+                    {
+                        if (d(this, im))
+                        {
+                            return true; //handled
+                        }
+                    }
+#else
+                    if (handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
                             d => d(this, im)))
                     {
                         return true; //handled
                     }
+#endif
                 }
                 handlerInstantMessage(this, im);
             }

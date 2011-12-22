@@ -146,7 +146,13 @@ namespace OpenSim.Services.Handlers.AbuseReports
             List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()),
                                                                           int.Parse(request["count"].ToString()),
                                                                           request["filter"].ToString());
+#if (!ISWIN)
+            Dictionary<string, object> returnvalue = new Dictionary<string, object>();
+            foreach (AbuseReport ar in ars)
+                returnvalue.Add(ar.Number.ToString(), ar);
+#else
             Dictionary<string, object> returnvalue = ars.ToDictionary<AbuseReport, string, object>(ar => ar.Number.ToString(), ar => ar);
+#endif
 
             string xmlString = WebUtils.BuildXmlResponse(returnvalue);
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);

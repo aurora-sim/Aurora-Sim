@@ -2661,8 +2661,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "UpdateFlags"></param>
         public void ScheduleUpdate(PrimUpdateFlags UpdateFlags)
         {
-            m_parentGroup.Scene.ForEachScenePresence(
-                avatar => avatar.AddUpdateToAvatar(this, UpdateFlags));
+#if (!ISWIN)
+            m_parentGroup.Scene.ForEachScenePresence(delegate(IScenePresence avatar)
+            {
+                avatar.AddUpdateToAvatar(this, UpdateFlags);
+            });
+#else
+            m_parentGroup.Scene.ForEachScenePresence(avatar => avatar.AddUpdateToAvatar(this, UpdateFlags));
+#endif
         }
 
         public void ScriptSetPhantomStatus(bool Phantom)

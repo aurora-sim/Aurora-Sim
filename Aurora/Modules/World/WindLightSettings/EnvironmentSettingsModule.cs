@@ -56,12 +56,27 @@ namespace Aurora.Modules.World.WindLightSettings
         {
             OSDMap retVal = new OSDMap();
             retVal["EnvironmentSettings"] = CapsUtil.CreateCAPS("EnvironmentSettings", "");
+#if (!ISWIN)
+            //Sets the windlight settings
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EnvironmentSettings"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return SetEnvironment(m_dhttpMethod, agentID);
+                                                      }));
+            //Sets the windlight settings
+            server.AddStreamHandler(new RestHTTPHandler("GET", retVal["EnvironmentSettings"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return EnvironmentSettings(m_dhttpMethod, agentID);
+                                                      }));
+#else
             //Sets the windlight settings
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EnvironmentSettings"],
                                                         m_dhttpMethod => SetEnvironment(m_dhttpMethod, agentID)));
             //Sets the windlight settings
             server.AddStreamHandler(new RestHTTPHandler("GET", retVal["EnvironmentSettings"],
                                                         m_dhttpMethod => EnvironmentSettings(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

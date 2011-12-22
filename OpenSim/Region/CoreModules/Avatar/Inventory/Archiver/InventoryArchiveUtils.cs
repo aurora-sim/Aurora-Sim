@@ -224,7 +224,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
 //                m_log.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
 
+#if (!ISWIN)
+                foreach (InventoryItemBase item in items)
+                {
+                    if (item.Name == components[0]) return item;
+                }
+                return null;
+#else
                 return items.FirstOrDefault(item => item.Name == components[0]);
+#endif
             }
             else
             {

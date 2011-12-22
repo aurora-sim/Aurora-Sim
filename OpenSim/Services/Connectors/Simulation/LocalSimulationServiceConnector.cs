@@ -55,7 +55,15 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public IScene GetScene(ulong regionhandle)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionHandle == regionhandle) return s;
+            }
+            return null;
+#else
             return m_sceneList.FirstOrDefault(s => s.RegionInfo.RegionHandle == regionhandle);
+#endif
             // ? weird. should not happen
         }
 
@@ -332,7 +340,15 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool IsLocalRegion(UUID id)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionID == id) return true;
+            }
+            return false;
+#else
             return m_sceneList.Any(s => s.RegionInfo.RegionID == id);
+#endif
         }
 
         #endregion

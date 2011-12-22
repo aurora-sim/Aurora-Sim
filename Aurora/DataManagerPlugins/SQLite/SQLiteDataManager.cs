@@ -497,7 +497,12 @@ namespace Aurora.DataManager.SQLite
             query = query.Remove(query.Length - 1);
             query += ") values (";
 
+#if (!ISWIN)
+            foreach (object o in keys)
+                query = query + String.Format(":{0},", o.ToString().Replace("`", ""));
+#else
             query = keys.Cast<object>().Aggregate(query, (current, key) => current + String.Format(":{0},", key.ToString().Replace("`", "")));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
 
@@ -617,7 +622,13 @@ namespace Aurora.DataManager.SQLite
 
         public override string ConCat(string[] toConcat)
         {
+#if (!ISWIN)
+            string returnValue = "";
+            foreach (string s in toConcat)
+                returnValue = returnValue + (s + " || ");
+#else
             string returnValue = toConcat.Aggregate("", (current, s) => current + (s + " || "));
+#endif
             return returnValue.Substring(0, returnValue.Length - 4);
         }
 
@@ -771,12 +782,23 @@ namespace Aurora.DataManager.SQLite
             Dictionary<string, ColumnDefinition> sameColumns = new Dictionary<string, ColumnDefinition>();
             foreach (ColumnDefinition column in oldColumns)
             {
+#if (!ISWIN)
+                foreach (ColumnDefinition innercolumn in columns)
+                {
+                    if (innercolumn.Name.ToLower() == column.Name.ToLower() || renameColumns.ContainsKey(column.Name) && renameColumns[column.Name].ToLower() == innercolumn.Name.ToLower())
+                    {
+                        sameColumns.Add(column.Name, column);
+                        break;
+                    }
+                }
+#else
                 if (columns.Any(innercolumn => innercolumn.Name.ToLower() == column.Name.ToLower() ||
                                                renameColumns.ContainsKey(column.Name) &&
                                                renameColumns[column.Name].ToLower() == innercolumn.Name.ToLower()))
                 {
                     sameColumns.Add(column.Name, column);
                 }
+#endif
             }
 
             string renamedTempTableColumnDefinition = string.Empty;

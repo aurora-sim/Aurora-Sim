@@ -113,7 +113,15 @@ namespace Aurora.Modules
 
             cmdparams[0] = "";
             cmdparams[1] = "";
+#if (!ISWIN)
+            string Desc = "";
+            foreach (string param in cmdparams)
+            {
+                Desc += param;
+            }
+#else
             string Desc = cmdparams.Aggregate("", (current, param) => current + param);
+#endif
 
             SaveNext(MainConsole.Instance.ConsoleScene, Desc);
         }

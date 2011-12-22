@@ -184,7 +184,19 @@ namespace Aurora.DataManager
             {
                 if (!extractedColumns.Contains(columnDefinition))
                 {
+#if (!ISWIN)
+                    ColumnDefinition thisDef = null;
+                    foreach (ColumnDefinition extractedDefinition in extractedColumns)
+                    {
+                        if (extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+#else
                     ColumnDefinition thisDef = extractedColumns.FirstOrDefault(extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
+#endif
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
@@ -200,7 +212,19 @@ namespace Aurora.DataManager
             {
                 if (!newColumns.Contains(columnDefinition))
                 {
+#if (!ISWIN)
+                    ColumnDefinition thisDef = null;
+                    foreach (ColumnDefinition extractedDefinition in newColumns)
+                    {
+                        if (extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+#else
                     ColumnDefinition thisDef = newColumns.FirstOrDefault(extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
+#endif
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {

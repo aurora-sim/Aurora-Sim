@@ -1977,7 +1977,19 @@ namespace OpenSim.CoreApplicationPlugins
                                     // change over time. Augment only.
 
                                     List<InventoryFolderBase> folders = inventoryService.GetFolderContent(ID, clothingFolder.ID).Folders;
+#if (!ISWIN)
+                                    InventoryFolderBase extraFolder = null;
+                                    foreach (InventoryFolderBase folder in folders)
+                                    {
+                                        if (folder.Name == outfitName)
+                                        {
+                                            extraFolder = folder;
+                                            break;
+                                        }
+                                    }
+#else
                                     InventoryFolderBase extraFolder = folders.FirstOrDefault(folder => folder.Name == outfitName);
+#endif
 
                                     // Otherwise, we must create the folder.
                                     if (extraFolder == null)
@@ -2022,7 +2034,19 @@ namespace OpenSim.CoreApplicationPlugins
                                         // Check if asset is in inventory already
                                         List<InventoryItemBase> inventoryItems = inventoryService.GetFolderContent(ID, extraFolder.ID).Items;
 
+#if (!ISWIN)
+                                        inventoryItem = null;
+                                        foreach (InventoryItemBase listItem in inventoryItems)
+                                        {
+                                            if (listItem.AssetID == assetid)
+                                            {
+                                                inventoryItem = listItem;
+                                                break;
+                                            }
+                                        }
+#else
                                         inventoryItem = inventoryItems.FirstOrDefault(listItem => listItem.AssetID == assetid);
+#endif
 
                                         // Create inventory item
                                         if (inventoryItem == null)

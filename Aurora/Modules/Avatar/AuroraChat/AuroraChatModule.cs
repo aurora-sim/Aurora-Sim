@@ -719,9 +719,17 @@ namespace Aurora.Modules
             OSDMap retVal = new OSDMap();
             retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ChatSessionRequest"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessChatSessionRequest(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ChatSessionRequest"],
                                                         m_dhttpMethod =>
                                                         ProcessChatSessionRequest(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

@@ -808,7 +808,19 @@ namespace Aurora.Modules.FileBasedSimulationData
 
             ILegacySimulationDataStore[] stores =
                 AuroraModuleLoader.PickupModules<ILegacySimulationDataStore>().ToArray();
+#if (!ISWIN)
+            ILegacySimulationDataStore simStore = null;
+            foreach (ILegacySimulationDataStore store in stores)
+            {
+                if (store.Name == name)
+                {
+                    simStore = store;
+                    break;
+                }
+            }
+#else
             ILegacySimulationDataStore simStore = stores.FirstOrDefault(store => store.Name == name);
+#endif
             if (simStore == null)
                 return false;
 

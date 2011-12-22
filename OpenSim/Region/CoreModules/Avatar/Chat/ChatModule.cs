@@ -216,10 +216,19 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             foreach (IScene s in m_scenes)
             {
+#if (!ISWIN)
+                s.ForEachScenePresence(
+                    delegate(IScenePresence presence)
+                    {
+                        TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType);
+                    }
+                );
+#else
                 s.ForEachScenePresence(
                     presence => TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message,
                                                    sourceType)
                     );
+#endif
             }
         }
 
