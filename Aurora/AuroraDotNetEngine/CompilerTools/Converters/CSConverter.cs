@@ -29,7 +29,6 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.CSharp;
 //using Microsoft.JScript;
 
@@ -343,7 +342,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                              "using System;\n" +
                              "using System.Collections.Generic;\n" +
                              "using System.Collections;\n";
-            compiledScript = m_includedDefines.Aggregate(compiledScript, (current, line) => current + ("using " + line + ";\n"));
+            foreach (string line in m_includedDefines)
+            {
+                compiledScript += "using " + line + ";\n";
+            }
             compiledScript += "namespace Script\n" +
                               "{\n";
 

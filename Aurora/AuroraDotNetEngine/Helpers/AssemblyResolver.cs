@@ -27,7 +27,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
@@ -61,7 +60,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (assemblyName.IndexOf(",") != -1)
                 assemblyName = args.Name.Substring(0, args.Name.IndexOf(","));
 
-            return (from s in pathList select Path.Combine(s, assemblyName) + ".dll" into path where File.Exists(path) select Assembly.LoadFrom(path)).FirstOrDefault();
+            foreach (string s in pathList)
+            {
+                string path = Path.Combine(s, assemblyName) + ".dll";
+
+                if (File.Exists(path))
+                    return Assembly.LoadFrom(path);
+            }
+            return null;
         }
     }
 }

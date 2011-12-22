@@ -30,7 +30,6 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Aurora.Framework;
@@ -273,16 +272,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public IScriptConverter FindConverterForScript(string Script)
         {
-            IScriptConverter language = converters.FirstOrDefault(convert => convert.Name == DefaultCompileLanguage);
 #if (!ISWIN)
+            IScriptConverter language = null;
             foreach (IScriptConverter convert in converters)
             {
                 if (Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture))
-                {
                     language = convert;
-                }
+
+                if (language == null && convert.Name == DefaultCompileLanguage)
+                    language = convert;
             }
 #else
+            IScriptConverter language = converters.FirstOrDefault(convert => convert.Name == DefaultCompileLanguage);
             foreach (IScriptConverter convert in converters.Where(convert => Script.StartsWith("//" + convert.Name, true, CultureInfo.InvariantCulture)))
             {
                 language = convert;

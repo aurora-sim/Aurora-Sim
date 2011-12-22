@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
@@ -678,7 +677,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                     m_host.ParentEntity.Scene.RequestModuleInterface<IGroupsModule>();
                                 if (groupsModule != null)
                                 {
-                                    bool success = FunctionPerms.Any(id => groupsModule.GroupPermissionCheck(m_host.OwnerID, id, GroupPowers.None));
+                                    bool success = false;
+                                    foreach (UUID id in FunctionPerms)
+                                    {
+                                        if (groupsModule.GroupPermissionCheck(m_host.OwnerID, id, GroupPowers.None))
+                                        {
+                                            success = true;
+                                            break;
+                                        }
+                                    }
                                     //Cache the success
                                     cachedFunctions[function] = success;
                                     if (!m_knownAllowedGroupFunctionsForAvatars.ContainsKey(m_host.OwnerID))
@@ -859,7 +866,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             List<ScriptData> Ids = new List<ScriptData>();
             lock (Scripts)
             {
+#if(!ISWIN)
+                foreach (Dictionary<UUID, ScriptData> Instances in Scripts.Values)
+                {
+                    foreach (ScriptData ID in Instances.Values)
+                    {
+                        Ids.Add(ID);
+                    }
+                }
+#else
                 Ids.AddRange(Scripts.Values.SelectMany(Instances => Instances.Values));
+#endif
             }
             return Ids.ToArray();
         }

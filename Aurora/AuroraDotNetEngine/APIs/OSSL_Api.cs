@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
@@ -1974,10 +1973,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Match match = matcher.Match(src, start);
             while (match.Success)
             {
-                foreach (Group g in from Group g in match.Groups where g.Success select g)
+                foreach (Group g in match.Groups)
                 {
-                    result.Add(new LSL_Integer(g.Value));
-                    result.Add(new LSL_Integer(g.Index));
+                    if(g.Success)
+                    {
+                        result.Add(new LSL_Integer(g.Value));
+                        result.Add(new LSL_Integer(g.Index));
+                    }
                 }
                 match = match.NextMatch();
             }

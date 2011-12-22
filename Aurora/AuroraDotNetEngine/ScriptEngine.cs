@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Timers;
@@ -748,14 +747,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     (obj as IScenePresence).Scene.RequestModuleInterface<IAttachmentsModule>();
                 if (attModule != null)
                 {
-                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
-                    activeScripts += attachments.Sum(grp => GetActiveScripts(grp));
+                    ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar (obj.UUID);
+                    foreach (ISceneEntity grp in attachments)
+                    {
+                        activeScripts += GetActiveScripts(grp);
+                    }
                 }
             }
             else //Ask the protection module how many Scripts there are
             {
                 ScriptData[] scripts = ScriptProtection.GetScripts(obj.UUID);
-                activeScripts += scripts.Count(script => script.Running);
+                foreach (ScriptData script in scripts)
+                {
+                    if (script.Running) activeScripts++;
+                }
             }
             return activeScripts;
         }
@@ -775,7 +780,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (attModule != null)
                 {
                     ISceneEntity[] attachments = attModule.GetAttachmentsForAvatar(obj.UUID);
-                    totalScripts += attachments.Sum(grp => GetTotalScripts(grp));
+                    foreach (ISceneEntity grp in attachments)
+                    {
+                        totalScripts += GetTotalScripts(grp);
+                    }
                 }
             }
             else //Ask the protection module how many Scripts there are
@@ -1147,7 +1155,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 if (Compiler.GetErrors().Length != 0)
                 {
-                    string error = Compiler.GetErrors().Aggregate("Error compiling script: ", (current, comperror) => current + comperror);
+                    string error = "Error compiling script: ";
+                    foreach (string comperror in Compiler.GetErrors())
+                    {
+                        error += comperror;
+                    } 
                     error += ".";
                     return error;
                 }
@@ -1241,7 +1253,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public List<string> GetFunctionNames(IScriptApi api)
         {
             MemberInfo[] members = api.GetType().GetMembers();
-            List<string> FunctionNames = (from member in members where member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase) select member.Name).ToList();
+            List<string> FunctionNames = new List<string>();
+            foreach (MemberInfo member in members)
+            {
+                if (member.Name.StartsWith(api.Name, StringComparison.CurrentCultureIgnoreCase))
+                    FunctionNames.Add(member.Name);
+            }
             members = null;
             return FunctionNames;
         }
@@ -1254,7 +1271,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScriptPlugin GetScriptPlugin(string Name)
         {
-            return ScriptPlugins.FirstOrDefault(plugin => plugin.Name == Name);
+            foreach (IScriptPlugin plugin in ScriptPlugins)
+            {
+                if (plugin.Name == Name)
+                    return plugin;
+            }
+            return null;
         }
 
         /// <summary>
@@ -1392,7 +1414,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public IScene findPrimsScene(uint localID)
         {
-            return (from s in m_Scenes let part = s.GetSceneObjectPart(localID) where part != null select s).FirstOrDefault();
+            foreach (IScene s in m_Scenes)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(localID);
+                if (part != null)
+                    return s;
+            }
+            return null;
         }
 
         private bool ScriptDanger(ISceneChildEntity part, Vector3 pos)
@@ -1479,7 +1507,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             //Get all the scripts
             ScriptData[] data = ScriptProtection.GetAllScripts();
-            return data.Count(script => script.Running);
+            int activeScripts = 0;
+            foreach (ScriptData script in data)
+            {
+                //Only if the script is running do we include it
+                if (script.Running) activeScripts++;
+            }
+            return activeScripts;
         }
 
         /// <summary>

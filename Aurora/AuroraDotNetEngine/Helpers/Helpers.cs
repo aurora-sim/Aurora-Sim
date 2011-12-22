@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.Linq;
 using System.Runtime.Serialization;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -255,10 +254,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             Owner = part.OwnerID;
             Type = part.Velocity == Vector3.Zero ? 0x04 : 0x02;
 
-            if (part.ParentEntity.ChildrenEntities().Any(p => p.Inventory.ContainsScripts()))
-            {
-                Type |= 0x08; // Scripted
-            }
+            foreach (ISceneChildEntity child in part.ParentEntity.ChildrenEntities())
+                if (child.Inventory.ContainsScripts())
+                    Type |= 0x08; // Scripted
+
             tmp = part.AbsolutePosition;
             Position = new LSL_Types.Vector3(tmp.X,
                                              tmp.Y,

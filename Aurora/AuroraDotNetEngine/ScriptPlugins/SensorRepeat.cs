@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
@@ -126,6 +125,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             OSDMap data = new OSDMap();
 
+#if(!ISWIN)
+            lock (SenseRepeatListLock)
+            {
+                foreach (SenseRepeatClass ts in SenseRepeaters)
+                {
+                    if (ts.itemID == itemID)
+                    {
+                        OSDMap map = new OSDMap();
+                        map.Add ("Interval", ts.interval);
+                        map.Add ("Name", ts.name);
+                        map.Add ("ID", ts.keyID);
+                        map.Add ("Type", ts.type);
+                        map.Add ("Range", ts.range);
+                        map.Add ("Arc", ts.arc);
+                        data[itemID.ToString ()] = map;
+                    }
+                }
+            }
+#else
             lock (SenseRepeatListLock)
             {
                 foreach (OSDMap map in from ts in SenseRepeaters
@@ -143,6 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     data[itemID.ToString()] = map;
                 }
             }
+#endif
 
             return data;
         }
@@ -595,12 +614,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public IScene findPrimsScene(UUID objectID)
         {
-            return (from s in m_ScriptEngine.Worlds let part = s.GetSceneObjectPart(objectID) where part != null select s).FirstOrDefault();
+            foreach (IScene s in m_ScriptEngine.Worlds)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(objectID);
+                if (part != null)
+                {
+                    return s;
+                }
+            }
+            return null;
         }
 
         public IScene findPrimsScene(uint localID)
         {
-            return (from s in m_ScriptEngine.Worlds let part = s.GetSceneObjectPart(localID) where part != null select s).FirstOrDefault();
+            foreach (IScene s in m_ScriptEngine.Worlds)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(localID);
+                if (part != null)
+                {
+                    return s;
+                }
+            }
+            return null;
         }
 
         public void Dispose()

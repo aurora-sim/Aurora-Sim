@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -149,14 +148,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         private bool HandlePostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount)
         {
-            bool ret = true;
-
-            if (m_scriptEngine.Worlds.Any(scene => scene.RegionInfo.RegionHandle == regionHandle))
-            {
-                ret = money(localID, agentID, amount);
-            }
-
-            return ret;
+            return money(localID, agentID, amount);
         }
 
         public void changed(ISceneChildEntity part, uint change)
