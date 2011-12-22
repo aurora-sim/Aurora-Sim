@@ -118,7 +118,16 @@ namespace OpenSim.Services.CapsService
 
         private RegionClientEventQueueService FindEventQueueConnector(IRegionClientCapsService service)
         {
+#if (!ISWIN)
+            foreach (ICapsServiceConnector connector in service.GetServiceConnectors())
+            {
+                RegionClientEventQueueService queueService = connector as RegionClientEventQueueService;
+                if (queueService != null) return queueService;
+            }
+            return null;
+#else
             return service.GetServiceConnectors().OfType<RegionClientEventQueueService>().FirstOrDefault();
+#endif
         }
 
         #region EventQueue Message Enqueue

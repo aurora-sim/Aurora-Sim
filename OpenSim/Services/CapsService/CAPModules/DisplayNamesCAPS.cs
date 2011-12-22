@@ -163,11 +163,22 @@ namespace OpenSim.Services.CapsService
                     //One for us
                     DisplayNameUpdate(newDisplayName, oldDisplayName, account, m_service.AgentID);
 
+#if (!ISWIN)
+                    foreach (IRegionClientCapsService avatar in m_service.RegionCaps.GetClients())
+                    {
+                        if (avatar.AgentID != m_service.AgentID)
+                        {
+                            //Update all others
+                            DisplayNameUpdate(newDisplayName, oldDisplayName, account, avatar.AgentID);
+                        }
+                    }
+#else
                     foreach (IRegionClientCapsService avatar in m_service.RegionCaps.GetClients().Where(avatar => avatar.AgentID != m_service.AgentID))
                     {
                         //Update all others
                         DisplayNameUpdate(newDisplayName, oldDisplayName, account, avatar.AgentID);
                     }
+#endif
                     //The reply
                     SetDisplayNameReply(newDisplayName, oldDisplayName, account);
                 }

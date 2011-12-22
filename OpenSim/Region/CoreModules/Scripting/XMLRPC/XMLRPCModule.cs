@@ -212,12 +212,24 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
 
             //Is a dupe?
+#if (!ISWIN)
+            foreach (RPCChannelInfo ci in m_openChannels.Values)
+            {
+                if (ci.GetItemID().Equals(itemID))
+                {
+                    // return the original channel ID for this item
+                    newChannel = ci.GetChannelID();
+                    break;
+                }
+            }
+#else
             foreach (RPCChannelInfo ci in m_openChannels.Values.Where(ci => ci.GetItemID().Equals(itemID)))
             {
                 // return the original channel ID for this item
                 newChannel = ci.GetChannelID();
                 break;
             }
+#endif
 
             if (newChannel == UUID.Zero)
             {
@@ -245,10 +257,20 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
                 lock (XMLRPCListLock)
                 {
+#if (!ISWIN)
+                    foreach (RPCChannelInfo li in m_openChannels.Values)
+                    {
+                        if (li.GetItemID().Equals(itemID))
+                        {
+                            tmp.Add(itemID);
+                        }
+                    }
+#else
                     foreach (RPCChannelInfo li in m_openChannels.Values.Where(li => li.GetItemID().Equals(itemID)))
                     {
                         tmp.Add(itemID);
                     }
+#endif
 
                     IEnumerator tmpEnumerator = tmp.GetEnumerator();
                     while (tmpEnumerator.MoveNext())
@@ -276,8 +298,15 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
             if (message_key == UUID.Zero)
             {
+#if (!ISWIN)
+                foreach (RPCRequestInfo oneRpcInfo in m_rpcPendingResponses.Values)
+                {
+                    if (oneRpcInfo.GetChannelKey() == channel_key) rpcInfo = oneRpcInfo;
+                }
+#else
                 foreach (RPCRequestInfo oneRpcInfo in m_rpcPendingResponses.Values.Where(oneRpcInfo => oneRpcInfo.GetChannelKey() == channel_key))
                     rpcInfo = oneRpcInfo;
+#endif
             }
             else
             {
@@ -336,10 +365,20 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                     return null;
                 lock (XMLRPCListLock)
                 {
+#if (!ISWIN)
+                    foreach (RPCRequestInfo luid in m_rpcPending.Values)
+                    {
+                        if (!luid.IsProcessed())
+                        {
+                            return luid;
+                        }
+                    }
+#else
                     foreach (RPCRequestInfo luid in m_rpcPending.Values.Where(luid => !luid.IsProcessed()))
                     {
                         return luid;
                     }
+#endif
                 }
             }
             return null;
@@ -383,10 +422,20 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
                     return null;
                 lock (XMLRPCListLock)
                 {
+#if (!ISWIN)
+                    foreach (SendRemoteDataRequest luid in m_pendingSRDResponses.Values)
+                    {
+                        if (luid.Finished)
+                        {
+                            return luid;
+                        }
+                    }
+#else
                     foreach (SendRemoteDataRequest luid in m_pendingSRDResponses.Values.Where(luid => luid.Finished))
                     {
                         return luid;
                     }
+#endif
                 }
             }
             return null;
@@ -410,10 +459,20 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             {
                 lock (XMLRPCListLock)
                 {
+#if (!ISWIN)
+                    foreach (SendRemoteDataRequest li in m_pendingSRDResponses.Values)
+                    {
+                        if (li.ItemID.Equals(itemID))
+                        {
+                            m_pendingSRDResponses.Remove(li.GetReqID());
+                        }
+                    }
+#else
                     foreach (SendRemoteDataRequest li in m_pendingSRDResponses.Values.Where(li => li.ItemID.Equals(itemID)))
                     {
                         m_pendingSRDResponses.Remove(li.GetReqID());
                     }
+#endif
                 }
             }
         }

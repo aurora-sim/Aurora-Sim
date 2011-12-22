@@ -53,13 +53,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         #region IObjectInventory Members
 
+        //note: it looks to me this function is not doing anything, no return value, always throws exception
         public IInventoryItem this[string name]
         {
             get
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem i in m_privateInventory.Values)
+                {
+                    if (i.Name == name)
+                        if (!m_publicInventory.ContainsKey(i.ItemID))
+                            m_publicInventory.Add(i.ItemID, new InventoryItem(m_rootScene, i));
+                }
+#else
                 foreach (TaskInventoryItem i in m_privateInventory.Values.Where(i => i.Name == name))
                     if (!m_publicInventory.ContainsKey(i.ItemID))
                         m_publicInventory.Add(i.ItemID, new InventoryItem(m_rootScene, i));
+#endif
                 throw new KeyNotFoundException();
             }
         }
@@ -75,8 +85,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         /// </description>
         private void SynchronizeDictionaries()
         {
+#if (!ISWIN)
+            foreach (TaskInventoryItem privateItem in m_privateInventory.Values)
+            {
+                if (!m_publicInventory.ContainsKey(privateItem.ItemID)) 
+                    m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
+            }
+#else
             foreach (TaskInventoryItem privateItem in m_privateInventory.Values.Where(privateItem => !m_publicInventory.ContainsKey(privateItem.ItemID)))
                 m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
+#endif
         }
 
         #region IDictionary<UUID, IInventoryItem> implementation

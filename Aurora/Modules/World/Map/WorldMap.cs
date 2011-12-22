@@ -811,7 +811,16 @@ namespace Aurora.Modules
                     m_scene.RegionInfo.RegionLocY + (9 * Constants.RegionSize));
             List<Image> bitImages = new List<Image>();
 
+#if (!ISWIN)
+            List<AssetBase> textures = new List<AssetBase>();
+            foreach (GridRegion r in regions)
+            {
+                AssetBase texAsset = m_scene.AssetService.Get(r.TerrainImage.ToString());
+                if (texAsset != null) textures.Add(texAsset);
+            }
+#else
             List<AssetBase> textures = regions.Select(r => m_scene.AssetService.Get(r.TerrainImage.ToString())).Where(texAsset => texAsset != null).ToList();
+#endif
 
             foreach (AssetBase asset in textures)
             {

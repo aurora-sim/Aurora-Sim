@@ -546,19 +546,53 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // Exponential backoff of the retransmission timeout
                 udpClient.BackoffRTO();
 
+#if (!ISWIN)
+                foreach (OutgoingPacket t in expiredPackets)
+                {
+                    if (t.UnackedMethod != null)
+                    {
+                        t.UnackedMethod(t);
+                    }
+                }
+#else
                 foreach (OutgoingPacket t in expiredPackets.Where(t => t.UnackedMethod != null))
                 {
                     t.UnackedMethod(t);
                 }
+#endif
 
                 // Resend packets
+#if (!ISWIN)
+                foreach (OutgoingPacket outgoingPacket in expiredPackets)
+                {
+                    if (outgoingPacket.UnackedMethod == null)
+                    {
+                        //m_log.DebugFormat("[LLUDPSERVER]: Resending packet #{0} (attempt {1}), {2}ms have passed",
+                        //    outgoingPacket.SequenceNumber, outgoingPacket.ResendCount, Environment.TickCount - outgoingPacket.TickCount);
+
+                        // Set the resent flag
+                        outgoingPacket.Buffer.Data[0] = (byte) (outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
+
+                        // resend in its original category
+                        outgoingPacket.Category = ThrottleOutPacketType.Resend;
+
+                        // Bump up the resend count on this packet
+                        Interlocked.Increment(ref outgoingPacket.ResendCount);
+                        //Interlocked.Increment(ref Stats.ResentPackets);
+
+                        // Requeue or resend the packet
+                        if (!outgoingPacket.Client.EnqueueOutgoing(outgoingPacket))
+                            SendPacketFinal(outgoingPacket);
+                    }
+                }
+#else
                 foreach (OutgoingPacket outgoingPacket in expiredPackets.Where(t => t.UnackedMethod == null))
                 {
                     //m_log.DebugFormat("[LLUDPSERVER]: Resending packet #{0} (attempt {1}), {2}ms have passed",
                     //    outgoingPacket.SequenceNumber, outgoingPacket.ResendCount, Environment.TickCount - outgoingPacket.TickCount);
 
                     // Set the resent flag
-                    outgoingPacket.Buffer.Data[0] = (byte) (outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
+                    outgoingPacket.Buffer.Data[0] = (byte)(outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
 
                     // resend in its original category
                     outgoingPacket.Category = ThrottleOutPacketType.Resend;
@@ -571,6 +605,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     if (!outgoingPacket.Client.EnqueueOutgoing(outgoingPacket))
                         SendPacketFinal(outgoingPacket);
                 }
+#endif
             }
         }
 

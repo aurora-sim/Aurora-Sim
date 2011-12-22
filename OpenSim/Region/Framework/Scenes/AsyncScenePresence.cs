@@ -1565,10 +1565,20 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentID = UUID.Zero;
             m_requestedSitTargetUUID = UUID.Zero;
             m_sitting = false;
+#if (!ISWIN)
+            foreach (IScenePresence sp in m_scene.GetScenePresences())
+            {
+                if (sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene))
+                {
+                    sp.ControllingClient.SendAvatarDataImmediate(this);
+                }
+            }
+#else
             foreach (IScenePresence sp in m_scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene)))
             {
                 sp.ControllingClient.SendAvatarDataImmediate(this);
             }
+#endif
 
             Animator.TrySetMovementAnimation("STAND");
         }
@@ -1850,11 +1860,21 @@ namespace OpenSim.Region.Framework.Scenes
                 Velocity = Vector3.Zero;
                 //Force send a full update
                 ControllingClient.SendAvatarDataImmediate(this);
+#if (!ISWIN)
+                foreach (IScenePresence sp in m_scene.GetScenePresences())
+                {
+                    if (sp.UUID != UUID && sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene))
+                    {
+                        sp.ControllingClient.SendAvatarDataImmediate(this);
+                    }
+                }
+#else
                 foreach (IScenePresence sp in m_scene.GetScenePresences().Where(sp => sp.UUID != UUID &&
                                                                                       sp.SceneViewer.Culler.ShowEntityToClient(sp, this, Scene)))
                 {
                     sp.ControllingClient.SendAvatarDataImmediate(this);
                 }
+#endif
                 Animator.TrySetMovementAnimation(sitAnimation);
             }
         }
@@ -2547,10 +2567,20 @@ namespace OpenSim.Region.Framework.Scenes
                                     foreach (TaskInventoryItem taskInv in child.Inventory.GetInventoryItems())
                                     {
                                         TaskInventoryItem inv = taskInv;
+#if (!ISWIN)
+                                        foreach (ControllerData cd in cAgent.Controllers)
+                                        {
+                                            if (cd.ItemID == inv.ItemID || cd.ItemID == inv.OldItemID)
+                                            {
+                                                cd.ItemID = taskInv.ItemID;
+                                            }
+                                        }
+#else
                                         foreach (ControllerData cd in cAgent.Controllers.Where(cd => cd.ItemID == inv.ItemID || cd.ItemID == inv.OldItemID))
                                         {
                                             cd.ItemID = taskInv.ItemID;
                                         }
+#endif
                                     }
                                 }
 
@@ -2743,10 +2773,23 @@ namespace OpenSim.Region.Framework.Scenes
 
                             //Find the lowest contact to use first
                             float z = lowest.Position.Z;
+#if (!ISWIN)
+                            foreach (ContactPoint contact in coldata.Values)
+                            {
+                                if (Single.IsNaN(z) || z != 0 && contact.Position.Z < z)
+                                {
+                                    if (contact.Type != ActorTypes.Agent)
+                                    {
+                                        lowest = contact;
+                                    }
+                                }
+                            }
+#else
                             foreach (ContactPoint contact in coldata.Values.Where(contact => Single.IsNaN(z) || z != 0 && contact.Position.Z < z).Where(contact => contact.Type != ActorTypes.Agent))
                             {
                                 lowest = contact;
                             }
+#endif
 
                             //Then if the normal isn't zero, set it (if its zero, it tends to do odd things in the client)
                             if (lowest.Position != new Vector3(float.MaxValue, float.MaxValue, float.MaxValue))

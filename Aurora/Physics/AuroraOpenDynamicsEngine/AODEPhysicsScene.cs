@@ -1037,6 +1037,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 */
             lock (_characters)
             {
+#if (!ISWIN)
+                foreach (AuroraODECharacter chr in _characters)
+                {
+                    if (chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero)
+                    {
+                        chr.IsColliding = false;
+
+                        // test the avatar's geometry for collision with the space
+                        // This will return near and the space that they are the closest to
+                        // And we'll run this again against the avatar and the space segment
+                        // This will return with a bunch of possible objects in the space segment
+                        // and we'll run it again on all of them.
+                        try
+                        {
+                            d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, nearCallback);
+                        }
+                        catch (AccessViolationException)
+                        {
+                            m_log.Warn("[PHYSICS]: Unable to space collide");
+                        }
+                    }
+                }
+#else
                 foreach (AuroraODECharacter chr in _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
                 {
                     chr.IsColliding = false;
@@ -1055,6 +1078,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_log.Warn("[PHYSICS]: Unable to space collide");
                     }
                 }
+#endif
             }
 
             lock (_activeprimsLock)
@@ -2052,10 +2076,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         lock (_characters)
                         {
                             List<AuroraODECharacter> defects = new List<AuroraODECharacter>();
+#if (!ISWIN)
+                            foreach (AuroraODECharacter actor in _characters)
+                            {
+                                if (actor != null)
+                                {
+                                    actor.Move(ODE_STEPSIZE, ref defects);
+                                }
+                            }
+#else
                             foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                             {
                                 actor.Move(ODE_STEPSIZE, ref defects);
                             }
+#endif
                             if (0 != defects.Count)
                             {
                                 foreach (AuroraODECharacter defect in defects)
@@ -2084,11 +2118,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             {
                                 foreach (AuroraODEPrim defect in defects)
                                 {
+#if (!ISWIN)
+                                    foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities())
+                                    {
+                                        if (child.PhysActor != null)
+                                        {
+                                            RemovePrimThreadLocked((AuroraODEPrim) child.PhysActor);
+                                            child.PhysActor = null; //Delete it
+                                        }
+                                    }
+#else
                                     foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities().Where(child => child.PhysActor != null))
                                     {
                                         RemovePrimThreadLocked((AuroraODEPrim) child.PhysActor);
                                         child.PhysActor = null; //Delete it
                                     }
+#endif
                                     //Destroy it
                                     RemovePrimThreadLocked(defect);
                                     defect.ParentEntity.PhysActor = null; //Delete it
@@ -2160,11 +2205,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 lock (_collisionEventListLock)
                 {
+#if (!ISWIN)
+                    foreach (PhysicsActor obj in ActiveAddCollisionQueue)
+                    {
+                        if (!_collisionEventPrimDictionary.ContainsKey(obj.UUID))
+                        {
+                            _collisionEventPrimDictionary.Add(obj.UUID, obj);
+                            _collisionEventPrimList.Add(obj);
+                        }
+                    }
+#else
                     foreach (PhysicsActor obj in ActiveAddCollisionQueue.Where(obj => !_collisionEventPrimDictionary.ContainsKey(obj.UUID)))
                     {
                         _collisionEventPrimDictionary.Add(obj.UUID, obj);
                         _collisionEventPrimList.Add(obj);
                     }
+#endif
                 }
                 ActiveAddCollisionQueue.Clear();
             }
@@ -2189,17 +2245,37 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 lock (_collisionEventListLock)
                 {
+#if (!ISWIN)
+                    foreach (PhysicsActor obj in _collisionEventPrimList)
+                    {
+                        if (obj != null)
+                        {
+                            obj.SendCollisions();
+                        }
+                    }
+#else
                     foreach (PhysicsActor obj in _collisionEventPrimList.Where(obj => obj != null))
                     {
                         obj.SendCollisions();
                     }
+#endif
                 }
                 lock (_characters)
                 {
+#if (!ISWIN)
+                    foreach (AuroraODECharacter av in _characters)
+                    {
+                        if (av != null)
+                        {
+                            av.SendCollisions();
+                        }
+                    }
+#else
                     foreach (AuroraODECharacter av in _characters.Where(av => av != null))
                     {
                         av.SendCollisions();
                     }
+#endif
                 }
             }
             m_StatSendCollisionsTime = Util.EnvironmentTickCountSubtract(SendCollisionsTime);
@@ -2210,6 +2286,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 lock (_characters)
                 {
+#if (!ISWIN)
+                    foreach (AuroraODECharacter actor in _characters)
+                    {
+                        if (actor != null)
+                        {
+                            if (actor.bad)
+                                m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
+                            else
+                                actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
+                        }
+                    }
+#else
                     foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                     {
                         if (actor.bad)
@@ -2218,6 +2306,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else
                             actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
                     }
+#endif
                 }
             }
             lock (_badCharacter)
@@ -2238,10 +2327,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             lock (_activeprimsLock)
             {
+#if (!ISWIN)
+                foreach (AuroraODEPrim actor in _activeprims)
+                {
+                    if (actor.IsPhysical)
+                    {
+                        actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
+                    }
+                }
+#else
                 foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
                 {
                     actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
                 }
+#endif
             }
             m_StatPrimUpdatePosAndVelocity = Util.EnvironmentTickCountSubtract(PrimUpdatePosAndVelocity);
         }
@@ -2426,10 +2525,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             List<AuroraODEPrim> collidingPrims = new List<AuroraODEPrim>();
             lock (_prims)
             {
+#if (!ISWIN)
+                foreach (AuroraODEPrim prm in _prims)
+                {
+                    if (prm.CollisionScore > 0)
+                    {
+                        if (!collidingPrims.Contains(prm))
+                        {
+                            collidingPrims.Add(prm);
+                        }
+                    }
+                }
+#else
                 foreach (AuroraODEPrim prm in _prims.Where(prm => prm.CollisionScore > 0).Where(prm => !collidingPrims.Contains(prm)))
                 {
                     collidingPrims.Add(prm);
                 }
+#endif
             }
             //Sort them by their score
             collidingPrims.Sort(

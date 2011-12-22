@@ -357,12 +357,24 @@ namespace OpenSim.Region.CoreModules.World.Land
         protected void CheckPrimForTemperary()
         {
             HashSet<ISceneEntity> entitiesToRemove = new HashSet<ISceneEntity>();
+#if (!ISWIN)
+            foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue)
+            {
+                if (entity.RootChild.Expires <= DateTime.Now)
+                {
+                    entitiesToRemove.Add(entity);
+                    //Temporary objects don't get a reason, they return quietly
+                    AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
+                }
+            }
+#else
             foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue.Where(entity => entity.RootChild.Expires <= DateTime.Now))
             {
                 entitiesToRemove.Add(entity);
                 //Temporary objects don't get a reason, they return quietly
                 AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
             }
+#endif
             foreach (ISceneEntity entity in entitiesToRemove)
             {
                 m_entitiesInAutoReturnQueue.Remove(entity);
@@ -642,6 +654,38 @@ namespace OpenSim.Region.CoreModules.World.Land
                 avatar.CurrentParcel.SendLandUpdateToClient(avatar.ControllingClient);
 
                 //Gotta kill all avatars outside the parcel
+#if (!ISWIN)
+                foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences())
+                {
+                    if (sp.UUID != avatar.UUID)
+                    {
+                        if (sp.CurrentParcel != null)
+                        {
+                            if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
+                            {
+                                if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))
+                                    //Either one, we gotta send an update
+                                {
+                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
+                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
+                                    sp.SceneViewer.QueuePresenceForFullUpdate(avatar, true);
+                                    avatar.SceneViewer.QueuePresenceForFullUpdate(sp, true);
+                                }
+                            }
+                            else //Kill those outside the parcel
+                            {
+                                if (sp.CurrentParcel.LandData.Private || avatar.CurrentParcel.LandData.Private)
+                                {
+                                    sp.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {avatar});
+                                    avatar.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {sp});
+                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
+                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
+                                }
+                            }
+                        }
+                    }
+                }
+#else
                 foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences().Where(sp => sp.UUID != avatar.UUID).Where(sp => sp.CurrentParcel != null))
                 {
                     if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
@@ -668,6 +712,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         }
                     }
                 }
+#endif
 
                 if (UseDwell)
                     avatar.CurrentParcel.LandData.Dwell += 1;
@@ -1576,10 +1621,20 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data, Vector2 parcelOffset)
         {
             bool result = true;
+#if (!ISWIN)
+            foreach (LandData t in data)
+            {
+                if (!PreprocessIncomingLandObjectFromStorage(t, parcelOffset))
+                {
+                    result = false;
+                }
+            }
+#else
             foreach (LandData t in data.Where(t => !PreprocessIncomingLandObjectFromStorage(t, parcelOffset)))
             {
                 result = false;
             }
+#endif
             List<ILandObject> newSimDefault = new List<ILandObject>();
             if (!result || data.Count == 0) //Force a new base first, then force a merge later
                 newSimDefault = AllParcels().Count > 0 ? AllParcels() : new List<ILandObject>(new ILandObject[1] {ResetSimLandObjects()});

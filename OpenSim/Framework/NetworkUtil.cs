@@ -81,12 +81,23 @@ namespace OpenSim.Framework
                 return simulator;
 
             // Check if we're accessing localhost.
+#if (!ISWIN)
+            foreach (IPAddress host in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (host.Equals(user) && host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" + simulator + "'");
+                    return host;
+                }
+            }
+#else
             foreach (IPAddress host in Dns.GetHostAddresses(Dns.GetHostName()).Where(host => host.Equals(user) && host.AddressFamily == AddressFamily.InterNetwork))
             {
                 m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
                            simulator + "'");
                 return host;
             }
+#endif
 
             // Check for same LAN segment
             foreach (KeyValuePair<IPAddress, IPAddress> subnet in m_subnets)
@@ -98,7 +109,21 @@ namespace OpenSim.Framework
                 if (subnetBytes.Length != destBytes.Length || subnetBytes.Length != localBytes.Length)
                     return null;
 
+#if (!ISWIN)
+                bool any = false;
+                for (int i = 0; i < subnetBytes.Length; i++)
+                {
+                    byte t = subnetBytes[i];
+                    if ((localBytes[i] & t) != (destBytes[i] & t))
+                    {
+                        any = true;
+                        break;
+                    }
+                }
+                bool valid = !any;
+#else
                 bool valid = !subnetBytes.Where((t, i) => (localBytes[i] & t) != (destBytes[i] & t)).Any();
+#endif
 
                 if (subnet.Key.AddressFamily != AddressFamily.InterNetwork)
                     valid = false;
@@ -120,24 +145,47 @@ namespace OpenSim.Framework
             // Adds IPv6 Support (Not that any of the major protocols supports it...)
             if (destination.AddressFamily == AddressFamily.InterNetworkV6)
             {
+#if (!ISWIN)
+                foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname))
+                {
+                    if (host.AddressFamily == AddressFamily.InterNetworkV6)
+                    {
+                        m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" + defaultHostname + "'");
+                        return host;
+                    }
+                }
+#else
                 foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname).Where(host => host.AddressFamily == AddressFamily.InterNetworkV6))
                 {
                     m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
                                defaultHostname + "'");
                     return host;
                 }
+#endif
             }
 
             if (destination.AddressFamily != AddressFamily.InterNetwork)
                 return null;
 
             // Check if we're accessing localhost.
+#if (!ISWIN)
+            foreach (KeyValuePair<IPAddress, IPAddress> pair in m_subnets)
+            {
+                IPAddress host = pair.Value;
+                if (host.Equals(destination) && host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    m_log.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" + defaultHostname + "'");
+                    return destination;
+                }
+            }
+#else
             foreach (IPAddress host in m_subnets.Select(pair => pair.Value).Where(host => host.Equals(destination) && host.AddressFamily == AddressFamily.InterNetwork))
             {
                 m_log.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" +
                            defaultHostname + "'");
                 return destination;
             }
+#endif
 
             // Check for same LAN segment
             foreach (KeyValuePair<IPAddress, IPAddress> subnet in m_subnets)
@@ -149,7 +197,21 @@ namespace OpenSim.Framework
                 if (subnetBytes.Length != destBytes.Length || subnetBytes.Length != localBytes.Length)
                     return null;
 
+#if (!ISWIN)
+                bool any = false;
+                for (int i = 0; i < subnetBytes.Length; i++)
+                {
+                    byte t = subnetBytes[i];
+                    if ((localBytes[i] & t) != (destBytes[i] & t))
+                    {
+                        any = true;
+                        break;
+                    }
+                }
+                bool valid = !any;
+#else
                 bool valid = !subnetBytes.Where((t, i) => (localBytes[i] & t) != (destBytes[i] & t)).Any();
+#endif
 
                 if (subnet.Key.AddressFamily != AddressFamily.InterNetwork)
                     valid = false;
@@ -163,10 +225,20 @@ namespace OpenSim.Framework
             }
 
             // Check to see if we can find a IPv4 address.
+#if (!ISWIN)
+            foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname))
+            {
+                if (host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return host;
+                }
+            }
+#else
             foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname).Where(host => host.AddressFamily == AddressFamily.InterNetwork))
             {
                 return host;
             }
+#endif
 
             // Unable to find anything.
             throw new ArgumentException(

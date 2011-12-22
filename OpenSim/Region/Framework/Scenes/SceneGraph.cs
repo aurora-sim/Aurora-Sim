@@ -424,7 +424,20 @@ namespace OpenSim.Region.Framework.Scenes
             if (getPrims)
             {
                 ISceneEntity[] EntityList = Entities.GetEntities(hray.Origin, length);
+#if (!ISWIN)
+                foreach (ISceneEntity ent in EntityList)
+                {
+                    if (ent is SceneObjectGroup)
+                    {
+                        SceneObjectGroup reportingG = (SceneObjectGroup)ent;
+                        EntityIntersection inter = reportingG.TestIntersection(hray, frontFacesOnly, faceCenters);
+                        if (inter.HitTF)
+                            result.Add(inter);
+                    }
+                }
+#else
                 result.AddRange(EntityList.OfType<SceneObjectGroup>().Select(reportingG => reportingG.TestIntersection(hray, frontFacesOnly, faceCenters)).Where(inter => inter.HitTF));
+#endif
             }
             if (getAvatars)
             {
@@ -1596,9 +1609,21 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DelinkObjects(List<uint> primIds, IClientAPI client)
         {
+#if (!ISWIN)
+            List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
+            foreach (uint localId in primIds)
+            {
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(localId);
+                if (part != null)
+                {
+                    if (m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID)) parts.Add(part);
+                }
+            }
+#else
             List<ISceneChildEntity> parts =
                 primIds.Select(localID => m_parentScene.GetSceneObjectPart(localID)).Where(part => part != null).Where(
                     part => m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID)).ToList();
+#endif
 
             DelinkObjects(parts);
         }

@@ -125,11 +125,13 @@ namespace OpenSim.Services.CapsService
                 IConfigurationService configService = m_registry.RequestModuleInterface<IConfigurationService>();
                 List<string> serverURIs = configService.FindValueOf(avatarID.ToString(), regionHandle.ToString(),
                                                                     "EventQueueServiceURI");
-                foreach (string serverURI in serverURIs.Where(serverURI => serverURI != ""))
+                foreach (string serverURI in serverURIs)
                 {
-                    if (runasync)
+                    if (serverURI != "")
                     {
-                        /*AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
+                        if (runasync)
+                        {
+                            /*AsynchronousRestObjectRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
                             OSDParser.SerializeJsonString(request),
                             delegate(string resp)
                             {
@@ -137,15 +139,14 @@ namespace OpenSim.Services.CapsService
                             });
 
                         return true;*/
-                        string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
-                                                                                OSDParser.SerializeJsonString(request));
-                        return RequestHandler(resp, events, avatarID, regionHandle);
-                    }
-                    else
-                    {
-                        string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER",
-                                                                                OSDParser.SerializeJsonString(request));
-                        return RequestHandler(resp, events, avatarID, regionHandle);
+                            string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER", OSDParser.SerializeJsonString(request));
+                            return RequestHandler(resp, events, avatarID, regionHandle);
+                        }
+                        else
+                        {
+                            string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER", OSDParser.SerializeJsonString(request));
+                            return RequestHandler(resp, events, avatarID, regionHandle);
+                        }
                     }
                 }
             }

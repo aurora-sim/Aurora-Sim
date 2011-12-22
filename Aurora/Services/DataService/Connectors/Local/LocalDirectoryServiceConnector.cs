@@ -90,6 +90,44 @@ namespace Aurora.Services.DataService
                 return;
 
             ClearRegion(parcels[0].RegionID);
+#if (!ISWIN)
+            foreach (LandData args in parcels)
+            {
+                List<object> Values = new List<object>
+                                          {
+                                              args.RegionID,
+                                              args.GlobalID,
+                                              args.LocalID,
+                                              args.UserLocation.X,
+                                              args.UserLocation.Y,
+                                              args.UserLocation.Z,
+                                              args.Name.MySqlEscape(50),
+                                              args.Description.MySqlEscape(255),
+                                              args.Flags,
+                                              args.Dwell,
+                                              args.InfoUUID,
+                                              ((args.Flags & (uint) ParcelFlags.ForSale) == (uint) ParcelFlags.ForSale)
+                                                  ? 1
+                                                  : 0,
+                                              args.SalePrice,
+                                              args.AuctionID,
+                                              args.Area,
+                                              0,
+                                              args.Maturity,
+                                              args.OwnerID,
+                                              args.GroupID,
+                                              ((args.Flags & (uint) ParcelFlags.ShowDirectory) ==
+                                               (uint) ParcelFlags.ShowDirectory)
+                                                  ? 1
+                                                  : 0,
+                                              args.SnapshotID,
+                                              OSDParser.SerializeLLSDXmlString(args.Bitmap)
+                                          };
+                //InfoUUID is the missing 'real' Gridwide ParcelID
+
+                GD.Insert("searchparcel", Values.ToArray());
+            }
+#else
             foreach (List<object> Values in parcels.Select(args => new List<object>
                                                                {
                                                                    args.RegionID,
@@ -125,6 +163,7 @@ namespace Aurora.Services.DataService
 
                 GD.Insert("searchparcel", Values.ToArray());
             }
+#endif
         }
 
         public void ClearRegion(UUID regionID)
@@ -197,6 +236,20 @@ namespace Aurora.Services.DataService
 
             bool[,] tempConvertMap = new bool[r.RegionSizeX/4,r.RegionSizeX/4];
             tempConvertMap.Initialize();
+#if (!ISWIN)
+            foreach (LandData land in Lands)
+            {
+                if (land.Bitmap != null)
+                {
+                    ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
+                    if (tempConvertMap[X/64, Y/64])
+                    {
+                        LandData = land;
+                        break;
+                    }
+                }
+            }
+#else
             foreach (LandData land in Lands.Where(land => land.Bitmap != null))
             {
                 ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
@@ -206,6 +259,7 @@ namespace Aurora.Services.DataService
                     break;
                 }
             }
+#endif
             if (LandData == null && Lands.Count != 0)
                 LandData = Lands[0];
             return LandData;

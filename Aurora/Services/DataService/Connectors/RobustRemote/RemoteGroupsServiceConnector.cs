@@ -540,18 +540,35 @@ namespace Aurora.Services.DataService
 
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
-                        requestingAgentID.ToString(), "RemoteServerURI", false);
-                foreach (GroupRecord @group in (from mServerUri in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values into replyvalues from f in replyvalues select f).OfType<Dictionary<string, object>>().Select(f => new GroupRecord(f)))
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(requestingAgentID.ToString(), "RemoteServerURI", true);
+                foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    // Success
-                    return group;
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                           m_ServerURI,
+                           reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            foreach (object f in replyvalues)
+                            {
+                                if (f is Dictionary<string, object>)
+                                {
+                                    GroupRecord group = new GroupRecord((Dictionary<string, object>)f);
+                                    // Success
+                                    return group;
+                                }
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -572,6 +589,28 @@ namespace Aurora.Services.DataService
             try
             {
                 List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupRecord> list = new List<GroupRecord>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupRecord(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs
                                                                                    select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                          m_ServerURI,
@@ -584,6 +623,8 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRecord(f)).ToList();
                 }
+#endif
+
             }
             catch (Exception e)
             {
@@ -668,10 +709,21 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupMembershipData group = null;
+#if (!ISWIN)
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null)
+                                {
+                                    group = new GroupMembershipData(f);
+                                }
+                            }
+#else
                             foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
                                 group = new GroupMembershipData(f);
                             }
+#endif
                             // Success
                             return group;
                         }
@@ -715,10 +767,20 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             bool group = false;
+#if (!ISWIN)
+                            foreach (object f in replyvalues)
+                            {
+                                if (bool.TryParse(f.ToString(), out group))
+                                {
+                                    break;
+                                }
+                            }
+#else
                             foreach (object f in replyvalues.Where(f => bool.TryParse(f.ToString(), out group)))
                             {
                                 break;
                             }
+#endif
                             // Success
                             return group;
                         }
@@ -799,10 +861,21 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupInviteInfo group = null;
+#if (!ISWIN)
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null)
+                                {
+                                    group = new GroupInviteInfo(f);
+                                }
+                            }
+#else
                             foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
                                 group = new GroupInviteInfo(f);
                             }
+#endif
                             // Success
                             return group;
                         }
@@ -846,10 +919,21 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupMembersData group = null;
+#if (!ISWIN)
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null)
+                                {
+                                    group = new GroupMembersData(f);
+                                }
+                            }
+#else
                             foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
                                 group = new GroupMembersData(f);
                             }
+#endif
                             // Success
                             return group;
                         }
@@ -892,10 +976,21 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             GroupNoticeInfo group = null;
+#if (!ISWIN)
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null)
+                                {
+                                    group = new GroupNoticeInfo(f);
+                                }
+                            }
+#else
                             foreach (Dictionary<string, object> f in replyvalues.OfType<Dictionary<string, object>>())
                             {
                                 group = new GroupNoticeInfo(f);
                             }
+#endif
                             // Success
                             return group;
                         }
@@ -925,6 +1020,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupMembershipData> list = new List<GroupMembershipData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupMembershipData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -932,6 +1049,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupMembershipData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -959,6 +1077,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<DirGroupsReplyData> list = new List<DirGroupsReplyData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new DirGroupsReplyData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -966,6 +1106,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new DirGroupsReplyData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -991,6 +1132,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupRolesData> list = new List<GroupRolesData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupRolesData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -998,6 +1161,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRolesData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -1022,6 +1186,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupRolesData> list = new List<GroupRolesData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupRolesData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -1029,6 +1215,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRolesData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -1053,13 +1240,35 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupMembersData> list = new List<GroupMembersData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupMembersData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
                 {
-                    // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupMembersData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -1084,6 +1293,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupRoleMembersData> list = new List<GroupRoleMembersData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupRoleMembersData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -1091,6 +1322,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupRoleMembersData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -1115,6 +1347,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupNoticeData> list = new List<GroupNoticeData>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupNoticeData(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -1122,6 +1376,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupNoticeData(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -1145,6 +1400,28 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
+#if (!ISWIN)
+                foreach (string mServerUri in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            // Success
+                            List<GroupInviteInfo> list = new List<GroupInviteInfo>();
+                            foreach (object replyvalue in replyvalues)
+                            {
+                                Dictionary<string, object> f = replyvalue as Dictionary<string, object>;
+                                if (f != null) list.Add(new GroupInviteInfo(f));
+                            }
+                            return list;
+                        }
+                    }
+                }
+#else
                 foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                           m_ServerURI,
                                                                                                                                           reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
@@ -1152,6 +1429,7 @@ namespace Aurora.Services.DataService
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupInviteInfo(f)).ToList();
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -1191,10 +1469,20 @@ namespace Aurora.Services.DataService
                         {
                             Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
                             uint numGroups = 0;
+#if (!ISWIN)
+                            foreach (object f in replyvalues)
+                            {
+                                if (uint.TryParse(f.ToString(), out numGroups))
+                                {
+                                    break;
+                                }
+                            }
+#else
                             foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numGroups)))
                             {
                                 break;
                             }
+#endif
                             // Success
                             return numGroups;
                         }

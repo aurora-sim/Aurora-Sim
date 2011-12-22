@@ -53,10 +53,23 @@ namespace Aurora.DataManager.Migration
             this.migratorName = migratorName;
             this.validateTables = validateTables;
             List<IMigrator> allMigrators = AuroraModuleLoader.PickupModules<IMigrator>();
+#if (!ISWIN)
+            foreach (IMigrator m in allMigrators)
+            {
+                if (m.MigrationName != null)
+                {
+                    if (m.MigrationName == migratorName)
+                    {
+                        migrators.Add((Migrator)m);
+                    }
+                }
+            }
+#else
             foreach (IMigrator m in allMigrators.Where(m => m.MigrationName != null).Where(m => m.MigrationName == migratorName))
             {
                 migrators.Add((Migrator) m);
             }
+#endif
         }
 
         public Version LatestVersion

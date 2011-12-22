@@ -312,11 +312,22 @@ namespace Aurora.Modules
                 }
             }
             List<AvatarAttachment> attachments = appearance.GetAttachments();
+#if (!ISWIN)
+            foreach (AvatarAttachment a in attachments)
+            {
+                if (a.AssetID != UUID.Zero)
+                {
+                    SaveItem(a.ItemID, items, assets);
+                    SaveAsset(a.AssetID, assets);
+                }
+            }
+#else
             foreach (AvatarAttachment a in attachments.Where(a => a.AssetID != UUID.Zero))
             {
                 SaveItem(a.ItemID, items, assets);
                 SaveAsset(a.AssetID, assets);
             }
+#endif
             map.Add("Body", body);
             map.Add("Assets", assets);
             map.Add("Items", items);

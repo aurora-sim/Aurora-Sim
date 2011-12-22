@@ -1681,6 +1681,86 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             IClientAPI client = sp.ControllingClient;
 
             //Make a copy so that it doesn't get modified outside of this loop
+#if (!ISWIN)
+            foreach (ISceneEntity g in new List<ISceneEntity>(objects))
+            {
+                if (!GenericObjectPermission(user, g.UUID, false))
+                {
+                    // This is a short cut for efficiency. If land is non-null,
+                    // then all objects are on that parcel and we can save
+                    // ourselves the checking for each prim. Much faster.
+                    //
+                    if (land != null)
+                    {
+                        l = land;
+                    }
+                    else
+                    {
+                        Vector3 pos = g.AbsolutePosition;
+                        if (m_parcelManagement == null)
+                            continue;
+
+                        l = m_parcelManagement.GetLandObject(pos.X, pos.Y);
+                    }
+
+                    // If it's not over any land, then we can't do a thing
+                    if (l == null)
+                    {
+                        objects.Remove(g);
+                        continue;
+                    }
+
+                    // If we own the land outright, then allow
+                    //
+                    if (l.LandData.OwnerID == user)
+                        continue;
+
+                    // Group voodoo
+                    //
+                    if (l.LandData.IsGroupOwned)
+                    {
+                        // Not a group member, or no rights at all
+                        //
+                        if (!m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.None))
+                        {
+                            objects.Remove(g);
+                            continue;
+                        }
+
+                        // Group deeded object?
+                        //
+                        if (g.OwnerID == l.LandData.GroupID && !m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnGroupOwned))
+                        {
+                            objects.Remove(g);
+                            continue;
+                        }
+
+                        // Group set object?
+                        //
+                        if (g.GroupID == l.LandData.GroupID && !m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnGroupSet))
+                        {
+                            objects.Remove(g);
+                            continue;
+                        }
+
+                        if (!m_groupsModule.GroupPermissionCheck(client.AgentId, g.GroupID, GroupPowers.ReturnNonGroup))
+                        {
+                            objects.Remove(g);
+                            continue;
+                        }
+
+                        // So we can remove all objects from this group land.
+                        // Fine.
+                        //
+                        continue;
+                    }
+
+                    // By default, we can't remove
+                    //
+                    objects.Remove(g);
+                }
+            }
+#else
             foreach (ISceneEntity g in new List<ISceneEntity>(objects).Where(g => !GenericObjectPermission(user, g.UUID, false)))
             {
                 // This is a short cut for efficiency. If land is non-null,
@@ -1758,6 +1838,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 //
                 objects.Remove(g);
             }
+#endif
 
             if (objects.Count == 0)
                 return false;

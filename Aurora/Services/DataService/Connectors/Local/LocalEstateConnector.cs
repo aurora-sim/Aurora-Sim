@@ -373,7 +373,14 @@ namespace Aurora.Services.DataService
         {
             List<string> RegionIDs = GD.Query(new[] {"`Key`", "`Value`"}, new object[] {"EstateID", estateID}, "estates",
                                               "ID");
+#if (!ISWIN)
+            List<UUID> list = new List<UUID>();
+            foreach (string regionId in RegionIDs)
+                list.Add(new UUID(regionId));
+            return list;
+#else
             return RegionIDs.Select(RegionID => new UUID(RegionID)).ToList();
+#endif
         }
 
         #region Helpers
@@ -420,7 +427,14 @@ namespace Aurora.Services.DataService
                 return uuids.ToArray(); //Couldn't find it, return then.
 
             OSDArray estateInfo = (OSDArray) OSDParser.DeserializeLLSDXml(query[0]);
+#if (!ISWIN)
+            foreach (OSD uuid in estateInfo)
+            {
+                uuids.Add(uuid.AsUUID());
+            }
+#else
             uuids.AddRange(estateInfo.Select(uuid => uuid.AsUUID()));
+#endif
 
             return uuids.ToArray();
         }

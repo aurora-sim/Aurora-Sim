@@ -105,10 +105,21 @@ namespace OpenSim.Services.Interfaces
                 if (str != string.Empty)
                 {
                     string[] parts = str.Split(new[] {';'});
+#if (!ISWIN)
+                    foreach (string s in parts)
+                    {
+                        string[] parts2 = s.Split(new[] {'*'});
+                        if (parts2.Length == 2)
+                        {
+                            ServiceURLs[parts2[0]] = parts2[1];
+                        }
+                    }
+#else
                     foreach (string[] parts2 in parts.Select(s => s.Split(new[] {'*'})).Where(parts2 => parts2.Length == 2))
                     {
                         ServiceURLs[parts2[0]] = parts2[1];
                     }
+#endif
                 }
             }
         }

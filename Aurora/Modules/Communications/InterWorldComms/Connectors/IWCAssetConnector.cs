@@ -155,8 +155,15 @@ namespace Aurora.Modules
 
             string localAssetHandler = handlerConfig.GetString("LocalAssetHandler", "AssetService");
             List<IAssetService> services = AuroraModuleLoader.PickupModules<IAssetService>();
+#if (!ISWIN)
+            foreach (IAssetService s in services)
+            {
+                if (s.GetType().Name == localAssetHandler) m_localService = s;
+            }
+#else
             foreach (IAssetService s in services.Where(s => s.GetType().Name == localAssetHandler))
                 m_localService = s;
+#endif
 
             if (m_localService == null)
                 m_localService = new AssetService();

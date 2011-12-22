@@ -426,11 +426,22 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
             }
 
+#if (!ISWIN)
+            foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences())
+            {
+                if (SP.ControllingClient.ActiveGroupId == groupID)
+                {
+                    m_cachedGroupTitles.Remove(SP.UUID);
+                    SendAgentGroupDataUpdate(SP.ControllingClient, GetRequestingAgentID(SP.ControllingClient));
+                }
+            }
+#else
             foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences().Where(SP => SP.ControllingClient.ActiveGroupId == groupID))
             {
                 m_cachedGroupTitles.Remove(SP.UUID);
                 SendAgentGroupDataUpdate(SP.ControllingClient, GetRequestingAgentID(SP.ControllingClient));
             }
+#endif
         }
 
         public void GroupRoleChanges(IClientAPI remoteClient, UUID groupID, UUID roleID, UUID memberID, uint changes)
@@ -879,10 +890,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                             //Force send a full update
                             IScenePresence presence1 = presence;
                             IScene scene1 = scene;
+#if (!ISWIN)
                             foreach (IScenePresence sp in scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1)))
                             {
                                 sp.ControllingClient.SendAvatarDataImmediate(presence);
                             }
+#else
+                            foreach (IScenePresence sp in scene.GetScenePresences().Where(sp => sp.SceneViewer.Culler.ShowEntityToClient(sp, presence1, scene1)))
+                            {
+                                sp.ControllingClient.SendAvatarDataImmediate(presence);
+                            }
+#endif
                         }
                     }
                 }

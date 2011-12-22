@@ -518,6 +518,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (perm != "")
                 {
                     string[] ids = perm.Split(',');
+#if (!ISWIN)
+                    foreach (string id in ids)
+                    {
+                        string current = id.Trim();
+                        UUID uuid;
+
+                        if (UUID.TryParse(current, out uuid))
+                        {
+                            if (uuid != UUID.Zero)
+                                m_allowedUsers.Add(uuid);
+                        }
+                    }
+#else
                     foreach (string current in ids.Select(id => id.Trim()))
                     {
                         UUID uuid;
@@ -528,11 +541,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 m_allowedUsers.Add(uuid);
                         }
                     }
+#endif
                 }
                 perm = m_scriptProtectionModule.m_config.GetString("Allow_All", "");
                 if (perm != "")
                 {
                     string[] ids = perm.Split(',');
+#if (!ISWIN)
+                    foreach (string id in ids)
+                    {
+                        string current = id.Trim();
+                        UUID uuid;
+
+                        if (UUID.TryParse(current, out uuid))
+                        {
+                            if (uuid != UUID.Zero)
+                                m_allowedUsers.Add(uuid);
+                        }
+                    }
+#else
                     foreach (string current in ids.Select(id => id.Trim()))
                     {
                         UUID uuid;
@@ -543,6 +570,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                 m_allowedUsers.Add(uuid);
                         }
                     }
+#endif
                 }
             }
 
@@ -572,6 +600,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             FunctionPerms = new List<UUID>();
 
                             string[] ids = perm.Split(new[] {','});
+#if (!ISWIN)
+                            foreach (string id in ids)
+                            {
+                                string current = id.Trim();
+                                UUID uuid;
+
+                                if (UUID.TryParse(current, out uuid))
+                                {
+                                    if (uuid != UUID.Zero)
+                                        FunctionPerms.Add(uuid);
+                                }
+                            }
+#else
                             foreach (string current in ids.Select(id => id.Trim()))
                             {
                                 UUID uuid;
@@ -582,6 +623,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                         FunctionPerms.Add(uuid);
                                 }
                             }
+#endif
                         }
                         m_FunctionPerms[function] = FunctionPerms;
                     }

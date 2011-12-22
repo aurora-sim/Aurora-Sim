@@ -357,7 +357,15 @@ namespace Aurora.Modules
                     lock (m_scene.Entities)
                     {
                         ISceneEntity[] entities = m_scene.Entities.GetEntities();
+#if (!ISWIN)
+                        foreach (ISceneEntity entity in entities)
+                        {
+                            if (!entity.IsAttachment)
+                                groups.Add(entity);
+                        }
+#else
                         groups.AddRange(entities.Where(entity => !entity.IsAttachment));
+#endif
                     }
                     //Delete all the groups now
                     DeleteSceneObjects(groups.ToArray(), true, true);

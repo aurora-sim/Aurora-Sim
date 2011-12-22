@@ -378,10 +378,20 @@ textures 1
 
             AvatarWearable cachedWearable = new AvatarWearable {MaxItems = 0};
             //Unlimited items
+#if (!ISWIN)
+            foreach (WearableCache item in wearables)
+            {
+                if (textureEntry.FaceTextures[item.TextureIndex] != null)
+                {
+                    cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
+                }
+            }
+#else
             foreach (WearableCache item in wearables.Where(item => textureEntry.FaceTextures[item.TextureIndex] != null))
             {
                 cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
             }
+#endif
             m_scene.AvatarService.CacheWearableData(sp.UUID, cachedWearable);
         }
 
@@ -839,14 +849,24 @@ textures 1
                 }
             }
 
-            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing.Where(wear => wear.Type < AvatarWearable.MAX_WEARABLES))
+#if (!ISWIN)
+            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
-                /*if (incomingLinks.ContainsKey (wear.ItemID))
+                if (wear.Type < AvatarWearable.MAX_WEARABLES)
+                {
+                    /*if (incomingLinks.ContainsKey (wear.ItemID))
                     {
                         wear.ItemID = incomingLinks[wear.ItemID];
                     }*/
+                    avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
+                }
+            }
+#else
+            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing.Where(wear => wear.Type < AvatarWearable.MAX_WEARABLES))
+            {
                 avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
             }
+#endif
 
             avatAppearance.GetAssetsFrom(appearance.Appearance);
 
@@ -863,10 +883,21 @@ textures 1
                 //Tell the client about the new things it is wearing
                 sp.ControllingClient.SendWearables(appearance.Appearance.Wearables, appearance.Appearance.Serial);
                 //Then forcefully tell it to rebake
+#if (!ISWIN)
+                foreach (Primitive.TextureEntryFace t in appearance.Appearance.Texture.FaceTextures)
+                {
+                    Primitive.TextureEntryFace face = (t);
+                    if (face != null)
+                    {
+                        sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
+                    }
+                }
+#else
                 foreach (Primitive.TextureEntryFace face in appearance.Appearance.Texture.FaceTextures.Select(t => (t)).Where(face => face != null))
                 {
                     sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
                 }
+#endif
             }
             QueueAppearanceSave(sp.UUID);
             //Send the wearables HERE so that the client knows what it is wearing

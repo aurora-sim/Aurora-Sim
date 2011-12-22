@@ -450,8 +450,18 @@ namespace Aurora.BotManager
         {
             //Cast a ray in the direction that we are going
             List<ISceneChildEntity> entities = llCastRay(start, end);
-
+#if (!ISWIN)
+            foreach (ISceneChildEntity entity in entities)
+            {
+                if (!entity.IsAttachment)
+                {
+                    if (entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z) return true;
+                }
+            }
+            return false;
+#else
             return entities.Where(entity => !entity.IsAttachment).Any(entity => entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z);
+#endif
         }
 
         public List<ISceneChildEntity> llCastRay(Vector3 start, Vector3 end)
@@ -468,11 +478,21 @@ namespace Aurora.BotManager
             if (distance == 0)
                 distance = 0.001;
             Vector3 posToCheck = startvector;
+#if (!ISWIN)
+            foreach (ContactResult result in results)
+            {
+                ISceneChildEntity child = m_scenePresence.Scene.GetSceneObjectPart(result.ConsumerID);
+                if (!entities.Contains(child))
+                {
+                    entities.Add(child);
+                }
+            }
+#else
             foreach (ISceneChildEntity child in results.Select(result => m_scenePresence.Scene.GetSceneObjectPart(result.ConsumerID)).Where(child => !entities.Contains(child)))
             {
                 entities.Add(child);
             }
-
+#endif
             return entities;
         }
 

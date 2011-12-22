@@ -940,6 +940,46 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
 
             int i = 0;
+#if (!ISWIN)
+            foreach (GroupActiveProposals proposal in Proposals)
+            {
+                GroupActiveProposalItemReplyPacket.ProposalDataBlock ProposalData = new GroupActiveProposalItemReplyPacket
+                    .ProposalDataBlock
+                                                                                        {
+                                                                                            VoteCast =
+                                                                                                Utils.StringToBytes(
+                                                                                                    "false"),
+                                                                                            VoteID =
+                                                                                                new UUID(proposal.VoteID),
+                                                                                            VoteInitiator =
+                                                                                                new UUID(
+                                                                                                proposal.VoteInitiator),
+                                                                                            Majority =
+                                                                                                Convert.ToInt32(
+                                                                                                    proposal.Majority),
+                                                                                            Quorum =
+                                                                                                Convert.ToInt32(
+                                                                                                    proposal.Quorum),
+                                                                                            TerseDateID =
+                                                                                                Utils.StringToBytes(
+                                                                                                    proposal.TerseDateID),
+                                                                                            StartDateTime =
+                                                                                                Utils.StringToBytes(
+                                                                                                    proposal.
+                                                                                                        StartDateTime),
+                                                                                            EndDateTime =
+                                                                                                Utils.StringToBytes(
+                                                                                                    proposal.EndDateTime),
+                                                                                            ProposalText =
+                                                                                                Utils.StringToBytes(
+                                                                                                    proposal.
+                                                                                                        ProposalText),
+                                                                                            AlreadyVoted = false
+                                                                                        };
+                GAPIRP.ProposalData[i] = ProposalData;
+                i++;
+            }
+#else
             foreach (GroupActiveProposalItemReplyPacket.ProposalDataBlock ProposalData in Proposals.Select(Proposal => new GroupActiveProposalItemReplyPacket.ProposalDataBlock
                                                                                         {
                                                                                             VoteCast = Utils.StringToBytes("false"),
@@ -957,6 +997,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 GAPIRP.ProposalData[i] = ProposalData;
                 i++;
             }
+#endif
             OutPacket(GAPIRP, ThrottleOutPacketType.AvatarInfo);
         }
 
@@ -991,16 +1032,32 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             int i = 0;
             GVHIRP.VoteItem = new GroupVoteHistoryItemReplyPacket.VoteItemBlock[VoteItems.Length];
+#if (!ISWIN)
+            foreach (GroupVoteHistoryItem item in VoteItems)
+            {
+                GroupVoteHistoryItemReplyPacket.VoteItemBlock VoteItem = new GroupVoteHistoryItemReplyPacket.
+                    VoteItemBlock
+                                                                             {
+                                                                                 CandidateID = item.CandidateID,
+                                                                                 NumVotes = item.NumVotes,
+                                                                                 VoteCast =
+                                                                                     Utils.StringToBytes(item.VoteCast)
+                                                                             };
+                GVHIRP.VoteItem[i] = VoteItem;
+                i++;
+            }
+#else
             foreach (GroupVoteHistoryItemReplyPacket.VoteItemBlock VoteItem in VoteItems.Select(item => new GroupVoteHistoryItemReplyPacket.VoteItemBlock
-                                                                            {
-                                                                                CandidateID = item.CandidateID,
-                                                                                NumVotes = item.NumVotes,
-                                                                                VoteCast = Utils.StringToBytes(item.VoteCast)
-                                                                            }))
+            {
+                CandidateID = item.CandidateID,
+                NumVotes = item.NumVotes,
+                VoteCast = Utils.StringToBytes(item.VoteCast)
+            }))
             {
                 GVHIRP.VoteItem[i] = VoteItem;
                 i++;
             }
+#endif
 
             OutPacket(GVHIRP, ThrottleOutPacketType.AvatarInfo);
         }
@@ -1670,11 +1727,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 int count = kill.ObjectData.Count(block => block != null);
                 i = 0;
                 KillObjectPacket.ObjectDataBlock[] bk = new KillObjectPacket.ObjectDataBlock[count];
+#if (!ISWIN)
+                foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData)
+                {
+                    if (block != null)
+                    {
+                        bk[i] = block;
+                        i++;
+                    }
+                }
+#else
                 foreach (KillObjectPacket.ObjectDataBlock block in kill.ObjectData.Where(block => block != null))
                 {
                     bk[i] = block;
                     i++;
                 }
+#endif
                 kill.ObjectData = bk;
             }
 
@@ -1694,11 +1762,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             KillObjectPacket kill = (KillObjectPacket) PacketPool.Instance.GetPacket(PacketType.KillObject);
             kill.ObjectData = new KillObjectPacket.ObjectDataBlock[entities.Length];
             int i = 0;
+#if (!ISWIN)
+            foreach (uint entity in entities)
+            {
+                KillObjectPacket.ObjectDataBlock block = new KillObjectPacket.ObjectDataBlock {ID = entity};
+                kill.ObjectData[i] = block;
+                i++;
+            }
+#else
             foreach (KillObjectPacket.ObjectDataBlock block in entities.Select(entity => new KillObjectPacket.ObjectDataBlock {ID = entity}))
             {
                 kill.ObjectData[i] = block;
                 i++;
             }
+#endif
             kill.Header.Reliable = true;
             kill.Header.Zerocoded = true;
 
@@ -2305,7 +2382,22 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendAvatarPickerReply(AvatarPickerReplyAgentDataArgs AgentData, List<AvatarPickerReplyDataArgs> Data)
         {
             //construct the AvatarPickerReply packet.
+#if (!ISWIN)
+            List<AvatarPickerReplyPacket.DataBlock> list = new List<AvatarPickerReplyPacket.DataBlock>();
+            foreach (AvatarPickerReplyDataArgs arg in Data)
+                list.Add(new AvatarPickerReplyPacket.DataBlock
+                             {
+                                 AvatarID = arg.AvatarID, FirstName = arg.FirstName, LastName = arg.LastName
+                             });
             AvatarPickerReplyPacket replyPacket = new AvatarPickerReplyPacket
+                                                      {
+                                                          AgentData =
+                                                              {AgentID = AgentData.AgentID, QueryID = AgentData.QueryID},
+                                                          Data =
+                                                              list.ToArray()
+                                                      };
+#else
+                AvatarPickerReplyPacket replyPacket = new AvatarPickerReplyPacket
                                                       {
                                                           AgentData =
                                                               {AgentID = AgentData.AgentID, QueryID = AgentData.QueryID},
@@ -2317,6 +2409,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                          LastName = arg.LastName
                                                                                      }).ToArray()
                                                       };
+#endif
             //int i = 0;
             OutPacket(replyPacket, ThrottleOutPacketType.AvatarInfo);
         }
@@ -4372,10 +4465,48 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             ObjectPropertiesPacket proper =
                 (ObjectPropertiesPacket) PacketPool.Instance.GetPacket(PacketType.ObjectProperties);
 
+#if (!ISWIN)
+            List<ObjectPropertiesPacket.ObjectDataBlock> list = new List<ObjectPropertiesPacket.ObjectDataBlock>();
+            foreach (IEntity part in parts)
+            {
+                ISceneChildEntity entity = part as ISceneChildEntity;
+                if (entity != null)
+                {
+                    ISceneChildEntity part1 = entity as ISceneChildEntity;
+                    list.Add(new ObjectPropertiesPacket.ObjectDataBlock
+                                 {
+                                     ItemID = part1.FromUserInventoryItemID,
+                                     CreationDate = (ulong) part1.CreationDate*1000000,
+                                     CreatorID = part1.CreatorID,
+                                     FolderID = UUID.Zero,
+                                     FromTaskID = UUID.Zero,
+                                     GroupID = part1.GroupID,
+                                     InventorySerial = (short) part1.InventorySerial,
+                                     LastOwnerID = part1.LastOwnerID,
+                                     ObjectID = part1.UUID,
+                                     OwnerID = part1.OwnerID == part1.GroupID ? UUID.Zero : part1.OwnerID,
+                                     TouchName = Util.StringToBytes256(part1.ParentEntity.RootChild.TouchName),
+                                     TextureID = new byte[0],
+                                     SitName = Util.StringToBytes256(part1.ParentEntity.RootChild.SitName),
+                                     Name = Util.StringToBytes256(part1.Name),
+                                     Description = Util.StringToBytes256(part1.Description),
+                                     OwnerMask = part1.ParentEntity.RootChild.OwnerMask,
+                                     NextOwnerMask = part1.ParentEntity.RootChild.NextOwnerMask,
+                                     GroupMask = part1.ParentEntity.RootChild.GroupMask,
+                                     EveryoneMask = part1.ParentEntity.RootChild.EveryoneMask,
+                                     BaseMask = part1.ParentEntity.RootChild.BaseMask,
+                                     SaleType = part1.ParentEntity.RootChild.ObjectSaleType,
+                                     SalePrice = part1.ParentEntity.RootChild.SalePrice
+                                 });
+                }
+            }
+            proper.ObjectData = list.ToArray();
+#else
             proper.ObjectData = parts.OfType<ISceneChildEntity>().Select(entity => entity as ISceneChildEntity).Select(part => new ObjectPropertiesPacket.ObjectDataBlock
                                                                                                                                    {
                                                                                                                                        ItemID = part.FromUserInventoryItemID, CreationDate = (ulong) part.CreationDate*1000000, CreatorID = part.CreatorID, FolderID = UUID.Zero, FromTaskID = UUID.Zero, GroupID = part.GroupID, InventorySerial = (short) part.InventorySerial, LastOwnerID = part.LastOwnerID, ObjectID = part.UUID, OwnerID = part.OwnerID == part.GroupID ? UUID.Zero : part.OwnerID, TouchName = Util.StringToBytes256(part.ParentEntity.RootChild.TouchName), TextureID = new byte[0], SitName = Util.StringToBytes256(part.ParentEntity.RootChild.SitName), Name = Util.StringToBytes256(part.Name), Description = Util.StringToBytes256(part.Description), OwnerMask = part.ParentEntity.RootChild.OwnerMask, NextOwnerMask = part.ParentEntity.RootChild.NextOwnerMask, GroupMask = part.ParentEntity.RootChild.GroupMask, EveryoneMask = part.ParentEntity.RootChild.EveryoneMask, BaseMask = part.ParentEntity.RootChild.BaseMask, SaleType = part.ParentEntity.RootChild.ObjectSaleType, SalePrice = part.ParentEntity.RootChild.SalePrice
                                                                                                                                    }).ToArray();
+#endif
 
             proper.Header.Zerocoded = true;
             bool hasFinishedSending = false; //Since this packet will be split up, we only want to finish sending once
@@ -4720,10 +4851,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             replyPacket.Data.LocalID = localLandID;
             replyPacket.Data.SequenceID = 0;
 
+#if (!ISWIN)
             replyPacket.List =
                 avatars.Select(
-                    avatar => new ParcelAccessListReplyPacket.ListBlock {Flags = accessFlag, ID = avatar, Time = 0}).
+                    avatar => new ParcelAccessListReplyPacket.ListBlock { Flags = accessFlag, ID = avatar, Time = 0 }).
                     ToArray();
+#else
+            replyPacket.List =
+                avatars.Select(
+                    avatar => new ParcelAccessListReplyPacket.ListBlock { Flags = accessFlag, ID = avatar, Time = 0 }).
+                    ToArray();
+#endif
             replyPacket.Header.Zerocoded = true;
             OutPacket(replyPacket, ThrottleOutPacketType.Land);
         }
@@ -6218,7 +6356,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             UUID agentID = afriendpack.AgentData.AgentID;
             UUID transactionID = afriendpack.TransactionBlock.TransactionID;
 
+#if (!ISWIN)
+            List<UUID> callingCardFolders = new List<UUID>();
+            foreach (AcceptFriendshipPacket.FolderDataBlock t in afriendpack.FolderData)
+                callingCardFolders.Add(t.FolderID);
+#else
             List<UUID> callingCardFolders = afriendpack.FolderData.Select(t => t.FolderID).ToList();
+#endif
 
             FriendActionDelegate handlerApproveFriendRequest = OnApproveFriendRequest;
             if (handlerApproveFriendRequest != null)
@@ -6392,7 +6536,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             DeRezObject handlerDeRezObject = OnDeRezObject;
             if (handlerDeRezObject != null)
             {
+#if (!ISWIN)
+                List<uint> deRezIDs = new List<uint>();
+                foreach (DeRezObjectPacket.ObjectDataBlock data in DeRezPacket.ObjectData)
+                    deRezIDs.Add(data.ObjectLocalID);
+#else
                 List<uint> deRezIDs = DeRezPacket.ObjectData.Select(data => data.ObjectLocalID).ToList();
+#endif
 
                 // It just so happens that the values on the DeRezAction enumerator match the Destination
                 // values given by a Second Life client
@@ -6544,9 +6694,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (cachedtex.AgentData.SessionID != SessionId) return false;
 
+#if (!ISWIN)
+            List<CachedAgentArgs> args = new List<CachedAgentArgs>();
+            foreach (AgentCachedTexturePacket.WearableDataBlock t in cachedtex.WearableData)
+                args.Add(new CachedAgentArgs {ID = t.ID, TextureIndex = t.TextureIndex});
+#else
             List<CachedAgentArgs> args =
                 cachedtex.WearableData.Select(t => new CachedAgentArgs {ID = t.ID, TextureIndex = t.TextureIndex}).
                     ToList();
+#endif
 
             AgentCachedTextureRequest actr = OnAgentCachedTextureRequest;
             if (actr != null)
@@ -6597,11 +6753,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 #endregion
 
                 AvatarWearingArgs wearingArgs = new AvatarWearingArgs();
+#if (!ISWIN)
+                foreach (AgentIsNowWearingPacket.WearableDataBlock t in nowWearing.WearableData)
+                {
+                    AvatarWearingArgs.Wearable wearable = new AvatarWearingArgs.Wearable(t.ItemID, t.WearableType);
+                    wearingArgs.NowWearing.Add(wearable);
+                }
+#else
                 foreach (AvatarWearingArgs.Wearable wearable in nowWearing.WearableData.Select(t => new AvatarWearingArgs.Wearable(t.ItemID,
                                                                                                                  t.WearableType)))
                 {
                     wearingArgs.NowWearing.Add(wearable);
                 }
+#endif
 
                 AvatarNowWearing handlerAvatarNowWearing = OnAvatarNowWearing;
                 if (handlerAvatarNowWearing != null)
@@ -7227,7 +7391,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // instance, when one prim of a link set has been edited independently
             // of the others).  Therefore, we'll pass all the ids onto the delink
             // method for it to decide which is the root.
+#if (!ISWIN)
+            List<uint> prims = new List<uint>();
+            foreach (ObjectDelinkPacket.ObjectDataBlock t in delink.ObjectData)
+                prims.Add(t.ObjectLocalID);
+#else
             List<uint> prims = delink.ObjectData.Select(t => t.ObjectLocalID).ToList();
+#endif
             DelinkObjects handlerDelinkObjects = OnDelinkObjects;
             if (handlerDelinkObjects != null)
             {
@@ -7423,7 +7593,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             #endregion
 
             ObjectSelect handlerObjectSelect = null;
+#if (!ISWIN)
+            List<uint> LocalIDs = new List<uint>();
+            foreach (ObjectSelectPacket.ObjectDataBlock t in incomingselect.ObjectData)
+                LocalIDs.Add(t.ObjectLocalID);
+#else
             List<uint> LocalIDs = incomingselect.ObjectData.Select(t => t.ObjectLocalID).ToList();
+#endif
             handlerObjectSelect = OnObjectSelect;
             if (handlerObjectSelect != null)
             {
@@ -7601,6 +7777,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
                 if ((grab.SurfaceInfo != null) && (grab.SurfaceInfo.Length > 0))
                 {
+#if (!ISWIN)
+                    foreach (ObjectGrabPacket.SurfaceInfoBlock surfaceInfo in grab.SurfaceInfo)
+                    {
+                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs
+                                                        {
+                                                            Binormal = surfaceInfo.Binormal,
+                                                            FaceIndex = surfaceInfo.FaceIndex,
+                                                            Normal = surfaceInfo.Normal,
+                                                            Position = surfaceInfo.Position,
+                                                            STCoord = surfaceInfo.STCoord,
+                                                            UVCoord = surfaceInfo.UVCoord
+                                                        };
+                        touchArgs.Add(arg);
+                    }
+#else
                     touchArgs.AddRange(grab.SurfaceInfo.Select(surfaceInfo => new SurfaceTouchEventArgs
                                                                                   {
                                                                                       Binormal = surfaceInfo.Binormal,
@@ -7610,6 +7801,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                       STCoord = surfaceInfo.STCoord,
                                                                                       UVCoord = surfaceInfo.UVCoord
                                                                                   }));
+#endif
                 }
                 handlerGrabObject(grab.ObjectData.LocalID, grab.ObjectData.GrabOffset, this, touchArgs);
             }
@@ -7638,6 +7830,21 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
                 if ((grabUpdate.SurfaceInfo != null) && (grabUpdate.SurfaceInfo.Length > 0))
                 {
+#if (!ISWIN)
+                    foreach (ObjectGrabUpdatePacket.SurfaceInfoBlock surfaceInfo in grabUpdate.SurfaceInfo)
+                    {
+                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs
+                                                        {
+                                                            Binormal = surfaceInfo.Binormal,
+                                                            FaceIndex = surfaceInfo.FaceIndex,
+                                                            Normal = surfaceInfo.Normal,
+                                                            Position = surfaceInfo.Position,
+                                                            STCoord = surfaceInfo.STCoord,
+                                                            UVCoord = surfaceInfo.UVCoord
+                                                        };
+                        touchArgs.Add(arg);
+                    }
+#else
                     touchArgs.AddRange(grabUpdate.SurfaceInfo.Select(surfaceInfo => new SurfaceTouchEventArgs
                                                                                         {
                                                                                             Binormal =
@@ -7652,6 +7859,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                             UVCoord =
                                                                                                 surfaceInfo.UVCoord
                                                                                         }));
+#endif
                 }
                 handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, grabUpdate.ObjectData.GrabOffsetInitial,
                                   grabUpdate.ObjectData.GrabPosition, this, touchArgs);
@@ -7680,6 +7888,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
                 if ((deGrab.SurfaceInfo != null) && (deGrab.SurfaceInfo.Length > 0))
                 {
+#if (!ISWIN)
+                    foreach (ObjectDeGrabPacket.SurfaceInfoBlock surfaceInfo in deGrab.SurfaceInfo)
+                    {
+                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs();
+                        arg.Binormal = surfaceInfo.Binormal;
+                        arg.FaceIndex = surfaceInfo.FaceIndex;
+                        arg.Normal = surfaceInfo.Normal;
+                        arg.Position = surfaceInfo.Position;
+                        arg.STCoord = surfaceInfo.STCoord;
+                        arg.UVCoord = surfaceInfo.UVCoord;
+                        touchArgs.Add(arg);
+                    }
+#else
                     touchArgs.AddRange(deGrab.SurfaceInfo.Select(surfaceInfo => new SurfaceTouchEventArgs
                                                                                     {
                                                                                         Binormal = surfaceInfo.Binormal,
@@ -7690,6 +7911,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                         STCoord = surfaceInfo.STCoord,
                                                                                         UVCoord = surfaceInfo.UVCoord
                                                                                     }));
+#endif
                 }
                 handlerDeGrabObject(deGrab.ObjectData.LocalID, this, touchArgs);
             }
@@ -8791,7 +9013,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnMoveInventoryItem != null)
             {
                 MoveInventoryItem handlerMoveInventoryItem = null;
+#if (!ISWIN)
+                List<InventoryItemBase> items = new List<InventoryItemBase>();
+                foreach (MoveInventoryItemPacket.InventoryDataBlock datablock in moveitem.InventoryData)
+                    items.Add(new InventoryItemBase(datablock.ItemID, AgentId) {Folder = datablock.FolderID, Name = Util.FieldToString(datablock.NewName)});
+#else
                 List<InventoryItemBase> items = moveitem.InventoryData.Select(datablock => new InventoryItemBase(datablock.ItemID, AgentId) {Folder = datablock.FolderID, Name = Util.FieldToString(datablock.NewName)}).ToList();
+#endif
                 handlerMoveInventoryItem = OnMoveInventoryItem;
                 if (handlerMoveInventoryItem != null)
                 {
@@ -8827,7 +9055,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnRemoveInventoryItem != null)
             {
                 RemoveInventoryItem handlerRemoveInventoryItem = null;
+#if (!ISWIN)
+                List<UUID> uuids = new List<UUID>();
+                foreach (RemoveInventoryItemPacket.InventoryDataBlock datablock in removeItem.InventoryData)
+                    uuids.Add(datablock.ItemID);
+#else
                 List<UUID> uuids = removeItem.InventoryData.Select(datablock => datablock.ItemID).ToList();
+#endif
                 handlerRemoveInventoryItem = OnRemoveInventoryItem;
                 if (handlerRemoveInventoryItem != null)
                 {
@@ -8863,7 +9097,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnRemoveInventoryFolder != null)
             {
                 RemoveInventoryFolder handlerRemoveInventoryFolder = null;
+#if (!ISWIN)
+                List<UUID> uuids = new List<UUID>();
+                foreach (RemoveInventoryFolderPacket.FolderDataBlock datablock in removeFolder.FolderData)
+                    uuids.Add(datablock.FolderID);
+#else
                 List<UUID> uuids = removeFolder.FolderData.Select(datablock => datablock.FolderID).ToList();
+#endif
                 handlerRemoveInventoryFolder = OnRemoveInventoryFolder;
                 if (handlerRemoveInventoryFolder != null)
                 {
@@ -8899,7 +9139,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnRemoveInventoryFolder != null)
             {
                 RemoveInventoryFolder handlerRemoveInventoryFolder = null;
+#if (!ISWIN)
+                List<UUID> uuids = new List<UUID>();
+                foreach (RemoveInventoryObjectsPacket.FolderDataBlock datablock in removeObject.FolderData)
+                    uuids.Add(datablock.FolderID);
+#else
                 List<UUID> uuids = removeObject.FolderData.Select(datablock => datablock.FolderID).ToList();
+#endif
                 handlerRemoveInventoryFolder = OnRemoveInventoryFolder;
                 if (handlerRemoveInventoryFolder != null)
                 {
@@ -8910,7 +9156,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OnRemoveInventoryItem != null)
             {
                 RemoveInventoryItem handlerRemoveInventoryItem = null;
+#if (!ISWIN)
+                List<UUID> uuids = new List<UUID>();
+                foreach (RemoveInventoryObjectsPacket.ItemDataBlock datablock in removeObject.ItemData)
+                    uuids.Add(datablock.ItemID);
+#else
                 List<UUID> uuids = removeObject.ItemData.Select(datablock => datablock.ItemID).ToList();
+#endif
                 handlerRemoveInventoryItem = OnRemoveInventoryItem;
                 if (handlerRemoveInventoryItem != null)
                 {
@@ -9376,6 +9628,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #endregion
 
+#if (!ISWIN)
+            List<ParcelManager.ParcelAccessEntry> entries = new List<ParcelManager.ParcelAccessEntry>();
+            foreach (ParcelAccessListUpdatePacket.ListBlock block in updatePacket.List)
+                entries.Add(new ParcelManager.ParcelAccessEntry
+                                {
+                                    AgentID = block.ID, Flags = (AccessList) block.Flags, Time = new DateTime()
+                                });
+#else
             List<ParcelManager.ParcelAccessEntry> entries =
                 updatePacket.List.Select(block => new ParcelManager.ParcelAccessEntry
                                                       {
@@ -9383,6 +9643,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                           Flags = (AccessList) block.Flags,
                                                           Time = new DateTime()
                                                       }).ToList();
+#endif
 
             ParcelAccessListUpdateRequest handlerParcelAccessListUpdateRequest = OnParcelAccessListUpdateRequest;
             if (handlerParcelAccessListUpdateRequest != null)
@@ -9545,7 +9806,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #endregion
 
+#if (!ISWIN)
+            List<UUID> returnIDs = new List<UUID>();
+            foreach (ParcelSelectObjectsPacket.ReturnIDsBlock rb in selectPacket.ReturnIDs)
+                returnIDs.Add(rb.ReturnID);
+#else
             List<UUID> returnIDs = selectPacket.ReturnIDs.Select(rb => rb.ReturnID).ToList();
+#endif  
 
             ParcelSelectObjects handlerParcelSelectObjects = OnParcelSelectObjects;
 
@@ -9925,10 +10192,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 case "estatechangecovenantid":
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
+#if (!ISWIN)
+                        foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
+                        {
+                            UUID newCovenantID = new UUID(Utils.BytesToString(block.Parameter));
+                            OnEstateChangeCovenantRequest(this, newCovenantID);
+                        }
+#else
                         foreach (UUID newCovenantID in messagePacket.ParamList.Select(block => new UUID(Utils.BytesToString(block.Parameter))))
                         {
                             OnEstateChangeCovenantRequest(this, newCovenantID);
                         }
+#endif
                     }
                     return true;
                 case "estateaccessdelta": // Estate access delta manages the banlist and allow list too.
@@ -10110,8 +10385,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 case "telehub":
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
+#if (!ISWIN)
+                        List<string> Parameters = new List<string>();
+                        foreach (EstateOwnerMessagePacket.ParamListBlock block in messagePacket.ParamList)
+                            Parameters.Add(Utils.BytesToString(block.Parameter));
+#else
                         List<string> Parameters =
                             messagePacket.ParamList.Select(block => Utils.BytesToString(block.Parameter)).ToList();
+#endif
                         GodlikeMessage handlerEstateTelehubRequest = OnEstateTelehubRequest;
                         if (handlerEstateTelehubRequest != null)
                         {
@@ -10285,8 +10566,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             #endregion
 
             GodlikeMessage handlerGodlikeMessage = OnGodlikeMessage;
+#if (!ISWIN)
+            List<string> Parameters = new List<string>();
+            foreach (GodlikeMessagePacket.ParamListBlock block in GodlikeMessage.ParamList)
+                Parameters.Add(Utils.BytesToString(block.Parameter));
+#else
             List<string> Parameters =
                 GodlikeMessage.ParamList.Select(block => Utils.BytesToString(block.Parameter)).ToList();
+#endif
             if (handlerGodlikeMessage != null)
             {
                 handlerGodlikeMessage(this,
@@ -10593,7 +10880,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #endregion
 
+#if (!ISWIN)
+            List<uint> localIDs = new List<uint>();
+            foreach (ObjectOwnerPacket.ObjectDataBlock d in objectOwnerPacket.ObjectData)
+                localIDs.Add(d.ObjectLocalID);
+#else
             List<uint> localIDs = objectOwnerPacket.ObjectData.Select(d => d.ObjectLocalID).ToList();
+#endif
 
             ObjectOwner handlerObjectOwner = OnObjectOwner;
             if (handlerObjectOwner != null)
@@ -10844,9 +11137,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (handlerParcelDisableObjectsRequest != null)
             {
+#if (!ISWIN)
+                List<UUID> list = new List<UUID>();
+                foreach (ParcelDisableObjectsPacket.TaskIDsBlock block in aPacket.TaskIDs)
+                    list.Add(block.TaskID);
+                handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,
+                                                   aPacket.OwnerIDs.Select(block => block.OwnerID).ToArray(),
+                                                   list.ToArray(), this);
+#else
                 handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,
                                                    aPacket.OwnerIDs.Select(block => block.OwnerID).ToArray(),
                                                    aPacket.TaskIDs.Select(block => block.TaskID).ToArray(), this);
+#endif
                 return true;
             }
             return false;
@@ -12904,10 +13206,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             SetFollowCamPropertiesPacket.CameraPropertyBlock[] camPropBlock =
                 new SetFollowCamPropertiesPacket.CameraPropertyBlock[parameters.Count];
             uint idx = 0;
+#if (!ISWIN)
+            foreach (KeyValuePair<int, float> pair in parameters)
+            {
+                SetFollowCamPropertiesPacket.CameraPropertyBlock block = new SetFollowCamPropertiesPacket.CameraPropertyBlock {Type = pair.Key, Value = pair.Value};
+                camPropBlock[idx++] = block;
+            }
+#else
             foreach (SetFollowCamPropertiesPacket.CameraPropertyBlock block in parameters.Select(pair => new SetFollowCamPropertiesPacket.CameraPropertyBlock {Type = pair.Key, Value = pair.Value}))
             {
                 camPropBlock[idx++] = block;
             }
+#endif
             packet.CameraProperty = camPropBlock;
             OutPacket(packet, ThrottleOutPacketType.AvatarInfo);
         }

@@ -698,6 +698,27 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                              HasBeenAdded = true
                                                          }, GroupID);
 
+#if (!ISWIN)
+                        foreach (GroupMembersData gmd in m_groupData.GetGroupMembers(AgentID, GroupID))
+                        {
+                            if (gmd.AgentID != AgentID)
+                            {
+                                if ((gmd.AgentPowers & (ulong) GroupPowers.JoinChat) == (ulong) GroupPowers.JoinChat)
+                                {
+                                    m_groupData.AddMemberToGroup(new ChatSessionMember
+                                                                     {
+                                                                         AvatarKey = gmd.AgentID,
+                                                                         CanVoiceChat = false,
+                                                                         IsModerator =
+                                                                             GetIsModerator(gmd.AgentID, GroupID),
+                                                                         MuteText = false,
+                                                                         MuteVoice = false,
+                                                                         HasBeenAdded = false
+                                                                     }, GroupID);
+                                }
+                            }
+                        }
+#else
                         foreach (GroupMembersData gmd in m_groupData.GetGroupMembers(AgentID, GroupID).Where(gmd => gmd.AgentID != AgentID).Where(gmd => (gmd.AgentPowers & (ulong) GroupPowers.JoinChat) == (ulong) GroupPowers.JoinChat))
                         {
                             m_groupData.AddMemberToGroup(new ChatSessionMember
@@ -711,6 +732,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                                  HasBeenAdded = false
                                                              }, GroupID);
                         }
+#endif
                         //Tell us that it was made successfully
                         ChatterBoxSessionStartReplyViaCaps(remoteClient, groupInfo.GroupName, GroupID);
                     }
@@ -879,10 +901,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (session == null)
                 return;
             ChatSessionMember member = new ChatSessionMember {AvatarKey = UUID.Zero};
+#if (!ISWIN)
+            foreach (ChatSessionMember testmember in session.Members)
+            {
+                if (testmember.AvatarKey == im.fromAgentID)
+                {
+                    member = testmember;
+                }
+            }
+#else
             foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == im.fromAgentID))
             {
                 member = testmember;
             }
+#endif
 
             if (member.AvatarKey != UUID.Zero)
             {

@@ -24,7 +24,7 @@ We aren’t just releasing new features, but a new outlook on a virtual world de
 
 - Configuration in Aurora is a bit different than in other distributions of OpenSim. 
 In Aurora, all configuration files (except for AuroraServer.ini and Aurora.ini) 
-have been moved to the AuroraConfiguration and Configuration folders (respectively) and further subdivided from there into categories of .ini files. 
+have been moved to the AuroraServerConfiguration and Configuration folders (respectively) and further subdivided from there into categories of .ini files. 
 
 ---------------------------
 --- Config file rundown ---

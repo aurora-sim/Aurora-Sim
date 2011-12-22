@@ -509,10 +509,20 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             List<UUID> primcountKeys = new List<UUID>(m_PrimCounts.Keys);
+#if (!ISWIN)
+            foreach (UUID k in primcountKeys)
+            {
+                if (!m_OwnerMap.ContainsKey(k))
+                {
+                    m_PrimCounts.Remove(k);
+                }
+            }
+#else
             foreach (UUID k in primcountKeys.Where(k => !m_OwnerMap.ContainsKey(k)))
             {
                 m_PrimCounts.Remove(k);
             }
+#endif
             m_Tainted = false;
         }
 

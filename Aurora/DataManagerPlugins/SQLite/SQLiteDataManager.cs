@@ -809,7 +809,16 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
 
             string newTableColumnDefinition = string.Empty;
+#if (!ISWIN)
+            List<ColumnDefinition> primaryColumns = new List<ColumnDefinition>();
+            foreach (ColumnDefinition column in columns)
+            {
+                if (column.IsPrimary) primaryColumns.Add(column);
+            }
+#else
             List<ColumnDefinition> primaryColumns = columns.Where(column => column.IsPrimary).ToList();
+#endif
+
             bool multiplePrimary = primaryColumns.Count > 1;
 
             foreach (ColumnDefinition column in columns)

@@ -177,12 +177,24 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             writer.WriteStartElement(String.Empty, "OtherParts", String.Empty);
 
             SceneObjectPart[] parts = sceneObject.Parts;
+#if (!ISWIN)
+            foreach (SceneObjectPart part in parts)
+            {
+                if (part.UUID != sceneObject.RootPart.UUID)
+                {
+                    writer.WriteStartElement(String.Empty, "Part", String.Empty);
+                    ToXmlFormat(part, writer);
+                    writer.WriteEndElement();
+                }
+            }
+#else
             foreach (SceneObjectPart part in parts.Where(part => part.UUID != sceneObject.RootPart.UUID))
             {
                 writer.WriteStartElement(String.Empty, "Part", String.Empty);
                 ToXmlFormat(part, writer);
                 writer.WriteEndElement();
             }
+#endif
 
             writer.WriteEndElement(); // OtherParts
             writer.WriteEndElement(); // SceneObjectGroup

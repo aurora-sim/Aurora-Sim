@@ -185,11 +185,22 @@ namespace OpenSim.Services.Interfaces
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             result["AvatarType"] = AvatarType.ToString();
+#if (!ISWIN)
+            foreach (KeyValuePair<string, string> _kvp in Data)
+            {
+                if (_kvp.Value != null)
+                {
+                    //Remove spaces
+                    result[_kvp.Key.Replace(" ", "").Replace(":", "")] = _kvp.Value;
+                }
+            }
+#else
             foreach (KeyValuePair<string, string> _kvp in Data.Where(_kvp => _kvp.Value != null))
             {
                 //Remove spaces
                 result[_kvp.Key.Replace(" ", "").Replace(":", "")] = _kvp.Value;
             }
+#endif
             return result;
         }
 
@@ -314,8 +325,15 @@ namespace OpenSim.Services.Interfaces
 
                 // Attachments
                 Dictionary<string, string> attchs = new Dictionary<string, string>();
+#if (!ISWIN)
+                foreach (KeyValuePair<string, string> _kvp in Data)
+                {
+                    if (_kvp.Key.StartsWith("_ap_")) attchs[_kvp.Key] = _kvp.Value;
+                }
+#else
                 foreach (KeyValuePair<string, string> _kvp in Data.Where(_kvp => _kvp.Key.StartsWith("_ap_")))
                     attchs[_kvp.Key] = _kvp.Value;
+#endif
 
                 foreach (KeyValuePair<string, string> _kvp in attchs)
                 {

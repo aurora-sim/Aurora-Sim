@@ -127,6 +127,18 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             InventoryCollection contents = inventoryService.GetFolderContent(startFolder.Owner, startFolder.ID);
 
+#if (!ISWIN)
+            foreach (InventoryFolderBase folder in contents.Folders)
+            {
+                if (folder.Name == components[0])
+                {
+                    if (components.Length > 1)
+                        foundFolders.AddRange(FindFolderByPath(inventoryService, folder, components[1]));
+                    else
+                        foundFolders.Add(folder);
+                }
+            }
+#else
             foreach (InventoryFolderBase folder in contents.Folders.Where(folder => folder.Name == components[0]))
             {
                 if (components.Length > 1)
@@ -134,6 +146,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 else
                     foundFolders.Add(folder);
             }
+#endif
 
             return foundFolders;
         }
