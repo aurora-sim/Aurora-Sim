@@ -137,10 +137,20 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             doc.Load(reader);
             reader.Close();
             XmlNode rootNode = doc.FirstChild;
-
+            
+#if (!ISWIN)
+            List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
+            foreach(XmlNode aPrimNode in rootNode.ChildNodes)
+            {
+                SceneObjectGroup grp = CreatePrimFromXml2(scene, aPrimNode.OuterXml);
+                if(grp != null)
+                    sceneObjects.Add(grp);
+            }
+#else
             ICollection<SceneObjectGroup> sceneObjects =
                 rootNode.ChildNodes.Cast<XmlNode>().Select(aPrimNode => CreatePrimFromXml2(scene, aPrimNode.OuterXml)).
                     Where(obj => obj != null).ToList();
+#endif
 
             foreach (SceneObjectGroup sceneObject in sceneObjects)
             {

@@ -1144,7 +1144,14 @@ namespace OpenSim.Services.MessagingService
 
         private List<GridRegion> GetRegions(IClientCapsService iClientCapsService)
         {
+#if(!ISWIN)
+            List<GridRegion> regions = new List<GridRegion>();
+            foreach(IRegionClientCapsService rcc in iClientCapsService.GetCapsServices())
+                regions.Add(rcc.Region);
+            return regions;
+#else
             return iClientCapsService.GetCapsServices().Select(rccs => rccs.Region).ToList();
+#endif
         }
 
         #endregion

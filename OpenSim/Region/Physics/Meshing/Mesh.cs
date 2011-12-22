@@ -80,7 +80,12 @@ namespace OpenSim.Region.Physics.Meshing
 
         public List<Vector3> getVertexList()
         {
-            return m_vertices.Keys.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+            List<Vector3> vs = new List<Vector3>();
+            foreach (Vertex v in m_vertices.Keys)
+            {
+                vs.Add(new Vector3(v.X, v.Y, v.Z));
+            }
+            return vs;
         }
 
         public float[] getVertexListAsFloatLocked()

@@ -326,10 +326,17 @@ namespace OpenSim.Region.Framework.Scenes
                 flags = PrimUpdateFlags.ForcedFullUpdate;
                 lock (m_objectUpdatesToSendLock)
                 {
+#if (!ISWIN)
+                    foreach (ISceneChildEntity child in part.ParentEntity.ChildrenEntities())
+                    {
+                        QueueEntityUpdate(new EntityUpdate(child, flags));
+                    }
+#else
                     foreach (EntityUpdate update in part.ParentEntity.ChildrenEntities().Select(child => new EntityUpdate(child, flags)))
                     {
                         QueueEntityUpdate(update);
                     }
+#endif
                 }
                 lastGrpsInView.Add(part.ParentEntity);
                 return;

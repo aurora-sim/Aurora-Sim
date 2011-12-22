@@ -2301,7 +2301,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         foreach (uint t in localids)
                         {
-                            foreach (scriptPosTarget att in atTargets.Keys.Select(target => atTargets[target]))
+                            foreach(scriptPosTarget att in atTargets.Values)
                             {
                                 m_scene.EventManager.TriggerAtTargetEvent(
                                     t, att.handle, att.targetPos, m_rootPart.GroupPosition);
@@ -2379,7 +2379,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         foreach (uint t in localids)
                         {
-                            foreach (scriptRotTarget att in atRotTargets.Keys.Select(target => atRotTargets[target]))
+                            foreach (scriptRotTarget att in atRotTargets.Values)
                             {
                                 m_scene.EventManager.TriggerAtRotTargetEvent(
                                     t, att.handle, att.targetRot, m_rootPart.RotationOffset);

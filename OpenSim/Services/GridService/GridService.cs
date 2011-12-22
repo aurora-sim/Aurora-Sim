@@ -952,6 +952,28 @@ namespace OpenSim.Services.GridService
                 }
             }
             //Build the mapItemReply blocks
+#if(!ISWIN)
+            List<mapItemReply> mapItems = new List<mapItemReply>();
+            foreach (KeyValuePair<Vector3, int> kvp in Positions)
+            {
+                mapItems.Add(new mapItemReply
+                                                                           {
+                                                                               x =
+                                                                                   (uint)
+                                                                                   (region.RegionLocX + kvp.Key.X),
+                                                                               y =
+                                                                                   (uint)
+                                                                                   (region.RegionLocY + kvp.Key.Y),
+                                                                               id = UUID.Zero,
+                                                                               name =
+                                                                                   Util.Md5Hash(region.RegionName +
+                                                                                                Environment.TickCount.
+                                                                                                    ToString()),
+                                                                               Extra = kvp.Value,
+                                                                               Extra2 = 0
+                                                                           });
+            }
+#else
             List<mapItemReply> mapItems = Positions.Select(position => new mapItemReply
                                                                            {
                                                                                x =
@@ -968,6 +990,7 @@ namespace OpenSim.Services.GridService
                                                                                Extra = position.Value,
                                                                                Extra2 = 0
                                                                            }).ToList();
+#endif
 
             //If there are no agents, we send one blank one to the client
             if (mapItems.Count == 0)

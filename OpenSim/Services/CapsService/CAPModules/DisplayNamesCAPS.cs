@@ -144,10 +144,24 @@ namespace OpenSim.Services.CapsService
                 UserAccount account = m_userService.GetUserAccount(UUID.Zero, m_service.AgentID);
 
                 //Check to see if their name contains a banned character
+#if (!ISWIN)
+                foreach (string bannedUserName in bannedNames)
+                {
+                    string BannedUserName = bannedUserName.Replace(" ", "");
+                    if (newDisplayName.ToLower().Contains(BannedUserName.ToLower()))
+                    {
+                        //Revert the name to the original and send them a warning
+                        newDisplayName = account.Name;
+                        //m_avatar.ControllingClient.SendAlertMessage ("You cannot update your display name to the name chosen, your name has been reverted. This request has been logged.");
+                        break; //No more checking
+                    }
+                }
+#else
                 if (bannedNames.Select(bannedUserName => bannedUserName.Replace(" ", "")).Any(BannedUserName => newDisplayName.ToLower().Contains(BannedUserName.ToLower())))
                 {
                     newDisplayName = account.Name;
                 }
+#endif
 
                 IUserProfileInfo info = m_profileConnector.GetUserProfile(m_service.AgentID);
                 if (info == null)

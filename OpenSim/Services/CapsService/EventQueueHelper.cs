@@ -455,6 +455,21 @@ namespace OpenSim.Services.CapsService
 
             OSDArray groupData = new OSDArray();
 
+#if(!ISWIN)
+            foreach (AgentGroupDataUpdatePacket.GroupDataBlock groupDataBlock in groupUpdatePacket.GroupData)
+            {
+                OSDMap groupDataMap = new OSDMap();
+                groupDataMap.Add("ListInProfile", OSD.FromBoolean(false));
+                groupDataMap.Add("GroupID", OSD.FromUUID(groupDataBlock.GroupID));
+                groupDataMap.Add("GroupInsigniaID", OSD.FromUUID(groupDataBlock.GroupInsigniaID));
+                groupDataMap.Add("Contribution", OSD.FromInteger(groupDataBlock.Contribution));
+                groupDataMap.Add("GroupPowers", OSD.FromBinary(ulongToByteArray(groupDataBlock.GroupPowers)));
+                groupDataMap.Add("GroupName", OSD.FromString(Utils.BytesToString(groupDataBlock.GroupName)));
+                groupDataMap.Add("AcceptNotices", OSD.FromBoolean(groupDataBlock.AcceptNotices));
+
+                groupData.Add(groupDataMap);
+            }
+#else
             foreach (OSDMap groupDataMap in groupUpdatePacket.GroupData.Select(groupDataBlock => new OSDMap
                                                                                                      {
                                                                                                          {"ListInProfile", OSD.FromBoolean(false)},
@@ -468,6 +483,7 @@ namespace OpenSim.Services.CapsService
             {
                 groupData.Add(groupDataMap);
             }
+#endif
             body.Add("GroupData", groupData);
             groupUpdate.Add("body", body);
 
@@ -490,6 +506,30 @@ namespace OpenSim.Services.CapsService
             body.Add("AgentData", agentData);
 
             OSDArray QueryData = new OSDArray();
+#if(!ISWIN)
+            int i = 0;
+            foreach (PlacesReplyPacket.QueryDataBlock groupDataBlock in PlacesReply.QueryData)
+            {
+                OSDMap QueryDataMap = new OSDMap();
+                QueryDataMap.Add("ActualArea", OSD.FromInteger(groupDataBlock.ActualArea));
+                QueryDataMap.Add("BillableArea", OSD.FromInteger(groupDataBlock.BillableArea));
+                QueryDataMap.Add("Description", OSD.FromBinary(groupDataBlock.Desc));
+                QueryDataMap.Add("Dwell", OSD.FromInteger((int)groupDataBlock.Dwell));
+                QueryDataMap.Add("Flags", OSD.FromString(Convert.ToString(groupDataBlock.Flags)));
+                QueryDataMap.Add("GlobalX", OSD.FromInteger((int)groupDataBlock.GlobalX));
+                QueryDataMap.Add("GlobalY", OSD.FromInteger((int)groupDataBlock.GlobalY));
+                QueryDataMap.Add("GlobalZ", OSD.FromInteger((int)groupDataBlock.GlobalZ));
+                QueryDataMap.Add("Name", OSD.FromBinary(groupDataBlock.Name));
+                QueryDataMap.Add("OwnerID", OSD.FromUUID(groupDataBlock.OwnerID));
+                QueryDataMap.Add("SimName", OSD.FromBinary(groupDataBlock.SimName));
+                QueryDataMap.Add("SnapShotID", OSD.FromUUID(groupDataBlock.SnapshotID));
+                QueryDataMap.Add("ProductSku", OSD.FromString(regionType[i]));
+                QueryDataMap.Add("Price", OSD.FromInteger(groupDataBlock.Price));
+                
+                QueryData.Add(QueryDataMap);
+                i++;
+            }
+#else
             int[] i = {0};
             foreach (OSDMap QueryDataMap in PlacesReply.QueryData.Select(groupDataBlock => new OSDMap
                                                                                                {
@@ -512,6 +552,7 @@ namespace OpenSim.Services.CapsService
                 QueryData.Add(QueryDataMap);
                 i[0]++;
             }
+#endif
             body.Add("QueryData", QueryData);
             placesReply.Add("QueryData[]", body);
 

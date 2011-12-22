@@ -1089,7 +1089,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_itemsLock)
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                    ret.Add(item.ItemID);
+#else
                 ret.AddRange(m_items.Values.Select(item => item.ItemID));
+#endif
             }
 
             return ret;
