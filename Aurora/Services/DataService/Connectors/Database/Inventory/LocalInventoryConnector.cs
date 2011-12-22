@@ -476,7 +476,7 @@ namespace Aurora.Services.DataService
                     });
 #else
                     items.RemoveAll(
-                        item => (item.Flags & 1) != 1;
+                        item => (item.Flags & 1) != 1);
 #endif
                 }
                 catch
