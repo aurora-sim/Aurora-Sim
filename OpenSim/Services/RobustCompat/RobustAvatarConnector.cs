@@ -57,10 +57,9 @@ namespace OpenSim.Services.RobustCompat
             {
                 List<string> serverURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
-                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                    m_ServerURI,
-                                                                                                                    reqString)))
+                foreach (string mServerUri in serverURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);

@@ -286,6 +286,19 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (perm != "")
             {
                 string[] ids = perm.Split(',');
+#if (!ISWIN)
+                foreach (string id in ids)
+                {
+                    string current = id.Trim();
+                    UUID uuid;
+
+                    if (UUID.TryParse(current, out uuid))
+                    {
+                        if (uuid != UUID.Zero)
+                            m_allowedAdministrators.Add(uuid);
+                    }
+                }
+#else
                 foreach (string current in ids.Select(id => id.Trim()))
                 {
                     UUID uuid;
@@ -296,6 +309,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                             m_allowedAdministrators.Add(uuid);
                     }
                 }
+#endif
             }
 
 
@@ -400,55 +414,102 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             string grant = PermissionsConfig.GetString("GrantLSL", "");
             if (grant.Length > 0)
             {
+#if (!ISWIN)
+                foreach (string uuidl in grant.Split(','))
+                {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
+                    GrantLSL.Add(uuid, true);
+                }
+#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantLSL.Add(uuid, true);
                 }
+#endif
             }
 
             grant = PermissionsConfig.GetString("GrantCS", "");
             if (grant.Length > 0)
             {
+#if (!ISWIN)
+                foreach (string uuidl in grant.Split(','))
+                {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
+                    GrantCS.Add(uuid, true);
+                }
+#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantCS.Add(uuid, true);
                 }
+#endif
             }
 
             grant = PermissionsConfig.GetString("GrantVB", "");
             if (grant.Length > 0)
             {
+#if (!ISWIN)
+                foreach (string uuidl in grant.Split(','))
+                {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
+                    GrantVB.Add(uuid, true);
+                }
+#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantVB.Add(uuid, true);
                 }
+#endif
             }
 
             grant = PermissionsConfig.GetString("GrantJS", "");
             if (grant.Length > 0)
             {
+#if (!ISWIN)
+                foreach (string uuidl in grant.Split(','))
+                {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
+                    GrantJS.Add(uuid, true);
+                }
+#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantJS.Add(uuid, true);
                 }
+#endif
             }
 
             grant = PermissionsConfig.GetString("GrantYP", "");
             if (grant.Length > 0)
             {
+#if (!ISWIN)
+                foreach (string uuidl in grant.Split(','))
+                {
+                    string uuid = uuidl.Trim(" \t".ToCharArray());
+                    GrantYP.Add(uuid, true);
+                }
+#else
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantYP.Add(uuid, true);
                 }
+#endif
             }
 
             grant = PermissionsConfig.GetString("GrantAScript", "");
             if (grant.Length > 0)
             {
+#if (!ISWIN)
                 foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
                 {
                     GrantAScript.Add(uuid, true);
                 }
+#else
+                foreach (string uuid in grant.Split(',').Select(uuidl => uuidl.Trim(" \t".ToCharArray())))
+                {
+                    GrantAScript.Add(uuid, true);
+                }
+#endif
             }
         }
 

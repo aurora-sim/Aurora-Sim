@@ -4852,10 +4852,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             replyPacket.Data.SequenceID = 0;
 
 #if (!ISWIN)
-            replyPacket.List =
-                avatars.Select(
-                    avatar => new ParcelAccessListReplyPacket.ListBlock { Flags = accessFlag, ID = avatar, Time = 0 }).
-                    ToArray();
+            List<ParcelAccessListReplyPacket.ListBlock> list = new List<ParcelAccessListReplyPacket.ListBlock>();
+            foreach (UUID avatar in avatars)
+                list.Add(new ParcelAccessListReplyPacket.ListBlock {Flags = accessFlag, ID = avatar, Time = 0});
+            replyPacket.List = list.ToArray();
 #else
             replyPacket.List =
                 avatars.Select(
@@ -11141,8 +11141,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 List<UUID> list = new List<UUID>();
                 foreach (ParcelDisableObjectsPacket.TaskIDsBlock block in aPacket.TaskIDs)
                     list.Add(block.TaskID);
+                List<UUID> list1 = new List<UUID>();
+                foreach (ParcelDisableObjectsPacket.OwnerIDsBlock block in aPacket.OwnerIDs)
+                    list1.Add(block.OwnerID);
                 handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,
-                                                   aPacket.OwnerIDs.Select(block => block.OwnerID).ToArray(),
+                                                   list1.ToArray(),
                                                    list.ToArray(), this);
 #else
                 handlerParcelDisableObjectsRequest(aPacket.ParcelData.LocalID, aPacket.ParcelData.ReturnType,

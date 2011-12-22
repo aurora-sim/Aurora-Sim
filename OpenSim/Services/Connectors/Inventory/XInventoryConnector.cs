@@ -173,7 +173,14 @@ namespace OpenSim.Services.Connectors
 
             Dictionary<string, object> items = (Dictionary<string, object>) ret["ITEMS"];
 
+#if (!ISWIN)
+            List<InventoryItemBase> list = new List<InventoryItemBase>();
+            foreach (object o in items.Values)
+                list.Add(BuildItem((Dictionary<string, object>) o));
+            return list;
+#else
             return items.Values.Select(o => BuildItem((Dictionary<string, object>) o)).ToList();
+#endif
         }
 
         public virtual bool AddFolder(InventoryFolderBase folder)
@@ -246,7 +253,13 @@ namespace OpenSim.Services.Connectors
             if (folderIDs.Count == 0)
                 return false;
 
+#if (!ISWIN)
+            List<string> slist = new List<string>();
+            foreach (UUID f in folderIDs)
+                slist.Add(f.ToString());
+#else
             List<string> slist = folderIDs.Select(f => f.ToString()).ToList();
+#endif
 
             Dictionary<string, object> ret = MakeRequest("DELETEFOLDERS",
                                                          new Dictionary<string, object>
@@ -410,7 +423,13 @@ namespace OpenSim.Services.Connectors
             if (itemIDs.Count == 0)
                 return true;
 
+#if (!ISWIN)
+            List<string> slist = new List<string>();
+            foreach (UUID f in itemIDs)
+                slist.Add(f.ToString());
+#else
             List<string> slist = itemIDs.Select(f => f.ToString()).ToList();
+#endif
 
             Dictionary<string, object> ret = MakeRequest("DELETEITEMS",
                                                          new Dictionary<string, object>

@@ -199,10 +199,9 @@ namespace OpenSim.Services.Connectors
                 List<string> serverURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionhandle.ToString(),
                                                                                            "GridServerURI");
-                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                    m_ServerURI,
-                                                                                                                    WebUtils.BuildQueryString(sendData))))
+                foreach (string mServerUri in serverURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, WebUtils.BuildQueryString(sendData));
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -823,10 +822,9 @@ namespace OpenSim.Services.Connectors
             {
                 List<string> serverURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
-                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                    m_ServerURI,
-                                                                                                                    reqString)))
+                foreach (string mServerUri in serverURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -835,8 +833,7 @@ namespace OpenSim.Services.Connectors
                         {
                             return String.Empty;
                         }
-                        else if (replyData.ContainsKey("Result") &&
-                                 (replyData["Result"].ToString().ToLower() == "failure"))
+                        else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
                         {
                             m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"]);
                             return replyData["Message"].ToString();

@@ -699,6 +699,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 Dictionary<string, OSDMap> MemberRoles;
                 if (SimianGetGenericEntries(agentID, "GroupRole" + groupID.ToString(), out MemberRoles))
                 {
+#if (!ISWIN)
+                    foreach (KeyValuePair<string, OSDMap> kvp in MemberRoles)
+                    {
+                        GroupRolesData data = new GroupRolesData();
+                        data.RoleID = UUID.Parse(kvp.Key);
+                        data.Name = GroupRoles[kvp.Key]["Name"].AsString();
+                        data.Description = GroupRoles[kvp.Key]["Description"].AsString();
+                        data.Title = GroupRoles[kvp.Key]["Title"].AsString();
+                        data.Powers = GroupRoles[kvp.Key]["Powers"].AsULong();
+
+                        Roles.Add(data);
+                    }
+#else
                     Roles.AddRange(MemberRoles.Select(kvp => new GroupRolesData
                                                                  {
                                                                      RoleID = UUID.Parse(kvp.Key),
@@ -708,6 +721,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                                      Title = GroupRoles[kvp.Key]["Title"].AsString(),
                                                                      Powers = GroupRoles[kvp.Key]["Powers"].AsULong()
                                                                  }));
+#endif
                 }
             }
             return Roles;
@@ -814,6 +828,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     Dictionary<UUID, OSDMap> GroupRoleMembers;
                     if (SimianGetGenericEntries("GroupRole" + groupID.ToString(), Role.Key, out GroupRoleMembers))
                     {
+#if (!ISWIN)
+                        foreach (KeyValuePair<UUID, OSDMap> GroupRoleMember in GroupRoleMembers)
+                        {
+                            GroupRoleMembersData data = new GroupRoleMembersData();
+
+                            data.MemberID = GroupRoleMember.Key;
+                            data.RoleID = UUID.Parse(Role.Key);
+
+                            members.Add(data);
+                        }
+#else
                         members.AddRange(GroupRoleMembers.Select(GroupRoleMember => new GroupRoleMembersData
                                                                                         {
                                                                                             MemberID =
@@ -821,6 +846,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                                                             RoleID =
                                                                                                 UUID.Parse(Role.Key)
                                                                                         }));
+#endif
                     }
                 }
             }

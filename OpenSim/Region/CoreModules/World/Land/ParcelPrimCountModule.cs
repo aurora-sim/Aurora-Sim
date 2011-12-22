@@ -486,12 +486,22 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             List<ILandObject> land = m_Scene.RequestModuleInterface<IParcelManagementModule>().AllParcels();
 
+#if (!ISWIN)
+            foreach (ILandObject l in land)
+            {
+                LandData landData = l.LandData;
+                m_OwnerMap[landData.GlobalID] = landData.OwnerID;
+                m_SimwideCounts[landData.OwnerID] = 0;
+                m_ParcelCounts[landData.GlobalID] = new ParcelCounts();
+            }
+#else
             foreach (LandData landData in land.Select(l => l.LandData))
             {
                 m_OwnerMap[landData.GlobalID] = landData.OwnerID;
                 m_SimwideCounts[landData.OwnerID] = 0;
                 m_ParcelCounts[landData.GlobalID] = new ParcelCounts();
             }
+#endif
 
             ISceneEntity[] objlist = m_Scene.Entities.GetEntities();
             foreach (ISceneEntity obj in objlist)

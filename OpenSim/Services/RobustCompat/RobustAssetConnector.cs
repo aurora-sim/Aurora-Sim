@@ -84,10 +84,10 @@ namespace OpenSim.Services.RobustCompat
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
             if (serverURIs != null)
-                foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id))
+                foreach (string mServerUri in serverURIs)
                 {
-                    rasset = SynchronousRestObjectRequester.
-                        MakeRequest<int, AssetBase>("GET", uri, 0);
+                    string uri = mServerUri + "/" + id;
+                    rasset = SynchronousRestObjectRequester.MakeRequest<int, AssetBase>("GET", uri, 0);
                     asset = TearDown(rasset);
                     if (m_Cache != null && asset != null)
                         m_Cache.Cache(asset);
@@ -155,19 +155,18 @@ namespace OpenSim.Services.RobustCompat
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
-            foreach (string uri in serverURIs.Select(m_ServerURI => m_ServerURI + "/"))
+            foreach (string mServerUri in serverURIs)
             {
+                string uri = mServerUri + "/";
                 try
                 {
-                    string request = SynchronousRestObjectRequester.
-                        MakeRequest<AssetBase, string>("POST", uri, rasset);
+                    string request = SynchronousRestObjectRequester.MakeRequest<AssetBase, string>("POST", uri, rasset);
 
                     UUID.TryParse(request, out newID);
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}",
-                                     asset.ID, e.Message);
+                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
                 }
 
                 if (newID != UUID.Zero)

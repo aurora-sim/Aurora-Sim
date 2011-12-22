@@ -130,11 +130,20 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
+#if (!ISWIN)
+                foreach (FriendInfo finfo in finfos)
+                {
+                    Dictionary<string, object> rinfoDict = finfo.ToKeyValuePairs();
+                    result["friend" + i] = rinfoDict;
+                    i++;
+                }
+#else
                 foreach (Dictionary<string, object> rinfoDict in finfos.Select(finfo => finfo.ToKeyValuePairs()))
                 {
                     result["friend" + i] = rinfoDict;
                     i++;
                 }
+#endif
             }
 
             string xmlString = WebUtils.BuildXmlResponse(result);

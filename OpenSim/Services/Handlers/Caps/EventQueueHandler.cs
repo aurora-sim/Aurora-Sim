@@ -173,7 +173,13 @@ namespace OpenSim.Services
                 if (request.ContainsKey("Events") && request["Events"].Type == OSDType.Array)
                     events = (OSDArray) request["Events"];
 
+#if (!ISWIN)
+                List<OSD> OSDEvents = new List<OSD>();
+                foreach (OSD ev in events)
+                    OSDEvents.Add(OSDParser.DeserializeLLSDXml(ev.AsString()));
+#else
                 List<OSD> OSDEvents = events.Select(ev => OSDParser.DeserializeLLSDXml(ev.AsString())).ToList();
+#endif
 
                 IClientCapsService clientCaps = m_capsService.GetClientCapsService(agentID);
                 if (clientCaps != null)
