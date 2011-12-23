@@ -361,10 +361,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //Update the ItemID with the new item
                     objatt.SetFromItemID(itemID, item.AssetID);
 
-                    //NOTE: we MUST do this manually, otherwise it will never be added!
-                    //We also have to reset the IDs!
-                    //Note: root first, as we have to set the parentID right!
-                    SendKillEntity(objatt.RootChild);
+                    //DO NOT SEND THIS KILL ENTITY
+                    // If we send this, when someone copies an inworld object, then wears it, the inworld objects disapepars
+                    // If a bug is caused by this, we need to figure out some other workaround.
+                    //SendKillEntity(objatt.RootChild);
+                    //We also have to reset the IDs so that it doesn't have the same IDs as one inworld (possibly)!
                     m_scene.SceneGraph.PrepPrimForAdditionToScene(objatt);
                     m_scene.Entities.Add(objatt);
 
