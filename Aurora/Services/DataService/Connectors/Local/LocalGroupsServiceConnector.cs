@@ -58,11 +58,8 @@ namespace Aurora.Services.DataService
             }
             if (source.Configs["Groups"] != null)
             {
-                agentsCanBypassGroupNoticePermsCheck = Util.ConvertToList(source.Configs[Name].GetString("AgentsCanBypassGroupNoticePermsCheck", "")).ConvertAll(x => new UUID(x));
-            }
-            m_log.Info("foo");
-            m_log.Info(string.Join(", ", agentsCanBypassGroupNoticePermsCheck.ConvertAll(x => x.ToString()).ToArray()));
-            m_log.Info("bar");
+                agentsCanBypassGroupNoticePermsCheck = Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", "")).ConvertAll(x => new UUID(x));
+            }   
 
             data.ConnectToDatabase(defaultConnectionString, "Groups",
                                    source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
