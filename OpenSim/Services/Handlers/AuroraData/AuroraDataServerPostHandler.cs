@@ -1114,10 +1114,10 @@ namespace OpenSim.Services
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             UUID requestingAgentID = UUID.Parse(request["requestingAgentID"].ToString());
-            UUID GroupID = UUID.Parse(request["GroupID"].ToString());
+            List<UUID> GroupIDs = Util.ConvertToList(request["GroupIDs"].ToString()).ConvertAll(x=>new UUID(x));
 
 
-            List<GroupNoticeData> rs = GroupsServiceConnector.GetGroupNotices(requestingAgentID, GroupID);
+            List<GroupNoticeData> rs = GroupsServiceConnector.GetGroupNotices(requestingAgentID, GroupIDs);
             int i = 0;
             foreach (GroupNoticeData r in rs)
             {

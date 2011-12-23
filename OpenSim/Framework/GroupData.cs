@@ -350,6 +350,7 @@ namespace OpenSim.Framework
 
     public class GroupNoticeData
     {
+        public UUID GroupID;
         public byte AssetType;
         public string FromName;
         public bool HasAttachment;
@@ -365,6 +366,7 @@ namespace OpenSim.Framework
 
         public GroupNoticeData(Dictionary<string, object> values)
         {
+            GroupID = UUID.Parse(values["GroupID"].ToString());
             NoticeID = UUID.Parse(values["NoticeID"].ToString());
             Timestamp = uint.Parse(values["Timestamp"].ToString());
             FromName = values["FromName"].ToString();
@@ -379,6 +381,7 @@ namespace OpenSim.Framework
         public Dictionary<string, object> ToKeyValuePairs()
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
+            values["GroupID"] = NoticeID;
             values["NoticeID"] = NoticeID;
             values["Timestamp"] = Timestamp;
             values["FromName"] = FromName;

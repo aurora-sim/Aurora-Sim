@@ -1102,11 +1102,18 @@ namespace Aurora.Services.DataService
 
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
+            List<UUID> GroupIDs = new List<UUID>();
+            GroupIDs.Add(GroupID);
+            return GetGroupNotices(requestingAgentID, GroupIDs);
+        }
+
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["METHOD"] = "GetGroupNotices";
             sendData["requestingAgentID"] = requestingAgentID;
-            sendData["GroupID"] = GroupID;
+            sendData["GroupIDs"] = GroupIDs;
 
             string reqString = WebUtils.BuildXmlResponse(sendData);
 
@@ -1115,9 +1122,14 @@ namespace Aurora.Services.DataService
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         requestingAgentID.ToString(), "RemoteServerURI", false);
-                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                                          m_ServerURI,
-                                                                                                                                          reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData where replyData != null select replyData.Values)
+                foreach (Dictionary<string, object>.ValueCollection replyvalues in from m_ServerURI in m_ServerURIs
+                                                                                   select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                         m_ServerURI,
+                                                                                                         reqString) into reply
+                                                                                   where reply != string.Empty
+                                                                                   select WebUtils.ParseXmlResponse(reply) into replyData
+                                                                                   where replyData != null
+                                                                                   select replyData.Values)
                 {
                     // Success
                     return replyvalues.OfType<Dictionary<string, object>>().Select(f => new GroupNoticeData(f)).ToList();
