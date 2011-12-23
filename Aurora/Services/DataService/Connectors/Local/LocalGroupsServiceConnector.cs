@@ -43,6 +43,7 @@ namespace Aurora.Services.DataService
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private IGenericData data;
+        List<UUID> agentsCanBypassGroupNoticePermsCheck = new List<UUID>();
 
         #region IGroupsServiceConnector Members
 
@@ -52,14 +53,19 @@ namespace Aurora.Services.DataService
             data = GenericData;
 
             if (source.Configs[Name] != null)
+            {
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+            }
+            if (source.Configs["Groups"] != null)
+            {
+                agentsCanBypassGroupNoticePermsCheck = Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", "")).ConvertAll(x => new UUID(x));
+            }
 
             data.ConnectToDatabase(defaultConnectionString, "Groups",
                                    source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
-            m_log.Warn("Using GroupsConnector " + source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector"));
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
@@ -982,6 +988,26 @@ namespace Aurora.Services.DataService
             return info;
         }
 
+        private static GroupNoticeData GroupNoticeQueryResult2GroupNoticeData(List<string> result)
+        {
+            GroupNoticeData GND = new GroupNoticeData
+            {
+                GroupID = UUID.Parse(result[0]),
+                NoticeID = UUID.Parse(result[6]),
+                Timestamp = uint.Parse(result[1]),
+                FromName = result[2],
+                Subject = result[3],
+                HasAttachment = int.Parse(result[5]) == 1
+            };
+            if (GND.HasAttachment)
+            {
+                GND.ItemID = UUID.Parse(result[4]);
+                GND.AssetType = (byte)int.Parse(result[8]);
+                GND.ItemName = result[9];
+            }
+            return GND;
+        }
+
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ReceiveNotices))
@@ -991,22 +1017,36 @@ namespace Aurora.Services.DataService
                                              "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,NoticeID,Message,AssetType,ItemName");
             for (int i = 0; i < notice.Count; i += 10)
             {
-                GroupNoticeData GND = new GroupNoticeData
-                                          {
-                                              NoticeID = UUID.Parse(notice[i + 6]),
-                                              Timestamp = uint.Parse(notice[i + 1]),
-                                              FromName = notice[i + 2],
-                                              Subject = notice[i + 3],
-                                              HasAttachment = int.Parse(notice[i + 5]) == 1
-                                          };
-                if (GND.HasAttachment)
-                {
-                    GND.ItemID = UUID.Parse(notice[i + 4]);
-                    GND.AssetType = (byte) int.Parse(notice[i + 8]);
-                    GND.ItemName = notice[i + 9];
-                }
+                AllNotices.Add(GroupNoticeQueryResult2GroupNoticeData(notice.GetRange(i,10)));
+            }
+            return AllNotices;
+        }
 
-                AllNotices.Add(GND);
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            List<UUID> groupIDs = new List<UUID>();
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
+            {
+                foreach (UUID GroupID in GroupIDs)
+                {
+                    if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
+                    {
+                        groupIDs.Add(GroupID);
+                    }
+                }
+            }
+            else
+            {
+                groupIDs = GroupIDs;
+            }
+            List<GroupNoticeData> AllNotices = new List<GroupNoticeData>();
+            if (GroupIDs.Count > 0)
+            {
+                List<string> notice = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "' ORDER BY Timestamp DESC", "osgroupnotice", "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,NoticeID,Message,AssetType,ItemName");
+                for (int i = 0; i < notice.Count; i += 10)
+                {
+                    AllNotices.Add(GroupNoticeQueryResult2GroupNoticeData(notice.GetRange(i, 10)));
+                }
             }
             return AllNotices;
         }

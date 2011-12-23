@@ -1334,11 +1334,18 @@ namespace Aurora.Services.DataService
 
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
+            List<UUID> GroupIDs = new List<UUID>();
+            GroupIDs.Add(GroupID);
+            return GetGroupNotices(requestingAgentID, GroupIDs);
+        }
+
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["METHOD"] = "GetGroupNotices";
             sendData["requestingAgentID"] = requestingAgentID;
-            sendData["GroupID"] = GroupID;
+            sendData["GroupIDs"] = GroupIDs;
 
             string reqString = WebUtils.BuildXmlResponse(sendData);
 

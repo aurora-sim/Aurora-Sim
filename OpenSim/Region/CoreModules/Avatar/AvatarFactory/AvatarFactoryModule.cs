@@ -349,9 +349,15 @@ textures 1
                 if (texturesChanged || visualParamsChanged)
                 {
                     if (texturesChanged)
+                    {
+                        m_log.Warn("Textured changed");
                         QueueAppearanceSave(client.AgentId);
+                    }
                     else
+                    {
+                        m_log.Warn("Non Textured changed");
                         QueueAppearanceSave(client.AgentId);
+                    }
                 }
                 appearance.Appearance.Serial++;
             }

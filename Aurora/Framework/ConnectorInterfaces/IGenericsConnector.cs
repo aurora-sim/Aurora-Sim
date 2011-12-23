@@ -76,7 +76,7 @@ namespace Aurora.Framework
         /// <param name = "Type"></param>
         /// <param name = "Key"></param>
         /// <param name = "Value"></param>
-        void AddGeneric(UUID AgentID, string Type, string Key, OSDMap Value);
+        void AddGeneric(UUID OwnerID, string Type, string Key, OSDMap Value);
 
         /// <summary>
         ///   Removes a generic IDataTransferable from the database
@@ -84,13 +84,29 @@ namespace Aurora.Framework
         /// <param name = "AgentID"></param>
         /// <param name = "Type"></param>
         /// <param name = "Key"></param>
-        void RemoveGeneric(UUID AgentID, string Type, string Key);
+        void RemoveGeneric(UUID OwnerID, string Type, string Key);
 
         /// <summary>
         ///   Removes a generic IDataTransferable from the database
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <param name = "Type"></param>
-        void RemoveGeneric(UUID AgentID, string Type);
+        void RemoveGeneric(UUID OwnerID, string Type);
+
+        /// <summary>
+        /// Returns a list of UUIDs of the specified type that have the specified key
+        /// </summary>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <returns></returns>
+        List<UUID> GetOwnersByGeneric(string Type, string Key);
+        /// <summary>
+        /// Returns a list of UUIDs of the specified type that have the specified key and value
+        /// </summary>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        List<UUID> GetOwnersByGeneric(string Type, string Key, OSDMap Value);
     }
 }

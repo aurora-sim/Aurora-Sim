@@ -137,6 +137,15 @@ namespace Aurora.Services.DataService
             GenericUtils.RemoveGeneric(AgentID, Type, GD);
         }
 
+        public List<UUID> GetOwnersByGeneric(string Type, string Key)
+        {
+            return GenericUtils.GetOwnersByGeneric(GD, Type, Key);
+        }
+        public List<UUID> GetOwnersByGeneric(string Type, string Key, OSDMap value)
+        {
+            return GenericUtils.GetOwnersByGeneric(GD, Type, Key, value);
+        }
+
         #endregion
 
         public void Dispose()
