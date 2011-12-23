@@ -283,18 +283,12 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void HandleObjectGroupUpdate(
             IClientAPI remoteClient, UUID GroupID, uint LocalID, UUID Garbage)
         {
-            IGroupsModule module = m_parentScene.RequestModuleInterface<IGroupsModule>();
-            if (module != null)
+            IEntity entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (!module.GroupPermissionCheck(remoteClient.AgentId, GroupID, GroupPowers.None))
-                    return; // No settings to groups you arn't in
-                IEntity entity;
-                if (TryGetEntity(LocalID, out entity))
-                {
-                    if(m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
-                        if(((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
-                            ((ISceneEntity)entity).SetGroup(GroupID, remoteClient);
-                }
+                if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
+                    if (((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
+                        ((ISceneEntity)entity).SetGroup(GroupID, remoteClient);
             }
         }
 
@@ -918,7 +912,6 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 // Otherwise, use this default creation code;
-                
                 sceneObject.SetGroup(groupID, null);
                 AddPrimToScene(sceneObject);
                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);

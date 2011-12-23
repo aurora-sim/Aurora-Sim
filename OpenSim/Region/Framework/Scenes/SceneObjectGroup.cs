@@ -1461,17 +1461,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name = "GroupID2"></param>
         /// <param name = "client"></param>
-        public void SetGroup(UUID GroupID2, IClientAPI client)
+        public void SetGroup(UUID GroupID2, UUID attemptingUserID)
         {
+            IGroupsModule module = Scene.RequestModuleInterface<IGroupsModule>();
+            if (module != null)
+                if (!module.GroupPermissionCheck(attemptingUserID, GroupID2, GroupPowers.None))
+                    return; // No settings to groups you arn't in
             foreach (SceneObjectPart part in m_partsList)
             {
-                part.SetGroup(GroupID2, client);
+                part.SetGroup(GroupID2);
                 part.Inventory.ChangeInventoryGroup(GroupID2);
             }
 
             HasGroupChanged = true;
-            if (client != null)
-                GetProperties(client);
+            IScenePresence sp = Scene.GetScenePresence(attemptingUserID);
+            if (sp != null)
+                GetProperties(sp.ControllingClient);
         }
 
         public void TriggerScriptChangedEvent(Changed val)

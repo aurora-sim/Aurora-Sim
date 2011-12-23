@@ -600,7 +600,7 @@ namespace OpenSim.Framework
 
         void SetRootPartOwner (ISceneChildEntity part, UUID uUID, UUID uUID_2);
 
-        void SetGroup (UUID groupID, IClientAPI remoteClient);
+        void SetGroup (UUID groupID, UUID attemptingUser);
 
         void ApplyNextOwnerPermissions ();
 
