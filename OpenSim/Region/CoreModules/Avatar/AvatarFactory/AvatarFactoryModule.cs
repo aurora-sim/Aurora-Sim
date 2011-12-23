@@ -50,11 +50,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         private readonly Dictionary<UUID, long> m_initialsendqueue = new Dictionary<UUID, long>();
         private readonly Dictionary<UUID, AvatarAppearance> m_saveQueueData = new Dictionary<UUID, AvatarAppearance>();
 
-        private readonly Dictionary<UUID, AvatarAppearance> m_saveTextureQueueData =
-            new Dictionary<UUID, AvatarAppearance>();
-
         private readonly Dictionary<UUID, long> m_savequeue = new Dictionary<UUID, long>();
-        private readonly Dictionary<UUID, long> m_savetexturequeue = new Dictionary<UUID, long>();
         private readonly Dictionary<UUID, long> m_sendqueue = new Dictionary<UUID, long>();
 
         private readonly object m_setAppearanceLock = new object();
@@ -353,7 +349,7 @@ textures 1
                 if (texturesChanged || visualParamsChanged)
                 {
                     if (texturesChanged)
-                        QueueTexturesAppearanceSave(client.AgentId);
+                        QueueAppearanceSave(client.AgentId);
                     else
                         QueueAppearanceSave(client.AgentId);
                 }
@@ -491,29 +487,6 @@ textures 1
             }
         }
 
-        public void QueueTexturesAppearanceSave(UUID agentid)
-        {
-            // m_log.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
-
-            // 10000 ticks per millisecond, 1000 milliseconds per second
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime*1000*10000);
-            lock (m_savequeue)
-            {
-                IScenePresence sp = m_scene.GetScenePresence(agentid);
-                if (sp == null)
-                {
-                    m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
-                    return;
-                }
-                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-                m_savetexturequeue[agentid] = timestamp;
-                lock (m_saveQueueData)
-                    m_saveTextureQueueData[agentid] = appearance.Appearance;
-
-                m_updateTimer.Start();
-            }
-        }
-
         private void HandleAppearanceSend(UUID agentid)
         {
             IScenePresence sp = m_scene.GetScenePresence(agentid);
@@ -643,20 +616,6 @@ textures 1
                 }
             }
 
-            lock (m_savetexturequeue)
-            {
-                Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_savetexturequeue);
-                foreach (KeyValuePair<UUID, long> kvp in saves)
-                {
-                    if (kvp.Value < now)
-                    {
-                        KeyValuePair<UUID, long> kvp1 = kvp;
-                        Util.FireAndForget(delegate { HandleAppearanceSave(kvp1.Key, true); });
-                        m_savetexturequeue.Remove(kvp.Key);
-                    }
-                }
-            }
-
             lock (m_initialsendqueue)
             {
                 Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_initialsendqueue);
@@ -671,7 +630,7 @@ textures 1
                 }
             }
 
-            if (m_savequeue.Count == 0 && m_savetexturequeue.Count == 0 && m_sendqueue.Count == 0 &&
+            if (m_savequeue.Count == 0 && m_sendqueue.Count == 0 &&
                 m_initialsendqueue.Count == 0)
                 m_updateTimer.Stop();
         }
