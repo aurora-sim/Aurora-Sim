@@ -59,6 +59,7 @@ namespace Aurora.Services.DataService
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
+            m_log.Warn("Using GroupsConnector " + source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector"));
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
