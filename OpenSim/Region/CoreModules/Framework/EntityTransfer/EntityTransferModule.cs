@@ -788,7 +788,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp, Vector3 attemptedPos)
         {
             bool successYN = false;
-            grp.RootPart.ClearUpdateScheduleOnce();
             if (destination != null)
             {
                 if(grp.SitTargetAvatar.Count != 0)
