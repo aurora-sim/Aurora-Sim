@@ -394,7 +394,7 @@ namespace OpenSim.Framework
             int i = 0;
             foreach (EstateBan ban in EstateBans)
             {
-                Ban[ConvertDecString(i)] = ban.ToOSD();
+                Ban[Util.ConvertDecString(i)] = ban.ToOSD();
                 i++;
             }
             values["EstateBans"] = Ban;
@@ -403,7 +403,7 @@ namespace OpenSim.Framework
             OSDMap Managers = new OSDMap();
             foreach (UUID ID in EstateManagers)
             {
-                Managers[ConvertDecString(i)] = ID;
+                Managers[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateManagers"] = Managers;
@@ -412,7 +412,7 @@ namespace OpenSim.Framework
             OSDMap Groups = new OSDMap();
             foreach (UUID ID in EstateGroups)
             {
-                Groups[ConvertDecString(i)] = ID;
+                Groups[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateGroups"] = Groups;
@@ -421,7 +421,7 @@ namespace OpenSim.Framework
             OSDMap Access = new OSDMap();
             foreach (UUID ID in EstateAccess)
             {
-                Access[ConvertDecString(i)] = ID;
+                Access[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateAccess"] = Access;
@@ -466,7 +466,7 @@ namespace OpenSim.Framework
             int i = 0;
             foreach (EstateBan ban in EstateBans)
             {
-                Ban[ConvertDecString(i)] = ban.ToKeyValuePairs();
+                Ban[Util.ConvertDecString(i)] = ban.ToKeyValuePairs();
                 i++;
             }
             values["EstateBans"] = Ban;
@@ -475,7 +475,7 @@ namespace OpenSim.Framework
             Dictionary<string, object> Managers = new Dictionary<string, object>();
             foreach (UUID ID in EstateManagers)
             {
-                Managers[ConvertDecString(i)] = ID;
+                Managers[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateManagers"] = Managers;
@@ -484,7 +484,7 @@ namespace OpenSim.Framework
             Dictionary<string, object> Groups = new Dictionary<string, object>();
             foreach (UUID ID in EstateGroups)
             {
-                Groups[ConvertDecString(i)] = ID;
+                Groups[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateGroups"] = Groups;
@@ -493,35 +493,12 @@ namespace OpenSim.Framework
             Dictionary<string, object> Access = new Dictionary<string, object>();
             foreach (UUID ID in EstateAccess)
             {
-                Access[ConvertDecString(i)] = ID;
+                Access[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateAccess"] = Access;
             i *= 0;
             return values;
-        }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
         }
 
         public void Save()

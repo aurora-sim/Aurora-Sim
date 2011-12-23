@@ -454,22 +454,41 @@ namespace Aurora.DataManager.SQLite
             dic[key].Add(value);
         }
 
+        public override bool InsertMultiple(string table, List<object[]> values)
+        {
+            var cmd = new SQLiteCommand();
+
+            string query = String.Format("insert into {0} select ", table);
+            int a = 0;
+            foreach (object[] value in values)
+            {
+                foreach (object v in value)
+                {
+                    query += ":" + Util.ConvertDecString(a) + ",";
+                    cmd.Parameters.AddWithValue(Util.ConvertDecString(a++), v is byte[] ? Utils.BytesToString((byte[])v) : v);
+                }
+                query = query.Remove(query.Length - 1);
+                query += " union all select ";
+            }
+            query = query.Remove(query.Length - (" union all select ").Length);
+            
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
         public override bool Insert(string table, object[] values)
         {
             var cmd = new SQLiteCommand();
 
             string query = "";
             query = String.Format("insert into {0} values(", table);
-            string a = "a";
+            int a = 0;
             foreach (object value in values)
             {
-                object v = value;
-                if (v is byte[])
-                    v = Utils.BytesToString((byte[]) v);
-
-                query += ":" + a + ",";
-                cmd.Parameters.AddWithValue(a, v);
-                a += "a"; //Nasty... but being lazy since SQLite doesn't like numbered params
+                query += ":" + Util.ConvertDecString(a) + ",";
+                cmd.Parameters.AddWithValue(Util.ConvertDecString(a++), value is byte[] ? Utils.BytesToString((byte[])value) : value);
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -639,12 +658,11 @@ namespace Aurora.DataManager.SQLite
 
             string query = "";
             query = String.Format("insert into {0} values (", table);
-            string a = "a";
+            int i = 0;
             foreach (object value in values)
             {
-                ps[":" + a] = value;
-                query = String.Format(query + ":{0},", a);
-                a += "a";
+                ps[":" + Util.ConvertDecString(i)] = value;
+                query = String.Format(query + ":{0},", Util.ConvertDecString(i++));
             }
             query = query.Remove(query.Length - 1);
             query += ")";

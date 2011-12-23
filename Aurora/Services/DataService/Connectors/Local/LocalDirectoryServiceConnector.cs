@@ -90,6 +90,7 @@ namespace Aurora.Services.DataService
                 return;
 
             ClearRegion(parcels[0].RegionID);
+            List<object[]> insertValues = new List<object[]>();
 #if (!ISWIN)
             foreach (LandData args in parcels)
             {
@@ -125,7 +126,7 @@ namespace Aurora.Services.DataService
                                           };
                 //InfoUUID is the missing 'real' Gridwide ParcelID
 
-                GD.Insert("searchparcel", Values.ToArray());
+                insertValues.Add(Values.ToArray());
             }
 #else
             foreach (List<object> Values in parcels.Select(args => new List<object>
@@ -161,9 +162,10 @@ namespace Aurora.Services.DataService
             {
                 //InfoUUID is the missing 'real' Gridwide ParcelID
 
-                GD.Insert("searchparcel", Values.ToArray());
+                insertValues.Add(Values.ToArray());
             }
 #endif
+            GD.InsertMultiple("searchparcel", insertValues);
         }
 
         public void ClearRegion(UUID regionID)

@@ -5222,11 +5222,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             update.Text = Utils.EmptyBytes;
             update.TextColor = new byte[4];
             update.TextureAnim = Utils.EmptyBytes;
-            IAvatarAppearanceModule appearance = data.RequestModuleInterface<IAvatarAppearanceModule>();
-            if (appearance != null)
-                update.TextureEntry = (appearance.Appearance.Texture != null)
-                                          ? appearance.Appearance.Texture.GetBytes()
-                                          : Utils.EmptyBytes;
+            // Don't send texture entry for avatars here - this is accomplished via the AvatarAppearance packet
+            update.TextureEntry = Utils.EmptyBytes;
             update.UpdateFlags = (uint) (
                                             PrimFlags.Physics | PrimFlags.ObjectModify | PrimFlags.ObjectCopy |
                                             PrimFlags.ObjectAnyOwner |

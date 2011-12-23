@@ -74,20 +74,17 @@ namespace Aurora.Services.DataService
         public bool Store(UUID PrincipalID, AvatarData data)
         {
             GD.Delete(m_realm, new string[1] {"PrincipalID"}, new object[1] {PrincipalID});
-            for (int i = 0; i < data.Data.Count; i++)
+            List<object[]> insertList = new List<object[]>();
+            foreach(KeyValuePair<string, string> kvp in data.Data)
             {
-                if (data.Data.ElementAt(i).Key == "Textures")
-                    GD.Insert(m_realm,
-                              new object[3]
-                                  {PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(32), data.Data.ElementAt(i).Value.MySqlEscape()});
-                else
-                    GD.Insert(m_realm,
-                              new object[3]
-                                  {
-                                      PrincipalID, data.Data.ElementAt(i).Key.MySqlEscape(32),
-                                      data.Data.ElementAt(i).Value.MySqlEscape()
-                                  });
+                insertList.Add(new object[3]
+                    {
+                        PrincipalID,
+                        kvp.Key.MySqlEscape(32),
+                        kvp.Value.MySqlEscape()
+                    });
             }
+            GD.InsertMultiple(m_realm, insertList);
             return true;
         }
 

@@ -509,16 +509,43 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
+        public override bool InsertMultiple(string table, List<object[]> values)
+        {
+            string query = String.Format("insert into {0} select ", table);
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            int i = 0;
+            foreach (object[] value in values)
+            {
+                foreach (object v in value)
+                {
+                    parameters[OpenSim.Framework.Util.ConvertDecString(i)] = v;
+                    query += "?" + OpenSim.Framework.Util.ConvertDecString(i++) + ",";
+                }
+                query = query.Remove(query.Length - 1);
+                query += " union all select ";
+            }
+            query = query.Remove(query.Length - (" union all select ").Length);
+
+            try
+            {
+                ExecuteNonQuery(query, parameters);
+            }
+            catch (Exception e)
+            {
+                m_log.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
+            }
+            return true;
+        }
+
         public override bool Insert(string table, object[] values)
         {
             string query = String.Format("insert into {0} values (", table);
             Dictionary<string, object> parameters = new Dictionary<string, object>();
-            string a = "a";
+            int i = 0;
             foreach (object o in values)
             {
-                parameters[a] = o;
-                query += "?" + a + ",";
-                a += "a"; //...Lazy, should be numeric
+                parameters[OpenSim.Framework.Util.ConvertDecString(i)] = o;
+                query += "?" + OpenSim.Framework.Util.ConvertDecString(i++) + ",";
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -651,12 +678,11 @@ namespace Aurora.DataManager.MySQL
         {
             string query = String.Format("insert into {0} VALUES('", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
-            string a = "a";
+            int i = 0;
             foreach (object o in values)
             {
-                param["?" + a] = o;
-                query += "?" + a + ",";
-                a += "a";
+                param["?" + OpenSim.Framework.Util.ConvertDecString(i)] = o;
+                query += "?" + OpenSim.Framework.Util.ConvertDecString(i++) + ",";
             }
             query = query.Remove(query.Length - 1);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);

@@ -60,6 +60,7 @@ namespace Aurora.DataManager
                                                                     string wantedValue);
 
         public abstract bool Insert(string table, object[] values);
+        public abstract bool InsertMultiple(string table, List<object[]> values);
         public abstract bool Insert(string table, string[] keys, object[] values);
         public abstract bool Delete(string table, string[] keys, object[] values);
         public abstract bool Delete(string table, string whereclause);

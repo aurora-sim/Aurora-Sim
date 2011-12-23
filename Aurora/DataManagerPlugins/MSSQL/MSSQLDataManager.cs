@@ -430,6 +430,11 @@ namespace Aurora.DataManager.MSSQL
             return true;
         }
 
+        public override bool InsertMultiple(string table, List<object[]> values)
+        {
+            return false;
+        }
+
         public override bool Insert(string table, object[] values)
         {
             SqlConnection dbcon = GetLockedConnection();
