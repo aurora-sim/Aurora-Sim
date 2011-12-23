@@ -91,15 +91,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         public ArchiveReadRequest (IScene scene, string loadPath, bool merge, bool skipAssets,
             int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
-            m_offsetX = offsetX;
-            m_offsetY = offsetY;
-            m_offsetZ = offsetZ;
-            m_flipX = flipX;
-            m_flipY = flipY;
-            m_useParcelOwnership = useParcelOwnership;
-            m_checkOwnership = checkOwnership;
-            m_scene = scene;
-
             try
             {
                 m_loadStream = new GZipStream(ArchiveHelpers.GetStream(loadPath), CompressionMode.Decompress);
@@ -111,21 +102,30 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
                 m_log.Error(e);
             }
+            Init(scene, m_loadStream, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
+        }
 
+        public void Init(IScene scene, Stream stream, bool merge, bool skipAssets,
+            int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
+        {
+            m_loadStream = stream;
+            m_offsetX = offsetX;
+            m_offsetY = offsetY;
+            m_offsetZ = offsetZ;
+            m_flipX = flipX;
+            m_flipY = flipY;
+            m_useParcelOwnership = useParcelOwnership;
+            m_checkOwnership = checkOwnership;
+            m_scene = scene;
             m_errorMessage = String.Empty;
             m_merge = merge;
             m_skipAssets = skipAssets;
         }
 
-        public ArchiveReadRequest (IScene scene, Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ)
+        public ArchiveReadRequest(IScene scene, Stream stream, bool merge, bool skipAssets,
+            int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
-            m_offsetX = offsetX;
-            m_offsetY = offsetY;
-            m_offsetZ = offsetZ;
-            m_scene = scene;
-            m_loadStream = loadStream;
-            m_merge = merge;
-            m_skipAssets = skipAssets;
+            Init(scene, stream, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
         }
 
         /// <summary>

@@ -97,7 +97,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         ///   Load a whole region from an opensimulator archive.
         /// </summary>
         /// <param name = "cmdparams"></param>
-        public void HandleLoadOarConsoleCommand(string module, string[] cmdparams)
+        public void HandleLoadOarConsoleCommand(string[] cmdparams)
         {
             bool mergeOar = false;
             bool skipAssets = false;
@@ -173,7 +173,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         ///   Save a region to a file, including all the assets needed to restore it.
         /// </summary>
         /// <param name = "cmdparams"></param>
-        public void HandleSaveOarConsoleCommand(string module, string[] cmdparams)
+        public void HandleSaveOarConsoleCommand(string[] cmdparams)
         {
             if (cmdparams.Length > 2)
             {
@@ -239,13 +239,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         public void DearchiveRegion(Stream loadStream)
         {
-            DearchiveRegion(loadStream, false, false, 0, 0, 0);
+            DearchiveRegion(loadStream, false, false, 0, 0, 0, false, false, false, false);
         }
 
-        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY,
-                                    int offsetZ)
+        public void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ,
+                             bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
-            new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, offsetX, offsetY, offsetZ).DearchiveRegion();
+            new ArchiveReadRequest(m_scene, loadStream, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership).DearchiveRegion();
         }
 
         #endregion

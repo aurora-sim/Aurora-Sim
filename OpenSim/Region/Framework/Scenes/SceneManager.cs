@@ -1189,7 +1189,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
                 if (archiver != null)
-                    archiver.HandleLoadOarConsoleCommand(string.Empty, cmdparams);
+                    archiver.HandleLoadOarConsoleCommand(cmdparams);
             }
             catch (Exception e)
             {
@@ -1205,7 +1205,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
             if (archiver != null)
-                archiver.HandleSaveOarConsoleCommand(string.Empty, cmdparams);
+                archiver.HandleSaveOarConsoleCommand(cmdparams);
         }
 
         #endregion

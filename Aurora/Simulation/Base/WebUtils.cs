@@ -308,6 +308,15 @@ namespace Aurora.Simulation.Base
         ///   POST URL-encoded form data to a web service that returns LLSD or
         ///   JSON data
         /// </summary>
+        public static OSDMap PostToService(string url, OSDMap data, int timeout, bool careAboutResponse, bool deserializeResponse)
+        {
+            return ServiceOSDRequest(url, data, "POST", timeout, careAboutResponse, deserializeResponse, false);
+        }
+
+        /// <summary>
+        ///   POST URL-encoded form data to a web service that returns LLSD or
+        ///   JSON data
+        /// </summary>
         public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse,
                                            bool returnRawResult)
         {

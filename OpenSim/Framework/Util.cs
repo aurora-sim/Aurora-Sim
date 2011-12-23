@@ -1728,6 +1728,7 @@ namespace OpenSim.Framework
 
         /// <summary>
         /// Because Escaping the sql might cause it to go over the max length
+        /// DO NOT USE THIS ON JSON STRINGS!!! IT WILL BREAK THE DESERIALIZATION!!!
         /// </summary>
         /// <param name="usString"></param>
         /// <param name="maxLength"></param>
