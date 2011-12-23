@@ -3275,8 +3275,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (!(grp is SceneObjectGroup))
                 return;
             SceneObjectGroup objectGroup = (SceneObjectGroup) grp;
-            //Clear the update schedule so that we don't send wrong updates later about how this group is set up
-            objectGroup.RootPart.ClearUpdateScheduleOnce();
 
             if (m_rootPart.PhysActor != null)
                 m_rootPart.PhysActor.BlockPhysicalReconstruction = true;
@@ -3383,29 +3381,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Remove the part from this object
             m_scene.SceneGraph.DeLinkPartFromEntity(this, linkPart);
-
-            /* this is already done in DeLinkPartFromEntity
-                        if (m_partsList.Count == 1 && RootPart != null) //Single prim is left
-                            RootPart.LinkNum = 0;
-                        else
-                        {
-                            lock (m_partsLock)
-                            {
-                                foreach (SceneObjectPart p in m_partsList)
-                                {
-                                    if (p.LinkNum > linkPart.LinkNum)
-                                        p.LinkNum--;
-                                }
-                            }
-                        }
-            */
             linkPart.SetParentLocalId(0);
             linkPart.LinkNum = 0;
 
             if (linkPart.PhysActor != null)
             {
                 m_scene.PhysicsScene.RemovePrim(linkPart.PhysActor);
-//            linkPart.PhysActor.delink();
             }
 
             // We need to reset the child part's position

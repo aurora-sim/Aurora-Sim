@@ -2623,30 +2623,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        ///   Clear all pending updates of parts to clients
-        ///   NOTE: Do NOT use this for things that reuse the LocalID, as it will break the object
-        /// </summary>
-        public void ClearUpdateSchedule()
-        {
-            /*foreach (IScenePresence SP in ParentGroup.Scene.GetScenePresences())
-            {
-                SP.SceneViewer.ClearUpdatesForPart(this);
-            }*/
-        }
-
-        /// <summary>
-        ///   Clear all pending updates of parts to clients once.
-        ///   NOTE: Use this for linking and other things that are going to be reusing the same LocalID
-        /// </summary>
-        public void ClearUpdateScheduleOnce()
-        {
-            /*foreach (IScenePresence SP in ParentGroup.Scene.GetScenePresences())
-            {
-                SP.SceneViewer.ClearUpdatesForOneLoopForPart(this);
-            }*/
-        }
-
-        /// <summary>
         ///   Schedule a terse update for this prim.  Terse updates only send position,
         ///   rotation, velocity, and rotational velocity information.
         /// </summary>
@@ -4232,101 +4208,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "linkNum"></param>
         /// <param name = "userExposed">True if the duplicate will immediately be in the scene, false otherwise</param>
         /// <returns></returns>
-        /* not in use
-                public SceneObjectPart Copy(uint localID, UUID AgentID, UUID GroupID, int linkNum, bool userExposed, bool ChangeScripts, SceneObjectGroup parent)
-                {
-                    SceneObjectPart dupe = (SceneObjectPart)MemberwiseClone();
-                    dupe.m_parentGroup = parent;
-                    dupe.m_shape = m_shape.Copy();
-                    dupe.m_regionHandle = m_regionHandle;
-
-                    if (userExposed)
-                        {
-                        //                dupe.UUID = UUID.Random();  can't whould mess original inventory
-                        dupe.m_uuid = UUID.Random();
-                        dupe.ParentGroup.HasGroupChanged = true;
-                        }
-
-                    //memberwiseclone means it also clones the physics actor reference
-                    // This will make physical prim 'bounce' if not set to null.
-                    if (!userExposed)
-                        dupe.PhysActor = null;
-
-                    dupe._ownerID = AgentID;
-                    dupe._groupID = GroupID;
-                    dupe.m_groupPosition = m_groupPosition;
-                    dupe.m_offsetPosition = m_offsetPosition;
-                    dupe.m_rotationOffset = m_rotationOffset;
-                    dupe.Velocity = new Vector3(0, 0, 0);
-                    dupe.Acceleration = new Vector3(0, 0, 0);
-                    dupe.AngularVelocity = new Vector3(0, 0, 0);
-                    dupe.Flags = Flags;
-
-                    dupe._ownershipCost = _ownershipCost;
-                    dupe._objectSaleType = _objectSaleType;
-                    dupe._salePrice = _salePrice;
-                    dupe._category = _category;
-                    dupe.Rezzed = Rezzed;
-
-                    dupe.m_inventory = new SceneObjectPartInventory(dupe);
-                    dupe.m_inventory.Items = (TaskInventoryDictionary)m_inventory.Items.Clone();
-
-                    if (userExposed)
-                    {
-                        dupe.ResetEntityIDs();
-                        dupe.LinkNum = linkNum;
-        //              dupe.CloneScrips(this);  // go to fix our scripts
-                        dupe.m_inventory.HasInventoryChanged = true;
-
-                    }
-                    else
-                    {
-                        dupe.m_inventory.HasInventoryChanged = m_inventory.HasInventoryChanged;
-                    }
-
-                    // Move afterwards ResetIDs as it clears the localID
-                    dupe.LocalId = localID;
-                    // This may be wrong...    it might have to be applied in SceneObjectGroup to the object that's being duplicated.
-                    dupe._lastOwnerID = OwnerID;
-
-                    byte[] extraP = new byte[Shape.ExtraParams.Length];
-                    Array.Copy(Shape.ExtraParams, extraP, extraP.Length);
-                    dupe.Shape.ExtraParams = extraP;
-
-                    if (userExposed)
-                    {
-                        if (dupe.m_shape.SculptEntry && dupe.m_shape.SculptTexture != UUID.Zero)
-                        {
-                            m_parentGroup.Scene.AssetService.Get(dupe.m_shape.SculptTexture.ToString(), dupe, AssetReceived); 
-                        }
-
-                        PrimitiveBaseShape pbs = dupe.Shape;
-                        if (dupe.PhysActor != null)
-                            {
-                            dupe.PhysActor.LocalID = localID;
-                            dupe.PhysActor = ParentGroup.Scene.PhysicsScene.AddPrimShape(
-                                dupe.Name,
-                                pbs,
-                                dupe.AbsolutePosition,
-                                dupe.Scale,
-                                dupe.RotationOffset,
-                                dupe.PhysActor.IsPhysical);
-
-                            dupe.PhysActor.LocalID = dupe.LocalId;
-                            dupe.DoPhysicsPropertyUpdate(dupe.PhysActor.IsPhysical, true);
-
-                            if (VolumeDetectActive)
-                                dupe.PhysActor.SetVolumeDetect(1);
-                        }
-                    }
-
-                    ParentGroup.Scene.EventManager.TriggerOnSceneObjectPartCopy(dupe, this);
-
-        //            m_log.DebugFormat("[SCENE OBJECT PART]: Clone of {0} {1} finished", Name, UUID);
-
-                    return dupe;
-                }
-        */
         public SceneObjectPart Copy(SceneObjectGroup parent, bool clonePhys)
         {
             SceneObjectPart dupe = (SceneObjectPart) MemberwiseClone();
@@ -5221,7 +5102,7 @@ namespace OpenSim.Region.Framework.Scenes
             hasProfileCut = hasDimple; // is it the same thing?
         }
 
-        public void SetGroup(UUID groupID, IClientAPI client)
+        public void SetGroup(UUID groupID)
         {
             _groupID = groupID;
         }

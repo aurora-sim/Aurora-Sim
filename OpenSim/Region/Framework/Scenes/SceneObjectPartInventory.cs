@@ -690,7 +690,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             SceneObjectPart[] partList = group.Parts;
 
-            group.SetGroup(m_part.GroupID, null);
+            group.SetGroup(m_part.GroupID, group.OwnerID);
 
             if ((rootPart.OwnerID != item.OwnerID) || (item.CurrentPermissions & 16) != 0)
             {

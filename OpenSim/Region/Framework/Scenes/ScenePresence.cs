@@ -2019,11 +2019,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Update Client(s)
 
-        public virtual uint GenerateClientFlags(ISceneChildEntity part)
-        {
-            return m_scene.Permissions.GenerateClientFlags(m_uuid, part);
-        }
-
         /// <summary>
         /// Tell the SceneViewer for the given client about the update
         /// </summary>

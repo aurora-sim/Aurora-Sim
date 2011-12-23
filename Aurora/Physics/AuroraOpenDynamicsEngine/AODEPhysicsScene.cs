@@ -306,8 +306,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private AuroraODERayCastRequestManager m_rayCastManager;
         private bool IsLocked;
         private List<PhysicsActor> RemoveQueue;
-        private readonly List<PhysicsActor> ActiveAddCollisionQueue = new List<PhysicsActor>();
-        private readonly List<PhysicsActor> ActiveRemoveCollisionQueue = new List<PhysicsActor>();
+        private readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
+        private readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
 
         public float m_avDecayTime = 0.985f;
         public float m_avStopDecaying = 2.05f;

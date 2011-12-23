@@ -300,8 +300,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 prim.RotationOffset = obj.Rotation;
 
                 grp.RootPart.IsAttachment = false;
-                // Required for linking
-                grp.RootPart.ClearUpdateScheduleOnce();
 
                 string reason;
                 if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
@@ -321,8 +319,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             for (int j = 1; j < allparts.Length; j++)
             {
-                allparts[j].RootPart.ClearUpdateScheduleOnce();
-                rootGroup.RootPart.ClearUpdateScheduleOnce();
                 rootGroup.LinkToGroup(allparts[j]);
             }
 

@@ -322,7 +322,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     foreach(SceneObjectPart part in partList)
                         part.AttachedAvatar = remoteClient.AgentId;
 
-                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
                     if (objatt.RootPart.OwnerID != item.Owner)
                     {
                         //Need to kill the for sale here

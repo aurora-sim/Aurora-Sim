@@ -528,13 +528,6 @@ namespace Aurora.Modules
                 {
                     // We need to keep track of this state in case this group is still queued for backup.
                     group.IsDeleted = true;
-                    //Clear the update schedule HERE so that IsDeleted will not have to fire as well
-
-                    foreach (ISceneChildEntity part in group.ChildrenEntities ())
-                    {
-                        //Make sure it isn't going to be updated again
-                        part.ClearUpdateSchedule ();
-                    }
                     m_scene.EventManager.TriggerObjectBeingRemovedFromScene(group);
                     return true;
                 }
