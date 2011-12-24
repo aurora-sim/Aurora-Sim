@@ -154,11 +154,11 @@ namespace Aurora.Modules
             {
                 MainConsole.Instance.Commands.AddCommand("save avatar archive",
                                                          "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>",
-                                                         "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)",
+                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)",
                                                          HandleSaveAvatarArchive);
                 MainConsole.Instance.Commands.AddCommand("load avatar archive",
                                                          "load avatar archive <First> <Last> <Filename>",
-                                                         "Loads appearance from an avatar archive archive",
+                                                         "Loads appearance from an avatar archive",
                                                          HandleLoadAvatarArchive);
             }
         }

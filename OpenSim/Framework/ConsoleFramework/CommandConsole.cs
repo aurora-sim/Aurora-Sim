@@ -54,24 +54,6 @@ namespace OpenSim.Framework
         /// <returns></returns>
         public List<string> GetHelp(string[] cmd)
         {
-            List<string> help = new List<string>();
-            List<string> helpParts = new List<string>(cmd);
-
-            // Remove initial help keyword
-            helpParts.RemoveAt(0);
-
-            help.AddRange(CollectHelp(helpParts));
-
-            return help;
-        }
-
-        /// <summary>
-        ///   See if we can find the requested command in order to display longer help
-        /// </summary>
-        /// <param name = "helpParts"></param>
-        /// <returns></returns>
-        private List<string> CollectHelp(List<string> helpParts)
-        {
             return tree.GetHelp();
         }
 
@@ -428,28 +410,32 @@ namespace OpenSim.Framework
                     help.Add("------- Help Sets (type the name and help to get more info about that set) -------");
                     help.Add("");
                 }
+                List<string> paths = new List<string>();
 #if (!ISWIN)
                 foreach (CommandSet set in commandsets.Values)
                 {
-                    help.Add(string.Format("-- Help Set: {0}", set.Path));
+                    paths.Add(string.Format("-- Help Set: {0}", set.Path));
                 }
 #else
-                help.AddRange(commandsets.Values.Select(set => string.Format("-- Help Set: {0}", set.Path)));
+                paths.AddRange(commandsets.Values.Select(set => string.Format("-- Help Set: {0}", set.Path)));
 #endif
+                help.AddRange(StringUtils.AlphanumericSort(paths));
                 if (help.Count != 0)
                 {
                     help.Add("");
                     help.Add("------- Help options -------");
                     help.Add("");
                 }
+                paths.Clear();
 #if (!ISWIN)
                 foreach (CommandInfo command in commands.Values)
                 {
-                    help.Add(string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
+                    paths.Add(string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info));
                 }
 #else
-                help.AddRange(commands.Values.Select(command => string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
+                paths.AddRange(commands.Values.Select(command => string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
 #endif
+                help.AddRange(StringUtils.AlphanumericSort(paths));
                 return help;
             }
         }
