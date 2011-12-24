@@ -983,8 +983,10 @@ namespace Aurora.Services.DataService
                                            noticeData = GND
                                        };
 
-            if (!CheckGroupPermissions(requestingAgentID, info.GroupID, (ulong) GroupPowers.ReceiveNotices))
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, info.GroupID, (ulong)GroupPowers.ReceiveNotices))
+            {
                 return null;
+            }
             return info;
         }
 
