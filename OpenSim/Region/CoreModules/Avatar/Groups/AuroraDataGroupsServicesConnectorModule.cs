@@ -255,7 +255,21 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
-            return GroupsConnector.GetGroupNotices(requestingAgentID, GroupID);
+            return GetGroupNotices(requestingAgentID, 0, GetNumberOfGroupNotices(requestingAgentID, GroupID), GroupID);
+        }
+
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
+        {
+            return GroupsConnector.GetGroupNotices(requestingAgentID, start, count, GroupID);
+        }
+
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
+        {
+            return GroupsConnector.GetNumberOfGroupNotices(requestingAgentID, GroupID);
+        }
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            return GroupsConnector.GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
         }
 
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)

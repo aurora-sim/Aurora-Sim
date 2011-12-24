@@ -59,7 +59,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["Groups"] != null)
             {
                 agentsCanBypassGroupNoticePermsCheck = Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", "")).ConvertAll(x => new UUID(x));
-            }
+            }   
 
             data.ConnectToDatabase(defaultConnectionString, "Groups",
                                    source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
@@ -983,8 +983,10 @@ namespace Aurora.Services.DataService
                                            noticeData = GND
                                        };
 
-            if (!CheckGroupPermissions(requestingAgentID, info.GroupID, (ulong) GroupPowers.ReceiveNotices))
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, info.GroupID, (ulong)GroupPowers.ReceiveNotices))
+            {
                 return null;
+            }
             return info;
         }
 
@@ -1008,21 +1010,14 @@ namespace Aurora.Services.DataService
             return GND;
         }
 
-        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ReceiveNotices))
-                return new List<GroupNoticeData>();
-            List<GroupNoticeData> AllNotices = new List<GroupNoticeData>();
-            List<string> notice = data.Query("GroupID", GroupID, "osgroupnotice",
-                                             "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,NoticeID,Message,AssetType,ItemName");
-            for (int i = 0; i < notice.Count; i += 10)
-            {
-                AllNotices.Add(GroupNoticeQueryResult2GroupNoticeData(notice.GetRange(i,10)));
-            }
-            return AllNotices;
+            List<UUID> GroupIDs = new List<UUID>();
+            GroupIDs.Add(GroupID);
+            return GetGroupNotices(requestingAgentID, start, count, GroupIDs);
         }
 
-        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, List<UUID> GroupIDs)
         {
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
@@ -1042,13 +1037,42 @@ namespace Aurora.Services.DataService
             List<GroupNoticeData> AllNotices = new List<GroupNoticeData>();
             if (GroupIDs.Count > 0)
             {
-                List<string> notice = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "' ORDER BY Timestamp DESC", "osgroupnotice", "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,NoticeID,Message,AssetType,ItemName");
+                List<string> notice = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "' ORDER BY Timestamp DESC" + string.Format(" LIMIT {0},{1}", start, count), "osgroupnotice", "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,NoticeID,Message,AssetType,ItemName");
                 for (int i = 0; i < notice.Count; i += 10)
                 {
                     AllNotices.Add(GroupNoticeQueryResult2GroupNoticeData(notice.GetRange(i, 10)));
                 }
             }
             return AllNotices;
+        }
+
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
+        {
+            List<UUID> GroupIDs = new List<UUID>();
+            GroupIDs.Add(GroupID);
+            return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
+        }
+
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            List<UUID> groupIDs = new List<UUID>();
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
+            {
+                foreach (UUID GroupID in GroupIDs)
+                {
+                    if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
+                    {
+                        groupIDs.Add(GroupID);
+                    }
+                }
+            }
+            else
+            {
+                groupIDs = GroupIDs;
+            }
+
+            List<string> numGroupNotices = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "'", "osgroupnotice", "Count(NoticeID)");
+            return uint.Parse(numGroupNotices[0]);
         }
 
         public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject,

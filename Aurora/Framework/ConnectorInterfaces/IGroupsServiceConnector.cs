@@ -80,8 +80,10 @@ namespace Aurora.Framework
         List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID);
         List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID);
         List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID);
-        List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID);
-        List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs);
+        List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID);
+        List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, List<UUID> GroupIDs);
+        uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID);
+        uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);
         void AddGroupProposal(UUID agentID, GroupProposalInfo info);
 

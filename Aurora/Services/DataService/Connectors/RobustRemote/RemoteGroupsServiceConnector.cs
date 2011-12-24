@@ -1332,19 +1332,21 @@ namespace Aurora.Services.DataService
             return new List<GroupRoleMembersData>();
         }
 
-        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
         {
             List<UUID> GroupIDs = new List<UUID>();
             GroupIDs.Add(GroupID);
-            return GetGroupNotices(requestingAgentID, GroupIDs);
+            return GetGroupNotices(requestingAgentID, start, count, GroupIDs);
         }
 
-        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, List<UUID> GroupIDs)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["METHOD"] = "GetGroupNotices";
             sendData["requestingAgentID"] = requestingAgentID;
+            sendData["start"] = start;
+            sendData["count"] = count;
             sendData["GroupIDs"] = GroupIDs;
 
             string reqString = WebUtils.BuildXmlResponse(sendData);
@@ -1391,6 +1393,57 @@ namespace Aurora.Services.DataService
             }
 
             return new List<GroupNoticeData>();
+        }
+
+        
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
+        {
+            List<UUID> GroupIDs = new List<UUID>();
+            GroupIDs.Add(GroupID);
+            return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
+        }
+
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["METHOD"] = "GetNumberOfGroupNotices";
+            sendData["requestingAgentID"] = requestingAgentID.ToString();
+            sendData["GroupIDs"] = GroupIDs;
+
+            string reqString = WebUtils.BuildXmlResponse(sendData);
+
+            try
+            {
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (string m_ServerURI in m_ServerURIs)
+                {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                             m_ServerURI,
+                                                                             reqString);
+                    if (reply != string.Empty)
+                    {
+                        Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                        if (replyData != null)
+                        {
+                            Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                            uint numGroupNotices = 0;
+                            foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numGroupNotices)))
+                            {
+                                break;
+                            }
+                            // Success
+                            return numGroupNotices;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+            }
+            return 0;
         }
 
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
