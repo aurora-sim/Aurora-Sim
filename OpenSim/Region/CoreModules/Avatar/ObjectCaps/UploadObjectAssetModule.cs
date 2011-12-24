@@ -91,8 +91,16 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
         {
             OSDMap retVal = new OSDMap();
             retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
+                                                       delegate(Hashtable m_dhttpMethod)
+                                                       {
+                                                           return ProcessAdd(m_dhttpMethod, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
                                                         m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 
@@ -292,8 +300,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
                 prim.RotationOffset = obj.Rotation;
 
                 grp.RootPart.IsAttachment = false;
-                // Required for linking
-                grp.RootPart.ClearUpdateScheduleOnce();
 
                 string reason;
                 if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
@@ -313,8 +319,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 
             for (int j = 1; j < allparts.Length; j++)
             {
-                allparts[j].RootPart.ClearUpdateScheduleOnce();
-                rootGroup.RootPart.ClearUpdateScheduleOnce();
                 rootGroup.LinkToGroup(allparts[j]);
             }
 

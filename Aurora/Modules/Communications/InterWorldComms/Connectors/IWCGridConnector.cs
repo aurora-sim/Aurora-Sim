@@ -234,8 +234,15 @@ namespace Aurora.Modules
 
             string localHandler = handlerConfig.GetString("LocalGridHandler", "GridService");
             List<IGridService> services = AuroraModuleLoader.PickupModules<IGridService>();
+#if (!ISWIN)
+            foreach (IGridService s in services)
+            {
+                if (s.GetType().Name == localHandler) m_localService = s;
+            }
+#else
             foreach (IGridService s in services.Where(s => s.GetType().Name == localHandler))
                 m_localService = s;
+#endif
 
             m_registry = registry;
             if (m_localService == null)

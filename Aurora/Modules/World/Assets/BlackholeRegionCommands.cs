@@ -89,55 +89,54 @@ namespace Aurora.Modules.World.Assets
             int counter = 0;
 
             ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
-            foreach (ISceneChildEntity child in entities.SelectMany(entity => entity.ChildrenEntities()))
-            {
-                objectCount++;
-                IEnumerable<UUID> textures = GetTextures(child.Shape.Textures);
-                foreach (UUID t in textures)
+            foreach (ISceneEntity entity in entities)
+                foreach (ISceneChildEntity child in entity.ChildrenEntities())
                 {
-                    AssetBase ass = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
-                    if (ass != null)
+                    objectCount++;
+                    IEnumerable<UUID> textures = GetTextures(child.Shape.Textures);
+                    foreach (UUID t in textures)
                     {
-                        if (!allAssetIDLookup.Contains(ass.ID))
+                        AssetBase ass = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
+                        if (ass != null)
                         {
-                            totalTextures++;
-                            totalBytes += ass.Data.Length;
-                            allAssetIDLookup.Add(ass.ID);
-                            ass.Description = ass.Data.Length.ToString();
-                            ass.Data = new byte[] {};
-                            allAssets.Add(ass);
-                            allAssetCount.Add(ass.ID.ToString(), "1");
-                            counter++;
-                        }
-                        else
-                        {
-                            allAssetCount[ass.ID.ToString()] =
-                                (int.Parse(allAssetCount[ass.ID.ToString()]) + 1).ToString();
-                        }
-                        if ((ass.ParentID != UUID.Zero) && (ass.ParentID != ass.ID))
-                        {
-                            if (converted.Contains(ass.ParentID))
-                                couldSave += ass.Data.Length;
+                            if (!allAssetIDLookup.Contains(ass.ID))
+                            {
+                                totalTextures++;
+                                totalBytes += ass.Data.Length;
+                                allAssetIDLookup.Add(ass.ID);
+                                ass.Description = ass.Data.Length.ToString();
+                                ass.Data = new byte[] {};
+                                allAssets.Add(ass);
+                                allAssetCount.Add(ass.ID.ToString(), "1");
+                                counter++;
+                            }
                             else
-                                converted.Add(ass.ParentID);
-                            totalChagnesTextures++;
+                            {
+                                allAssetCount[ass.ID.ToString()] = (int.Parse(allAssetCount[ass.ID.ToString()]) + 1).ToString();
+                            }
+                            if ((ass.ParentID != UUID.Zero) && (ass.ParentID != ass.ID))
+                            {
+                                if (converted.Contains(ass.ParentID))
+                                    couldSave += ass.Data.Length;
+                                else
+                                    converted.Add(ass.ParentID);
+                                totalChagnesTextures++;
+                            }
+                        }
+                    }
+                    foreach (TaskInventoryItem inventoryItem in child.Inventory.GetInventoryItems())
+                    {
+                        totalInventory++;
+                        AssetBase ass2 = MainConsole.Instance.ConsoleScene.AssetService.Get(inventoryItem.AssetID.ToString());
+                        if (ass2 != null)
+                        {
+                            if ((ass2 != null) && (ass2.ParentID != UUID.Zero) && (ass2.ParentID != ass2.ID))
+                                totalChangesInventory++;
+                            if ((ass2.TypeAsset == AssetType.LSLText) || (ass2.TypeAsset == AssetType.LSLBytecode))
+                                scriptCount++;
                         }
                     }
                 }
-                foreach (TaskInventoryItem inventoryItem in child.Inventory.GetInventoryItems())
-                {
-                    totalInventory++;
-                    AssetBase ass2 =
-                        MainConsole.Instance.ConsoleScene.AssetService.Get(inventoryItem.AssetID.ToString());
-                    if (ass2 != null)
-                    {
-                        if ((ass2 != null) && (ass2.ParentID != UUID.Zero) && (ass2.ParentID != ass2.ID))
-                            totalChangesInventory++;
-                        if ((ass2.TypeAsset == AssetType.LSLText) || (ass2.TypeAsset == AssetType.LSLBytecode))
-                            scriptCount++;
-                    }
-                }
-            }
 
             AssetBase[] SortResults = new AssetBase[] {};
             SortResults = SortAssetArray(allAssets.ToArray(), SortResults, 0);

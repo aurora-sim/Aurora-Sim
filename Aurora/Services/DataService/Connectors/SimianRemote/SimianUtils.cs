@@ -182,7 +182,13 @@ namespace Aurora.Services.DataService
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
                 OSDArray entryArray = (OSDArray) response["Entries"];
+#if (!ISWIN)
+                maps = new Dictionary<string, OSDMap>();
+                foreach (OSDMap map in entryArray)
+                    maps.Add(map["Key"].AsString(), (OSDMap) OSDParser.DeserializeJson(map["Value"].AsString()));
+#else
                 maps = entryArray.Cast<OSDMap>().ToDictionary(entryMap => entryMap["Key"].AsString(), entryMap => (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString()));
+#endif
                 if (maps.Count == 0)
                 {
                     //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
@@ -212,7 +218,13 @@ namespace Aurora.Services.DataService
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
                 OSDArray entryArray = (OSDArray) response["Entries"];
+#if (!ISWIN)
+                maps = new Dictionary<UUID, OSDMap>();
+                foreach (OSDMap map in entryArray)
+                    maps.Add(map["OwnerID"].AsUUID(), (OSDMap) OSDParser.DeserializeJson(map["Value"].AsString()));
+#else
                 maps = entryArray.Cast<OSDMap>().ToDictionary(entryMap => entryMap["OwnerID"].AsUUID(), entryMap => (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString()));
+#endif
                 if (maps.Count == 0)
                 {
                     //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");

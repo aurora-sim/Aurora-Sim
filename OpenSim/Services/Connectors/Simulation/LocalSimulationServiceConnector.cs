@@ -55,7 +55,15 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public IScene GetScene(ulong regionhandle)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionHandle == regionhandle) return s;
+            }
+            return null;
+#else
             return m_sceneList.FirstOrDefault(s => s.RegionInfo.RegionHandle == regionhandle);
+#endif
             // ? weird. should not happen
         }
 
@@ -105,6 +113,20 @@ namespace OpenSim.Services.Connectors.Simulation
                 return false;
             }
 
+#if (!ISWIN)
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionID == destination.RegionID)
+                {
+                    //m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
+                    if (data != null)
+                        UpdateAgent(destination, data);
+                    IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        return transferModule.NewUserConnection(s, aCircuit, teleportFlags, out requestedUDPPort, out reason);
+                }
+            }
+#else
             foreach (IScene s in m_sceneList.Where(s => s.RegionInfo.RegionID == destination.RegionID))
             {
                 //m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Found region {0} to send SendCreateChildAgent", destination.RegionName);
@@ -115,6 +137,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     return transferModule.NewUserConnection(s, aCircuit, teleportFlags, out requestedUDPPort,
                                                             out reason);
             }
+#endif
 
             m_log.DebugFormat("[LOCAL SIMULATION CONNECTOR]: Did not find region {0} for CreateAgent",
                               destination.RegionName);
@@ -134,10 +157,20 @@ namespace OpenSim.Services.Connectors.Simulation
             IEntityTransferModule transferModule = m_sceneList[0].RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
             {
+#if (!ISWIN)
+                foreach (IScene s in m_sceneList)
+                {
+                    if (destination.RegionID == s.RegionInfo.RegionID)
+                    {
+                        retVal = transferModule.IncomingChildAgentDataUpdate(s, cAgentData);
+                    }
+                }
+#else
                 foreach (IScene s in m_sceneList.Where(s => destination.RegionID == s.RegionInfo.RegionID))
                 {
                     retVal = transferModule.IncomingChildAgentDataUpdate(s, cAgentData);
                 }
+#endif
             }
 
             //            m_log.DebugFormat("[LOCAL COMMS]: Did not find region {0} for ChildAgentUpdate", regionHandle);
@@ -166,10 +199,24 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionID == RegionID)
+                {
+                    IScenePresence sp = s.GetScenePresence(AgentID);
+                    if (sp != null)
+                    {
+                        sp.AgentFailedToLeave();
+                    }
+                }
+            }
+#else
             foreach (IScenePresence sp in m_sceneList.Where(s => s.RegionInfo.RegionID == RegionID).Select(s => s.GetScenePresence(AgentID)).Where(sp => sp != null))
             {
                 sp.AgentFailedToLeave();
             }
+#endif
             return false;
         }
 
@@ -293,7 +340,15 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool IsLocalRegion(UUID id)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_sceneList)
+            {
+                if (s.RegionInfo.RegionID == id) return true;
+            }
+            return false;
+#else
             return m_sceneList.Any(s => s.RegionInfo.RegionID == id);
+#endif
         }
 
         #endregion

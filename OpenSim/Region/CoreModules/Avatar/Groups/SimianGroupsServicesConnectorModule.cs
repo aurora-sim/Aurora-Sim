@@ -535,6 +535,31 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (response["Success"].AsBoolean() && response["Entries"] is OSDArray)
             {
                 OSDArray entryArray = (OSDArray) response["Entries"];
+#if (!ISWIN)
+                foreach (OSDMap entryMap in entryArray)
+                {
+                    if (entryMap["AllowPublish"].AsBoolean() != false)
+                    {
+                        if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) != (uint) DirectoryManager.DirFindFlags.IncludeMature)
+                            if (entryMap["MaturePublish"].AsBoolean()) // Check for pg,mature
+                                continue; //Block mature
+
+                        DirGroupsReplyData data = new DirGroupsReplyData
+                                                      {
+                                                          groupID = entryMap["OwnerID"].AsUUID(), groupName = entryMap["Key"].AsString()
+                                                      };
+
+                        // TODO: is there a better way to do this?
+                        Dictionary<UUID, OSDMap> Members;
+                        data.members = SimianGetGenericEntries("GroupMember", data.groupID.ToString(), out Members) ? Members.Count : 0;
+
+                        // TODO: sort results?
+                        // data.searchOrder = order;
+
+                        findings.Add(data);
+                    }
+                }
+#else
                 foreach (OSDMap entryMap in entryArray.Cast<OSDMap>().Where(entryMap => entryMap["AllowPublish"].AsBoolean() != false))
                 {
                     if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) !=
@@ -557,6 +582,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
                     findings.Add(data);
                 }
+#endif
             }
 
 
@@ -647,7 +673,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             Dictionary<string, OSDMap> GroupMemberShips;
             if (SimianGetGenericEntries(agentID, "GroupMember", out GroupMemberShips))
             {
+#if (!ISWIN)
+                foreach (string key in GroupMemberShips.Keys)
+                {
+                    memberships.Add(GetAgentGroupMembership(requestingAgentID, agentID, UUID.Parse(key)));
+                }
+#else
                 memberships.AddRange(GroupMemberShips.Keys.Select(key => GetAgentGroupMembership(requestingAgentID, agentID, UUID.Parse(key))));
+#endif
             }
 
             return memberships;
@@ -666,6 +699,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 Dictionary<string, OSDMap> MemberRoles;
                 if (SimianGetGenericEntries(agentID, "GroupRole" + groupID.ToString(), out MemberRoles))
                 {
+#if (!ISWIN)
+                    foreach (KeyValuePair<string, OSDMap> kvp in MemberRoles)
+                    {
+                        GroupRolesData data = new GroupRolesData();
+                        data.RoleID = UUID.Parse(kvp.Key);
+                        data.Name = GroupRoles[kvp.Key]["Name"].AsString();
+                        data.Description = GroupRoles[kvp.Key]["Description"].AsString();
+                        data.Title = GroupRoles[kvp.Key]["Title"].AsString();
+                        data.Powers = GroupRoles[kvp.Key]["Powers"].AsULong();
+
+                        Roles.Add(data);
+                    }
+#else
                     Roles.AddRange(MemberRoles.Select(kvp => new GroupRolesData
                                                                  {
                                                                      RoleID = UUID.Parse(kvp.Key),
@@ -675,6 +721,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                                      Title = GroupRoles[kvp.Key]["Title"].AsString(),
                                                                      Powers = GroupRoles[kvp.Key]["Powers"].AsULong()
                                                                  }));
+#endif
                 }
             }
             return Roles;
@@ -781,6 +828,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     Dictionary<UUID, OSDMap> GroupRoleMembers;
                     if (SimianGetGenericEntries("GroupRole" + groupID.ToString(), Role.Key, out GroupRoleMembers))
                     {
+#if (!ISWIN)
+                        foreach (KeyValuePair<UUID, OSDMap> GroupRoleMember in GroupRoleMembers)
+                        {
+                            GroupRoleMembersData data = new GroupRoleMembersData();
+
+                            data.MemberID = GroupRoleMember.Key;
+                            data.RoleID = UUID.Parse(Role.Key);
+
+                            members.Add(data);
+                        }
+#else
                         members.AddRange(GroupRoleMembers.Select(GroupRoleMember => new GroupRoleMembersData
                                                                                         {
                                                                                             MemberID =
@@ -788,6 +846,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                                                             RoleID =
                                                                                                 UUID.Parse(Role.Key)
                                                                                         }));
+#endif
                     }
                 }
             }

@@ -101,16 +101,44 @@ namespace OpenSim.Framework
                 EstatePass = values["EstatePass"].ToString();
 
             Dictionary<string, object> Managers = values["EstateManagers"] as Dictionary<string, object>;
+#if (!ISWIN)
+            List<UUID> list = new List<UUID>();
+            foreach (object uuid in Managers.Values)
+                list.Add(new UUID(uuid.ToString()));
+            EstateManagers = list.ToArray();
+#else
             EstateManagers = Managers.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
+#endif
 
             Dictionary<string, object> Ban = values["EstateBans"] as Dictionary<string, object>;
+#if (!ISWIN)
+            List<EstateBan> list1 = new List<EstateBan>();
+            foreach (object bannedUser in Ban.Values)
+                list1.Add(new EstateBan((Dictionary<string, object>) bannedUser));
+            EstateBans = list1.ToArray();
+#else
             EstateBans = Ban.Values.Select(BannedUser => new EstateBan((Dictionary<string, object>) BannedUser)).ToArray();
+#endif
 
             Dictionary<string, object> Access = values["EstateAccess"] as Dictionary<string, object>;
+#if (!ISWIN)
+            List<UUID> list2 = new List<UUID>();
+            foreach (object uuid in Access.Values)
+                list2.Add(new UUID(uuid.ToString()));
+            EstateAccess = list2.ToArray();
+#else
             EstateAccess = Access.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
+#endif
 
             Dictionary<string, object> Groups = values["EstateGroups"] as Dictionary<string, object>;
+#if (!ISWIN)
+            List<UUID> list3 = new List<UUID>();
+            foreach (object uuid in Groups.Values)
+                list3.Add(new UUID(uuid.ToString()));
+            EstateGroups = list3.ToArray();
+#else
             EstateGroups = Groups.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
+#endif
         }
 
         public uint EstateID { get; set; }
@@ -289,7 +317,14 @@ namespace OpenSim.Framework
                 EstatePass = values["EstatePass"].AsString();
 
             OSDMap Managers = values["EstateManagers"] as OSDMap;
+#if (!ISWIN)
+            List<UUID> list = new List<UUID>();
+            foreach (OSD id in Managers.Values)
+                list.Add(id.AsUUID());
+            EstateManagers = list.ToArray();
+#else
             EstateManagers = Managers.Values.Select(ID => ID.AsUUID()).ToArray();
+#endif
 
             OSDMap Ban = values["EstateBans"] as OSDMap;
             List<EstateBan> NewBan = new List<EstateBan>();
@@ -302,10 +337,24 @@ namespace OpenSim.Framework
             EstateBans = NewBan.ToArray();
 
             OSDMap Access = values["EstateAccess"] as OSDMap;
+#if (!ISWIN)
+            List<UUID> list1 = new List<UUID>();
+            foreach (OSD uuid in Access.Values)
+                list1.Add(uuid.AsUUID());
+            EstateAccess = list1.ToArray();
+#else
             EstateAccess = Access.Values.Select(UUID => UUID.AsUUID()).ToArray();
+#endif
 
             OSDMap Groups = values["EstateGroups"] as OSDMap;
+#if (!ISWIN)
+            List<UUID> list2 = new List<UUID>();
+            foreach (OSD uuid in Groups.Values)
+                list2.Add(uuid.AsUUID());
+            EstateGroups = list2.ToArray();
+#else
             EstateGroups = Groups.Values.Select(UUID => UUID.AsUUID()).ToArray();
+#endif
         }
 
         public OSD ToOSD(bool Local)
@@ -345,7 +394,7 @@ namespace OpenSim.Framework
             int i = 0;
             foreach (EstateBan ban in EstateBans)
             {
-                Ban[ConvertDecString(i)] = ban.ToOSD();
+                Ban[Util.ConvertDecString(i)] = ban.ToOSD();
                 i++;
             }
             values["EstateBans"] = Ban;
@@ -354,7 +403,7 @@ namespace OpenSim.Framework
             OSDMap Managers = new OSDMap();
             foreach (UUID ID in EstateManagers)
             {
-                Managers[ConvertDecString(i)] = ID;
+                Managers[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateManagers"] = Managers;
@@ -363,7 +412,7 @@ namespace OpenSim.Framework
             OSDMap Groups = new OSDMap();
             foreach (UUID ID in EstateGroups)
             {
-                Groups[ConvertDecString(i)] = ID;
+                Groups[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateGroups"] = Groups;
@@ -372,7 +421,7 @@ namespace OpenSim.Framework
             OSDMap Access = new OSDMap();
             foreach (UUID ID in EstateAccess)
             {
-                Access[ConvertDecString(i)] = ID;
+                Access[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateAccess"] = Access;
@@ -417,7 +466,7 @@ namespace OpenSim.Framework
             int i = 0;
             foreach (EstateBan ban in EstateBans)
             {
-                Ban[ConvertDecString(i)] = ban.ToKeyValuePairs();
+                Ban[Util.ConvertDecString(i)] = ban.ToKeyValuePairs();
                 i++;
             }
             values["EstateBans"] = Ban;
@@ -426,7 +475,7 @@ namespace OpenSim.Framework
             Dictionary<string, object> Managers = new Dictionary<string, object>();
             foreach (UUID ID in EstateManagers)
             {
-                Managers[ConvertDecString(i)] = ID;
+                Managers[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateManagers"] = Managers;
@@ -435,7 +484,7 @@ namespace OpenSim.Framework
             Dictionary<string, object> Groups = new Dictionary<string, object>();
             foreach (UUID ID in EstateGroups)
             {
-                Groups[ConvertDecString(i)] = ID;
+                Groups[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateGroups"] = Groups;
@@ -444,35 +493,12 @@ namespace OpenSim.Framework
             Dictionary<string, object> Access = new Dictionary<string, object>();
             foreach (UUID ID in EstateAccess)
             {
-                Access[ConvertDecString(i)] = ID;
+                Access[Util.ConvertDecString(i)] = ID;
                 i++;
             }
             values["EstateAccess"] = Access;
             i *= 0;
             return values;
-        }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
         }
 
         public void Save()
@@ -541,7 +567,15 @@ namespace OpenSim.Framework
 
         public bool IsBanned(UUID avatarID)
         {
+#if (!ISWIN)
+            foreach (EstateBan ban in l_EstateBans)
+            {
+                if (ban.BannedUserID == avatarID) return true;
+            }
+            return false;
+#else
             return l_EstateBans.Any(ban => ban.BannedUserID == avatarID);
+#endif
         }
 
         public void AddBan(EstateBan ban)
@@ -559,8 +593,15 @@ namespace OpenSim.Framework
 
         public void RemoveBan(UUID avatarID)
         {
+#if (!ISWIN)
+            foreach (EstateBan ban in new List<EstateBan>(l_EstateBans))
+            {
+                if (ban.BannedUserID == avatarID) l_EstateBans.Remove(ban);
+            }
+#else
             foreach (EstateBan ban in new List<EstateBan>(l_EstateBans).Where(ban => ban.BannedUserID == avatarID))
                 l_EstateBans.Remove(ban);
+#endif
         }
 
         public bool HasAccess(UUID user)

@@ -430,6 +430,11 @@ namespace Aurora.DataManager.MSSQL
             return true;
         }
 
+        public override bool InsertMultiple(string table, List<object[]> values)
+        {
+            return false;
+        }
+
         public override bool Insert(string table, object[] values)
         {
             SqlConnection dbcon = GetLockedConnection();
@@ -437,7 +442,12 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
 
             string query = String.Format("insert into {0} values (", table);
+#if (!ISWIN)
+            foreach (object value in values)
+                query = query + String.Format("'{0}',", (object[]) value);
+#else
             query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", (object[]) value));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -467,7 +477,12 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
 
             string query = String.Format("insert into {0} values (", table);
+#if (!ISWIN)
+            foreach (object value in values)
+                query = query + String.Format("'{0}',", (object[]) value);
+#else
             query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", (object[]) value));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -503,10 +518,20 @@ namespace Aurora.DataManager.MSSQL
 
             string query = String.Format("replace into {0} (", table);
 
+#if (!ISWIN)
+            foreach (object o in keys)
+                query = query + String.Format("{0},", (object[]) o);
+#else
             query = keys.Cast<object>().Aggregate(query, (current, key) => current + String.Format("{0},", (object[]) key));
+#endif
             query = query.Remove(query.Length - 1);
             query += ") values (";
+#if (!ISWIN)
+            foreach (object value in values)
+                query = query + String.Format("'{0}',", (object[]) value);
+#else
             query = values.Aggregate(query, (current, value) => current + String.Format("'{0}',", (object[]) value));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -535,7 +560,12 @@ namespace Aurora.DataManager.MSSQL
             IDbCommand result;
             IDataReader reader;
             string query = String.Format("insert into {0} VALUES('", table);
+#if (!ISWIN)
+            foreach (object value in values)
+                query = query + (value + "','");
+#else
             query = values.Aggregate(query, (current, value) => current + (value + "','"));
+#endif
             query = query.Remove(query.Length - 2);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -592,7 +622,13 @@ namespace Aurora.DataManager.MSSQL
 
         public override string ConCat(string[] toConcat)
         {
+#if (!ISWIN)
+            string returnValue = "";
+            foreach (string s in toConcat)
+                returnValue = returnValue + (s + " + ");
+#else
             string returnValue = toConcat.Aggregate("", (current, s) => current + (s + " + "));
+#endif
             return returnValue.Substring(0, returnValue.Length - 3);
         }
 

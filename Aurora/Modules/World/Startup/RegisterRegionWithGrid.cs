@@ -130,7 +130,7 @@ namespace Aurora.Modules
                         loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
                     }
                 }
-                if (error == "Region overlaps another region")
+                else if (error == "Region overlaps another region")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid failed - The region location you specified is already in use. You must move your region.");
@@ -151,7 +151,7 @@ namespace Aurora.Modules
                         loader.UpdateRegionInfo(scene.RegionInfo.RegionName, scene.RegionInfo);
                     }
                 }
-                if (error.Contains("Can't move this region"))
+                else if (error.Contains("Can't move this region"))
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid failed - You can not move this region. Moving it back to its original position.");
@@ -176,7 +176,7 @@ namespace Aurora.Modules
                         throw e;
                     }
                 }
-                if (error == "Duplicate region name")
+                else if (error == "Duplicate region name")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid failed - The region name you specified is already in use. Please change the name.");
@@ -189,14 +189,14 @@ namespace Aurora.Modules
                         loader.UpdateRegionInfo(oldRegionName, scene.RegionInfo);
                     }
                 }
-                if (error == "Region locked out")
+                else if (error == "Region locked out")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid the failed - The region you are attempting to join has been blocked from connecting. Please connect another region.");
                     MainConsole.Instance.CmdPrompt("Press enter when you are ready to exit");
                     Environment.Exit(0);
                 }
-                if (error == "Error communicating with grid service")
+                else if (error == "Error communicating with grid service")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
@@ -208,7 +208,7 @@ namespace Aurora.Modules
                         Environment.Exit(0);
                     }
                 }
-                if (error == "Wrong Session ID")
+                else if (error == "Wrong Session ID")
                 {
                     m_log.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid failed - Wrong Session ID for this region!");

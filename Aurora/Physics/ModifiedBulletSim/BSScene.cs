@@ -465,10 +465,20 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                     _colliders.Add(c2);
                 }
                 //Send out all the collisions now
+#if (!ISWIN)
+                foreach (PhysicsActor colID in _colliders)
+                {
+                    if (colID != null)
+                    {
+                        colID.SendCollisions();
+                    }
+                }
+#else
                 foreach (PhysicsActor colID in _colliders.Where(colID => colID != null))
                 {
                     colID.SendCollisions();
                 }
+#endif
             }
             if (updatedEntityCount > 0)
                 lock (m_entProperties)

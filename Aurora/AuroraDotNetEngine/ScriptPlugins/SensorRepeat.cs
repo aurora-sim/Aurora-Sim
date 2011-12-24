@@ -76,7 +76,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             // Remove from timer
             lock (SenseRepeatListLock)
             {
+#if (!ISWIN)
+                List<SenseRepeatClass> NewSensors = new List<SenseRepeatClass>();
+                foreach (SenseRepeatClass ts in SenseRepeaters)
+                {
+                    if (ts.objectID != objectID && ts.itemID != m_itemID) NewSensors.Add(ts);
+                }
+#else
                 List<SenseRepeatClass> NewSensors = SenseRepeaters.Where(ts => ts.objectID != objectID && ts.itemID != m_itemID).ToList();
+#endif
                 SenseRepeaters.Clear();
                 SenseRepeaters = NewSensors;
             }
@@ -92,12 +100,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 // Go through all timers
                 DateTime UniversalTime = DateTime.Now.ToUniversalTime();
+#if (!ISWIN)
+                foreach (SenseRepeatClass ts in SenseRepeaters)
+                {
+                    if (ts.next.ToUniversalTime() < UniversalTime)
+                    {
+                        SensorSweep(ts);
+                        // set next interval
+                        ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
+                    }
+                }
+#else
                 foreach (SenseRepeatClass ts in SenseRepeaters.Where(ts => ts.next.ToUniversalTime() < UniversalTime))
                 {
                     SensorSweep(ts);
                     // set next interval
                     ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
                 }
+#endif
             } // lock
             return SenseRepeaters.Count > 0;
         }
@@ -106,6 +126,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             OSDMap data = new OSDMap();
 
+#if(!ISWIN)
+            lock (SenseRepeatListLock)
+            {
+                foreach (SenseRepeatClass ts in SenseRepeaters)
+                {
+                    if (ts.itemID == itemID)
+                    {
+                        OSDMap map = new OSDMap();
+                        map.Add ("Interval", ts.interval);
+                        map.Add ("Name", ts.name);
+                        map.Add ("ID", ts.keyID);
+                        map.Add ("Type", ts.type);
+                        map.Add ("Range", ts.range);
+                        map.Add ("Arc", ts.arc);
+                        data[itemID.ToString ()] = map;
+                    }
+                }
+            }
+#else
             lock (SenseRepeatListLock)
             {
                 foreach (OSDMap map in from ts in SenseRepeaters
@@ -123,6 +162,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                     data[itemID.ToString()] = map;
                 }
             }
+#endif
 
             return data;
         }
@@ -575,12 +615,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public IScene findPrimsScene(UUID objectID)
         {
-            return (from s in m_ScriptEngine.Worlds let part = s.GetSceneObjectPart(objectID) where part != null select s).FirstOrDefault();
+            foreach (IScene s in m_ScriptEngine.Worlds)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(objectID);
+                if (part != null)
+                {
+                    return s;
+                }
+            }
+            return null;
         }
 
         public IScene findPrimsScene(uint localID)
         {
-            return (from s in m_ScriptEngine.Worlds let part = s.GetSceneObjectPart(localID) where part != null select s).FirstOrDefault();
+            foreach (IScene s in m_ScriptEngine.Worlds)
+            {
+                ISceneChildEntity part = s.GetSceneObjectPart(localID);
+                if (part != null)
+                {
+                    return s;
+                }
+            }
+            return null;
         }
 
         public void Dispose()

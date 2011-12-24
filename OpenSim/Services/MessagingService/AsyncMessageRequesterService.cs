@@ -141,7 +141,15 @@ namespace OpenSim.Services.MessagingService
 
         private IScene GetScene(ulong regionHandle)
         {
+#if (!ISWIN)
+            foreach (IScene scene in m_scenes)
+            {
+                if (scene.RegionInfo.RegionHandle == regionHandle) return scene;
+            }
+            return null;
+#else
             return m_scenes.FirstOrDefault(scene => scene.RegionInfo.RegionHandle == regionHandle);
+#endif
         }
 
         #region Helpers

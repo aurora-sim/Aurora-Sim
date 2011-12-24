@@ -74,11 +74,22 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
             lock (XferUploaders)
             {
+#if (!ISWIN)
+                foreach (AssetXferUploader uploader in XferUploaders.Values)
+                {
+                    if (uploader.XferID == xferID)
+                    {
+                        uploader.HandleXferPacket(remoteClient, xferID, packetID, data);
+                        break;
+                    }
+                }
+#else
                 foreach (AssetXferUploader uploader in XferUploaders.Values.Where(uploader => uploader.XferID == xferID))
                 {
                     uploader.HandleXferPacket(remoteClient, xferID, packetID, data);
                     break;
                 }
+#endif
             }
         }
 

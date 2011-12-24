@@ -510,6 +510,22 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             {
                 foreach (KeyValuePair<int, List<ListenerInfo>> lis in m_listeners)
                 {
+#if (!ISWIN)
+                    foreach (ListenerInfo li in lis.Value)
+                    {
+                        if (li.GetItemID().Equals(itemID) && li.GetHandle().Equals(handle))
+                        {
+                            lis.Value.Remove(li);
+                            if (lis.Value.Count == 0)
+                            {
+                                m_listeners.Remove(lis.Key);
+                                m_curlisteners--;
+                            }
+                            // there should be only one, so we bail out early
+                            return;
+                        }
+                    }
+#else
                     foreach (ListenerInfo li in lis.Value.Where(li => li.GetItemID().Equals(itemID) && li.GetHandle().Equals(handle)))
                     {
                         lis.Value.Remove(li);
@@ -521,6 +537,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                         // there should be only one, so we bail out early
                         return;
                     }
+#endif
                 }
             }
         }
@@ -534,7 +551,17 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             {
                 foreach (KeyValuePair<int, List<ListenerInfo>> lis in m_listeners)
                 {
+#if (!ISWIN)
+                    foreach (ListenerInfo li in lis.Value)
+                    {
+                        if (li.GetItemID().Equals(itemID))
+                        {
+                            removedListeners.Add(li);
+                        }
+                    }
+#else
                     removedListeners.AddRange(lis.Value.Where(li => li.GetItemID().Equals(itemID)));
+#endif
                     foreach (ListenerInfo li in removedListeners)
                     {
                         lis.Value.Remove(li);

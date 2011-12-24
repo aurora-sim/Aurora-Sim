@@ -49,14 +49,19 @@ namespace Aurora.DataManager.SQLite
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
 
 //        private static bool m_spammedmessage = false;
+        private static bool m_copiedFile = false;
         public SQLiteLoader()
         {
             try
             {
-                if (System.IO.File.Exists("System.Data.SQLite.dll"))
-                   System.IO.File.Delete("System.Data.SQLite.dll");
-                string fileName = System.IntPtr.Size == 4 ? "System.Data.SQLitex86.dll" : "System.Data.SQLitex64.dll";
-                System.IO.File.Copy(fileName, "System.Data.SQLite.dll",true);
+                if (!m_copiedFile)
+                {
+                    m_copiedFile = true;
+                    if (System.IO.File.Exists("System.Data.SQLite.dll"))
+                        System.IO.File.Delete("System.Data.SQLite.dll");
+                    string fileName = System.IntPtr.Size == 4 ? "System.Data.SQLitex86.dll" : "System.Data.SQLitex64.dll";
+                    System.IO.File.Copy(fileName, "System.Data.SQLite.dll", true);
+                }
             }
             catch
 //            catch (Exception ex)
@@ -449,22 +454,41 @@ namespace Aurora.DataManager.SQLite
             dic[key].Add(value);
         }
 
+        public override bool InsertMultiple(string table, List<object[]> values)
+        {
+            var cmd = new SQLiteCommand();
+
+            string query = String.Format("insert into {0} select ", table);
+            int a = 0;
+            foreach (object[] value in values)
+            {
+                foreach (object v in value)
+                {
+                    query += ":" + Util.ConvertDecString(a) + ",";
+                    cmd.Parameters.AddWithValue(Util.ConvertDecString(a++), v is byte[] ? Utils.BytesToString((byte[])v) : v);
+                }
+                query = query.Remove(query.Length - 1);
+                query += " union all select ";
+            }
+            query = query.Remove(query.Length - (" union all select ").Length);
+            
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
         public override bool Insert(string table, object[] values)
         {
             var cmd = new SQLiteCommand();
 
             string query = "";
             query = String.Format("insert into {0} values(", table);
-            string a = "a";
+            int a = 0;
             foreach (object value in values)
             {
-                object v = value;
-                if (v is byte[])
-                    v = Utils.BytesToString((byte[]) v);
-
-                query += ":" + a + ",";
-                cmd.Parameters.AddWithValue(a, v);
-                a += "a"; //Nasty... but being lazy since SQLite doesn't like numbered params
+                query += ":" + Util.ConvertDecString(a) + ",";
+                cmd.Parameters.AddWithValue(Util.ConvertDecString(a++), value is byte[] ? Utils.BytesToString((byte[])value) : value);
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -492,7 +516,12 @@ namespace Aurora.DataManager.SQLite
             query = query.Remove(query.Length - 1);
             query += ") values (";
 
+#if (!ISWIN)
+            foreach (object o in keys)
+                query = query + String.Format(":{0},", o.ToString().Replace("`", ""));
+#else
             query = keys.Cast<object>().Aggregate(query, (current, key) => current + String.Format(":{0},", key.ToString().Replace("`", "")));
+#endif
             query = query.Remove(query.Length - 1);
             query += ")";
 
@@ -612,7 +641,13 @@ namespace Aurora.DataManager.SQLite
 
         public override string ConCat(string[] toConcat)
         {
+#if (!ISWIN)
+            string returnValue = "";
+            foreach (string s in toConcat)
+                returnValue = returnValue + (s + " || ");
+#else
             string returnValue = toConcat.Aggregate("", (current, s) => current + (s + " || "));
+#endif
             return returnValue.Substring(0, returnValue.Length - 4);
         }
 
@@ -623,12 +658,11 @@ namespace Aurora.DataManager.SQLite
 
             string query = "";
             query = String.Format("insert into {0} values (", table);
-            string a = "a";
+            int i = 0;
             foreach (object value in values)
             {
-                ps[":" + a] = value;
-                query = String.Format(query + ":{0},", a);
-                a += "a";
+                ps[":" + Util.ConvertDecString(i)] = value;
+                query = String.Format(query + ":{0},", Util.ConvertDecString(i++));
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -766,12 +800,23 @@ namespace Aurora.DataManager.SQLite
             Dictionary<string, ColumnDefinition> sameColumns = new Dictionary<string, ColumnDefinition>();
             foreach (ColumnDefinition column in oldColumns)
             {
+#if (!ISWIN)
+                foreach (ColumnDefinition innercolumn in columns)
+                {
+                    if (innercolumn.Name.ToLower() == column.Name.ToLower() || renameColumns.ContainsKey(column.Name) && renameColumns[column.Name].ToLower() == innercolumn.Name.ToLower())
+                    {
+                        sameColumns.Add(column.Name, column);
+                        break;
+                    }
+                }
+#else
                 if (columns.Any(innercolumn => innercolumn.Name.ToLower() == column.Name.ToLower() ||
                                                renameColumns.ContainsKey(column.Name) &&
                                                renameColumns[column.Name].ToLower() == innercolumn.Name.ToLower()))
                 {
                     sameColumns.Add(column.Name, column);
                 }
+#endif
             }
 
             string renamedTempTableColumnDefinition = string.Empty;
@@ -804,7 +849,16 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
 
             string newTableColumnDefinition = string.Empty;
+#if (!ISWIN)
+            List<ColumnDefinition> primaryColumns = new List<ColumnDefinition>();
+            foreach (ColumnDefinition column in columns)
+            {
+                if (column.IsPrimary) primaryColumns.Add(column);
+            }
+#else
             List<ColumnDefinition> primaryColumns = columns.Where(column => column.IsPrimary).ToList();
+#endif
+
             bool multiplePrimary = primaryColumns.Count > 1;
 
             foreach (ColumnDefinition column in columns)

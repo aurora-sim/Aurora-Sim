@@ -32,6 +32,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
+
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
     public class DataserverPlugin : IScriptPlugin
@@ -56,7 +57,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         {
             lock (DataserverRequests)
             {
+#if (!ISWIN)
+                List<DataserverRequest> ToRemove = new List<DataserverRequest>();
+                foreach (DataserverRequest ds in DataserverRequests.Values)
+                {
+                    if (ds.itemID == itemID) ToRemove.Add(ds);
+                }
+#else
                 List<DataserverRequest> ToRemove = DataserverRequests.Values.Where(ds => ds.itemID == itemID).ToList();
+#endif
                 foreach (DataserverRequest re in ToRemove)
                 {
                     DataserverRequests.Remove(re.handle);

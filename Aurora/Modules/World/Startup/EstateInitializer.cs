@@ -145,7 +145,13 @@ namespace OpenSim.Region.CoreModules
                         if (LastEstateName == "")
                             LastEstateName = ownerEstates[0].EstateName;
 
+#if (!ISWIN)
+                        List<string> responses = new List<string>();
+                        foreach (EstateSettings settings in ownerEstates)
+                            responses.Add(settings.EstateName);
+#else
                         List<string> responses = ownerEstates.Select(settings => settings.EstateName).ToList();
+#endif
                         responses.Add ("None");
                         responses.Add ("Cancel");
                         response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName, responses);

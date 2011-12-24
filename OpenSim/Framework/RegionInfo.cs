@@ -281,7 +281,11 @@ namespace OpenSim.Framework
             args["region_size_x"] = OSD.FromInteger(RegionSizeX);
             args["region_size_y"] = OSD.FromInteger(RegionSizeY);
             args["region_size_z"] = OSD.FromInteger(RegionSizeZ);
+#if (!ISWIN)
+            OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(delegate(int a) { return a; }));
+#else
             OSDArray ports = new OSDArray(UDPPorts.ConvertAll<OSD>(a => a));
+#endif
             args["UDPPorts"] = ports;
             args["InfiniteRegion"] = OSD.FromBoolean(InfiniteRegion);
             if (secure)

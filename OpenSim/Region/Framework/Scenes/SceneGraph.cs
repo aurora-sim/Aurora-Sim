@@ -283,18 +283,12 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void HandleObjectGroupUpdate(
             IClientAPI remoteClient, UUID GroupID, uint LocalID, UUID Garbage)
         {
-            IGroupsModule module = m_parentScene.RequestModuleInterface<IGroupsModule>();
-            if (module != null)
+            IEntity entity;
+            if (TryGetEntity(LocalID, out entity))
             {
-                if (!module.GroupPermissionCheck(remoteClient.AgentId, GroupID, GroupPowers.None))
-                    return; // No settings to groups you arn't in
-                IEntity entity;
-                if (TryGetEntity(LocalID, out entity))
-                {
-                    if(m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
-                        if(((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
-                            ((ISceneEntity)entity).SetGroup(GroupID, remoteClient);
-                }
+                if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
+                    if (((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
+                        ((ISceneEntity)entity).SetGroup(GroupID, remoteClient.AgentId);
             }
         }
 
@@ -359,7 +353,15 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (string firstName, string lastName)
         {
             List<IScenePresence> presences = GetScenePresences ();
+#if (!ISWIN)
+            foreach (IScenePresence presence in presences)
+            {
+                if (presence.Firstname == firstName && presence.Lastname == lastName) return presence;
+            }
+            return null;
+#else
             return presences.FirstOrDefault(presence => presence.Firstname == firstName && presence.Lastname == lastName);
+#endif
         }
 
         /// <summary>
@@ -370,7 +372,15 @@ namespace OpenSim.Region.Framework.Scenes
         public IScenePresence GetScenePresence (uint localID)
         {
             List<IScenePresence> presences = GetScenePresences ();
+#if (!ISWIN)
+            foreach (IScenePresence presence in presences)
+            {
+                if (presence.LocalId == localID) return presence;
+            }
+            return null;
+#else
             return presences.FirstOrDefault(presence => presence.LocalId == localID);
+#endif
         }
 
         protected internal bool TryGetScenePresence (UUID agentID, out IScenePresence avatar)
@@ -380,7 +390,19 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected internal bool TryGetAvatarByName (string name, out IScenePresence avatar)
         {
+#if (!ISWIN)
+            avatar = null;
+            foreach (IScenePresence presence in GetScenePresences())
+            {
+                if (String.Compare(name, presence.ControllingClient.Name, true) == 0)
+                {
+                    avatar = presence;
+                    break;
+                }
+            }
+#else
             avatar = GetScenePresences().FirstOrDefault(presence => String.Compare(name, presence.ControllingClient.Name, true) == 0);
+#endif
             return (avatar != null);
         }
 
@@ -424,7 +446,20 @@ namespace OpenSim.Region.Framework.Scenes
             if (getPrims)
             {
                 ISceneEntity[] EntityList = Entities.GetEntities(hray.Origin, length);
+#if (!ISWIN)
+                foreach (ISceneEntity ent in EntityList)
+                {
+                    if (ent is SceneObjectGroup)
+                    {
+                        SceneObjectGroup reportingG = (SceneObjectGroup)ent;
+                        EntityIntersection inter = reportingG.TestIntersection(hray, frontFacesOnly, faceCenters);
+                        if (inter.HitTF)
+                            result.Add(inter);
+                    }
+                }
+#else
                 result.AddRange(EntityList.OfType<SceneObjectGroup>().Select(reportingG => reportingG.TestIntersection(hray, frontFacesOnly, faceCenters)).Where(inter => inter.HitTF));
+#endif
             }
             if (getAvatars)
             {
@@ -455,7 +490,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //TODO
             }
+#if (!ISWIN)
+            result.Sort(delegate(EntityIntersection a, EntityIntersection b)
+            {
+                return a.distance.CompareTo(b.distance);
+            });
+#else
             result.Sort((a, b) => a.distance.CompareTo(b.distance));
+#endif
             if(result.Count > count)
                 result.RemoveRange(count, result.Count - count);
             return result;
@@ -870,8 +912,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 // Otherwise, use this default creation code;
-                
-                sceneObject.SetGroup(groupID, null);
+                sceneObject.SetGroup(groupID, ownerID);
                 AddPrimToScene(sceneObject);
                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
@@ -1027,7 +1068,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ownerID != UUID.Zero)
                 {
                     sog.SetOwnerId(ownerID);
-                    sog.SetGroup(groupID, remoteClient);
+                    sog.SetGroup(groupID, remoteClient.AgentId);
                     sog.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
                     foreach (ISceneChildEntity child in sog.ChildrenEntities())
@@ -1596,9 +1637,21 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void DelinkObjects(List<uint> primIds, IClientAPI client)
         {
+#if (!ISWIN)
+            List<ISceneChildEntity> parts = new List<ISceneChildEntity>();
+            foreach (uint localId in primIds)
+            {
+                ISceneChildEntity part = m_parentScene.GetSceneObjectPart(localId);
+                if (part != null)
+                {
+                    if (m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID)) parts.Add(part);
+                }
+            }
+#else
             List<ISceneChildEntity> parts =
                 primIds.Select(localID => m_parentScene.GetSceneObjectPart(localID)).Where(part => part != null).Where(
                     part => m_parentScene.Permissions.CanDelinkObject(client.AgentId, part.ParentEntity.UUID)).ToList();
+#endif
 
             DelinkObjects(parts);
         }
@@ -1651,7 +1704,13 @@ namespace OpenSim.Region.Framework.Scenes
                 client.SendAlertMessage("Permissions: Cannot link, not enough permissions.");
                 return;
             }
+#if (!ISWIN)
+            int LinkCount = 0;
+            foreach (SceneObjectPart part in children)
+                LinkCount += part.ParentGroup.ChildrenList.Count;
+#else
             int LinkCount = children.Cast<SceneObjectPart>().Sum(part => part.ParentGroup.ChildrenList.Count);
+#endif
 
             IOpenRegionSettingsModule module = m_parentScene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
@@ -1826,9 +1885,6 @@ namespace OpenSim.Region.Framework.Scenes
                             //
                             ISceneChildEntity newRoot = newSet[0];
                             newSet.RemoveAt(0);
-
-                            foreach (ISceneChildEntity newChild in newSet)
-                                newChild.ClearUpdateScheduleOnce();
 
                             LinkObjects(newRoot, newSet);
                             if (!affectedGroups.Contains(newRoot.ParentEntity))

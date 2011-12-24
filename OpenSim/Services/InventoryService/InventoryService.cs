@@ -227,7 +227,7 @@ namespace OpenSim.Services.InventoryService
                     defaultShape.AssetID = asset.ID;
                     defaultShape.Folder = bodypartFolder.ID;
                     defaultShape.CreatorId = UUID.Zero.ToString();
-                    AddItem(defaultShape);
+                    AddItem(defaultShape, false);
                 }
 
                 InventoryItemBase defaultSkin = new InventoryItemBase
@@ -253,7 +253,7 @@ namespace OpenSim.Services.InventoryService
                     defaultSkin.CurrentPermissions = (uint) PermissionMask.All;
                     defaultSkin.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultSkin.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultSkin);
+                    AddItem(defaultSkin, false);
                 }
 
                 InventoryItemBase defaultHair = new InventoryItemBase
@@ -279,7 +279,7 @@ namespace OpenSim.Services.InventoryService
                     defaultHair.CurrentPermissions = (uint) PermissionMask.All;
                     defaultHair.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultHair.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultHair);
+                    AddItem(defaultHair, false);
                 }
 
                 InventoryItemBase defaultEyes = new InventoryItemBase
@@ -305,7 +305,7 @@ namespace OpenSim.Services.InventoryService
                     defaultEyes.CurrentPermissions = (uint) PermissionMask.All;
                     defaultEyes.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultEyes.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultEyes);
+                    AddItem(defaultEyes, false);
                 }
 
                 InventoryItemBase defaultShirt = new InventoryItemBase
@@ -331,7 +331,7 @@ namespace OpenSim.Services.InventoryService
                     defaultShirt.CurrentPermissions = (uint) PermissionMask.All;
                     defaultShirt.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultShirt.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultShirt);
+                    AddItem(defaultShirt, false);
                 }
 
                 InventoryItemBase defaultPants = new InventoryItemBase
@@ -357,7 +357,7 @@ namespace OpenSim.Services.InventoryService
                     defaultPants.CurrentPermissions = (uint) PermissionMask.All;
                     defaultPants.EveryOnePermissions = (uint) PermissionMask.None;
                     defaultPants.NextPermissions = (uint) PermissionMask.All;
-                    AddItem(defaultPants);
+                    AddItem(defaultPants, false);
                 }
             }
 
@@ -393,8 +393,15 @@ namespace OpenSim.Services.InventoryService
                 return null;
 
             InventoryFolderBase root = null;
+#if (!ISWIN)
+            foreach (InventoryFolderBase folder in folders)
+            {
+                if (folder.Name == "My Inventory") root = folder;
+            }
+#else
             foreach (InventoryFolderBase folder in folders.Where(folder => folder.Name == "My Inventory"))
                 root = folder;
+#endif
             if (folders == null) // oops
                 root = folders[0];
 
@@ -608,9 +615,21 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool AddItem(InventoryItemBase item)
         {
+            return AddItem(item, true);
+        }
+
+        public virtual bool AddItem(InventoryItemBase item, bool doParentFolderCheck)
+        {
 //            m_log.DebugFormat(
 //                "[XINVENTORY SERVICE]: Adding item {0} to folder {1} for {2}", item.ID, item.Folder, item.Owner);
 
+            if (doParentFolderCheck)
+            {
+                InventoryFolderBase folder = GetFolder(new InventoryFolderBase(item.Folder));
+
+                if (folder == null || folder.Owner != item.Owner)
+                    return false;
+            }
             m_Database.IncrementFolder(item.Folder);
             return m_Database.StoreItem(item);
         }
@@ -815,11 +834,22 @@ namespace OpenSim.Services.InventoryService
             if (rootFolders.Count != 1)
             {
                 //No duplicate folders!
+#if (!ISWIN)
+                foreach (InventoryFolderBase f in rootFolders)
+                {
+                    if (!badFolders.Contains(f.ID) && f.ID != rootFolder.ID)
+                    {
+                        m_log.Warn("Removing duplicate root folder " + f.Name);
+                        badFolders.Add(f.ID);
+                    }
+                }
+#else
                 foreach (InventoryFolderBase f in rootFolders.Where(f => !badFolders.Contains(f.ID) && f.ID != rootFolder.ID))
                 {
                     m_log.Warn("Removing duplicate root folder " + f.Name);
                     badFolders.Add(f.ID);
                 }
+#endif
             }
             //Fix any root folders that shouldn't be root folders
             List<InventoryFolderBase> skeleton = GetInventorySkeleton(account.PrincipalID);
@@ -895,6 +925,18 @@ namespace OpenSim.Services.InventoryService
             skeleton = GetInventorySkeleton(account.PrincipalID);
             Dictionary<int, UUID> defaultFolders = new Dictionary<int, UUID>();
             Dictionary<UUID, UUID> changedFolders = new Dictionary<UUID, UUID>();
+#if (!ISWIN)
+            foreach (InventoryFolderBase folder in skeleton)
+            {
+                if (folder.Type != -1)
+                {
+                    if (!defaultFolders.ContainsKey(folder.Type))
+                        defaultFolders[folder.Type] = folder.ID;
+                    else
+                        changedFolders.Add(folder.ID, defaultFolders[folder.Type]);
+                }
+            }
+#else
             foreach (InventoryFolderBase folder in skeleton.Where(folder => folder.Type != -1))
             {
                 if (!defaultFolders.ContainsKey(folder.Type))
@@ -902,6 +944,7 @@ namespace OpenSim.Services.InventoryService
                 else
                     changedFolders.Add(folder.ID, defaultFolders[folder.Type]);
             }
+#endif
             foreach (InventoryFolderBase folder in skeleton)
             {
                 if (folder.Type != -1 && defaultFolders[folder.Type] != folder.ID)

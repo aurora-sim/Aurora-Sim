@@ -35,8 +35,8 @@ namespace OpenSim.Region.Framework.Interfaces
     /// </summary>
     public interface IRegionArchiverModule
     {
-        void HandleLoadOarConsoleCommand(string module, string[] cmdparams);
-        void HandleSaveOarConsoleCommand(string module, string[] cmdparams);
+        void HandleLoadOarConsoleCommand(string[] cmdparams);
+        void HandleSaveOarConsoleCommand(string[] cmdparams);
 
         /// <summary>
         ///   Archive the region to the given path
@@ -110,6 +110,7 @@ namespace OpenSim.Region.Framework.Interfaces
         ///   assets are already known to be present in the grid's asset service.
         /// </param
         /// <param name = "requestId">If supplied, this request Id is later returned in the saved event</param>
-        void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ);
+        void DearchiveRegion(Stream loadStream, bool merge, bool skipAssets, int offsetX, int offsetY, int offsetZ,
+                             bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership);
     }
 }

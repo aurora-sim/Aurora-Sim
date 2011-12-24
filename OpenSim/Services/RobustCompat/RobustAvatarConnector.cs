@@ -40,8 +40,15 @@ namespace OpenSim.Services.RobustCompat
 
             Dictionary<string, object> structData = avatar.ToKeyValuePairs();
 
+#if (!ISWIN)
+            foreach (KeyValuePair<string, object> kvp in structData)
+            {
+                if (kvp.Key != "Textures") sendData[kvp.Key] = kvp.Value.ToString();
+            }
+#else
             foreach (KeyValuePair<string, object> kvp in structData.Where(kvp => kvp.Key != "Textures"))
                 sendData[kvp.Key] = kvp.Value.ToString();
+#endif
 
             ResetAvatar(userID);
             string reqString = WebUtils.BuildQueryString(sendData);
@@ -50,10 +57,9 @@ namespace OpenSim.Services.RobustCompat
             {
                 List<string> serverURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AvatarServerURI");
-                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                    m_ServerURI,
-                                                                                                                    reqString)))
+                foreach (string mServerUri in serverURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);

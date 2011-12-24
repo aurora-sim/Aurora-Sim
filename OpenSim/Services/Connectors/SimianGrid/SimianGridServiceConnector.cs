@@ -481,7 +481,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 OSDArray array = response["Scenes"] as OSDArray;
                 if (array != null)
                 {
+#if (!ISWIN)
+                    for (int i = 0; i < array.Count; i++)
+                    {
+                        GridRegion region = ResponseToGridRegion(array[i] as OSDMap);
+                        if (region != null)
+                            foundRegions.Add(region);
+                    }
+#else
                     foundRegions.AddRange(array.Select(t => ResponseToGridRegion(t as OSDMap)).Where(region => region != null));
+#endif
                 }
             }
 
@@ -509,7 +518,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 OSDArray array = response["Scenes"] as OSDArray;
                 if (array != null)
                 {
+#if (!ISWIN)
+                    for (int i = 0; i < array.Count; i++)
+                    {
+                        GridRegion region = ResponseToGridRegion(array[i] as OSDMap);
+                        if (region != null)
+                            foundRegions.Add(region);
+                    }
+#else
                     foundRegions.AddRange(array.Select(t => ResponseToGridRegion(t as OSDMap)).Where(region => region != null));
+#endif
                 }
             }
 

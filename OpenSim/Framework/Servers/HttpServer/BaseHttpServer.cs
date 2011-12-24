@@ -496,12 +496,23 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                 if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
                 {
+#if (!ISWIN)
+                    foreach (string strAccept in request.AcceptTypes)
+                    {
+                        if (strAccept.Contains("application/llsd+xml") || strAccept.Contains("application/llsd+json"))
+                        {
+                            HandleLLSDRequests(request, response);
+                            return;
+                        }
+                    }
+#else
                     if (request.AcceptTypes.Any(strAccept => strAccept.Contains("application/llsd+xml") ||
                                                              strAccept.Contains("application/llsd+json")))
                     {
                         HandleLLSDRequests(request, response);
                         return;
                     }
+#endif
                 }
 
                 switch (request.ContentType)

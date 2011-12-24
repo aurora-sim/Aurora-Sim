@@ -155,7 +155,15 @@ namespace OpenSim.Services.GridService
         {
             List<GridRegion> regions = m_Database.GetDefaultRegions(scopeID);
 
-            List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
+#if (!ISWIN)
+            List<GridRegion> ret = new List<GridRegion>();
+            foreach (GridRegion r in regions)
+            {
+                if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
+            }
+#else
+            List<GridRegion> ret = regions.Where(r => (r.Flags & (int)RegionFlags.RegionOnline) != 0).ToList();
+#endif
 
             m_log.DebugFormat("[GRID SERVICE]: GetDefaultRegions returning {0} regions", ret.Count);
             return ret;
@@ -213,7 +221,15 @@ namespace OpenSim.Services.GridService
         {
             List<GridRegion> regions = m_Database.GetFallbackRegions(scopeID, x, y);
 
+#if (!ISWIN)
+            List<GridRegion> ret = new List<GridRegion>();
+            foreach (GridRegion r in regions)
+            {
+                if ((r.Flags & (int) RegionFlags.RegionOnline) != 0) ret.Add(r);
+            }
+#else
             List<GridRegion> ret = regions.Where(r => (r.Flags & (int) RegionFlags.RegionOnline) != 0).ToList();
+#endif
 
             m_log.DebugFormat("[GRID SERVICE]: Fallback returned {0} regions", ret.Count);
             return ret;
@@ -360,12 +376,23 @@ namespace OpenSim.Services.GridService
                 List<GridRegion> dupe = m_Database.Get(regionInfos.RegionName, regionInfos.ScopeID);
                 if (dupe != null && dupe.Count > 0)
                 {
+#if (!ISWIN)
+                    foreach (GridRegion d in dupe)
+                    {
+                        if (d.RegionID != regionInfos.RegionID)
+                        {
+                            m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.", regionInfos.RegionName, regionInfos.RegionID);
+                            return "Duplicate region name";
+                        }
+                    }
+#else
                     if (dupe.Any(d => d.RegionID != regionInfos.RegionID))
                     {
                         m_log.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
                                          regionInfos.RegionName, regionInfos.RegionID);
                         return "Duplicate region name";
                     }
+#endif
                 }
             }
 
@@ -573,7 +600,17 @@ namespace OpenSim.Services.GridService
                 rdatas.Sort(new RegionDataComparison(name));
                 //Results are backwards... so it needs reversed
                 rdatas.Reverse();
+#if (!ISWIN)
+                foreach (GridRegion rdata in rdatas)
+                {
+                    if (count++ < maxNumber)
+                    {
+                        rinfos.Add(rdata);
+                    }
+                }
+#else
                 rinfos.AddRange(rdatas.Where(rdata => count++ < maxNumber));
+#endif
             }
 
             return rinfos;
@@ -926,6 +963,28 @@ namespace OpenSim.Services.GridService
                 }
             }
             //Build the mapItemReply blocks
+#if(!ISWIN)
+            List<mapItemReply> mapItems = new List<mapItemReply>();
+            foreach (KeyValuePair<Vector3, int> kvp in Positions)
+            {
+                mapItems.Add(new mapItemReply
+                                                                           {
+                                                                               x =
+                                                                                   (uint)
+                                                                                   (region.RegionLocX + kvp.Key.X),
+                                                                               y =
+                                                                                   (uint)
+                                                                                   (region.RegionLocY + kvp.Key.Y),
+                                                                               id = UUID.Zero,
+                                                                               name =
+                                                                                   Util.Md5Hash(region.RegionName +
+                                                                                                Environment.TickCount.
+                                                                                                    ToString()),
+                                                                               Extra = kvp.Value,
+                                                                               Extra2 = 0
+                                                                           });
+            }
+#else
             List<mapItemReply> mapItems = Positions.Select(position => new mapItemReply
                                                                            {
                                                                                x =
@@ -942,6 +1001,7 @@ namespace OpenSim.Services.GridService
                                                                                Extra = position.Value,
                                                                                Extra2 = 0
                                                                            }).ToList();
+#endif
 
             //If there are no agents, we send one blank one to the client
             if (mapItems.Count == 0)

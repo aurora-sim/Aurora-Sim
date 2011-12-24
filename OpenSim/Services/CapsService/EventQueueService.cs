@@ -118,7 +118,16 @@ namespace OpenSim.Services.CapsService
 
         private RegionClientEventQueueService FindEventQueueConnector(IRegionClientCapsService service)
         {
+#if (!ISWIN)
+            foreach (ICapsServiceConnector connector in service.GetServiceConnectors())
+            {
+                RegionClientEventQueueService queueService = connector as RegionClientEventQueueService;
+                if (queueService != null) return queueService;
+            }
+            return null;
+#else
             return service.GetServiceConnectors().OfType<RegionClientEventQueueService>().FirstOrDefault();
+#endif
         }
 
         #region EventQueue Message Enqueue
@@ -512,8 +521,16 @@ namespace OpenSim.Services.CapsService
 
 
             // Register this as a caps handler
+#if (!ISWIN)
+            IRequestHandler rhandler = new RestHTTPHandler("POST", m_capsPath,
+                                                           delegate(Hashtable m_dhttpMethod)
+                                                           {
+                                                               return ProcessQueue(m_dhttpMethod, service.AgentID);
+                                                           });
+#else
             IRequestHandler rhandler = new RestHTTPHandler("POST", m_capsPath,
                                                            m_dhttpMethod => ProcessQueue(m_dhttpMethod, service.AgentID));
+#endif
             m_service.AddStreamHandler("EventQueueGet", rhandler);
 
             // This will persist this beyond the expiry of the caps handlers

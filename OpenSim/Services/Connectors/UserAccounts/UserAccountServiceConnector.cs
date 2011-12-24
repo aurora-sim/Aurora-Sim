@@ -298,10 +298,9 @@ namespace OpenSim.Services.Connectors
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(avatarID.ToString(),
                                                                                            "UserAccountServerURI");
-                foreach (string reply in m_ServerURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                      m_ServerURI + "/accounts",
-                                                                                                                      reqString)))
+                foreach (string mServerUri in m_ServerURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/accounts", reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -312,8 +311,7 @@ namespace OpenSim.Services.Connectors
                                 return true;
                         }
                         else
-                            m_log.DebugFormat(
-                                "[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
+                            m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount reply data does not contain result field");
                     }
                     else
                         m_log.DebugFormat("[ACCOUNTS CONNECTOR]: Set or Create UserAccount received empty reply");

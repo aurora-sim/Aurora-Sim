@@ -686,7 +686,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             string path = (backup) ? m_CacheDirectoryBackup : m_CacheDirectory;
             try
             {
+#if (!ISWIN)
+                foreach (char invalidChar in m_InvalidChars)
+                    id = id.Replace(invalidChar, '_');
+#else
                 id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
+#endif
                 for (int p = 1; p <= m_CacheDirectoryTiers; p++)
                 {
                     string pathPart = id.Substring(0, m_CacheDirectoryTierLen);

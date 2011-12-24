@@ -110,10 +110,18 @@ namespace Aurora.Services.DataService
                 List<string> urls =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                         message.toAgentID.ToString(), "RemoteServerURI");
+#if (!ISWIN)
+                foreach (string url in urls)
+                {
+                    OSDMap result = WebUtils.PostToService(url + "osd", sendData, true, false);
+                    return ((OSDMap) OSDParser.DeserializeJson(result["_RawResult"]))["Result"].AsBoolean();
+                }
+#else
                 foreach (OSDMap result in urls.Select(url => WebUtils.PostToService(url + "osd", sendData, true, false)))
                 {
                     return ((OSDMap) OSDParser.DeserializeJson(result["_RawResult"]))["Result"].AsBoolean();
                 }
+#endif
             }
             catch (Exception e)
             {

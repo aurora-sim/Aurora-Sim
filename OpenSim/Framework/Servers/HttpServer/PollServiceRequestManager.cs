@@ -161,10 +161,20 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             m_requests.Clear();
 
+#if (!ISWIN)
+            foreach (Thread t in m_workerThreads)
+            {
+                if (t != null)
+                {
+                    t.Abort();
+                }
+            }
+#else
             foreach (Thread t in m_workerThreads.Where(t => t != null))
             {
                 t.Abort();
             }
+#endif
             m_running = false;
         }
     }

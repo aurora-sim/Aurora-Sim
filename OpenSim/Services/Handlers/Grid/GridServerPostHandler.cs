@@ -464,11 +464,20 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
+#if (!ISWIN)
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+#else
                 foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
                 }
+#endif
             }
 
             string xmlString = WebUtils.BuildXmlResponse(result);
@@ -514,11 +523,20 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
+#if (!ISWIN)
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+#else
                 foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
                 }
+#endif
             }
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
@@ -544,11 +562,20 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
+#if (!ISWIN)
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+#else
                 foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
                 }
+#endif
             }
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
@@ -585,11 +612,20 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
+#if (!ISWIN)
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+#else
                 foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
                 }
+#endif
             }
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
@@ -626,11 +662,20 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
+#if (!ISWIN)
+                foreach (GridRegion rinfo in rinfos)
+                {
+                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    result["region" + i] = rinfoDict;
+                    i++;
+                }
+#else
                 foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
                 }
+#endif
             }
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);

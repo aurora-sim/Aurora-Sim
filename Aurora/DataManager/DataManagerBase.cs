@@ -60,6 +60,7 @@ namespace Aurora.DataManager
                                                                     string wantedValue);
 
         public abstract bool Insert(string table, object[] values);
+        public abstract bool InsertMultiple(string table, List<object[]> values);
         public abstract bool Insert(string table, string[] keys, object[] values);
         public abstract bool Delete(string table, string[] keys, object[] values);
         public abstract bool Delete(string table, string whereclause);
@@ -101,10 +102,24 @@ namespace Aurora.DataManager
             if (results.Count > 0)
             {
                 Version[] highestVersion = {null};
+#if (!ISWIN)
+                foreach (string result in results)
+                {
+                    if (result.Trim() != string.Empty)
+                    {
+                        var version = new Version(result);
+                        if (highestVersion[0] == null || version > highestVersion[0])
+                        {
+                            highestVersion[0] = version;
+                        }
+                    }
+                }
+#else
                 foreach (var version in results.Where(result => result.Trim() != string.Empty).Select(result => new Version(result)).Where(version => highestVersion[0] == null || version > highestVersion[0]))
                 {
                     highestVersion[0] = version;
                 }
+#endif
                 return highestVersion[0];
             }
 
@@ -170,7 +185,19 @@ namespace Aurora.DataManager
             {
                 if (!extractedColumns.Contains(columnDefinition))
                 {
+#if (!ISWIN)
+                    ColumnDefinition thisDef = null;
+                    foreach (ColumnDefinition extractedDefinition in extractedColumns)
+                    {
+                        if (extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+#else
                     ColumnDefinition thisDef = extractedColumns.FirstOrDefault(extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
+#endif
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
@@ -186,7 +213,19 @@ namespace Aurora.DataManager
             {
                 if (!newColumns.Contains(columnDefinition))
                 {
+#if (!ISWIN)
+                    ColumnDefinition thisDef = null;
+                    foreach (ColumnDefinition extractedDefinition in newColumns)
+                    {
+                        if (extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower())
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+#else
                     ColumnDefinition thisDef = newColumns.FirstOrDefault(extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
+#endif
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {

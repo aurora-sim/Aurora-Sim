@@ -927,7 +927,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock(Events)
             {
+#if (!ISWIN)
+                Events.Add(delegate()
+                {
+                    m_clientManager.ForEachSync(action);
+                });
+#else
                 Events.Add(() => m_clientManager.ForEachSync(action));
+#endif
             }
         }
 
@@ -945,7 +952,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock(Events)
             {
+#if (!ISWIN)
+                Events.Add(delegate()
+                {
+                    m_sceneGraph.ForEachSceneEntity(action);
+                });
+#else
                 Events.Add(() => m_sceneGraph.ForEachSceneEntity(action));
+#endif
             }
         }
 

@@ -141,10 +141,20 @@ namespace OpenSim.Region.Framework.Scenes
                         if (textureEntry.FaceTextures != null)
                         {
                             // Loop through the rest of the texture faces (a non-null face means the face is different from DefaultTexture)
+#if (!ISWIN)
+                            foreach (Primitive.TextureEntryFace texture in textureEntry.FaceTextures)
+                            {
+                                if (texture != null)
+                                {
+                                    assetUuids[texture.TextureID] = AssetType.Texture;
+                                }
+                            }
+#else
                             foreach (Primitive.TextureEntryFace texture in textureEntry.FaceTextures.Where(texture => texture != null))
                             {
                                 assetUuids[texture.TextureID] = AssetType.Texture;
                             }
+#endif
                         }
                     }
 
@@ -155,10 +165,20 @@ namespace OpenSim.Region.Framework.Scenes
                     TaskInventoryDictionary taskDictionary = (TaskInventoryDictionary) part.TaskInventory.Clone();
 
                     // Now analyze this prim's inventory items to preserve all the uuids that they reference
+#if (!ISWIN)
+                    foreach (TaskInventoryItem tii in taskDictionary.Values)
+                    {
+                        if (!assetUuids.ContainsKey(tii.AssetID))
+                        {
+                            GatherAssetUuids(tii.AssetID, (AssetType) tii.Type, assetUuids, scene);
+                        }
+                    }
+#else
                     foreach (TaskInventoryItem tii in taskDictionary.Values.Where(tii => !assetUuids.ContainsKey(tii.AssetID)))
                     {
                         GatherAssetUuids(tii.AssetID, (AssetType) tii.Type, assetUuids, scene);
                     }
+#endif
                 }
                 catch (Exception e)
                 {

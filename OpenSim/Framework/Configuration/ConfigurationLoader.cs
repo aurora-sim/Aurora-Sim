@@ -171,6 +171,17 @@ namespace OpenSim.Framework
                                      iniDirName);
 
                     string[] fileEntries = Directory.GetFiles(iniDirName);
+#if (!ISWIN)
+                    foreach (string filePath in fileEntries)
+                    {
+                        string extension = Path.GetExtension(filePath);
+                        if (extension != null && extension.ToLower() == ".ini")
+                        {
+                            if (!sources.Contains(Path.Combine(iniDirName, filePath)))
+                                sources.Add(Path.Combine(iniDirName, filePath));
+                        }
+                    }
+#else
                     foreach (string filePath in fileEntries.Where(filePath =>
                                                                       {
                                                                           var extension = Path.GetExtension(filePath);
@@ -179,6 +190,7 @@ namespace OpenSim.Framework
                     {
                         sources.Add(Path.Combine(iniDirName, filePath));
                     }
+#endif
                 }
             }
             else
@@ -350,17 +362,35 @@ namespace OpenSim.Framework
                                     paths.AddRange(Util.GetSubFiles(path));
                                     List<string> examplefiles =
                                         new List<string>(Util.GetSubFiles(path.Replace(".ini", ".ini.example")));
+#if (!ISWIN)
+                                    examplefiles.RemoveAll(delegate(string s)
+                                    {
+                                        return paths.Contains(s.Replace(".example", ""));
+                                    });
+#else
                                     examplefiles.RemoveAll(
                                         s => paths.Contains(s.Replace(".example", "")));
+#endif
                                     paths.AddRange(examplefiles);
                                 }
                                 else
                                     paths.AddRange(Util.GetSubFiles(path));
+#if (!ISWIN)
+                            foreach (string p in paths)
+                            {
+                                if (!sources.Contains(p))
+                                {
+                                    cn++;
+                                    sources.Insert(cn, p);
+                                }
+                            }
+#else
                             foreach (string p in paths.Where(p => !sources.Contains(p)))
                             {
                                 cn++;
                                 sources.Insert(cn, p);
                             }
+#endif
                         }
                     }
                     else if (k.StartsWith("RemoveInclude-"))
@@ -393,11 +423,22 @@ namespace OpenSim.Framework
                             string[] paths = new string[1] {path};
                             if (path.Contains("*"))
                                 paths = Util.GetSubFiles(path);
+#if (!ISWIN)
+                            foreach (string p in paths)
+                            {
+                                if (!sources.Contains(p))
+                                {
+                                    cn--;
+                                    sources.Remove(p);
+                                }
+                            }
+#else
                             foreach (string p in paths.Where(p => !sources.Contains(p)))
                             {
                                 cn--;
                                 sources.Remove(p);
                             }
+#endif
                         }
                     }
                 }

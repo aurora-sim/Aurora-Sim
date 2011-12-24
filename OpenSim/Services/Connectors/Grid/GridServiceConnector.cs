@@ -98,45 +98,46 @@ namespace OpenSim.Services.Connectors
 
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RegistrationURI");
-            foreach (OSDMap result in serverURIs.Select(m_ServerURI => WebUtils.PostToService(m_ServerURI + "/grid", map, true, false)).Where(result => result["Success"].AsBoolean()))
+            foreach (string mServerUri in serverURIs)
             {
-                try
+                OSDMap result = WebUtils.PostToService(mServerUri + "/grid", map, true, false);
+                if (result["Success"].AsBoolean())
                 {
-                    OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
-                    if (r is OSDMap)
+                    try
                     {
-                        OSDMap innerresult = (OSDMap) r;
-                        if (innerresult["Result"].AsString() == "")
+                        OSD r = OSDParser.DeserializeJson(result["_RawResult"]);
+                        if (r is OSDMap)
                         {
-                            object[] o = new object[2];
-                            o[0] = regionInfo;
-                            o[1] = innerresult;
-                            SessionID = innerresult["SecureSessionID"].AsUUID();
-                            m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(
-                                regionInfo.RegionHandle.ToString(), (OSDMap) innerresult["URLs"]);
-
-                            OSDArray array = (OSDArray) innerresult["Neighbors"];
-                            foreach (OSD ar in array)
+                            OSDMap innerresult = (OSDMap) r;
+                            if (innerresult["Result"].AsString() == "")
                             {
-                                GridRegion n = new GridRegion();
-                                n.FromOSD((OSDMap) ar);
-                                neighbors.Add(n);
+                                object[] o = new object[2];
+                                o[0] = regionInfo;
+                                o[1] = innerresult;
+                                SessionID = innerresult["SecureSessionID"].AsUUID();
+                                m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfo.RegionHandle.ToString(), (OSDMap) innerresult["URLs"]);
+
+                                OSDArray array = (OSDArray) innerresult["Neighbors"];
+                                foreach (OSD ar in array)
+                                {
+                                    GridRegion n = new GridRegion();
+                                    n.FromOSD((OSDMap) ar);
+                                    neighbors.Add(n);
+                                }
+                                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("GridRegionRegistered", o);
+                                return "";
                             }
-                            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.
-                                FireGenericEventHandler("GridRegionRegistered", o);
-                            return "";
-                        }
-                        else
-                        {
-                            SessionID = UUID.Zero;
-                            return innerresult["Result"].AsString();
+                            else
+                            {
+                                SessionID = UUID.Zero;
+                                return innerresult["Result"].AsString();
+                            }
                         }
                     }
-                }
-                catch (Exception) //JsonException
-                {
-                    m_log.Warn(
-                        "[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
+                    catch (Exception) //JsonException
+                    {
+                        m_log.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
+                    }
                 }
             }
             SessionID = SecureSessionID;
@@ -152,6 +153,23 @@ namespace OpenSim.Services.Connectors
 
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
+#if (!ISWIN)
+            foreach (string mServerUri in serverURIs)
+            {
+                OSDMap result = WebUtils.PostToService(mServerUri, map, true, true);
+                if (result["Success"].AsBoolean())
+                {
+                    try
+                    {
+                        OSDMap innerresult = (OSDMap) result["_Result"];
+                        return innerresult["Result"].AsString();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+#else
             foreach (OSDMap result in serverURIs.Select(m_ServerURI => WebUtils.PostToService(m_ServerURI, map, true, true)).Where(result => result["Success"].AsBoolean()))
             {
                 try
@@ -163,6 +181,7 @@ namespace OpenSim.Services.Connectors
                 {
                 }
             }
+#endif
             return "Error communicating with grid service";
         }
 
@@ -180,10 +199,9 @@ namespace OpenSim.Services.Connectors
                 List<string> serverURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(regionhandle.ToString(),
                                                                                            "GridServerURI");
-                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                    m_ServerURI,
-                                                                                                                    WebUtils.BuildQueryString(sendData))))
+                foreach (string mServerUri in serverURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, WebUtils.BuildQueryString(sendData));
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -390,11 +408,24 @@ namespace OpenSim.Services.Connectors
                         if (replyData != null)
                         {
                             Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                            foreach (object o in rinfosList)
+                            {
+                                Dictionary<string, object> r = o as Dictionary<string, object>;
+                                if (r != null)
+                                {
+                                    GridRegion rinfo = new GridRegion(r);
+                                    rinfo.GenericMap["URL"] = m_ServerURI;
+                                    rinfos.Add(rinfo);
+                                }
+                            }
+#else
                             foreach (GridRegion rinfo in rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)))
                             {
                                 rinfo.GenericMap["URL"] = m_ServerURI;
                                 rinfos.Add(rinfo);
                             }
+#endif
                         }
                         else
                             m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
@@ -444,11 +475,24 @@ namespace OpenSim.Services.Connectors
                         if (replyData != null)
                         {
                             Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                            foreach (object o in rinfosList)
+                            {
+                                Dictionary<string, object> r = o as Dictionary<string, object>;
+                                if (r != null)
+                                {
+                                    GridRegion rinfo = new GridRegion(r);
+                                    rinfo.GenericMap["URL"] = m_ServerURI;
+                                    rinfos.Add(rinfo);
+                                }
+                            }
+#else
                             foreach (GridRegion rinfo in rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)))
                             {
                                 rinfo.GenericMap["URL"] = m_ServerURI;
                                 rinfos.Add(rinfo);
                             }
+#endif
                         }
                         else
                             m_log.DebugFormat(
@@ -506,7 +550,18 @@ namespace OpenSim.Services.Connectors
                 if (replyData != null)
                 {
                     Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object r in rinfosList)
+                    {
+                        if (r is Dictionary<string, object>)
+                        {
+                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                            rinfos.Add(rinfo);
+                        }
+                    }
+#else
                     rinfos.AddRange(rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)));
+#endif
                 }
                 else
                     m_log.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions {0} received null response",
@@ -556,7 +611,18 @@ namespace OpenSim.Services.Connectors
                 if (replyData != null)
                 {
                     Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object r in rinfosList)
+                    {
+                        if (r is Dictionary<string, object>)
+                        {
+                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                            rinfos.Add(rinfo);
+                        }
+                    }
+#else
                     rinfos.AddRange(rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)));
+#endif
                 }
                 else
                     m_log.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions {0}, {1}-{2} received null response",
@@ -606,7 +672,19 @@ namespace OpenSim.Services.Connectors
                 if (replyData != null)
                 {
                     Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object r in rinfosList)
+                    {
+                        if (r is Dictionary<string, object>)
+                        {
+                            GridRegion rinfo = new GridRegion((Dictionary<string, object>)r);
+                            rinfos.Add(rinfo);
+                        }
+                    }
+#else
                     rinfos.AddRange(rinfosList.OfType<Dictionary<string, object>>().Select(r => new GridRegion(r)));
+#endif
+
                 }
                 else
                     m_log.DebugFormat("[GRID CONNECTOR]: GetSafeRegions {0}, {1}-{2} received null response",
@@ -744,10 +822,9 @@ namespace OpenSim.Services.Connectors
             {
                 List<string> serverURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
-                foreach (string reply in serverURIs.Select(m_ServerURI => SynchronousRestFormsRequester.MakeRequest("POST",
-                                                                                                                    m_ServerURI,
-                                                                                                                    reqString)))
+                foreach (string mServerUri in serverURIs)
                 {
+                    string reply = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, reqString);
                     if (reply != string.Empty)
                     {
                         Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -756,8 +833,7 @@ namespace OpenSim.Services.Connectors
                         {
                             return String.Empty;
                         }
-                        else if (replyData.ContainsKey("Result") &&
-                                 (replyData["Result"].ToString().ToLower() == "failure"))
+                        else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
                         {
                             m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"]);
                             return replyData["Message"].ToString();

@@ -169,7 +169,15 @@ namespace OpenSim.Framework
             lock (m_presenceEntitiesLock)
             {
                 List<IScenePresence> tmp = new List<IScenePresence>(m_presenceEntities.Count);
-                tmp.AddRange(m_presenceEntities.Values.Where(entity => (entity.AbsolutePosition - pos).LengthSquared() < radius*radius));
+#if (!ISWIN)
+                foreach (IScenePresence entity in m_presenceEntities.Values)
+                {
+                    if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius)
+                        tmp.Add(entity);
+                }
+#else
+                tmp.AddRange(m_presenceEntities.Values.Where(entity => (entity.AbsolutePosition - pos).LengthSquared() < radius * radius));
+#endif
 
                 return tmp.ToArray();
             }

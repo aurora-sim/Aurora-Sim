@@ -298,11 +298,19 @@ namespace Aurora.DataManager
 
             int nLastVerFound = 0;
             Match m = null;
+#if (!ISWIN)
             string sFile = Array.FindLast(names, nm =>
                                                      {
                                                          m = _match_new.Match(nm);
                                                          return m.Success;
                                                      });
+#else
+            string sFile = Array.FindLast(names, nm =>
+                                                     {
+                                                         m = _match_new.Match(nm);
+                                                         return m.Success;
+                                                     });
+#endif
                 // ; nm.StartsWith(sPrefix, StringComparison.InvariantCultureIgnoreCase
 
             if ((m != null) && !String.IsNullOrEmpty(sFile))

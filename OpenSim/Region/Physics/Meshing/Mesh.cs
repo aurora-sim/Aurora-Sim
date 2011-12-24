@@ -80,7 +80,12 @@ namespace OpenSim.Region.Physics.Meshing
 
         public List<Vector3> getVertexList()
         {
-            return m_vertices.Keys.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+            List<Vector3> vs = new List<Vector3>();
+            foreach (Vertex v in m_vertices.Keys)
+            {
+                vs.Add(new Vector3(v.X, v.Y, v.Z));
+            }
+            return vs;
         }
 
         public float[] getVertexListAsFloatLocked()
@@ -221,6 +226,20 @@ namespace OpenSim.Region.Physics.Meshing
                 m_verticesPtr != IntPtr.Zero)
                 throw new NotSupportedException("Attempt to TransformLinear a pinned Mesh");
 
+#if (!ISWIN)
+            foreach (Vertex v in m_vertices.Keys)
+            {
+                if (v != null)
+                {
+                    float x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
+                    float y = v.X*matrix[0, 1] + v.Y*matrix[1, 1] + v.Z*matrix[2, 1];
+                    float z = v.X*matrix[0, 2] + v.Y*matrix[1, 2] + v.Z*matrix[2, 2];
+                    v.X = x + offset[0];
+                    v.Y = y + offset[1];
+                    v.Z = z + offset[2];
+                }
+            }
+#else
             foreach (Vertex v in m_vertices.Keys.Where(v => v != null))
             {
                 float x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
@@ -230,6 +249,7 @@ namespace OpenSim.Region.Physics.Meshing
                 v.Y = y + offset[1];
                 v.Z = z + offset[2];
             }
+#endif
         }
 
         #endregion
@@ -384,10 +404,17 @@ namespace OpenSim.Region.Physics.Meshing
             String fileName = name + "_" + title + ".raw";
             String completePath = Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
+#if (!ISWIN)
+            foreach (Triangle s in m_triangles)
+            {
+                sw.WriteLine(s.ToStringRaw());
+            }
+#else
             foreach (string s in m_triangles.Select(t => t.ToStringRaw()))
             {
                 sw.WriteLine(s);
             }
+#endif
             sw.Close();
         }
 

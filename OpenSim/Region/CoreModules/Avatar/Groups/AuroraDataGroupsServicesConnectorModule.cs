@@ -224,7 +224,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         public GroupMembershipData GetAgentActiveMembership(UUID requestingAgentID, UUID AgentID)
         {
             return GroupsConnector.GetGroupMembershipData(requestingAgentID,
-                                                          GroupsConnector.GetAgentActiveGroup(requestingAgentID, AgentID),
+                                                          UUID.Zero, 
                                                           AgentID);
         }
 
@@ -356,10 +356,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if (session == null)
                 return null;
             ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
+#if (!ISWIN)
+            foreach (ChatSessionMember testmember in session.Members)
+            {
+                if (testmember.AvatarKey == Agent)
+                {
+                    thismember = testmember;
+                }
+            }
+#else
             foreach (ChatSessionMember testmember in session.Members.Where(testmember => testmember.AvatarKey == Agent))
             {
                 thismember = testmember;
             }
+#endif
             return thismember;
         }
 
@@ -460,7 +470,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private int GetMemeberCount(ChatSession session)
         {
+#if (!ISWIN)
+            int count = 0;
+            foreach (ChatSessionMember member in session.Members)
+            {
+                if (member.HasBeenAdded) count++;
+            }
+            return count;
+#else
             return session.Members.Count(member => member.HasBeenAdded);
+#endif
         }
 
         /// <summary>

@@ -235,10 +235,20 @@ namespace Aurora.Simulation.Base
                     //Just clean it out as good as we can
                     simBase.Shutdown(false);
                     IRegionLoader[] regionLoaders = simBase.ApplicationRegistry.RequestModuleInterfaces<IRegionLoader>();
+#if (!ISWIN)
+                    foreach (IRegionLoader loader in regionLoaders)
+                    {
+                        if (loader != null && loader.Default)
+                        {
+                            loader.FailedToStartRegions(ex.Message);
+                        }
+                    }
+#else
                     foreach (IRegionLoader loader in regionLoaders.Where(loader => loader != null && loader.Default))
                     {
                         loader.FailedToStartRegions(ex.Message);
                     }
+#endif
                 }
                 //Then let it restart if it needs by sending it back up to 'while (AutoRestart || Running)' above
                 return;

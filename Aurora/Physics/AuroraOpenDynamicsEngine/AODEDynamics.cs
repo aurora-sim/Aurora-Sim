@@ -69,12 +69,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_angularDeflectionEfficiency;
         private float m_angularDeflectionTimescale;
         private Vector3 m_angularFrictionTimescale = Vector3.Zero; // body angular velocity  decay rate
-        private int m_angularMotorApply; // application frame counter
+        
         private float m_angularMotorDecayTimescale; // motor angular velocity decay rate
         private Vector3 m_angularMotorDirection = Vector3.Zero; // angular velocity requested by LSL motor
         private float m_angularMotorTimescale; // motor angular velocity ramp up rate
         private Vector3 m_angularMotorVelocity = Vector3.Zero; // current angular motor velocity
-        private bool m_angularZeroFlag;
+        
 
         //Banking properties
         private float m_bankingEfficiency;
@@ -98,7 +98,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_linearMotorDirectionLASTSET = Vector3.Zero; // velocity requested by LSL
         private Vector3 m_linearMotorOffset = Vector3.Zero;
         private float m_linearMotorTimescale;
-        private bool m_linearZeroFlag;
+        //private bool m_linearZeroFlag;
         private Vector3 m_newVelocity = Vector3.Zero; // velocity applied to body
         private Quaternion m_referenceFrame = Quaternion.Identity; // Axis modifier
         private Vehicle m_type = Vehicle.TYPE_NONE; // If a 'VEHICLE', and what kind
@@ -112,6 +112,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         //Attractor properties
         private float m_verticalAttractionEfficiency = 1.0f; // damped
         private float m_verticalAttractionTimescale = 500f; // Timescale > 300  means no vert attractor.
+        
+       
+        
 
         public Vehicle Type
         {
@@ -762,7 +765,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 try
                 {
+#if (!ISWIN)
+                    foreach (Vector3 vector3 in m_forcelist)
+                        TaintedForce = TaintedForce + (vector3);
+#else
                     TaintedForce = m_forcelist.Aggregate(TaintedForce, (current, t) => current + (t));
+#endif
                 }
                 catch (IndexOutOfRangeException)
                 {
@@ -1208,5 +1216,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             return rotBetween;
         }
+
+
+
+        public int m_angularMotorApply { get; set; }
+
+        public bool m_angularZeroFlag { get; set; }
     }
 }

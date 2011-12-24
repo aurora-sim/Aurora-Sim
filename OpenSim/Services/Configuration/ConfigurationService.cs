@@ -186,10 +186,20 @@ namespace OpenSim.Services.ConfigurationService
             {
                 return FindValueOfFromOSDMap(key, m_allConfigs[userID]);
             }
+#if (!ISWIN)
+            foreach (string name in m_allConfigs.Keys)
+            {
+                if (m_allConfigs[name].ContainsKey(key) && m_allConfigs[name][key] != "")
+                {
+                    return FindValueOfFromOSDMap(key, m_allConfigs[name]);
+                }
+            }
+#else
             foreach (string name in m_allConfigs.Keys.Where(name => m_allConfigs[name].ContainsKey(key) && m_allConfigs[name][key] != ""))
             {
                 return FindValueOfFromOSDMap(key, m_allConfigs[name]);
             }
+#endif
             return FindValueOf(key);
         }
 
@@ -207,10 +217,20 @@ namespace OpenSim.Services.ConfigurationService
             {
                 urls.AddRange(FindValueOfFromOSDMap(key, m_allConfigs[userID]));
             }
+#if (!ISWIN)
+            foreach (string name in m_allConfigs.Keys)
+            {
+                if (m_allConfigs[name].ContainsKey(key) && m_allConfigs[name][key] != "")
+                {
+                    urls.AddRange(FindValueOfFromOSDMap(key, m_allConfigs[name]));
+                }
+            }
+#else
             foreach (string name in m_allConfigs.Keys.Where(name => m_allConfigs[name].ContainsKey(key) && m_allConfigs[name][key] != ""))
             {
                 urls.AddRange(FindValueOfFromOSDMap(key, m_allConfigs[name]));
             }
+#endif
             urls.AddRange(FindValueOf(key));
 
             return urls.Urls;
@@ -240,10 +260,20 @@ namespace OpenSim.Services.ConfigurationService
                 {
                     return FindValueOfFromOSDMap(key, m_allConfigs[regionID]);
                 }
+#if (!ISWIN)
+                foreach (string name in m_allConfigs.Keys)
+                {
+                    if (m_allConfigs[name].ContainsKey(key))
+                    {
+                        return FindValueOfFromOSDMap(key, m_allConfigs[name]);
+                    }
+                }
+#else
                 foreach (string name in m_allConfigs.Keys.Where(name => m_allConfigs[name].ContainsKey(key)))
                 {
                     return FindValueOfFromOSDMap(key, m_allConfigs[name]);
                 }
+#endif
             }
             return FindValueOf(key);
         }
@@ -335,10 +365,23 @@ namespace OpenSim.Services.ConfigurationService
 
             public void AddRange(IEnumerable<string> e)
             {
+#if (!ISWIN)
+                foreach (string ee in e)
+                {
+                    if (ee != "")
+                    {
+                        if (!Urls.Contains(ee))
+                        {
+                            Urls.Add(ee);
+                        }
+                    }
+                }
+#else
                 foreach (string ee in e.Where(ee => ee != "").Where(ee => !Urls.Contains(ee)))
                 {
                     Urls.Add(ee);
                 }
+#endif
             }
         }
 

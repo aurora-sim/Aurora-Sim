@@ -322,7 +322,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     foreach(SceneObjectPart part in partList)
                         part.AttachedAvatar = remoteClient.AgentId;
 
-                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
                     if (objatt.RootPart.OwnerID != item.Owner)
                     {
                         //Need to kill the for sale here
@@ -361,10 +361,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     //Update the ItemID with the new item
                     objatt.SetFromItemID(itemID, item.AssetID);
 
-                    //NOTE: we MUST do this manually, otherwise it will never be added!
-                    //We also have to reset the IDs!
-                    //Note: root first, as we have to set the parentID right!
-                    SendKillEntity(objatt.RootChild);
+                    //DO NOT SEND THIS KILL ENTITY
+                    // If we send this, when someone copies an inworld object, then wears it, the inworld objects disapepars
+                    // If a bug is caused by this, we need to figure out some other workaround.
+                    //SendKillEntity(objatt.RootChild);
+                    //We also have to reset the IDs so that it doesn't have the same IDs as one inworld (possibly)!
                     m_scene.SceneGraph.PrepPrimForAdditionToScene(objatt);
                     m_scene.Entities.Add(objatt);
 
@@ -762,8 +763,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void SendKillEntity(ISceneChildEntity rootPart)
         {
+#if (!ISWIN)
+            m_scene.ForEachClient(delegate(IClientAPI client)
+            {
+                client.SendKillObject(m_scene.RegionInfo.RegionHandle, new IEntity[] { rootPart });
+            });
+#else
             m_scene.ForEachClient(
                 client => client.SendKillObject(m_scene.RegionInfo.RegionHandle, new IEntity[] {rootPart}));
+#endif
         }
 
         // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.

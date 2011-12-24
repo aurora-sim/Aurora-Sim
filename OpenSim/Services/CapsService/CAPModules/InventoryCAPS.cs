@@ -59,9 +59,17 @@ namespace OpenSim.Services.CapsService
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
 
+#if (!ISWIN)
+            RestBytesMethod method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
+            };
+#else
             RestBytesMethod method =
                 (request, path, param, httpRequest, httpResponse) =>
                 HandleWebFetchInventoryDescendents(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("WebFetchInventoryDescendents",
                                      new RestBytesStreamHandler("POST",
                                                                 service.CreateCAPS("WebFetchInventoryDescendents", ""),
@@ -75,9 +83,17 @@ namespace OpenSim.Services.CapsService
                                                                 service.CreateCAPS("FetchInventoryDescendents2", ""),
                                                                 method));
 
+#if (!ISWIN)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchLibDescendents(request, m_service.AgentID);
+            };
+#else
             method =
                 (request, path, param, httpRequest, httpResponse) =>
                 HandleFetchLibDescendents(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("FetchLibDescendents",
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
                                                                 method));
@@ -85,8 +101,16 @@ namespace OpenSim.Services.CapsService
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
                                                                 method));
 
+#if (!ISWIN)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchInventory(request, m_service.AgentID);
+            };
+#else
             method =
                 (request, path, param, httpRequest, httpResponse) => HandleFetchInventory(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("FetchInventory",
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
                                                                 method));
@@ -94,7 +118,15 @@ namespace OpenSim.Services.CapsService
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
                                                                 method));
 
+#if (!ISWIN)
+            method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return HandleFetchLib(request, m_service.AgentID);
+            };
+#else
             method = (request, path, param, httpRequest, httpResponse) => HandleFetchLib(request, m_service.AgentID);
+#endif
             service.AddStreamHandler("FetchLib",
                                      new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
                                                                 method));
@@ -207,10 +239,22 @@ namespace OpenSim.Services.CapsService
                 //We have to send the agent_id in the main map as well as all the items
 
                 OSDArray items = new OSDArray();
+#if (!ISWIN)
+                foreach (OSDMap requestedFolders in foldersrequested)
+                {
+                    UUID itemId = requestedFolders["item_id"].AsUUID();
+                    OSDArray item = m_inventoryService.GetItem(itemId);
+                    if (item != null && item.Count > 0)
+                    {
+                        items.Add(item[0]);
+                    }
+                }
+#else
                 foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(item_id)).Where(item => item != null && item.Count > 0))
                 {
                     items.Add(item[0]);
                 }
+#endif
                 map.Add("items", items);
 
                 byte[] response = OSDParser.SerializeLLSDXmlBytes(map);
@@ -238,10 +282,22 @@ namespace OpenSim.Services.CapsService
 
                 OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
                 OSDArray items = new OSDArray();
+#if (!ISWIN)
+                foreach (OSDMap requestedFolders in foldersrequested)
+                {
+                    UUID itemId = requestedFolders["item_id"].AsUUID();
+                    OSDArray item = m_inventoryService.GetItem(itemId);
+                    if (item != null && item.Count > 0)
+                    {
+                        items.Add(item[0]);
+                    }
+                }
+#else
                 foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(item_id)).Where(item => item != null && item.Count > 0))
                 {
                     items.Add(item[0]);
                 }
+#endif
                 map.Add("items", items);
 
                 byte[] response = OSDParser.SerializeLLSDXmlBytes(map);
@@ -458,12 +514,22 @@ namespace OpenSim.Services.CapsService
                 SceneObjectGroup grp = null;
 
                 List<UUID> textures = new List<UUID>();
+#if(!ISWIN)
+                for (int i = 0; i < texture_list.Count; i++)
+                {
+                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, AssetType.Texture, m_service.AgentID);
+                    textureAsset.Data = texture_list[i].AsBinary();
+                    textureAsset.ID = m_assetService.Store(textureAsset);
+                    textures.Add(textureAsset.ID);
+                }
+#else
                 foreach (AssetBase textureAsset in texture_list.Select(t => new AssetBase(UUID.Random(), assetName, AssetType.Texture,
                                                                                           m_service.AgentID) {Data = t.AsBinary()}))
                 {
                     textureAsset.ID = m_assetService.Store(textureAsset);
                     textures.Add(textureAsset.ID);
                 }
+#endif
                 InventoryFolderBase meshFolder = m_inventoryService.GetFolderForType(m_service.AgentID,
                                                                                      InventoryType.Mesh, AssetType.Mesh);
                 for (int i = 0; i < mesh_list.Count; i++)

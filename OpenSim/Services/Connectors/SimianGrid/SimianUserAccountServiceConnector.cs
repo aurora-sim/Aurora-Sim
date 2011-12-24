@@ -153,7 +153,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 OSDArray array = response["Users"] as OSDArray;
                 if (array != null && array.Count > 0)
                 {
+#if (!ISWIN)
+                    for (int i = 0; i < array.Count; i++)
+                    {
+                        UserAccount account = ResponseToUserAccount(array[i] as OSDMap);
+                        if (account != null)
+                            accounts.Add(account);
+                    }
+#else
                     accounts.AddRange(array.Select(t => ResponseToUserAccount(t as OSDMap)).Where(account => account != null));
+#endif
                 }
                 else
                 {

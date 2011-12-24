@@ -302,7 +302,12 @@ namespace Aurora.Services.DataService
                 {
                     addToCount = false;
                     query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
+#if (!ISWIN)
+                    foreach (UUID item in moreLinkedItems)
+                        query = query + String.Format("{0} = '{1}' or ", "inventoryID", item);
+#else
                     query = moreLinkedItems.Aggregate(query, (current, t) => current + String.Format("{0} = '{1}' or ", "inventoryID", t));
+#endif
                     query = query.Remove(query.Length - 4, 4);
                     query += ")";
                     moreLinkedItems.Clear();
@@ -464,8 +469,15 @@ namespace Aurora.Services.DataService
                 try
                 {
                     items = ParseInventoryItems(reader);
+#if (!ISWIN)
+                    items.RemoveAll(delegate(InventoryItemBase item)
+                    {
+                        return (item.Flags & 1) != 1; //1 means that it is active, so remove all ones that do not have a 1
+                    });
+#else
                     items.RemoveAll(
-                        item => !((item.Flags & 1) == 1));
+                        item => (item.Flags & 1) != 1);
+#endif
                 }
                 catch
                 {

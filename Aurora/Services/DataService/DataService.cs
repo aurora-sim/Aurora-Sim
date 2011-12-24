@@ -27,10 +27,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Aurora.DataManager.MSSQL;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 using Aurora.Framework;
+using log4net;
 using Nini.Config;
 using OpenSim.Framework;
 
@@ -38,6 +40,10 @@ namespace Aurora.Services.DataService
 {
     public class LocalDataService
     {
+        private static readonly ILog m_log =
+            LogManager.GetLogger(
+                MethodBase.GetCurrentMethod().DeclaringType);
+
         private string ConnectionString = "";
         private string StorageProvider = "";
 
@@ -98,8 +104,10 @@ namespace Aurora.Services.DataService
                 {
                     plugin.Initialize(DataConnector.Copy(), source, simBase, ConnectionString);
                 }
-                catch
-                { }
+                catch(Exception ex)
+                {
+                    m_log.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                }
             }
         }
     }

@@ -279,7 +279,12 @@ namespace Aurora.Addon.Hypergrid
                 {
                     addToCount = false;
                     query = String.Format("where {0} = '{1}' and (", "avatarID", AgentID);
+#if (!ISWIN)
+                    foreach (UUID item in moreLinkedItems)
+                        query = query + String.Format("{0} = '{1}' or ", "inventoryID", item);
+#else
                     query = moreLinkedItems.Aggregate(query, (current, t) => current + String.Format("{0} = '{1}' or ", "inventoryID", t));
+#endif
                     query = query.Remove(query.Length - 4, 4);
                     query += ")";
                     if (isForeign)

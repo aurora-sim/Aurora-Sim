@@ -161,7 +161,18 @@ namespace OpenSim.Services.RobustCompat
                     }
 
                     Dictionary<string, object>.ValueCollection pinfosList = replyData.Values;
+#if (!ISWIN)
+                    foreach (object presence in pinfosList)
+                    {
+                        if (presence is Dictionary<string, object>)
+                        {
+                            string regionUUID = ((Dictionary<string, object>)presence)["RegionID"].ToString();
+                            rinfos.Add(GetRegionService(UUID.Parse(regionUUID)));
+                        }
+                    }
+#else
                     rinfos.AddRange(pinfosList.OfType<Dictionary<string, object>>().Select(presence => (presence)["RegionID"].ToString()).Select(regionUUID => GetRegionService(UUID.Parse(regionUUID))));
+#endif
                 }
             }
 

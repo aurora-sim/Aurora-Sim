@@ -576,7 +576,14 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         private void CrossAgentToNewRegionAsyncUtil (IScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
             Vector3 newposition = new Vector3 (agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
+#if (!ISWIN)
+            Util.FireAndForget(delegate(object o)
+            {
+                CrossAgentToNewRegionAsync(agent, newposition, crossingRegion, isFlying, false);
+            });
+#else
             Util.FireAndForget (o => CrossAgentToNewRegionAsync(agent, newposition, crossingRegion, isFlying, false));
+#endif
         }
 
         /// <summary>
@@ -781,7 +788,6 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         protected bool CrossPrimGroupIntoNewRegion(GridRegion destination, SceneObjectGroup grp, Vector3 attemptedPos)
         {
             bool successYN = false;
-            grp.RootPart.ClearUpdateScheduleOnce();
             if (destination != null)
             {
                 if(grp.SitTargetAvatar.Count != 0)
@@ -990,7 +996,15 @@ namespace OpenSim.Region.CoreModules.Framework.EntityTransfer
         /// <returns></returns>
         public IScene GetScene(UUID RegionID)
         {
+#if (!ISWIN)
+            foreach (IScene scene in m_scenes)
+            {
+                if (scene.RegionInfo.RegionID == RegionID) return scene;
+            }
+            return null;
+#else
             return m_scenes.FirstOrDefault(scene => scene.RegionInfo.RegionID == RegionID);
+#endif
         }
 
         #endregion

@@ -357,12 +357,24 @@ namespace OpenSim.Region.CoreModules.World.Land
         protected void CheckPrimForTemperary()
         {
             HashSet<ISceneEntity> entitiesToRemove = new HashSet<ISceneEntity>();
+#if (!ISWIN)
+            foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue)
+            {
+                if (entity.RootChild.Expires <= DateTime.Now)
+                {
+                    entitiesToRemove.Add(entity);
+                    //Temporary objects don't get a reason, they return quietly
+                    AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
+                }
+            }
+#else
             foreach (ISceneEntity entity in m_entitiesInAutoReturnQueue.Where(entity => entity.RootChild.Expires <= DateTime.Now))
             {
                 entitiesToRemove.Add(entity);
                 //Temporary objects don't get a reason, they return quietly
                 AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
             }
+#endif
             foreach (ISceneEntity entity in entitiesToRemove)
             {
                 m_entitiesInAutoReturnQueue.Remove(entity);
@@ -522,7 +534,15 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public ILandObject GetLandObject(UUID GlobalID)
         {
+#if (!ISWIN)
+            foreach (ILandObject land in AllParcels())
+            {
+                if (land.LandData.GlobalID == GlobalID) return land;
+            }
+            return null;
+#else
             return AllParcels().FirstOrDefault(land => land.LandData.GlobalID == GlobalID);
+#endif
         }
 
         public ILandObject GetLandObject(float x, float y)
@@ -642,6 +662,38 @@ namespace OpenSim.Region.CoreModules.World.Land
                 avatar.CurrentParcel.SendLandUpdateToClient(avatar.ControllingClient);
 
                 //Gotta kill all avatars outside the parcel
+#if (!ISWIN)
+                foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences())
+                {
+                    if (sp.UUID != avatar.UUID)
+                    {
+                        if (sp.CurrentParcel != null)
+                        {
+                            if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
+                            {
+                                if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))
+                                    //Either one, we gotta send an update
+                                {
+                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
+                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
+                                    sp.SceneViewer.QueuePresenceForFullUpdate(avatar, true);
+                                    avatar.SceneViewer.QueuePresenceForFullUpdate(sp, true);
+                                }
+                            }
+                            else //Kill those outside the parcel
+                            {
+                                if (sp.CurrentParcel.LandData.Private || avatar.CurrentParcel.LandData.Private)
+                                {
+                                    sp.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {avatar});
+                                    avatar.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {sp});
+                                    sp.SceneViewer.RemoveAvatarFromView(avatar);
+                                    avatar.SceneViewer.RemoveAvatarFromView(sp);
+                                }
+                            }
+                        }
+                    }
+                }
+#else
                 foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences().Where(sp => sp.UUID != avatar.UUID).Where(sp => sp.CurrentParcel != null))
                 {
                     if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
@@ -668,6 +720,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         }
                     }
                 }
+#endif
 
                 if (UseDwell)
                     avatar.CurrentParcel.LandData.Dwell += 1;
@@ -1148,6 +1201,16 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             ILandObject masterLandObject = selectedLandObjects[0];
 
+#if (!ISWIN)
+            foreach (ILandObject p in selectedLandObjects)
+            {
+                if (!m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) || (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide && !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false)))
+                {
+                    client.SendAlertMessage("Permissions: you cannot join these parcels");
+                    return;
+                }
+            }
+#else
             if (selectedLandObjects.Any(p => !m_scene.Permissions.CanSubdivideParcel(attempting_user_id, p) ||
                                              (!m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide &&
                                               !m_scene.Permissions.CanIssueEstateCommand(attempting_user_id, false))))
@@ -1155,6 +1218,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 client.SendAlertMessage("Permissions: you cannot join these parcels");
                 return;
             }
+#endif
 
             m_hasSentParcelOverLay.Clear(); //Clear everyone out
             selectedLandObjects.RemoveAt(0);
@@ -1576,10 +1640,20 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void EventManagerOnIncomingLandDataFromStorage(List<LandData> data, Vector2 parcelOffset)
         {
             bool result = true;
+#if (!ISWIN)
+            foreach (LandData t in data)
+            {
+                if (!PreprocessIncomingLandObjectFromStorage(t, parcelOffset))
+                {
+                    result = false;
+                }
+            }
+#else
             foreach (LandData t in data.Where(t => !PreprocessIncomingLandObjectFromStorage(t, parcelOffset)))
             {
                 result = false;
             }
+#endif
             List<ILandObject> newSimDefault = new List<ILandObject>();
             if (!result || data.Count == 0) //Force a new base first, then force a merge later
                 newSimDefault = AllParcels().Count > 0 ? AllParcels() : new List<ILandObject>(new ILandObject[1] {ResetSimLandObjects()});
@@ -1698,20 +1772,47 @@ namespace OpenSim.Region.CoreModules.World.Land
             OSDMap retVal = new OSDMap();
             retVal["RemoteParcelRequest"] = CapsUtil.CreateCAPS("RemoteParcelRequest", remoteParcelRequestPath);
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return RemoteParcelRequest(request, path, param, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           RemoteParcelRequest(request, path, param,
                                                                               agentID)));
+#endif
             retVal["ParcelPropertiesUpdate"] = CapsUtil.CreateCAPS("ParcelPropertiesUpdate", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return ProcessPropertiesUpdate(request, path, param, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           ProcessPropertiesUpdate(request, path, param,
                                                                                   agentID)));
+#endif
             retVal["ParcelMediaURLFilterList"] = CapsUtil.CreateCAPS("ParcelMediaURLFilterList", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
+                                                       delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                                                       {
+                                                           return ProcessParcelMediaURLFilterList(request, path, param, agentID);
+                                                       }));
+#else
             server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
                                                           (request, path, param, httpRequest, httpResponse) =>
                                                           ProcessParcelMediaURLFilterList(request, path,
                                                                                           param, agentID)));
+#endif
 
 
             return retVal;

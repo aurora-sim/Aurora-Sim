@@ -29,7 +29,6 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule;
 using Microsoft.CSharp;
 using OpenMetaverse;
@@ -67,7 +66,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
             string[] lines = Script.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
-            List<string> libraries = (from s in lines where s.StartsWith("//@DEPENDS:") select s.Replace("//@DEPENDS:", "")).ToList();
+            List<string> libraries = new List<string>();
+            foreach (string s in lines)
+                if (s.StartsWith("//@DEPENDS:"))
+                    libraries.Add(s.Replace("//@DEPENDS:", ""));
 
             string rootPath =
                 Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);

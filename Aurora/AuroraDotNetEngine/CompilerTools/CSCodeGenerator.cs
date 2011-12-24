@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Tools;
 
@@ -315,15 +314,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "using System.Collections;\n";
             compiledScript += "using System.Reflection;\n";
             compiledScript += "using System.Timers;\n";
-            compiledScript = m_compiler.ScriptEngine.GetAPIs().Aggregate(compiledScript,
-                                                                         (current1, api) =>
-                                                                         api.NamespaceAdditions.Aggregate(current1,
-                                                                                                          (current,
-                                                                                                           nameSpace) =>
-                                                                                                          current +
-                                                                                                          ("using " +
-                                                                                                           nameSpace +
-                                                                                                           ";\n")));
+            foreach (IScriptApi api in m_compiler.ScriptEngine.GetAPIs())
+                foreach (string nameSpace in api.NamespaceAdditions)
+                    compiledScript += "using " + nameSpace + ";\n";
 
             compiledScript += "namespace Script\n";
             compiledScript += "{\n";
@@ -334,7 +327,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "{\n";
 
             compiledScript += ScriptClass;
-            compiledScript = MethodsToAdd.Aggregate(compiledScript, (current, method) => current + method);
+            foreach (string method in MethodsToAdd)
+            {
+                compiledScript += method;
+            }
 
             compiledScript += "}\n"; // Close Class
 
@@ -470,14 +466,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     string[] Split = SplitBeforeESpace[0].Split('e');
                                         // Split at the e so we can look at the syntax
                                     Split[0] += ".";
-                                    string TempString = Split.Aggregate("", (current, tempLine) => current + (tempLine + "e"));
+                                    string TempString = "";
+                                    foreach (string tempLine in Split)
+                                    {
+                                        TempString += tempLine + "e";
+                                    } 
                                     TempString = TempString.Remove(TempString.Length - 1, 1);
                                     SplitBeforeESpace[0] = TempString;
-                                    TempString = SplitBeforeESpace.Aggregate("", (current, tempLine) => current + (tempLine + ";"));
+                                    TempString = "";
+                                    foreach (string tempLine in SplitBeforeESpace)
+                                    {
+                                        TempString += tempLine + ";";
+                                    }
                                     //Remove the last ;
                                     TempString = TempString.Remove(TempString.Length - 1, 1);
                                     SplitBeforeE[1] = TempString;
-                                    AddLine = SplitBeforeE.Aggregate("", (current, tempLine) => current + (tempLine + "="));
+                                    foreach (string tempLine in SplitBeforeE)
+                                    {
+                                        AddLine += tempLine + "=";
+                                    }
                                     //Remove the last e
                                     AddLine = AddLine.Remove(AddLine.Length - 1, 1);
                                 }
@@ -487,7 +494,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 ReconstructableScript.Add(AddLine);
             }
-            return ReconstructableScript.Aggregate("", (current, line) => current + (line + "\n"));
+            string RetVal = "";
+            foreach (string line in ReconstructableScript)
+            {
+                RetVal += line + "\n";
+            }
+            return RetVal;
         }
 
         private string CheckForInlineVectors(string script)
@@ -524,7 +536,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             ReconstructableLine.Add(AddInsideLine);
                             lineNumber++;
                         }
-                        AddLine = ReconstructableLine.Aggregate("", (current, insideline) => current + (insideline + "\""));
+                        AddLine = "";
+                        foreach (string insideline in ReconstructableLine)
+                        {
+                            AddLine += insideline + "\"";
+                        }
                         AddLine = AddLine.Remove(AddLine.Length - 1, 1);
                     }
                     else
@@ -543,7 +559,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 ReconstructableScript.Add(AddLine);
             }
-            return ReconstructableScript.Aggregate("", (current, line) => current + (line + "\n"));
+            string RetVal = "";
+            foreach (string line in ReconstructableScript)
+            {
+                RetVal += line + "\n";
+            }
+            return RetVal;
         }
 
         /// <summary>
@@ -554,10 +575,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private void CheckEventCasts(string script)
         {
             CheckEvent(script, "default");
-            string[] States = OriginalScript.Split(new[] {"state "}, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string stateName in from state in States let stateName = state.Split(' ')[0] select state.Split('\n')[0] into stateName where !stateName.Contains("default") select stateName)
+            string[] States = OriginalScript.Split(new string[] { "state " }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string state in States)
             {
-                CheckEvent(script, stateName);
+                string stateName = state.Split(' ')[0].Split('\n')[0];
+                if (!stateName.Contains("default"))
+                    CheckEvent(script, stateName);
             }
         }
 
@@ -1562,8 +1585,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // print the state arguments, if any
             List<ArgumentDeclarationList> args = new List<ArgumentDeclarationList>();
-            foreach (ArgumentDeclarationList ADL in argumentDeclarationListKids.Cast<ArgumentDeclarationList>())
+            foreach (SYMBOL kid in argumentDeclarationListKids)
             {
+                ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
                 args.Add(ADL);
                 retstr.Append(GenerateArgumentDeclarationList(ADL));
             }
@@ -3193,7 +3217,8 @@ default
             }
             lock (FuncCalls)
             {
-                ret = FuncCalls.Aggregate(ret, (current, s) => current + GenerateIndentedLine(s));
+                foreach (string s in FuncCalls)
+                    ret += GenerateIndentedLine(s);
                 FuncCalls.Clear();
             }
             return ret;
@@ -3214,7 +3239,8 @@ default
             }
             lock (FuncCalls)
             {
-                ret = AfterFuncCalls.Aggregate(ret, (current, s) => current + GenerateIndentedLine(s));
+                foreach (string s in AfterFuncCalls)
+                    ret += GenerateIndentedLine(s);
                 AfterFuncCalls.Clear();
             }
             return ret;

@@ -584,6 +584,23 @@ namespace Aurora.Modules
                     {
                         bool found = false;
                         //We need to check here as well for bans, can't toss someone into a parcel they are banned from
+#if (!ISWIN)
+                        foreach (ILandObject Parcel in Parcels)
+                        {
+                            if (!Parcel.IsBannedFromLand(userID))
+                            {
+                                //Now we have to check their userloc
+                                if (ILO.LandData.LandingType == (int) LandingType.None)
+                                    continue; //Blocked, check next one
+                                else if (ILO.LandData.LandingType == (int) LandingType.LandingPoint)
+                                    //Use their landing spot
+                                    newPosition = Parcel.LandData.UserLocation;
+                                else //They allow for anywhere, so dump them in the center at the ground
+                                    newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
+                                found = true;
+                            }
+                        }
+#else
                         foreach (ILandObject Parcel in Parcels.Where(Parcel => !Parcel.IsBannedFromLand(userID)))
                         {
                             //Now we have to check their userloc
@@ -596,6 +613,7 @@ namespace Aurora.Modules
                                 newPosition = parcelManagement.GetParcelCenterAtGround(Parcel);
                             found = true;
                         }
+#endif
                         if (!found) //Dump them at the edge
                         {
                             if (Sp != null)
@@ -918,7 +936,15 @@ namespace Aurora.Modules
             {
                 List<UUID> esGroups = new List<UUID>(ES.EstateGroups);
                 GroupMembershipData[] gmds = gm.GetMembershipData(agent.AgentID);
+#if (!ISWIN)
+                foreach (GroupMembershipData gmd in gmds)
+                {
+                    if (esGroups.Contains(gmd.GroupID)) return true;
+                }
+                return false;
+#else
                 return gmds.Any(gmd => esGroups.Contains(gmd.GroupID));
+#endif
             }
             return false;
         }
@@ -943,6 +969,18 @@ namespace Aurora.Modules
                 else
                 {
                     bool FoundParcel = false;
+#if (!ISWIN)
+                    foreach (ILandObject lo in Parcels)
+                    {
+                        if (!lo.IsEitherBannedOrRestricted(AgentID))
+                        {
+                            newPosition = lo.LandData.UserLocation;
+                            ILO = lo; //Update the parcel settings
+                            FoundParcel = true;
+                            break;
+                        }
+                    }
+#else
                     foreach (ILandObject lo in Parcels.Where(lo => !lo.IsEitherBannedOrRestricted(AgentID)))
                     {
                         newPosition = lo.LandData.UserLocation;
@@ -950,6 +988,7 @@ namespace Aurora.Modules
                         FoundParcel = true;
                         break;
                     }
+#endif
                     if (!FoundParcel)
                     {
                         //Dump them in the region corner as they are banned from all nearby parcels

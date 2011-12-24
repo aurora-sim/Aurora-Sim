@@ -217,7 +217,13 @@ namespace Aurora.Simulation.Base
                         type.Value = "List";
 
                         elem.Attributes.Append(type);
+#if (!ISWIN)
+                        Dictionary<string, object> value = new Dictionary<string, object>();
+                        foreach (KeyValuePair<string, string> pair in ((Dictionary<string, string>) kvp.Value))
+                            value.Add(pair.Key, pair.Value);
+#else
                         Dictionary<string, object> value = ((Dictionary<string, string>) kvp.Value).ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key, pair => pair.Value);
+#endif
                         BuildXmlData(elem, value);
                     }
                     else
@@ -296,6 +302,15 @@ namespace Aurora.Simulation.Base
         public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
         {
             return ServiceOSDRequest(url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, false);
+        }
+
+        /// <summary>
+        ///   POST URL-encoded form data to a web service that returns LLSD or
+        ///   JSON data
+        /// </summary>
+        public static OSDMap PostToService(string url, OSDMap data, int timeout, bool careAboutResponse, bool deserializeResponse)
+        {
+            return ServiceOSDRequest(url, data, "POST", timeout, careAboutResponse, deserializeResponse, false);
         }
 
         /// <summary>
@@ -596,7 +611,11 @@ namespace Aurora.Simulation.Base
             if (types.Length > 0)
             {
                 List<string> list = new List<string>(types);
+#if (!ISWIN)
+                list.RemoveAll(delegate(string s) { return !s.ToLower().StartsWith("image"); });
+#else
                 list.RemoveAll(s => !s.ToLower().StartsWith("image"));
+#endif
                 ArrayList tlist = new ArrayList(list);
                 tlist.Sort(new QBasedComparer());
 
@@ -701,6 +720,7 @@ namespace Aurora.Simulation.Base
             catch (Exception ex)
             {
                 m_log.Warn("[WebUtils]: exception on parse of REST message " + ex);
+                m_log.Warn("[WebUtils]: bad data: " + data);
                 return null;
             }
         }

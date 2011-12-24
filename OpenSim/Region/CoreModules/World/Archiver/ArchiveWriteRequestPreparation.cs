@@ -109,6 +109,19 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // Filter entities so that we only have scene objects.
             // FIXME: Would be nicer to have this as a proper list in SceneGraph, since lots of methods
             // end up having to do this
+#if (!ISWIN)
+            foreach (ISceneEntity entity in entities)
+            {
+                if (!entity.IsDeleted && !entity.IsAttachment)
+                {
+                    if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, entity, m_checkPermissions))
+                        // The user isn't allowed to copy/transfer this object, so it will not be included in the OAR.
+                        ++numObjectsSkippedPermissions;
+                    else
+                        sceneObjects.Add(entity);
+                }
+            }
+#else
             foreach (ISceneEntity entity in entities.Where(entity => !entity.IsDeleted && !entity.IsAttachment))
             {
                 if (!CanUserArchiveObject(m_scene.RegionInfo.EstateSettings.EstateOwner, entity, m_checkPermissions))
@@ -117,6 +130,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 else
                     sceneObjects.Add(entity);
             }
+#endif
 
             UuidGatherer assetGatherer = new UuidGatherer(m_scene.AssetService);
 

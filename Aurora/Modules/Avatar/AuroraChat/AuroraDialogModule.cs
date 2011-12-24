@@ -116,10 +116,20 @@ namespace Aurora.Modules
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
+#if (!ISWIN)
+                foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
+                {
+                    if (mute.MuteID == ownerID)
+                    {
+                        return;
+                    }
+                }
+#else
                 if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                 {
                     return;
                 }
+#endif
             }
 
             IScenePresence sp = m_scene.GetScenePresence(avatarID);
@@ -137,10 +147,20 @@ namespace Aurora.Modules
             if (m_muteListModule != null)
             {
                 bool cached = false; //Unneeded
+#if (!ISWIN)
+                foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
+                {
+                    if (mute.MuteID == ownerID)
+                    {
+                        return;
+                    }
+                }
+#else
                 if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                 {
                     return;
                 }
+#endif
             }
 
             if (sp != null && !sp.IsChildAgent)
@@ -179,10 +199,20 @@ namespace Aurora.Modules
                 if (m_muteListModule != null)
                 {
                     bool cached = false; //Unneeded
+#if (!ISWIN)
+                    foreach (MuteList mute in m_muteListModule.GetMutes(avatarID, out cached))
+                    {
+                        if (mute.MuteID == ownerID)
+                        {
+                            return;
+                        }
+                    }
+#else
                     if (m_muteListModule.GetMutes(avatarID, out cached).Any(mute => mute.MuteID == ownerID))
                     {
                         return;
                     }
+#endif
                 }
                 sp.ControllingClient.SendTextBoxRequest(message, chatChannel, name, ownerFirstName, ownerLastName,
                                                         objectID);

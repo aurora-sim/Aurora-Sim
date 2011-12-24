@@ -211,11 +211,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
+#if (!ISWIN)
+                foreach (IScene scene in m_ScriptEngine.Worlds)
+                {
+                    ITimeMonitor scriptMonitor = (ITimeMonitor) module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
+                    if (scriptMonitor != null)
+                    {
+                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                    }
+                }
+#else
                 foreach (ITimeMonitor scriptMonitor in m_ScriptEngine.Worlds.Select(scene => (ITimeMonitor)
                                                                                              module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime)).Where(scriptMonitor => scriptMonitor != null))
                 {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
+#endif
             }
         }
 
@@ -293,11 +304,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
+#if (!ISWIN)
+                foreach (IScene scene in m_ScriptEngine.Worlds)
+                {
+                    ITimeMonitor scriptMonitor = (ITimeMonitor) module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime);
+                    if (scriptMonitor != null)
+                    {
+                        scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
+                    }
+                }
+#else
                 foreach (ITimeMonitor scriptMonitor in m_ScriptEngine.Worlds.Select(scene => (ITimeMonitor)
                                                                                              module.GetMonitor(scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.ScriptFrameTime)).Where(scriptMonitor => scriptMonitor != null))
                 {
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
                 }
+#endif
             }
 
             if (didAnything) //If we did something, run us again soon

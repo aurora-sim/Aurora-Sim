@@ -294,7 +294,19 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_items)
             {
-                ret.AddRange(m_items.Values.Where(item => item.InvType == (int) InventoryType.LSL).Where(item => m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID)));
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                {
+                    if (item.InvType == (int)InventoryType.LSL)
+                    {
+                        if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
+                            continue;
+                        ret.Add(item);
+                    }
+                }
+#else
+                ret.AddRange(m_items.Values.Where(item => item.InvType == (int)InventoryType.LSL).Where(item => m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID)));
+#endif
             }
 
             return ret;
@@ -472,10 +484,20 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_itemsLock)
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                {
+                    if (item.Name == name)
+                    {
+                        return true;
+                    }
+                }
+#else
                 if (m_items.Values.Any(item => item.Name == name))
                 {
                     return true;
                 }
+#endif
             }
             return false;
         }
@@ -668,7 +690,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             SceneObjectPart[] partList = group.Parts;
 
-            group.SetGroup(m_part.GroupID, null);
+            group.SetGroup(m_part.GroupID, group.OwnerID);
 
             if ((rootPart.OwnerID != item.OwnerID) || (item.CurrentPermissions & 16) != 0)
             {
@@ -1062,10 +1084,20 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_itemsLock)
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                {
+                    if (item.InvType == (int) InventoryType.LSL)
+                    {
+                        return true;
+                    }
+                }
+#else
                 if (m_items.Values.Any(item => item.InvType == (int)InventoryType.LSL))
                 {
                     return true;
                 }
+#endif
             }
 
             return false;
@@ -1077,7 +1109,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             lock (m_itemsLock)
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_items.Values)
+                    ret.Add(item.ItemID);
+#else
                 ret.AddRange(m_items.Values.Select(item => item.ItemID));
+#endif
             }
 
             return ret;

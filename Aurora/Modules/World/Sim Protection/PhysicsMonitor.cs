@@ -222,7 +222,15 @@ namespace Aurora.Modules
             List<IScene> scenesToRun = new List<IScene>();
             if (cmd.Length == 3)
             {
+#if (!ISWIN)
+                foreach (IScene scene in m_scenes)
+                {
+                    if (scene.RegionInfo.RegionName == cmd[2])
+                        scenesToRun.Add(scene);
+                }
+#else
                 scenesToRun.AddRange(m_scenes.Where(scene => scene.RegionInfo.RegionName == cmd[2]));
+#endif
                 if (scenesToRun.Count == 0)
                     scenesToRun = m_scenes;
             }
@@ -256,7 +264,15 @@ namespace Aurora.Modules
             List<IScene> scenesToRun = new List<IScene>();
             if (cmd.Length == 3)
             {
+#if (!ISWIN)
+                foreach (IScene scene in m_scenes)
+                {
+                    if (scene.RegionInfo.RegionName == cmd[2])
+                        scenesToRun.Add(scene);
+                }
+#else
                 scenesToRun.AddRange(m_scenes.Where(scene => scene.RegionInfo.RegionName == cmd[2]));
+#endif
                 if (scenesToRun.Count == 0)
                     scenesToRun = m_scenes;
             }
@@ -297,7 +313,15 @@ namespace Aurora.Modules
             List<IScene> scenesToRun = new List<IScene>();
             if (cmd.Length == 3)
             {
+#if (!ISWIN)
+                foreach (IScene scene in m_scenes)
+                {
+                    if (scene.RegionInfo.RegionName == cmd[2])
+                        scenesToRun.Add(scene);
+                }
+#else
                 scenesToRun.AddRange(m_scenes.Where(scene => scene.RegionInfo.RegionName == cmd[2]));
+#endif
                 if (scenesToRun.Count == 0)
                     scenesToRun = m_scenes;
             }

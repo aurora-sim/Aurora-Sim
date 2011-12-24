@@ -160,7 +160,12 @@ namespace OpenSim.Services.Connectors
                     {
                         OSDMap innerresult = (OSDMap) r;
                         OSDArray resultArray = (OSDArray) innerresult["Result"];
+#if (!ISWIN)
+                        foreach (OSD o in resultArray)
+                            retVal.Add(o.AsString());
+#else
                         retVal.AddRange(resultArray.Select(o => o.AsString()));
+#endif  
                     }
                 }
                 catch

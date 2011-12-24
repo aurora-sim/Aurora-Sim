@@ -73,8 +73,15 @@ namespace Aurora.Modules
 
             string localHandler = handlerConfig.GetString("LocalFriendsHandler", "FriendsService");
             List<IFriendsService> services = AuroraModuleLoader.PickupModules<IFriendsService>();
+#if (!ISWIN)
+            foreach (IFriendsService s in services)
+            {
+                if (s.GetType().Name == localHandler) m_localService = s;
+            }
+#else
             foreach (IFriendsService s in services.Where(s => s.GetType().Name == localHandler))
                 m_localService = s;
+#endif
 
             if (m_localService == null)
                 m_localService = new FriendsService();

@@ -269,12 +269,21 @@ namespace Aurora.Modules
         {
             UUID capuuid = UUID.Random();
 
+#if (!ISWIN)
+            caps.AddStreamHandler("SendUserReportWithScreenshot",
+                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return ProcessSendUserReportWithScreenshot(m_dhttpMethod, capuuid, agentID);
+                                                      }));
+#else
             caps.AddStreamHandler("SendUserReportWithScreenshot",
                                   new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
                                                       m_dhttpMethod =>
                                                       ProcessSendUserReportWithScreenshot(m_dhttpMethod,
                                                                                           capuuid,
                                                                                           agentID)));
+#endif
         }
 
         private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
@@ -302,7 +311,17 @@ namespace Aurora.Modules
 
         public IScenePresence findScenePresence(UUID avID)
         {
+#if (!ISWIN)
+            foreach (IScene s in m_SceneList)
+            {
+                IScenePresence SP = s.GetScenePresence(avID);
+                if (SP != null)
+                    return SP;
+            }
+            return null;
+#else
             return m_SceneList.Select(s => s.GetScenePresence(avID)).FirstOrDefault(SP => SP != null);
+#endif
         }
 
         #endregion

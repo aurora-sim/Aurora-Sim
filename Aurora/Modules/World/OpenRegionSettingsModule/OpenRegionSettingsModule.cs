@@ -304,9 +304,17 @@ namespace Aurora.Modules
             retVal["DispatchOpenRegionSettings"] = CapsUtil.CreateCAPS("DispatchOpenRegionSettings", "");
 
             //Sets the OpenRegionSettings
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchOpenRegionSettings"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return DispatchOpenRegionSettings(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchOpenRegionSettings"],
                                                         m_dhttpMethod =>
                                                         DispatchOpenRegionSettings(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 

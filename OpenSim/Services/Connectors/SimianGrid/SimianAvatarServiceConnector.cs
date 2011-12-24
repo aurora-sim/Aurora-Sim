@@ -311,10 +311,20 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
 
                 OSDMap items = new OSDMap();
+#if (!ISWIN)
+                foreach (KeyValuePair<string, string> kvp in avatar.Data)
+                {
+                    if (kvp.Key.StartsWith("_ap_"))
+                    {
+                        items.Add(kvp.Key, OSD.FromString(kvp.Value));
+                    }
+                }
+#else
                 foreach (KeyValuePair<string, string> kvp in avatar.Data.Where(kvp => kvp.Key.StartsWith("_ap_")))
                 {
                     items.Add(kvp.Key, OSD.FromString(kvp.Value));
                 }
+#endif
 
                 NameValueCollection requestArgs = new NameValueCollection
                                                       {

@@ -141,7 +141,15 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public IRegionClientCapsService GetRootCapsService()
         {
+#if (!ISWIN)
+            foreach (IRegionClientCapsService clientCaps in m_RegionCapsServices.Values)
+            {
+                if (clientCaps.RootAgent) return clientCaps;
+            }
+            return null;
+#else
             return m_RegionCapsServices.Values.FirstOrDefault(clientCaps => clientCaps.RootAgent);
+#endif
         }
 
         public List<IRegionClientCapsService> GetCapsServices()

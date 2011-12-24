@@ -550,7 +550,12 @@ namespace Flotsam.RegionModules.AssetCache
         private string GetFileName(string id)
         {
             // Would it be faster to just hash the darn thing?
+#if (!ISWIN)
+            foreach (char invalidChar in m_InvalidChars)
+                id = id.Replace(invalidChar, '_');
+#else
             id = m_InvalidChars.Aggregate(id, (current, c) => current.Replace(c, '_'));
+#endif
 
             string path = m_CacheDirectory;
             for (int p = 1; p <= m_CacheDirectoryTiers; p++)
@@ -598,7 +603,14 @@ namespace Flotsam.RegionModules.AssetCache
                         // Now that it's written, rename it so that it can be found.
                         if (File.Exists(filename))
                             File.Delete(filename);
-                        File.Move(tempname, filename);
+                        try
+                        {
+                            File.Move(tempname, filename);
+                        }
+                        catch
+                        {
+                            File.Delete(tempname);
+                        }
                     }
 
                     if (m_LogLevel >= 2)
@@ -641,7 +653,8 @@ namespace Flotsam.RegionModules.AssetCache
             string[] text = e.ToString().Split(new[] {'\n'});
             foreach (string t in text)
             {
-                m_log.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
+                if(t.Trim() != "")
+                    m_log.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
             }
         }
 
@@ -652,7 +665,14 @@ namespace Flotsam.RegionModules.AssetCache
         /// <returns></returns>
         private int GetFileCacheCount(string dir)
         {
+#if (!ISWIN)
+            int sum = 0;
+            foreach (string subdir in Directory.GetDirectories(dir))
+                sum += GetFileCacheCount(subdir);
+            return Directory.GetFiles(dir).Length + sum;
+#else
             return Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Sum(subdir => GetFileCacheCount(subdir));
+#endif
         }
 
         /// <summary>
@@ -701,8 +721,14 @@ namespace Flotsam.RegionModules.AssetCache
                     StampRegionStatusFile(s.RegionInfo.RegionID);
 
                     IScene s1 = s;
-                    s.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets, s1)
-                        );
+#if (!ISWIN)
+                    s.ForEachSceneEntity(delegate(ISceneEntity e)
+                    {
+                        gatherer.GatherAssetUuids(e, assets, s1);
+                    });
+#else
+                    s.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets, s1));
+#endif
                 }
 
                 foreach (UUID assetID in assets.Keys)

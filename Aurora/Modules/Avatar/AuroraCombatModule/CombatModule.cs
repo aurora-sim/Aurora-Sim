@@ -225,7 +225,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
         private void OnLandObjectAdded(LandData newParcel)
         {
             //If a new land object is added or updated, we need to redo the check for the avatars invulnerability
+#if (!ISWIN)
+            m_scene.ForEachScenePresence(delegate(IScenePresence sp)
+            {
+                AvatarEnteringParcel(sp, null);
+            });
+#else
             m_scene.ForEachScenePresence(sp => AvatarEnteringParcel(sp, null));
+#endif
         }
 
         private void AvatarEnteringParcel(IScenePresence avatar, ILandObject oldParcel)

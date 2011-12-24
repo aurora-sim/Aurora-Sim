@@ -116,8 +116,15 @@ namespace Aurora.Modules
                 new List<DirPlacesReplyData>(directoryService.FindLand(queryText, category.ToString(), queryStart,
                                                                        (uint) queryFlags));
 
+#if (!ISWIN)
+            SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
+            {
+                remoteClient.SendDirPlacesReply(queryID, data);
+            });
+#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirPlacesReply(queryID, data));
+#endif
         }
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
@@ -145,8 +152,15 @@ namespace Aurora.Modules
                 new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price.ToString(),
                                                                             area.ToString(), queryStart, queryFlags));
 
+#if (!ISWIN)
+            SplitPackets<DirLandReplyData>(ReturnValues, delegate(DirLandReplyData[] data)
+            {
+                remoteClient.SendDirLandReply(queryID, data);
+            });
+#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirLandReply(queryID, data));
+#endif
         }
 
         /// <summary>
@@ -202,10 +216,20 @@ namespace Aurora.Modules
                     {
                         person.group = "";
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
+#if (!ISWIN)
+                        foreach (GroupMembershipData membership in memberships)
+                        {
+                            if (membership.Active)
+                            {
+                                person.group = membership.GroupName;
+                            }
+                        }
+#else
                         foreach (GroupMembershipData membership in memberships.Where(membership => membership.Active))
                         {
                             person.group = membership.GroupName;
                         }
+#endif
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
@@ -230,10 +254,20 @@ namespace Aurora.Modules
                         person.group = "";
                         //Check what group they have set
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
+#if (!ISWIN)
+                        foreach (GroupMembershipData membership in memberships)
+                        {
+                            if (membership.Active)
+                            {
+                                person.group = membership.GroupName;
+                            }
+                        }
+#else
                         foreach (GroupMembershipData membership in memberships.Where(membership => membership.Active))
                         {
                             person.group = membership.GroupName;
                         }
+#endif
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
@@ -245,8 +279,15 @@ namespace Aurora.Modules
                 }
             }
 
+#if (!ISWIN)
+            SplitPackets<DirPeopleReplyData>(ReturnValues, delegate(DirPeopleReplyData[] data)
+            {
+                remoteClient.SendDirPeopleReply(queryID, data);
+            });
+#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirPeopleReply(queryID, data));
+#endif
         }
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
@@ -255,8 +296,15 @@ namespace Aurora.Modules
             List<DirEventsReplyData> ReturnValues =
                 new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
 
+#if (!ISWIN)
+            SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
+            {
+                remoteClient.SendDirEventsReply(queryID, data);
+            });
+#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirEventsReply(queryID, data));
+#endif
         }
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
@@ -267,8 +315,15 @@ namespace Aurora.Modules
                 new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(),
                                                                                   queryFlags.ToString(), queryStart));
 
+#if (!ISWIN)
+            SplitPackets<DirClassifiedReplyData>(ReturnValues, delegate(DirClassifiedReplyData[] data)
+            {
+                remoteClient.SendDirClassifiedReply(queryID, data);
+            });
+#else
             SplitPackets(ReturnValues,
                          data => remoteClient.SendDirClassifiedReply(queryID, data));
+#endif
         }
 
         public void SplitPackets<T>(List<T> packets, SendPacket<T> send)
@@ -377,12 +432,24 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
+#if (!ISWIN)
+                    foreach (IScene scene in m_Scenes)
+                    {
+                        if (scene.RegionInfo.RegionID == landdata.RegionID)
+                        {
+                            //Global coords, so add the meters
+                            locX = scene.RegionInfo.RegionLocX;
+                            locY = scene.RegionInfo.RegionLocY;
+                        }
+                    }
+#else
                     foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
                     {
                         //Global coords, so add the meters
                         locX = scene.RegionInfo.RegionLocX;
                         locY = scene.RegionInfo.RegionLocY;
                     }
+#endif
                     if (locY == 0 && locX == 0)
                     {
                         //Ask the grid service for the coordinates if the region is not local
@@ -431,11 +498,22 @@ namespace Aurora.Modules
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity == 0)
                         continue; //Its PG
+#if (!ISWIN)
+                    foreach (IScene scene in m_Scenes)
+                    {
+                        if (scene.RegionInfo.RegionID == landdata.RegionID)
+                        {
+                            locX = scene.RegionInfo.RegionLocX;
+                            locY = scene.RegionInfo.RegionLocY;
+                        }
+                    }
+#else
                     foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
                     {
                         locX = scene.RegionInfo.RegionLocX;
                         locY = scene.RegionInfo.RegionLocY;
                     }
+#endif
                     if (locY == 0 && locX == 0)
                     {
                         //Ask the grid service for the coordinates if the region is not local

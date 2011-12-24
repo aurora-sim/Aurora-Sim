@@ -188,10 +188,20 @@ namespace Aurora.Modules
                         foreach (IScene scene in m_scenes)
                         {
                             bool found = false;
+#if (!ISWIN)
+                            foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans)
+                            {
+                                if (ban.BannedUserID == BanID)
+                                {
+                                    found = true;
+                                }
+                            }
+#else
                             foreach (EstateBan ban in scene.RegionInfo.EstateSettings.EstateBans.Where(ban => ban.BannedUserID == BanID))
                             {
                                 found = true;
                             }
+#endif
                             if (!found)
                             {
                                 scene.RegionInfo.EstateSettings.EstateBans[
@@ -222,27 +232,11 @@ namespace Aurora.Modules
             int i = 0;
             foreach (EstateBan ban in from scene in m_scenes from ban in scene.RegionInfo.EstateSettings.EstateBans where !Bans.ContainsValue(ban.BannedUserID) select ban)
             {
-                Bans.Add(ConvertDecString(i), ban.BannedUserID);
+                Bans.Add(Util.ConvertDecString(i), ban.BannedUserID);
                 i++;
             }
             result["Bans"] = Bans;
             return result;
-        }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            string retVal = string.Empty;
-            double value = Convert.ToDouble(dvalue);
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-            return retVal;
         }
     }
 

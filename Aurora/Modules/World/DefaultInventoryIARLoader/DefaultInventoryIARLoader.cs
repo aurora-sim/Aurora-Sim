@@ -128,7 +128,19 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 
             List<InventoryFolderBase> rootFolders = m_MockScene.InventoryService.GetFolderFolders(uinfo.PrincipalID,
                                                                                                   UUID.Zero);
+#if (!ISWIN)
+            bool alreadyExists = false;
+            foreach (InventoryFolderBase folder in rootFolders)
+            {
+                if (folder.Name == iarFileName)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+#else
             bool alreadyExists = rootFolders.Any(folder => folder.Name == iarFileName);
+#endif
             if (alreadyExists)
             {
                 m_log.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);
@@ -179,12 +191,25 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             foreach (InventoryFolderBase folder in folders)
             {
                 InventoryFolderBase folder1 = folder;
+#if (!ISWIN)
+                foreach (KeyValuePair<string, AssetType> type in m_assetTypes)
+                {
+                    if (folder1.Name.ToLower().StartsWith(type.Key.ToLower()))
+                    {
+                        if (folder.Type == (short) type.Value) break;
+                        folder.Type = (short) type.Value;
+                        m_MockScene.InventoryService.UpdateFolder(folder);
+                        break;
+                    }
+                }
+#else
                 foreach (KeyValuePair<string, AssetType> type in m_assetTypes.Where(type => folder1.Name.ToLower().StartsWith(type.Key.ToLower())).TakeWhile(type => folder.Type != (short) type.Value))
                 {
                     folder.Type = (short) type.Value;
                     m_MockScene.InventoryService.UpdateFolder(folder);
                     break;
                 }
+#endif
                 TraverseFolders(folder.ID, m_MockScene);
             }
         }

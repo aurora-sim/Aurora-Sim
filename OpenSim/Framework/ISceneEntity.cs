@@ -331,13 +331,6 @@ namespace OpenSim.Framework
         void SendTerseUpdateToAllClients ();
 
         /// <summary>
-        /// Generates flags to send to the client about what permissions the client has
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        uint GenerateClientFlags (ISceneChildEntity p);
-
-        /// <summary>
         /// Sends locations of all the avies in the region to the client
         /// </summary>
         /// <param name="coarseLocations"></param>
@@ -600,7 +593,7 @@ namespace OpenSim.Framework
 
         void SetRootPartOwner (ISceneChildEntity part, UUID uUID, UUID uUID_2);
 
-        void SetGroup (UUID groupID, IClientAPI remoteClient);
+        void SetGroup (UUID groupID, UUID attemptingUser);
 
         void ApplyNextOwnerPermissions ();
 
@@ -990,8 +983,6 @@ namespace OpenSim.Framework
 
         void ApplyNextOwnerPermissions ();
 
-        void ClearUpdateScheduleOnce ();
-
         void StoreUndoState ();
 
         EntityIntersection TestIntersectionOBB (Ray NewRay, Quaternion quaternion, bool frontFacesOnly, bool CopyCenters);
@@ -1094,8 +1085,6 @@ namespace OpenSim.Framework
         }
 
         void GenerateRotationalVelocityFromOmega ();
-
-        void ClearUpdateSchedule ();
 
         void ScriptSetTemporaryStatus (bool tempOnRez);
 

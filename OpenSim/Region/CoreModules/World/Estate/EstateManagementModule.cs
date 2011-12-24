@@ -143,15 +143,31 @@ namespace OpenSim.Region.CoreModules.World.Estate
             OSDMap retVal = new OSDMap();
             retVal["DispatchRegionInfo"] = CapsUtil.CreateCAPS("DispatchRegionInfo", "");
 
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchRegionInfo"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"], agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchRegionInfo"],
                                                         m_dhttpMethod =>
                                                         DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"],
                                                                            agentID)));
+#endif
             retVal["EstateChangeInfo"] = CapsUtil.CreateCAPS("EstateChangeInfo", "");
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EstateChangeInfo"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"], agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EstateChangeInfo"],
                                                         m_dhttpMethod =>
                                                         EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"],
                                                                          agentID)));
+#endif
             return retVal;
         }
 
@@ -544,7 +560,19 @@ namespace OpenSim.Region.CoreModules.World.Estate
                             {
                                 EstateBan[] innerbanlistcheck = estate.EstateBans;
 
+#if (!ISWIN)
+                                bool inneralreadyInList = false;
+                                foreach (EstateBan t in innerbanlistcheck)
+                                {
+                                    if (user == t.BannedUserID)
+                                    {
+                                        inneralreadyInList = true;
+                                        break;
+                                    }
+                                }
+#else
                                 bool inneralreadyInList = innerbanlistcheck.Any(t => user == t.BannedUserID);
+#endif
 
                                 if (!inneralreadyInList)
                                 {
@@ -562,7 +590,19 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     }
                     EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 
+#if (!ISWIN)
+                    bool alreadyInList = false;
+                    foreach (EstateBan t in banlistcheck)
+                    {
+                        if (user == t.BannedUserID)
+                        {
+                            alreadyInList = true;
+                            break;
+                        }
+                    }
+#else
                     bool alreadyInList = banlistcheck.Any(t => user == t.BannedUserID);
+#endif
 
                     if (!alreadyInList)
                     {

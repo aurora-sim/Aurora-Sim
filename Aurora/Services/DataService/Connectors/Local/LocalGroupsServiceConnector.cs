@@ -66,7 +66,6 @@ namespace Aurora.Services.DataService
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
-            m_log.Warn("Using GroupsConnector " + source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector"));
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(Name, this);
@@ -475,6 +474,8 @@ namespace Aurora.Services.DataService
         public GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             GroupMembershipData GMD = new GroupMembershipData();
+            if (GroupID == UUID.Zero)
+                GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
             List<string> Membership = data.Query(new[]
                                                      {
@@ -524,7 +525,17 @@ namespace Aurora.Services.DataService
                                                         {
                                                             AgentID
                                                         }, "osgroupmembership", "GroupID");
+#if (!ISWIN)
+            List<GroupMembershipData> list = new List<GroupMembershipData>();
+            foreach (string groupId in Groups)
+            {
+                GroupMembershipData temp = GetGroupMembershipData(requestingAgentID, UUID.Parse(groupId), AgentID);
+                if (temp != null) list.Add(temp);
+            }
+            return list;
+#else
             return Groups.Select(GroupID => GetGroupMembershipData(requestingAgentID, UUID.Parse(GroupID), AgentID)).Where(temp => temp != null).ToList();
+#endif
         }
 
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices,
@@ -850,7 +861,14 @@ namespace Aurora.Services.DataService
                 return new List<GroupMembersData>();
 
             List<string> Agents = data.Query("GroupID", GroupID, "osgroupmembership", "AgentID");
+#if (!ISWIN)
+            List<GroupMembersData> list = new List<GroupMembersData>();
+            foreach (string agent in Agents)
+                list.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent)));
+            return list;
+#else
             return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();
+#endif
         }
 
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)

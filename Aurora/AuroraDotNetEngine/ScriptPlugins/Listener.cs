@@ -88,10 +88,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         public OSD GetSerializationData(UUID itemID, UUID primID)
         {
+#if (!ISWIN)
+            foreach (IWorldComm comms in m_modules)
+            {
+                OSD r = comms.GetSerializationData(itemID, primID);
+                if (r != null)
+                {
+                    return r;
+                }
+            }
+#else
             foreach (OSD r in m_modules.Select(comms => comms.GetSerializationData(itemID, primID)).Where(r => r != null))
             {
                 return r;
             }
+#endif  
             return new OSD();
         }
 

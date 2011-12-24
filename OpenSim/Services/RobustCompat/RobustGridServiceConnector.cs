@@ -86,12 +86,24 @@ namespace OpenSim.Services.RobustCompat
             SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
+#if (!ISWIN)
+                foreach (IScene scene in manager.Scenes)
+                {
+                    if (scene.RegionInfo.RegionID == gridRegion.RegionID)
+                    {
+                        gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
+                        gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
+                        return gridRegion;
+                    }
+                }
+#else
                 foreach (IScene scene in manager.Scenes.Where(scene => scene.RegionInfo.RegionID == gridRegion.RegionID))
                 {
                     gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
                     gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
                     return gridRegion;
                 }
+#endif
             }
             return gridRegion;
         }

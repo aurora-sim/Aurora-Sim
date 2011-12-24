@@ -559,11 +559,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             InventoryFolderBase f = new InventoryFolderBase(folderID, remoteClient.AgentId);
-            InventoryFolderBase folder = m_scene.InventoryService.GetFolder(f);
-
-            if (folder == null || folder.Owner != remoteClient.AgentId)
-                return;
-
+            
             if (transactionID == UUID.Zero)
             {
                 IScenePresence presence;
@@ -1788,7 +1784,13 @@ namespace OpenSim.Region.Framework.Scenes
             if (returnobjects.Length == 0)
                 return true;
             //AddReturns(returnobjects[0].OwnerID, returnobjects[0].Name, returnobjects.Length, returnobjects[0].AbsolutePosition, "parcel owner return");
+#if (!ISWIN)
+            List<uint> IDs = new List<uint>();
+            foreach (ISceneEntity grp in returnobjects)
+                IDs.Add(grp.LocalId);
+#else
             List<uint> IDs = returnobjects.Select(grp => grp.LocalId).ToList();
+#endif
             IClientAPI client;
             m_scene.ClientManager.TryGetValue(AgentId, out client);
             //Its ok if the client is null, its taken care of
@@ -1987,20 +1989,39 @@ namespace OpenSim.Region.Framework.Scenes
             retVal["UpdateScriptTask"] = retVal["UpdateScriptTaskInventory"];
 
             //Region Server bound
+#if (!ISWIN)
+            IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
+                delegate(string request, string path, string param,
+                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                {
+                    return ScriptTaskInventory(agentID, request, path, param,
+                        httpRequest, httpResponse);
+                });
+#else
             IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
                                                             (request, path, param, httpRequest, httpResponse) =>
                                                             ScriptTaskInventory(agentID, request, path, param,
                                                                                 httpRequest, httpResponse));
+#endif
             server.AddStreamHandler(handler);
 
             retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
             retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
             retVal["UpdateScriptAgent"] = retVal["UpdateNotecardAgentInventory"];
             //Unless the script engine goes, region server bound
+#if (!ISWIN)
+            handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(string request, string path, string param,
+                                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return NoteCardAgentInventory(agentID, request, path, param,
+                    httpRequest, httpResponse);
+            });
+#else
             handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"],
                                             (request, path, param, httpRequest, httpResponse) =>
                                             NoteCardAgentInventory(agentID, request, path, param,
                                                                    httpRequest, httpResponse));
+#endif
             server.AddStreamHandler(handler);
             return retVal;
         }

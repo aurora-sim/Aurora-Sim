@@ -85,11 +85,22 @@ namespace Aurora.Modules
 
         private void RegionNameSelector_SelectedIndexChanged(object sender, EventArgs e)
         {
+#if (!ISWIN)
+            foreach (IScene scene in m_scenes)
+            {
+                if (scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString())
+                {
+                    SceneSelected = scene.RegionInfo.RegionID;
+                    break;
+                }
+            }
+#else
             foreach (IScene scene in m_scenes.Where(scene => scene.RegionInfo.RegionName == RegionNameSelector.SelectedItem.ToString()))
             {
                 SceneSelected = scene.RegionInfo.RegionID;
                 break;
             }
+#endif
             UpdateStatsBars();
         }
 

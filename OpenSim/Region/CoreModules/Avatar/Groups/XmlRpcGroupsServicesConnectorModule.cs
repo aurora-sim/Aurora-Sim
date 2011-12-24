@@ -893,10 +893,20 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 else
                 {
                     StringBuilder sb = new StringBuilder(requestingAgentID + function);
+#if (!ISWIN)
+                    foreach (object key in param.Keys)
+                    {
+                        if (param[key] != null)
+                        {
+                            sb.AppendFormat(",{0}:{1}", key, param[key]);
+                        }
+                    }
+#else
                     foreach (object key in param.Keys.Cast<object>().Where(key => param[key] != null))
                     {
                         sb.AppendFormat(",{0}:{1}", key, param[key]);
                     }
+#endif
 
                     CacheKey = sb.ToString();
                     m_memoryCache.TryGetValue(CacheKey, out resp);

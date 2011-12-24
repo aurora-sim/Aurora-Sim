@@ -286,10 +286,20 @@ namespace OpenSim.Services.MessagingService
                 IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                 if (GridService != null)
                 {
+#if (!ISWIN)
+                    foreach (IRegionClientCapsService regionClient in regionCaps.ClientCaps.GetCapsServices())
+                    {
+                        if (regionClient.RegionHandle != regionCaps.RegionHandle && regionClient.Region != null)
+                        {
+                            SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
+                        }
+                    }
+#else
                     foreach (IRegionClientCapsService regionClient in regionCaps.ClientCaps.GetCapsServices().Where(regionClient => regionClient.RegionHandle != regionCaps.RegionHandle && regionClient.Region != null))
                     {
                         SimulationService.CloseAgent(regionClient.Region, regionCaps.AgentID);
                     }
+#endif
                 }
             }
             if (kickRootAgent && regionCaps.Region != null) //Kick the root agent then
@@ -1111,11 +1121,21 @@ namespace OpenSim.Services.MessagingService
 
                     //Tell all neighbor regions about the new position as well
                     List<GridRegion> ourNeighbors = GetRegions(regionCaps.ClientCaps);
+#if (!ISWIN)
+                    foreach (GridRegion region in ourNeighbors)
+                    {
+                        if (!SimulationService.UpdateAgent(region, agentpos))
+                        {
+                            m_log.Info("[AgentProcessing]: Failed to inform " + region.RegionName + " about updating agent. ");
+                        }
+                    }
+#else
                     foreach (GridRegion region in ourNeighbors.Where(region => !SimulationService.UpdateAgent(region, agentpos)))
                     {
                         m_log.Info("[AgentProcessing]: Failed to inform " + region.RegionName +
                                    " about updating agent. ");
                     }
+#endif
 
                     EnableChildAgentsForPosition(regionCaps, agentpos.Position);
                 }
@@ -1124,7 +1144,14 @@ namespace OpenSim.Services.MessagingService
 
         private List<GridRegion> GetRegions(IClientCapsService iClientCapsService)
         {
+#if(!ISWIN)
+            List<GridRegion> regions = new List<GridRegion>();
+            foreach(IRegionClientCapsService rcc in iClientCapsService.GetCapsServices())
+                regions.Add(rcc.Region);
+            return regions;
+#else
             return iClientCapsService.GetCapsServices().Select(rccs => rccs.Region).ToList();
+#endif
         }
 
         #endregion

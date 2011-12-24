@@ -375,6 +375,68 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name = "filename">Filename to terrain file. Type is determined by extension.</param>
         public void LoadFromFile(string filename, int offsetX, int offsetY)
         {
+#if (!ISWIN)
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+            {
+                if (filename.EndsWith(loader.Key))
+                {
+                    lock (m_scene)
+                    {
+                        try
+                        {
+                            ITerrainChannel channel = loader.Value.LoadFile(filename, m_scene);
+                            channel.Scene = m_scene;
+                            if (m_channel.Height == channel.Height && m_channel.Width == channel.Width)
+                            {
+                                m_channel = channel;
+                                m_scene.RegisterModuleInterface(m_channel);
+                                m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                            }
+                            else
+                            {
+                                //Make sure it is in bounds
+                                if ((offsetX + channel.Width) > m_channel.Width || (offsetY + channel.Height) > m_channel.Height)
+                                {
+                                    m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                    return;
+                                }
+                                else
+                                {
+                                    //Merge the terrains together at the specified offset
+                                    for (int x = offsetX; x < offsetX + channel.Width; x++)
+                                    {
+                                        for (int y = offsetY; y < offsetY + channel.Height; y++)
+                                        {
+                                            m_channel[x, y] = channel[x - offsetX, y - offsetY];
+                                        }
+                                    }
+                                    m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                                }
+                            }
+                            UpdateRevertMap();
+                        }
+                        catch (NotImplementedException)
+                        {
+                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
+                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            m_log.Error("[TERRAIN]: Unable to load heightmap, file not found. (A directory permissions error may also cause this)");
+                            throw new TerrainException(String.Format("unable to load heightmap: file {0} not found (or permissions do not allow access", filename));
+                        }
+                        catch (ArgumentException e)
+                        {
+                            m_log.ErrorFormat("[TERRAIN]: Unable to load heightmap: {0}", e.Message);
+                            throw new TerrainException(String.Format("Unable to load heightmap: {0}", e.Message));
+                        }
+                    }
+                    CheckForTerrainUpdates();
+                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    return;
+                }
+            }
+#else
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
             {
                 lock (m_scene)
@@ -445,6 +507,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return;
             }
+#endif
 
             m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
@@ -459,11 +522,22 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
+#if (!ISWIN)
+                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                {
+                    if (filename.EndsWith(loader.Key))
+                    {
+                        loader.Value.SaveFile(filename, m_channel);
+                        return;
+                    }
+                }
+#else
                 foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
                 {
                     loader.Value.SaveFile(filename, m_channel);
                     return;
                 }
+#endif
             }
             catch (NotImplementedException)
             {
@@ -495,6 +569,68 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         /// <param name = "stream"></param>
         public void LoadFromStream(string filename, Stream stream)
         {
+#if (!ISWIN)
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+            {
+                if (filename.EndsWith(loader.Key))
+                {
+                    lock (m_scene)
+                    {
+                        try
+                        {
+                            ITerrainChannel channel = loader.Value.LoadStream(stream, m_scene);
+                            if (channel != null)
+                            {
+                                channel.Scene = m_scene;
+                                if (m_channel.Height == channel.Height && m_channel.Width == channel.Width)
+                                {
+                                    m_channel = channel;
+                                    m_scene.RegisterModuleInterface(m_channel);
+                                }
+                                else
+                                {
+                                    //Make sure it is in bounds
+                                    if ((channel.Width) > m_channel.Width || (channel.Height) > m_channel.Height)
+                                    {
+                                        for (int x = 0; x < m_channel.Width; x++)
+                                        {
+                                            for (int y = 0; y < m_channel.Height; y++)
+                                            {
+                                                m_channel[x, y] = channel[x, y];
+                                            }
+                                        }
+                                        //m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        //return;
+                                    }
+                                    else
+                                    {
+                                        //Merge the terrains together at the specified offset
+                                        for (int x = 0; x < channel.Width; x++)
+                                        {
+                                            for (int y = 0; y < channel.Height; y++)
+                                            {
+                                                m_channel[x, y] = channel[x, y];
+                                            }
+                                        }
+                                        m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                                    }
+                                }
+                                UpdateRevertMap();
+                            }
+                        }
+                        catch (NotImplementedException)
+                        {
+                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
+                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
+                        }
+                    }
+
+                    CheckForTerrainUpdates();
+                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    return;
+                }
+            }
+#else
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
             {
                 lock (m_scene)
@@ -558,6 +694,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return;
             }
+#endif
             m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
@@ -636,11 +773,22 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             try
             {
+#if (!ISWIN)
+                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                {
+                    if (filename.EndsWith(loader.Key))
+                    {
+                        loader.Value.SaveStream(stream, channel);
+                        return;
+                    }
+                }
+#else
                 foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
                 {
                     loader.Value.SaveStream(stream, channel);
                     return;
                 }
+#endif
             }
             catch (NotImplementedException)
             {
@@ -1059,6 +1207,73 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                                       ITerrainChannel update)
         {
             ITerrainChannel channel = null;
+#if (!ISWIN)
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+            {
+                if (filename.EndsWith(loader.Key))
+                {
+                    lock (m_scene)
+                    {
+                        try
+                        {
+                            channel = loader.Value.LoadStream(stream, m_scene);
+                            if (channel != null)
+                            {
+                                channel.Scene = m_scene;
+                                if (update == null || (update.Height == channel.Height && update.Width == channel.Width))
+                                {
+                                    if (m_scene.RegionInfo.RegionSizeX != channel.Width || m_scene.RegionInfo.RegionSizeY != channel.Height)
+                                    {
+                                        if ((channel.Width) > m_scene.RegionInfo.RegionSizeX || (channel.Height) > m_scene.RegionInfo.RegionSizeY)
+                                        {
+                                            TerrainChannel c = new TerrainChannel(true, m_scene);
+                                            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+                                            {
+                                                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+                                                {
+                                                    c[x, y] = channel[x, y];
+                                                }
+                                            }
+                                            return c;
+                                        }
+                                        return null;
+                                    }
+                                }
+                                else
+                                {
+                                    //Make sure it is in bounds
+                                    if ((offsetX + channel.Width) > update.Width || (offsetY + channel.Height) > update.Height)
+                                    {
+                                        m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        return null;
+                                    }
+                                    else
+                                    {
+                                        //Merge the terrains together at the specified offset
+                                        for (int x = offsetX; x < offsetX + channel.Width; x++)
+                                        {
+                                            for (int y = offsetY; y < offsetY + channel.Height; y++)
+                                            {
+                                                update[x, y] = channel[x - offsetX, y - offsetY];
+                                            }
+                                        }
+                                        return update;
+                                    }
+                                }
+                            }
+                        }
+                        catch (NotImplementedException)
+                        {
+                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
+                            throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
+                        }
+                    }
+
+                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    return channel;
+                }
+            }
+#else
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
             {
                 lock (m_scene)
@@ -1129,6 +1344,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return channel;
             }
+#endif
             m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
@@ -1228,6 +1444,23 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (offsetX >= 0 && offsetX < fileWidth && offsetY >= 0 && offsetY < fileHeight)
             {
                 // this region is included in the tile request
+#if (!ISWIN)
+                foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                {
+                    if (filename.EndsWith(loader.Key))
+                    {
+                        lock (m_scene)
+                        {
+                            ITerrainChannel channel = loader.Value.LoadFile(filename, offsetX, offsetY, fileWidth, fileHeight, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+                            channel.Scene = m_scene;
+                            m_channel = channel;
+                            m_scene.RegisterModuleInterface(m_channel);
+                            UpdateRevertMap();
+                        }
+                        return;
+                    }
+                }
+#else
                 foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
                 {
                     lock (m_scene)
@@ -1243,6 +1476,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                     return;
                 }
+#endif
             }
         }
 
@@ -1530,7 +1764,17 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 //Return them all
                 return m_terrainModules;
             }
+#if (!ISWIN)
+            foreach (TerrainModule module in m_terrainModules)
+            {
+                if (module.m_scene == scene)
+                {
+                    modules.Add(module);
+                }
+            }
+#else
             modules.AddRange(m_terrainModules.Where(module => module.m_scene == scene));
+#endif
             return modules;
         }
 
@@ -1841,7 +2085,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
                 return;
+#if (!ISWIN)
+            string supportedFileExtensions = "";
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                supportedFileExtensions = supportedFileExtensions + (" " + loader.Key + " (" + loader.Value + ")");
+#else
             string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
+#endif
 
             m_log.Info(
                 "terrain load <FileName> - Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
@@ -1880,7 +2130,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void AddConsoleCommands()
         {
             // Load / Save
+#if (!ISWIN)
+            string supportedFileExtensions = "";
+            foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
+                supportedFileExtensions = supportedFileExtensions + (" " + loader.Key + " (" + loader.Value + ")");
+#else
             string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
+#endif
 
             if (MainConsole.Instance != null)
             {

@@ -119,7 +119,7 @@ namespace OpenSim.Framework
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
-                new List<string>(listAsString.Split(new[] {",", " "}, StringSplitOptions.RemoveEmptyEntries));
+                new List<string>(listAsString.Split(new[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries));
             return value;
         }
 
@@ -143,7 +143,7 @@ namespace OpenSim.Framework
         /// <returns></returns>
         public static double lerp(double a, double b, double c)
         {
-            return (b*a) + (c*(1 - a));
+            return (b * a) + (c * (1 - a));
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace OpenSim.Framework
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
             float dz = a.Z - b.Z;
-            return Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace OpenSim.Framework
         {
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
-            return Math.Sqrt(dx*dx + dy*dy);
+            return Math.Sqrt(dx * dx + dy * dy);
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace OpenSim.Framework
             float dx = a.X - b.X;
             float dy = a.Y - b.Y;
             float dz = a.Z - b.Z;
-            return (dx*dx + dy*dy + dz*dz) < (amount*amount);
+            return (dx * dx + dy * dy + dz * dz) < (amount * amount);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace OpenSim.Framework
         /// <returns>The magnitude of the vector</returns>
         public static double GetMagnitude(Vector3 a)
         {
-            return Math.Sqrt((a.X*a.X) + (a.Y*a.Y) + (a.Z*a.Z));
+            return Math.Sqrt((a.X * a.X) + (a.Y * a.Y) + (a.Z * a.Z));
         }
 
         /// <summary>
@@ -239,8 +239,8 @@ namespace OpenSim.Framework
             if (IsZeroVector(a))
                 throw new ArgumentException("Vector paramater cannot be a zero vector.");
 
-            float Mag = (float) GetMagnitude(a);
-            return new Vector3(a.X/Mag, a.Y/Mag, a.Z/Mag);
+            float Mag = (float)GetMagnitude(a);
+            return new Vector3(a.X / Mag, a.Y / Mag, a.Z / Mag);
         }
 
         /// <summary>
@@ -262,16 +262,16 @@ namespace OpenSim.Framework
         public static Quaternion Axes2Rot(Vector3 fwd, Vector3 left, Vector3 up)
         {
             float s;
-            float tr = (float) (fwd.X + left.Y + up.Z + 1.0);
+            float tr = (float)(fwd.X + left.Y + up.Z + 1.0);
 
             if (tr >= 1.0)
             {
-                s = (float) (0.5/Math.Sqrt(tr));
+                s = (float)(0.5 / Math.Sqrt(tr));
                 return new Quaternion(
-                    (left.Z - up.Y)*s,
-                    (up.X - fwd.Z)*s,
-                    (fwd.Y - left.X)*s,
-                    (float) 0.25/s);
+                    (left.Z - up.Y) * s,
+                    (up.X - fwd.Z) * s,
+                    (fwd.Y - left.X) * s,
+                    (float)0.25 / s);
             }
             else
             {
@@ -279,36 +279,36 @@ namespace OpenSim.Framework
 
                 if (max < fwd.X)
                 {
-                    s = (float) (Math.Sqrt(fwd.X - (left.Y + up.Z) + 1.0));
-                    float x = (float) (s*0.5);
-                    s = (float) (0.5/s);
+                    s = (float)(Math.Sqrt(fwd.X - (left.Y + up.Z) + 1.0));
+                    float x = (float)(s * 0.5);
+                    s = (float)(0.5 / s);
                     return new Quaternion(
                         x,
-                        (fwd.Y + left.X)*s,
-                        (up.X + fwd.Z)*s,
-                        (left.Z - up.Y)*s);
+                        (fwd.Y + left.X) * s,
+                        (up.X + fwd.Z) * s,
+                        (left.Z - up.Y) * s);
                 }
                 else if (max == left.Y)
                 {
-                    s = (float) (Math.Sqrt(left.Y - (up.Z + fwd.X) + 1.0));
-                    float y = (float) (s*0.5);
-                    s = (float) (0.5/s);
+                    s = (float)(Math.Sqrt(left.Y - (up.Z + fwd.X) + 1.0));
+                    float y = (float)(s * 0.5);
+                    s = (float)(0.5 / s);
                     return new Quaternion(
-                        (fwd.Y + left.X)*s,
+                        (fwd.Y + left.X) * s,
                         y,
-                        (left.Z + up.Y)*s,
-                        (up.X - fwd.Z)*s);
+                        (left.Z + up.Y) * s,
+                        (up.X - fwd.Z) * s);
                 }
                 else
                 {
-                    s = (float) (Math.Sqrt(up.Z - (fwd.X + left.Y) + 1.0));
-                    float z = (float) (s*0.5);
-                    s = (float) (0.5/s);
+                    s = (float)(Math.Sqrt(up.Z - (fwd.X + left.Y) + 1.0));
+                    float z = (float)(s * 0.5);
+                    s = (float)(0.5 / s);
                     return new Quaternion(
-                        (up.X + fwd.Z)*s,
-                        (left.Z + up.Y)*s,
+                        (up.X + fwd.Z) * s,
+                        (left.Z + up.Y) * s,
                         z,
-                        (fwd.Y - left.X)*s);
+                        (fwd.Y - left.X) * s);
                 }
             }
         }
@@ -354,7 +354,7 @@ namespace OpenSim.Framework
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
 
-            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
+            XmlTextWriter xtw = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
 
             try
             {
@@ -414,7 +414,7 @@ namespace OpenSim.Framework
         public static int ToUnixTime(DateTime stamp)
         {
             TimeSpan t = stamp.ToUniversalTime() - unixEpoch;
-            return (int) t.TotalSeconds;
+            return (int)t.TotalSeconds;
         }
 
         public static DateTime ToDateTime(ulong seconds)
@@ -499,7 +499,19 @@ namespace OpenSim.Framework
             if (bytes.Length == 0) return String.Empty;
 
             StringBuilder output = new StringBuilder();
+#if (!ISWIN)
+            bool printable = true;
+            foreach (byte t in bytes)
+            {
+                if ((t < 0x20 || t > 0x7E) && t != 0x09 && t != 0x0D && t != 0x0A && t != 0x00)
+                {
+                    printable = false;
+                    break;
+                }
+            }
+#else
             bool printable = bytes.All(t => (t >= 0x20 && t <= 0x7E) || t == 0x09 || t == 0x0D || t == 0x0A || t == 0x00);
+#endif
 
             if (printable)
             {
@@ -531,7 +543,7 @@ namespace OpenSim.Framework
                     for (int j = 0; j < 16 && (i + j) < bytes.Length; j++)
                     {
                         if (bytes[i + j] >= 0x20 && bytes[i + j] < 0x7E)
-                            output.Append((char) bytes[i + j]);
+                            output.Append((char)bytes[i + j]);
                         else
                             output.Append(".");
                     }
@@ -627,10 +639,10 @@ namespace OpenSim.Framework
 
         public static void AddDataRowToConfig(IConfigSource config, DataRow row)
         {
-            config.Configs.Add((string) row[0]);
+            config.Configs.Add((string)row[0]);
             for (int i = 0; i < row.Table.Columns.Count; i++)
             {
-                config.Configs[(string) row[0]].Set(row.Table.Columns[i].ColumnName, row[i]);
+                config.Configs[(string)row[0]].Set(row.Table.Columns[i].ColumnName, row[i]);
             }
         }
 
@@ -758,7 +770,7 @@ namespace OpenSim.Framework
         public static void Compress7ZipFile(string path, string destination)
         {
             ProcessStartInfo p = new ProcessStartInfo();
-            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof (Util)).CodeBase);
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
             if (pa != null)
             {
                 p.FileName = Path.Combine(pa, "7za.exe");
@@ -772,7 +784,7 @@ namespace OpenSim.Framework
         public static void UnCompress7ZipFile(string path, string destination)
         {
             ProcessStartInfo p = new ProcessStartInfo();
-            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof (Util)).CodeBase);
+            string pa = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
             if (pa != null)
             {
                 p.FileName = Path.Combine(pa, "7za.exe");
@@ -861,9 +873,9 @@ namespace OpenSim.Framework
         public static ulong BytesToUInt64Big(byte[] bytes)
         {
             if (bytes.Length < 8) return 0;
-            return ((ulong) bytes[0] << 56) | ((ulong) bytes[1] << 48) | ((ulong) bytes[2] << 40) |
-                   ((ulong) bytes[3] << 32) |
-                   ((ulong) bytes[4] << 24) | ((ulong) bytes[5] << 16) | ((ulong) bytes[6] << 8) | bytes[7];
+            return ((ulong)bytes[0] << 56) | ((ulong)bytes[1] << 48) | ((ulong)bytes[2] << 40) |
+                   ((ulong)bytes[3] << 32) |
+                   ((ulong)bytes[4] << 24) | ((ulong)bytes[5] << 16) | ((ulong)bytes[6] << 8) | bytes[7];
         }
 
         // used for RemoteParcelRequest (for "About Landmark")
@@ -996,70 +1008,58 @@ namespace OpenSim.Framework
             Type settingsType = settingsClass.GetType();
 
             FieldInfo[] fieldInfos = settingsType.GetFields();
-            foreach (FieldInfo fieldInfo in fieldInfos.Where(fieldInfo => !fieldInfo.IsStatic))
+            foreach (FieldInfo fieldInfo in fieldInfos)
             {
-                if (fieldInfo.FieldType == typeof (String))
+                if (!fieldInfo.IsStatic)
                 {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof (Boolean))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof (Int32))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof (Single))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
-                }
-                else if (fieldInfo.FieldType == typeof (UInt32))
-                {
-                    fieldInfo.SetValue(settingsClass,
-                                       Convert.ToUInt32(config.Get(fieldInfo.Name,
-                                                                   ((uint) fieldInfo.GetValue(settingsClass)).
-                                                                       ToString())));
+                    if (fieldInfo.FieldType == typeof (String))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (Boolean))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (Int32))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (Single))
+                    {
+                        fieldInfo.SetValue(settingsClass, config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
+                    }
+                    else if (fieldInfo.FieldType == typeof (UInt32))
+                    {
+                        fieldInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(fieldInfo.Name, ((uint) fieldInfo.GetValue(settingsClass)).ToString())));
+                    }
                 }
             }
 
             PropertyInfo[] propertyInfos = settingsType.GetProperties();
-            foreach (PropertyInfo propInfo in propertyInfos.Where(propInfo => (propInfo.CanRead) && (propInfo.CanWrite)))
+            foreach (PropertyInfo propInfo in propertyInfos)
             {
-                if (propInfo.PropertyType == typeof (String))
+                if ((propInfo.CanRead) && (propInfo.CanWrite))
                 {
-                    propInfo.SetValue(settingsClass,
-                                      config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                else if (propInfo.PropertyType == typeof (Boolean))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                else if (propInfo.PropertyType == typeof (Int32))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                else if (propInfo.PropertyType == typeof (Single))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)),
-                                      null);
-                }
-                if (propInfo.PropertyType == typeof (UInt32))
-                {
-                    propInfo.SetValue(settingsClass,
-                                      Convert.ToUInt32(config.Get(propInfo.Name,
-                                                                  ((uint) propInfo.GetValue(settingsClass, null)).
-                                                                      ToString())), null);
+                    if (propInfo.PropertyType == typeof (String))
+                    {
+                        propInfo.SetValue(settingsClass, config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    else if (propInfo.PropertyType == typeof (Boolean))
+                    {
+                        propInfo.SetValue(settingsClass, config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    else if (propInfo.PropertyType == typeof (Int32))
+                    {
+                        propInfo.SetValue(settingsClass, config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    else if (propInfo.PropertyType == typeof (Single))
+                    {
+                        propInfo.SetValue(settingsClass, config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)), null);
+                    }
+                    if (propInfo.PropertyType == typeof (UInt32))
+                    {
+                        propInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(propInfo.Name, ((uint) propInfo.GetValue(settingsClass, null)).ToString())), null);
+                    }
                 }
             }
 
@@ -1144,7 +1144,7 @@ namespace OpenSim.Framework
             buffer = OSDParser.DeserializeJson(strdata);
             if (buffer.Type == OSDType.Map)
             {
-                args = (OSDMap) buffer;
+                args = (OSDMap)buffer;
                 return args;
             }
             return null;
@@ -1160,7 +1160,7 @@ namespace OpenSim.Framework
                 buffer = OSDParser.DeserializeJson(data);
                 if (buffer.Type == OSDType.Map)
                 {
-                    args = (OSDMap) buffer;
+                    args = (OSDMap)buffer;
                     return args;
                 }
                 else
@@ -1183,7 +1183,7 @@ namespace OpenSim.Framework
 
             if (Path.VolumeSeparatorChar != Path.DirectorySeparatorChar)
             {
-                string[] vcomps = path.Split(new[] {Path.VolumeSeparatorChar}, 2, StringSplitOptions.RemoveEmptyEntries);
+                string[] vcomps = path.Split(new[] { Path.VolumeSeparatorChar }, 2, StringSplitOptions.RemoveEmptyEntries);
 
                 if (vcomps.Length > 1)
                 {
@@ -1192,16 +1192,16 @@ namespace OpenSim.Framework
                 }
             }
 
-            string[] comps = path.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
+            string[] comps = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
                                         StringSplitOptions.RemoveEmptyEntries);
 
             // Glob
 
             path = vol;
             if (vol != String.Empty)
-                path += new String(new[] {Path.VolumeSeparatorChar, Path.DirectorySeparatorChar});
+                path += new String(new[] { Path.VolumeSeparatorChar, Path.DirectorySeparatorChar });
             else
-                path = new String(new[] {Path.DirectorySeparatorChar});
+                path = new String(new[] { Path.DirectorySeparatorChar });
 
             List<string> paths = new List<string>();
             List<string> found = new List<string>();
@@ -1219,7 +1219,12 @@ namespace OpenSim.Framework
 
                     if (dirs.Length != 0)
                     {
+#if (!ISWIN)
+                        foreach (string dir in dirs)
+                            addpaths.Add(Path.Combine(path, dir));
+#else
                         addpaths.AddRange(dirs.Select(dir => Path.Combine(path, dir)));
+#endif
                     }
 
                     // Only add files if that is the last path component
@@ -1237,7 +1242,7 @@ namespace OpenSim.Framework
 
         public static string[] GetSubFiles(string path)
         {
-            string[] comps = path.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
+            string[] comps = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
                                         StringSplitOptions.None);
             List<string> paths = new List<string>();
             string endFind = comps[comps.Length - 1];
@@ -1251,7 +1256,15 @@ namespace OpenSim.Framework
             }
             paths.Add(baseDir);
 
+#if (!ISWIN)
+            List<string> list = new List<string>();
+            foreach (string p in paths)
+                foreach (string file in Directory.GetFiles(p, endFind))
+                    list.Add(file);
+            return list.ToArray();
+#else
             return paths.SelectMany(p => Directory.GetFiles(p, endFind)).ToArray();
+#endif
         }
 
         public static byte[] StringToBytes256(string str, params object[] args)
@@ -1353,7 +1366,7 @@ namespace OpenSim.Framework
 
             private static void EndFireAndForget(IAsyncResult ar)
             {
-                WaitCallback callback = (WaitCallback) ar.AsyncState;
+                WaitCallback callback = (WaitCallback)ar.AsyncState;
 
                 try
                 {
@@ -1391,8 +1404,8 @@ namespace OpenSim.Framework
             {
                 //This stops more tasks and threads from being started
                 m_threadPoolRunning = false;
-                m_ThreadPool.WaitForIdle(60*1000);
-                    //Wait for the threads to be idle, but don't wait for more than a minute
+                m_ThreadPool.WaitForIdle(60 * 1000);
+                //Wait for the threads to be idle, but don't wait for more than a minute
                 //Destroy the threadpool now
                 m_ThreadPool.Dispose();
                 m_ThreadPool = null;
@@ -1443,14 +1456,14 @@ namespace OpenSim.Framework
                     if (m_ThreadPool == null)
                         m_ThreadPool = new SmartThreadPool(5000, 15, 1);
                     if (m_threadPoolRunning) //Check if the thread pool should be running
-                        m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] {callback, obj});
+                        m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] { callback, obj });
                     break;
                 case FireAndForgetMethod.Thread:
                     Thread thread = new Thread(delegate(object o)
-                                                   {
-                                                       Culture.SetCurrentCulture();
-                                                       callback(o);
-                                                   });
+                    {
+                        Culture.SetCurrentCulture();
+                        callback(o);
+                    });
                     thread.Start(obj);
                     break;
 #if NET_4_0
@@ -1475,8 +1488,8 @@ namespace OpenSim.Framework
 
         private static object SmartThreadPoolCallback(object o)
         {
-            object[] array = (object[]) o;
-            WaitCallback callback = (WaitCallback) array[0];
+            object[] array = (object[])o;
+            WaitCallback callback = (WaitCallback)array[0];
             object obj = array[1];
 
             callback(obj);
@@ -1535,7 +1548,7 @@ namespace OpenSim.Framework
             foreach (StackFrame stackFrame in stackFrames)
             {
                 m_log.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name);
-                    // write method name
+                // write method name
             }
         }
 
@@ -1589,13 +1602,13 @@ namespace OpenSim.Framework
         {
             uint xx, yy;
             Utils.LongToUInts(regionHandle, out xx, out yy);
-            x = (int) xx;
-            y = (int) yy;
+            x = (int)xx;
+            y = (int)yy;
         }
 
         public static ulong IntsToUlong(int x, int y)
         {
-            return Utils.UIntsToLong((uint) x, (uint) y);
+            return Utils.UIntsToLong((uint)x, (uint)y);
         }
 
         public static string CombineParams(string[] commandParams, int pos)
@@ -1677,9 +1690,32 @@ namespace OpenSim.Framework
 
         public static sbyte CheckMeshType(sbyte p)
         {
-            if (p == (sbyte) AssetType.Mesh)
-                return (sbyte) AssetType.Texture;
+            if (p == (sbyte)AssetType.Mesh)
+                return (sbyte)AssetType.Texture;
             return p;
+        }
+
+        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
+        // By: A Million Lemmings
+        public static string ConvertDecString(int dvalue)
+        {
+            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            string retVal = string.Empty;
+
+            double value = Convert.ToDouble(dvalue);
+
+            do
+            {
+                double remainder = value - (26 * Math.Truncate(value / 26));
+
+                retVal = retVal + CHARS.Substring((int)remainder, 1);
+
+                value = Math.Truncate(value / 26);
+            } while (value > 0);
+
+
+            return retVal;
         }
     }
 
@@ -1692,6 +1728,7 @@ namespace OpenSim.Framework
 
         /// <summary>
         /// Because Escaping the sql might cause it to go over the max length
+        /// DO NOT USE THIS ON JSON STRINGS!!! IT WILL BREAK THE DESERIALIZATION!!!
         /// </summary>
         /// <param name="usString"></param>
         /// <param name="maxLength"></param>
@@ -1796,7 +1833,7 @@ namespace OpenSim.Framework
 
         public static void InternetFailure()
         {
-            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5*60*1000); /*5 mins*/
+            m_nextInternetConnectionCheck = Util.EnvironmentTickCountAdd(5 * 60 * 1000); /*5 mins*/
             m_noInternetConnection = true;
         }
 
@@ -1810,7 +1847,7 @@ namespace OpenSim.Framework
             if (xff == string.Empty)
                 return null;
 
-            string[] parts = xff.Split(new[] {','});
+            string[] parts = xff.Split(new[] { ',' });
             if (parts.Length > 0)
             {
                 try
@@ -1832,7 +1869,7 @@ namespace OpenSim.Framework
             {
                 try
                 {
-                    Hashtable headers = (Hashtable) req["headers"];
+                    Hashtable headers = (Hashtable)req["headers"];
                     if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
                         return headers["remote_addr"].ToString();
                 }
@@ -1907,7 +1944,7 @@ namespace OpenSim.Framework
 
             try
             {
-                port1 = uri.Split(new[] {':'})[2];
+                port1 = uri.Split(new[] { ':' })[2];
             }
             catch
             {
@@ -1924,7 +1961,7 @@ namespace OpenSim.Framework
         /// <returns>A resolved IP Address</returns>
         public static IPAddress GetHostFromURL(string url)
         {
-            return GetHostFromDNS(url.Split(new[] {'/', ':'})[3]);
+            return GetHostFromDNS(url.Split(new[] { '/', ':' })[3]);
         }
 
         /// <summary>
@@ -1945,14 +1982,14 @@ namespace OpenSim.Framework
             // Is it already a valid IP? No need to look it up.
             if (IPAddress.TryParse(dnsAddress, out ipa))
             {
-                m_dnsCache.Add(dnsAddress, ipa, 30*60 /*30mins*/);
+                m_dnsCache.Add(dnsAddress, ipa, 30 * 60 /*30mins*/);
                 return ipa;
             }
             try
             {
                 if (IPAddress.TryParse(dnsAddress.Split(':')[0], out ipa))
                 {
-                    m_dnsCache.Add(dnsAddress, ipa, 30*60 /*30mins*/);
+                    m_dnsCache.Add(dnsAddress, ipa, 30 * 60 /*30mins*/);
                     return ipa;
                 }
             }
@@ -1984,15 +2021,26 @@ namespace OpenSim.Framework
 
             if (hosts != null)
             {
+#if (!ISWIN)
+                foreach (IPAddress host in hosts)
+                {
+                    if (host.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
+                        return host;
+                    }
+                }
+#else
                 foreach (IPAddress host in hosts.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
+                    m_dnsCache.Add(dnsAddress, host, 30 * 60 /*30mins*/);
                     return host;
                 }
+#endif
 
                 if (hosts.Length > 0)
                 {
-                    m_dnsCache.Add(dnsAddress, hosts[0], 30*60 /*30mins*/);
+                    m_dnsCache.Add(dnsAddress, hosts[0], 30 * 60 /*30mins*/);
                     return hosts[0];
                 }
             }
@@ -2037,17 +2085,37 @@ namespace OpenSim.Framework
                 }
             }
 
+#if (!ISWIN)
+            foreach (IPAddress host in iplist)
+            {
+                if (!IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return host;
+                }
+            }
+#else
             foreach (IPAddress host in iplist.Where(host => !IPAddress.IsLoopback(host) && host.AddressFamily == AddressFamily.InterNetwork))
             {
                 return host;
             }
+#endif
 
             if (iplist.Length > 0)
             {
+#if (!ISWIN)
+                foreach (IPAddress host in iplist)
+                {
+                    if (host.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return host;
+                    }
+                }
+#else
                 foreach (IPAddress host in iplist.Where(host => host.AddressFamily == AddressFamily.InterNetwork))
                 {
                     return host;
                 }
+#endif
                 // Well all else failed...
                 return iplist[0];
             }

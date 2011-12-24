@@ -413,10 +413,20 @@ namespace Aurora.Modules.FileBasedSimulationData
             {
                 if (engines != null)
                 {
+#if (!ISWIN)
+                    foreach (IScriptModule engine in engines)
+                    {
+                        if (engine != null)
+                        {
+                            engine.SaveStateSaves();
+                        }
+                    }
+#else
                     foreach (IScriptModule engine in engines.Where(engine => engine != null))
                     {
                         engine.SaveStateSaves();
                     }
+#endif
                 }
             }
             catch (Exception ex)
@@ -641,11 +651,21 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             ISceneEntity[] entities = m_scene.Entities.GetEntities();
             try
-            {
+            { 
+#if (!ISWIN)
+                foreach (ISceneEntity entity in entities)
+                {
+                    if (entity.HasGroupChanged)
+                    {
+                        entity.HasGroupChanged = false;
+                    }
+                }
+#else
                 foreach (ISceneEntity entity in entities.Where(entity => entity.HasGroupChanged))
                 {
                     entity.HasGroupChanged = false;
                 }
+#endif
             }
             catch (Exception ex)
             {
@@ -788,7 +808,19 @@ namespace Aurora.Modules.FileBasedSimulationData
 
             ILegacySimulationDataStore[] stores =
                 AuroraModuleLoader.PickupModules<ILegacySimulationDataStore>().ToArray();
+#if (!ISWIN)
+            ILegacySimulationDataStore simStore = null;
+            foreach (ILegacySimulationDataStore store in stores)
+            {
+                if (store.Name == name)
+                {
+                    simStore = store;
+                    break;
+                }
+            }
+#else
             ILegacySimulationDataStore simStore = stores.FirstOrDefault(store => store.Name == name);
+#endif
             if (simStore == null)
                 return false;
 

@@ -50,11 +50,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         private readonly Dictionary<UUID, long> m_initialsendqueue = new Dictionary<UUID, long>();
         private readonly Dictionary<UUID, AvatarAppearance> m_saveQueueData = new Dictionary<UUID, AvatarAppearance>();
 
-        private readonly Dictionary<UUID, AvatarAppearance> m_saveTextureQueueData =
-            new Dictionary<UUID, AvatarAppearance>();
-
         private readonly Dictionary<UUID, long> m_savequeue = new Dictionary<UUID, long>();
-        private readonly Dictionary<UUID, long> m_savetexturequeue = new Dictionary<UUID, long>();
         private readonly Dictionary<UUID, long> m_sendqueue = new Dictionary<UUID, long>();
 
         private readonly object m_setAppearanceLock = new object();
@@ -353,9 +349,15 @@ textures 1
                 if (texturesChanged || visualParamsChanged)
                 {
                     if (texturesChanged)
-                        QueueTexturesAppearanceSave(client.AgentId);
-                    else
+                    {
+                        m_log.Warn("Textured changed");
                         QueueAppearanceSave(client.AgentId);
+                    }
+                    else
+                    {
+                        m_log.Warn("Non Textured changed");
+                        QueueAppearanceSave(client.AgentId);
+                    }
                 }
                 appearance.Appearance.Serial++;
             }
@@ -378,10 +380,20 @@ textures 1
 
             AvatarWearable cachedWearable = new AvatarWearable {MaxItems = 0};
             //Unlimited items
+#if (!ISWIN)
+            foreach (WearableCache item in wearables)
+            {
+                if (textureEntry.FaceTextures[item.TextureIndex] != null)
+                {
+                    cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
+                }
+            }
+#else
             foreach (WearableCache item in wearables.Where(item => textureEntry.FaceTextures[item.TextureIndex] != null))
             {
                 cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
             }
+#endif
             m_scene.AvatarService.CacheWearableData(sp.UUID, cachedWearable);
         }
 
@@ -477,29 +489,6 @@ textures 1
                     return;
                 }
                 m_initialsendqueue[agentid] = timestamp;
-                m_updateTimer.Start();
-            }
-        }
-
-        public void QueueTexturesAppearanceSave(UUID agentid)
-        {
-            // m_log.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
-
-            // 10000 ticks per millisecond, 1000 milliseconds per second
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime*1000*10000);
-            lock (m_savequeue)
-            {
-                IScenePresence sp = m_scene.GetScenePresence(agentid);
-                if (sp == null)
-                {
-                    m_log.WarnFormat("[AvatarFactory]: Agent {0} no longer in the scene", agentid);
-                    return;
-                }
-                IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-                m_savetexturequeue[agentid] = timestamp;
-                lock (m_saveQueueData)
-                    m_saveTextureQueueData[agentid] = appearance.Appearance;
-
                 m_updateTimer.Start();
             }
         }
@@ -633,20 +622,6 @@ textures 1
                 }
             }
 
-            lock (m_savetexturequeue)
-            {
-                Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_savetexturequeue);
-                foreach (KeyValuePair<UUID, long> kvp in saves)
-                {
-                    if (kvp.Value < now)
-                    {
-                        KeyValuePair<UUID, long> kvp1 = kvp;
-                        Util.FireAndForget(delegate { HandleAppearanceSave(kvp1.Key, true); });
-                        m_savetexturequeue.Remove(kvp.Key);
-                    }
-                }
-            }
-
             lock (m_initialsendqueue)
             {
                 Dictionary<UUID, long> saves = new Dictionary<UUID, long>(m_initialsendqueue);
@@ -661,7 +636,7 @@ textures 1
                 }
             }
 
-            if (m_savequeue.Count == 0 && m_savetexturequeue.Count == 0 && m_sendqueue.Count == 0 &&
+            if (m_savequeue.Count == 0 && m_sendqueue.Count == 0 &&
                 m_initialsendqueue.Count == 0)
                 m_updateTimer.Stop();
         }
@@ -839,14 +814,24 @@ textures 1
                 }
             }
 
-            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing.Where(wear => wear.Type < AvatarWearable.MAX_WEARABLES))
+#if (!ISWIN)
+            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
             {
-                /*if (incomingLinks.ContainsKey (wear.ItemID))
+                if (wear.Type < AvatarWearable.MAX_WEARABLES)
+                {
+                    /*if (incomingLinks.ContainsKey (wear.ItemID))
                     {
                         wear.ItemID = incomingLinks[wear.ItemID];
                     }*/
+                    avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
+                }
+            }
+#else
+            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing.Where(wear => wear.Type < AvatarWearable.MAX_WEARABLES))
+            {
                 avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
             }
+#endif
 
             avatAppearance.GetAssetsFrom(appearance.Appearance);
 
@@ -863,10 +848,21 @@ textures 1
                 //Tell the client about the new things it is wearing
                 sp.ControllingClient.SendWearables(appearance.Appearance.Wearables, appearance.Appearance.Serial);
                 //Then forcefully tell it to rebake
+#if (!ISWIN)
+                foreach (Primitive.TextureEntryFace t in appearance.Appearance.Texture.FaceTextures)
+                {
+                    Primitive.TextureEntryFace face = (t);
+                    if (face != null)
+                    {
+                        sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
+                    }
+                }
+#else
                 foreach (Primitive.TextureEntryFace face in appearance.Appearance.Texture.FaceTextures.Select(t => (t)).Where(face => face != null))
                 {
                     sp.ControllingClient.SendRebakeAvatarTextures(face.TextureID);
                 }
+#endif
             }
             QueueAppearanceSave(sp.UUID);
             //Send the wearables HERE so that the client knows what it is wearing

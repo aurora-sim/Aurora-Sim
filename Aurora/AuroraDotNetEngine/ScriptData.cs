@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Lifetime;
@@ -651,7 +650,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                         if (compileerrors.Length != 0)
                         {
-                            string error = compileerrors.Aggregate(string.Empty, (current, compileerror) => current + compileerror);
+                            string error = string.Empty;
+                            foreach (string compileerror in compileerrors)
+                            {
+                                error += compileerror;
+                            }
                             DisplayUserNotification(error, "compiling", reupload, true);
                             //It might have failed, but we still need to add it so that we can reuse this script data class later
                             ScriptEngine.ScriptProtection.AddNewScript(this);
@@ -669,7 +672,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                             if (compilewarnings != null && compilewarnings.Length != 0)
                             {
-                                string error = compileerrors.Aggregate(string.Empty, (current, compileerror) => current + compileerror);
+                                string error = string.Empty;
+                                foreach (string compileerror in compilewarnings)
+                                {
+                                    error += compileerror;
+                                }
                                 DisplayUserNotification(error, "compiling", reupload, false);
                                 //It might have failed, but we still need to add it so that we can reuse this script data class later
                                 ScriptEngine.ScriptProtection.AddNewScript(this);

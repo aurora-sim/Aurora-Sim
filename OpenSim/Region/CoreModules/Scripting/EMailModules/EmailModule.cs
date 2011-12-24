@@ -173,11 +173,22 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                     {
                         lock (m_Scenes)
                         {
+#if (!ISWIN)
+                            foreach (IScene s in m_Scenes.Values)
+                            {
+                                IScenePresence SP = s.GetScenePresence(part.OwnerID);
+                                if ((SP != null) && (!SP.IsChildAgent))
+                                {
+                                    SP.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
+                                }
+                            }
+#else
                             foreach (IScenePresence SP in m_Scenes.Values.Select(s => s.GetScenePresence(part.OwnerID)).Where(SP => (SP != null) && (!SP.IsChildAgent)))
                             {
                                 SP.ControllingClient.SendAlertMessage(
                                     "llEmail: email module not configured for outgoing emails");
                             }
+#endif
                         }
                     }
                 }
@@ -239,7 +250,15 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
                 // Hopefully this isn't too time consuming.  If it is, we can always push it into a worker thread.
                 DateTime now = DateTime.Now;
+#if (!ISWIN)
+                List<UUID> removal = new List<UUID>();
+                foreach (UUID uuid in m_LastGetEmailCall.Keys)
+                {
+                    if ((now - m_LastGetEmailCall[uuid]) > m_QueueTimeout) removal.Add(uuid);
+                }
+#else
                 List<UUID> removal = m_LastGetEmailCall.Keys.Where(uuid => (now - m_LastGetEmailCall[uuid]) > m_QueueTimeout).ToList();
+#endif
 
                 foreach (UUID remove in removal)
                 {

@@ -792,7 +792,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
 
-            group.SetGroup (remoteClient.ActiveGroupId, remoteClient);
+            group.SetGroup (remoteClient.ActiveGroupId, remoteClient.AgentId);
             item.Owner = remoteClient.AgentId;
             if (rootPart.OwnerID != item.Owner)
             {
@@ -926,7 +926,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                 List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
-                group.SetGroup(remoteClient.ActiveGroupId, remoteClient);
+                group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
                 item.Owner = remoteClient.AgentId;
                 if (rootPart.OwnerID != item.Owner)
                 {

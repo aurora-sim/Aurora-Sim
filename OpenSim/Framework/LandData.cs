@@ -592,6 +592,16 @@ namespace OpenSim.Framework
 
 
             landData._parcelAccessList.Clear();
+#if (!ISWIN)
+            foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)
+            {
+                ParcelManager.ParcelAccessEntry newEntry = new ParcelManager.ParcelAccessEntry
+                                                               {
+                                                                   AgentID = entry.AgentID, Flags = entry.Flags, Time = entry.Time
+                                                               };
+                landData._parcelAccessList.Add(newEntry);
+            }
+#else
             foreach (ParcelManager.ParcelAccessEntry newEntry in _parcelAccessList.Select(entry => new ParcelManager.ParcelAccessEntry
                                                                                          {
                                                                                              AgentID = entry.AgentID,
@@ -601,6 +611,7 @@ namespace OpenSim.Framework
             {
                 landData._parcelAccessList.Add(newEntry);
             }
+#endif
 
             return landData;
         }

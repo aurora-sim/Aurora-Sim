@@ -312,10 +312,20 @@ namespace Aurora.Modules
                     }
                 }
 
+#if (!ISWIN)
+                foreach (IScenePresence client in scene.GetScenePresences())
+                {
+                    if (client.ControllingClient.AgentId != remoteClient.AgentId)
+                    {
+                        client.ControllingClient.SendViewerEffect(effectBlockArray);
+                    }
+                }
+#else
                 foreach (IScenePresence client in scene.GetScenePresences().Where(client => client.ControllingClient.AgentId != remoteClient.AgentId))
                 {
                     client.ControllingClient.SendViewerEffect(effectBlockArray);
                 }
+#endif
             }
         }
 
@@ -419,9 +429,18 @@ namespace Aurora.Modules
                 effect.TypeData = part;
                 effectBlockArray[0] = effect;
 
+#if (!ISWIN)
+                m_presence.Scene.ForEachClient(
+                    delegate(IClientAPI client)
+                    {
+                        client.SendViewerEffect(effectBlockArray);
+                    }
+                );
+#else
                 m_presence.Scene.ForEachClient(
                     client => client.SendViewerEffect(effectBlockArray)
                     );
+#endif
             }
         }
 

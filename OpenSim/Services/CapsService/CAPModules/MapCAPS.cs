@@ -56,10 +56,18 @@ namespace OpenSim.Services.CapsService
             if (config != null)
                 m_allowCapsMessage = config.GetBoolean("AllowCapsMessage", m_allowCapsMessage);
 
+#if (!ISWIN)
+            RestMethod method = delegate(string request, string path, string param,
+                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                return MapLayerRequest(request, path, param, httpRequest, httpResponse, m_service.AgentID);
+            };
+#else
             RestMethod method =
                 (request, path, param, httpRequest, httpResponse) =>
                 MapLayerRequest(request, path, param, httpRequest, httpResponse,
                                 m_service.AgentID);
+#endif
             m_service.AddStreamHandler("MapLayer",
                                        new RestStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
                                                              method));

@@ -252,10 +252,20 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 {
                     // The requested item should be the first in this list, but loop through
                     // and sanity check just in case
+#if (!ISWIN)
+                    foreach (InventoryItemBase t in items)
+                    {
+                        if (t.ID == item.ID)
+                        {
+                            return t;
+                        }
+                    }
+#else
                     foreach (InventoryItemBase t in items.Where(t => t.ID == item.ID))
                     {
                         return t;
                     }
+#endif
                 }
             }
 
@@ -607,7 +617,15 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 UUID destFolderID = items[0].Folder;
 
                 // Find all of the items being moved to the current destination folder
+#if (!ISWIN)
+                List<InventoryItemBase> currentItems = new List<InventoryItemBase>();
+                foreach (InventoryItemBase item in items)
+                {
+                    if (item.Folder == destFolderID) currentItems.Add(item);
+                }
+#else
                 List<InventoryItemBase> currentItems = items.Where(item => item.Folder == destFolderID).ToList();
+#endif
 
                 // Do the inventory move for the current items
                 success &= MoveItems(ownerID, items, destFolderID);
@@ -812,10 +830,21 @@ namespace OpenSim.Services.Connectors.SimianGrid
             OSDArray gestures = FetchGestures(userID);
             OSDArray newGestures = new OSDArray();
 
+#if (!ISWIN)
+            foreach (OSD t in gestures)
+            {
+                UUID gesture = t.AsUUID();
+                if (gesture != itemID)
+                {
+                    newGestures.Add(OSD.FromUUID(gesture));
+                }
+            }
+#else
             foreach (UUID gesture in gestures.Select(t => t.AsUUID()).Where(gesture => gesture != itemID))
             {
                 newGestures.Add(OSD.FromUUID(gesture));
             }
+#endif
 
             if (enabled)
                 newGestures.Add(OSD.FromUUID(itemID));

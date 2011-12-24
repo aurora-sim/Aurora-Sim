@@ -192,6 +192,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 IPrimCounts primCounts = primCountModule.GetPrimCounts(LO.LandData.GlobalID);
                 if (Parameter == 0) // Owner objects
                 {
+#if (!ISWIN)
+                    foreach (ISceneEntity obj in primCounts.Objects)
+                    {
+                        if (obj.OwnerID == LO.LandData.OwnerID)
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] = new List<ISceneEntity>();
+
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+#else
                     foreach (ISceneEntity obj in primCounts.Objects.Where(obj => obj.OwnerID == LO.LandData.OwnerID))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
@@ -200,9 +212,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         returns[obj.OwnerID].Add(obj);
                     }
+#endif
                 }
                 if (Parameter == 1) //Everyone elses
                 {
+#if (!ISWIN)
+                    foreach (ISceneEntity obj in primCounts.Objects)
+                    {
+                        if (obj.OwnerID != LO.LandData.OwnerID && (obj.GroupID != LO.LandData.GroupID || LO.LandData.GroupID == UUID.Zero))
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] = new List<ISceneEntity>();
+
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+#else
                     foreach (ISceneEntity obj in primCounts.Objects.Where(obj => obj.OwnerID != LO.LandData.OwnerID &&
                                                                                  (obj.GroupID != LO.LandData.GroupID ||
                                                                                   LO.LandData.GroupID == UUID.Zero)))
@@ -213,9 +238,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         returns[obj.OwnerID].Add(obj);
                     }
+#endif
                 }
                 if (Parameter == 2) // Group
                 {
+#if (!ISWIN)
+                    foreach (ISceneEntity obj in primCounts.Objects)
+                    {
+                        if (obj.GroupID == LO.LandData.GroupID)
+                        {
+                            if (!returns.ContainsKey(obj.OwnerID))
+                                returns[obj.OwnerID] = new List<ISceneEntity>();
+
+                            returns[obj.OwnerID].Add(obj);
+                        }
+                    }
+#else
                     foreach (ISceneEntity obj in primCounts.Objects.Where(obj => obj.GroupID == LO.LandData.GroupID))
                     {
                         if (!returns.ContainsKey(obj.OwnerID))
@@ -224,6 +262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         returns[obj.OwnerID].Add(obj);
                     }
+#endif
                 }
 
                 foreach (List<ISceneEntity> ol in returns.Values)
@@ -252,6 +291,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 IPrimCountModule primCountModule = World.RequestModuleInterface<IPrimCountModule>();
                 IPrimCounts primCounts = primCountModule.GetPrimCounts(LO.LandData.GlobalID);
+#if (!ISWIN)
+                foreach (ISceneEntity obj in primCounts.Objects)
+                {
+                    if (obj.OwnerID == new UUID(userID.m_string))
+                    {
+                        if (!returns.ContainsKey(obj.OwnerID))
+                            returns[obj.OwnerID] = new List<ISceneEntity>();
+
+                        returns[obj.OwnerID].Add(obj);
+                    }
+                }
+#else
                 foreach (ISceneEntity obj in primCounts.Objects.Where(obj => obj.OwnerID == new UUID(userID.m_string)))
                 {
                     if (!returns.ContainsKey(obj.OwnerID))
@@ -260,6 +311,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     returns[obj.OwnerID].Add(obj);
                 }
+#endif
 
                 foreach (List<ISceneEntity> ol in returns.Values)
                 {
@@ -683,12 +735,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID animID = UUID.Zero;
                     lock (m_host.TaskInventory)
                     {
+#if (!ISWIN)
+                        foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+                        {
+                            if (inv.Value.Name == animation)
+                            {
+                                if (inv.Value.Type == (int) AssetType.Animation)
+                                    animID = inv.Value.AssetID;
+                                continue;
+                            }
+                        }
+#else
                         foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory.Where(inv => inv.Value.Name == animation))
                         {
                             if (inv.Value.Type == (int) AssetType.Animation)
                                 animID = inv.Value.AssetID;
                             continue;
                         }
+#endif
                     }
                     if (animID == UUID.Zero)
                         target.Animator.AddAnimation(animation, m_host.UUID);
@@ -715,12 +779,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID animID = UUID.Zero;
                     lock (m_host.TaskInventory)
                     {
+#if (!ISWIN)
+                        foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+                        {
+                            if (inv.Value.Name == animation)
+                            {
+                                if (inv.Value.Type == (int) AssetType.Animation)
+                                    animID = inv.Value.AssetID;
+                                continue;
+                            }
+                        }
+#else
                         foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory.Where(inv => inv.Value.Name == animation))
                         {
                             if (inv.Value.Type == (int) AssetType.Animation)
                                 animID = inv.Value.AssetID;
                             continue;
                         }
+#endif
                     }
 
                     if (animID == UUID.Zero)
@@ -1613,10 +1689,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!UUID.TryParse(name, out assetID))
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_host.TaskInventory.Values)
+                {
+                    if (item.Type == 7 && item.Name == name)
+                    {
+                        assetID = item.AssetID;
+                    }
+                }
+#else
                 foreach (TaskInventoryItem item in m_host.TaskInventory.Values.Where(item => item.Type == 7 && item.Name == name))
                 {
                     assetID = item.AssetID;
                 }
+#endif
             }
 
             if (assetID == UUID.Zero)
@@ -1663,10 +1749,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!UUID.TryParse(name, out assetID))
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_host.TaskInventory.Values)
+                {
+                    if (item.Type == 7 && item.Name == name)
+                    {
+                        assetID = item.AssetID;
+                    }
+                }
+#else
                 foreach (TaskInventoryItem item in m_host.TaskInventory.Values.Where(item => item.Type == 7 && item.Name == name))
                 {
                     assetID = item.AssetID;
                 }
+#endif
             }
 
             if (assetID == UUID.Zero)
@@ -1718,10 +1814,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (!UUID.TryParse(name, out assetID))
             {
+#if (!ISWIN)
+                foreach (TaskInventoryItem item in m_host.TaskInventory.Values)
+                {
+                    if (item.Type == 7 && item.Name == name)
+                    {
+                        assetID = item.AssetID;
+                    }
+                }
+#else
                 foreach (TaskInventoryItem item in m_host.TaskInventory.Values.Where(item => item.Type == 7 && item.Name == name))
                 {
                     assetID = item.AssetID;
                 }
+#endif
             }
 
             if (assetID == UUID.Zero)
@@ -1868,10 +1974,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Match match = matcher.Match(src, start);
             while (match.Success)
             {
-                foreach (Group g in from Group g in match.Groups where g.Success select g)
+                foreach (Group g in match.Groups)
                 {
-                    result.Add(new LSL_Integer(g.Value));
-                    result.Add(new LSL_Integer(g.Index));
+                    if(g.Success)
+                    {
+                        result.Add(new LSL_Integer(g.Value));
+                        result.Add(new LSL_Integer(g.Index));
+                    }
                 }
                 match = match.NextMatch();
             }
@@ -2159,10 +2268,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             List<GroupRolesData> roles = m_groupData.GetGroupRoles(m_host.OwnerID, groupRecord.GroupID);
+#if (!ISWIN)
+            foreach (GroupRolesData role in roles)
+            {
+                if (role.Name == RequestedRole.m_string)
+                {
+                    roleID = role.RoleID;
+                }
+            }
+#else
             foreach (GroupRolesData role in roles.Where(role => role.Name == RequestedRole.m_string))
             {
                 roleID = role.RoleID;
             }
+#endif
 
             //It takes care of permission checks in the module
             m_groupData.AddAgentToGroup(m_host.OwnerID, UUID.Parse(AgentID.m_string), groupRecord.GroupID, roleID);

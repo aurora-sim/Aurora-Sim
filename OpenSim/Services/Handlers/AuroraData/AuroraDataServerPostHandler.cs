@@ -505,7 +505,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (string d in data)
             {
-                result.Add(ConvertDecString(i), d);
+                result.Add(Util.ConvertDecString(i), d);
                 i++;
             }
 
@@ -556,29 +556,6 @@ namespace OpenSim.Services
             xw.Flush();
 
             return ms.ToArray();
-        }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
         }
     }
 
@@ -950,7 +927,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupMembershipData r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -985,7 +962,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRecord r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1010,7 +987,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirGroupsReplyData r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1033,7 +1010,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRolesData r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1055,7 +1032,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRolesData r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1075,11 +1052,22 @@ namespace OpenSim.Services
 
             List<GroupMembersData> rs = GroupsServiceConnector.GetGroupMembers(requestingAgentID, GroupID);
             int i = 0;
+#if (!ISWIN)
+            foreach (GroupMembersData r in rs)
+            {
+                if (r != null)
+                {
+                    result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                    i++;
+                }
+            }
+#else
             foreach (GroupMembersData r in rs.Where(r => r != null))
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
+#endif
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -1099,7 +1087,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRoleMembersData r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1123,7 +1111,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupNoticeData r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1144,7 +1132,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupInviteInfo r in rs)
             {
-                result.Add(ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
                 i++;
             }
 
@@ -1186,29 +1174,6 @@ namespace OpenSim.Services
 
             return ms.ToArray();
         }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
-        }
     }
 
     public class DirectoryInfoHandler
@@ -1234,7 +1199,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirPlacesReplyData land in lands)
             {
-                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
                 i++;
             }
 
@@ -1259,7 +1224,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirLandReplyData land in lands)
             {
-                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
                 i++;
             }
 
@@ -1281,7 +1246,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirEventsReplyData land in lands)
             {
-                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
                 i++;
             }
 
@@ -1302,7 +1267,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirEventsReplyData land in lands)
             {
-                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
                 i++;
             }
 
@@ -1326,7 +1291,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirClassifiedReplyData land in lands)
             {
-                result.Add(ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
                 i++;
             }
 
@@ -1361,7 +1326,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (Classified classified in classifieds)
             {
-                result.Add(ConvertDecString(i), classified.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), classified.ToKeyValuePairs());
                 i++;
             }
 
@@ -1402,29 +1367,6 @@ namespace OpenSim.Services
 
             return ms.ToArray();
         }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
-        }
     }
 
     public class EstateInfoHandler
@@ -1448,7 +1390,7 @@ namespace OpenSim.Services
             {
                 foreach (int estateID in EstateIDs)
                 {
-                    estateresult.Add(ConvertDecString(i), estateID);
+                    estateresult.Add(Util.ConvertDecString(i), estateID);
                     i++;
                 }
             }
@@ -1472,7 +1414,7 @@ namespace OpenSim.Services
             {
                 foreach (EstateSettings estateID in EstateIDs)
                 {
-                    estateresult.Add(ConvertDecString(i), estateID.ToKeyValuePairs(false));
+                    estateresult.Add(Util.ConvertDecString(i), estateID.ToKeyValuePairs(false));
                     i++;
                 }
             }
@@ -1623,29 +1565,6 @@ namespace OpenSim.Services
 
             return ms.ToArray();
         }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
-        }
     }
 
     public class MuteInfoHandler
@@ -1667,7 +1586,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (MuteList Mute in Mutes)
             {
-                result.Add(ConvertDecString(i), Mute.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), Mute.ToKeyValuePairs());
                 i++;
             }
 
@@ -1741,29 +1660,6 @@ namespace OpenSim.Services
             xw.Flush();
 
             return ms.ToArray();
-        }
-
-        // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
-        // By: A Million Lemmings
-        public string ConvertDecString(int dvalue)
-        {
-            string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            string retVal = string.Empty;
-
-            double value = Convert.ToDouble(dvalue);
-
-            do
-            {
-                double remainder = value - (26*Math.Truncate(value/26));
-
-                retVal = retVal + CHARS.Substring((int) remainder, 1);
-
-                value = Math.Truncate(value/26);
-            } while (value > 0);
-
-
-            return retVal;
         }
     }
 
@@ -1853,7 +1749,13 @@ namespace OpenSim.Services
             List<AbuseReport> ars = m_AbuseReportsService.GetAbuseReports(int.Parse(request["start"].ToString()),
                                                                           int.Parse(request["count"].ToString()),
                                                                           request["filter"].ToString());
+#if (!ISWIN)
+            Dictionary<string, object> returnvalue = new Dictionary<string, object>();
+            foreach (AbuseReport ar in ars)
+                returnvalue.Add(ar.Number.ToString(), ar);
+#else
             Dictionary<string, object> returnvalue = ars.ToDictionary<AbuseReport, string, object>(ar => ar.Number.ToString(), ar => ar);
+#endif
 
             string xmlString = WebUtils.BuildXmlResponse(returnvalue);
             //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);

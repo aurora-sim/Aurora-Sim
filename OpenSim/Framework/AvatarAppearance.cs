@@ -483,10 +483,20 @@ namespace OpenSim.Framework
                 return true;
             if (m_attachments.ContainsKey(attPnt))
             {
+#if (!ISWIN)
+                foreach (AvatarAttachment a in m_attachments[attPnt])
+                {
+                    if (a.ItemID == item)
+                    {
+                        return !(a.AssetID == assetID);
+                    }
+                }
+#else
                 foreach (AvatarAttachment a in m_attachments[attPnt].Where(a => a.ItemID == item))
                 {
                     return !(a.AssetID == assetID);
                 }
+#endif
             }
             return true;
         }
@@ -506,17 +516,34 @@ namespace OpenSim.Framework
 
         public int GetAttachpoint(UUID itemID)
         {
+#if (!ISWIN)
+            foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
+            {
+                int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
+                if (index >= 0)
+                {
+                    int i = kvp.Key;
+                    return i;
+                }
+            }
+            return 0;
+#else
             return (m_attachments.Select(
                 kvp =>
                 new {kvp, index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; })}).
                 Where(@t => @t.index >= 0).Select(@t => @t.kvp.Key)).FirstOrDefault();
+#endif
         }
 
         public bool DetachAttachment(UUID itemID)
         {
             foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
             {
+#if (!ISWIN)
+                int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
+#else
                 int index = kvp.Value.FindIndex(a => a.ItemID == itemID);
+#endif
                 if (index >= 0)
                 {
                     // Remove it from the list of attachments at that attach point

@@ -93,10 +93,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         public int GetFriendPerms(UUID principalID, UUID friendID)
         {
             FriendInfo[] friends = GetFriends(principalID);
+#if (!ISWIN)
+            foreach (FriendInfo fi in friends)
+            {
+                if (fi.Friend == friendID.ToString())
+                {
+                    return fi.TheirFlags;
+                }
+            }
+#else
             foreach (FriendInfo fi in friends.Where(fi => fi.Friend == friendID.ToString()))
             {
                 return fi.TheirFlags;
             }
+#endif
 
             return -1;
         }
@@ -507,10 +517,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                               target);
             // Let's find the friend in this user's friend list
             FriendInfo friend = null;
+#if (!ISWIN)
+            foreach (FriendInfo fi in friends)
+            {
+                if (fi.Friend == target.ToString())
+                {
+                    friend = fi;
+                }
+            }
+#else
             foreach (FriendInfo fi in friends.Where(fi => fi.Friend == target.ToString()))
             {
                 friend = fi;
             }
+#endif
 
             if (friend != null) // Found it
             {
@@ -663,25 +683,55 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 FriendInfo[] friends = GetFriends(friendID);
                 lock (m_Friends)
                 {
+#if (!ISWIN)
+                    foreach (FriendInfo finfo in friends)
+                    {
+                        if (finfo.Friend == userID.ToString())
+                        {
+                            finfo.TheirFlags = rights;
+                        }
+                    }
+#else
                     foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == userID.ToString()))
                     {
                         finfo.TheirFlags = rights;
                     }
+#endif
                 }
                 friends = GetFriends(userID);
                 lock (m_Friends)
                 {
+#if (!ISWIN)
+                    foreach (FriendInfo finfo in friends)
+                    {
+                        if (finfo.Friend == friendID.ToString())
+                        {
+                            finfo.MyFlags = rights;
+                        }
+                    }
+#else
                     foreach (FriendInfo finfo in friends.Where(finfo => finfo.Friend == friendID.ToString()))
                     {
                         finfo.MyFlags = rights;
                     }
+#endif
                 }
                 //Add primFlag updates for all the prims in the sim with the owner, so that the new permissions are set up correctly
                 IScenePresence friendSP = friendClient.Scene.GetScenePresence(friendClient.AgentId);
+#if (!ISWIN)
+                foreach (ISceneEntity entity in friendClient.Scene.Entities.GetEntities())
+                {
+                    if (entity.OwnerID == userID)
+                    {
+                        entity.ScheduleGroupUpdateToAvatar(friendSP, PrimUpdateFlags.PrimFlags);
+                    }
+                }
+#else
                 foreach (ISceneEntity entity in friendClient.Scene.Entities.GetEntities().Where(entity => entity.OwnerID == userID))
                 {
                     entity.ScheduleGroupUpdateToAvatar(friendSP, PrimUpdateFlags.PrimFlags);
                 }
+#endif
 
                 return true;
             }
@@ -701,7 +751,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             public bool IsFriend(string friend)
             {
+#if (!ISWIN)
+                foreach (FriendInfo fi in Friends)
+                {
+                    if (fi.Friend == friend) return true;
+                }
+                return false;
+#else
                 return Friends.Any(fi => fi.Friend == friend);
+#endif
             }
         }
 

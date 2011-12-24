@@ -336,7 +336,28 @@ namespace OpenSim.Services.GridService
 
         private bool CheckModuleNames (GridRegistrationURLs urls)
         {
+#if (!ISWIN)
+            foreach (string urlName in m_modules.Keys)
+            {
+#if (!ISWIN)
+                bool found = false;
+                foreach (string o in urls.URLS.Keys)
+                {
+                    if (o == urlName)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+#else
+                bool found = urls.URLS.Keys.Any(o => o == urlName);
+#endif
+                if (!found) return false;
+            }
+            return true;
+#else
             return m_modules.Keys.Select(urlName => urls.URLS.Keys.Any(o => o == urlName)).All(found => found);
+#endif
         }
 
         public void RemoveUrlsForClient(string SessionID)

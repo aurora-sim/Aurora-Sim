@@ -160,6 +160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_List llGetParcelDetails(LSL_Vector pos, LSL_List param);
         LSL_Integer llGetParcelFlags(LSL_Vector pos);
         LSL_Integer llGetParcelMaxPrims(LSL_Vector pos, int sim_wide);
+        LSL_String llGetParcelMusicURL();
         LSL_Integer llGetParcelPrimCount(LSL_Vector pos, int category, int sim_wide);
         LSL_List llGetParcelPrimOwners(LSL_Vector pos);
         LSL_Integer llGetPermissions();
@@ -409,6 +410,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         DateTime llTextBox(string avatar, string message, int chat_channel);
         LSL_String llToLower(string source);
         LSL_String llToUpper(string source);
+        LSL_String llTransferLindenDollars(LSL_String destination, LSL_Integer amt);
         void llTriggerSound(string sound, double volume);
         void llTriggerSoundLimited(string sound, double volume, LSL_Vector top_north_east, LSL_Vector bottom_south_west);
         LSL_String llUnescapeURL(string url);

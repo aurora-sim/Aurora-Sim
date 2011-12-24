@@ -777,7 +777,15 @@ namespace Aurora.Modules
         private static ImageCodecInfo GetEncoderInfo(String mimeType)
         {
             ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders();
+#if (!ISWIN)
+            foreach (ImageCodecInfo t in encoders)
+            {
+                if (t.MimeType == mimeType) return t;
+            }
+            return null;
+#else
             return encoders.FirstOrDefault(t => t.MimeType == mimeType);
+#endif
         }
 
         /// <summary>
@@ -811,7 +819,16 @@ namespace Aurora.Modules
                     m_scene.RegionInfo.RegionLocY + (9 * Constants.RegionSize));
             List<Image> bitImages = new List<Image>();
 
+#if (!ISWIN)
+            List<AssetBase> textures = new List<AssetBase>();
+            foreach (GridRegion r in regions)
+            {
+                AssetBase texAsset = m_scene.AssetService.Get(r.TerrainImage.ToString());
+                if (texAsset != null) textures.Add(texAsset);
+            }
+#else
             List<AssetBase> textures = regions.Select(r => m_scene.AssetService.Get(r.TerrainImage.ToString())).Where(texAsset => texAsset != null).ToList();
+#endif
 
             foreach (AssetBase asset in textures)
             {

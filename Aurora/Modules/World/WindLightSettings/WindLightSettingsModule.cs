@@ -216,15 +216,31 @@ namespace Aurora.Modules
             OSDMap retVal = new OSDMap();
             retVal["DispatchWindLightSettings"] = CapsUtil.CreateCAPS("DispatchWindLightSettings", "");
             //Sets the windlight settings
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return DispatchWindLightSettings(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
                                                         m_dhttpMethod =>
                                                         DispatchWindLightSettings(m_dhttpMethod, agentID)));
+#endif
 
             retVal["RetrieveWindLightSettings"] = CapsUtil.CreateCAPS("RetrieveWindLightSettings", "");
             //Retrieves the windlight settings for a specifc parcel or region
+#if (!ISWIN)
+            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["RetrieveWindLightSettings"],
+                                                      delegate(Hashtable m_dhttpMethod)
+                                                      {
+                                                          return RetrieveWindLightSettings(m_dhttpMethod, agentID);
+                                                      }));
+#else
             server.AddStreamHandler(new RestHTTPHandler("POST", retVal["RetrieveWindLightSettings"],
                                                         m_dhttpMethod =>
                                                         RetrieveWindLightSettings(m_dhttpMethod, agentID)));
+#endif
             return retVal;
         }
 
@@ -349,7 +365,19 @@ namespace Aurora.Modules
                 {
                     if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
                         return responsedata; // No permissions
+#if (!ISWIN)
+                    bool found = false;
+                    foreach (RegionLightShareData regionLsd in m_WindlightSettings.Values)
+                    {
+                        if (lsd.minEffectiveAltitude == regionLsd.minEffectiveAltitude && lsd.maxEffectiveAltitude == regionLsd.maxEffectiveAltitude)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+#else
                     bool found = m_WindlightSettings.Values.Any(regionLSD => lsd.minEffectiveAltitude == regionLSD.minEffectiveAltitude && lsd.maxEffectiveAltitude == regionLSD.maxEffectiveAltitude);
+#endif
 
                     //Set to default
                     if (found)
