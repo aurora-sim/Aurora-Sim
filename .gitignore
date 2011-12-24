@@ -62,6 +62,10 @@ bin/OpenSim.Grid.UserServer.log
 bin/OpenSim.log
 bin/*.manifest
 bin/crashes/
+bin/AuroraServerConfiguration/*/*.ini
+bin/AuroraServerConfiguration/*.ini
+bin/Configuration/*/*.ini
+bin/Configuration/*.ini
 Examples/*.dll
 Aurora.build
 Aurora.sln
