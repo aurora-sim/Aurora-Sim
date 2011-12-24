@@ -425,12 +425,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         faceObj.addVertex(vert);
                     }
 
-                    for (int j = 0; j < face.Indices.Count; j += 3)
+                    for (int j = 0; j < face.Indices.Count;)
                     {
                         faceObj.addTriangle(
-                            face.Indices[j + 0],
-                            face.Indices[j + 1],
-                            face.Indices[j + 2]);
+                            face.Indices[j++],
+                            face.Indices[j++],
+                            face.Indices[j++]);
                     }
 
                     Primitive.TextureEntryFace teFace = prim.Shape.Textures.GetFace((uint) i);
