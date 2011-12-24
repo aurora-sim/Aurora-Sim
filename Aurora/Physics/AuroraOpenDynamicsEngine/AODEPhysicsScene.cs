@@ -1798,9 +1798,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (pbs.SculptEntry && !meshSculptedPrim)
             {
-#if SPAM
-                m_log.Warn("NonMesh");
-#endif
                 return false;
             }
             else if (pbs.SculptType != (byte) SculptType.Mesh &&
