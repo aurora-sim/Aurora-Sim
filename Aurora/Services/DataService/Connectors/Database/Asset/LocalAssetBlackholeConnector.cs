@@ -349,7 +349,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     if (asset.HashCode != asset.LastHashCode)
                     {
                         // check if that hash is being used anywhere later
-                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
+                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.LastHashCode });
                     }
 
                     // check to see if this hash/creator combo already exist
