@@ -137,7 +137,7 @@ namespace OpenSim.Services.RobustCompat
             {
                 string reply = string.Empty;
                 string reqString = WebUtils.BuildQueryString(sendData);
-                //m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
+                //MainConsole.Instance.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
                 try
                 {
                     reply = SynchronousRestFormsRequester.MakeRequest("POST",
@@ -201,7 +201,7 @@ namespace OpenSim.Services.RobustCompat
             sendData["LookAt"] = lookAt.ToString();
 
             string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> urls = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridUserServerURI");
@@ -233,7 +233,7 @@ namespace OpenSim.Services.RobustCompat
         protected UserInfo Get(Dictionary<string, object> sendData)
         {
             string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[GRID USER CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> urls =

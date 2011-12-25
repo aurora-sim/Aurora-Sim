@@ -238,9 +238,9 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             m_updateArrayPinnedHandle = GCHandle.Alloc(m_updateArray, GCHandleType.Pinned);
 
             // if Debug, enable logging from the unmanaged code
-            if (m_log.IsDebugEnabled)
+            if (MainConsole.Instance.IsDebugEnabled)
             {
-                m_log.DebugFormat("{0}: Initialize: Setting debug callback for unmanaged code", LogHeader);
+                MainConsole.Instance.DebugFormat("{0}: Initialize: Setting debug callback for unmanaged code", LogHeader);
                 debugLogCallbackHandle = BulletLogger;
                 BulletSimAPI.SetDebugLogCallback(debugLogCallbackHandle);
             }
@@ -250,7 +250,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             // The bounding box for the simulated world
             Vector3 worldExtent = new Vector3(m_region.RegionSizeX, m_region.RegionSizeY, m_region.RegionSizeZ);
 
-            // m_log.DebugFormat("{0}: Initialize: Calling BulletSimAPI.Initialize.", LogHeader);
+            // MainConsole.Instance.DebugFormat("{0}: Initialize: Calling BulletSimAPI.Initialize.", LogHeader);
             m_worldID = BulletSimAPI.Initialize(worldExtent, m_paramsHandle.AddrOfPinnedObject(),
                                                 m_maxCollisionsPerFrame,
                                                 m_collisionArrayPinnedHandle.AddrOfPinnedObject(),
@@ -353,13 +353,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         // Called directly from unmanaged code so don't do much
         private void BulletLogger(string msg)
         {
-            m_log.Debug("[BULLETS UNMANAGED]:" + msg);
+            MainConsole.Instance.Debug("[BULLETS UNMANAGED]:" + msg);
         }
 
         public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint LocalID, UUID UUID)
         {
-            // m_log.DebugFormat("{0}: AddAvatar: {1}", LogHeader, avName);
+            // MainConsole.Instance.DebugFormat("{0}: AddAvatar: {1}", LogHeader, avName);
             BSCharacter actor = new BSCharacter(LocalID, UUID, avName, this, position, rotation, size, isFlying);
             lock (m_avatars) m_avatars.Add(LocalID, actor);
             return actor;
@@ -367,7 +367,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override void RemoveAvatar(PhysicsCharacter actor)
         {
-            // m_log.DebugFormat("{0}: RemoveAvatar", LogHeader);
+            // MainConsole.Instance.DebugFormat("{0}: RemoveAvatar", LogHeader);
             if (actor is BSCharacter)
                 ((BSCharacter) actor).Destroy();
 
@@ -377,13 +377,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("{0}: Attempt to remove avatar that is not in physics scene: {1}", LogHeader, e);
+                MainConsole.Instance.WarnFormat("{0}: Attempt to remove avatar that is not in physics scene: {1}", LogHeader, e);
             }
         }
 
         public override void RemovePrim(PhysicsObject prim)
         {
-            // m_log.DebugFormat("{0}: RemovePrim", LogHeader);
+            // MainConsole.Instance.DebugFormat("{0}: RemovePrim", LogHeader);
             if (prim is BSPrim)
                 ((BSPrim) prim).Destroy();
 
@@ -393,7 +393,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("{0}: Attempt to remove prim that is not in physics scene: {1}", LogHeader, e);
+                MainConsole.Instance.WarnFormat("{0}: Attempt to remove prim that is not in physics scene: {1}", LogHeader, e);
             }
         }
 
@@ -507,7 +507,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 foreach (EntityProperties entprop in props)
                 {
-                    // m_log.DebugFormat("{0}: entprop[{1}]: id={2}, pos={3}", LogHeader, ii, entprop.ID, entprop.Position);
+                    // MainConsole.Instance.DebugFormat("{0}: entprop[{1}]: id={2}, pos={3}", LogHeader, ii, entprop.ID, entprop.Position);
                     BSCharacter character;
                     if (m_avatars.TryGetValue(entprop.ID, out character))
                         character.UpdateProperties(entprop);
@@ -585,7 +585,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override void Dispose()
         {
-            m_log.DebugFormat("{0}: Dispose()", LogHeader);
+            MainConsole.Instance.DebugFormat("{0}: Dispose()", LogHeader);
         }
 
         public override Dictionary<uint, float> GetTopColliders()
@@ -616,7 +616,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             // can use an internal representation for the prim
             if (!_forceSimplePrimMeshing)
             {
-                // m_log.DebugFormat("{0}: NeedsMeshing: simple mesh: profshape={1}, curve={2}", LogHeader, pbs.ProfileShape, pbs.PathCurve);
+                // MainConsole.Instance.DebugFormat("{0}: NeedsMeshing: simple mesh: profshape={1}, curve={2}", LogHeader, pbs.ProfileShape, pbs.PathCurve);
                 if ((pbs.ProfileShape == ProfileShape.Square && pbs.PathCurve == (byte) Extrusion.Straight)
                     || (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte) Extrusion.Curve1
                         && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.Y == pbs.Scale.Z))
@@ -741,7 +741,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat("{0}: ProcessTaints: Exception: {1}", LogHeader, e);
+                        MainConsole.Instance.ErrorFormat("{0}: ProcessTaints: Exception: {1}", LogHeader, e);
                     }
                 }
                 oldList.Clear();

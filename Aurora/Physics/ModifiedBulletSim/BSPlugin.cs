@@ -33,7 +33,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 {
     public class BSPlugin : IPhysicsPlugin
     {
-        //private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly log4net.ILog MainConsole.Instance = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private BSScene _mScene;
 

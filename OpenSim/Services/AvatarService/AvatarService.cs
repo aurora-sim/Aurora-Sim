@@ -136,7 +136,7 @@ namespace OpenSim.Services.AvatarService
                 bool store = m_CacheDatabase.Store(baseData);
                 if (!store)
                 {
-                    m_log.Warn("[AvatarService]: Issue saving the cached wearables to the database.");
+                    MainConsole.Instance.Warn("[AvatarService]: Issue saving the cached wearables to the database.");
                 }
             }
             catch
@@ -183,7 +183,7 @@ namespace OpenSim.Services.AvatarService
         public void ResetAvatarAppearance(string[] cmd)
         {
             string name = "";
-            name = cmd.Length == 3 ? MainConsole.Instance.CmdPrompt("Avatar Name") : Util.CombineParams(cmd, 3);
+            name = cmd.Length == 3 ? MainConsole.Instance.Prompt("Avatar Name") : Util.CombineParams(cmd, 3);
             UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
             if (acc == null)
             {

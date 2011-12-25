@@ -41,7 +41,6 @@ namespace OpenSim.Region.CoreModules
 {
     public class ActivityDetector : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<IScene> m_scenes = new List<IScene>();
         private readonly List<UUID> m_zombieAgents = new List<UUID>();
         private Timer m_presenceUpdateTimer;
@@ -157,7 +156,7 @@ namespace OpenSim.Region.CoreModules
             if (client.IsLoggingOut && sp != null & !sp.IsChildAgent)
             {
                 sp.SetAgentLeaving(null);
-                m_log.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}", client.Name,
+                MainConsole.Instance.InfoFormat("[ActivityDetector]: Detected logout of user {0} in region {1}", client.Name,
                                  client.Scene.RegionInfo.RegionName);
 
                 //Inform the grid service about it

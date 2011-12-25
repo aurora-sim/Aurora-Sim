@@ -44,7 +44,7 @@ namespace Aurora.Server
             if (MainConsole.Instance != null)
                 MainConsole.Instance.DefaultPrompt = "Aurora.Server ";
 
-            m_log.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
+            MainConsole.Instance.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
         }
 
         public override ISimulationBase Copy()

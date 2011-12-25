@@ -40,9 +40,6 @@ namespace OpenSim.Region.CoreModules.World.Region
 {
     public class RestartModule : INonSharedRegionModule, IRestartModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected List<int> m_Alerts;
         protected Timer m_CountdownTimer;
         protected IDialogModule m_DialogModule;
@@ -117,7 +114,7 @@ namespace OpenSim.Region.CoreModules.World.Region
 
             if (m_CountdownTimer != null)
             {
-                m_log.Warn("[Region]: Reseting the restart timer for new settings.");
+                MainConsole.Instance.Warn("[Region]: Reseting the restart timer for new settings.");
                 m_CountdownTimer.Stop();
                 m_CountdownTimer = null;
             }
@@ -155,7 +152,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                 if (m_DialogModule != null && message != String.Empty)
                     m_DialogModule.SendGeneralAlert(message);
 
-                m_log.Warn("[Region]: Region restart aborted");
+                MainConsole.Instance.Warn("[Region]: Region restart aborted");
             }
         }
 
@@ -174,7 +171,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                     return;
                 }
             }
-            m_log.Error("[Scene]: Restaring Now");
+            MainConsole.Instance.Error("[Scene]: Restaring Now");
             m_scene.RequestModuleInterface<SceneManager>().RestartRegion(m_scene);
         }
 
@@ -232,7 +229,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                     m_DialogModule.SendGeneralAlert(msg);
                 else
                     m_DialogModule.SendNotificationToUsersInRegion(m_Initiator, "System", msg);
-                m_log.Warn("[Region]: Region will restart in " + currentAlertString);
+                MainConsole.Instance.Warn("[Region]: Region will restart in " + currentAlertString);
             }
 
             return currentAlert - nextAlert;
@@ -297,7 +294,7 @@ namespace OpenSim.Region.CoreModules.World.Region
                         return;
                     }
                 }
-                m_log.Info("Error: restart region <mode> <name> <time> ...");
+                MainConsole.Instance.Info("Error: restart region <mode> <name> <time> ...");
                 return;
             }
         }

@@ -42,8 +42,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         //List of all enabled APIs for scripts
         private List<string> EnabledAPIs = new List<string>();
         //Keeps track of whether the source has been compiled before
@@ -449,7 +447,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private void TriggerAlert(string function, LimitDef d, string message, ISceneChildEntity host)
         {
             if (d.Alert == LimitAlert.Console || d.Alert == LimitAlert.ConsoleAndInworld)
-                m_log.Warn("[Limitor]: " + message);
+                MainConsole.Instance.Warn("[Limitor]: " + message);
             if (d.Alert == LimitAlert.Inworld || d.Alert == LimitAlert.ConsoleAndInworld)
             {
                 IChatModule chatModule = host.ParentEntity.Scene.RequestModuleInterface<IChatModule>();
@@ -482,7 +480,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 throw new Exception(""); //Blank messages kill events, but don't show anything on the console/inworld
             }
             else if (d.Action == LimitAction.Delay)
-                m_log.Warn("Function delaying is not implemented");
+                MainConsole.Instance.Warn("Function delaying is not implemented");
             return true;
         }
 

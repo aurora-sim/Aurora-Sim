@@ -38,8 +38,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
 {
     public class DialogModule : INonSharedRegionModule, IDialogModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected bool m_enabled = true;
         protected IScene m_scene;
 
@@ -166,7 +164,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
 
             if (null == m_config)
             {
-                m_log.Info("[DIALOGMODULE]: no config found, plugin enabled");
+                MainConsole.Instance.Info("[DIALOGMODULE]: no config found, plugin enabled");
                 return;
             }
 
@@ -265,20 +263,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
             }
             else
             {
-                m_log.Info("Usage: alert \"message\" | alert general <message> | alert <first> <last> <message>");
+                MainConsole.Instance.Info("Usage: alert \"message\" | alert general <message> | alert <first> <last> <message>");
                 return;
             }
 
             if (isGeneral)
             {
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending general alert in region {0} with message {1}",
                     m_scene.RegionInfo.RegionName, message);
                 SendGeneralAlert(message);
             }
             else
             {
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
                 SendAlertToUser(firstName, lastName, message, false);

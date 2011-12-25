@@ -50,9 +50,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     public class WarpTileRenderer : IMapTileTerrainRenderer
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly UUID TEXTURE_METADATA_MAGIC = new UUID("802dc0e0-f080-4931-8b57-d1be8611c4f3");
         private static readonly Color4 WATER_COLOR = new Color4(29, 72, 96, 216);
         private readonly Dictionary<UUID, Color4> m_colors = new Dictionary<UUID, Color4>();
@@ -76,11 +73,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (renderers.Count > 0)
             {
                 m_primMesher = RenderingLoader.LoadRenderer(renderers[0]);
-                m_log.Debug("[MAPTILE]: Loaded prim mesher " + m_primMesher);
+                MainConsole.Instance.Debug("[MAPTILE]: Loaded prim mesher " + m_primMesher);
             }
             else
             {
-                m_log.Info("[MAPTILE]: No prim mesher loaded, prim rendering will be disabled");
+                MainConsole.Instance.Info("[MAPTILE]: No prim mesher loaded, prim rendering will be disabled");
             }
 
             bool drawPrimVolume = true;
@@ -94,7 +91,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch
             {
-                m_log.Warn("[MAPTILE]: Failed to load StartupConfig");
+                MainConsole.Instance.Warn("[MAPTILE]: Failed to load StartupConfig");
             }
 
             m_texturePrims = m_config.Configs["MapModule"].GetBoolean("WarpTexturePrims", false);
@@ -170,7 +167,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch (Exception ex)
             {
-                m_log.Warn("[Warp3D]: Exception in the map generation, " + ex);
+                MainConsole.Instance.Warn("[Warp3D]: Exception in the map generation, " + ex);
             }
 
             renderer.Render();
@@ -459,7 +456,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch (Exception ex)
             {
-                m_log.Warn("[Warp3D]: Exception creating prim, " + ex);
+                MainConsole.Instance.Warn("[Warp3D]: Exception creating prim, " + ex);
             }
         }
 
@@ -558,7 +555,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             if (renderer.Scene.material(materialName) == null)
             {
-                m_log.DebugFormat("Creating material {0}", materialName);
+                MainConsole.Instance.DebugFormat("Creating material {0}", materialName);
                 renderer.AddMaterial(materialName, ConvertColor(faceColor));
                 if (faceColor.A < 1f)
                 {
@@ -692,7 +689,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID,
+                MainConsole.Instance.WarnFormat("[MAPTILE]: Error decoding JPEG2000 texture {0} ({1} bytes): {2}", textureID,
                                  j2kData.Length, ex.Message);
                 width = 0;
                 height = 0;

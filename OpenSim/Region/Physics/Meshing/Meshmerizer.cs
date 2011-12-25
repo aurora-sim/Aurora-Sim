@@ -66,8 +66,6 @@ namespace OpenSim.Region.Physics.Meshing
 
     public class Meshmerizer : IMesher
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         // Setting baseDir to a path will enable the dumping of raw files
         // raw files can be imported by blender so a visual inspection of the results can be done
 #if SPAM
@@ -100,7 +98,7 @@ namespace OpenSim.Region.Physics.Meshing
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath, e.ToString());
+                MainConsole.Instance.WarnFormat("[SCULPT]: Unable to create {0} directory: ", decodedSculptMapPath, e.ToString());
             }
         }
 
@@ -190,9 +188,9 @@ namespace OpenSim.Region.Physics.Meshing
 
         private void ReportPrimError(string message, string primName, PrimMesh primMesh)
         {
-            m_log.Error(message);
-            m_log.Error("\nPrim Name: " + primName);
-            m_log.Error("****** PrimMesh Parameters ******\n" + primMesh.ParamsToDisplayString());
+            MainConsole.Instance.Error(message);
+            MainConsole.Instance.Error("\nPrim Name: " + primName);
+            MainConsole.Instance.Error("****** PrimMesh Parameters ******\n" + primMesh.ParamsToDisplayString());
         }
 
         private ulong GetMeshKey(PrimitiveBaseShape pbs, Vector3 size, float lod)
@@ -273,13 +271,13 @@ namespace OpenSim.Region.Physics.Meshing
                     if (!useMeshiesPhysicsMesh)
                         return null;
 
-                    m_log.Debug("[MESH]: experimental mesh proxy generation");
+                    MainConsole.Instance.Debug("[MESH]: experimental mesh proxy generation");
 
                     OSD meshOsd = null;
 
                     if (primShape.SculptData == null || primShape.SculptData.Length <= 0)
                     {
-                        m_log.Error("[MESH]: asset data is zero length");
+                        MainConsole.Instance.Error("[MESH]: asset data is zero length");
                         return null;
                     }
 
@@ -292,7 +290,7 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (Exception e)
                         {
-                            m_log.Error("[MESH]: Exception deserializing mesh asset header:" + e);
+                            MainConsole.Instance.Error("[MESH]: Exception deserializing mesh asset header:" + e);
                         }
                         start = data.Position;
                     }
@@ -354,7 +352,7 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (Exception e)
                         {
-                            m_log.Error("[MESH]: exception decoding physical mesh: " + e);
+                            MainConsole.Instance.Error("[MESH]: exception decoding physical mesh: " + e);
                             return null;
                         }
 
@@ -431,10 +429,10 @@ namespace OpenSim.Region.Physics.Meshing
                         }
                         catch (Exception e)
                         {
-                            m_log.Error("[SCULPT]: unable to load cached sculpt map " + decodedSculptFileName + " " + e);
+                            MainConsole.Instance.Error("[SCULPT]: unable to load cached sculpt map " + decodedSculptFileName + " " + e);
                         }
                         //if (idata != null)
-                        //    m_log.Debug("[SCULPT]: loaded cached map asset for map ID: " + primShape.SculptTexture.ToString());
+                        //    MainConsole.Instance.Debug("[SCULPT]: loaded cached map asset for map ID: " + primShape.SculptTexture.ToString());
                     }
 
                     if (idata == null)
@@ -456,25 +454,25 @@ namespace OpenSim.Region.Physics.Meshing
                                 }
                                 catch (Exception e)
                                 {
-                                    m_log.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " +
+                                    MainConsole.Instance.Error("[SCULPT]: unable to cache sculpt map " + decodedSculptFileName + " " +
                                                 e);
                                 }
                             }
                         }
                         catch (DllNotFoundException)
                         {
-                            m_log.Error(
+                            MainConsole.Instance.Error(
                                 "[PHYSICS]: OpenJpeg is not installed correctly on this system. Physics Proxy generation failed.  Often times this is because of an old version of GLIBC.  You must have version 2.4 or above!");
                             return null;
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            m_log.Error("[PHYSICS]: OpenJpeg was unable to decode this. Physics Proxy generation failed");
+                            MainConsole.Instance.Error("[PHYSICS]: OpenJpeg was unable to decode this. Physics Proxy generation failed");
                             return null;
                         }
                         catch (Exception ex)
                         {
-                            m_log.Error(
+                            MainConsole.Instance.Error(
                                 "[PHYSICS]: Unable to generate a Sculpty physics proxy. Sculpty texture decode failed: " +
                                 ex);
                             return null;
@@ -571,7 +569,7 @@ namespace OpenSim.Region.Physics.Meshing
 
                 if (primMesh.errorMessage != null)
                     if (primMesh.errorMessage.Length > 0)
-                        m_log.Error("[ERROR] " + primMesh.errorMessage);
+                        MainConsole.Instance.Error("[ERROR] " + primMesh.errorMessage);
 
                 primMesh.topShearX = pathShearX;
                 primMesh.topShearY = pathShearY;
@@ -592,7 +590,7 @@ namespace OpenSim.Region.Physics.Meshing
                         if (profileEnd > 1.0f) profileEnd = 1.0f;
                     }
 #if SPAM
-                m_log.Debug("****** PrimMesh Parameters (Linear) ******\n" + primMesh.ParamsToDisplayString());
+                MainConsole.Instance.Debug("****** PrimMesh Parameters (Linear) ******\n" + primMesh.ParamsToDisplayString());
 #endif
                     try
                     {
@@ -625,7 +623,7 @@ namespace OpenSim.Region.Physics.Meshing
                         if (profileEnd > 1.0f) profileEnd = 1.0f;
                     }
 #if SPAM
-                m_log.Debug("****** PrimMesh Parameters (Circular) ******\n" + primMesh.ParamsToDisplayString());
+                MainConsole.Instance.Debug("****** PrimMesh Parameters (Circular) ******\n" + primMesh.ParamsToDisplayString());
 #endif
                     try
                     {
@@ -706,7 +704,7 @@ namespace OpenSim.Region.Physics.Meshing
                     size.Z < minSizeForComplexMesh)
             {
 #if SPAM
-                m_log.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 
+                MainConsole.Instance.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 
                             minSizeForComplexMesh.ToString() + " - creating simple bounding box");
 #endif
                 mesh = CreateBoundingBoxMesh(mesh, key);

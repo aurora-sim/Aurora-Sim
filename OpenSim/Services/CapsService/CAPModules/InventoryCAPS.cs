@@ -43,7 +43,6 @@ namespace OpenSim.Services.CapsService
 {
     public class InventoryCAPS : ICapsServiceConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string m_newInventory = "0002";
         private IAssetService m_assetService;
         private IInventoryService m_inventoryService;
@@ -183,14 +182,14 @@ namespace OpenSim.Services.CapsService
             OSDArray foldersrequested = (OSDArray) map["folders"];
             try
             {
-                //m_log.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
+                //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
                 return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID,
                                                                                        UUID.Zero);
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
+                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             finally
             {
@@ -206,7 +205,7 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
-                //m_log.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
+                //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
                 OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
@@ -218,7 +217,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
+                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             OSDMap rmap = new OSDMap();
             rmap["folders"] = new OSDArray();
@@ -229,7 +228,7 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
-                //m_log.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
+                //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
                 OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
@@ -263,7 +262,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
+                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             OSDMap rmap = new OSDMap();
             rmap["items"] = new OSDArray();
@@ -274,7 +273,7 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
-                //m_log.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
+                //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
                 OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
@@ -306,7 +305,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                m_log.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
+                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
             }
             OSDMap rmap = new OSDMap();
             rmap["items"] = new OSDArray();
@@ -383,8 +382,8 @@ namespace OpenSim.Services.CapsService
                                                         OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             string asset_type = map["asset_type"].AsString();
-            //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
-            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
+            //MainConsole.Instance.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //MainConsole.Instance.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
 
             string assetName = map["name"].AsString();
             string assetDes = map["description"].AsString();
@@ -417,8 +416,8 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
-            //m_log.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
-            //m_log.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
+            //MainConsole.Instance.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
+            //MainConsole.Instance.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
 
             if (asset_type == "texture" ||
                 asset_type == "animation" ||

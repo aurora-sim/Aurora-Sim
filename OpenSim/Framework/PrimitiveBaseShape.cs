@@ -78,8 +78,6 @@ namespace OpenSim.Framework
     [Serializable]
     public class PrimitiveBaseShape
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly byte[] DEFAULT_TEXTURE =
             new Primitive.TextureEntry(new UUID("89556747-24cb-43ed-920b-47caed15465f")).GetBytes();
 
@@ -203,7 +201,7 @@ namespace OpenSim.Framework
 
                 if (!Enum.IsDefined(typeof (HollowShape), hollowShapeByte))
                 {
-                    m_log.WarnFormat(
+                    MainConsole.Instance.WarnFormat(
                         "[SHAPE]: Attempt to set a ProfileCurve with a hollow shape value of {0}, which isn't a valid enum.  Replacing with default shape.",
                         hollowShapeByte);
 
@@ -219,7 +217,7 @@ namespace OpenSim.Framework
 
                 if (!Enum.IsDefined(typeof (ProfileShape), profileShapeByte))
                 {
-                    m_log.WarnFormat(
+                    MainConsole.Instance.WarnFormat(
                         "[SHAPE]: Attempt to set a ProfileCurve with a profile shape value of {0}, which isn't a valid enum.  Replacing with square.",
                         profileShapeByte);
 
@@ -244,7 +242,7 @@ namespace OpenSim.Framework
         {
             get
             {
-                //m_log.DebugFormat("[SHAPE]: get m_textureEntry length {0}", m_textureEntry.Length);
+                //MainConsole.Instance.DebugFormat("[SHAPE]: get m_textureEntry length {0}", m_textureEntry.Length);
                 try
                 {
                     return new Primitive.TextureEntry(m_textureEntry, 0, m_textureEntry.Length);
@@ -253,7 +251,7 @@ namespace OpenSim.Framework
                 {
                 }
 
-                m_log.Warn("[SHAPE]: Failed to decode texture, length=" +
+                MainConsole.Instance.Warn("[SHAPE]: Failed to decode texture, length=" +
                            ((m_textureEntry != null) ? m_textureEntry.Length : 0));
                 return new Primitive.TextureEntry(UUID.Zero);
             }
@@ -815,7 +813,7 @@ namespace OpenSim.Framework
 
 
             return returnbytes;
-            //m_log.Info("[EXTRAPARAMS]: Length = " + m_shape.ExtraParams.Length.ToString());
+            //MainConsole.Instance.Info("[EXTRAPARAMS]: Length = " + m_shape.ExtraParams.Length.ToString());
         }
 
         public void ReadInUpdateExtraParam(ushort type, bool inUse, byte[] data)
@@ -960,7 +958,7 @@ namespace OpenSim.Framework
             }
             _sculptTexture = SculptUUID;
             _sculptType = SculptTypel;
-            //m_log.Info("[SCULPT]:" + SculptUUID.ToString());
+            //MainConsole.Instance.Info("[SCULPT]:" + SculptUUID.ToString());
         }
 
         public byte[] GetSculptBytes()
@@ -1072,7 +1070,7 @@ namespace OpenSim.Framework
             }
             catch (Exception ex)
             {
-                m_log.Warn("Error GetLightBytes: " + ex);
+                MainConsole.Instance.Warn("Error GetLightBytes: " + ex);
             }
 
             return data;
@@ -1317,7 +1315,7 @@ namespace OpenSim.Framework
                         xtr.MoveToContent();
 
                         string type = xtr.GetAttribute("type");
-                        //m_log.DebugFormat("[MOAP]: Loaded media texture entry with type {0}", type);
+                        //MainConsole.Instance.DebugFormat("[MOAP]: Loaded media texture entry with type {0}", type);
 
                         if (type != MEDIA_TEXTURE_TYPE)
                             return;

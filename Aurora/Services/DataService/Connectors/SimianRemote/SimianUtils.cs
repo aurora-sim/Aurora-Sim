@@ -42,7 +42,7 @@ namespace Aurora.Services.DataService
 
         public static bool GetGenericEntry(UUID ownerID, string type, string key, string m_ServerURI, out OSDMap map)
         {
-            //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  {0} called ({1},{2},{3})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type, key);
+            //MainConsole.Instance.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  {0} called ({1},{2},{3})", System.Reflection.MethodBase.GetCurrentMethod().Name, ownerID, type, key);
 
             NameValueCollection RequestArgs = new NameValueCollection
                                                   {
@@ -63,18 +63,18 @@ namespace Aurora.Services.DataService
                     key = entryMap["Key"].AsString();
                     map = (OSDMap) OSDParser.DeserializeJson(entryMap["Value"].AsString());
 
-                    //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
+                    //MainConsole.Instance.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  Generics Result {0}", entryMap["Value"].AsString());
 
                     return true;
                 }
                 else
                 {
-                    ///m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
+                    ///MainConsole.Instance.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
                 }
             }
             else
             {
-                //m_log.WarnFormat("[SIMIAN MUTELIST CONNECTOR]: Error retrieving group info ({0})", Response["Message"]);
+                //MainConsole.Instance.WarnFormat("[SIMIAN MUTELIST CONNECTOR]: Error retrieving group info ({0})", Response["Message"]);
             }
             map = null;
             return false;
@@ -101,7 +101,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                //m_log.WarnFormat("[SIMIAN GROUPS CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key, Response["Message"]);
+                //MainConsole.Instance.WarnFormat("[SIMIAN GROUPS CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key, Response["Message"]);
                 return false;
             }
         }
@@ -162,7 +162,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                //m_log.WarnFormat("[SIMIAN MUTELIST CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key, response["Message"]);
+                //MainConsole.Instance.WarnFormat("[SIMIAN MUTELIST CONNECTOR]: Error {0}, {1}, {2}, {3}", ownerID, type, key, response["Message"]);
                 return false;
             }
         }
@@ -191,7 +191,7 @@ namespace Aurora.Services.DataService
 #endif
                 if (maps.Count == 0)
                 {
-                    //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
+                    //MainConsole.Instance.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
                 }
 
                 return true;
@@ -199,7 +199,7 @@ namespace Aurora.Services.DataService
             else
             {
                 maps = null;
-                //m_log.WarnFormat("[SIMIAN MUTELIST CONNECTOR]: Error retrieving group info ({0})", response["Message"]);
+                //MainConsole.Instance.WarnFormat("[SIMIAN MUTELIST CONNECTOR]: Error retrieving group info ({0})", response["Message"]);
             }
             return false;
         }
@@ -227,14 +227,14 @@ namespace Aurora.Services.DataService
 #endif
                 if (maps.Count == 0)
                 {
-                    //m_log.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
+                    //MainConsole.Instance.InfoFormat("[SIMIAN-MUTELIST-CONNECTOR]  No Generics Results");
                 }
                 return true;
             }
             else
             {
                 maps = null;
-                //m_log.WarnFormat("[SIMIAN-MUTELIST-CONNECTOR]: Error retrieving group info ({0})", response["Message"]);
+                //MainConsole.Instance.WarnFormat("[SIMIAN-MUTELIST-CONNECTOR]: Error retrieving group info ({0})", response["Message"]);
             }
             return false;
         }

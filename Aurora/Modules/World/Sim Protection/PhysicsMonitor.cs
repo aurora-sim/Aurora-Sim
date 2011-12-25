@@ -64,7 +64,6 @@ namespace Aurora.Modules
 
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public bool m_collectingStats;
 
         protected Dictionary<UUID, PhysicsStats> m_currentPhysicsStats = new Dictionary<UUID, PhysicsStats>();
@@ -242,7 +241,7 @@ namespace Aurora.Modules
             m_waitingForCollectionOfStats = m_scenes.Count;
             //Start the timer as well
             m_physicsStatTimer.Start();
-            m_log.Info("Collecting Stats Now... Please wait...");
+            MainConsole.Instance.Info("Collecting Stats Now... Please wait...");
             while (m_waitingForCollectionOfStats > 0)
             {
                 Thread.Sleep(50);
@@ -284,7 +283,7 @@ namespace Aurora.Modules
             m_waitingForCollectionOfStats = m_scenes.Count;
             //Start the timer as well
             m_physicsStatTimer.Start();
-            m_log.Info("Collecting Stats Now... Please wait...");
+            MainConsole.Instance.Info("Collecting Stats Now... Please wait...");
             while (m_waitingForCollectionOfStats > 0)
             {
                 Thread.Sleep(50);
@@ -304,7 +303,7 @@ namespace Aurora.Modules
             }
             catch (Exception ex)
             {
-                m_log.Warn("There was an error opening the form: " + ex);
+                MainConsole.Instance.Warn("There was an error opening the form: " + ex);
             }
         }
 
@@ -333,7 +332,7 @@ namespace Aurora.Modules
             m_waitingForCollectionOfStats = m_scenes.Count;
             //Start the timer as well
             m_physicsStatTimer.Start();
-            m_log.Info("Collecting Stats Now... Please wait...");
+            MainConsole.Instance.Info("Collecting Stats Now... Please wait...");
             while (m_waitingForCollectionOfStats > 0)
             {
                 Thread.Sleep(50);
@@ -352,20 +351,20 @@ namespace Aurora.Modules
 
         protected virtual void DumpStatsToConsole(IScene scene, PhysicsStats stats)
         {
-            m_log.Info("------  Physics Stats for region " + scene.RegionInfo.RegionName + "  ------");
-            m_log.Info("   All stats are in milliseconds spent per second.");
-            m_log.Info("   These are in the order they are run in the PhysicsScene.");
-            m_log.Info(" PhysicsTaintTime: " + stats.StatPhysicsTaintTime);
-            m_log.Info(" PhysicsMoveTime: " + stats.StatPhysicsMoveTime);
-            m_log.Info(" FindContactsTime: " + stats.StatFindContactsTime);
-            m_log.Info(" ContactLoopTime: " + stats.StatContactLoopTime);
-            m_log.Info(" CollisionAccountingTime: " + stats.StatCollisionAccountingTime);
-            m_log.Info(" CollisionOptimizedTime: " + stats.StatCollisionOptimizedTime);
-            m_log.Info(" SendCollisionsTime: " + stats.StatSendCollisionsTime);
-            m_log.Info(" AvatarUpdatePosAndVelocity: " + stats.StatAvatarUpdatePosAndVelocity);
-            m_log.Info(" PrimUpdatePosAndVelocity: " + stats.StatPrimUpdatePosAndVelocity);
-            m_log.Info(" UnlockedArea: " + stats.StatUnlockedArea);
-            m_log.Info("");
+            MainConsole.Instance.Info("------  Physics Stats for region " + scene.RegionInfo.RegionName + "  ------");
+            MainConsole.Instance.Info("   All stats are in milliseconds spent per second.");
+            MainConsole.Instance.Info("   These are in the order they are run in the PhysicsScene.");
+            MainConsole.Instance.Info(" PhysicsTaintTime: " + stats.StatPhysicsTaintTime);
+            MainConsole.Instance.Info(" PhysicsMoveTime: " + stats.StatPhysicsMoveTime);
+            MainConsole.Instance.Info(" FindContactsTime: " + stats.StatFindContactsTime);
+            MainConsole.Instance.Info(" ContactLoopTime: " + stats.StatContactLoopTime);
+            MainConsole.Instance.Info(" CollisionAccountingTime: " + stats.StatCollisionAccountingTime);
+            MainConsole.Instance.Info(" CollisionOptimizedTime: " + stats.StatCollisionOptimizedTime);
+            MainConsole.Instance.Info(" SendCollisionsTime: " + stats.StatSendCollisionsTime);
+            MainConsole.Instance.Info(" AvatarUpdatePosAndVelocity: " + stats.StatAvatarUpdatePosAndVelocity);
+            MainConsole.Instance.Info(" PrimUpdatePosAndVelocity: " + stats.StatPrimUpdatePosAndVelocity);
+            MainConsole.Instance.Info(" UnlockedArea: " + stats.StatUnlockedArea);
+            MainConsole.Instance.Info("");
         }
 
         protected virtual void PhysicsStatsHeartbeat(object sender, ElapsedEventArgs e)

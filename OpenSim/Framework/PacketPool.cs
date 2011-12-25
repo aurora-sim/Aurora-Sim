@@ -37,8 +37,6 @@ namespace OpenSim.Framework
 {
     public sealed class PacketPool
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly PacketPool instance = new PacketPool();
 
         private static readonly Dictionary<Type, Stack<Object>> DataBlocks =
@@ -90,7 +88,7 @@ namespace OpenSim.Framework
                 {
                     // Recycle old packages
 #if Debug
-                    m_log.Info("[PacketPool]: Using " + type);
+                    MainConsole.Instance.Info("[PacketPool]: Using " + type);
 #endif
                     packet = (pool[t]).Pop();
                 }
@@ -153,7 +151,7 @@ namespace OpenSim.Framework
             int i = 0;
             Packet packet = GetPacket(type);
             if (packet == null)
-                m_log.WarnFormat("[PACKETPOOL]: Failed to get packet of type {0}", type);
+                MainConsole.Instance.WarnFormat("[PACKETPOOL]: Failed to get packet of type {0}", type);
             else
                 packet.FromBytes(bytes, ref i, ref packetEnd, zeroBuffer);
             return packet;
@@ -203,7 +201,7 @@ namespace OpenSim.Framework
                                 t = (int) PacketType.ObjectUpdateCompressed;
 
 #if Debug
-                            m_log.Info("[PacketPool]: Returning " + type);
+                            MainConsole.Instance.Info("[PacketPool]: Returning " + type);
 #endif
 
                             if (!pool.ContainsKey(t))
@@ -242,7 +240,7 @@ namespace OpenSim.Framework
                             int t = (int) packet.Type;
 
 #if Debug
-                            m_log.Info("[PacketPool]: Returning " + type);
+                            MainConsole.Instance.Info("[PacketPool]: Returning " + type);
 #endif
 
                             if (!pool.ContainsKey(t))

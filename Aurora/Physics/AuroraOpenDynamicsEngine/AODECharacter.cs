@@ -40,7 +40,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     {
         #region Declare
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
         private readonly AuroraODEPhysicsScene _parent_scene;
         public IntPtr Amotor = IntPtr.Zero;
@@ -171,7 +170,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_taintPosition.X = _position.X;
                 m_taintPosition.Y = _position.Y;
                 m_taintPosition.Z = _position.Z;
-                m_log.Warn("[PHYSICS]: Got NaN Position on Character Create");
+                MainConsole.Instance.Warn("[PHYSICS]: Got NaN Position on Character Create");
             }
 
             _parent_scene = parent_scene;
@@ -189,7 +188,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //            else
 //                AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
 
-            //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
+            //MainConsole.Instance.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
             m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
             m_isPhysical = false; // current status: no ODE information exists
@@ -325,7 +324,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     else
                     {
-                        m_log.Warn("[PHYSICS]: Got a NaN Position from Scene on a Character");
+                        MainConsole.Instance.Warn("[PHYSICS]: Got a NaN Position from Scene on a Character");
                     }
                 }
             }
@@ -353,7 +352,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (((SetSize.Z*1.1f) - CAPSULE_RADIUS*2.0f) == CAPSULE_LENGTH)
                     {
                         //It is the same, do not rebuild
-                        m_log.Info(
+                        MainConsole.Instance.Info(
                             "[Physics]: Not rebuilding the avatar capsule, as it is the same size as the previous capsule.");
                         return;
                     }
@@ -365,7 +364,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
 //                    else
 //                        AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
-                    //m_log.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
+                    //MainConsole.Instance.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
 
                     Velocity = Vector3.Zero;
 
@@ -373,7 +372,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got a NaN Size from Scene on a Character");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got a NaN Size from Scene on a Character");
                 }
             }
         }
@@ -419,7 +418,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
                 }
             }
         }
@@ -538,14 +537,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
             {
-                m_log.Warn(
+                MainConsole.Instance.Warn(
                     "[PHYSICS]: The capsule size you specified in aurora.ini is invalid!  Setting it to the smallest possible size!");
                 CAPSULE_LENGTH = 1.2f;
             }
 
             if (CAPSULE_RADIUS <= 0)
             {
-                m_log.Warn(
+                MainConsole.Instance.Warn(
                     "[PHYSICS]: The capsule size you specified in aurora.ini is invalid!  Setting it to the normal size!");
                 CAPSULE_RADIUS = 0.37f;
             }
@@ -687,7 +686,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (!IsFinite(localPos))
             {
-                m_log.Warn("[PHYSICS]: Avatar Position is non-finite!");
+                MainConsole.Instance.Warn("[PHYSICS]: Avatar Position is non-finite!");
                 defects.Add(this);
                 // _parent_scene.RemoveCharacter(this);
 
@@ -1151,8 +1150,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                m_log.Warn("[PHYSICS]: Got a NaN force vector in Move()");
-                m_log.Warn("[PHYSICS]: Avatar Position is non-finite!");
+                MainConsole.Instance.Warn("[PHYSICS]: Got a NaN force vector in Move()");
+                MainConsole.Instance.Warn("[PHYSICS]: Avatar Position is non-finite!");
                 defects.Add(this);
                 //kill the Geometry
                 _parent_scene.waitForSpaceUnlock(_parent_scene.space);
@@ -1195,7 +1194,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _parent_scene.BadCharacter(this);
                 vec = new d.Vector3(_position.X, _position.Y, _position.Z);
                 base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
-                m_log.WarnFormat("[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
+                MainConsole.Instance.WarnFormat("[ODEPLUGIN]: Avatar Null reference for Avatar {0}, physical actor {1}", m_name, m_uuid);
             }
 
             // vec is a ptr into internal ode data better not mess with it
@@ -1391,8 +1390,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // the "-" sign is to force the tilt to be OPPOSITE the direction of movement.
             float xTiltComponent = -movementVector.X * m_tiltMagnitudeWhenProjectedOnXYPlane;
             float yTiltComponent = -movementVector.Y * m_tiltMagnitudeWhenProjectedOnXYPlane;
-            //m_log.Debug(movementVector.X + " " + movementVector.Y);
-            //m_log.Debug("[PHYSICS] changing avatar tilt");
+            //MainConsole.Instance.Debug(movementVector.X + " " + movementVector.Y);
+            //MainConsole.Instance.Debug("[PHYSICS] changing avatar tilt");
             d.JointSetAMotorAngle(Amotor, 0, xTiltComponent);
             d.JointSetAMotorAngle(Amotor, 1, yTiltComponent);
             d.JointSetAMotorAngle(Amotor, 2, 0);
@@ -1425,7 +1424,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 //             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, servo, 0.0f, 0.0f, 1.0f);
 //             d.BodyAddForceAtRelPos(Body, 0.0f, 0.0f, -servo, 0.0f, 0.0f, -1.0f);
 //             //d.Matrix3 bodyrotation = d.BodyGetRotation(Body);
-//             //m_log.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
+//             //MainConsole.Instance.Info("[PHYSICSAV]: Rotation: " + bodyrotation.M00 + " : " + bodyrotation.M01 + " : " + bodyrotation.M02 + " : " + bodyrotation.M10 + " : " + bodyrotation.M11 + " : " + bodyrotation.M12 + " : " + bodyrotation.M20 + " : " + bodyrotation.M21 + " : " + bodyrotation.M22);
         //         }
 
         #endregion
@@ -1458,7 +1457,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                m_log.Warn("[PHYSICS]: Got a NaN force applied to a Character");
+                MainConsole.Instance.Warn("[PHYSICS]: Got a NaN force applied to a Character");
             }
             //m_lastUpdateSent = false;
         }
@@ -1543,7 +1542,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Create avatar capsule and related ODE data
                     if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero)) // && Amotor == IntPtr.Zero))
                     {
-                        m_log.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
+                        MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
                                    + (Shell != IntPtr.Zero ? "Shell " : "")
                                    + (Body != IntPtr.Zero ? "Body " : "")
                             );
@@ -1600,7 +1599,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // no lock needed on _parent_scene.OdeLock because we are called from within the thread lock in OdePlugin's simulate()
                     float prevCapsule = CAPSULE_LENGTH;
                     CAPSULE_LENGTH = m_tainted_CAPSULE_LENGTH;
-                    //m_log.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
+                    //MainConsole.Instance.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
                     d.BodyDestroy(Body);
                     Body = IntPtr.Zero;
                     d.GeomDestroy(Shell);
@@ -1614,7 +1613,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: trying to change capsule size, but the following ODE data is missing - "
+                    MainConsole.Instance.Warn("[PHYSICS]: trying to change capsule size, but the following ODE data is missing - "
                                + (Shell == IntPtr.Zero ? "Shell " : "")
                                + (Body == IntPtr.Zero ? "Body " : "")
                         );

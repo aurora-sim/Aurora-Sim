@@ -45,10 +45,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// </summary>
     public class SimianFriendsServiceConnector : IFriendsService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private string m_serverUrl = String.Empty;
 
         public string Name
@@ -112,7 +108,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             if (String.IsNullOrEmpty(m_serverUrl))
-                m_log.Info("[SIMIAN FRIENDS CONNECTOR]: No FriendsServerURI specified, disabling connector");
+                MainConsole.Instance.Info("[SIMIAN FRIENDS CONNECTOR]: No FriendsServerURI specified, disabling connector");
         }
 
         private OSDArray GetFriended(UUID ownerID)
@@ -131,7 +127,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve friends for user " + ownerID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve friends for user " + ownerID + ": " +
                            response["Message"].AsString());
                 return new OSDArray(0);
             }
@@ -153,7 +149,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve reverse friends for user " + ownerID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN FRIENDS CONNECTOR]: Failed to retrieve reverse friends for user " + ownerID + ": " +
                            response["Message"].AsString());
                 return new OSDArray(0);
             }
@@ -232,7 +228,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                m_log.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to store friend " + friend + " for user " + principalID +
+                MainConsole.Instance.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to store friend " + friend + " for user " + principalID +
                             ": " + response["Message"].AsString());
 
             return success;
@@ -255,7 +251,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                m_log.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to remove friend " + friend + " for user " + principalID +
+                MainConsole.Instance.Error("[SIMIAN FRIENDS CONNECTOR]: Failed to remove friend " + friend + " for user " + principalID +
                             ": " + response["Message"].AsString());
 
             return success;

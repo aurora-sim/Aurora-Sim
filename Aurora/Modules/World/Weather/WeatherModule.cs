@@ -31,7 +31,7 @@ namespace Aurora.Modules
     public class WeatherModule : ISharedRegionModule
     {
         #region Declares
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Timer timer = new Timer();
         private Dictionary<Scene, WeatherInRegion> Scenes = new Dictionary<Scene, WeatherInRegion>();
@@ -102,7 +102,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 3)
             {
-                m_log.Warn("Incorrect amount of parameters.");
+                MainConsole.Instance.Warn("Incorrect amount of parameters.");
                 return;
             }
             KeyValuePair<Scene, WeatherInRegion> Region = new KeyValuePair<Scene, WeatherInRegion>();
@@ -113,7 +113,7 @@ namespace Aurora.Modules
             }
             if(Region.Key == null)
             {
-                m_log.Warn("Region not found.");
+                MainConsole.Instance.Warn("Region not found.");
                 return;
             }
             Dictionary<Scene, WeatherInRegion> NewScenes = new Dictionary<Scene, WeatherInRegion>(); 
@@ -129,7 +129,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 2)
             {
-                m_log.Warn("Wrong amount of parameters!");
+                MainConsole.Instance.Warn("Wrong amount of parameters!");
                 return;
             }
             if (cmdparams[1] == "pause")
@@ -146,7 +146,7 @@ namespace Aurora.Modules
             {
                 Region = MainConsole.Instance.CmdPrompt("Region", "None");
                 if (Region == "None")
-                    m_log.Info("No region selected. Please try again");
+                    MainConsole.Instance.Info("No region selected. Please try again");
                 else
                 {
                     bool found = false;
@@ -159,7 +159,7 @@ namespace Aurora.Modules
                         }
                     }
                     if (found) break;
-                    m_log.Info("No region found. Please try again");
+                    MainConsole.Instance.Info("No region found. Please try again");
                 }
             }
             WeatherType = MainConsole.Instance.CmdPrompt("Weather Type", "0");

@@ -38,8 +38,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
 {
     public class GesturesModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IScene m_scene;
 
         public bool IsSharedModule
@@ -115,7 +113,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
                 invService.UpdateItem(item);
             }
             else
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[GESTURES]: Unable to find gesture {0} to activate for {1}", gestureId, client.Name);
         }
 
@@ -131,7 +129,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
                 invService.UpdateItem(item);
             }
             else
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[GESTURES]: Unable to find gesture to deactivate {0} for {1}", gestureId, client.Name);
         }
     }

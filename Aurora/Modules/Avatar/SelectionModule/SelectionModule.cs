@@ -42,9 +42,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private bool m_UseSelectionParticles = true;
 
         public bool UseSelectionParticles
@@ -158,7 +155,7 @@ namespace Aurora.Modules
                     IObjectCache cache = remoteClient.Scene.RequestModuleInterface<IObjectCache>();
                     if (cache != null)
                         cache.RemoveObject(remoteClient.AgentId, entity.LocalId, cacheMissType);
-                    m_log.WarnFormat("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID,
+                    MainConsole.Instance.WarnFormat("[ObjectCache]: Avatar didn't have {0}, miss type {1}, CRC {2}", primLocalID,
                                      cacheMissType, ((ISceneEntity) entity).RootChild.CRC);
                 }
             }
@@ -207,7 +204,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    m_log.ErrorFormat("[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.",
+                    MainConsole.Instance.ErrorFormat("[SCENEPACKETHANDLER]: Could not find prim {0} in SelectPrim, killing prim.",
                                       primLocalID);
                     //Send a kill packet to the viewer so it doesn't come up again
                     remoteClient.SendKillObject(scene.RegionInfo.RegionHandle, new uint[1] {primLocalID});

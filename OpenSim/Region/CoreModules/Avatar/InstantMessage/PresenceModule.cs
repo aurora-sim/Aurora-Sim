@@ -39,9 +39,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
     public class PresenceModule : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(
-            MethodBase.GetCurrentMethod().DeclaringType);
-
         protected List<IScene> m_Scenes = new List<IScene>();
 
         #region ISharedRegionModule Members
@@ -106,7 +103,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
 
             IClientAPI client = (IClientAPI) sender;
-            m_log.DebugFormat("[PRESENCE MODULE]: OnlineNotification requested by {0}", client.Name);
+            MainConsole.Instance.DebugFormat("[PRESENCE MODULE]: OnlineNotification requested by {0}", client.Name);
 
             UserInfo[] status = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfos(args.ToArray());
 

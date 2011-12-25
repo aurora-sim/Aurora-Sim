@@ -41,10 +41,6 @@ namespace OpenSim.Services.AuthenticationService
     //
     public class AuthenticationServiceBase
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IAuthenticationData m_Database;
         protected bool m_authenticateUsers = true;
 
@@ -77,11 +73,11 @@ namespace OpenSim.Services.AuthenticationService
             auth.PasswordSalt = passwordSalt;
             if (!m_Database.Store(auth))
             {
-                m_log.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
+                MainConsole.Instance.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
                 return false;
             }
 
-            m_log.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
+            MainConsole.Instance.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
             return true;
         }
 
@@ -114,11 +110,11 @@ namespace OpenSim.Services.AuthenticationService
             auth.PasswordSalt = passwordSalt;
             if (!m_Database.Store(auth))
             {
-                m_log.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
+                MainConsole.Instance.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
                 return false;
             }
 
-            m_log.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
+            MainConsole.Instance.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
             return true;
         }
 
@@ -133,11 +129,11 @@ namespace OpenSim.Services.AuthenticationService
             auth.PasswordSalt = "";
             if (!m_Database.Store(auth))
             {
-                m_log.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
+                MainConsole.Instance.DebugFormat("[AUTHENTICATION DB]: Failed to store authentication data");
                 return false;
             }
 
-            m_log.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
+            MainConsole.Instance.InfoFormat("[AUTHENTICATION DB]: Set password for principalID {0}", principalID);
             return true;
         }
     }

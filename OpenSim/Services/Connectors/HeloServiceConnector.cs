@@ -11,10 +11,6 @@ namespace OpenSim.Services
 {
     public class HeloServiceConnector : IHeloServiceConnector, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         #region IHeloServiceConnector Members
 
         public virtual string Helo(string serverURI)
@@ -30,7 +26,7 @@ namespace OpenSim.Services
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[HELO SERVICE]: Unable to perform HELO request to {0}: {1}", serverURI, e.Message);
+                MainConsole.Instance.DebugFormat("[HELO SERVICE]: Unable to perform HELO request to {0}: {1}", serverURI, e.Message);
             }
 
             // fail

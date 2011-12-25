@@ -36,7 +36,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
 {
     public class SoundModule : INonSharedRegionModule, ISoundModule
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly Dictionary<UUID, ConeOfSilence> Cones = new Dictionary<UUID, ConeOfSilence>();
         protected IScene m_scene;

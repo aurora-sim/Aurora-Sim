@@ -44,8 +44,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
     /// </summary>
     public class AssetsDearchiver
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
 
         /// <summary>
@@ -106,7 +104,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 AssetMetadata metadata = new AssetMetadata();
 
                 string filename = reader.ReadElementString("filename");
-                m_log.DebugFormat("[DEARCHIVER]: Reading node {0}", filename);
+                MainConsole.Instance.DebugFormat("[DEARCHIVER]: Reading node {0}", filename);
 
                 metadata.Name = reader.ReadElementString("name");
                 metadata.Description = reader.ReadElementString("description");
@@ -120,7 +118,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 reader.Read();
             }
 
-            m_log.DebugFormat("[DEARCHIVER]: Resolved {0} items of asset metadata", m_metadata.Count);
+            MainConsole.Instance.DebugFormat("[DEARCHIVER]: Resolved {0} items of asset metadata", m_metadata.Count);
 
             ResolvePendingAssetData();
         }
@@ -156,7 +154,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     filename = filename.Remove(filename.Length - extension.Length);
                 }
 
-                m_log.DebugFormat("[ARCHIVER]: Importing asset {0}", filename);
+                MainConsole.Instance.DebugFormat("[ARCHIVER]: Importing asset {0}", filename);
 
                 AssetBase asset = new AssetBase(filename, metadata.Name, (AssetType) metadata.AssetType, UUID.Zero)
                                       {Description = metadata.Description, Data = data, MetaOnly = false};
@@ -164,7 +162,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             else
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[DEARCHIVER]: Tried to dearchive data with filename {0} without any corresponding metadata",
                     assetPath);
             }

@@ -50,8 +50,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
     /// </summary>
     public class ArchiveWriteRequestExecution
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected TarArchiveWriter m_archiveWriter;
         protected Guid m_requestId;
         protected IScene m_scene;
@@ -87,7 +85,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 m_archiveWriter.Close();
             }
 
-            m_log.InfoFormat("[ARCHIVER]: Finished writing out OAR for {0}", m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Finished writing out OAR for {0}", m_scene.RegionInfo.RegionName);
 
             m_scene.EventManager.TriggerOarFileSaved(m_requestId, String.Empty);
         }
@@ -96,18 +94,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             foreach (UUID uuid in assetsNotFoundUuids)
             {
-                m_log.DebugFormat("[ARCHIVER]: Could not find asset {0}", uuid);
+                MainConsole.Instance.DebugFormat("[ARCHIVER]: Could not find asset {0}", uuid);
             }
 
-//            m_log.InfoFormat(
+//            MainConsole.Instance.InfoFormat(
 //                "[ARCHIVER]: Received {0} of {1} assets requested",
 //                assetsFoundUuids.Count, assetsFoundUuids.Count + assetsNotFoundUuids.Count);
 
-            m_log.InfoFormat("[ARCHIVER]: Creating archive file.  This may take some time.");
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Creating archive file.  This may take some time.");
 
             // Write out control file
             m_archiveWriter.WriteFile(ArchiveConstants.CONTROL_FILE_PATH, Create0p2ControlFile());
-            m_log.InfoFormat("[ARCHIVER]: Added control file to archive.");
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Added control file to archive.");
 
             // Write out region settings
             string settingsPath
@@ -115,7 +113,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_archiveWriter.WriteFile(settingsPath,
                                       RegionSettingsSerializer.Serialize(m_scene.RegionInfo.RegionSettings));
 
-            m_log.InfoFormat("[ARCHIVER]: Added region settings to archive.");
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Added region settings to archive.");
 
             // Write out land data (aka parcel) settings
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
@@ -130,7 +128,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     m_archiveWriter.WriteFile(landDataPath, LandDataSerializer.Serialize(landData));
                 }
             }
-            m_log.InfoFormat("[ARCHIVER]: Added parcel settings to archive.");
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Added parcel settings to archive.");
 
             // Write out terrain
             string terrainPath
@@ -141,18 +139,18 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             m_archiveWriter.WriteFile(terrainPath, ms.ToArray());
             ms.Close();
 
-            m_log.InfoFormat("[ARCHIVER]: Added terrain information to archive.");
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Added terrain information to archive.");
 
             // Write out scene object metadata
             foreach (ISceneEntity sceneObject in m_sceneObjects)
             {
-                //m_log.DebugFormat("[ARCHIVER]: Saving {0} {1}, {2}", entity.Name, entity.UUID, entity.GetType());
+                //MainConsole.Instance.DebugFormat("[ARCHIVER]: Saving {0} {1}, {2}", entity.Name, entity.UUID, entity.GetType());
 
                 string serializedObject = m_serialiser.SerializeGroupToXml2(sceneObject);
                 m_archiveWriter.WriteFile(ArchiveHelpers.CreateObjectPath(sceneObject), serializedObject);
             }
 
-            m_log.InfoFormat("[ARCHIVER]: Added scene objects to archive.");
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Added scene objects to archive.");
         }
 
         /// <summary>

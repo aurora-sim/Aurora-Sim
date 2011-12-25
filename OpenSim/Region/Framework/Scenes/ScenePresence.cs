@@ -50,8 +50,6 @@ namespace OpenSim.Region.Framework.Scenes
         public event RemovePhysics OnRemovePhysics;
         public event AddPhysics OnSignificantClientMovement;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly Array DIR_CONTROL_FLAGS = Enum.GetValues(typeof(Dir_ControlFlags));
         private static readonly Vector3 HEAD_ADJUSTMENT = new Vector3(0f, 0f, 0.3f);
         
@@ -486,7 +484,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[SCENEPRESENCE]: ABSOLUTE POSITION " + e);
+                        MainConsole.Instance.Error("[SCENEPRESENCE]: ABSOLUTE POSITION " + e);
                     }
                 }
 
@@ -562,7 +560,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error ("[SCENEPRESENCE]: VELOCITY " + e.Message);
+                        MainConsole.Instance.Error ("[SCENEPRESENCE]: VELOCITY " + e.Message);
                     }
                 }
                 else
@@ -789,7 +787,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion (Scene.RegionInfo, AbsolutePosition, look);
 
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                 "[SCENE]: Upgrading child to root agent for {0} in {1}",
                 Name, m_scene.RegionInfo.RegionName);
 
@@ -864,7 +862,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 Animator.ResetAnimations();
 
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                  "[SCENEPRESENCE]: Downgrading root agent {0}, {1} to a child agent in {2}",
                  Name, UUID, m_scene.RegionInfo.RegionName);
 
@@ -1008,7 +1006,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private void CompleteMovement(IClientAPI client)
         {
-            //m_log.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
+            //MainConsole.Instance.Debug("[SCENE PRESENCE]: CompleteMovement for " + Name + " in " + m_regionInfo.RegionName);
 
             string reason = "";
             Vector3 pos;
@@ -1017,7 +1015,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (agent == null || !Scene.Permissions.AllowedIncomingTeleport (UUID, AbsolutePosition, agent.teleportFlags, out pos, out reason))
             {
-                m_log.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
+                MainConsole.Instance.Error("[ScenePresence]: Error in MakeRootAgent! Could not authorize agent " + Name +
                     ", reason: " + reason);
                 return;
             }
@@ -1048,7 +1046,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (hitYN)
                 {
                     CameraConstraintActive = true;
-                    //m_log.DebugFormat("[RAYCASTRESULT]: {0}, {1}, {2}, {3}", hitYN, collisionPoint, localid, distance);
+                    //MainConsole.Instance.DebugFormat("[RAYCASTRESULT]: {0}, {1}, {2}, {3}", hitYN, collisionPoint, localid, distance);
 
                     Vector3 normal = Vector3.Normalize(new Vector3(0f, 0f, collisionPoint.Z) - collisionPoint);
                     ControllingClient.SendCameraConstraint(new Vector4(normal.X, normal.Y, normal.Z, -1 * Vector3.Distance(new Vector3(0, 0, collisionPoint.Z), collisionPoint)));
@@ -1130,7 +1128,7 @@ namespace OpenSim.Region.Framework.Scenes
                 StandUp();
             }
 
-            //m_log.DebugFormat("[FollowCam]: {0}", m_followCamAuto);
+            //MainConsole.Instance.DebugFormat("[FollowCam]: {0}", m_followCamAuto);
             // Raycast from the avatar's head to the camera to see if there's anything blocking the view
             if ((m_movementUpdateCount % NumMovementsBetweenRayCast) == 0 && m_scene.PhysicsScene.SupportsRayCast())
             {
@@ -1164,7 +1162,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (actor == null)
             {
                 //This happens while sitting, don't spam it
-                //m_log.Debug("Null physical actor in AgentUpdate in " + m_scene.RegionInfo.RegionName);
+                //MainConsole.Instance.Debug("Null physical actor in AgentUpdate in " + m_scene.RegionInfo.RegionName);
                 return;
             }
             
@@ -1250,7 +1248,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 bResetMoveToPosition = true;
                                 DCFlagKeyPressed = true;
                                 agent_control_v3 += dirVectors[i];
-                                //m_log.DebugFormat("[Motion]: {0}, {1}",i, dirVectors[i]);
+                                //MainConsole.Instance.DebugFormat("[Motion]: {0}, {1}",i, dirVectors[i]);
 
                                 if ((m_movementflag & (uint)DCF) == 0)
                                 {
@@ -1277,7 +1275,7 @@ namespace OpenSim.Region.Framework.Scenes
                                         if ((DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD_NUDGE || DCF == Dir_ControlFlags.DIR_CONTROL_FLAG_BACKWARD_NUDGE)
                                         && ((m_movementflag & (byte)nudgehack) == nudgehack))
                                         {
-                                            m_log.Debug("Removed Hack flag");
+                                            MainConsole.Instance.Debug("Removed Hack flag");
                                         }
                                     */
                                 }
@@ -1380,7 +1378,7 @@ namespace OpenSim.Region.Framework.Scenes
                             catch (Exception e)
                             {
                                 //Avoid system crash, can be slower but...
-                                m_log.DebugFormat("Crash! {0}", e);
+                                MainConsole.Instance.DebugFormat("Crash! {0}", e);
                             }
                         }
                     }
@@ -1419,8 +1417,8 @@ namespace OpenSim.Region.Framework.Scenes
                 // which occurs later in the main scene loop
                 if (update_movementflag || (update_rotation && DCFlagKeyPressed))
                 {
-                    //                    m_log.DebugFormat("{0} {1}", update_movementflag, (update_rotation && DCFlagKeyPressed));
-                    //                    m_log.DebugFormat(
+                    //                    MainConsole.Instance.DebugFormat("{0} {1}", update_movementflag, (update_rotation && DCFlagKeyPressed));
+                    //                    MainConsole.Instance.DebugFormat(
                     //                        "In {0} adding velocity to {1} of {2}", m_scene.RegionInfo.RegionName, Name, agent_control_v3);
 
                     AddNewMovement(agent_control_v3, q);
@@ -1482,23 +1480,23 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (InvalidCastException)
                 {
-                    m_log.Error("[CLIENT]: Invalid autopilot request");
+                    MainConsole.Instance.Error("[CLIENT]: Invalid autopilot request");
                     return;
                 }
                 m_moveToPositionInProgress = true;
                 m_moveToPositionTarget = new Vector3(locx, locy, locz);
-                //m_log.Warn("Moving to " + m_moveToPositionTarget);
+                //MainConsole.Instance.Warn("Moving to " + m_moveToPositionTarget);
             }
             catch (Exception ex)
             {
                 //Why did I get this error?
-               m_log.Error("[SCENEPRESENCE]: DoMoveToPosition" + ex);
+               MainConsole.Instance.Error("[SCENEPRESENCE]: DoMoveToPosition" + ex);
             }
         }
 
         private void CheckAtSitTarget()
         {
-            //m_log.Debug("[AUTOPILOT]: " + Util.GetDistanceTo(AbsolutePosition, m_autoPilotTarget).ToString());
+            //MainConsole.Instance.Debug("[AUTOPILOT]: " + Util.GetDistanceTo(AbsolutePosition, m_autoPilotTarget).ToString());
             if (Util.GetDistanceTo(AbsolutePosition, m_autoPilotTarget) <= 1.5)
             {
                 if (m_sitAtAutoTarget)
@@ -1794,7 +1792,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SendSitResponse(remoteClient, targetID, offset, Quaternion.Identity);
             }
             else
-                m_log.Warn("Sit requested on unknown object: " + targetID.ToString());
+                MainConsole.Instance.Warn("Sit requested on unknown object: " + targetID.ToString());
         }
         
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset, string sitAnimation)
@@ -1810,11 +1808,11 @@ namespace OpenSim.Region.Framework.Scenes
                 m_requestedSitTargetUUID = targetID;
                 m_sitting = true;
 
-                m_log.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
+                MainConsole.Instance.DebugFormat("[SIT]: Client requested Sit Position: {0}", offset);
                 SendSitResponse(remoteClient, targetID, offset, Quaternion.Identity);
             }
             else
-                m_log.Warn("Sit requested on unknown object: " + targetID);
+                MainConsole.Instance.Warn("Sit requested on unknown object: " + targetID);
         }
 
         public void HandleAgentSit(IClientAPI remoteClient, UUID agentID)
@@ -1836,7 +1834,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn (ex);
+                    MainConsole.Instance.Warn (ex);
                 }
 
                 if (m_sitAtAutoTarget || !m_autopilotMoving)
@@ -1914,7 +1912,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // WHAT??? we can't make them a root agent though... what if they shouldn't be here?
                 //  Or even worse, what if they are spoofing the client???
-                m_log.Info("[SCENEPRESENCE]: AddNewMovement() called on child agent for " + Name + "! Possible attempt to force a fake agent into a sim!");
+                MainConsole.Instance.Info("[SCENEPRESENCE]: AddNewMovement() called on child agent for " + Name + "! Possible attempt to force a fake agent into a sim!");
                 return;
             }
 
@@ -2035,7 +2033,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         public virtual void SendTerseUpdateToClient (IScenePresence remoteClient)
         {
-            //m_log.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
+            //MainConsole.Instance.DebugFormat("[SCENEPRESENCE]: TerseUpdate: Pos={0} Rot={1} Vel={2}", m_pos, m_bodyRot, m_velocity);
             remoteClient.SceneViewer.QueuePresenceForUpdate (
                 this,
                 PrimUpdateFlags.TerseUpdate);
@@ -2242,7 +2240,7 @@ namespace OpenSim.Region.Framework.Scenes
                             if(transferModule != null)
                                 transferModule.Cross(this, isFlying, neighborRegion);
                             else
-                                m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+                                MainConsole.Instance.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
                         }
                         return true;
                     }
@@ -2292,12 +2290,12 @@ namespace OpenSim.Region.Framework.Scenes
                                 if(transferModule != null)
                                     transferModule.Cross(this, isFlying, neighborRegion);
                                 else
-                                    m_log.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
+                                    MainConsole.Instance.DebugFormat("[ScenePresence]: Unable to cross agent to neighbouring region, because there is no AgentTransferModule");
 
                                 return true;
                             }
                             //else
-                            //    m_log.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
+                            //    MainConsole.Instance.Debug("[ScenePresence]: Could not find region for " + Name + " to cross into @ {" + TargetX / 256 + ", " + TargetY / 256 + "}");
                         }
                     }
                 }
@@ -2375,7 +2373,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void ChildAgentDataUpdate (AgentData cAgentData)
         {
-            //m_log.Debug("   >>> ChildAgentDataUpdate <<< " + Scene.RegionInfo.RegionName);
+            //MainConsole.Instance.Debug("   >>> ChildAgentDataUpdate <<< " + Scene.RegionInfo.RegionName);
             //if (!IsChildAgent)
             //    return;
 
@@ -2391,7 +2389,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!IsChildAgent)
                 return;
 
-            //m_log.Debug("   >>> ChildAgentPositionUpdate <<< " + rRegionX + "-" + rRegionY);
+            //MainConsole.Instance.Debug("   >>> ChildAgentPositionUpdate <<< " + rRegionX + "-" + rRegionY);
             int shiftx = rRegionX - tRegionX;
             int shifty = rRegionY - tRegionY;
 
@@ -2444,7 +2442,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 multiplier = 0.25f;
             }
-            //m_log.Info("[NeighborThrottle]: " + m_scene.GetInaccurateNeighborCount().ToString() + " - m: " + multiplier.ToString());
+            //MainConsole.Instance.Info("[NeighborThrottle]: " + m_scene.GetInaccurateNeighborCount().ToString() + " - m: " + multiplier.ToString());
             cAgent.Throttles = ControllingClient.GetThrottlesPacked(multiplier);
 
             cAgent.HeadRotation = m_headrotation;
@@ -2596,7 +2594,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch(Exception ex)
             {
-                m_log.Warn("[ScenePresence]: Error in CopyFrom: " + ex);
+                MainConsole.Instance.Warn("[ScenePresence]: Error in CopyFrom: " + ex);
             }
         }
 
@@ -2679,7 +2677,7 @@ namespace OpenSim.Region.Framework.Scenes
             PhysicsActor.ForceSetPosition(m_pos);
             PhysicsActor.ForceSetVelocity(Vector3.Zero);
             RemoveFromPhysicalScene();
-            m_log.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position, the client may be messed up now.");
+            MainConsole.Instance.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position, the client may be messed up now.");
 
             //Make them fly so that they don't just fall
             AddToPhysicalScene(true, false);

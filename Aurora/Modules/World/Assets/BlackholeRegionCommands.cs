@@ -13,7 +13,6 @@ namespace Aurora.Modules.World.Assets
 {
     public class BlackholeRegionCommands : ISharedRegionModule
     {
-        private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private bool initialized;
 
         #region ISharedRegionModule Members
@@ -141,16 +140,16 @@ namespace Aurora.Modules.World.Assets
             AssetBase[] SortResults = new AssetBase[] {};
             SortResults = SortAssetArray(allAssets.ToArray(), SortResults, 0);
 
-            m_Log.Info("[BlkHolAssets] Total Texture Bytes " + totalBytes);
-            m_Log.Info("[BlkHolAssets] Total Texture Kilobyte " + (totalBytes/1024.0));
-            m_Log.Info("[BlkHolAssets] Total Texture Megabyte " + (totalBytes/1048576.0));
-            m_Log.Info("[BlkHolAssets] " + totalTextures + " textures on region");
-            m_Log.Info("[BlkHolAssets] " + totalChagnesTextures + " textures could be optimised");
-            m_Log.Info("[BlkHolAssets] " + totalInventory + " item in object inventory");
-            m_Log.Info("[BlkHolAssets] " + scriptCount + " scripts in object inventory");
-            m_Log.Info("Largest Textures Top 10");
-            m_Log.Info("UUID                                 Size");
-            m_Log.Info("--------------------------------------------------------------");
+            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Bytes " + totalBytes);
+            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Kilobyte " + (totalBytes/1024.0));
+            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Megabyte " + (totalBytes/1048576.0));
+            MainConsole.Instance.Info("[BlkHolAssets] " + totalTextures + " textures on region");
+            MainConsole.Instance.Info("[BlkHolAssets] " + totalChagnesTextures + " textures could be optimised");
+            MainConsole.Instance.Info("[BlkHolAssets] " + totalInventory + " item in object inventory");
+            MainConsole.Instance.Info("[BlkHolAssets] " + scriptCount + " scripts in object inventory");
+            MainConsole.Instance.Info("Largest Textures Top 10");
+            MainConsole.Instance.Info("UUID                                 Size");
+            MainConsole.Instance.Info("--------------------------------------------------------------");
 
             int loopTo = 9;
             if (SortResults.Count() <= 9)
@@ -159,10 +158,10 @@ namespace Aurora.Modules.World.Assets
             {
                 double mbsize = Math.Round((int.Parse(SortResults[looper].Description)/1048576.0)*100.0)/100.0;
 
-                m_Log.Info(SortResults[looper].ID + " " + mbsize + "MB");
+                MainConsole.Instance.Info(SortResults[looper].ID + " " + mbsize + "MB");
             }
 
-            m_Log.Info("[BlkHolAssets] Nothing escapes the BlackHole!");
+            MainConsole.Instance.Info("[BlkHolAssets] Nothing escapes the BlackHole!");
         }
 
         private string SetUpName(string name)
@@ -255,13 +254,13 @@ namespace Aurora.Modules.World.Assets
                     }
                 }
             }
-            m_Log.Info("[BlkHolAssets] Bytes Saved " + savedBytes);
-            m_Log.Info("[BlkHolAssets] Kilobyte Saved " + (savedBytes/1024.0f));
-            m_Log.Info("[BlkHolAssets] Megabyte Saved " + (savedBytes/1048576.0f));
-            m_Log.Info("[BlkHolAssets] " + totalChagnesTextures + " out of " + totalTextures + " textures changed");
-            m_Log.Info("[BlkHolAssets] " + totalChangesInventory + " out of " + totalInventory +
+            MainConsole.Instance.Info("[BlkHolAssets] Bytes Saved " + savedBytes);
+            MainConsole.Instance.Info("[BlkHolAssets] Kilobyte Saved " + (savedBytes/1024.0f));
+            MainConsole.Instance.Info("[BlkHolAssets] Megabyte Saved " + (savedBytes/1048576.0f));
+            MainConsole.Instance.Info("[BlkHolAssets] " + totalChagnesTextures + " out of " + totalTextures + " textures changed");
+            MainConsole.Instance.Info("[BlkHolAssets] " + totalChangesInventory + " out of " + totalInventory +
                        " inventory items changed");
-            m_Log.Info("[BlkHolAssets] Your are optimised.. Nothing escapes the BlackHole!");
+            MainConsole.Instance.Info("[BlkHolAssets] Your are optimised.. Nothing escapes the BlackHole!");
         }
 
         private Primitive.TextureEntry SetTexture(PrimitiveBaseShape shape, UUID newID, UUID oldID)

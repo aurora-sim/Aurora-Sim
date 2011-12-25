@@ -527,7 +527,7 @@ namespace OpenSim.Framework
 
             if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
             {
-                m_log.Info("[CONSOLE] Invalid command");
+                MainConsole.Instance.Info("[CONSOLE] Invalid command");
             }
         }
 
@@ -565,60 +565,17 @@ namespace OpenSim.Framework
             return cmdinput;
         }
 
-        public string CmdPrompt(string p)
+        public string Prompt(string prompt)
         {
-            m_isPrompting = true;
-            string line = ReadLine(String.Format("{0}: ", p), false, true);
-            m_isPrompting = false;
-            return line;
+            return Prompt(prompt, "");
         }
 
-        public string CmdPrompt(string p, string def)
+        public string Prompt(string prompt, string defaultResponse)
         {
-            m_isPrompting = true;
-            string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
-            if (ret == String.Empty)
-                ret = def;
-
-            m_isPrompting = false;
-            return ret;
+            return Prompt(prompt, defaultResponse, new List<string>());
         }
 
-        public string CmdPrompt(string p, List<char> excludedCharacters)
-        {
-            m_isPrompting = true;
-
-            bool itisdone = false;
-            string ret = String.Empty;
-            while (!itisdone)
-            {
-                itisdone = true;
-                ret = CmdPrompt(p);
-
-                string ret1 = ret;
-#if (!ISWIN)
-                foreach (char c in excludedCharacters)
-                {
-                    if (ret1.Contains(c.ToString()))
-                    {
-                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
-                }
-#else
-                foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
-                {
-                    Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                    itisdone = false;
-                }
-#endif
-            }
-
-            m_isPrompting = false;
-            return ret;
-        }
-
-        public string CmdPrompt(string p, string def, List<char> excludedCharacters)
+        public string Prompt(string prompt, string defaultResponse, List<char> excludedCharacters)
         {
             m_isPrompting = true;
             bool itisdone = false;
@@ -626,12 +583,10 @@ namespace OpenSim.Framework
             while (!itisdone)
             {
                 itisdone = true;
-                ret = CmdPrompt(p, def);
+                ret = Prompt(prompt, defaultResponse);
 
                 if (ret == String.Empty)
-                {
-                    ret = def;
-                }
+                    ret = defaultResponse;
                 else
                 {
                     string ret1 = ret;
@@ -659,7 +614,7 @@ namespace OpenSim.Framework
         }
 
         // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
-        public string CmdPrompt(string prompt, string defaultresponse, List<string> options)
+        public string Prompt(string prompt, string defaultresponse, List<string> options)
         {
             m_isPrompting = true;
             m_promptOptions = new List<string>(options);
@@ -673,8 +628,8 @@ namespace OpenSim.Framework
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
 #endif
 
-            string temp = CmdPrompt(prompt, defaultresponse);
-            while (itisdone == false)
+            string temp = Prompt(prompt, defaultresponse);
+            while (itisdone == false && options.Count > 0)
             {
                 if (options.Contains(temp))
                 {
@@ -683,7 +638,7 @@ namespace OpenSim.Framework
                 else
                 {
                     Console.WriteLine("Valid options are" + optstr);
-                    temp = CmdPrompt(prompt, defaultresponse);
+                    temp = Prompt(prompt, defaultresponse);
                 }
             }
             m_isPrompting = false;
@@ -693,7 +648,7 @@ namespace OpenSim.Framework
 
         // Displays a prompt and waits for the user to enter a string, then returns that string
         // (Done with no echo and suitable for passwords)
-        public string PasswdPrompt(string p)
+        public string PasswordPrompt(string p)
         {
             m_isPrompting = true;
             string line = ReadLine(p + ": ", false, false);
@@ -828,5 +783,285 @@ namespace OpenSim.Framework
 #endif
             }
         }
+
+        #region ICommandConsole Members
+
+
+        public bool IsDebugEnabled
+        {
+            get { return m_log.IsDebugEnabled; }
+        }
+
+        public bool IsErrorEnabled
+        {
+            get { return m_log.IsErrorEnabled; }
+        }
+
+        public bool IsFatalEnabled
+        {
+            get { return m_log.IsFatalEnabled; }
+        }
+
+        public bool IsInfoEnabled
+        {
+            get { return m_log.IsInfoEnabled; }
+        }
+
+        public bool IsWarnEnabled
+        {
+            get { return m_log.IsInfoEnabled; }
+        }
+
+        public void Debug(object message)
+        {
+            m_log.Debug(message);
+        }
+
+        public void Debug(object message, Exception exception)
+        {
+            m_log.Debug(message, exception);
+        }
+
+        public void DebugFormat(string format, object arg0)
+        {
+            m_log.DebugFormat(format, arg0);
+        }
+
+        public void DebugFormat(string format, params object[] args)
+        {
+            m_log.DebugFormat(format, args);
+        }
+
+        public void DebugFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.DebugFormat(provider, format, args);
+        }
+
+        public void DebugFormat(string format, object arg0, object arg1)
+        {
+            m_log.DebugFormat(format, arg0, arg1);
+        }
+
+        public void DebugFormat(string format, object arg0, object arg1, object arg2)
+        {
+            m_log.DebugFormat(format, arg0, arg1, arg2);
+        }
+
+        public void Error(object message)
+        {
+            m_log.Error(message);
+        }
+
+        public void Error(object message, Exception exception)
+        {
+            m_log.Error(message, exception);
+        }
+
+        public void ErrorFormat(string format, object arg0)
+        {
+            m_log.ErrorFormat(format, arg0);
+        }
+
+        public void ErrorFormat(string format, params object[] args)
+        {
+            m_log.ErrorFormat(format, args);
+        }
+
+        public void ErrorFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.ErrorFormat(format, provider, args);
+        }
+
+        public void ErrorFormat(string format, object arg0, object arg1)
+        {
+            m_log.ErrorFormat(format, arg0, arg1);
+        }
+
+        public void ErrorFormat(string format, object arg0, object arg1, object arg2)
+        {
+            m_log.ErrorFormat(format, arg0, arg1, arg2);
+        }
+
+        public void Fatal(object message)
+        {
+            m_log.Fatal(message);
+        }
+
+        public void Fatal(object message, Exception exception)
+        {
+            m_log.Fatal(message, exception);
+        }
+
+        public void FatalFormat(string format, object arg0)
+        {
+            m_log.FatalFormat(format, arg0);
+        }
+
+        public void FatalFormat(string format, params object[] args)
+        {
+            m_log.FatalFormat(format, args);
+        }
+
+        public void FatalFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.FatalFormat(provider, format, args);
+        }
+
+        public void FatalFormat(string format, object arg0, object arg1)
+        {
+            m_log.FatalFormat(format, arg0, arg1);
+        }
+
+        public void FatalFormat(string format, object arg0, object arg1, object arg2)
+        {
+            m_log.FatalFormat(format, arg0, arg1, arg2);
+        }
+
+        public void Format(Level level, string format, object arg0)
+        {
+            m_log.Format(level, format, arg0);
+        }
+
+        public void Format(Level level, string format, params object[] args)
+        {
+            m_log.Format(level, format, args);
+        }
+
+        public void Format(Level level, IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.Format(level, provider, format, args);
+        }
+
+        public void Format(Level level, string format, object arg0, object arg1)
+        {
+            m_log.Format(level, format, arg0, arg1);
+        }
+
+        public void Format(Level level, string format, object arg0, object arg1, object arg2)
+        {
+            m_log.Format(level, format, arg0, arg1, arg2);
+        }
+
+        public void Info(object message)
+        {
+            m_log.Info(message);
+        }
+
+        public void Info(object message, Exception exception)
+        {
+            m_log.Info(message, exception);
+        }
+
+        public void InfoFormat(string format, object arg0)
+        {
+            m_log.InfoFormat(format, arg0);
+        }
+
+        public void InfoFormat(string format, params object[] args)
+        {
+            m_log.InfoFormat(format, args);
+        }
+
+        public void InfoFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.InfoFormat(provider, format, args);
+        }
+
+        public void InfoFormat(string format, object arg0, object arg1)
+        {
+            m_log.InfoFormat(format, arg0, arg1);
+        }
+
+        public void InfoFormat(string format, object arg0, object arg1, object arg2)
+        {
+            m_log.InfoFormat(format, arg0, arg1, arg2);
+        }
+
+        public bool IsEnabled(Level level)
+        {
+            return m_log.IsEnabled(level);
+        }
+
+        public void Log(Level level, object message)
+        {
+            m_log.Log(level, message);
+        }
+
+        public void Log(Level level, object message, Exception exception)
+        {
+            m_log.Log(level, message, exception);
+        }
+
+        public void Trace(object message)
+        {
+            m_log.Trace(message);
+        }
+
+        public void Trace(object message, Exception exception)
+        {
+            m_log.Trace(message, exception);
+        }
+
+        public void TraceFormat(string format, object arg0)
+        {
+            m_log.TraceFormat(format, arg0);
+        }
+
+        public void TraceFormat(string format, params object[] args)
+        {
+            m_log.TraceFormat(format, args);
+        }
+
+        public void TraceFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.TraceFormat(provider, format, args);
+        }
+
+        public void TraceFormat(string format, object arg0, object arg1)
+        {
+            m_log.TraceFormat(format, arg0, arg1);
+        }
+
+        public void TraceFormat(string format, object arg0, object arg1, object arg2)
+        {
+            m_log.TraceFormat(format, arg0, arg1, arg2);
+        }
+
+        public void Warn(object message)
+        {
+            m_log.Warn(message);
+        }
+
+        public void Warn(object message, Exception exception)
+        {
+            m_log.Warn(message, exception);
+        }
+
+        public void WarnFormat(string format, object arg0)
+        {
+            m_log.WarnFormat(format, arg0);
+        }
+
+        public void WarnFormat(string format, params object[] args)
+        {
+            m_log.WarnFormat(format, args);
+        }
+
+        public void WarnFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            m_log.WarnFormat(provider, format, args);
+        }
+
+        public void WarnFormat(string format, object arg0, object arg1)
+        {
+            m_log.WarnFormat(format, arg0, arg1);
+        }
+
+        public void WarnFormat(string format, object arg0, object arg1, object arg2)
+        {
+            m_log.WarnFormat(format, arg0, arg1, arg2);
+        }
+
+        #endregion
     }
 }

@@ -63,7 +63,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                                       | CollisionCategories.Character
                                                                      );
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr>();
         private readonly AuroraODEPhysicsScene _parent_scene;
 
@@ -254,7 +253,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_localID; }
             set
             {
-                //m_log.Info("[PHYSICS]: Setting TrackerID: " + value);
+                //MainConsole.Instance.Info("[PHYSICS]: Setting TrackerID: " + value);
                 m_localID = value;
             }
         }
@@ -342,7 +341,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 showposition = value;
                 fakepos++;
                 AddChange(AuroraODEPhysicsScene.changes.Position, value);
-                //m_log.Info("[PHYSICS]: " + _position.ToString());
+                //MainConsole.Instance.Info("[PHYSICS]: " + _position.ToString());
             }
         }
 
@@ -357,7 +356,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got NaN Size on object");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got NaN Size on object");
                 }
             }
         }
@@ -380,7 +379,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: NaN in Force Applied to an Object");
+                    MainConsole.Instance.Warn("[PHYSICS]: NaN in Force Applied to an Object");
                 }
             }
         }
@@ -448,7 +447,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got NaN Velocity in Object");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got NaN Velocity in Object");
                 }
             }
         }
@@ -469,7 +468,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AddChange(AuroraODEPhysicsScene.changes.Torque, value);
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got NaN Torque in Object");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got NaN Torque in Object");
                 }
             }
         }
@@ -498,7 +497,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AddChange(AuroraODEPhysicsScene.changes.Orientation, value);
                 }
                 else
-                    m_log.Warn("[PHYSICS]: Got NaN quaternion Orientation from Scene in Object");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got NaN quaternion Orientation from Scene in Object");
             }
         }
 
@@ -527,7 +526,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    m_log.Warn("[PHYSICS]: Got NaN RotationalVelocity in Object");
+                    MainConsole.Instance.Warn("[PHYSICS]: Got NaN RotationalVelocity in Object");
                 }
             }
         }
@@ -592,7 +591,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     parent.ChildSetGeom(this);
                 }
             }
-            //m_log.Warn("Setting Geom to: " + prim_geom);
+            //MainConsole.Instance.Warn("Setting Geom to: " + prim_geom);
         }
 
         public void enableBodySoft()
@@ -635,7 +634,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (prim_geom == IntPtr.Zero)
             {
-                m_log.Warn("[PHYSICS]: Unable to link the linkset.  Root has no geom yet");
+                MainConsole.Instance.Warn("[PHYSICS]: Unable to link the linkset.  Root has no geom yet");
                 return;
             }
 
@@ -646,7 +645,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 d.BodyDestroy(Body);
                 Body = IntPtr.Zero;
-                m_log.Warn("[PHYSICS]: MakeBody called having a body");
+                MainConsole.Instance.Warn("[PHYSICS]: MakeBody called having a body");
             }
 
 
@@ -688,7 +687,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if (prm.prim_geom == IntPtr.Zero)
                         {
-                            m_log.Warn(
+                            MainConsole.Instance.Warn(
                                 "[PHYSICS]: Unable to link one of the linkset elements, skipping it.  No geom yet");
                             continue;
                         }
@@ -937,7 +936,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (AccessViolationException)
             {
-                m_log.Error("[PHYSICS]: MESH LOCKED");
+                MainConsole.Instance.Error("[PHYSICS]: MESH LOCKED");
                 return false;
             }
 
@@ -1284,7 +1283,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.Warn("[PHYSICS]: Create sphere failed: {0}", e);
+                        MainConsole.Instance.Warn("[PHYSICS]: Create sphere failed: {0}", e);
                         return;
                     }
                 }
@@ -1297,7 +1296,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.Warn("[PHYSICS]: Create box failed: {0}", e);
+                        MainConsole.Instance.Warn("[PHYSICS]: Create box failed: {0}", e);
                         return;
                     }
                 }
@@ -1323,14 +1322,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[PHYSICS]: PrimGeom destruction failed {1}", e);
+                    MainConsole.Instance.ErrorFormat("[PHYSICS]: PrimGeom destruction failed {1}", e);
                 }
 
                 prim_geom = IntPtr.Zero;
             }
             else
             {
-                m_log.ErrorFormat("[PHYSICS]: PrimGeom destruction BAD");
+                MainConsole.Instance.ErrorFormat("[PHYSICS]: PrimGeom destruction BAD");
             }
             Body = IntPtr.Zero;
             hasOOBoffsetFromMesh = false;
@@ -1355,7 +1354,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if(_mesh != null)
                         _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, _mesh);
                     // createmesh returns null when it's a shape that isn't a cube.
-                    // m_log.Debug(m_localID);
+                    // MainConsole.Instance.Debug(m_localID);
 
                     // Remove the reference to any JPEG2000 sculpt data so it can be GCed
                     _pbs.SculptData = null;
@@ -1584,7 +1583,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _zeroFlag = false;
 
                         _acceleration = ((_velocity - m_lastVelocity) / timestep);
-                        //m_log.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
+                        //MainConsole.Instance.Info ("[PHYSICS]: P1: " + _position + " V2: " + m_lastposition + " Acceleration: " + _acceleration.ToString ());
                         d.GeomCopyQuaternion (prim_geom, out ori);
                         _orientation.X = ori.X;
                         _orientation.Y = ori.Y;
@@ -1850,7 +1849,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }*/
 
 
-                    //m_log.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
+                    //MainConsole.Instance.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
 
                     if (!d.BodyIsEnabled(Body))
                         d.BodyEnable(Body);
@@ -2046,7 +2045,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                         _acceleration = ((_velocity - m_lastVelocity) / timestep);
 
-                        //m_log.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
+                        //MainConsole.Instance.Info("[PHYSICS]: V1: " + _velocity + " V2: " + m_lastVelocity + " Acceleration: " + _acceleration.ToString());
 
                         m_rotationalVelocity.X = rotvel.X;
                         m_rotationalVelocity.Y = rotvel.Y;
@@ -2195,7 +2194,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 catch (AccessViolationException)
                 {
                     prim_geom = IntPtr.Zero;
-                    m_log.Error("[PHYSICS]: PrimGeom dead");
+                    MainConsole.Instance.Error("[PHYSICS]: PrimGeom dead");
                 }
                 prim_geom = IntPtr.Zero;
             }
@@ -2297,7 +2296,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (!m_isSelected)
             {
-                //m_log.Info("[PHYSICS]: dequeing forcelist");
+                //MainConsole.Instance.Info("[PHYSICS]: dequeing forcelist");
                 if (IsPhysical)
                 {
                     m_angularforceacc += (Vector3)arg * 100;
@@ -2392,9 +2391,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                m_log.Warn("[PHYSICS]: Got Invalid linear force vector from Scene in Object");
+                MainConsole.Instance.Warn("[PHYSICS]: Got Invalid linear force vector from Scene in Object");
             }
-            //m_log.Info("[PHYSICS]: Added Force:" + force.ToString() +  " to prim at " + Position.ToString());
+            //MainConsole.Instance.Info("[PHYSICS]: Added Force:" + force.ToString() +  " to prim at " + Position.ToString());
         }
 
         public override void AddAngularForce(Vector3 force, bool pushforce)
@@ -2405,7 +2404,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                m_log.Warn("[PHYSICS]: Got Invalid Angular force vector from Scene in Object");
+                MainConsole.Instance.Warn("[PHYSICS]: Got Invalid Angular force vector from Scene in Object");
             }
         }
 
@@ -2419,7 +2418,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else if (m_crossingfailures == _parent_scene.geomCrossingFailuresBeforeOutofbounds)
             {
-                m_log.Warn("[PHYSICS]: Too many crossing failures for: " + _parent_entity.Name + " @ " +
+                MainConsole.Instance.Warn("[PHYSICS]: Too many crossing failures for: " + _parent_entity.Name + " @ " +
                            _parent_entity.AbsolutePosition);
             }
         }
@@ -2442,12 +2441,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 axis.X = (axis.X > 0) ? 1f : 0f;
                 axis.Y = (axis.Y > 0) ? 1f : 0f;
                 axis.Z = (axis.Z > 0) ? 1f : 0f;
-                m_log.DebugFormat("[axislock]: <{0},{1},{2}>", axis.X, axis.Y, axis.Z);
+                MainConsole.Instance.DebugFormat("[axislock]: <{0},{1},{2}>", axis.X, axis.Y, axis.Z);
                 AddChange(AuroraODEPhysicsScene.changes.AngLock, axis);
             }
             else
             {
-                m_log.Warn("[PHYSICS]: Got NaN locking axis from Scene on Object");
+                MainConsole.Instance.Warn("[PHYSICS]: Got NaN locking axis from Scene on Object");
             }
         }
 

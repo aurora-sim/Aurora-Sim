@@ -42,9 +42,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected bool AllowDisablePhysics = true;
         protected bool AllowDisableScripts = true;
 
@@ -123,7 +120,7 @@ namespace Aurora.Modules
                                                                             MonitorModuleHelper.SimFrameStats);
             if (m_statsReporter == null)
             {
-                m_log.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");
+                MainConsole.Instance.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");
                 return;
             }
             TimerToCheckHeartbeat = new Timer {Interval = TimeBetweenChecks*1000*60};

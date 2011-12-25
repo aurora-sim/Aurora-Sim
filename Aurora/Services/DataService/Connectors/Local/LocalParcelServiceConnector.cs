@@ -38,9 +38,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalParcelServiceConnector : IParcelServiceConnector
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData GD;
 
         #region IParcelServiceConnector Members
@@ -108,7 +105,7 @@ namespace Aurora.Services.DataService
             catch (Exception ex)
             {
                 AllLandObjects = new List<LandData>();
-                m_log.Info("[ParcelService]: Failed to load parcels, " + ex);
+                MainConsole.Instance.Info("[ParcelService]: Failed to load parcels, " + ex);
             }
             foreach (LandData t in AllLandObjects)
             {

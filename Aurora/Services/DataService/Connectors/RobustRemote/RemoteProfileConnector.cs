@@ -41,10 +41,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteProfileConnector : IProfileConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IProfileConnector Members
@@ -90,7 +86,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -114,7 +110,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return false;
         }
@@ -141,7 +137,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return true;
         }
@@ -169,7 +165,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -208,7 +204,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -229,7 +225,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -250,7 +246,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return true;
         }
@@ -278,7 +274,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -317,7 +313,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -338,7 +334,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteProfileConnector]: Exception when contacting server: {0}", e);
             }
         }
 

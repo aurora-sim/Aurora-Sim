@@ -268,7 +268,7 @@ namespace OpenSim.Framework
 
         #endregion SL / file extension / content-type conversions
 
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         ///   Parse a notecard in Linden format to a string of ordinary text.
@@ -280,7 +280,7 @@ namespace OpenSim.Framework
             string[] output = ParseNotecardToList(rawInput).ToArray();
 
 //            foreach (string line in output)
-//                m_log.DebugFormat("[PARSE NOTECARD]: ParseNotecardToString got line {0}", line);
+//                MainConsole.Instance.DebugFormat("[PARSE NOTECARD]: ParseNotecardToString got line {0}", line);
 
             return string.Join("\n", output);
         }
@@ -371,7 +371,7 @@ namespace OpenSim.Framework
                                     level++;
                                 }
 
-                                //                            m_log.DebugFormat("[PARSE NOTECARD]: Adding line {0}", ln);
+                                //                            MainConsole.Instance.DebugFormat("[PARSE NOTECARD]: Adding line {0}", ln);
                                 output.Add(ln);
                                 count += stringLength + 1;
                                 idx++;

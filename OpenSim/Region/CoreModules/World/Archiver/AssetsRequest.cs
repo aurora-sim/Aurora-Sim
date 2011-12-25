@@ -53,8 +53,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// </value>
         protected const int MAX_UUID_DISPLAY_ON_TIMEOUT = 3;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <value>
         ///   Record the number of asset replies required so we know when we've finished
         /// </value>
@@ -112,7 +110,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             m_requestState = RequestState.Running;
 
-            m_log.DebugFormat("[ARCHIVER]: AssetsRequest executed looking for {0} assets", m_repliesRequired);
+            MainConsole.Instance.DebugFormat("[ARCHIVER]: AssetsRequest executed looking for {0} assets", m_repliesRequired);
 
             // We can stop here if there are no assets to fetch
             if (m_repliesRequired == 0)
@@ -158,27 +156,27 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     uuids.Remove(uuid);
                 }
 
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Asset service failed to return information about {0} requested assets", uuids.Count);
 
                 int i = 0;
                 foreach (UUID uuid in uuids)
                 {
-                    m_log.ErrorFormat("[ARCHIVER]: No information about asset {0} received", uuid);
+                    MainConsole.Instance.ErrorFormat("[ARCHIVER]: No information about asset {0} received", uuid);
 
                     if (++i >= MAX_UUID_DISPLAY_ON_TIMEOUT)
                         break;
                 }
 
                 if (uuids.Count > MAX_UUID_DISPLAY_ON_TIMEOUT)
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[ARCHIVER]: (... {0} more not shown)", uuids.Count - MAX_UUID_DISPLAY_ON_TIMEOUT);
 
-                m_log.Error("[ARCHIVER]: OAR save aborted.");
+                MainConsole.Instance.Error("[ARCHIVER]: OAR save aborted.");
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[ARCHIVER]: Timeout handler exception {0}", e);
+                MainConsole.Instance.ErrorFormat("[ARCHIVER]: Timeout handler exception {0}", e);
             }
             finally
             {
@@ -192,7 +190,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             if (fetchedAsset != null && fetchedAsset.Type == (sbyte) AssetType.Unknown)
             {
                 AssetType type = (AssetType) assetType;
-                m_log.InfoFormat("[ARCHIVER]: Rewriting broken asset type for {0} to {1}", fetchedAsset.ID, type);
+                MainConsole.Instance.InfoFormat("[ARCHIVER]: Rewriting broken asset type for {0} to {1}", fetchedAsset.ID, type);
                 fetchedAsset.Type = (sbyte) type;
             }
 
@@ -210,13 +208,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 lock (this)
                 {
-                    //m_log.DebugFormat("[ARCHIVER]: Received callback for asset {0}", id);
+                    //MainConsole.Instance.DebugFormat("[ARCHIVER]: Received callback for asset {0}", id);
 
                     m_requestCallbackTimer.Stop();
 
                     if (m_requestState == RequestState.Aborted)
                     {
-                        m_log.WarnFormat(
+                        MainConsole.Instance.WarnFormat(
                             "[ARCHIVER]: Received information about asset {0} after archive save abortion.  Ignoring.",
                             id);
 
@@ -225,13 +223,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                     if (asset != null)
                     {
-//                        m_log.DebugFormat("[ARCHIVER]: Writing asset {0}", id);
+//                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Writing asset {0}", id);
                         m_foundAssetUuids.Add(asset.ID);
                         m_assetsArchiver.WriteAsset(asset);
                     }
                     else
                     {
-//                        m_log.DebugFormat("[ARCHIVER]: Recording asset {0} as not found", id);
+//                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Recording asset {0} as not found", id);
                         m_notFoundAssetUuids.Add(new UUID(id));
                     }
 
@@ -239,7 +237,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     {
                         m_requestState = RequestState.Completed;
 
-                        m_log.InfoFormat(
+                        MainConsole.Instance.InfoFormat(
                             "[ARCHIVER]: Successfully added {0} assets ({1} assets notified missing)",
                             m_foundAssetUuids.Count, m_notFoundAssetUuids.Count);
 
@@ -253,7 +251,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[ARCHIVER]: AssetRequestCallback failed with {0}", e);
+                MainConsole.Instance.ErrorFormat("[ARCHIVER]: AssetRequestCallback failed with {0}", e);
             }
         }
 
@@ -268,7 +266,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Terminating archive creation since asset requster callback failed with {0}", e);
             }
         }

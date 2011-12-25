@@ -37,7 +37,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
     public class AssetXferUploader
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly AgentAssetTransactions m_userTransactions;
 
         private UUID InventFolder = UUID.Zero;
@@ -157,7 +156,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 networkMonitor.AddPendingUploads(-1);
             }
 
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                 "[ASSET TRANSACTIONS]: Uploaded asset {0} for transaction {1}", m_asset.ID, TransactionID);
         }
 

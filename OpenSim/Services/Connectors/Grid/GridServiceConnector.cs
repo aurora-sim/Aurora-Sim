@@ -43,10 +43,6 @@ namespace OpenSim.Services.Connectors
 {
     public class GridServicesConnector : IGridService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IRegistryCore m_registry;
 
         public virtual string Name
@@ -136,7 +132,7 @@ namespace OpenSim.Services.Connectors
                     }
                     catch (Exception) //JsonException
                     {
-                        m_log.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
+                        MainConsole.Instance.Warn("[GridServiceConnector]: Exception on parsing OSDMap from server, legacy (OpenSim) server?");
                     }
                 }
             }
@@ -210,12 +206,12 @@ namespace OpenSim.Services.Connectors
                             return true;
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: DeregisterRegion received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: DeregisterRegion received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
             }
 
             return false;
@@ -254,20 +250,20 @@ namespace OpenSim.Services.Connectors
                                 rinfo.GenericMap["URL"] = m_ServerURI;
                             }
                             //else
-                            //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response",
+                            //    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response",
                             //        scopeID, regionID);
                         }
                         else
-                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response: {2}",
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response: {2}",
                                               scopeID, regionID, reply);
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return null;
             }
 
@@ -307,21 +303,21 @@ namespace OpenSim.Services.Connectors
                                 rinfo.GenericMap["URL"] = m_ServerURI;
                             }
                             //else
-                            //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received no region",
+                            //    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received no region",
                             //        scopeID, x, y);
                         }
                         else
-                            m_log.DebugFormat(
+                            MainConsole.Instance.DebugFormat(
                                 "[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received null response",
                                 scopeID, x, y);
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return null;
             }
 
@@ -360,16 +356,16 @@ namespace OpenSim.Services.Connectors
                             }
                         }
                         else
-                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1} received null response",
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1} received null response",
                                               scopeID, regionName);
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionByName received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByName received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return null;
             }
 
@@ -428,16 +424,16 @@ namespace OpenSim.Services.Connectors
 #endif
                         }
                         else
-                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
                                               scopeID, name, maxNumber);
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionsByName received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
 
@@ -495,19 +491,19 @@ namespace OpenSim.Services.Connectors
 #endif
                         }
                         else
-                            m_log.DebugFormat(
+                            MainConsole.Instance.DebugFormat(
                                 "[GRID CONNECTOR]: GetRegionRange {0}, {1}-{2} {3}-{4} received null response",
                                 scopeID, xmin, xmax, ymin, ymax);
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionRange received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionRange received null reply");
 
-                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
 
@@ -534,12 +530,12 @@ namespace OpenSim.Services.Connectors
                                                                       m_ServerURI,
                                                                       WebUtils.BuildQueryString(sendData));
 
-                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
 
@@ -564,11 +560,11 @@ namespace OpenSim.Services.Connectors
 #endif
                 }
                 else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions {0} received null response",
+                    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions {0} received null response",
                                       scopeID);
             }
             else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions received null reply");
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions received null reply");
 
             return rinfos;
         }
@@ -595,12 +591,12 @@ namespace OpenSim.Services.Connectors
                                                                       m_ServerURI,
                                                                       WebUtils.BuildQueryString(sendData));
 
-                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
 
@@ -625,11 +621,11 @@ namespace OpenSim.Services.Connectors
 #endif
                 }
                 else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions {0}, {1}-{2} received null response",
+                    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions {0}, {1}-{2} received null response",
                                       scopeID, x, y);
             }
             else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions received null reply");
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions received null reply");
 
             return rinfos;
         }
@@ -656,12 +652,12 @@ namespace OpenSim.Services.Connectors
                                                                       m_ServerURI,
                                                                       WebUtils.BuildQueryString(sendData));
 
-                    //m_log.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
+                    //MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return rinfos;
             }
 
@@ -687,11 +683,11 @@ namespace OpenSim.Services.Connectors
 
                 }
                 else
-                    m_log.DebugFormat("[GRID CONNECTOR]: GetSafeRegions {0}, {1}-{2} received null response",
+                    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetSafeRegions {0}, {1}-{2} received null response",
                                       scopeID, x, y);
             }
             else
-                m_log.DebugFormat("[GRID CONNECTOR]: GetSafeRegions received null reply");
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetSafeRegions received null reply");
 
             return rinfos;
         }
@@ -725,22 +721,22 @@ namespace OpenSim.Services.Connectors
                         {
                             Int32.TryParse((string) replyData["result"], out flags);
                             //else
-                            //    m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received wrong type {2}",
+                            //    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received wrong type {2}",
                             //        scopeID, regionID, replyData["result"].GetType());
                         }
                         else
-                            m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received null response",
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received null response",
                                               scopeID, regionID);
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetRegionFlags received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionFlags received null reply");
                     if (flags != -1)
                         return flags;
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
                 return -1;
             }
 
@@ -779,13 +775,13 @@ namespace OpenSim.Services.Connectors
                     }
 
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: GetMapItems {0} received null response",
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetMapItems {0} received null response",
                                           regionHandle);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting server: {0}", e.Message);
             }
 
             return null;
@@ -817,7 +813,7 @@ namespace OpenSim.Services.Connectors
             sendData["METHOD"] = "register";
 
             string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> serverURIs =
@@ -835,26 +831,26 @@ namespace OpenSim.Services.Connectors
                         }
                         else if (replyData.ContainsKey("Result") && (replyData["Result"].ToString().ToLower() == "failure"))
                         {
-                            m_log.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"]);
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Registration failed: {0}", replyData["Message"]);
                             return replyData["Message"].ToString();
                         }
                         else if (!replyData.ContainsKey("Result"))
                         {
-                            m_log.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: reply data does not contain result field");
                         }
                         else
                         {
-                            m_log.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"]);
+                            MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: unexpected result {0}", replyData["Result"]);
                             return "Unexpected result " + replyData["Result"];
                         }
                     }
                     else
-                        m_log.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: RegisterRegion received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server: {0}", e.Message);
             }
 
             return "Error communicating with grid service";

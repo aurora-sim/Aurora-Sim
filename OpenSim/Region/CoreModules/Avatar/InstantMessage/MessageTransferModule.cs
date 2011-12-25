@@ -55,8 +55,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         #endregion
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Param UUID - AgentID
         ///   Param string - HTTP path to the region the user is in, blank if not found
@@ -111,7 +109,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     return;
                 }
             }
-            //m_log.DebugFormat("[INSTANT MESSAGE]: Delivering IM to {0} via XMLRPC", im.toAgentID);
+            //MainConsole.Instance.DebugFormat("[INSTANT MESSAGE]: Delivering IM to {0} via XMLRPC", im.toAgentID);
             SendGridInstantMessageViaXMLRPC(im);
         }
 
@@ -126,7 +124,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 "MessageTransferModule", "MessageTransferModule") !=
                 "MessageTransferModule")
             {
-                m_log.Debug("[MESSAGE TRANSFER]: Disabled by configuration");
+                MainConsole.Instance.Debug("[MESSAGE TRANSFER]: Disabled by configuration");
                 return;
             }
 
@@ -140,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             lock (m_Scenes)
             {
-                //m_log.Debug("[MESSAGE TRANSFER]: Message transfer module active");
+                //MainConsole.Instance.Debug("[MESSAGE TRANSFER]: Message transfer module active");
                 scene.RegisterModuleInterface<IMessageTransferModule>(this);
                 m_Scenes.Add(scene);
             }
@@ -197,7 +195,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 return;
             }
 
-            //m_log.DebugFormat("[INSTANT MESSAGE]: Undeliverable");
+            //MainConsole.Instance.DebugFormat("[INSTANT MESSAGE]: Undeliverable");
         }
 
         /// <summary>
@@ -506,7 +504,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     if (AgentLocations[i] == "NotOnline")
                     {
                         IMUsersCache.Remove(users[i]);
-                        m_log.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] +
+                        MainConsole.Instance.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] +
                                     ", user was not online");
                         HandleUndeliveredMessage(im, "User is not set as online by presence service.");
                         continue;
@@ -514,7 +512,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     else if (AgentLocations[i] == "NonExistant")
                     {
                         IMUsersCache.Remove(users[i]);
-                        m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] +
+                        MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] +
                                    ", user does not exist");
                         HandleUndeliveredMessage(im, "User does not exist.");
                         continue;
@@ -525,7 +523,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
             else
             {
-                m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message, no users found.");
+                MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message, no users found.");
                 return;
             }
 
@@ -636,14 +634,14 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         //Remove them so we keep testing against the db
                         IMUsersCache.Remove(toAgentID);
                     }
-                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
+                    MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message");
                     HandleUndeliveredMessage(im, "User is not set as online by presence service.");
                     return;
                 }
                 else if (AgentLocations[0] == "NonExistant")
                 {
                     IMUsersCache.Remove(toAgentID);
-                    m_log.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + toAgentID +
+                    MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + toAgentID +
                                ", user does not exist");
                     HandleUndeliveredMessage(im, "User does not exist.");
                     return;
@@ -666,7 +664,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                             //Remove them so we keep testing against the db
                             IMUsersCache.Remove(toAgentID);
                         }
-                        m_log.Info(
+                        MainConsole.Instance.Info(
                             "[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
                         HandleUndeliveredMessage(im, "Failed to send IM to destination.");
                         return;
@@ -689,7 +687,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     //Remove them so we keep testing against the db
                     IMUsersCache.Remove(toAgentID);
                 }
-                m_log.Info(
+                MainConsole.Instance.Info(
                     "[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
                 HandleUndeliveredMessage(im, "Agent Location was blank.");
             }
@@ -723,7 +721,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
             catch (WebException e)
             {
-                m_log.ErrorFormat("[GRID INSTANT MESSAGE]: Error sending message to " + httpInfo, e.Message);
+                MainConsole.Instance.ErrorFormat("[GRID INSTANT MESSAGE]: Error sending message to " + httpInfo, e.Message);
             }
 
             return false;

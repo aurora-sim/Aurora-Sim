@@ -44,9 +44,6 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
 {
     public class UploadObjectAssetModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IScene m_scene;
 
         #region INonSharedRegionModule Members
@@ -131,7 +128,7 @@ namespace OpenSim.Region.CoreModules.Avatar.ObjectCaps
             }
             catch (Exception ex)
             {
-                m_log.Error("[UploadObjectAssetModule]: Error deserializing message " + ex);
+                MainConsole.Instance.Error("[UploadObjectAssetModule]: Error deserializing message " + ex);
                 message = null;
             }
 

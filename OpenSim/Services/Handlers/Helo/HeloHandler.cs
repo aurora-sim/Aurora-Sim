@@ -58,8 +58,6 @@ namespace OpenSim.Services
 
     public class HeloServerGetHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly string m_HandlersType;
 
         public HeloServerGetHandler(string handlersType) :

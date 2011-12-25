@@ -44,8 +44,6 @@ namespace Aurora.Modules.RegionLoader
 {
     public partial class RegionManager : Form
     {
-        private static readonly ILog m_log
-           = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public delegate void NewRegion(RegionInfo info);
         public delegate void NoOp();
         public event NewRegion OnNewRegion;
@@ -165,7 +163,7 @@ namespace Aurora.Modules.RegionLoader
                 Application.Exit();
                 return;
             }
-            m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             manager.AllRegions++;
             manager.StartNewRegion(region);

@@ -29,7 +29,7 @@ namespace Aurora.Services.DataService
 {
     /*public class SimianProfileConnector : IProfileConnector
     {
-        private static readonly ILog m_log =
+        private static readonly ILog MainConsole.Instance =
                 LogManager.GetLogger(
                 MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -125,7 +125,7 @@ namespace Aurora.Services.DataService
                 }
                 else
                 {
-                    m_log.Error("[SIMIAN PROFILES CONNECTOR]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
+                    MainConsole.Instance.Error("[SIMIAN PROFILES CONNECTOR]: Failed to fetch user data for " + userID + ": " + response["Message"].AsString());
                 }
             }
 

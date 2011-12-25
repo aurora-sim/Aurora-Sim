@@ -53,10 +53,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// </summary>
     public class SimianGridServiceConnector : IGridService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<UUID, IScene> m_scenes = new Dictionary<UUID, IScene>();
         private string m_serverUrl = String.Empty;
 
@@ -176,7 +172,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             if (String.IsNullOrEmpty(m_serverUrl))
-                m_log.Info("[SIMIAN GRID CONNECTOR]: No GridServerURI specified, disabling connector");
+                MainConsole.Instance.Info("[SIMIAN GRID CONNECTOR]: No GridServerURI specified, disabling connector");
         }
 
         private void UploadMapTile(IScene scene)
@@ -188,7 +184,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             IMapImageGenerator tileGenerator = scene.RequestModuleInterface<IMapImageGenerator>();
             if (tileGenerator == null)
             {
-                m_log.Warn("[SIMIAN GRID CONNECTOR]: Cannot upload PNG map tile without an IMapImageGenerator");
+                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Cannot upload PNG map tile without an IMapImageGenerator");
                 return;
             }
 
@@ -236,7 +232,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                         {
                             OSDMap responseMap = (OSDMap) responseOSD;
                             if (responseMap["Success"].AsBoolean())
-                                m_log.Info("[SIMIAN GRID CONNECTOR]: Uploaded " + pngData.Length +
+                                MainConsole.Instance.Info("[SIMIAN GRID CONNECTOR]: Uploaded " + pngData.Length +
                                            " byte PNG map tile to AddMapTile");
                             else
                                 errorMessage = "Upload failed: " + responseMap["Message"].AsString();
@@ -262,7 +258,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             if (!String.IsNullOrEmpty(errorMessage))
             {
-                m_log.WarnFormat("[SIMIAN GRID CONNECTOR]: Failed to store {0} byte PNG map tile for {1}: {2}",
+                MainConsole.Instance.WarnFormat("[SIMIAN GRID CONNECTOR]: Failed to store {0} byte PNG map tile for {1}: {2}",
                                  pngData.Length, scene.RegionInfo.RegionName, errorMessage.Replace('\n', ' '));
             }
         }
@@ -285,7 +281,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region at " + position);
+                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region at " + position);
                 return null;
             }
         }
@@ -339,7 +335,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             if (m_scenes.TryGetValue(regionInfo.RegionID, out scene))
                 UploadMapTile(scene);
             else
-                m_log.Warn("Registering region " + regionInfo.RegionName + " (" + regionInfo.RegionID +
+                MainConsole.Instance.Warn("Registering region " + regionInfo.RegionName + " (" + regionInfo.RegionID +
                            ") that we are not tracking");
 
             Vector3d minPosition = new Vector3d(regionInfo.RegionLocX, regionInfo.RegionLocY, 0.0);
@@ -398,7 +394,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                m_log.Warn("[SIMIAN GRID CONNECTOR]: Region deregistration for " + regionID + " failed: " +
+                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Region deregistration for " + regionID + " failed: " +
                            response["Message"].AsString());
 
             return success;
@@ -419,7 +415,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region " + regionID);
+                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region " + regionID);
                 return null;
             }
         }
@@ -444,7 +440,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                //m_log.InfoFormat("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region at {0},{1}",
+                //MainConsole.Instance.InfoFormat("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region at {0},{1}",
                 //    x / Constants.RegionSize, y / Constants.RegionSize);
                 return null;
             }
@@ -454,7 +450,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
             List<GridRegion> regions = GetRegionsByName(scopeID, regionName, 1);
 
-            m_log.Debug("[SIMIAN GRID CONNECTOR]: Got " + regions.Count + " matches for region name " + regionName);
+            MainConsole.Instance.Debug("[SIMIAN GRID CONNECTOR]: Got " + regions.Count + " matches for region name " + regionName);
 
             if (regions.Count > 0)
                 return regions[0];
@@ -578,7 +574,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region " + regionID +
+                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Grid service did not find a match for region " + regionID +
                            " during region flags check");
                 return -1;
             }

@@ -40,10 +40,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalDataService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private string ConnectionString = "";
         private string StorageProvider = "";
 
@@ -106,7 +102,7 @@ namespace Aurora.Services.DataService
                 }
                 catch(Exception ex)
                 {
-                    m_log.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
+                    MainConsole.Instance.Warn("[DataService]: Exeception occured starting data plugin " + plugin.Name + ", " + ex.ToString());
                 }
             }
         }

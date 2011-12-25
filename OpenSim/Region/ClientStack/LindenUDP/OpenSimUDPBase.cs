@@ -29,7 +29,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using log4net;
+using OpenSim.Framework;
 
 namespace OpenMetaverse
 {
@@ -38,8 +38,6 @@ namespace OpenMetaverse
     /// </summary>
     public abstract class OpenSimUDPBase
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Flag to process packets asynchronously or synchronously
         /// </summary>
@@ -128,11 +126,11 @@ namespace OpenMetaverse
                     // This udp socket flag is not supported under mono, 
                     // so we'll catch the exception and continue
                     m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] {0}, null);
-                    //m_log.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag set");
+                    //MainConsole.Instance.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag set");
                 }
                 catch (SocketException)
                 {
-                    //m_log.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag not supported on this platform, ignoring");
+                    //MainConsole.Instance.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag not supported on this platform, ignoring");
                 }
 
                 if (recvBufferSize != 0)
@@ -192,7 +190,7 @@ namespace OpenMetaverse
                 {
                     if (e.SocketErrorCode == SocketError.ConnectionReset)
                     {
-                        m_log.Warn(
+                        MainConsole.Instance.Warn(
                             "[UDPBASE]: SIO_UDP_CONNRESET was ignored, attempting to salvage the UDP listener on port " +
                             m_udpPort);
                         bool salvaged = false;
@@ -221,7 +219,7 @@ namespace OpenMetaverse
                             }
                         }
 
-                        m_log.Warn("[UDPBASE]: Salvaged the UDP listener on port " + m_udpPort);
+                        MainConsole.Instance.Warn("[UDPBASE]: Salvaged the UDP listener on port " + m_udpPort);
                     }
                 }
                 catch (ObjectDisposedException)

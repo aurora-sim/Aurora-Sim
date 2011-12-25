@@ -43,7 +43,7 @@ namespace OpenSim.Framework
     public class TaskInventoryDictionary : Dictionary<UUID, TaskInventoryItem>,
                                            ICloneable, IXmlSerializable
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        // private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly XmlSerializer tiiSerializer = new XmlSerializer(typeof (TaskInventoryItem));
 
@@ -89,7 +89,7 @@ namespace OpenSim.Framework
         // see IXmlSerializable
         public void ReadXml(XmlReader reader)
         {
-            // m_log.DebugFormat("[TASK INVENTORY]: ReadXml current node before actions, {0}", reader.Name);
+            // MainConsole.Instance.DebugFormat("[TASK INVENTORY]: ReadXml current node before actions, {0}", reader.Name);
 
             if (!reader.IsEmptyElement)
             {
@@ -99,21 +99,21 @@ namespace OpenSim.Framework
                     TaskInventoryItem item = (TaskInventoryItem) tiiSerializer.Deserialize(reader);
                     Add(item.ItemID, item);
 
-                    //m_log.DebugFormat("[TASK INVENTORY]: Instanted prim item {0}, {1} from xml", item.Name, item.ItemID);
+                    //MainConsole.Instance.DebugFormat("[TASK INVENTORY]: Instanted prim item {0}, {1} from xml", item.Name, item.ItemID);
                 }
 
-                // m_log.DebugFormat("[TASK INVENTORY]: Instantiated {0} prim items in total from xml", Count);
+                // MainConsole.Instance.DebugFormat("[TASK INVENTORY]: Instantiated {0} prim items in total from xml", Count);
             }
             // else
             // {
-            //     m_log.DebugFormat("[TASK INVENTORY]: Skipping empty element {0}", reader.Name);
+            //     MainConsole.Instance.DebugFormat("[TASK INVENTORY]: Skipping empty element {0}", reader.Name);
             // }
 
             // For some .net implementations, this last read is necessary so that we advance beyond the end tag
             // of the element wrapping this object so that the rest of the serialization can complete normally.
             reader.Read();
 
-            // m_log.DebugFormat("[TASK INVENTORY]: ReadXml current node after actions, {0}", reader.Name);
+            // MainConsole.Instance.DebugFormat("[TASK INVENTORY]: ReadXml current node after actions, {0}", reader.Name);
         }
 
         // see IXmlSerializable

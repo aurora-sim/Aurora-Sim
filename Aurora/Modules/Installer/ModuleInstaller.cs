@@ -20,9 +20,6 @@ namespace Aurora.Modules.Installer
     {
         #region IService Members
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public IConfigSource m_config;
         public IRegistryCore m_registry;
 
@@ -105,7 +102,7 @@ namespace Aurora.Modules.Installer
             bool ConsoleConfiguration = map["ConsoleConfiguration"];
             bool useConfigDirectory = true;
             if(standaloneSwitch)
-                useConfigDirectory = MainConsole.Instance.CmdPrompt("Are you running this module in standalone or on Aurora.Server?", "Standalone", new List<string>(new[] { "Standalone", "Aurora.Server" })) == "Standalone";
+                useConfigDirectory = MainConsole.Instance.Prompt("Are you running this module in standalone or on Aurora.Server?", "Standalone", new List<string>(new[] { "Standalone", "Aurora.Server" })) == "Standalone";
             string configDir = useConfigDirectory ? map["ConfigDirectory"] : map["ServerConfigDirectory"];
             string configurationFinished = map["ConfigurationFinished"];
             string configPath = Path.Combine(Environment.CurrentDirectory, configDir);
@@ -125,7 +122,7 @@ namespace Aurora.Modules.Installer
                 OSDMap ConsoleConfig = (OSDMap)map["ConsoleConfig"];
                 foreach (KeyValuePair<string, OSD> kvp in ConsoleConfig)
                 {
-                    string resp = MainConsole.Instance.CmdPrompt(kvp.Key);
+                    string resp = MainConsole.Instance.Prompt(kvp.Key);
                     OSDMap configMap = (OSDMap)kvp.Value;
                     string file = configMap["File"];
                     string Section = configMap["Section"];
@@ -135,7 +132,7 @@ namespace Aurora.Modules.Installer
                     doc.Save(Path.Combine(configPath, file));
                 }
             }
-            m_log.Warn(configurationFinished);
+            MainConsole.Instance.Warn(configurationFinished);
         }
 
         private static void BuildCSProj(string tmpFile)
@@ -154,7 +151,7 @@ namespace Aurora.Modules.Installer
         {
             File.Delete(tmpFile);
             string projFile = FindProjFile(Path.GetDirectoryName(fileName));
-            m_log.Warn("Installing " + Path.GetFileNameWithoutExtension(projFile));
+            MainConsole.Instance.Warn("Installing " + Path.GetFileNameWithoutExtension(projFile));
             BasicProject project = ProjectReader.Instance.ReadProject(projFile);
             CsprojCompiler compiler = new CsprojCompiler();
             compiler.Compile(project);
@@ -163,11 +160,11 @@ namespace Aurora.Modules.Installer
             if (project.BuildOutput == "Project built successfully!")
             {
                 if(options != null)
-                    m_log.Warn(options["CompileFinished"]);
+                    MainConsole.Instance.Warn(options["CompileFinished"]);
                 CopyAndInstallDllFile(dllFile, copiedDllFile, options);
             }
             else
-                m_log.Warn("Failed to compile the module, exiting! (" + project.BuildOutput + ")");
+                MainConsole.Instance.Warn("Failed to compile the module, exiting! (" + project.BuildOutput + ")");
             
             File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), "Aurora.sln"));
             File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), projFile));
@@ -181,17 +178,17 @@ namespace Aurora.Modules.Installer
             {
                 File.Copy(dllFile, copiedDllFile);
                 if (options != null)
-                    m_log.Warn(options["CopyFinished"]);
+                    MainConsole.Instance.Warn(options["CopyFinished"]);
             }
             catch (Exception ex)
             {
-                m_log.Warn("Failed to copy the module! (" + ex + ")");
-                if (MainConsole.Instance.CmdPrompt("Continue?", "yes", new List<string>(new[] { "yes", "no" })) == "no")
+                MainConsole.Instance.Warn("Failed to copy the module! (" + ex + ")");
+                if (MainConsole.Instance.Prompt("Continue?", "yes", new List<string>(new[] { "yes", "no" })) == "no")
                     return;
             }
             string basePath = Path.Combine(Environment.CurrentDirectory, copiedDllFile);
             LoadModulesFromDllFile(basePath);
-            m_log.Warn("Installed the module successfully!");
+            MainConsole.Instance.Warn("Installed the module successfully!");
         }
 
         private void ReadFileAndCreatePrebuildFile(string tmpFile, string fileName)

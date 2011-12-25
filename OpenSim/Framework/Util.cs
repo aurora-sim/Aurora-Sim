@@ -79,8 +79,6 @@ namespace OpenSim.Framework
     /// </summary>
     public class Util
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static uint nextXferID = 5000;
         private static readonly Random randomClass = new Random();
         // Get a list of invalid file characters (OS dependent)
@@ -727,7 +725,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.Error(e.ToString());
+                MainConsole.Instance.Error(e.ToString());
             }
             finally
             {
@@ -754,7 +752,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.Error(e.ToString());
+                MainConsole.Instance.Error(e.ToString());
             }
             finally
             {
@@ -1239,13 +1237,13 @@ namespace OpenSim.Framework
                 else
                 {
                     // uh?
-                    m_log.Debug(("[UTILS]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                    MainConsole.Instance.Debug(("[UTILS]: Got OSD of unexpected type " + buffer.Type.ToString()));
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                m_log.Debug("[UTILS]: exception on GetOSDMap " + ex);
+                MainConsole.Instance.Debug("[UTILS]: exception on GetOSDMap " + ex);
                 return null;
             }
         }
@@ -1447,7 +1445,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("[UTIL]: Asynchronous method threw an exception: " + ex, ex);
+                    MainConsole.Instance.Error("[UTIL]: Asynchronous method threw an exception: " + ex, ex);
                 }
 
                 ar.AsyncWaitHandle.Close();
@@ -1620,7 +1618,7 @@ namespace OpenSim.Framework
             // write call stack method names
             foreach (StackFrame stackFrame in stackFrames)
             {
-                m_log.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name);
+                MainConsole.Instance.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name);
                 // write method name
             }
         }
@@ -1923,7 +1921,6 @@ namespace OpenSim.Framework
 
     public class NetworkUtils
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool m_noInternetConnection;
         private static int m_nextInternetConnectionCheck;
         private static bool useLocalhostLoopback=false;
@@ -2028,7 +2025,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
+                    MainConsole.Instance.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
                 }
             }
 
@@ -2047,7 +2044,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
+                    MainConsole.Instance.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
                 }
             }
             return string.Empty;
@@ -2184,7 +2181,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
+                MainConsole.Instance.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
                 InternetFailure();
                 // Still going to throw the exception on for now, since this was what was happening in the first place

@@ -50,8 +50,6 @@ namespace OpenSim.Region.Framework.Scenes
     ///retrieved to work out which assets it references).
     public class UuidGatherer
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Asset cache used for gathering assets
         /// </summary>
@@ -120,13 +118,13 @@ namespace OpenSim.Region.Framework.Scenes
         public void GatherAssetUuids(ISceneEntity sceneObject, IDictionary<UUID, AssetType> assetUuids,
                                      IRegistryCore scene)
         {
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[ASSET GATHERER]: Getting assets for object {0}, {1}", sceneObject.Name, sceneObject.UUID);
 
             ISceneChildEntity[] parts = sceneObject.ChildrenEntities().ToArray();
             foreach (ISceneChildEntity part in parts)
             {
-//                m_log.DebugFormat(
+//                MainConsole.Instance.DebugFormat(
 //                    "[ARCHIVER]: Getting part {0}, {1} for object {2}", part.Name, part.UUID, sceneObject.UUID);
 
                 try
@@ -182,8 +180,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[UUID GATHERER]: Failed to get part - {0}", e);
-                    m_log.DebugFormat(
+                    MainConsole.Instance.ErrorFormat("[UUID GATHERER]: Failed to get part - {0}", e);
+                    MainConsole.Instance.DebugFormat(
                         "[UUID GATHERER]: Texture entry length for prim was {0} (min is 46)",
                         part.Shape.TextureEntry.Length);
                 }
@@ -244,13 +242,13 @@ namespace OpenSim.Region.Framework.Scenes
             if (null != scriptAsset)
             {
                 string script = Utils.BytesToString(scriptAsset.Data);
-                //m_log.DebugFormat("[ARCHIVER]: Script {0}", script);
+                //MainConsole.Instance.DebugFormat("[ARCHIVER]: Script {0}", script);
                 MatchCollection uuidMatches = Util.UUIDPattern.Matches(script);
-                //m_log.DebugFormat("[ARCHIVER]: Found {0} matches in script", uuidMatches.Count);
+                //MainConsole.Instance.DebugFormat("[ARCHIVER]: Found {0} matches in script", uuidMatches.Count);
 
                 foreach (UUID uuid in from Match uuidMatch in uuidMatches select new UUID(uuidMatch.Value))
                 {
-                    //m_log.DebugFormat("[ARCHIVER]: Recording {0} in script", uuid);
+                    //MainConsole.Instance.DebugFormat("[ARCHIVER]: Recording {0} in script", uuid);
 
                     // Assume AssetIDs embedded in scripts are textures
                     assetUuids[uuid] = AssetType.Texture;
@@ -269,11 +267,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (null != assetBase)
             {
-                //m_log.Debug(new System.Text.ASCIIEncoding().GetString(bodypartAsset.Data));
+                //MainConsole.Instance.Debug(new System.Text.ASCIIEncoding().GetString(bodypartAsset.Data));
                 AssetWearable wearableAsset = new AssetBodypart(wearableAssetUuid, assetBase.Data);
                 wearableAsset.Decode();
 
-                //m_log.DebugFormat(
+                //MainConsole.Instance.DebugFormat(
                 //    "[ARCHIVER]: Wearable asset {0} references {1} assets", wearableAssetUuid, wearableAsset.Textures.Count);
 
                 foreach (UUID uuid in wearableAsset.Textures.Values)

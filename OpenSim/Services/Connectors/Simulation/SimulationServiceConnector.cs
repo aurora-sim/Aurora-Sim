@@ -42,8 +42,6 @@ namespace OpenSim.Services.Connectors.Simulation
 {
     public class SimulationServiceConnector : ISimulationService, IService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   These are regions that have timed out and we are not sending updates to until the (int) time passes
         /// </summary>
@@ -160,7 +158,7 @@ namespace OpenSim.Services.Connectors.Simulation
             }
             catch (Exception e)
             {
-                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: CreateAgent failed with exception: " + e);
+                MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: CreateAgent failed with exception: " + e);
                 reason = e.Message;
             }
 
@@ -195,7 +193,7 @@ namespace OpenSim.Services.Connectors.Simulation
             }
             catch (Exception e)
             {
-                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e);
+                MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: FailedToMoveAgentIntoNewRegion failed with exception: " + e);
             }
             return false;
         }
@@ -217,7 +215,7 @@ namespace OpenSim.Services.Connectors.Simulation
             }
             catch (Exception e)
             {
-                m_log.Warn("[REMOTE SIMULATION CONNECTOR]: MakeChildAgent failed with exception: " + e);
+                MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: MakeChildAgent failed with exception: " + e);
             }
             return false;
         }
@@ -258,7 +256,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 }
                 catch (Exception e)
                 {
-                    m_log.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e);
+                    MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e);
                 }
 
                 return false;
@@ -284,7 +282,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[REMOTE SIMULATION CONNECTOR] CloseAgent failed with exception; {0}", e);
+                    MainConsole.Instance.WarnFormat("[REMOTE SIMULATION CONNECTOR] CloseAgent failed with exception; {0}", e);
                 }
 
                 return true;
@@ -324,7 +322,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     if (m_blackListedRegions[uri] > 3 &&
                         Util.EnvironmentTickCountSubtract(m_blackListedRegions[uri]) > 0)
                     {
-                        m_log.Warn("[SimServiceConnector]: Blacklisted region " + destination.RegionName + " requested");
+                        MainConsole.Instance.Warn("[SimServiceConnector]: Blacklisted region " + destination.RegionName + " requested");
                         //Still blacklisted
                         return false;
                     }
@@ -363,7 +361,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 }
                 catch (Exception e)
                 {
-                    m_log.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e);
+                    MainConsole.Instance.Warn("[REMOTE SIMULATION CONNECTOR]: UpdateAgent failed with exception: " + e);
                 }
 
                 return false;
@@ -381,7 +379,7 @@ namespace OpenSim.Services.Connectors.Simulation
             // Try local first
             if (m_localBackend != null && m_localBackend.CreateObject(destination, sog))
             {
-                //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
+                //MainConsole.Instance.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
                 return true;
             }
 
@@ -390,7 +388,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (m_localBackend == null || !m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 string uri = MakeUri(destination, false) + sog.UUID + "/";
-                //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
+                //MainConsole.Instance.Debug("   >>> DoCreateObjectCall <<< " + uri);
 
                 OSDMap args = new OSDMap(7);
                 args["sog"] = OSD.FromString(sog.ToXml2());
@@ -413,7 +411,7 @@ namespace OpenSim.Services.Connectors.Simulation
             // Try local first
             if (m_localBackend.CreateObject(destination, userID, itemID))
             {
-                //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
+                //MainConsole.Instance.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
                 return true;
             }
 
@@ -422,7 +420,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (!m_localBackend.IsLocalRegion(destination.RegionHandle))
             {
                 string uri = MakeUri(destination, false) + itemID + "/";
-                //m_log.Debug("   >>> DoCreateObjectCall <<< " + uri);
+                //MainConsole.Instance.Debug("   >>> DoCreateObjectCall <<< " + uri);
 
                 OSDMap args = new OSDMap(6);
                 args["userID"] = OSD.FromUUID(userID);

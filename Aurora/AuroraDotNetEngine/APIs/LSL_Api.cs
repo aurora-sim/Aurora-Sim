@@ -67,7 +67,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     [Serializable]
     public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected IScriptModulePlugin m_ScriptEngine;
         protected ISceneChildEntity m_host;
         protected uint m_localID;
@@ -1444,7 +1443,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Integer();
 
-            // m_log.Debug(m_host.ToString() + " status is " + m_host.GetEffectiveObjectFlags().ToString());
             if (status == ScriptBaseClass.STATUS_PHYSICS)
             {
                 return (m_host.GetEffectiveObjectFlags() & (uint)PrimFlags.Physics) == (uint)PrimFlags.Physics ? new LSL_Integer (1) : new LSL_Integer (0);
@@ -4165,7 +4163,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // process causes some clients to fail to display the attachment properly.
                     World.SceneGraph.AddPrimToScene(group);
 
-                    //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
                     // if attachment we set it's asset id so object updates can reflect that
                     // if not, we set it's position in world.
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
@@ -4745,7 +4742,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                //m_log.Debug("Giving inventory to " + destId + " from " + m_host.Name);
                 GridInstantMessage msg = new GridInstantMessage(World,
                         m_host.UUID, m_host.Name+", an object owned by "+
                         resolveName(m_host.OwnerID)+",", destId,
@@ -10020,7 +10016,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             catch (Exception)
             {
-                //m_log.Error("[LSL_API]: llRequestSimulatorData" + e.ToString());
             }
 
             ScriptSleep(1000);
@@ -11871,7 +11866,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         UTF8Encoding enc =
                             new UTF8Encoding();
                         string data = enc.GetString(a.Data);
-                        //m_log.Debug(data);
                         NotecardCache.Cache(id, data);
                         dataserverPlugin.AddReply (rq.ToString (),
                                 NotecardCache.GetLines(id).ToString(), 100);
@@ -11997,7 +11991,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                          UTF8Encoding enc =
                              new UTF8Encoding();
                          string data = enc.GetString(a.Data);
-                         //m_log.Debug(data);
                          NotecardCache.Cache(id, data);
                          dataserverPlugin.AddReply (rq.ToString (),
                             NotecardCache.GetLine(id, line, m_notecardLineReadCharsMax), 100);

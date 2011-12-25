@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class SimianAgentConnector : IAgentConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private List<string> m_ServerURIs = new List<string>();
 
         #region IAgentConnector Members
@@ -141,7 +137,7 @@ namespace Aurora.Services.DataService
                 }
                 else
                 {
-                    m_log.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
+                    MainConsole.Instance.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " + response["Message"].AsString());
                 }
             }
 #else
@@ -153,7 +149,7 @@ namespace Aurora.Services.DataService
                 }
                 else
                 {
-                    m_log.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " +
+                    MainConsole.Instance.Error("[SIMIAN AGENTS CONNECTOR]: Failed to fetch agent info data for " + userID + ": " +
                                 response["Message"].AsString());
                 }
             }

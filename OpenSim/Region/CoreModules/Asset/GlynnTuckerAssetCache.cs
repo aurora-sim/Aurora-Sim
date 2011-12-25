@@ -39,10 +39,6 @@ namespace OpenSim.Region.CoreModules.Asset
     {
         #region Declares
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private ICache m_Cache;
         private uint m_DebugRate;
         private ulong m_Hits;
@@ -66,13 +62,13 @@ namespace OpenSim.Region.CoreModules.Asset
             if (moduleConfig != null)
             {
                 string name = moduleConfig.GetString("AssetCaching");
-                //m_log.DebugFormat("[ASSET CACHE] name = {0} (this module's name: {1}). Sync? ", name, Name, m_Cache.IsSynchronized);
+                //MainConsole.Instance.DebugFormat("[ASSET CACHE] name = {0} (this module's name: {1}). Sync? ", name, Name, m_Cache.IsSynchronized);
 
                 if (name == Name)
                 {
                     m_Cache = new SimpleMemoryCache();
 
-                    m_log.Info("[ASSET CACHE]: GlynnTucker asset cache enabled");
+                    MainConsole.Instance.Info("[ASSET CACHE]: GlynnTucker asset cache enabled");
 
                     // Instrumentation
                     IConfig cacheConfig = config.Configs["AssetCache"];
@@ -137,7 +133,7 @@ namespace OpenSim.Region.CoreModules.Asset
                     ++m_Hits;
 
                 if ((m_Requests%m_DebugRate) == 0)
-                    m_log.DebugFormat("[ASSET CACHE]: Hit Rate {0} / {1} == {2}%", m_Hits, m_Requests,
+                    MainConsole.Instance.DebugFormat("[ASSET CACHE]: Hit Rate {0} / {1} == {2}%", m_Hits, m_Requests,
                                       (m_Hits/(float) m_Requests)*100.0f);
             }
             // End instrumentation

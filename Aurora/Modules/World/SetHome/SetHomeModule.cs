@@ -45,7 +45,7 @@ namespace Aurora.Modules.World.Auction
 {
     public class SetHomeModule : INonSharedRegionModule
     {
-        //private static readonly ILog m_log =
+        //private static readonly ILog MainConsole.Instance =
         //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
 

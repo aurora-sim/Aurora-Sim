@@ -44,8 +44,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 {
     public class InventoryArchiveReadRequest
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly string m_invPath;
 
         /// <value>
@@ -118,7 +116,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 if (folderCandidates.Count == 0)
                 {
                     // Possibly provide an option later on to automatically create this folder if it does not exist
-                    m_log.ErrorFormat("[INVENTORY ARCHIVER]: Inventory path {0} does not exist", m_invPath);
+                    MainConsole.Instance.ErrorFormat("[INVENTORY ARCHIVER]: Inventory path {0} does not exist", m_invPath);
 
                     return loadedNodes;
                 }
@@ -143,7 +141,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                             failedAssetRestores++;
 
                         if ((successfulAssetRestores)%50 == 0)
-                            m_log.InfoFormat(
+                            MainConsole.Instance.InfoFormat(
                                 "[INVENTORY ARCHIVER]: Loaded {0} assets...",
                                 successfulAssetRestores);
                     }
@@ -168,7 +166,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                 successfulItemRestores++;
 
                                 if ((successfulItemRestores)%50 == 0)
-                                    m_log.InfoFormat(
+                                    MainConsole.Instance.InfoFormat(
                                         "[INVENTORY ARCHIVER]: Loaded {0} items...",
                                         successfulItemRestores);
 
@@ -183,10 +181,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     data = null;
                 }
 
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[INVENTORY ARCHIVER]: Successfully loaded {0} assets with {1} failures",
                     successfulAssetRestores, failedAssetRestores);
-                m_log.InfoFormat("[INVENTORY ARCHIVER]: Successfully loaded {0} items", successfulItemRestores);
+                MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Successfully loaded {0} items", successfulItemRestores);
 
                 return loadedNodes;
             }
@@ -223,13 +221,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         {
             string iarPathExisting = iarPath;
 
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[INVENTORY ARCHIVER]: Loading folder {0} {1}", rootDestFolder.Name, rootDestFolder.ID);
 
             InventoryFolderBase destFolder
                 = ResolveDestinationFolder(rootDestFolder, ref iarPathExisting, ref resolvedFolders);
 
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[INVENTORY ARCHIVER]: originalArchivePath [{0}], section already loaded [{1}]", 
 //                iarPath, iarPathExisting);
 
@@ -266,11 +264,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             while (archivePath.Length > 0)
             {
-//                m_log.DebugFormat("[INVENTORY ARCHIVER]: Trying to resolve destination folder {0}", archivePath);
+//                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Trying to resolve destination folder {0}", archivePath);
 
                 if (resolvedFolders.ContainsKey(archivePath))
                 {
-//                    m_log.DebugFormat(
+//                    MainConsole.Instance.DebugFormat(
 //                        "[INVENTORY ARCHIVER]: Found previously created folder from archive path {0}", archivePath);
                     return resolvedFolders[archivePath];
                 }
@@ -304,7 +302,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     }
                     else
                     {
-//                        m_log.DebugFormat(
+//                        MainConsole.Instance.DebugFormat(
 //                            "[INVENTORY ARCHIVER]: Found no previously created folder for archive path {0}",
 //                            originalArchivePath);
                         archivePath = string.Empty;
@@ -345,7 +343,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             for (int i = 0; i < rawDirsToCreate.Length; i++)
             {
-//                m_log.DebugFormat("[INVENTORY ARCHIVER]: Creating folder {0} from IAR", rawDirsToCreate[i]);
+//                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Creating folder {0} from IAR", rawDirsToCreate[i]);
 
                 if (!rawDirsToCreate[i].Contains(ArchiveConstants.INVENTORY_NODE_NAME_COMPONENT_SEPARATOR))
                     continue;
@@ -371,7 +369,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 // Record that we have now created this folder
                 iarPathExisting += rawDirsToCreate[i] + "/";
-                m_log.DebugFormat("[INVENTORY ARCHIVER]: Created folder {0} from IAR", iarPathExisting);
+                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Created folder {0} from IAR", iarPathExisting);
                 resolvedFolders[iarPathExisting] = destFolder;
 
                 if (0 == i && loadedNodes != null)
@@ -438,7 +436,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                                                                                             (AssetType) item.AssetType);
                 if (f != null)
                 {
-                    //                    m_log.DebugFormat(
+                    //                    MainConsole.Instance.DebugFormat(
                     //                        "[LOCAL INVENTORY SERVICES CONNECTOR]: Found folder {0} type {1} for item {2}", 
                     //                        f.Name, (AssetType)f.Type, item.Name);
 
@@ -453,7 +451,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                     }
                     else
                     {
-                        m_log.WarnFormat(
+                        MainConsole.Instance.WarnFormat(
                             "[AGENT INVENTORY]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
                             item.Owner, item.Name);
                         return false;
@@ -465,7 +463,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 return true;
             else
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[AGENT INVENTORY]: Agent {0} could not add item {1} {2}",
                     item.Owner, item.Name, item.ID);
 
@@ -488,7 +486,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             if (i == -1)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[INVENTORY ARCHIVER]: Could not find extension information in asset path {0} since it's missing the separator {1}.  Skipping",
                     assetPath, ArchiveConstants.ASSET_EXTENSION_SEPARATOR);
 
@@ -503,7 +501,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 AssetType assetType = ArchiveConstants.EXTENSION_TO_ASSET_TYPE[extension];
 
                 if (assetType == AssetType.Unknown)
-                    m_log.WarnFormat("[INVENTORY ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length,
+                    MainConsole.Instance.WarnFormat("[INVENTORY ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length,
                                      uuid);
                 else if (assetType == AssetType.Object)
                 {
@@ -531,7 +529,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                         }
                     data = Utils.StringToBytes(SceneObjectSerializer.ToOriginalXmlFormat(sceneObjects[0]));
                 }
-                //m_log.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
+                //MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
 
                 AssetBase asset = new AssetBase(UUID.Parse(uuid), "RandomName", assetType, UUID.Zero)
                                       {Data = data, Flags = AssetFlags.Normal};
@@ -540,7 +538,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
             else
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[INVENTORY ARCHIVER]: Tried to dearchive data with path {0} with an unknown type extension {1}",
                     assetPath, extension);
 

@@ -91,7 +91,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<string, long> NextEventDelay = new Dictionary<string, long>();
 
         //This is the UUID of the actual script.
@@ -246,7 +245,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Script = null;
             }
 
-            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " +
+            MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " +
                         Part.Name);
             if (AppDomain == null)
                 return;
@@ -340,7 +339,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], EventPriority.FirstStart,
                                             new object[] {});
 
-            m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
+            MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
         }
 
         internal void ChangeState(string state)
@@ -426,7 +425,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string consoletext = IsError ? "Error " : "Warning ";
                 consoletext += stage + " script:\n" + message + " prim name: " + Part.Name + "@ " +
                                Part.AbsolutePosition + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
-                m_log.Error(consoletext);
+                MainConsole.Instance.Error(consoletext);
             }
 
             // DISPLAY ERROR INWORLD
@@ -526,7 +525,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (InventoryItem == null)
             {
-                m_log.Warn("[ADNE]: Could not find inventory item for script " + ItemID + ", part" + Part.Name + "@" +
+                MainConsole.Instance.Warn("[ADNE]: Could not find inventory item for script " + ItemID + ", part" + Part.Name + "@" +
                            Part.AbsolutePosition);
                 return false;
             }
@@ -552,7 +551,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 AssetBase asset = Part.ParentEntity.Scene.AssetService.Get(InventoryItem.AssetID.ToString());
                 if (null == asset)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[ScriptData]: " +
                         "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                         InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
@@ -564,7 +563,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (string.IsNullOrEmpty(Source))
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ScriptData]: " +
                     "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                     InventoryItem.Name, InventoryItem.ItemID, Part.AbsolutePosition,
@@ -701,7 +700,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             bool useDebug = false;
             if (useDebug)
-                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 1 compile: " +
+                MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 1 compile: " +
                             (DateTime.Now.ToUniversalTime() - StartTime).TotalSeconds);
 
             //Create the app domain if needed.
@@ -714,7 +713,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (FileNotFoundException) // Not valid!!!
             {
-                m_log.Error("[" + m_ScriptEngine.ScriptEngineName +
+                MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName +
                             "]: File not found in app domain creation. Corrupt state save! " + AssemblyName);
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
                 return Start(reupload); // Lets restart the script if this happens
@@ -738,7 +737,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(new[] {"SUCCESSFULL"}));
 
             if (useDebug)
-                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " +
+                MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " +
                             (DateTime.Now.ToUniversalTime() - StartTime).TotalSeconds);
 
             SetApis();
@@ -753,7 +752,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (this.State == "" && DefaultState != this.State)
                     //Sometimes, "" is a valid state for other script languages
                 {
-                    m_log.Warn("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
+                    MainConsole.Instance.Warn("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
                     this.State = DefaultState;
                 }
                 // we get new rez events on sim restart, too
@@ -785,11 +784,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //All done, compiled successfully
             Loading = false;
 
-            if (m_log.IsDebugEnabled)
+            if (MainConsole.Instance.IsDebugEnabled)
             {
                 TimeSpan time = (DateTime.Now.ToUniversalTime() - StartTime);
 
-                m_log.Debug("[" + m_ScriptEngine.ScriptEngineName +
+                MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName +
                             "]: Started Script " + InventoryItem.Name +
                             " in object " + Part.Name + "@" + Part.ParentEntity.RootChild.AbsolutePosition +
                             (presence != null ? " by " + presence.Name : "") +

@@ -32,7 +32,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
     public interface IHost
     {
         IObject Object { get; }
-        ILog Console { get; }
         IGraphics Graphics { get; }
         IExtension Extensions { get; }
         IMicrothreader Microthreads { get; }

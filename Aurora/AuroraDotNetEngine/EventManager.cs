@@ -55,8 +55,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         // verify what exact parameters are needed.
         //
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<uint, Dictionary<UUID, DetectParams>> CoalescedTouchEvents =
             new Dictionary<uint, Dictionary<UUID, DetectParams>>();
 
@@ -69,7 +67,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void HookUpRegionEvents(IScene Scene)
         {
-            //m_log.Info("[" + myScriptEngine.ScriptEngineName +
+            //MainConsole.Instance.Info("[" + myScriptEngine.ScriptEngineName +
             //           "]: Hooking up to server events");
 
             Scene.EventManager.OnObjectGrab +=
@@ -127,7 +125,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //if (part == null)
             //    return;
 
-            //m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
+            //MainConsole.Instance.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
             //if (part.ParentGroup != null)
             //    part = part.ParentGroup.RootPart;
 
@@ -137,7 +135,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //}
             if (part != null)
             {
-                m_log.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
+                MainConsole.Instance.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
                 if (part.ParentEntity != null) part = part.ParentEntity.RootChild;
                 if (part != null)
                 {
@@ -1061,7 +1059,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //This will happen if the script doesn't compile correctly
                 if (ID.Script == null)
                 {
-                    m_log.Info("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name +
+                    MainConsole.Instance.Info("[AuroraDotNetEngine]: Could not load script from item '" + ID.InventoryItem.Name +
                                "' to fire event " + FunctionName);
                     return false;
                 }

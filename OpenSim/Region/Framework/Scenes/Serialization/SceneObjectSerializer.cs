@@ -47,8 +47,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
     /// right now - hopefully this isn't forever.
     public class SceneObjectSerializer
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Restore this part from the serialized xml representation.
         /// </summary>
@@ -83,7 +81,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         public static SceneObjectGroup FromOriginalXmlFormat(UUID fromUserInventoryItemID, string xmlData,
                                                              IRegistryCore scene)
         {
-            //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
+            //MainConsole.Instance.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
 
             try
@@ -135,7 +133,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
                 return null;
             }
@@ -167,7 +165,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns></returns>
         public static void ToOriginalXmlFormat(SceneObjectGroup sceneObject, XmlTextWriter writer)
         {
-            //m_log.DebugFormat("[SERIALIZER]: Starting serialization of {0}", Name);
+            //MainConsole.Instance.DebugFormat("[SERIALIZER]: Starting serialization of {0}", Name);
             //int time = Util.EnvironmentTickCount();
 
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
@@ -199,7 +197,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             writer.WriteEndElement(); // OtherParts
             writer.WriteEndElement(); // SceneObjectGroup
 
-            //m_log.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, Util.EnvironmentTickCount() - time);
+            //MainConsole.Instance.DebugFormat("[SERIALIZER]: Finished serialization of SOG {0}, {1}ms", Name, Util.EnvironmentTickCount() - time);
         }
 
         protected static void ToXmlFormat(SceneObjectPart part, XmlTextWriter writer)
@@ -209,7 +207,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static SceneObjectGroup FromXml2Format(string xmlData, IScene scene)
         {
-            //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
+            //MainConsole.Instance.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
 
             XmlDocument doc = new XmlDocument();
@@ -222,7 +220,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
                 return null;
             }
             finally
@@ -234,7 +232,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static SceneObjectGroup FromXml2Format(ref MemoryStream ms, IScene scene)
         {
-            //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
+            //MainConsole.Instance.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
 
             XmlDocument doc = new XmlDocument();
@@ -248,7 +246,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}", e);
+                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}", e);
                 return grp;
             }
             finally
@@ -259,7 +257,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         private static SceneObjectGroup InternalFromXml2Format(XmlDocument doc, IScene scene)
         {
-            //m_log.DebugFormat("[SOG]: Starting deserialization of SOG");
+            //MainConsole.Instance.DebugFormat("[SOG]: Starting deserialization of SOG");
             //int time = Util.EnvironmentTickCount();
 
             try
@@ -267,7 +265,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 XmlNodeList parts = doc.GetElementsByTagName("SceneObjectPart");
                 if (parts.Count == 0)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[SERIALIZER]: Deserialization of xml failed: No SceneObjectPart nodes. xml was " + doc.Value);
                     return null;
                 }
@@ -297,7 +295,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, doc.Value);
+                MainConsole.Instance.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, doc.Value);
                 return null;
             }
         }
@@ -519,7 +517,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 m_genericSerializers.Add(Name, processor.Serialization);
             }
             else
-                m_log.Warn("[SCENEOBJECTSERIALIZER]: Tried to add an additional SOP processor for " + Name);
+                MainConsole.Instance.Warn("[SCENEOBJECTSERIALIZER]: Tried to add an additional SOP processor for " + Name);
         }
 
         public static void RemoveSerializer(string Name)
@@ -530,7 +528,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 m_genericSerializers.Remove(Name);
             }
             else
-                m_log.Warn("[SCENEOBJECTSERIALIZER]: Tried to remove a SOP processor for " + Name +
+                MainConsole.Instance.Warn("[SCENEOBJECTSERIALIZER]: Tried to remove a SOP processor for " + Name +
                            " that did not exist");
         }
 
@@ -884,28 +882,28 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 SOPXmlProcessor p = null;
                 if (m_SOPXmlProcessors.TryGetValue(reader.Name, out p))
                 {
-                    //m_log.DebugFormat("[XXX] Processing: {0}", reader.Name);
+                    //MainConsole.Instance.DebugFormat("[XXX] Processing: {0}", reader.Name);
                     try
                     {
                         p(obj, reader);
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[SceneObjectSerializer]: exception while parsing {0}: {1}", nodeName, e);
+                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing {0}: {1}", nodeName, e);
                         if (reader.NodeType == XmlNodeType.EndElement)
                             reader.Read();
                     }
                 }
                 else
                 {
-                    //                    m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element {0}", nodeName);
+                    //                    MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: caught unknown element {0}", nodeName);
                     reader.ReadOuterXml(); // ignore
                 }
             }
 
             reader.ReadEndElement(); // SceneObjectPart
 
-            //m_log.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
+            //MainConsole.Instance.DebugFormat("[XXX]: parsed SOP {0} - {1}", obj.Name, obj.UUID);
             return obj;
         }
 
@@ -992,13 +990,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                             p(item, reader);
                         else
                         {
-                            //m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element in TaskInventory {0}, {1}", reader.Name, reader.Value);
+                            //MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: caught unknown element in TaskInventory {0}, {1}", reader.Name, reader.Value);
                             reader.ReadOuterXml();
                         }
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[SceneObjectSerializer]: exception while parsing Inventory Items {0}: {1}",
+                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing Inventory Items {0}: {1}",
                                           reader.Name, e);
                     }
                 }
@@ -1028,7 +1026,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             while (reader.NodeType != XmlNodeType.EndElement)
             {
                 nodeName = reader.Name;
-                //m_log.DebugFormat("[XXX] Processing: {0}", reader.Name); 
+                //MainConsole.Instance.DebugFormat("[XXX] Processing: {0}", reader.Name); 
                 ShapeXmlProcessor p = null;
                 if (m_ShapeXmlProcessors.TryGetValue(reader.Name, out p))
                 {
@@ -1038,14 +1036,14 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[SceneObjectSerializer]: exception while parsing Shape {0}: {1}", nodeName, e);
+                        MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: exception while parsing Shape {0}: {1}", nodeName, e);
                         if (reader.NodeType == XmlNodeType.EndElement)
                             reader.Read();
                     }
                 }
                 else
                 {
-                    // m_log.DebugFormat("[SceneObjectSerializer]: caught unknown element in Shape {0}", reader.Name);
+                    // MainConsole.Instance.DebugFormat("[SceneObjectSerializer]: caught unknown element in Shape {0}", reader.Name);
                     reader.ReadOuterXml();
                 }
             }

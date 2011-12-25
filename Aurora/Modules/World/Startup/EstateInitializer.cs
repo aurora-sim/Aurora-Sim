@@ -44,7 +44,6 @@ namespace OpenSim.Region.CoreModules
 {
     public class EstateInitializer : ISharedRegionStartupModule, IAuroraBackupModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string LastEstateName = "";
         private string LastEstateOwner = "Test User";
 
@@ -60,25 +59,25 @@ namespace OpenSim.Region.CoreModules
             {
                 IEstateConnector EstateConnector = DataManager.RequestPlugin<IEstateConnector>();
 
-                string name = MainConsole.Instance.CmdPrompt("Estate owner name", LastEstateOwner);
+                string name = MainConsole.Instance.Prompt("Estate owner name", LastEstateOwner);
                 UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
 
                 if (account == null)
                 {
-                    string createNewUser = MainConsole.Instance.CmdPrompt("Could not find user " + name + ". Would you like to create this user?", "yes");
+                    string createNewUser = MainConsole.Instance.Prompt("Could not find user " + name + ". Would you like to create this user?", "yes");
 
                     if (createNewUser == "yes")
                     {
                         // Create a new account
-                        string password = MainConsole.Instance.PasswdPrompt(name + "'s password");
-                        string email = MainConsole.Instance.CmdPrompt(name + "'s email", "");
+                        string password = MainConsole.Instance.PasswordPrompt(name + "'s password");
+                        string email = MainConsole.Instance.Prompt(name + "'s email", "");
 
                         scene.UserAccountService.CreateUser(name, Util.Md5Hash(password), email);
                         account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
 
                         if (account == null)
                         {
-                            m_log.ErrorFormat("[EstateService]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
+                            MainConsole.Instance.ErrorFormat("[EstateService]: Unable to store account. If this simulator is connected to a grid, you must create the estate owner account first.");
                             continue;
                         }
                     }
@@ -92,41 +91,41 @@ namespace OpenSim.Region.CoreModules
                 string response = (ownerEstates != null && ownerEstates.Count > 0) ? "yes" : "no";
                 if (ownerEstates != null && ownerEstates.Count > 0)
                 {
-                    m_log.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
+                    MainConsole.Instance.WarnFormat("Found user. {0} has {1} estates currently. {2}", account.Name, ownerEstates.Count,
                         "These estates are the following:");
                     foreach (EstateSettings t in ownerEstates)
                     {
-                        m_log.Warn(t.EstateName);
+                        MainConsole.Instance.Warn(t.EstateName);
                     }
-                    response = MainConsole.Instance.CmdPrompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> { "yes", "no", "cancel" });
+                    response = MainConsole.Instance.Prompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> { "yes", "no", "cancel" });
                 }
                 else
                 {
-                    m_log.WarnFormat("Found user. {0} has no estates currently. Creating a new estate.", account.Name);
+                    MainConsole.Instance.WarnFormat("Found user. {0} has no estates currently. Creating a new estate.", account.Name);
                 }
                 if (response == "no")
                 {
                     // Create a new estate
                     // ES could be null 
-                    ES.EstateName = MainConsole.Instance.CmdPrompt("New estate name (or cancel to go back)", "My Estate");
+                    ES.EstateName = MainConsole.Instance.Prompt("New estate name (or cancel to go back)", "My Estate");
                     if (ES.EstateName == "cancel")
                         continue;
                     //Set to auto connect to this region next
                     LastEstateName = ES.EstateName;
 
-                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
+                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.Prompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
                     ES.EstatePass = Password;
                     ES.EstateOwner = account.PrincipalID;
 
                     ES = EstateConnector.CreateEstate(ES, scene.RegionInfo.RegionID);
                     if (ES == null)
                     {
-                        m_log.Warn("The connection to the server was broken, please try again soon.");
+                        MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
                         continue;
                     }
                     if (ES.EstateID == 0)
                     {
-                        m_log.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
+                        MainConsole.Instance.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
                         continue;
                     }
                     //We set this back if there wasn't an error because the EstateService will NOT send it back
@@ -154,7 +153,7 @@ namespace OpenSim.Region.CoreModules
 #endif
                         responses.Add ("None");
                         responses.Add ("Cancel");
-                        response = MainConsole.Instance.CmdPrompt("Estate name to join", LastEstateName, responses);
+                        response = MainConsole.Instance.Prompt("Estate name to join", LastEstateName, responses);
                         if (response == "None" || response == "Cancel")
                             continue;
                         LastEstateName = response;
@@ -164,18 +163,18 @@ namespace OpenSim.Region.CoreModules
                     List<int> estateIDs = EstateConnector.GetEstates(LastEstateName);
                     if (estateIDs == null)
                     {
-                        m_log.Warn("The connection to the server was broken, please try again soon.");
+                        MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
                         continue;
                     }
                     if (estateIDs.Count < 1)
                     {
-                        m_log.Warn("The name you have entered matches no known estate. Please try again");
+                        MainConsole.Instance.Warn("The name you have entered matches no known estate. Please try again");
                         continue;
                     }
 
                     int estateID = estateIDs[0];
 
-                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.CmdPrompt("Password for the estate", "")));
+                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.Prompt("Password for the estate", "")));
                     //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
                     if (EstateConnector.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
                     {
@@ -183,7 +182,7 @@ namespace OpenSim.Region.CoreModules
                         {
                             if (ES == null)
                             {
-                                m_log.Warn("The connection to the server was broken, please try again soon.");
+                                MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
                                 continue;
                             }
                             //Reset the pass and save it to the database
@@ -196,14 +195,14 @@ namespace OpenSim.Region.CoreModules
                         }
                         else
                         {
-                            m_log.Warn("The connection to the server was broken, please try again soon.");
+                            MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
                             continue;
                         }
-                        m_log.Warn("Successfully joined the estate!");
+                        MainConsole.Instance.Warn("Successfully joined the estate!");
                         break;
                     }
 
-                    m_log.Warn("Joining the estate failed. Please try again.");
+                    MainConsole.Instance.Warn("Joining the estate failed. Please try again.");
                     continue;
                 }
             }
@@ -226,7 +225,7 @@ namespace OpenSim.Region.CoreModules
                 if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
                 {
                     //It found the estate service, but found no estates for this region, make a new one
-                    m_log.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
+                    MainConsole.Instance.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
                     ES = CreateEstateInfo(scene);
                 }
                 else if (ES != null)
@@ -236,10 +235,10 @@ namespace OpenSim.Region.CoreModules
                 else
                 {
                     //It could not find the estate service, wait until it can find it
-                    m_log.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
+                    MainConsole.Instance.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
                     while (true)
                     {
-                        MainConsole.Instance.CmdPrompt("Press enter to try again.");
+                        MainConsole.Instance.Prompt("Press enter to try again.");
                         if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
                         {
                             ES = CreateEstateInfo(scene);
@@ -283,16 +282,16 @@ namespace OpenSim.Region.CoreModules
             {
                 if (MainConsole.Instance.ConsoleScene == null)
                 {
-                    m_log.Warn("Select a region before using this command.");
+                    MainConsole.Instance.Warn("Select a region before using this command.");
                     return;
                 }
                 IScene scene = MainConsole.Instance.ConsoleScene;
-                string removeFromEstate = MainConsole.Instance.CmdPrompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
+                string removeFromEstate = MainConsole.Instance.Prompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
                 if (removeFromEstate == "yes")
                 {
                     if (!EstateConnector.DelinkRegion(scene.RegionInfo.RegionID, scene.RegionInfo.EstateSettings.EstatePass))
                     {
-                        m_log.Warn("Unable to remove this region from the estate.");
+                        MainConsole.Instance.Warn("Unable to remove this region from the estate.");
                         return;
                     }
                     scene.RegionInfo.EstateSettings = CreateEstateInfo(scene);
@@ -304,7 +303,7 @@ namespace OpenSim.Region.CoreModules
                         scene.RegionInfo.EstateSettings.EstatePass = s.Password;
                 }
                 else
-                    m_log.Warn("No action has been taken.");
+                    MainConsole.Instance.Warn("No action has been taken.");
             }
         }
 
@@ -350,7 +349,7 @@ namespace OpenSim.Region.CoreModules
 
         public void SaveModuleToArchive(TarArchiveWriter writer, IScene scene)
         {
-            m_log.Debug("[Archive]: Writing estates to archive");
+            MainConsole.Instance.Debug("[Archive]: Writing estates to archive");
 
             EstateSettings settings = scene.RegionInfo.EstateSettings;
             if (settings == null)
@@ -359,15 +358,15 @@ namespace OpenSim.Region.CoreModules
             string xmlData = WebUtils.BuildXmlResponse(settings.ToKeyValuePairs(true));
             writer.WriteFile("estate/" + scene.RegionInfo.RegionName, xmlData);
 
-            m_log.Debug("[Archive]: Finished writing estates to archive");
-            m_log.Debug("[Archive]: Writing region info to archive");
+            MainConsole.Instance.Debug("[Archive]: Finished writing estates to archive");
+            MainConsole.Instance.Debug("[Archive]: Writing region info to archive");
 
             writer.WriteDir("regioninfo");
             RegionInfo regionInfo = scene.RegionInfo;
 
             writer.WriteFile("regioninfo/" + scene.RegionInfo.RegionName, OSDParser.SerializeLLSDBinary(regionInfo.PackRegionInfoData(true)));
 
-            m_log.Debug("[Archive]: Finished writing region info to archive");
+            MainConsole.Instance.Debug("[Archive]: Finished writing region info to archive");
         }
 
         public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
@@ -380,7 +379,7 @@ namespace OpenSim.Region.CoreModules
             }
             else if (filePath.StartsWith("regioninfo/"))
             {
-                string m_merge = MainConsole.Instance.CmdPrompt("Should we load the region information from the archive (region name, region position, etc)?", "false");
+                string m_merge = MainConsole.Instance.Prompt("Should we load the region information from the archive (region name, region position, etc)?", "false");
                 RegionInfo settings = new RegionInfo();
                 settings.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeLLSDBinary(data));
                 if (m_merge == "false")

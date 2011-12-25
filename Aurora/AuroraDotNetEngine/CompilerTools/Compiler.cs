@@ -35,7 +35,7 @@ using System.Reflection;
 using System.Threading;
 using Aurora.Framework;
 using OpenMetaverse;
-using log4net;
+using OpenSim.Framework;
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
@@ -44,7 +44,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static UInt64 scriptCompileCounter; // And a counter
         private readonly List<string> m_errors = new List<string>();
 
@@ -154,18 +153,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 #endif
             }
             if (AllowedCompilers.Count == 0)
-                m_log.Error(
+                MainConsole.Instance.Error(
                     "[Compiler]: Config error. Compiler could not recognize any language in \"AllowedCompilers\". Scripts will not be executed!");
 
             if (!found)
-                m_log.Error("[Compiler]: " +
+                MainConsole.Instance.Error("[Compiler]: " +
                             "Config error. Default language \"" + DefaultCompileLanguage +
                             "\" specified in \"DefaultCompileLanguage\" is not recognized as a valid language. Changing default to: \"lsl\".");
 
             // Is this language in allow-list?
             if (!AllowedCompilers.ContainsKey(DefaultCompileLanguage))
             {
-                m_log.Error("[Compiler]: " +
+                MainConsole.Instance.Error("[Compiler]: " +
                             "Config error. Default language \"" + DefaultCompileLanguage +
                             "\"specified in \"DefaultCompileLanguage\" is not in list of \"AllowedCompilers\". Scripts may not be executed!");
             }
@@ -478,7 +477,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
-                    m_log.Error("[Compiler]: Exception while " +
+                    MainConsole.Instance.Error("[Compiler]: Exception while " +
                                 "trying to write script source to file \"" +
                                 srcFileName + "\": " + ex);
                 }
@@ -533,7 +532,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 catch (Exception ex) //NOTLEGIT - Should be just FileIOException
                 {
-                    m_log.Error("[Compiler]: Exception while " +
+                    MainConsole.Instance.Error("[Compiler]: Exception while " +
                                 "trying to write script source to file \"" +
                                 srcFileName + "\": " + ex);
                 }

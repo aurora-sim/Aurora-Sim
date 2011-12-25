@@ -40,8 +40,7 @@ namespace OpenSim.Region.CoreModules
     public class WindModule : IWindModule, INonSharedRegionModule
     {
         private const string m_dWindPluginName = "SimpleRandomWind";
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        
         private readonly Dictionary<string, IWindModelPlugin> m_availableWindPlugins =
             new Dictionary<string, IWindModelPlugin>();
 
@@ -90,14 +89,14 @@ namespace OpenSim.Region.CoreModules
             m_scene = scene;
             if (m_enabled)
             {
-                //m_log.InfoFormat("[WIND] Enabled with an update rate of {0} frames.", m_frameUpdateRate);
+                //MainConsole.Instance.InfoFormat("[WIND] Enabled with an update rate of {0} frames.", m_frameUpdateRate);
 
                 m_frame = 0;
 
                 // Register all the Wind Model Plug-ins
                 foreach (IWindModelPlugin windPlugin in AuroraModuleLoader.PickupModules<IWindModelPlugin>())
                 {
-                    //m_log.InfoFormat("[WIND] Found Plugin: {0}", windPlugin.Name);
+                    //MainConsole.Instance.InfoFormat("[WIND] Found Plugin: {0}", windPlugin.Name);
                     m_availableWindPlugins.Add(windPlugin.Name, windPlugin);
                 }
 
@@ -106,7 +105,7 @@ namespace OpenSim.Region.CoreModules
                 {
                     m_activeWindPlugin = m_availableWindPlugins[desiredWindPlugin];
 
-                    //m_log.InfoFormat("[WIND] {0} plugin found, initializing.", desiredWindPlugin);
+                    //MainConsole.Instance.InfoFormat("[WIND] {0} plugin found, initializing.", desiredWindPlugin);
 
                     if (windConfig != null)
                     {
@@ -119,8 +118,8 @@ namespace OpenSim.Region.CoreModules
                 // if the plug-in wasn't found, default to no wind.
                 if (m_activeWindPlugin == null)
                 {
-                    m_log.ErrorFormat("[WIND] Could not find specified wind plug-in: {0}", desiredWindPlugin);
-                    m_log.ErrorFormat("[WIND] Defaulting to no wind.");
+                    MainConsole.Instance.ErrorFormat("[WIND] Could not find specified wind plug-in: {0}", desiredWindPlugin);
+                    MainConsole.Instance.ErrorFormat("[WIND] Defaulting to no wind.");
                 }
 
                 if (MainConsole.Instance != null)
@@ -208,7 +207,7 @@ namespace OpenSim.Region.CoreModules
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
             {
-                m_log.InfoFormat("[WIND]: Console Scene is not my scene.");
+                MainConsole.Instance.InfoFormat("[WIND]: Console Scene is not my scene.");
                 return;
             }
         }
@@ -219,7 +218,7 @@ namespace OpenSim.Region.CoreModules
         private void HandleConsoleCommand(string[] cmdparams)
         {
             ValidateConsole();
-            m_log.Info(
+            MainConsole.Instance.Info(
                 "[WIND] The wind command can be used to change the currently active wind model plugin and update the parameters for wind plugins.");
         }
 
@@ -233,7 +232,7 @@ namespace OpenSim.Region.CoreModules
             if ((cmdparams.Length != 4)
                 || !cmdparams[1].Equals("base"))
             {
-                m_log.Info(
+                MainConsole.Instance.Info(
                     "[WIND] Invalid parameters to change parameters for Wind module base, usage: wind base <parameter> <value>");
                 return;
             }
@@ -249,7 +248,7 @@ namespace OpenSim.Region.CoreModules
                     }
                     else
                     {
-                        m_log.InfoFormat("[WIND] Invalid value {0} specified for {1}", cmdparams[3], cmdparams[2]);
+                        MainConsole.Instance.InfoFormat("[WIND] Invalid value {0} specified for {1}", cmdparams[3], cmdparams[2]);
                         return;
                     }
 
@@ -259,18 +258,18 @@ namespace OpenSim.Region.CoreModules
 
                     if (desiredPlugin.Equals(m_activeWindPlugin.Name))
                     {
-                        m_log.InfoFormat("[WIND] Wind model plugin {0} is already active", cmdparams[3]);
+                        MainConsole.Instance.InfoFormat("[WIND] Wind model plugin {0} is already active", cmdparams[3]);
                         return;
                     }
 
                     if (m_availableWindPlugins.ContainsKey(desiredPlugin))
                     {
                         m_activeWindPlugin = m_availableWindPlugins[cmdparams[3]];
-                        m_log.InfoFormat("[WIND] {0} wind model plugin now active", m_activeWindPlugin.Name);
+                        MainConsole.Instance.InfoFormat("[WIND] {0} wind model plugin now active", m_activeWindPlugin.Name);
                     }
                     else
                     {
-                        m_log.InfoFormat("[WIND] Could not find wind model plugin {0}", desiredPlugin);
+                        MainConsole.Instance.InfoFormat("[WIND] Could not find wind model plugin {0}", desiredPlugin);
                     }
                     break;
             }
@@ -287,7 +286,7 @@ namespace OpenSim.Region.CoreModules
             if ((cmdparams.Length != 4)
                 && (cmdparams.Length != 3))
             {
-                m_log.Info("[WIND] Usage: wind <plugin> <param> [value]");
+                MainConsole.Instance.Info("[WIND] Usage: wind <plugin> <param> [value]");
                 return;
             }
 
@@ -298,7 +297,7 @@ namespace OpenSim.Region.CoreModules
             {
                 if (!float.TryParse(cmdparams[3], out value))
                 {
-                    m_log.InfoFormat("[WIND] Invalid value {0}", cmdparams[3]);
+                    MainConsole.Instance.InfoFormat("[WIND] Invalid value {0}", cmdparams[3]);
                 }
 
                 try
@@ -307,7 +306,7 @@ namespace OpenSim.Region.CoreModules
                 }
                 catch (Exception e)
                 {
-                    m_log.InfoFormat("[WIND] {0}", e.Message);
+                    MainConsole.Instance.InfoFormat("[WIND] {0}", e.Message);
                 }
             }
             else
@@ -315,11 +314,11 @@ namespace OpenSim.Region.CoreModules
                 try
                 {
                     value = WindParamGet(plugin, param);
-                    m_log.InfoFormat("[WIND] {0} : {1}", param, value);
+                    MainConsole.Instance.InfoFormat("[WIND] {0} : {1}", param, value);
                 }
                 catch (Exception e)
                 {
-                    m_log.InfoFormat("[WIND] {0}", e.Message);
+                    MainConsole.Instance.InfoFormat("[WIND] {0}", e.Message);
                 }
             }
         }
@@ -352,7 +351,7 @@ namespace OpenSim.Region.CoreModules
             {
                 IWindModelPlugin windPlugin = m_availableWindPlugins[plugin];
                 windPlugin.WindParamSet(param, value);
-                m_log.InfoFormat("[WIND] {0} set to {1}", param, value);
+                MainConsole.Instance.InfoFormat("[WIND] {0} set to {1}", param, value);
             }
             else
             {

@@ -40,8 +40,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
     public class RegionLoaderFileSystem : IRegionLoader
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_configSource;
         private bool m_default = true;
         private bool m_enabled = true;
@@ -190,16 +188,16 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             if (name == String.Empty || source.Configs.Count == 0)
             {
-                m_log.Info ("=====================================\n");
-                m_log.Info ("We are now going to ask a couple of questions about your region.\n");
-                m_log.Info ("You can press 'enter' without typing anything to use the default\n");
-                m_log.Info ("the default is displayed between [ ] brackets.\n");
-                m_log.Info ("=====================================\n");
+                MainConsole.Instance.Info ("=====================================\n");
+                MainConsole.Instance.Info ("We are now going to ask a couple of questions about your region.\n");
+                MainConsole.Instance.Info ("You can press 'enter' without typing anything to use the default\n");
+                MainConsole.Instance.Info ("the default is displayed between [ ] brackets.\n");
+                MainConsole.Instance.Info ("=====================================\n");
             }
 
             bool NeedsUpdate = false;
             if (name == String.Empty)
-                name = MainConsole.Instance.CmdPrompt("New region name", name);
+                name = MainConsole.Instance.Prompt("New region name", name);
             if (name == String.Empty)
                 throw new Exception("Cannot interactively create region with no name");
 
@@ -229,7 +227,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 NeedsUpdate = true;
                 UUID newID = UUID.Random();
 
-                regionUUID = MainConsole.Instance.CmdPrompt("Region UUID for region " + name, newID.ToString());
+                regionUUID = MainConsole.Instance.Prompt("Region UUID for region " + name, newID.ToString());
                 config.Set("RegionUUID", regionUUID);
             }
 
@@ -241,7 +239,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (location == String.Empty)
             {
                 NeedsUpdate = true;
-                location = MainConsole.Instance.CmdPrompt("Region Location for region " + name, "1000,1000");
+                location = MainConsole.Instance.Prompt("Region Location for region " + name, "1000,1000");
                 config.Set("Location", location);
             }
 
@@ -256,7 +254,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 NeedsUpdate = true;
                 while (true)
                 {
-                    if (int.TryParse(MainConsole.Instance.CmdPrompt("Region X Size for region " + name, "256"), out regionSizeX))
+                    if (int.TryParse(MainConsole.Instance.Prompt("Region X Size for region " + name, "256"), out regionSizeX))
                         break;
                 }
                 config.Set("RegionSizeX", regionSizeX);
@@ -269,7 +267,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 NeedsUpdate = true;
                 while(true)
                 {
-                    if(int.TryParse(MainConsole.Instance.CmdPrompt("Region Y Size for region " + name, "256"), out regionSizeY))
+                    if(int.TryParse(MainConsole.Instance.Prompt("Region Y Size for region " + name, "256"), out regionSizeY))
                         break;
                 }
                 config.Set("RegionSizeY", regionSizeY);
@@ -295,7 +293,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             else
             {
                 NeedsUpdate = true;
-                address = IPAddress.Parse(MainConsole.Instance.CmdPrompt("Internal IP address for region " + name, "0.0.0.0"));
+                address = IPAddress.Parse(MainConsole.Instance.Prompt("Internal IP address for region " + name, "0.0.0.0"));
                 config.Set("InternalAddress", address.ToString());
             }
 
@@ -308,7 +306,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             else
             {
                 NeedsUpdate = true;
-                port = Convert.ToInt32(MainConsole.Instance.CmdPrompt("Internal port for region " + name, "9000"));
+                port = Convert.ToInt32(MainConsole.Instance.Prompt("Internal port for region " + name, "9000"));
                 config.Set("InternalPort", port);
             }
             region.UDPPorts.Add (port);
@@ -326,7 +324,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             {
                 NeedsUpdate = true;
                 //Let's know our external IP (by Enrico Nirvana)
-                externalName = MainConsole.Instance.CmdPrompt("External host name for region " + name, Aurora.Framework.Utilities.GetExternalIp());
+                externalName = MainConsole.Instance.Prompt("External host name for region " + name, Aurora.Framework.Utilities.GetExternalIp());
                 config.Set("ExternalHostName", externalName);
                 //ended here (by Enrico Nirvana)
             }
@@ -336,7 +334,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (region.RegionType == String.Empty)
             {
                 NeedsUpdate = true;
-                region.RegionType = MainConsole.Instance.CmdPrompt("Region Type for region " + name, "Mainland");
+                region.RegionType = MainConsole.Instance.Prompt("Region Type for region " + name, "Mainland");
                 config.Set("RegionType", region.RegionType);
             }
 
@@ -375,8 +373,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {
-            string fileName = MainConsole.Instance.CmdPrompt ("File Name", "Regions.ini");
-            string regionName = MainConsole.Instance.CmdPrompt ("Region Name", "New Region");
+            string fileName = MainConsole.Instance.Prompt ("File Name", "Regions.ini");
+            string regionName = MainConsole.Instance.Prompt ("Region Name", "New Region");
 
             if (fileName.EndsWith (".ini"))
             {
@@ -385,14 +383,14 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 if (fileName.StartsWith ("/") || fileName.StartsWith ("\\") || fileName.StartsWith (".."))
                     regionFile = fileName;
 
-                m_log.Debug ("[LOADREGIONS]: Creating Region: " + regionName);
+                MainConsole.Instance.Debug ("[LOADREGIONS]: Creating Region: " + regionName);
                 SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
                 manager.AllRegions++;
                 manager.StartNewRegion(LoadRegionFromFile(regionName, regionFile, false, m_configSource, regionName));
             }
             else
             {
-                m_log.Info ("The file name must end with .ini");
+                MainConsole.Instance.Info ("The file name must end with .ini");
             }
         }
 
@@ -457,7 +455,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 if (regionInfo.RegionFile.ToLower().EndsWith(".xml"))
                 {
                     File.Delete(regionInfo.RegionFile);
-                    m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", regionInfo.RegionFile);
+                    MainConsole.Instance.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", regionInfo.RegionFile);
                 }
                 if (regionInfo.RegionFile.ToLower().EndsWith(".ini"))
                 {

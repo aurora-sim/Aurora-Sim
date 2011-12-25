@@ -49,8 +49,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </value>
         private const string STAR_WILDCARD = "*";
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly InventoryArchiverModule m_module;
         private readonly bool m_saveAssets;
 
@@ -134,7 +132,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 // We're almost done.  Just need to write out the control file now
                 m_archiveWriter.WriteFile(ArchiveConstants.CONTROL_FILE_PATH, Create0p1ControlFile());
-                m_log.InfoFormat("[ARCHIVER]: Added control file to archive.");
+                MainConsole.Instance.InfoFormat("[ARCHIVER]: Added control file to archive.");
                 m_archiveWriter.Close();
             }
             catch (Exception e)
@@ -277,7 +275,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
                 if (inventoryFolder != null)
                 {
-                    m_log.DebugFormat(
+                    MainConsole.Instance.DebugFormat(
                         "[INVENTORY ARCHIVER]: Found folder {0} {1} at {2}",
                         inventoryFolder.Name,
                         inventoryFolder.ID,
@@ -288,7 +286,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 }
                 else if (inventoryItem != null)
                 {
-                    m_log.DebugFormat(
+                    MainConsole.Instance.DebugFormat(
                         "[INVENTORY ARCHIVER]: Found item {0} {1} at {2}",
                         inventoryItem.Name, inventoryItem.ID, m_invPath);
 
@@ -315,7 +313,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
             else
             {
-                m_log.Debug("[INVENTORY ARCHIVER]: Save Complete");
+                MainConsole.Instance.Debug("[INVENTORY ARCHIVER]: Save Complete");
                 m_archiveWriter.Close();
             }
         }
@@ -325,7 +323,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </summary>
         protected void SaveUsers()
         {
-            m_log.InfoFormat("[INVENTORY ARCHIVER]: Saving user information for {0} users", m_userUuids.Count);
+            MainConsole.Instance.InfoFormat("[INVENTORY ARCHIVER]: Saving user information for {0} users", m_userUuids.Count);
 
             foreach (UUID creatorId in m_userUuids.Keys)
             {
@@ -341,7 +339,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 }
                 else
                 {
-                    m_log.WarnFormat("[INVENTORY ARCHIVER]: Failed to get creator profile for {0}", creatorId);
+                    MainConsole.Instance.WarnFormat("[INVENTORY ARCHIVER]: Failed to get creator profile for {0}", creatorId);
                 }
             }
         }

@@ -47,8 +47,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private const double MINVIEWDSTEP = 16;
         private const double MINVIEWDSTEPSQ = MINVIEWDSTEP*MINVIEWDSTEP;
 
@@ -663,7 +661,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
+                        MainConsole.Instance.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
                     }
                 }
             }
@@ -701,7 +699,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
+                        MainConsole.Instance.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
                     }
                 }
             }
@@ -741,7 +739,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
+                        MainConsole.Instance.WarnFormat("[SceneViewer]: Exception while running presence loop: {0}", ex);
                     }
                 }
             }
@@ -783,7 +781,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat("[SceneViewer]: Exception while running object loop: {0}", ex);
+                        MainConsole.Instance.WarnFormat("[SceneViewer]: Exception while running object loop: {0}", ex);
                     }
                     m_presence.ControllingClient.SendPrimUpdate(updates);
                 }
@@ -829,7 +827,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[SceneViewer]: Exception occured in sending initial prims, " + ex);
+                    MainConsole.Instance.Warn("[SceneViewer]: Exception occured in sending initial prims, " + ex);
                     //An exception occured, don't fail to send all the prims to the client
                     m_SentInitialObjects = false;
                 }

@@ -64,10 +64,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
     public class UrlModule : ISharedRegionModule, IUrlModule
     {
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<UUID, UrlData> m_RequestMap =
                 new Dictionary<UUID, UrlData>();
 
@@ -212,7 +208,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             }
             else
             {
-                m_log.Info("[HttpRequestHandler] There is no http-in request with id " + request.ToString());
+                MainConsole.Instance.Info("[HttpRequestHandler] There is no http-in request with id " + request.ToString());
             }
         }
 
@@ -227,7 +223,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             }
             else
             {
-                m_log.Warn("[HttpRequestHandler] There was no http-in request with id " + requestId);
+                MainConsole.Instance.Warn("[HttpRequestHandler] There was no http-in request with id " + requestId);
             }
             return String.Empty;
         }
@@ -479,9 +475,9 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 catch (Exception we)
                 {
                     //Hashtable response = new Hashtable();
-                    m_log.Warn("[HttpRequestHandler]: http-in request failed");
-                    m_log.Warn(we.Message);
-                    m_log.Warn(we.StackTrace);
+                    MainConsole.Instance.Warn("[HttpRequestHandler]: http-in request failed");
+                    MainConsole.Instance.Warn(we.Message);
+                    MainConsole.Instance.Warn(we.StackTrace);
                 }
             }
         }

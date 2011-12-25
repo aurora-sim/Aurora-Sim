@@ -40,8 +40,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
     public class OfflineMessageModule : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly List<IScene> m_SceneList = new List<IScene>();
         private bool enabled = true;
         private bool m_ForwardOfflineGroupMessages = true;
@@ -67,7 +65,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             m_RestURL = cnf.GetString("OfflineMessageURL", "");
             if (m_RestURL == "")
             {
-                m_log.Error("[OFFLINE MESSAGING] Module was enabled, but no URL is given, disabling");
+                MainConsole.Instance.Error("[OFFLINE MESSAGING] Module was enabled, but no URL is given, disabling");
                 enabled = false;
                 return;
             }
@@ -99,7 +97,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 enabled = false;
                 m_SceneList.Clear();
 
-                m_log.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
+                MainConsole.Instance.Error("[OFFLINE MESSAGING] No message transfer module is enabled. Diabling offline messages");
             }
             else
                 scene.RequestModuleInterface<IMessageTransferModule>().OnUndeliveredMessage += UndeliveredMessage;
@@ -122,7 +120,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             if (!enabled)
                 return;
 
-            m_log.Debug("[OFFLINE MESSAGING] Offline messages enabled");
+            MainConsole.Instance.Debug("[OFFLINE MESSAGING] Offline messages enabled");
         }
 
         public string Name
@@ -168,7 +166,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             if (m_RestURL != "")
             {
-                m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
+                MainConsole.Instance.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
                 List<GridInstantMessage> msglist = SynchronousRestObjectRequester.MakeRequest
                     <UUID, List<GridInstantMessage>>(

@@ -45,10 +45,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// </summary>
     public class SimianAssetServiceConnector : IAssetService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private static string ZeroID = UUID.Zero.ToString();
 
         private IImprovedAssetCache m_cache;
@@ -119,7 +115,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             if (String.IsNullOrEmpty(m_serverUrl))
-                m_log.Info("[SIMIAN ASSET CONNECTOR]: No AssetServerURI specified, disabling connector");
+                MainConsole.Instance.Info("[SIMIAN ASSET CONNECTOR]: No AssetServerURI specified, disabling connector");
         }
 
         private AssetBase GetRemote(string id)
@@ -163,7 +159,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Asset GET from " + url + " failed: " + ex.Message);
+                MainConsole.Instance.Warn("[SIMIAN ASSET CONNECTOR]: Asset GET from " + url + " failed: " + ex.Message);
                 return null;
             }
         }
@@ -174,7 +170,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
-                m_log.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
+                MainConsole.Instance.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
                 throw new InvalidOperationException();
             }
 
@@ -223,7 +219,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
-                m_log.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
+                MainConsole.Instance.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
                 throw new InvalidOperationException();
             }
 
@@ -259,7 +255,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
-                m_log.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
+                MainConsole.Instance.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
                 throw new InvalidOperationException();
             }
 
@@ -282,7 +278,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             {
                 if (!storedInCache)
                 {
-                    m_log.Error("Cannot store local " + asset.TypeString + " asset without an asset cache");
+                    MainConsole.Instance.Error("Cannot store local " + asset.TypeString + " asset without an asset cache");
                     asset.ID = UUID.Zero;
                 }
 
@@ -365,7 +361,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 errorMessage = ex.Message;
             }
 
-            m_log.WarnFormat("[SIMIAN ASSET CONNECTOR]: Failed to store asset \"{0}\" ({1}, {2}): {3}",
+            MainConsole.Instance.WarnFormat("[SIMIAN ASSET CONNECTOR]: Failed to store asset \"{0}\" ({1}, {2}): {3}",
                              asset.Name, asset.ID, asset.TypeString, errorMessage);
             return UUID.Zero;
         }
@@ -384,7 +380,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             if (asset == null)
             {
-                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Failed to fetch asset " + id + " for updating");
+                MainConsole.Instance.Warn("[SIMIAN ASSET CONNECTOR]: Failed to fetch asset " + id + " for updating");
                 return false;
             }
 
@@ -403,7 +399,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
-                m_log.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
+                MainConsole.Instance.Error("[SIMIAN ASSET CONNECTOR]: No AssetServerURI configured");
                 throw new InvalidOperationException();
             }
 
@@ -422,7 +418,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 {
                     if (response.StatusCode != HttpStatusCode.NoContent)
                     {
-                        m_log.Warn("[SIMIAN ASSET CONNECTOR]: Unexpected response when deleting asset " + url + ": " +
+                        MainConsole.Instance.Warn("[SIMIAN ASSET CONNECTOR]: Unexpected response when deleting asset " + url + ": " +
                                    response.StatusCode + " (" + response.StatusDescription + ")");
                     }
                 }
@@ -431,7 +427,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SIMIAN ASSET CONNECTOR]: Failed to delete asset " + id + " from the asset service: " +
+                MainConsole.Instance.Warn("[SIMIAN ASSET CONNECTOR]: Failed to delete asset " + id + " from the asset service: " +
                            ex.Message);
                 return false;
             }

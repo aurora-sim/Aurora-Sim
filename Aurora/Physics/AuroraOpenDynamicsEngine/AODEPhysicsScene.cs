@@ -699,7 +699,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[PHYSICS]: SpaceCollide2 failed: {0} ", e);
+                    MainConsole.Instance.WarnFormat("[PHYSICS]: SpaceCollide2 failed: {0} ", e);
                     return;
                 }
                 return;
@@ -727,7 +727,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[PHYSICS]:  ode Collide failed: {0} ", e);
+                MainConsole.Instance.WarnFormat("[PHYSICS]:  ode Collide failed: {0} ", e);
                 return;
             }
 
@@ -952,19 +952,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (Math.Abs(contact.depth - contactGeom.depth) < 0.052f)
                             {
                                 //contactGeom.depth *= .00005f;
-                                //m_log.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
-                                // m_log.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
+                                //MainConsole.Instance.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
+                                // MainConsole.Instance.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
                                 result = true;
                                 break;
                             }
                             else
                             {
-                                //m_log.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
+                                //MainConsole.Instance.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
                             }
                         }
                         else
                         {
-                            //m_log.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
+                            //MainConsole.Instance.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
                             //int i = 0;
                         }
                     }
@@ -989,8 +989,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     break;
                                 }
                             }
-                            //m_log.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
-                            //m_log.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
+                            //MainConsole.Instance.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
+                            //MainConsole.Instance.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
                         }
                     }
 
@@ -999,7 +999,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             //watch.Stop();
-            //m_log.Warn(watch.ElapsedMilliseconds);
+            //MainConsole.Instance.Warn(watch.ElapsedMilliseconds);
             return result;
         }
 
@@ -1031,7 +1031,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //This'll cause weird physics inworld
                     //m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
                     contacts = new d.ContactGeom[Math.Max (5, (int)(m_timeDilation * contactsPerCollision))];
-                    m_log.DebugFormat ("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
+                    MainConsole.Instance.DebugFormat ("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
                 }
                 else if(contactsPerCollision - contacts.Length < 10 &&
                     contacts.Length != contactsPerCollision)
@@ -1060,7 +1060,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         catch (AccessViolationException)
                         {
-                            m_log.Warn("[PHYSICS]: Unable to space collide");
+                            MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
                         }
                     }
                 }
@@ -1080,7 +1080,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (AccessViolationException)
                     {
-                        m_log.Warn("[PHYSICS]: Unable to space collide");
+                        MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
                     }
                 }
 #endif
@@ -1113,14 +1113,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     if (removeprims == null)
                                         removeprims = new List<AuroraODEPrim>();
                                     removeprims.Add(chr);
-                                    m_log.Debug(
+                                    MainConsole.Instance.Debug(
                                         "[PHYSICS]: unable to collide test active prim against space.  The space was zero, the geom was zero or it was in the process of being removed.  Removed it from the active prim list.  This needs to be fixed!");
                                 }
                             }
                         }
                         catch (AccessViolationException)
                         {
-                            m_log.Warn("[PHYSICS]: Unable to space collide");
+                            MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
                         }
                     }
                     else if (chr.m_frozen)
@@ -1385,7 +1385,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!chr.bad)
                         _characters.Add(chr);
                     else
-                        m_log.DebugFormat("[PHYSICS] Did not add BAD actor {0} to characters list", chr.m_uuid);
+                        MainConsole.Instance.DebugFormat("[PHYSICS] Did not add BAD actor {0} to characters list", chr.m_uuid);
                 }
             }
         }
@@ -1409,7 +1409,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void RemoveAvatar(PhysicsCharacter actor)
         {
-            //m_log.Debug("[PHYSICS]:ODELOCK");
+            //MainConsole.Instance.Debug("[PHYSICS]:ODELOCK");
             ((AuroraODECharacter) actor).Destroy();
         }
 
@@ -1442,7 +1442,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!_activeprims.Contains(activatePrim))
                     _activeprims.Add(activatePrim);
                 //else
-                //  m_log.Warn("[PHYSICS]: Double Entry in _activeprims detected, potential crash immenent");
+                //  MainConsole.Instance.Warn("[PHYSICS]: Double Entry in _activeprims detected, potential crash immenent");
             }
         }
 
@@ -1514,12 +1514,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            m_log.Warn("[PHYSICS]: Unable to remove prim from physics scene");
+                            MainConsole.Instance.Warn("[PHYSICS]: Unable to remove prim from physics scene");
                         }
                     }
                     catch (AccessViolationException)
                     {
-                        m_log.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
+                        MainConsole.Instance.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
                     }
                 }
                 if (!prim.childPrim)
@@ -1582,7 +1582,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //Thread.Sleep(20);
             if (currentspace != space)
             {
-                //m_log.Info("[SPACE]: C:" + currentspace.ToString() + " g:" + geom.ToString());
+                //MainConsole.Instance.Info("[SPACE]: C:" + currentspace.ToString() + " g:" + geom.ToString());
                 //if (currentspace == IntPtr.Zero)
                 //{
                 //int adfadf = 0;
@@ -1596,7 +1596,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     else
                     {
-                        m_log.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" + currentspace +
+                        MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" + currentspace +
                                    " Geom:" + geom);
                     }
                 }
@@ -1612,7 +1612,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            m_log.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
+                            MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
                                        sGeomIsIn + " Geom:" + geom);
                         }
                     }
@@ -1635,7 +1635,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            m_log.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
+                            MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
                                        currentspace + " Geom:" + geom);
                         }
                     }
@@ -1656,7 +1656,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         }
                         else
                         {
-                            m_log.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
+                            MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
                                        currentspace + " Geom:" + geom);
                         }
                     }
@@ -1672,7 +1672,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             }
                             else
                             {
-                                m_log.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
+                                MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
                                            sGeomIsIn + " Geom:" + geom);
                             }
                         }
@@ -1722,7 +1722,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public IntPtr calculateSpaceForGeom(Vector3 pos)
         {
             int[] xyspace = calculateSpaceArrayItemFromPos(pos);
-            //m_log.Info("[Physics]: Attempting to use arrayItem: " + xyspace[0].ToString() + "," + xyspace[1].ToString());
+            //MainConsole.Instance.Info("[Physics]: Attempting to use arrayItem: " + xyspace[0].ToString() + "," + xyspace[1].ToString());
             return staticPrimspace[xyspace[0], xyspace[1]];
         }
 
@@ -1784,7 +1784,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // convenient place to do it for now...
 
             //    //if (pbs.PathCurve == (byte)Primitive.PathCurve.Circle && pbs.ProfileCurve == (byte)Primitive.ProfileCurve.Circle && pbs.PathScaleY <= 0.75f)
-            //    //m_log.Debug("needsMeshing: " + " pathCurve: " + pbs.PathCurve.ToString() + " profileCurve: " + pbs.ProfileCurve.ToString() + " pathScaleY: " + Primitive.UnpackPathScale(pbs.PathScaleY).ToString());
+            //    //MainConsole.Instance.Debug("needsMeshing: " + " pathCurve: " + pbs.PathCurve.ToString() + " profileCurve: " + pbs.ProfileCurve.ToString() + " pathScaleY: " + Primitive.UnpackPathScale(pbs.PathScaleY).ToString());
             int iPropertiesNotSupportedDefault = 0;
 
 //            return true;
@@ -1828,7 +1828,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         && pbs.PathShearX == 0 && pbs.PathShearY == 0)
                     {
 #if SPAM
-                    m_log.Warn("NonMesh");
+                    MainConsole.Instance.Warn("NonMesh");
 #endif
                         return false;
                     }
@@ -1890,12 +1890,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (iPropertiesNotSupportedDefault == 0)
             {
 #if SPAM
-                m_log.Warn("NonMesh");
+                MainConsole.Instance.Warn("NonMesh");
 #endif
                 return false;
             }
 #if SPAM
-            m_log.Debug("Mesh");
+            MainConsole.Instance.Debug("Mesh");
 #endif
             return true;
         }
@@ -1962,7 +1962,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         _taintedActors.Add(taintedchar);
                         if (taintedchar.bad)
-                            m_log.DebugFormat("[PHYSICS]: Added BAD actor {0} to tainted actors", taintedchar.m_uuid);
+                            MainConsole.Instance.DebugFormat("[PHYSICS]: Added BAD actor {0} to tainted actors", taintedchar.m_uuid);
                     }
                 }
             }
@@ -1991,7 +1991,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             framecount++;
 
-            //m_log.Info(timeStep.ToString());
+            //MainConsole.Instance.Info(timeStep.ToString());
             step_time += timeElapsed;
 
             IsLocked = true;
@@ -2160,7 +2160,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat("[PHYSICS]: {0}, {1}, {2}", e, e.TargetSite, e);
+                        MainConsole.Instance.ErrorFormat("[PHYSICS]: {0}, {1}, {2}", e, e.TargetSite, e);
                     }
 
                     step_time -= ODE_STEPSIZE;
@@ -2294,7 +2294,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (actor != null)
                         {
                             if (actor.bad)
-                                m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
+                                MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
                             else
                                 actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
                         }
@@ -2303,7 +2303,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                     {
                         if (actor.bad)
-                            m_log.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?",
+                            MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?",
                                              actor.m_uuid);
                         else
                             actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);

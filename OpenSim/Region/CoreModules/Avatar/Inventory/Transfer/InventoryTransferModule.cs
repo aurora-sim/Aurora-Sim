@@ -40,10 +40,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 {
     public class InventoryTransferModule : ISharedRegionModule
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        /// <summary>
         private readonly List<IScene> m_Scenelist = new List<IScene>();
 
         private bool m_Enabled = true;
@@ -88,7 +84,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                 m_TransferModule = m_Scenelist[0].RequestModuleInterface<IMessageTransferModule>();
                 if (m_TransferModule == null)
                 {
-                    m_log.Error("[INVENTORY TRANSFER]: No Message transfer module found, transfers will be local only");
+                    MainConsole.Instance.Error("[INVENTORY TRANSFER]: No Message transfer module found, transfers will be local only");
                     m_Enabled = false;
 
                     m_Scenelist.Clear();
@@ -152,7 +148,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            //m_log.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
+            //MainConsole.Instance.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
 
             IScene scene = FindClientScene(client.AgentId);
 
@@ -161,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
             {
-                //m_log.DebugFormat("Asset type {0}", ((AssetType)im.binaryBucket[0]));
+                //MainConsole.Instance.DebugFormat("Asset type {0}", ((AssetType)im.binaryBucket[0]));
 
                 if (im.binaryBucket.Length < 17) // Invalid
                     return;
@@ -183,7 +179,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
                     {
                         UUID folderID = new UUID(im.binaryBucket, 1);
 
-                        m_log.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} " +
+                        MainConsole.Instance.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} " +
                                           "into agent {1}'s inventory",
                                           folderID, im.toAgentID);
 
@@ -221,7 +217,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
                         UUID itemID = new UUID(im.binaryBucket, 1);
 
-                        m_log.DebugFormat("[INVENTORY TRANSFER]: (giving) Inserting item {0} " +
+                        MainConsole.Instance.DebugFormat("[INVENTORY TRANSFER]: (giving) Inserting item {0} " +
                                           "into agent {1}'s inventory",
                                           itemID, im.toAgentID);
 

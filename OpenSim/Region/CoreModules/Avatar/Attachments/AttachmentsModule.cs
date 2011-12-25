@@ -43,8 +43,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IScene m_scene = null;
         protected bool m_allowMultipleAttachments = true;
         protected int m_maxNumberOfAttachments = 38;
@@ -114,7 +112,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
                 if (null == appearance || null == appearance.Appearance)
                 {
-                    m_log.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
+                    MainConsole.Instance.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
                     return;
                 }
 
@@ -131,7 +129,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e);
+                        MainConsole.Instance.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e);
                     }
                 }
             });
@@ -229,7 +227,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
         protected void ClientAttachObject(IClientAPI remoteClient, uint objectLocalID, int AttachmentPt, bool silent)
         {
-            m_log.Debug("[ATTACHMENTS MODULE]: Invoking AttachObject");
+            MainConsole.Instance.Debug("[ATTACHMENTS MODULE]: Invoking AttachObject");
 
             try
             {
@@ -243,7 +241,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ATTACHMENTS MODULE]: exception upon Attach Object {0}", e);
+                MainConsole.Instance.DebugFormat("[ATTACHMENTS MODULE]: exception upon Attach Object {0}", e);
             }
         }
 
@@ -289,7 +287,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
         public ISceneEntity RezSingleAttachmentFromInventory (
             IClientAPI remoteClient, UUID itemID, int AttachmentPt)
         {
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                 "[ATTACHMENTS MODULE]: Rezzing attachment to point {0} from item {1} for {2}",
                 (AttachmentPoint)AttachmentPt, itemID, remoteClient.Name);
             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
@@ -381,7 +379,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         if (save)
                             AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
-                        m_log.InfoFormat(
+                        MainConsole.Instance.InfoFormat(
                             "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
                             objatt.Name, remoteClient.Name, AttachmentPt, objatt.LocalId);
 
@@ -393,7 +391,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
                 else
                 {
-                    m_log.WarnFormat(
+                    MainConsole.Instance.WarnFormat(
                         "[ATTACHMENTS MODULE]: Could not retrieve item {0} for attaching to avatar {1} at point {2}",
                         itemID, remoteClient.Name, AttachmentPt);
                 }
@@ -427,7 +425,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                         return; //Its not attached! What are we doing!
                 }
 
-                m_log.Debug ("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
+                MainConsole.Instance.Debug ("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)
                     AvatarFactory.QueueAppearanceSave (remoteClient.AgentId);
             }
@@ -515,7 +513,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             }
             else
             {
-                m_log.Warn("[Attachments]: Could not find attachment by ItemID!");
+                MainConsole.Instance.Warn("[Attachments]: Could not find attachment by ItemID!");
             }
         }
 
@@ -729,7 +727,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 
             if (UUID.Zero == itemID)
             {
-                m_log.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
+                MainConsole.Instance.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
                 remoteClient.SendAgentAlertMessage(
                     "Unable to save attachment. Error inventory item ID.", false);
                 return;
@@ -813,7 +811,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 if (attModule != null) presence.SetAttachments(attModule.Get());
             }
 
-            m_log.Debug ("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint ()).ToString ());
+            MainConsole.Instance.Debug ("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint ()).ToString ());
 
             //Update the saved attach points
             if (group.RootChild.AttachedPos != group.RootChild.SavedAttachedPos ||
@@ -856,14 +854,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
             {
                 if (!grp.HasGroupChanged)
                 {
-                    //m_log.WarnFormat("[ATTACHMENTS MODULE]: Save request for {0} which is unchanged", grp.UUID);
+                    //MainConsole.Instance.WarnFormat("[ATTACHMENTS MODULE]: Save request for {0} which is unchanged", grp.UUID);
                     return;
                 }
 
                 //let things like state saves and another async things be performed before we serialize the object
                 grp.BackupPreparation();
 
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[ATTACHMENTS MODULE]: Updating asset for attachment {0}, attachpoint {1}",
                     grp.UUID, grp.GetAttachmentPoint());
 
@@ -903,7 +901,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
                 else
                 {
-                    m_log.Warn("[AttachmentModule]: Could not find inventory item for attachment to update!");
+                    MainConsole.Instance.Warn("[AttachmentModule]: Could not find inventory item for attachment to update!");
                 }
             }
         }

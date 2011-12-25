@@ -38,8 +38,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalAgentConnector : IAgentConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData GD;
 
         #region IAgentConnector Members
@@ -139,7 +137,7 @@ namespace Aurora.Services.DataService
             {
                 //Found a mac that matched
                 reason = "Your Mac Address has been banned, please contact a grid administrator.";
-                m_log.InfoFormat("[AgentInfoConnector]: Mac '{0}' is in the ban list", Mac);
+                MainConsole.Instance.InfoFormat("[AgentInfoConnector]: Mac '{0}' is in the ban list", Mac);
                 return false;
             }
 
@@ -148,7 +146,7 @@ namespace Aurora.Services.DataService
             if (clientfound.Count != 0)
             {
                 reason = "The viewer you are using has been banned, please use a different viewer.";
-                m_log.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);
+                MainConsole.Instance.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);
                 return false;
             }
             reason = "";

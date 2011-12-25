@@ -41,8 +41,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
 {
     public class LoadImageURLModule : ISharedRegionModule, IDynamicTextureRender
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private string m_name = "LoadImageURL";
         private string m_proxyexcepts = "";
         private string m_proxyurl = "";
@@ -227,12 +225,12 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
                         }
                         catch (Exception)
                         {
-                            m_log.Error("[LOADIMAGEURLMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
+                            MainConsole.Instance.Error("[LOADIMAGEURLMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
                         }
                     }
                     else
                     {
-                        m_log.WarnFormat("[LOADIMAGEURLMODULE] No data returned");
+                        MainConsole.Instance.WarnFormat("[LOADIMAGEURLMODULE] No data returned");
                     }
                 }
             }
@@ -249,7 +247,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
                     stream.Close();
                 }
             }
-            m_log.DebugFormat("[LOADIMAGEURLMODULE] Returning {0} bytes of image data for request {1}",
+            MainConsole.Instance.DebugFormat("[LOADIMAGEURLMODULE] Returning {0} bytes of image data for request {1}",
                               imageJ2000.Length, state.RequestID);
             m_textureManager.ReturnData(state.RequestID, imageJ2000);
         }

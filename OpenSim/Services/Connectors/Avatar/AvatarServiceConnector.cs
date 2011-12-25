@@ -42,17 +42,13 @@ namespace OpenSim.Services.Connectors
 {
     public class AvatarServicesConnector : IAvatarService, IService
     {
-        protected static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IRegistryCore m_registry;
 
         #region IAvatarService
 
         public virtual AvatarAppearance GetAppearance(UUID userID)
         {
-            m_log.Info("[AvatarServiceConnector] GetAppearance");
+            MainConsole.Instance.Info("[AvatarServiceConnector] GetAppearance");
             AvatarData avatar = GetAvatar(userID);
             if (avatar == null)
                 return null;
@@ -78,7 +74,7 @@ namespace OpenSim.Services.Connectors
             string reply = string.Empty;
             string reqString = WebUtils.BuildQueryString(sendData);
             AvatarData avatar = null;
-            // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> serverURIs =
@@ -90,7 +86,7 @@ namespace OpenSim.Services.Connectors
                                                                       reqString);
                     if (reply == null || (reply != null && reply == string.Empty))
                     {
-                        m_log.DebugFormat("[AVATAR CONNECTOR]: GetAgent received null or empty reply");
+                        MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: GetAgent received null or empty reply");
                         return null;
                     }
                     Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
@@ -107,7 +103,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting presence server: {0}", e.Message);
             }
 
             return avatar;
@@ -136,7 +132,7 @@ namespace OpenSim.Services.Connectors
 
 
             string reqString = WebUtils.BuildQueryString(sendData);
-            //m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
+            //MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> serverURIs =
@@ -154,15 +150,15 @@ namespace OpenSim.Services.Connectors
                                 return true;
                         }
                         else
-                            m_log.DebugFormat("[AVATAR CONNECTOR]: SetAvatar reply data does not contain result field");
+                            MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: SetAvatar reply data does not contain result field");
                     }
                     else
-                        m_log.DebugFormat("[AVATAR CONNECTOR]: SetAvatar received empty reply");
+                        MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: SetAvatar received empty reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
             }
 
             return false;
@@ -179,7 +175,7 @@ namespace OpenSim.Services.Connectors
             sendData["UserID"] = userID.ToString();
 
             string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> serverURIs =
@@ -197,15 +193,15 @@ namespace OpenSim.Services.Connectors
                                 return true;
                         }
                         else
-                            m_log.DebugFormat("[AVATAR CONNECTOR]: SetItems reply data does not contain result field");
+                            MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: SetItems reply data does not contain result field");
                     }
                     else
-                        m_log.DebugFormat("[AVATAR CONNECTOR]: SetItems received empty reply");
+                        MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: SetItems received empty reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
             }
 
             return false;
@@ -222,7 +218,7 @@ namespace OpenSim.Services.Connectors
             sendData["WEARABLES"] = OSDParser.SerializeJsonString(cachedWearable.Pack());
 
             string reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> serverURIs =
@@ -236,7 +232,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
             }
         }
 

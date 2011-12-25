@@ -140,8 +140,6 @@ namespace OpenSim.Services.LLLoginService
     /// </summary>
     public class LLLoginResponse : LoginResponse
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly ArrayList classifiedCategories;
         private readonly ArrayList eventCategories;
         private readonly ArrayList initialOutfit;
@@ -246,7 +244,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[LLLOGIN SERVICE]: Error processing inventory skeleton of agent {0} - {1}",
                     agentID, e);
 
@@ -532,7 +530,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e);
+                MainConsole.Instance.Warn("[CLIENT]: LoginResponse: Error creating Hashtable Response: " + e);
 
                 return LLFailedLoginResponse.InternalError.ToHashtable();
             }
@@ -667,7 +665,7 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                m_log.Warn("[CLIENT]: LoginResponse: Error creating LLSD Response: " + e.Message);
+                MainConsole.Instance.Warn("[CLIENT]: LoginResponse: Error creating LLSD Response: " + e.Message);
 
                 return LLFailedLoginResponse.InternalError.ToOSDMap();
             }

@@ -166,7 +166,7 @@ namespace OpenSim.Services.RobustCompat
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
+                    MainConsole.Instance.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
                 }
 
                 if (newID != UUID.Zero)
@@ -224,8 +224,6 @@ namespace OpenSim.Services.RobustCompat
         [Serializable]
         public class AssetBase
         {
-            private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
             /// <summary>
             ///   Data of the Asset
             /// </summary>
@@ -254,7 +252,7 @@ namespace OpenSim.Services.RobustCompat
                 if (assetType == (sbyte) AssetType.Unknown)
                 {
                     StackTrace trace = new StackTrace(true);
-                    m_log.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
+                    MainConsole.Instance.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
                                       name, assetID, trace);
                 }
 
@@ -266,7 +264,7 @@ namespace OpenSim.Services.RobustCompat
                 if (assetType == (sbyte) AssetType.Unknown)
                 {
                     StackTrace trace = new StackTrace(true);
-                    m_log.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
+                    MainConsole.Instance.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
                                       name, assetID, trace);
                 }
 

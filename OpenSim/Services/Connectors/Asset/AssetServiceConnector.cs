@@ -43,10 +43,6 @@ namespace OpenSim.Services.Connectors
 {
     public class AssetServicesConnector : IAssetServiceConnector, IService
     {
-        protected static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IImprovedAssetCache m_Cache;
         protected IRegistryCore m_registry;
         protected string m_serverURL = "";
@@ -387,7 +383,7 @@ namespace OpenSim.Services.Connectors
         {
             if (args.Length != 4)
             {
-                m_log.Info("Syntax: dump asset <id> <file>");
+                MainConsole.Instance.Info("Syntax: dump asset <id> <file>");
                 return;
             }
 
@@ -395,13 +391,13 @@ namespace OpenSim.Services.Connectors
 
             if (!UUID.TryParse(args[2], out assetID))
             {
-                m_log.Info("Invalid asset ID");
+                MainConsole.Instance.Info("Invalid asset ID");
                 return;
             }
 
             if (m_Cache == null)
             {
-                m_log.Info("Instance uses no cache");
+                MainConsole.Instance.Info("Instance uses no cache");
                 return;
             }
 
@@ -409,7 +405,7 @@ namespace OpenSim.Services.Connectors
 
             if (asset == null)
             {
-                m_log.Info("Asset not found in cache");
+                MainConsole.Instance.Info("Asset not found in cache");
                 return;
             }
 

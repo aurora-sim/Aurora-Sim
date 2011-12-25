@@ -84,7 +84,7 @@ namespace OpenSim.Services.InventoryService
                 libOwnerName = libConfig.GetString("LibraryOwnerName", pLibOwnerName);
             }
 
-            //m_log.Debug("[LIBRARY]: Starting library service...");
+            //MainConsole.Instance.Debug("[LIBRARY]: Starting library service...");
 
             registry.RegisterModuleInterface<ILibraryService>(this);
             m_registry = registry;
@@ -132,7 +132,7 @@ namespace OpenSim.Services.InventoryService
 
         private void ClearDefaultInventory(string[] cmd)
         {
-            string sure = MainConsole.Instance.CmdPrompt("Are you sure you want to delete the default inventory?", "yes");
+            string sure = MainConsole.Instance.Prompt("Are you sure you want to delete the default inventory?", "yes");
             if (!sure.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
                 return;
             IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService>();

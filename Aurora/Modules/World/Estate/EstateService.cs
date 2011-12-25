@@ -47,7 +47,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<UUID, int> LastTelehub = new Dictionary<UUID, int>();
 
         private readonly Dictionary<UUID, int> TimeSinceLastTeleport = new Dictionary<UUID, int>();
@@ -78,7 +77,7 @@ namespace Aurora.Modules
         {
             if (cmd.Length < 2)
             {
-                m_log.Info("Syntax: login enable|disable|status");
+                MainConsole.Instance.Info("Syntax: login enable|disable|status");
                 return;
             }
 
@@ -86,19 +85,19 @@ namespace Aurora.Modules
             {
                 case "enable":
                     if (LoginsDisabled)
-                        m_log.Warn("Enabling Logins");
+                        MainConsole.Instance.Warn("Enabling Logins");
                     LoginsDisabled = false;
                     break;
                 case "disable":
                     if (!LoginsDisabled)
-                        m_log.Warn("Disabling Logins");
+                        MainConsole.Instance.Warn("Disabling Logins");
                     LoginsDisabled = true;
                     break;
                 case "status":
-                    m_log.Warn("Logins are " + (LoginsDisabled ? "dis" : "en") + "abled.");
+                    MainConsole.Instance.Warn("Logins are " + (LoginsDisabled ? "dis" : "en") + "abled.");
                     break;
                 default:
-                    m_log.Info("Syntax: login enable|disable|status");
+                    MainConsole.Instance.Info("Syntax: login enable|disable|status");
                     break;
             }
         }
@@ -107,14 +106,14 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length < 4)
             {
-                m_log.Warn("Not enough parameters!");
+                MainConsole.Instance.Warn("Not enough parameters!");
                 return;
             }
 
             IScenePresence SP = MainConsole.Instance.ConsoleScene.SceneGraph.GetScenePresence(cmdparams[2], cmdparams[3]);
             if (SP == null)
             {
-                m_log.Warn("Could not find user");
+                MainConsole.Instance.Warn("Could not find user");
                 return;
             }
             EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
@@ -149,7 +148,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length < 4)
             {
-                m_log.Warn("Not enough parameters!");
+                MainConsole.Instance.Warn("Not enough parameters!");
                 return;
             }
             UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount(UUID.Zero,
@@ -157,7 +156,7 @@ namespace Aurora.Modules
                                                                                                           (cmdparams, 2));
             if (account == null)
             {
-                m_log.Warn("Could not find user");
+                MainConsole.Instance.Warn("Could not find user");
                 return;
             }
             EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
@@ -175,7 +174,7 @@ namespace Aurora.Modules
 
             if (cmdparams.Length < 4)
             {
-                m_log.Warn("Not enough parameters!");
+                MainConsole.Instance.Warn("Not enough parameters!");
                 return;
             }
             if (cmdparams[2] == "Maturity")
@@ -194,7 +193,7 @@ namespace Aurora.Modules
                 }
                 else
                 {
-                    m_log.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
+                    MainConsole.Instance.Warn("Your parameter did not match any existing parameters. Try PG, Mature, or Adult");
                     return;
                 }
                 scene.RegionInfo.RegionSettings.Save();
@@ -210,7 +209,7 @@ namespace Aurora.Modules
 
             if (cmdparams.Length < 4)
             {
-                m_log.Warn("Not enough parameters!");
+                MainConsole.Instance.Warn("Not enough parameters!");
                 return;
             }
             if (cmdparams[2] == "AddEstateBan".ToLower())
@@ -399,7 +398,7 @@ namespace Aurora.Modules
             if (Position.X < -2f || Position.Y < -2f ||
                 Position.X > scene.RegionInfo.RegionSizeX + 2 || Position.Y > scene.RegionInfo.RegionSizeY + 2)
             {
-                m_log.DebugFormat(
+                MainConsole.Instance.DebugFormat(
                     "[EstateService]: AllowedIncomingTeleport was given an illegal position of {0} for avatar {1}, {2}. Clamping",
                     Position, Name, userID);
                 bool changedX = false;
@@ -824,7 +823,7 @@ namespace Aurora.Modules
                     }
                     catch (SocketException)
                     {
-                        m_log.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
+                        MainConsole.Instance.WarnFormat("[IPBAN] IP address \"{0}\" cannot be resolved via DNS", end);
                         rDNS = null;
                     }
                     if (ban.BannedHostIPMask == agent.IPAddress ||
@@ -1113,7 +1112,7 @@ namespace Aurora.Modules
         {
             if (!StartDisabled)
             {
-                m_log.DebugFormat("[Region]: Enabling logins");
+                MainConsole.Instance.DebugFormat("[Region]: Enabling logins");
                 LoginsDisabled = false;
             }
         }

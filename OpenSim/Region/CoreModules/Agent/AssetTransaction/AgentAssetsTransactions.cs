@@ -40,8 +40,6 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
     /// </summary>
     public class AgentAssetTransactions
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         // Fields
         public AssetTransactionModule Manager;
         public UUID UserID;
@@ -159,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         //    }
         //    else
         //    {
-        //        m_log.ErrorFormat(
+        //        MainConsole.Instance.ErrorFormat(
         //            "[ASSET TRANSACTIONS]: Could not find user {0} for inventory item creation",
         //            ourClient.AgentId);
         //    }
@@ -173,7 +171,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 AssetBase asset = XferUploaders[transactionID].GetAssetData();
                 if (asset != null)
                 {
-                    m_log.DebugFormat(
+                    MainConsole.Instance.DebugFormat(
                         "[ASSET TRANSACTIONS]: Updating task item {0} in {1} with asset in transaction {2}",
                         item.Name, part.Name, transactionID);
 

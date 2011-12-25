@@ -382,8 +382,6 @@ namespace OpenSim.Region.Framework.Scenes
 
     public class Prioritizer : IPrioritizer
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly double m_childReprioritizationDistance = 20.0;
 
         public UpdatePrioritizationSchemes UpdatePrioritizationScheme =
@@ -405,13 +403,13 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception)
                 {
-                    m_log.Warn(
+                    MainConsole.Instance.Warn(
                         "[Prioritizer]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
                     UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
                 }
             }
 
-            //m_log.Info("[Prioritizer]: Using the " + UpdatePrioritizationScheme + " prioritization scheme");
+            //MainConsole.Instance.Info("[Prioritizer]: Using the " + UpdatePrioritizationScheme + " prioritization scheme");
         }
 
         #region IPrioritizer Members
@@ -460,7 +458,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (!(ex is InvalidOperationException))
                 {
-                    m_log.Warn("[PRIORITY]: Error in finding priority of a prim/user:" + ex);
+                    MainConsole.Instance.Warn("[PRIORITY]: Error in finding priority of a prim/user:" + ex);
                 }
                 //Set it to max if it errors
                 priority = double.PositiveInfinity;

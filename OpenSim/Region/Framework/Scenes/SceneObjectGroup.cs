@@ -462,7 +462,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_rootPart.Shape == null)
             {
-                m_log.Warn("[SceneObjectGroup]: Found null shape for prim " + UUID + ", creating default box shape");
+                MainConsole.Instance.Warn("[SceneObjectGroup]: Found null shape for prim " + UUID + ", creating default box shape");
                 m_rootPart.Shape = new PrimitiveBaseShape();
             }
 
@@ -1080,7 +1080,7 @@ namespace OpenSim.Region.Framework.Scenes
                             offsetHeight *= -1;
                         }
             */
-            // m_log.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
+            // MainConsole.Instance.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
             return boundingBox;
         }
 
@@ -1509,7 +1509,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     startedColliders.Add(localid);
                 }
-                //m_log.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
+                //MainConsole.Instance.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
             }
 
             // calculate things that ended colliding
@@ -3298,7 +3298,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "grp">The group of prims which should be linked to this group</param>
         public void LinkToGroup(ISceneEntity grp)
         {
-            //m_log.DebugFormat(
+            //MainConsole.Instance.DebugFormat(
             //    "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
             //    objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
 
@@ -3403,7 +3403,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!(part is SceneObjectPart))
                 return null;
             SceneObjectPart linkPart = part as SceneObjectPart;
-//                m_log.DebugFormat(
+//                MainConsole.Instance.DebugFormat(
 //                    "[SCENE OBJECT GROUP]: Delinking part {0}, {1} from group with root part {2}, {3}",
 //                    linkPart.Name, linkPart.UUID, RootPart.Name, RootPart.UUID);
 
@@ -3608,8 +3608,8 @@ namespace OpenSim.Region.Framework.Scenes
                             // save and update old orientation
                             Quaternion old = m_rootPart.SpinOldOrientation;
                             m_rootPart.SpinOldOrientation = newOrientation;
-                            //m_log.Error("[SCENE OBJECT GROUP]: Old orientation is " + old);
-                            //m_log.Error("[SCENE OBJECT GROUP]: Incoming new orientation is " + newOrientation);
+                            //MainConsole.Instance.Error("[SCENE OBJECT GROUP]: Old orientation is " + old);
+                            //MainConsole.Instance.Error("[SCENE OBJECT GROUP]: Incoming new orientation is " + newOrientation);
 
                             // compute difference between previous old rotation and new incoming rotation
                             Quaternion minimalRotationFromQ1ToQ2 = Quaternion.Inverse(old)*newOrientation;
@@ -3619,7 +3619,7 @@ namespace OpenSim.Region.Framework.Scenes
                             minimalRotationFromQ1ToQ2.GetAxisAngle(out rotationAxis, out rotationAngle);
                             rotationAxis.Normalize();
 
-                            //m_log.Error("SCENE OBJECT GROUP]: rotation axis is " + rotationAxis);
+                            //MainConsole.Instance.Error("SCENE OBJECT GROUP]: rotation axis is " + rotationAxis);
                             Vector3 spinforce = new Vector3(rotationAxis.X, rotationAxis.Y, rotationAxis.Z);
                             spinforce = (spinforce/8)*m_rootPart.PhysActor.Mass;
                                 // 8 is an arbitrary torque scaling factor
@@ -4174,7 +4174,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                         }
                         //The group should have crossed a region, but no region was found so return it instead
-                        m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition +
+                        MainConsole.Instance.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition +
                                    " because it has gone out of bounds.");
                         ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)

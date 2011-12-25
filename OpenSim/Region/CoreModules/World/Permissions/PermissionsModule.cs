@@ -42,8 +42,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 {
     public class PermissionsModule : INonSharedRegionModule, IPermissionsModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IConfig PermissionsConfig;
         protected IScene m_scene;
 
@@ -126,7 +124,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         protected void DebugPermissionInformation(string permissionCalled)
         {
             if (m_debugPermissions)
-                m_log.Debug("[PERMISSIONS]: " + permissionCalled + " was called from " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Debug("[PERMISSIONS]: " + permissionCalled + " was called from " + m_scene.RegionInfo.RegionName);
         }
 
         public bool IsInGroup(UUID user, UUID groupID)
@@ -521,18 +519,18 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         public void RegionLoaded(IScene scene)
         {
             //if (m_friendsModule == null)
-            //    m_log.Warn("[PERMISSIONS]: Friends module not found, friend permissions will not work");
+            //    MainConsole.Instance.Warn("[PERMISSIONS]: Friends module not found, friend permissions will not work");
 
             m_groupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
 
             //if (m_groupsModule == null)
-            //    m_log.Warn("[PERMISSIONS]: Groups module not found, group permissions will not work");
+            //    MainConsole.Instance.Warn("[PERMISSIONS]: Groups module not found, group permissions will not work");
 
             m_moapModule = m_scene.RequestModuleInterface<IMoapModule>();
 
             // This log line will be commented out when no longer required for debugging
 //            if (m_moapModule == null)
-//                m_log.Warn("[PERMISSIONS]: Media on a prim module not found, media on a prim permissions will not work");
+//                MainConsole.Instance.Warn("[PERMISSIONS]: Media on a prim module not found, media on a prim permissions will not work");
 
             m_parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
         }
@@ -569,7 +567,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
                 m_bypassPermissions = val;
 
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[PERMISSIONS]: Set permissions bypass to {0} for {1}",
                     m_bypassPermissions, m_scene.RegionInfo.RegionName);
             }
@@ -584,7 +582,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             if (!m_bypassPermissions)
             {
-                m_log.Error("[PERMISSIONS] Permissions can't be forced unless they are bypassed first");
+                MainConsole.Instance.Error("[PERMISSIONS] Permissions can't be forced unless they are bypassed first");
                 return;
             }
 
@@ -597,7 +595,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
                 m_bypassPermissionsValue = val;
 
-                m_log.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}", m_bypassPermissionsValue,
+                MainConsole.Instance.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}", m_bypassPermissionsValue,
                                  m_scene.RegionInfo.RegionName);
             }
         }
@@ -618,7 +616,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
                 m_debugPermissions = val;
 
-                m_log.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}", m_debugPermissions,
+                MainConsole.Instance.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}", m_debugPermissions,
                                  m_scene.RegionInfo.RegionName);
             }
         }
@@ -811,7 +809,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         private bool CanCompileScript(UUID ownerUUID, string scriptType, IScene scene)
         {
-            //m_log.DebugFormat("check if {0} is allowed to compile {1}", ownerUUID, scriptType);
+            //MainConsole.Instance.DebugFormat("check if {0} is allowed to compile {1}", ownerUUID, scriptType);
             switch (scriptType)
             {
                 case "lsl":
@@ -906,7 +904,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         private bool CanControlPrimMedia(UUID agentID, UUID primID, int face)
         {
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[PERMISSONS]: Performing CanControlPrimMedia check with agentID {0}, primID {1}, face {2}",
 //                agentID, primID, face);
 
@@ -923,7 +921,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (null == me)
                 return true;
 
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[PERMISSIONS]: Checking CanControlPrimMedia for {0} on {1} face {2} with control permissions {3}", 
 //                agentID, primID, face, me.ControlPermissions);
 
@@ -932,7 +930,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         private bool CanInteractWithPrimMedia(UUID agentID, UUID primID, int face)
         {
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[PERMISSONS]: Performing CanInteractWithPrimMedia check with agentID {0}, primID {1}, face {2}",
 //                agentID, primID, face);
 
@@ -949,7 +947,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (null == me)
                 return true;
 
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[PERMISSIONS]: Checking CanInteractWithPrimMedia for {0} on {1} face {2} with interact permissions {3}", 
 //                agentID, primID, face, me.InteractPermissions);
 
@@ -1469,7 +1467,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 m_scene.Entities.TryGetValue(objectID, out group);
                 if (group == null)
                 {
-                    m_log.Warn("[PERMISSIONS]: COULD NOT FIND PRIM FOR CanEditObjectInventory! " + objectID);
+                    MainConsole.Instance.Warn("[PERMISSIONS]: COULD NOT FIND PRIM FOR CanEditObjectInventory! " + objectID);
                     return false;
                 }
                 objectID = group.UUID;
@@ -2160,7 +2158,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
                 if (part == null)
                 {
-                    m_log.Warn("[PERMISSIONS]: NULL PRIM IN canViewScript! " + objectID);
+                    MainConsole.Instance.Warn("[PERMISSIONS]: NULL PRIM IN canViewScript! " + objectID);
                     return false;
                 }
 
@@ -2264,7 +2262,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
                 if (part == null)
                 {
-                    m_log.Warn("[PERMISSIONS]: NULL PRIM IN canViewNotecard! " + objectID);
+                    MainConsole.Instance.Warn("[PERMISSIONS]: NULL PRIM IN canViewNotecard! " + objectID);
                     return false;
                 }
 

@@ -45,7 +45,6 @@ namespace OpenSim.Services.CapsService
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IRegistryCore m_registry;
 
         #endregion
@@ -110,7 +109,7 @@ namespace OpenSim.Services.CapsService
 
         private bool AddToQueue(OSD ev, UUID avatarID, ulong regionHandle, bool runasync)
         {
-            //m_log.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
+            //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: Enqueuing event for {0} in region {1}", avatarID, m_scene.RegionInfo.RegionName);
 
             if (ev == null)
                 return false;
@@ -152,7 +151,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception e)
             {
-                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
+                MainConsole.Instance.Error("[EVENTQUEUE] Caught exception: " + e);
             }
 
             return false;
@@ -168,7 +167,7 @@ namespace OpenSim.Services.CapsService
                 {
                     bool success = result["success"].AsBoolean();
                     if (!success)
-                        m_log.Warn("[EventQueueServicesConnector]: Failed to post EQMessage for user " + avatarID);
+                        MainConsole.Instance.Warn("[EventQueueServicesConnector]: Failed to post EQMessage for user " + avatarID);
                     else
                         return success;
                 }

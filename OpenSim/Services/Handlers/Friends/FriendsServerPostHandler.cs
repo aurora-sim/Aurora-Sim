@@ -44,8 +44,6 @@ namespace OpenSim.Services
 {
     public class FriendsServerPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IFriendsService m_FriendsService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -66,7 +64,7 @@ namespace OpenSim.Services
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
 
             try
             {
@@ -101,11 +99,11 @@ namespace OpenSim.Services
                                 return FailureResult();
                         return DeleteFriend(request);
                 }
-                m_log.DebugFormat("[FRIENDS HANDLER]: unknown method {0} request {1}", method.Length, method);
+                MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: unknown method {0} request {1}", method.Length, method);
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[FRIENDS HANDLER]: Exception {0}", e);
+                MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: Exception {0}", e);
             }
 
             return FailureResult();
@@ -119,10 +117,10 @@ namespace OpenSim.Services
             if (request.ContainsKey("PRINCIPALID"))
                 UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
             else
-                m_log.WarnFormat("[FRIENDS HANDLER]: no principalID in request to get friends");
+                MainConsole.Instance.WarnFormat("[FRIENDS HANDLER]: no principalID in request to get friends");
 
             FriendInfo[] finfos = m_FriendsService.GetFriends(principalID);
-            //m_log.DebugFormat("[FRIENDS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
+            //MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             Dictionary<string, object> result = new Dictionary<string, object>();
             if ((finfos == null) || ((finfos != null) && (finfos.Length == 0)))
@@ -147,7 +145,7 @@ namespace OpenSim.Services
             }
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -170,7 +168,7 @@ namespace OpenSim.Services
             if (request.ContainsKey("PRINCIPALID"))
                 UUID.TryParse(request["PRINCIPALID"].ToString(), out principalID);
             else
-                m_log.WarnFormat("[FRIENDS HANDLER]: no principalID in request to delete friend");
+                MainConsole.Instance.WarnFormat("[FRIENDS HANDLER]: no principalID in request to delete friend");
             string friend = string.Empty;
             if (request.ContainsKey("FRIEND"))
                 friend = request["FRIEND"].ToString();

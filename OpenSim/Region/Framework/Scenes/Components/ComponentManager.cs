@@ -44,8 +44,6 @@ namespace OpenSim.Region.Framework.Scenes.Components
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Dictionary of all the components that we have by name, component
         /// </summary>
@@ -71,7 +69,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 if (m_componentsBaseType.ContainsKey(component.BaseType))
                 {
                     //We only register one base type per session
-                    m_log.Warn(
+                    MainConsole.Instance.Warn(
                         "[COMPONENTMANAGER]: Tried registering a component while another base type was already registed by the same base type! The previously registered module was " +
                         m_componentsBaseType[component.BaseType]);
                     return;
@@ -80,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             //Now check for name duplication
             if (m_components.ContainsKey(component.Name))
             {
-                m_log.Warn(
+                MainConsole.Instance.Warn(
                     "[COMPONENTMANAGER]: Tried registering a component while another module already has used this name '" +
                     component.Name + "'!");
                 return;
@@ -136,7 +134,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             }
             else
             {
-                m_log.Warn("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
+                MainConsole.Instance.Warn("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
                 DefaultComponents com = new DefaultComponents(Name, 0);
                 RegisterComponent(com);
                 return m_components[Name].GetState(obj.UUID);
@@ -288,7 +286,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[COMPONENTMANAGER]: Error on deserializing Components! " + ex);
+                    MainConsole.Instance.Warn("[COMPONENTMANAGER]: Error on deserializing Components! " + ex);
                 }
             }
         }

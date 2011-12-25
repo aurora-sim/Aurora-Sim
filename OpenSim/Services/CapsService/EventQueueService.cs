@@ -203,7 +203,7 @@ namespace OpenSim.Services.CapsService
                                                              transactionID,
                                                              fromGroup, binaryBucket);
             Enqueue(item, toAgent, RegionHandle);
-            //m_log.InfoFormat("########### eq ChatterboxInvitation #############\n{0}", item);
+            //MainConsole.Instance.InfoFormat("########### eq ChatterboxInvitation #############\n{0}", item);
         }
 
         public virtual void ChatterBoxSessionAgentListUpdates(UUID sessionID, UUID fromAgent, UUID toAgent,
@@ -213,7 +213,7 @@ namespace OpenSim.Services.CapsService
             OSD item = EventQueueHelper.ChatterBoxSessionAgentListUpdates(sessionID, fromAgent, canVoiceChat,
                                                                           isModerator, textMute);
             Enqueue(item, toAgent, RegionHandle);
-            //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
+            //MainConsole.Instance.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
         public virtual void ChatterBoxSessionAgentListUpdates(UUID sessionID,
@@ -223,7 +223,7 @@ namespace OpenSim.Services.CapsService
         {
             OSD item = EventQueueHelper.ChatterBoxSessionAgentListUpdates(sessionID, messages, Transition);
             Enqueue(item, toAgent, RegionHandle);
-            //m_log.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
+            //MainConsole.Instance.InfoFormat("########### eq ChatterBoxSessionAgentListUpdates #############\n{0}", item);
         }
 
         public virtual void ParcelProperties(ParcelPropertiesMessage parcelPropertiesPacket, UUID avatarID,
@@ -272,8 +272,6 @@ namespace OpenSim.Services.CapsService
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Queue<OSD> queue = new Queue<OSD>();
         private string m_capsPath;
         private int m_ids;
@@ -311,7 +309,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (NullReferenceException e)
             {
-                m_log.Error("[EVENTQUEUE] Caught exception: " + e);
+                MainConsole.Instance.Error("[EVENTQUEUE] Caught exception: " + e);
                 return false;
             }
 
@@ -352,7 +350,7 @@ namespace OpenSim.Services.CapsService
                                                 {{"body", new OSDMap()}, {"message", new OSDString("FAKEEVENT")}};
                     element = keepAliveEvent;
                     array.Add(keepAliveEvent);
-                    //m_log.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
+                    //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
                 }
 
                 array.Add(element);
@@ -376,7 +374,7 @@ namespace OpenSim.Services.CapsService
                             OSDMap map = (OSDMap) ev;
                             if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                             {
-                                m_log.Debug("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
+                                MainConsole.Instance.Debug("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
                                 removeAt = array.IndexOf(ev);
                                 //This will be the last bunch of EQMs that go through, so we can safely die now
                                 //Except that we can't do this, the client will freak if we do this
@@ -398,7 +396,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                m_log.Warn("[EQS]: Exception! " + ex);
+                MainConsole.Instance.Warn("[EQS]: Exception! " + ex);
             }
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200;
@@ -406,7 +404,7 @@ namespace OpenSim.Services.CapsService
             responsedata["keepalive"] = false;
             responsedata["reusecontext"] = false;
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
-            //m_log.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", pAgentId, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
+            //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", pAgentId, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
             return responsedata;
         }
 
@@ -427,16 +425,16 @@ namespace OpenSim.Services.CapsService
             // TODO: this has to be redone to not busy-wait (and block the thread),
             // TODO: as soon as we have a non-blocking way to handle HTTP-requests.
 
-            //            if (m_log.IsDebugEnabled)
+            //            if (MainConsole.Instance.IsDebugEnabled)
             //            { 
             //                String debug = "[EVENTQUEUE]: Got request for agent {0} in region {1} from thread {2}: [  ";
             //                foreach (object key in request.Keys)
             //                {
             //                    debug += key.ToString() + "=" + request[key].ToString() + "  ";
             //                }
-            //                m_log.DebugFormat(debug + "  ]", agentID, m_scene.RegionInfo.RegionName, System.Threading.Thread.CurrentThread.Name);
+            //                MainConsole.Instance.DebugFormat(debug + "  ]", agentID, m_scene.RegionInfo.RegionName, System.Threading.Thread.CurrentThread.Name);
             //            }
-            //m_log.Warn("Got EQM get at " + m_handler.CapsURL);
+            //MainConsole.Instance.Warn("Got EQM get at " + m_handler.CapsURL);
             OSD element = null;
             lock (queue)
             {
@@ -448,7 +446,7 @@ namespace OpenSim.Services.CapsService
 
             if (element == null)
             {
-                //m_log.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
+                //MainConsole.Instance.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
                 return NoEvents(UUID.Zero, agentID);
             }
 
@@ -496,7 +494,7 @@ namespace OpenSim.Services.CapsService
             responsedata["content_type"] = "application/xml";
             responsedata["keepalive"] = false;
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
-            //m_log.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", agentID, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
+            //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", agentID, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
 
             return responsedata;
         }

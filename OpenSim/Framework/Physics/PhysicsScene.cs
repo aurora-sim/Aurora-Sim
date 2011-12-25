@@ -50,8 +50,6 @@ namespace OpenSim.Framework
 
     public abstract class PhysicsScene
     {
-        public static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public virtual float TimeDilation
         {
             get { return 1.0f; }
@@ -256,7 +254,7 @@ namespace OpenSim.Framework
         public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint localID, UUID UUID)
         {
-            m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
+            MainConsole.Instance.InfoFormat("[PHYSICS]: NullPhysicsScene : AddAvatar({0})", position);
             return new NullCharacterPhysicsActor();
         }
 
@@ -275,7 +273,7 @@ namespace OpenSim.Framework
         /*
                     public override PhysicsActor AddPrim(Vector3 position, Vector3 size, Quaternion rotation)
                     {
-                        m_log.InfoFormat("NullPhysicsScene : AddPrim({0},{1})", position, size);
+                        MainConsole.Instance.InfoFormat("NullPhysicsScene : AddPrim({0},{1})", position, size);
                         return PhysicsActor.Null;
                     }
         */
@@ -296,7 +294,7 @@ namespace OpenSim.Framework
 
         public override void SetTerrain(ITerrainChannel channel, short[] heightMap)
         {
-            m_log.InfoFormat("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
+            MainConsole.Instance.InfoFormat("[PHYSICS]: NullPhysicsScene : SetTerrain({0} items)", heightMap.Length);
         }
 
         public override void Dispose()

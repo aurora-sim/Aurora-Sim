@@ -156,7 +156,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                 // This is currently a bad debug stanza since it gobbles us the response...
                 //                StreamReader reader = new StreamReader(stream);
-                //                m_log.DebugFormat("[REST OBJECT POSTER RESPONSE]: Received {0}", reader.ReadToEnd());
+                //                MainConsole.Instance.DebugFormat("[REST OBJECT POSTER RESPONSE]: Received {0}", reader.ReadToEnd());
 
                 if (stream != null)
                 {
@@ -179,9 +179,6 @@ namespace OpenSim.Framework.Servers.HttpServer
     public class RestDeserialiseSecureHandler<TRequest, TResponse> : BaseRequestHandler, IStreamHandler
         where TRequest : new()
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly RestDeserialiseMethod<TRequest, TResponse> m_method;
         private readonly CheckIdentityMethod m_smethod;
 
@@ -211,7 +208,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.Error("[REST]: Deserialization problem. Ignoring request. " + e);
+                    MainConsole.Instance.Error("[REST]: Deserialization problem. Ignoring request. " + e);
                     fail = true;
                 }
             }
@@ -237,9 +234,6 @@ namespace OpenSim.Framework.Servers.HttpServer
     public class RestDeserialiseTrustedHandler<TRequest, TResponse> : BaseRequestHandler, IStreamHandler
         where TRequest : new()
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   The operation to perform once trust has been established.
         /// </summary>
@@ -276,7 +270,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.Error("[REST]: Deserialization problem. Ignoring request. " + e);
+                    MainConsole.Instance.Error("[REST]: Deserialization problem. Ignoring request. " + e);
                     fail = true;
                 }
             }

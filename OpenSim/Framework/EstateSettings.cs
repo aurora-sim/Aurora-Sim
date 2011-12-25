@@ -35,7 +35,7 @@ namespace OpenSim.Framework
 {
     public class EstateSettings
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        // private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         #region Delegates
 

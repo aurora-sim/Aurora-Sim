@@ -49,8 +49,6 @@ namespace Aurora.Framework
 {
     public static class Utilities
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static string EncryptorType = "SHA1";
         private static int EncryptIterations = 2;
         private static int KeySize = 256;
@@ -376,7 +374,7 @@ namespace Aurora.Framework
                     catch (Exception iex)
                     {
                         NetworkUtils.InternetFailure();
-                        m_log.Error("[Utilities]: Failed to get external IP, " + iex +
+                        MainConsole.Instance.Error("[Utilities]: Failed to get external IP, " + iex +
                                     ", please check your internet connection (if this applies), setting to internal...");
                         externalIp = "127.0.0.1";
                     }
@@ -571,7 +569,7 @@ namespace Aurora.Framework
             WebClient webClient = new WebClient();
             try
             {
-                m_log.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
+                MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
                 webClient.DownloadFile(downloadLink, filename);
             }
             catch (Exception)

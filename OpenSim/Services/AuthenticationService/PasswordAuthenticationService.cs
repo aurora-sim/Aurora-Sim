@@ -46,10 +46,6 @@ namespace OpenSim.Services.AuthenticationService
     public class PasswordAuthenticationService :
         AuthenticationServiceBase, IAuthenticationService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         public virtual string Name
         {
             get { return GetType().Name; }
@@ -82,7 +78,7 @@ namespace OpenSim.Services.AuthenticationService
                     string hashed = Util.Md5Hash(password + ":" +
                                                  data.PasswordSalt);
 
-                    m_log.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed,
+                    MainConsole.Instance.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed,
                                       data.PasswordHash);
 
                     if (data.PasswordHash == hashed)
@@ -92,7 +88,7 @@ namespace OpenSim.Services.AuthenticationService
                 }
             }
 
-            m_log.DebugFormat("[AUTH SERVICE]: PrincipalID {0} or its data not found", principalID);
+            MainConsole.Instance.DebugFormat("[AUTH SERVICE]: PrincipalID {0} or its data not found", principalID);
             return String.Empty;
         }
 

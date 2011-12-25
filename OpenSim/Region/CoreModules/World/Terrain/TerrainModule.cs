@@ -76,8 +76,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private static readonly List<IScene> m_scenes = new List<IScene>();
         private static readonly List<TerrainModule> m_terrainModules = new List<TerrainModule>();
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<StandardTerrainEffects, ITerrainFloodEffect> m_floodeffects =
             new Dictionary<StandardTerrainEffects, ITerrainFloodEffect>();
 
@@ -273,7 +271,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IOException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize ||
                     m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
@@ -285,21 +283,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IndexOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
                 m_revert = m_channel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (ArgumentOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
                 m_revert = m_channel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e);
+                MainConsole.Instance.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e);
             }
         }
 
@@ -316,7 +314,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     if (m_channel == null)
                     {
-                        m_log.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
+                        MainConsole.Instance.Info("[TERRAIN]: No default terrain. Generating a new terrain.");
                         m_channel = new TerrainChannel(m_scene);
 
                         m_scene.SimulationDataService.Tainted();
@@ -329,7 +327,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IOException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize ||
                     m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
@@ -341,21 +339,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IndexOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
                 m_channel = new TerrainChannel(m_scene);
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (ArgumentOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldMap() - Failed with exception " + e + " Regenerating");
                 m_channel = new TerrainChannel(m_scene);
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e);
+                MainConsole.Instance.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e);
                 m_channel = new TerrainChannel(m_scene);
 
                 m_scene.SimulationDataService.Tainted();
@@ -390,14 +388,14 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             {
                                 m_channel = channel;
                                 m_scene.RegisterModuleInterface(m_channel);
-                                m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                                MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
                             }
                             else
                             {
                                 //Make sure it is in bounds
                                 if ((offsetX + channel.Width) > m_channel.Width || (offsetY + channel.Height) > m_channel.Height)
                                 {
-                                    m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                    MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
                                     return;
                                 }
                                 else
@@ -410,29 +408,29 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                             m_channel[x, y] = channel[x - offsetX, y - offsetY];
                                         }
                                     }
-                                    m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                                    MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
                                 }
                             }
                             UpdateRevertMap();
                         }
                         catch (NotImplementedException)
                         {
-                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
+                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
                             throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
                         }
                         catch (FileNotFoundException)
                         {
-                            m_log.Error("[TERRAIN]: Unable to load heightmap, file not found. (A directory permissions error may also cause this)");
+                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, file not found. (A directory permissions error may also cause this)");
                             throw new TerrainException(String.Format("unable to load heightmap: file {0} not found (or permissions do not allow access", filename));
                         }
                         catch (ArgumentException e)
                         {
-                            m_log.ErrorFormat("[TERRAIN]: Unable to load heightmap: {0}", e.Message);
+                            MainConsole.Instance.ErrorFormat("[TERRAIN]: Unable to load heightmap: {0}", e.Message);
                             throw new TerrainException(String.Format("Unable to load heightmap: {0}", e.Message));
                         }
                     }
                     CheckForTerrainUpdates();
-                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                     return;
                 }
             }
@@ -450,7 +448,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             m_channel = channel;
                             m_scene.RegisterModuleInterface(m_channel);
-                            m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
+                            MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
                                               channel.Height);
                         }
                         else
@@ -459,7 +457,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                             if ((offsetX + channel.Width) > m_channel.Width ||
                                 (offsetY + channel.Height) > m_channel.Height)
                             {
-                                m_log.Error(
+                                MainConsole.Instance.Error(
                                     "[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
                                 return;
                             }
@@ -473,7 +471,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                         m_channel[x, y] = channel[x - offsetX, y - offsetY];
                                     }
                                 }
-                                m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
+                                MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
                                                   channel.Height);
                             }
                         }
@@ -481,7 +479,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                     catch (NotImplementedException)
                     {
-                        m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
+                        MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
                                     " parser does not support file loading. (May be save only)");
                         throw new TerrainException(
                             String.Format("unable to load heightmap: parser {0} does not support loading",
@@ -489,7 +487,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                     catch (FileNotFoundException)
                     {
-                        m_log.Error(
+                        MainConsole.Instance.Error(
                             "[TERRAIN]: Unable to load heightmap, file not found. (A directory permissions error may also cause this)");
                         throw new TerrainException(
                             String.Format(
@@ -498,18 +496,18 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                     catch (ArgumentException e)
                     {
-                        m_log.ErrorFormat("[TERRAIN]: Unable to load heightmap: {0}", e.Message);
+                        MainConsole.Instance.ErrorFormat("[TERRAIN]: Unable to load heightmap: {0}", e.Message);
                         throw new TerrainException(
                             String.Format("Unable to load heightmap: {0}", e.Message));
                     }
                 }
                 CheckForTerrainUpdates();
-                m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return;
             }
 #endif
 
-            m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
+            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
         }
@@ -541,13 +539,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (NotImplementedException)
             {
-                m_log.Error("Unable to save to " + filename + ", saving of this file format has not been implemented.");
+                MainConsole.Instance.Error("Unable to save to " + filename + ", saving of this file format has not been implemented.");
                 throw new TerrainException(
                     String.Format("Unable to save heightmap: saving of this file format not implemented"));
             }
             catch (IOException ioe)
             {
-                m_log.Error(String.Format("[TERRAIN]: Unable to save to {0}, {1}", filename, ioe.Message));
+                MainConsole.Instance.Error(String.Format("[TERRAIN]: Unable to save to {0}, {1}", filename, ioe.Message));
                 throw new TerrainException(String.Format("Unable to save heightmap: {0}", ioe.Message));
             }
         }
@@ -599,7 +597,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                                 m_channel[x, y] = channel[x, y];
                                             }
                                         }
-                                        //m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        //MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
                                         //return;
                                     }
                                     else
@@ -612,7 +610,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                                 m_channel[x, y] = channel[x, y];
                                             }
                                         }
-                                        m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
+                                        MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width, channel.Height);
                                     }
                                 }
                                 UpdateRevertMap();
@@ -620,13 +618,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         }
                         catch (NotImplementedException)
                         {
-                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
+                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
                             throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
                         }
                     }
 
                     CheckForTerrainUpdates();
-                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                     return;
                 }
             }
@@ -660,7 +658,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                             m_channel[x, y] = channel[x, y];
                                         }
                                     }
-                                    //m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                    //MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
                                     //return;
                                 }
                                 else
@@ -673,7 +671,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                             m_channel[x, y] = channel[x, y];
                                         }
                                     }
-                                    m_log.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
+                                    MainConsole.Instance.DebugFormat("[TERRAIN]: Loaded terrain, wd/ht: {0}/{1}", channel.Width,
                                                       channel.Height);
                                 }
                             }
@@ -682,7 +680,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                     catch (NotImplementedException)
                     {
-                        m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
+                        MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
                                     " parser does not support file loading. (May be save only)");
                         throw new TerrainException(
                             String.Format("unable to load heightmap: parser {0} does not support loading",
@@ -691,11 +689,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
 
                 CheckForTerrainUpdates();
-                m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return;
             }
 #endif
-            m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
+            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
         }
@@ -792,7 +790,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (NotImplementedException)
             {
-                m_log.Error("Unable to save to " + filename + ", saving of this file format has not been implemented.");
+                MainConsole.Instance.Error("Unable to save to " + filename + ", saving of this file format has not been implemented.");
                 throw new TerrainException(
                     String.Format("Unable to save heightmap: saving of this file format not implemented"));
             }
@@ -1068,7 +1066,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IOException e)
             {
-                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize ||
                     m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
@@ -1080,21 +1078,21 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IndexOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
                 m_waterRevert = m_waterChannel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (ArgumentOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e + " Regenerating");
                 m_waterRevert = m_waterChannel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
             }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e);
+                MainConsole.Instance.Warn("[TERRAIN]: LoadRevertWaterMap() - Failed with exception " + e);
                 m_waterRevert = m_waterChannel.MakeCopy();
 
                 m_scene.SimulationDataService.Tainted();
@@ -1116,7 +1114,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 {
                     if (m_waterChannel == null)
                     {
-                        m_log.Info("[TERRAIN]: No default water. Generating a new water.");
+                        MainConsole.Instance.Info("[TERRAIN]: No default water. Generating a new water.");
                         m_waterChannel = new TerrainChannel(m_scene);
                         for (int x = 0; x < m_waterChannel.Height; x++)
                         {
@@ -1136,7 +1134,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IOException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
                 // Non standard region size.    If there's an old terrain in the database, it might read past the buffer
                 if (m_scene.RegionInfo.RegionSizeX != Constants.RegionSize ||
                     m_scene.RegionInfo.RegionSizeY != Constants.RegionSize)
@@ -1155,7 +1153,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (IndexOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
                 for (int x = 0; x < m_waterChannel.Height; x++)
                 {
@@ -1169,7 +1167,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (ArgumentOutOfRangeException e)
             {
-                m_log.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
+                MainConsole.Instance.Warn("[TERRAIN]: LoadWorldWaterMap() - Failed with exception " + e + " Regenerating");
                 m_waterChannel = new TerrainChannel(m_scene);
                 for (int x = 0; x < m_waterChannel.Height; x++)
                 {
@@ -1183,7 +1181,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             }
             catch (Exception e)
             {
-                m_log.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e);
+                MainConsole.Instance.Warn("[TERRAIN]: Scene.cs: LoadWorldMap() - Failed with exception " + e);
                 m_waterChannel = new TerrainChannel(m_scene);
                 for (int x = 0; x < m_waterChannel.Height; x++)
                 {
@@ -1244,7 +1242,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                     //Make sure it is in bounds
                                     if ((offsetX + channel.Width) > update.Width || (offsetY + channel.Height) > update.Height)
                                     {
-                                        m_log.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
+                                        MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
                                         return null;
                                     }
                                     else
@@ -1264,12 +1262,12 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         }
                         catch (NotImplementedException)
                         {
-                            m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
+                            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value + " parser does not support file loading. (May be save only)");
                             throw new TerrainException(String.Format("unable to load heightmap: parser {0} does not support loading", loader.Value));
                         }
                     }
 
-                    m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                    MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                     return channel;
                 }
             }
@@ -1312,7 +1310,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                                 if ((offsetX + channel.Width) > update.Width ||
                                     (offsetY + channel.Height) > update.Height)
                                 {
-                                    m_log.Error(
+                                    MainConsole.Instance.Error(
                                         "[TERRAIN]: Unable to load heightmap, the terrain you have given is larger than the current region.");
                                     return null;
                                 }
@@ -1333,7 +1331,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                     catch (NotImplementedException)
                     {
-                        m_log.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
+                        MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, the " + loader.Value +
                                     " parser does not support file loading. (May be save only)");
                         throw new TerrainException(
                             String.Format("unable to load heightmap: parser {0} does not support loading",
@@ -1341,11 +1339,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     }
                 }
 
-                m_log.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
+                MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
                 return channel;
             }
 #endif
-            m_log.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
+            MainConsole.Instance.Error("[TERRAIN]: Unable to load heightmap, no file loader available for that format.");
             throw new TerrainException(
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
         }
@@ -1683,7 +1681,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         CheckForTerrainUpdates(!god, false, true);
                     }
                     else
-                        m_log.Warn("Unknown terrain brush type " + action);
+                        MainConsole.Instance.Warn("Unknown terrain brush type " + action);
                 }
             }
             else
@@ -1709,7 +1707,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         CheckForTerrainUpdates(!god, false, true);
                     }
                     else
-                        m_log.Warn("Unknown terrain flood type " + action);
+                        MainConsole.Instance.Warn("Unknown terrain flood type " + action);
                 }
             }
         }
@@ -1727,7 +1725,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
         protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
         {
-            //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
+            //MainConsole.Instance.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
             client.SendLayerData(patchX, patchY, m_channel.GetSerialised(m_scene));
         }
 
@@ -1758,7 +1756,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (scene == null)
             {
                 string line =
-                    MainConsole.Instance.CmdPrompt("Are you sure that you want to do this command on all scenes?", "yes");
+                    MainConsole.Instance.Prompt("Are you sure that you want to do this command on all scenes?", "yes");
                 if (!line.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
                     return modules;
                 //Return them all
@@ -1902,7 +1900,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 }
                 else
                 {
-                    m_log.Error("Unrecognised direction - need x or y");
+                    MainConsole.Instance.Error("Unrecognised direction - need x or y");
                 }
 
 
@@ -1921,7 +1919,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
                 // determine desired scaling factor
                 float desiredRange = desiredMax - desiredMin;
-                //m_log.InfoFormat("Desired {0}, {1} = {2}", new Object[] { desiredMin, desiredMax, desiredRange });
+                //MainConsole.Instance.InfoFormat("Desired {0}, {1} = {2}", new Object[] { desiredMin, desiredMax, desiredRange });
 
                 if (desiredRange == 0d)
                 {
@@ -1956,8 +1954,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                     float currRange = currMax - currMin;
                     float scale = desiredRange/currRange;
 
-                    //m_log.InfoFormat("Current {0}, {1} = {2}", new Object[] { currMin, currMax, currRange });
-                    //m_log.InfoFormat("Scale = {0}", scale);
+                    //MainConsole.Instance.InfoFormat("Current {0}, {1} = {2}", new Object[] { currMin, currMax, currRange });
+                    //MainConsole.Instance.InfoFormat("Scale = {0}", scale);
 
                     // scale the heightmap accordingly
                     for (int x = 0; x < width; x++)
@@ -2057,8 +2055,8 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
                 double avg = sum/(tmodule.m_channel.Height*tmodule.m_channel.Width);
 
-                m_log.Info("Channel " + tmodule.m_channel.Width + "x" + tmodule.m_channel.Height);
-                m_log.Info("max/min/avg/sum: " + max + "/" + min + "/" + avg + "/" + sum);
+                MainConsole.Instance.Info("Channel " + tmodule.m_channel.Width + "x" + tmodule.m_channel.Height);
+                MainConsole.Instance.Info("max/min/avg/sum: " + max + "/" + min + "/" + avg + "/" + sum);
             }
         }
 
@@ -2093,35 +2091,35 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             string supportedFileExtensions = m_loaders.Aggregate("", (current, loader) => current + (" " + loader.Key + " (" + loader.Value + ")"));
 #endif
 
-            m_log.Info(
+            MainConsole.Instance.Info(
                 "terrain load <FileName> - Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
                 supportedFileExtensions);
-            m_log.Info(
+            MainConsole.Instance.Info(
                 "terrain save <FileName> - Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
                 supportedFileExtensions);
-            m_log.Info(
+            MainConsole.Instance.Info(
                 "terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile> - Loads a terrain from a section of a larger file. " +
                 "\n file width: The width of the file in tiles" +
                 "\n file height: The height of the file in tiles" +
                 "\n minimum X tile: The X region coordinate of the first section on the file" +
                 "\n minimum Y tile: The Y region coordinate of the first section on the file");
-            m_log.Info("terrain fill <value> - Fills the current heightmap with a specified value." +
+            MainConsole.Instance.Info("terrain fill <value> - Fills the current heightmap with a specified value." +
                        "\n value: The numeric value of the height you wish to set your region to.");
-            m_log.Info("terrain elevate <value> - Raises the current heightmap by the specified amount." +
+            MainConsole.Instance.Info("terrain elevate <value> - Raises the current heightmap by the specified amount." +
                        "\n amount: The amount of height to remove from the terrain in meters.");
-            m_log.Info("terrain lower <value> - Lowers the current heightmap by the specified amount." +
+            MainConsole.Instance.Info("terrain lower <value> - Lowers the current heightmap by the specified amount." +
                        "\n amount: The amount of height to remove from the terrain in meters.");
-            m_log.Info("terrain multiply <value> - Multiplies the heightmap by the value specified." +
+            MainConsole.Instance.Info("terrain multiply <value> - Multiplies the heightmap by the value specified." +
                        "\n value: The value to multiply the heightmap by.");
-            m_log.Info("terrain bake - Saves the current terrain into the regions revert map.");
-            m_log.Info("terrain revert - Loads the revert map terrain into the regions heightmap.");
-            m_log.Info("terrain stats - Shows some information about the regions heightmap for debugging purposes.");
-            m_log.Info(
+            MainConsole.Instance.Info("terrain bake - Saves the current terrain into the regions revert map.");
+            MainConsole.Instance.Info("terrain revert - Loads the revert map terrain into the regions heightmap.");
+            MainConsole.Instance.Info("terrain stats - Shows some information about the regions heightmap for debugging purposes.");
+            MainConsole.Instance.Info(
                 "terrain newbrushes <enabled> - Enables experimental brushes which replace the standard terrain brushes." +
                 "\n enabled: true / false - Enable new brushes");
-            m_log.Info("terrain flip <direction> - Flips the current terrain about the X or Y axis" +
+            MainConsole.Instance.Info("terrain flip <direction> - Flips the current terrain about the X or Y axis" +
                        "\n direction: [x|y] the direction to flip the terrain in");
-            m_log.Info(
+            MainConsole.Instance.Info(
                 "terrain rescale <min> <max> - Rescales the current terrain to fit between the given min and max heights" +
                 "\n Min: min terrain height after rescaling" +
                 "\n Max: max terrain height after rescaling");

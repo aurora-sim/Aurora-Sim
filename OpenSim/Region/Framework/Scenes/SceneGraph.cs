@@ -48,8 +48,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected internal EntityManager Entities = new EntityManager();
 
         protected RegionInfo m_regInfo;
@@ -214,7 +212,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                     {
                         // we can't find the parent..  ! arg!
-                        m_log.Warn("Could not find parent prim for avatar " + sp.Name);
+                        MainConsole.Instance.Warn("Could not find parent prim for avatar " + sp.Name);
                         coarseLocations.Add(sp.AbsolutePosition);
                         avatarUUIDs.Add(sp.UUID);
                     }
@@ -308,7 +306,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!Entities.Remove(agent))
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[SCENE]: Tried to remove non-existent scene presence with agent ID {0} from scene Entities list",
                     agent.UUID);
                 return;
@@ -523,7 +521,7 @@ namespace OpenSim.Region.Framework.Scenes
                 catch (Exception e)
                 {
                     // Catch it and move on. This includes situations where splist has inconsistent info
-                    m_log.WarnFormat("[SCENE]: Problem processing action in ForEachSOG: {0}", e.ToString());
+                    MainConsole.Instance.WarnFormat("[SCENE]: Problem processing action in ForEachSOG: {0}", e.ToString());
                 }
             }
         }
@@ -546,8 +544,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
-                        m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
+                        MainConsole.Instance.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
+                        MainConsole.Instance.Info("[BUG] Stack Trace: " + e.StackTrace);
                     }
                 });
             Parallel.ForEach<ScenePresence>(GetScenePresences(), protectedAction);
@@ -562,8 +560,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception e)
                 {
-                    m_log.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
-                    m_log.Info("[BUG] Stack Trace: " + e.StackTrace);
+                    MainConsole.Instance.Info("[BUG] in " + m_parentScene.RegionInfo.RegionName + ": " + e.ToString());
+                    MainConsole.Instance.Info("[BUG] Stack Trace: " + e.StackTrace);
                 }
             }
         }
@@ -811,7 +809,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (target != null)
                 {
                     pos = target.AbsolutePosition;
-                    //m_log.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
+                    //MainConsole.Instance.Info("[OBJECT_REZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
 
                     // TODO: Raytrace better here
 
@@ -822,7 +820,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityIntersection ei = target.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, FaceCenter);
 
                     // Un-comment out the following line to Get Raytrace results printed to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    //MainConsole.Instance.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
                     float ScaleOffset = 0.5f;
 
                     // If we hit something
@@ -855,7 +853,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityIntersection ei = GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), true, false);
 
                     // Un-comment the following line to print the raytrace results to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    //MainConsole.Instance.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
 
                     pos = ei.HitTF ? new Vector3(ei.ipoint.X, ei.ipoint.Y, ei.ipoint.Z) : RayEnd;
 
@@ -899,7 +897,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual ISceneEntity AddNewPrim(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
-            //m_log.DebugFormat(
+            //MainConsole.Instance.DebugFormat(
             //    "[SCENE]: Scene.AddNewPrim() pcode {0} called for {1} in {2}", shape.PCode, ownerID, RegionInfo.RegionName);
 
             SceneObjectGroup sceneObject = new SceneObjectGroup (ownerID, pos, rot, shape, m_DefaultObjectName, m_parentScene);
@@ -941,7 +939,7 @@ namespace OpenSim.Region.Framework.Scenes
                                            bool BypassRaycast, bool RayEndIsIntersection, bool CopyCenters, bool CopyRotates)
         {
             const bool frontFacesOnly = true;
-            //m_log.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
+            //MainConsole.Instance.Info("HITTARGET: " + RayTargetObj.ToString() + ", COPYTARGET: " + localID.ToString());
             ISceneChildEntity target = m_parentScene.GetSceneObjectPart (localID);
             ISceneChildEntity target2 = m_parentScene.GetSceneObjectPart (RayTargetObj);
             IScenePresence Sp = GetScenePresence (AgentID);
@@ -960,8 +958,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if (target2.ParentEntity != null)
                 {
                     pos = target2.AbsolutePosition;
-                    //m_log.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
-                    //m_log.Info("[OBJECTREZ]: AXOrigin: " + AXOrigin.ToString() + "AXdirection: " + AXdirection.ToString());
+                    //MainConsole.Instance.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
+                    //MainConsole.Instance.Info("[OBJECTREZ]: AXOrigin: " + AXOrigin.ToString() + "AXdirection: " + AXdirection.ToString());
                     // TODO: Raytrace better here
 
                     //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), false, false);
@@ -971,7 +969,7 @@ namespace OpenSim.Region.Framework.Scenes
                     EntityIntersection ei = target2.TestIntersectionOBB(NewRay, Quaternion.Identity, frontFacesOnly, CopyCenters);
 
                     // Un-comment out the following line to Get Raytrace results printed to the console.
-                    //m_log.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
+                    //MainConsole.Instance.Info("[RAYTRACERESULTS]: Hit:" + ei.HitTF.ToString() + " Point: " + ei.ipoint.ToString() + " Normal: " + ei.normal.ToString());
                     float ScaleOffset = 0.5f;
 
                     // If we hit something
@@ -1573,7 +1571,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool DuplicateObject(uint LocalID, Vector3 offset, uint flags, UUID AgentID, UUID GroupID, Quaternion rot)
         {
-            //m_log.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
+            //MainConsole.Instance.DebugFormat("[SCENE]: Duplication of object {0} at offset {1} requested by agent {2}", originalPrim, offset, AgentID);
             IEntity entity;
 
             if (TryGetEntity(LocalID, out entity))
@@ -1665,13 +1663,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (root == null)
             {
-                m_log.DebugFormat("[LINK]: Can't find linkset root prim {0}", parentPrimId);
+                MainConsole.Instance.DebugFormat("[LINK]: Can't find linkset root prim {0}", parentPrimId);
                 return;
             }
 
             if (!m_parentScene.Permissions.CanLinkObject(client.AgentId, root.ParentEntity.UUID))
             {
-                m_log.DebugFormat("[LINK]: Refusing link. No permissions on root prim");
+                MainConsole.Instance.DebugFormat("[LINK]: Refusing link. No permissions on root prim");
                 return;
             }
 
@@ -1693,14 +1691,14 @@ namespace OpenSim.Region.Framework.Scenes
             //
             if (owners.Count > 1)
             {
-                m_log.DebugFormat("[LINK]: Refusing link. Too many owners");
+                MainConsole.Instance.DebugFormat("[LINK]: Refusing link. Too many owners");
                 client.SendAlertMessage("Permissions: Cannot link, too many owners.");
                 return;
             }
 
             if (children.Count == 0)
             {
-                m_log.DebugFormat("[LINK]: Refusing link. No permissions to link any of the children");
+                MainConsole.Instance.DebugFormat("[LINK]: Refusing link. No permissions to link any of the children");
                 client.SendAlertMessage("Permissions: Cannot link, not enough permissions.");
                 return;
             }

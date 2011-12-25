@@ -39,7 +39,7 @@ namespace OpenSim.Services
 {
     public class AssetServerPostHandler : BaseStreamHandler
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        // private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly IAssetService m_AssetService;
         protected string m_SessionID;

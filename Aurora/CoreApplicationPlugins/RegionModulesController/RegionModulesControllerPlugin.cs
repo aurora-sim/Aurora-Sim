@@ -38,11 +38,6 @@ namespace OpenSim.CoreApplicationPlugins
 {
     public class RegionModulesControllerPlugin : IRegionModulesController, IApplicationPlugin
     {
-        // Logger
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected List<IRegionModuleBase> IRegionModuleBaseModules = new List<IRegionModuleBase>();
 
         // Config access
@@ -111,18 +106,18 @@ namespace OpenSim.CoreApplicationPlugins
 
                         if (mii.Invoke(scene, new object[0]) != null)
                         {
-                            m_log.DebugFormat(
+                            MainConsole.Instance.DebugFormat(
                                 "[REGIONMODULE]: Not loading {0} because another module has registered {1}", module.Name,
                                 replaceableInterface);
                             continue;
                         }
 
                         deferredSharedModules[replaceableInterface] = module;
-                        //m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
+                        //MainConsole.Instance.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
                         continue;
                     }
 
-                    //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
+                    //MainConsole.Instance.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
                     //                  scene.RegionInfo.RegionName, module.Name);
 
                     module.AddRegion(scene);
@@ -133,7 +128,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[RegionModulePlugin]: Failed to load plugin, " + ex);
+                    MainConsole.Instance.Warn("[RegionModulePlugin]: Failed to load plugin, " + ex);
                 }
             }
 
@@ -149,13 +144,13 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (mii.Invoke(scene, new object[0]) != null)
                     {
-                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
+                        MainConsole.Instance.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
                                           module.Name, replaceableInterface);
                         continue;
                     }
 
                     deferredNonSharedModules[replaceableInterface] = module;
-                    m_log.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
+                    MainConsole.Instance.DebugFormat("[REGIONMODULE]: Deferred load of {0}", module.Name);
                     continue;
                 }
 
@@ -164,7 +159,7 @@ namespace OpenSim.CoreApplicationPlugins
                     continue;
                 }
 
-                //m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
+                //MainConsole.Instance.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1}",
                 //                  scene.RegionInfo.RegionName, module.Name);
 
                 // Initialise the module
@@ -195,12 +190,12 @@ namespace OpenSim.CoreApplicationPlugins
 
                 if (mii.Invoke(scene, new object[0]) != null)
                 {
-                    m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
+                    MainConsole.Instance.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
                                       module.Name, replaceableInterface);
                     continue;
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1} (deferred)",
+                MainConsole.Instance.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1} (deferred)",
                                   scene.RegionInfo.RegionName, module.Name);
 
                 // Not replaced, load the module
@@ -225,13 +220,13 @@ namespace OpenSim.CoreApplicationPlugins
 
                     if (mii.Invoke(scene, new object[0]) != null)
                     {
-                        m_log.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
+                        MainConsole.Instance.DebugFormat("[REGIONMODULE]: Not loading {0} because another module has registered {1}",
                                           module.Name, replaceableInterface);
                         continue;
                     }
                 }
 
-                m_log.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1} (deferred)",
+                MainConsole.Instance.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1} (deferred)",
                                   scene.RegionInfo.RegionName, module.Name);
 
                 module.Initialise(m_openSim.ConfigSource);
@@ -273,7 +268,7 @@ namespace OpenSim.CoreApplicationPlugins
         {
             foreach (IRegionModuleBase module in RegionModules[scene].Values)
             {
-                m_log.DebugFormat("[REGIONMODULE]: Removing scene {0} from module {1}",
+                MainConsole.Instance.DebugFormat("[REGIONMODULE]: Removing scene {0} from module {1}",
                                   scene.RegionInfo.RegionName, module.Name);
                 module.RemoveRegion(scene);
                 if (module is INonSharedRegionModule)
@@ -349,7 +344,7 @@ namespace OpenSim.CoreApplicationPlugins
             if (handlerConfig.GetString("RegionModulesControllerPlugin", "") != Name)
                 return;
 
-            //m_log.DebugFormat("[REGIONMODULES]: PostInitializing...");
+            //MainConsole.Instance.DebugFormat("[REGIONMODULES]: PostInitializing...");
 
             // Immediately run PostInitialise on shared modules
             foreach (ISharedRegionModule module in m_sharedInstances)

@@ -45,8 +45,6 @@ namespace Aurora.Simulation.Base
 {
     public class SimulationBase : ISimulationBase
     {
-        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected string m_startupCommandsFile;
         protected string m_shutdownCommandsFile;
         protected string m_TimerScriptFileName = "disabled";
@@ -192,10 +190,10 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void Startup()
         {
-            m_log.Warn("====================================================================");
-            m_log.Warn("========================= STARTING AURORA =========================");
-            m_log.Warn("====================================================================");
-            m_log.Warn("[AuroraStartup]: Version: " + Version + "\n");
+            MainConsole.Instance.Warn("====================================================================");
+            MainConsole.Instance.Warn("========================= STARTING AURORA =========================");
+            MainConsole.Instance.Warn("====================================================================");
+            MainConsole.Instance.Warn("[AuroraStartup]: Version: " + Version + "\n");
 
             SetUpHTTPServer();
 
@@ -228,9 +226,9 @@ namespace Aurora.Simulation.Base
                 catch (Exception ex)
                 {
                     //Only error that ever could occur is the restart one
-                    m_log.InfoFormat("[Console]: Exception {0}", ex.Message);
-                    m_log.InfoFormat("[Console]: App {0}", ex.Source);
-                    m_log.InfoFormat("[Console]: tgt {0}", ex.TargetSite);
+                    MainConsole.Instance.InfoFormat("[Console]: Exception {0}", ex.Message);
+                    MainConsole.Instance.InfoFormat("[Console]: App {0}", ex.Source);
+                    MainConsole.Instance.InfoFormat("[Console]: tgt {0}", ex.TargetSite);
                     Shutdown(true);
                     throw;
                 }
@@ -388,7 +386,7 @@ namespace Aurora.Simulation.Base
                 string currentLine;
                 while ((currentLine = readFile.ReadLine()) != null)
                 {
-                    m_log.Info("[!]" + currentLine);
+                    MainConsole.Instance.Info("[!]" + currentLine);
                 }
             }
         }
@@ -440,7 +438,7 @@ namespace Aurora.Simulation.Base
         {
             if (File.Exists(fileName))
             {
-                m_log.Info("[COMMANDFILE]: Running " + fileName);
+                MainConsole.Instance.Info("[COMMANDFILE]: Running " + fileName);
                 List<string> commands = new List<string>();
                 using (StreamReader readFile = File.OpenText(fileName))
                 {
@@ -455,7 +453,7 @@ namespace Aurora.Simulation.Base
                 }
                 foreach (string currentCommand in commands)
                 {
-                    m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
+                    MainConsole.Instance.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
                     MainConsole.Instance.RunCommand(currentCommand);
                 }
             }
@@ -464,17 +462,17 @@ namespace Aurora.Simulation.Base
         public virtual void HandleForceGC(string[] cmd)
         {
             GC.Collect();
-            m_log.Warn("Garbage collection finished");
+            MainConsole.Instance.Warn("Garbage collection finished");
         }
 
         public virtual void HandleTimerScriptTime(string[] cmd)
         {
             if (cmd.Length != 5)
             {
-                m_log.Warn("[CONSOLE]: Timer Interval command did not have enough parameters.");
+                MainConsole.Instance.Warn("[CONSOLE]: Timer Interval command did not have enough parameters.");
                 return;
             }
-            m_log.Warn("[CONSOLE]: Set Timer Interval to " + cmd[4]);
+            MainConsole.Instance.Warn("[CONSOLE]: Set Timer Interval to " + cmd[4]);
             m_TimerScriptTime = int.Parse(cmd[4]);
             m_TimerScriptTimer.Enabled = false;
             m_TimerScriptTimer.Interval = m_TimerScriptTime * 60 * 1000;
@@ -500,18 +498,18 @@ namespace Aurora.Simulation.Base
             {
                 server.HostName = hostName;
             }
-            m_log.Info ("Finished reloading configuration.");
+            MainConsole.Instance.Info ("Finished reloading configuration.");
         }
 
         public virtual void HandleShowInfo (string[] cmd)
         {
-            m_log.Info ("Version: " + m_version);
-            m_log.Info ("Startup directory: " + Environment.CurrentDirectory);
+            MainConsole.Instance.Info ("Version: " + m_version);
+            MainConsole.Instance.Info ("Startup directory: " + Environment.CurrentDirectory);
         }
 
         public virtual void HandleShowVersion (string[] cmd)
         {
-            m_log.Info (
+            MainConsole.Instance.Info (
                 String.Format (
                     "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
         }
@@ -570,9 +568,9 @@ namespace Aurora.Simulation.Base
                 }
 
                 if (close)
-                    m_log.Info("[SHUTDOWN]: Terminating");
+                    MainConsole.Instance.Info("[SHUTDOWN]: Terminating");
 
-                m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " + (close ? " Exiting..." : ""));
+                MainConsole.Instance.Info("[SHUTDOWN]: Shutdown processing on main thread complete. " + (close ? " Exiting..." : ""));
 
                 if (close)
                     Environment.Exit(0);

@@ -53,7 +53,6 @@ namespace OpenSim.Data.SQLite
         private const string landAccessListSelect = "select distinct * from landaccesslist";
         private const string regionbanListSelect = "select * from regionban";
         private const string regionSettingsSelect = "select * from regionsettings";
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private DataSet ds;
         private SQLiteDataAdapter landAccessListDa;
@@ -132,7 +131,7 @@ namespace OpenSim.Data.SQLite
                     }
                     catch (Exception)
                     {
-                        m_log.Info("[SQLite REGION DB]: Caught fill error on terrain table");
+                        MainConsole.Instance.Info("[SQLite REGION DB]: Caught fill error on terrain table");
                     }
 
                     try
@@ -141,7 +140,7 @@ namespace OpenSim.Data.SQLite
                     }
                     catch (Exception)
                     {
-                        m_log.Info("[SQLite REGION DB]: Caught fill error on land table");
+                        MainConsole.Instance.Info("[SQLite REGION DB]: Caught fill error on land table");
                     }
 
                     try
@@ -150,7 +149,7 @@ namespace OpenSim.Data.SQLite
                     }
                     catch (Exception)
                     {
-                        m_log.Info("[SQLite REGION DB]: Caught fill error on landaccesslist table");
+                        MainConsole.Instance.Info("[SQLite REGION DB]: Caught fill error on landaccesslist table");
                     }
 
                     try
@@ -159,7 +158,7 @@ namespace OpenSim.Data.SQLite
                     }
                     catch (Exception)
                     {
-                        m_log.Info("[SQLite REGION DB]: Caught fill error on regionsettings table");
+                        MainConsole.Instance.Info("[SQLite REGION DB]: Caught fill error on regionsettings table");
                     }
 
                     // We have to create a data set mapping for every table, otherwise the IDataAdaptor.Update() will not populate rows with values!
@@ -173,7 +172,7 @@ namespace OpenSim.Data.SQLite
             }
             catch (Exception e)
             {
-                m_log.Error(e);
+                MainConsole.Instance.Error(e);
                 //TODO: better error for users!
                 Thread.Sleep(10000); //Sleep so the user can see the error
                 Environment.Exit(23);
@@ -261,9 +260,9 @@ namespace OpenSim.Data.SQLite
                         }
                         catch (Exception e)
                         {
-                            m_log.Error(
+                            MainConsole.Instance.Error(
                                 "[SQLite REGION DB]: Failed create prim object in new group, exception and data follows");
-                            m_log.Error("[SQLite REGION DB]: ", e);
+                            MainConsole.Instance.Error("[SQLite REGION DB]: ", e);
                         }
                     }
                 }
@@ -302,9 +301,9 @@ namespace OpenSim.Data.SQLite
                         }
                         catch (Exception e)
                         {
-                            m_log.Error(
+                            MainConsole.Instance.Error(
                                 "[SQLite REGION DB]: Failed create prim object in new group, exception and data follows");
-                            m_log.Error("[SQLite REGION DB]: ", e);
+                            MainConsole.Instance.Error("[SQLite REGION DB]: ", e);
                         }
                     }
                 }
@@ -389,11 +388,11 @@ namespace OpenSim.Data.SQLite
                         }
                         else
                         {
-                            m_log.Warn("[SQLite REGION DB]: No terrain found for region");
+                            MainConsole.Instance.Warn("[SQLite REGION DB]: No terrain found for region");
                             return null;
                         }
 
-                        //m_log.Debug("[SQLite REGION DB]: Loaded terrain revision r" + rev.ToString());
+                        //MainConsole.Instance.Debug("[SQLite REGION DB]: Loaded terrain revision r" + rev.ToString());
                     }
                 }
             }
@@ -493,7 +492,7 @@ namespace OpenSim.Data.SQLite
         /// <param name = "prim">the prim</param>
         private void LoadItems(SceneObjectPart prim)
         {
-            // m_log.DebugFormat(":[SQLite REGION DB]: Loading inventory for {0} {1}", prim.Name, prim.UUID);
+            // MainConsole.Instance.DebugFormat(":[SQLite REGION DB]: Loading inventory for {0} {1}", prim.Name, prim.UUID);
             IList<TaskInventoryItem> inventory = new List<TaskInventoryItem>();
             using (SQLiteCommand cmd = new SQLiteCommand())
             {
@@ -513,7 +512,7 @@ namespace OpenSim.Data.SQLite
                 }
             }
 
-//			m_log.DebugFormat(
+//			MainConsole.Instance.DebugFormat(
 //			    "[SQLite REGION DB]: Found {0} items for {1} {2}", dbItemRows.Length, prim.Name, prim.UUID);
 
             prim.Inventory.RestoreInventoryItems(inventory);
@@ -555,7 +554,7 @@ namespace OpenSim.Data.SQLite
 
                 // the following is an work around for .NET.  The perf
                 // issues associated with it aren't as bad as you think.
-                m_log.Debug("[SQLite REGION DB]: Storing terrain revision r" + revision.ToString());
+                MainConsole.Instance.Debug("[SQLite REGION DB]: Storing terrain revision r" + revision.ToString());
                 const string sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert, X, Y)" +
                                    " values(:RegionUUID, :Revision, :Heightfield, :Revert, :X, :Y)";
 
@@ -612,7 +611,7 @@ namespace OpenSim.Data.SQLite
 
                 // the following is an work around for .NET.  The perf
                 // issues associated with it aren't as bad as you think.
-                m_log.Debug("[SQLite REGION DB]: Storing terrain revision r" + revision.ToString());
+                MainConsole.Instance.Debug("[SQLite REGION DB]: Storing terrain revision r" + revision.ToString());
                 const string sql = "insert into terrain(RegionUUID, Revision, Heightfield, Revert, X, Y)" +
                                    " values(:RegionUUID, :Revision, :Heightfield, :Revert, :X, :Y)";
 
@@ -697,7 +696,7 @@ namespace OpenSim.Data.SQLite
                         }
                         else
                         {
-                            m_log.Warn("[SQLite REGION DB]: No terrain found for region");
+                            MainConsole.Instance.Warn("[SQLite REGION DB]: No terrain found for region");
                             return null;
                         }
                     }
@@ -757,7 +756,7 @@ namespace OpenSim.Data.SQLite
         ///</summary>
         public void Commit()
         {
-            //m_log.Debug(":[SQLite]: Starting commit");
+            //MainConsole.Instance.Debug(":[SQLite]: Starting commit");
             lock (ds)
             {
                 terrainDa.Update(ds, "terrain");
@@ -1282,7 +1281,7 @@ namespace OpenSim.Data.SQLite
                     case "RegionUUID":
                         break;
                     default:
-                        m_log.Warn("[NXGSQLite]: Unknown database row: " + name);
+                        MainConsole.Instance.Warn("[NXGSQLite]: Unknown database row: " + name);
                         break;
                 }
 
@@ -1400,7 +1399,7 @@ namespace OpenSim.Data.SQLite
             }
             catch (InvalidCastException)
             {
-                m_log.ErrorFormat(":[SQLite REGION DB]: unable to get parcel telehub settings for {1}", newData.Name);
+                MainConsole.Instance.ErrorFormat(":[SQLite REGION DB]: unable to get parcel telehub settings for {1}", newData.Name);
                 newData.UserLocation = Vector3.Zero;
                 newData.UserLookAt = Vector3.Zero;
             }
@@ -1598,7 +1597,7 @@ namespace OpenSim.Data.SQLite
                     case "Shape":
                         break;
                     default:
-                        m_log.Warn("[NXGSQLite]: Found a row in BuildShape that was not implemented " + name);
+                        MainConsole.Instance.Warn("[NXGSQLite]: Found a row in BuildShape that was not implemented " + name);
                         break;
                 }
 
@@ -1648,7 +1647,7 @@ namespace OpenSim.Data.SQLite
             sql += ") values (:";
             sql += String.Join(", :", cols);
             sql += ")";
-            //m_log.DebugFormat(":[SQLite]: Created insert command {0}", sql);
+            //MainConsole.Instance.DebugFormat(":[SQLite]: Created insert command {0}", sql);
             SQLiteCommand cmd = new SQLiteCommand(sql);
 
             // this provides the binding for all our parameters, so

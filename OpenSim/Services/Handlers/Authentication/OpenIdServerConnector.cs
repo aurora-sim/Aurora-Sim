@@ -37,10 +37,6 @@ namespace OpenSim.Services
 {
     public class OpenIdServerConnector : IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IAuthenticationService m_AuthenticationService;
         private IUserAccountService m_UserAccountService;
 
@@ -76,7 +72,7 @@ namespace OpenSim.Services
             server.AddStreamHandler(new OpenIdStreamHandler("GET", "/openid/server/", m_UserAccountService,
                                                             m_AuthenticationService));
 
-            m_log.Info("[OPENID]: OpenId service enabled");
+            MainConsole.Instance.Info("[OPENID]: OpenId service enabled");
         }
 
         public void FinishedStartup()

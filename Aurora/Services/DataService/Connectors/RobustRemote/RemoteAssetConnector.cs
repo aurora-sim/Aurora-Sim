@@ -41,10 +41,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteAssetConnector : IAssetConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IAssetConnector Members
@@ -88,7 +84,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -128,7 +124,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
+                MainConsole.Instance.DebugFormat("[AuroraRemoteAssetConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return data;
         }

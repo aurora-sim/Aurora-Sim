@@ -43,8 +43,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData GD;
         private IRegistryCore m_registry;
 
@@ -192,7 +190,7 @@ namespace Aurora.Services.DataService
                                                                                                  RegionY);
             if (r == null)
             {
-                m_log.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
+                MainConsole.Instance.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
                 return null;
             }
             //Get info about a specific parcel somewhere in the metaverse

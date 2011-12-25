@@ -164,7 +164,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         public void TrySetMovementAnimation(string anim)
         {
-            //m_log.DebugFormat("Updating movement animation to {0}", anim);
+            //MainConsole.Instance.DebugFormat("Updating movement animation to {0}", anim);
 
             if (!m_useSplatAnimation && anim == "STANDUP")
                 anim = "LAND";
@@ -581,7 +581,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         public void SendAnimPack()
         {
-            //m_log.Debug("Sending animation pack to all");
+            //MainConsole.Instance.Debug("Sending animation pack to all");
 
             if (m_scenePresence.IsChildAgent)
                 return;

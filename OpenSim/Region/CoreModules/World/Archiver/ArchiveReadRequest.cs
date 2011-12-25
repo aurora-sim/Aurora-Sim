@@ -51,8 +51,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
     /// </summary>
     public class ArchiveReadRequest
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected static ASCIIEncoding m_asciiEncoding = new ASCIIEncoding();
         protected static UTF8Encoding m_utf8Encoding = new UTF8Encoding();
 
@@ -97,10 +95,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             catch (EntryPointNotFoundException e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
                         + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                m_log.Error(e);
+                MainConsole.Instance.Error(e);
             }
             Init(scene, m_loadStream, merge, skipAssets, offsetX, offsetY, offsetZ, flipX, flipY, useParcelOwnership, checkOwnership);
         }
@@ -159,10 +157,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             if (!m_merge)
             {
                 DateTime before = DateTime.Now;
-                m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
+                MainConsole.Instance.Info("[ARCHIVER]: Clearing all existing scene objects");
                 if (backup != null)
                     backup.DeleteAllSceneObjects();
-                m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
+                MainConsole.Instance.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
             }
 
             IScriptModule[] modules = m_scene.RequestModuleInterfaces<IScriptModule>();
@@ -186,7 +184,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             {
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                 {
-                    //m_log.DebugFormat(
+                    //MainConsole.Instance.DebugFormat(
                     //    "[ARCHIVER]: Successfully read {0} ({1} bytes)", filePath, data.Length);
 
                     if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
@@ -195,7 +193,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
                     {
                         /*
-                        m_log.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
+                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
 
                         // Really large xml files (multi megabyte) appear to cause
                         // memory problems
@@ -203,7 +201,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 
                         if (serialisedSceneObject.Length > 5000000)
                         {
-                            m_log.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
+                            MainConsole.Instance.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
                             continue;
                         }
                         */
@@ -213,7 +211,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         if (sceneObject == null)
                         {
                             //! big error!
-                            m_log.Error("Error reading SOP XML (Please mantis this!): " + m_asciiEncoding.GetString(data));
+                            MainConsole.Instance.Error("Error reading SOP XML (Please mantis this!): " + m_asciiEncoding.GetString(data));
                             continue;
                         }
 
@@ -269,7 +267,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                         }
                         sceneObjectsLoadedCount++;
                         if (sceneObjectsLoadedCount % 250 == 0)
-                            m_log.Info("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
+                            MainConsole.Instance.Info("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
                     }
                     else if (!m_skipAssets && filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
@@ -279,7 +277,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             failedAssetRestores++;
 
                         if ((successfulAssetRestores + failedAssetRestores) % 250 == 0)
-                            m_log.Info("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
+                            MainConsole.Instance.Info("[ARCHIVER]: Loaded " + successfulAssetRestores + " assets and failed to load " + failedAssetRestores + " assets...");
                     }
                     else if (filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
                     {
@@ -301,11 +299,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     }
                 }
 
-                //m_log.Debug("[ARCHIVER]: Reached end of archive");
+                //MainConsole.Instance.Debug("[ARCHIVER]: Reached end of archive");
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Aborting load with error in archive file {0}.  {1}", filePath, e);
                 m_errorMessage += e.ToString();
                 m_scene.EventManager.TriggerOarFileLoaded(UUID.Zero.Guid, m_errorMessage);
@@ -339,11 +337,11 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             if (!m_skipAssets)
             {
-                m_log.InfoFormat("[ARCHIVER]: Restored {0} assets", successfulAssetRestores);
+                MainConsole.Instance.InfoFormat("[ARCHIVER]: Restored {0} assets", successfulAssetRestores);
 
                 if (failedAssetRestores > 0)
                 {
-                    m_log.ErrorFormat("[ARCHIVER]: Failed to load {0} assets", failedAssetRestores);
+                    MainConsole.Instance.ErrorFormat("[ARCHIVER]: Failed to load {0} assets", failedAssetRestores);
                     m_errorMessage += String.Format("Failed to load {0} assets", failedAssetRestores);
                 }
             }
@@ -352,7 +350,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // otherwise, use the master avatar uuid instead
 
             // Reload serialized parcels
-            m_log.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
 
             IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
             if (!m_merge && parcelManagementModule != null)
@@ -372,12 +370,12 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             else if (parcelManagementModule != null)
                 parcelManagementModule.ResetSimLandObjects();
 
-            m_log.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
 
             //Clean it out
             landData.Clear();
 
-            m_log.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
+            MainConsole.Instance.InfoFormat("[ARCHIVER]: Successfully loaded archive in " + (DateTime.Now - start).Minutes + ":" + (DateTime.Now - start).Seconds);
 
             m_validUserUuids.Clear();
             m_scene.EventManager.TriggerOarFileLoaded(UUID.Zero.Guid, m_errorMessage);
@@ -428,12 +426,12 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 if(m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
                 {
                     tryAgain:
-                    string ownerName = MainConsole.Instance.CmdPrompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
+                    string ownerName = MainConsole.Instance.Prompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
                     account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
                     if(account != null)
                         id = account.PrincipalID;
                     else if(ownerName != "")
-                        if((ownerName = MainConsole.Instance.CmdPrompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
+                        if((ownerName = MainConsole.Instance.Prompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
                             goto tryAgain;
                 }
                 if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
@@ -496,7 +494,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             if (i == -1)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Could not find extension information in asset path {0} since it's missing the separator {1}.  Skipping",
                     assetPath, ArchiveConstants.ASSET_EXTENSION_SEPARATOR);
 
@@ -511,9 +509,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 AssetType assetType = ArchiveConstants.EXTENSION_TO_ASSET_TYPE[extension];
 
                 if (assetType == AssetType.Unknown)
-                    m_log.WarnFormat("[ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
+                    MainConsole.Instance.WarnFormat("[ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
 
-                //m_log.DebugFormat("[ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
+                //MainConsole.Instance.DebugFormat("[ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
                 AssetBase asset = new AssetBase(UUID.Parse(uuid), String.Empty, assetType, UUID.Zero)
                                       {Data = data};
 
@@ -538,7 +536,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 return true;
             }
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[ARCHIVER]: Tried to dearchive data with path {0} with an unknown type extension {1}",
                 assetPath, extension);
 
@@ -577,7 +575,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Could not parse region settings file {0}.  Ignoring.  Exception was {1}",
                     settingsPath, e);
                 return false;
@@ -641,7 +639,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             terrainModule.LoadFromStream(terrainPath, ms, m_offsetX, m_offsetY);
             ms.Close();
 
-            m_log.DebugFormat("[ARCHIVER]: Restored terrain {0}", terrainPath);
+            MainConsole.Instance.DebugFormat("[ARCHIVER]: Restored terrain {0}", terrainPath);
 
             return true;
         }

@@ -33,7 +33,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 {
     public class EstateTerrainXferHandler
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         #region Delegates
 

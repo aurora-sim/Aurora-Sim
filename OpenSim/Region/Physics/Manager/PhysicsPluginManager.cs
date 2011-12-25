@@ -40,8 +40,6 @@ namespace OpenSim.Region.Physics.Manager
     /// </summary>
     public class PhysicsPluginManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<string, IMeshingPlugin> _MeshPlugins = new Dictionary<string, IMeshingPlugin>();
         private readonly Dictionary<string, IPhysicsPlugin> _PhysPlugins = new Dictionary<string, IPhysicsPlugin>();
 
@@ -68,18 +66,18 @@ namespace OpenSim.Region.Physics.Manager
             IMesher meshEngine = null;
             if (_MeshPlugins.ContainsKey(meshEngineName))
             {
-                m_log.Debug("[Physics]: Loading meshing engine: " + meshEngineName);
+                MainConsole.Instance.Debug("[Physics]: Loading meshing engine: " + meshEngineName);
                 meshEngine = _MeshPlugins[meshEngineName].GetMesher(config);
             }
             else
             {
-                m_log.WarnFormat("[Physics]: Couldn't find meshing engine: {0}", meshEngineName);
+                MainConsole.Instance.WarnFormat("[Physics]: Couldn't find meshing engine: {0}", meshEngineName);
                 throw new ArgumentException(String.Format("couldn't find meshing engine: {0}", meshEngineName));
             }
 
             if (_PhysPlugins.ContainsKey(physEngineName))
             {
-                m_log.Debug("[Physics]: Loading physics engine: " + physEngineName);
+                MainConsole.Instance.Debug("[Physics]: Loading physics engine: " + physEngineName);
                 PhysicsScene result = _PhysPlugins[physEngineName].GetScene(region.RegionName);
                 result.Initialise(meshEngine, region, registry);
                 result.PostInitialise(config);
@@ -87,7 +85,7 @@ namespace OpenSim.Region.Physics.Manager
             }
             else
             {
-                m_log.WarnFormat("[Physics]: Couldn't find physics engine: {0}", physEngineName);
+                MainConsole.Instance.WarnFormat("[Physics]: Couldn't find physics engine: {0}", physEngineName);
                 throw new ArgumentException(String.Format("couldn't find physics engine: {0}", physEngineName));
             }
         }

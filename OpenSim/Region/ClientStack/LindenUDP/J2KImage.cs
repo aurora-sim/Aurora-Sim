@@ -45,7 +45,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private const int IMAGE_PACKET_SIZE = 1000;
         private const int FIRST_PACKET_SIZE = 600;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly LLImageManager m_imageManager;
 
         public UUID AgentID;
@@ -167,7 +166,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // Check for missing image asset data
                     if (m_asset == null)
                     {
-                        m_log.Warn(
+                        MainConsole.Instance.Warn(
                             "[J2KIMAGE]: RunUpdate() called with missing asset data (no missing image texture?). Canceling texture transfer");
                         m_currentPacket = m_stopPacket;
                         return;
@@ -178,7 +177,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // This shouldn't happen, but if it does, we really can't proceed
                         if (Layers == null)
                         {
-                            m_log.Warn("[J2KIMAGE]: RunUpdate() called with missing Layers. Canceling texture transfer");
+                            MainConsole.Instance.Warn("[J2KIMAGE]: RunUpdate() called with missing Layers. Canceling texture transfer");
                             m_currentPacket = m_stopPacket;
                             return;
                         }
@@ -222,7 +221,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             if (m_asset == null)
             {
-                m_log.Warn("[J2KIMAGE]: Sending ImageNotInDatabase for texture " + TextureID);
+                MainConsole.Instance.Warn("[J2KIMAGE]: Sending ImageNotInDatabase for texture " + TextureID);
                 client.SendImageNotFound(TextureID);
                 return true;
             }
@@ -242,7 +241,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             catch (Exception)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[J2KIMAGE]: Texture block copy for the first packet failed. textureid={0}, assetlength={1}",
                     TextureID, m_asset.Length);
                 return true;
@@ -290,7 +289,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     catch (Exception e)
                     {
-                        m_log.ErrorFormat(
+                        MainConsole.Instance.ErrorFormat(
                             "[J2KIMAGE]: Texture block copy for the first packet failed. textureid={0}, assetlength={1}, currentposition={2}, imagepacketsize={3}, exception={4}",
                             TextureID, m_asset.Length, currentPosition, imagePacketSize, e.Message);
                         return false;
@@ -402,7 +401,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 string assetServerURL = string.Empty;
                 if (InventoryAccessModule.IsForeignUser(AgentID, out assetServerURL))
                 {
-                    m_log.DebugFormat(
+                    MainConsole.Instance.DebugFormat(
                         "[J2KIMAGE]: texture {0} not found in local asset storage. Trying user's storage.", id);
                     AssetService.Get(assetServerURL + "/" + id, InventoryAccessModule, AssetReceived);
                     return;

@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteOfflineMessagesConnector : IOfflineMessagesConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IOfflineMessagesConnector Members
@@ -94,7 +90,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteOfflineMessagesConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteOfflineMessagesConnector]: Exception when contacting server: {0}", e);
             }
             return Messages.ToArray();
         }
@@ -125,7 +121,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteOfflineMessagesConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteOfflineMessagesConnector]: Exception when contacting server: {0}", e);
             }
             return false;
         }

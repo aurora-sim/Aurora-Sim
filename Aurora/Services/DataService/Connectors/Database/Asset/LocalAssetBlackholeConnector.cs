@@ -55,7 +55,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTierLen = 1;
         private const bool disableTimer = false;
         private static readonly SHA256Managed SHA256HashGenerator = new SHA256Managed();
-        private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<char> m_InvalidChars = new List<char>();
         private readonly List<Blank> m_genericTasks = new List<Blank>();
         private readonly Stopwatch sw = new Stopwatch();
@@ -108,7 +107,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 Directory.CreateDirectory(m_CacheDirectoryBackup);
             if (!Directory.Exists(m_CacheDirectoryBackup))
             {
-                m_Log.Error(
+                MainConsole.Instance.Error(
                     "Check your Main.ini and ensure your backup directory is set! under [BlackHole] BackupCacheDirector");
                 m_Enabled = false;
                 return;
@@ -118,7 +117,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 Directory.CreateDirectory(m_CacheDirectory);
             if (!Directory.Exists(m_CacheDirectory))
             {
-                m_Log.Error(
+                MainConsole.Instance.Error(
                     "Check your Main.ini and ensure your cache directory is set! under [BlackHole] m_CacheDirectory");
                 m_Enabled = false;
                 return;
@@ -134,7 +133,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
             if (m_Enabled)
             {
-                m_Log.Error("[BlackholeAssets]: Blackhole assets enabled");
+                MainConsole.Instance.Error("[BlackholeAssets]: Blackhole assets enabled");
                 DataManager.DataManager.RegisterPlugin(Name, this);
                 try
                 {
@@ -216,7 +215,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if ((asset == null) && (displayMessages))
                 {
                     // oh well.. we tried
-                    m_Log.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
+                    MainConsole.Instance.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
                 }
                 if (asset == null) return null;
 
@@ -233,7 +232,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             catch (Exception e)
             {
                 if (displayMessages)
-                    m_Log.Error("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Error ", e);
+                    MainConsole.Instance.Error("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Error ", e);
             }
             finally
             {
@@ -271,7 +270,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetBlackholeConnector] LoadAssetFromDR(); Error Loading", e);
+                MainConsole.Instance.Error("[LocalAssetBlackholeConnector] LoadAssetFromDR(); Error Loading", e);
             }
             finally
             {
@@ -408,7 +407,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     if (m_Gd.Query("id", asset.ID, "auroraassets_" + asset.ID.ToString().Substring(0, 1), "id").Count ==
                         0)
                     {
-                        m_Log.Error("[AssetDataPlugin] Asset did not saver propery: " + asset.ID);
+                        MainConsole.Instance.Error("[AssetDataPlugin] Asset did not saver propery: " + asset.ID);
                         successful = false;
                         return asset;
                     }
@@ -418,7 +417,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[AssetDataPlugin]: StoreAsset(" + asset.ID + ")", e);
+                MainConsole.Instance.Error("[AssetDataPlugin]: StoreAsset(" + asset.ID + ")", e);
             }
             successful = false;
             return asset;
@@ -450,7 +449,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ASSETS DB]: MySql failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
@@ -509,7 +508,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[AssetDataPlugin] Delete - Error for asset ID " + id, e);
+                MainConsole.Instance.Error("[AssetDataPlugin] Delete - Error for asset ID " + id, e);
                 return false;
             }
         }
@@ -566,7 +565,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         }
                         else
                         {
-                            m_Log.Error("[AssetDataPlugin] Error writing Asset File " + assetid, e);
+                            MainConsole.Instance.Error("[AssetDataPlugin] Error writing Asset File " + assetid, e);
                         }
                     }
                     string filenameForBackup = GetFileName(hashCode, true) + ".7z";
@@ -578,7 +577,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[AssetDataPlugin]: WriteFile(" + assetid + ")", e);
+                MainConsole.Instance.Error("[AssetDataPlugin]: WriteFile(" + assetid + ")", e);
             }
             finally
             {
@@ -642,13 +641,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     if (RestoreBackup(hashCode))
                         return LoadFile(hashCode, true);
-                    m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery");
+                    MainConsole.Instance.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery");
                 }
                 else
-                    m_Log.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery 2");
+                    MainConsole.Instance.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery 2");
             }
             else if (waserror)
-                m_Log.Error("[AssetDataPlugin]: Asset recovery successfully");
+                MainConsole.Instance.Error("[AssetDataPlugin]: Asset recovery successfully");
             return results;
         }
 
@@ -673,7 +672,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         File.Move(file, file + ".corrupt");
                     }
                     Util.UnCompress7ZipFile(backupfile, Path.GetDirectoryName(file));
-                    m_Log.Info("[AssetDataPlugin] Restored backup asset file " + file);
+                    MainConsole.Instance.Info("[AssetDataPlugin] Restored backup asset file " + file);
                     return true;
                 }
             }
@@ -685,7 +684,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     trycount = trycount + 1;
                     return RestoreBackup(hashCode, trycount);
                 }
-                m_Log.Error("[AssetDataPlugin] Restore back error:", e);
+                MainConsole.Instance.Error("[AssetDataPlugin] Restore back error:", e);
             }
             return false;
         }
@@ -710,7 +709,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception ex)
             {
-                m_Log.Error("[] Error while getting filename", ex);
+                MainConsole.Instance.Error("[] Error while getting filename", ex);
             }
             return Path.Combine(path, id + ".ass");
         }
@@ -736,9 +735,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (displayCount == 100)
             {
                 sw.Stop();
-                m_Log.Info("[Blackhole Assets] Converted:" + convertCount + " DupeContent:" + convertCountDupe +
+                MainConsole.Instance.Info("[Blackhole Assets] Converted:" + convertCount + " DupeContent:" + convertCountDupe +
                            " Dupe4Creator:" + convertCountParentFix);
-                m_Log.Info("[Blackhole Assets] 500 in " + sw.Elapsed.Minutes + ":" + sw.Elapsed.Seconds);
+                MainConsole.Instance.Info("[Blackhole Assets] 500 in " + sw.Elapsed.Minutes + ":" + sw.Elapsed.Seconds);
                 displayCount = 0;
                 sw.Reset();
                 sw.Start();
@@ -823,7 +822,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                             }
                                             catch (Exception e)
                                             {
-                                                m_Log.Error("Errored", e);
+                                                MainConsole.Instance.Error("Errored", e);
                                             }
                                         }
                                     }
@@ -887,7 +886,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 }
                                 catch (Exception e)
                                 {
-                                    m_Log.Error(
+                                    MainConsole.Instance.Error(
                                         "[LocalAssetBlackholeManualMigration] Error on update/insert",
                                         e);
                                 }
@@ -900,7 +899,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetBlackholeManualMigration] Migrate Error", e);
+                MainConsole.Instance.Error("[LocalAssetBlackholeManualMigration] Migrate Error", e);
             }
             finally
             {
@@ -970,7 +969,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             int result = TaskGetHashCodeUseCount(task_value);
                             if (result == 0)
                             {
-                                m_Log.Info("[AssetDataPlugin] Deleteing old unused asset file");
+                                MainConsole.Instance.Info("[AssetDataPlugin] Deleteing old unused asset file");
                                 File.Delete(GetFileName(task_value, false));
                                 if (File.Exists(GetFileName(task_value, true)))
                                     File.Delete(GetFileName(task_value, true));
@@ -1029,7 +1028,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 catch (Exception ex)
                 {
-                    m_Log.Error("[AssetDataPlugin] Background task error. Task " + task_type, ex);
+                    MainConsole.Instance.Error("[AssetDataPlugin] Background task error. Task " + task_type, ex);
                 }
                 finally
                 {
@@ -1080,7 +1079,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 catch (Exception exx)
                 {
-                    m_Log.Error("[AssetDataPlugin] Background task retiring asset", exx);
+                    MainConsole.Instance.Error("[AssetDataPlugin] Background task retiring asset", exx);
                 }
             }
             ResetTimer(15000);

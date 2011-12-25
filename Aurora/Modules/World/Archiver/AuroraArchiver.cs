@@ -43,9 +43,6 @@ namespace Aurora.Modules
 {
     public class AuroraArchiver : IService, IAuroraBackupArchiver
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private Int64 m_AllowPrompting;
 
         #region IAuroraBackupArchiver Members
@@ -78,7 +75,7 @@ namespace Aurora.Modules
 
             writer.Close();
             GC.Collect();
-            m_log.Info("[Archive]: Finished saving of archive.");
+            MainConsole.Instance.Info("[Archive]: Finished saving of archive.");
         }
 
         public void LoadRegionBackup(TarArchiveReader reader, IScene scene)
@@ -149,11 +146,11 @@ namespace Aurora.Modules
             IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)
             {
-                m_log.Warn("Select a region first.");
+                MainConsole.Instance.Warn("Select a region first.");
                 return;
             }
 
-            string fileName = MainConsole.Instance.CmdPrompt("What file name should we load?",
+            string fileName = MainConsole.Instance.Prompt("What file name should we load?",
                                                              scene.RegionInfo.RegionName + ".abackup");
 
             GZipStream m_loadStream = new GZipStream(ArchiveHelpers.GetStream(fileName), CompressionMode.Decompress);
@@ -168,11 +165,11 @@ namespace Aurora.Modules
             IScene scene = MainConsole.Instance.ConsoleScene;
             if (scene == null)
             {
-                m_log.Warn("Select a region first.");
+                MainConsole.Instance.Warn("Select a region first.");
                 return;
             }
 
-            string fileName = MainConsole.Instance.CmdPrompt("What file name will this be saved as?",
+            string fileName = MainConsole.Instance.Prompt("What file name will this be saved as?",
                                                              scene.RegionInfo.RegionName + ".abackup");
 
             GZipStream m_saveStream = new GZipStream(new FileStream(fileName, FileMode.Create), CompressionMode.Compress);

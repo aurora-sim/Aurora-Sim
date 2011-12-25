@@ -71,7 +71,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 while (httpInfo != null)
                 {
                     HttpRequestClass info = (HttpRequestClass) httpInfo;
-                    //m_log.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
+                    //MainConsole.Instance.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
 
                     // Deliver data to prim's remote_data handler
 

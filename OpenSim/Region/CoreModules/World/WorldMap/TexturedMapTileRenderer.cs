@@ -117,9 +117,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
     {
         #region Constants
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         // some hardcoded terrain UUIDs that work with SL 1.20 (the four default textures and "Blank").
         // The color-values were choosen because they "look right" (at least to me) ;-)
         private static readonly UUID defaultTerrainTexture1 = new UUID("0bc58228-74a0-7e83-89bc-5c23464bcec5");
@@ -165,7 +162,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             FastBitmap unsafeBMP = new FastBitmap(mapbmp);
             unsafeBMP.LockBitmap();
             //DateTime start = DateTime.Now;
-            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+            //MainConsole.Instance.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
 
             // These textures should be in the AssetCache anyway, as every client conneting to this
             // region needs them. Except on start, when the map is recreated (before anyone connected),
@@ -265,7 +262,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 m_mapping.Clear();
             }
             unsafeBMP.UnlockBitmap();
-            //m_log.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (DateTime.Now - start).TotalSeconds + " ms");
+            //MainConsole.Instance.Info("[MAPTILE]: Generating Maptile Step 1: Done in " + (DateTime.Now - start).TotalSeconds + " ms");
             return unsafeBMP.Bitmap();
         }
 
@@ -353,7 +350,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             using (AssetBase asset = m_scene.AssetService.Get(id.ToString()))
             {
-                //m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
+                //MainConsole.Instance.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
                 if (asset == null) return null;
 
                 try
@@ -367,19 +364,19 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
                 catch (DllNotFoundException)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}",
                         id);
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}",
                         id);
                 }
                 catch (Exception)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}",
                         id);
                 }

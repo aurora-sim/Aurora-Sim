@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteAgentConnector : IAgentConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly ExpiringCache<UUID, IAgentInfo> m_cache = new ExpiringCache<UUID, IAgentInfo>();
         private IRegistryCore m_registry;
 
@@ -103,7 +99,7 @@ namespace Aurora.Services.DataService
                                 m_cache.AddOrUpdate(PrincipalID, agent, new TimeSpan(0, 30, 0));
                             }
                             else
-                                m_log.DebugFormat(
+                                MainConsole.Instance.DebugFormat(
                                     "[AuroraRemoteAgentConnector]: GetAgent {0} received invalid response type {1}",
                                     PrincipalID, f.GetType());
                         }
@@ -112,13 +108,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteAgentConnector]: GetAgent {0} received null response",
                                           PrincipalID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;

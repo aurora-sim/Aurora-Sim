@@ -39,7 +39,7 @@ namespace OpenSim.Region.CoreModules.World.Objects.BuySell
 {
     public class BuySellModule : IBuySellModule, INonSharedRegionModule
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IDialogModule m_dialogModule;
         protected IScene m_scene;

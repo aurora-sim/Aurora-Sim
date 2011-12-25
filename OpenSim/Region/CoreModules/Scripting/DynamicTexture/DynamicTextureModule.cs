@@ -42,7 +42,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 {
     public class DynamicTextureModule : ISharedRegionModule, IDynamicTextureManager
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private const int ALL_SIDES = -1;
 
@@ -273,8 +273,6 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 
         public class DynamicTextureUpdater
         {
-            private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
             public bool BlendWithOldTexture;
             public string BodyData;
             public string ContentType;
@@ -447,7 +445,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                         }
                         catch (Exception)
                         {
-                            m_log.Error("[DYNAMICTEXTUREMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
+                            MainConsole.Instance.Error("[DYNAMICTEXTUREMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
                         }
 
                         return result;

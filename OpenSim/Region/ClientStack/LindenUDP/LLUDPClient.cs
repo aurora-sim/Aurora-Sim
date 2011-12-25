@@ -150,8 +150,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private const int STARTPERCLIENTRATE = 25000;
         private const int MAX_PACKET_SKIP_RATE = 4;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   AgentID for this client
         /// </summary>
@@ -506,7 +504,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             total = TotalRateMin; // let it grow slowlly
 
 
-            //m_log.WarnFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, AvatarInfo={9}, Transfer={10}, TaskFull={11}, Total={12}",
+            //MainConsole.Instance.WarnFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, AvatarInfo={9}, Transfer={10}, TaskFull={11}, Total={12}",
             //    AgentID, resend, land, wind, cloud, task, texture, asset, state, avatarinfo, transfer, task + state + avatarinfo, total);
 
             // Update the token buckets with new throttle values
@@ -600,7 +598,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // this queue
                 else if (m_outbox.Dequeue(out packet))
                 {
-                    m_log.Format(new Level(0, "All"), AgentID + " - " + packet.Packet.Type, null);
+                    MainConsole.Instance.Format(new Level(0, "All"), AgentID + " - " + packet.Packet.Type, null);
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
                     if (packet.Category == ThrottleOutPacketType.OutBand ||
@@ -692,7 +690,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             RTO = rto;
 
-            //m_log.Debug("[LLUDPCLIENT]: Setting agent " + this.Agent.FullName + "'s RTO to " + RTO + "ms with an RTTVAR of " +
+            //MainConsole.Instance.Debug("[LLUDPCLIENT]: Setting agent " + this.Agent.FullName + "'s RTO to " + RTO + "ms with an RTTVAR of " +
             //    RTTVAR + " based on new RTT of " + r + "ms");
         }
 
@@ -734,7 +732,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 catch (Exception e)
                 {
-                    m_log.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e);
+                    MainConsole.Instance.Error("[LLUDPCLIENT]: OnQueueEmpty() threw an exception: " + e.Message, e);
                 }
             }
 

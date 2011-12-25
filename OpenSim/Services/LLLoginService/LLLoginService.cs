@@ -50,7 +50,6 @@ namespace OpenSim.Services.LLLoginService
 {
     public class LLLoginService : ILoginService, IService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool Initialized = false;
         // Global Textures
         private const string sunTexture = "cce0f112-878f-4586-a2e2-a8f104bba271";
@@ -77,7 +76,7 @@ namespace OpenSim.Services.LLLoginService
         protected int m_MinLoginLevel;
         protected bool m_AllowRemoteSetLoginLevel;
 
-        protected IConfig m_LoginServerConfig;
+        protected IConfig m_loginServerConfig;
         protected IConfigSource m_config;
         protected bool m_AllowAnonymousLogin = false;
         protected bool m_AllowDuplicateLogin = false;
@@ -98,51 +97,51 @@ namespace OpenSim.Services.LLLoginService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_config = config;
-            m_LoginServerConfig = config.Configs["LoginService"];
-            if (m_LoginServerConfig == null)
+            m_loginServerConfig = config.Configs["LoginService"];
+            if (m_loginServerConfig == null)
                 return;
 
-            m_UseTOS = m_LoginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
-            m_DefaultHomeRegion = m_LoginServerConfig.GetString("DefaultHomeRegion", "");
-            m_DefaultUserAvatarArchive = m_LoginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
-            m_AllowAnonymousLogin = m_LoginServerConfig.GetBoolean("AllowAnonymousLogin", false);
-            m_AllowDuplicateLogin = m_LoginServerConfig.GetBoolean("AllowDuplicateLogin", false);
-            m_TOSLocation = m_LoginServerConfig.GetString("FileNameOfTOS", "");
-            LLLoginResponseRegister.RegisterValue ("AllowFirstLife", m_LoginServerConfig.GetBoolean ("AllowFirstLifeInProfile", true) ? "Y" : "N");
-            LLLoginResponseRegister.RegisterValue ("TutorialURL", m_LoginServerConfig.GetString ("TutorialURL", ""));
-            LLLoginResponseRegister.RegisterValue ("OpenIDURL", m_LoginServerConfig.GetString ("OpenIDURL", ""));
-            LLLoginResponseRegister.RegisterValue ("SnapshotConfigURL", m_LoginServerConfig.GetString ("SnapshotConfigURL", ""));
-            LLLoginResponseRegister.RegisterValue ("MaxAgentGroups", m_LoginServerConfig.GetInt ("MaxAgentGroups", 100));
-            LLLoginResponseRegister.RegisterValue ("HelpURL", m_LoginServerConfig.GetString ("HelpURL", ""));
-            LLLoginResponseRegister.RegisterValue ("VoiceServerType", m_LoginServerConfig.GetString ("VoiceServerType", "vivox"));
-            ReadEventValues (m_LoginServerConfig);
-            ReadClassifiedValues(m_LoginServerConfig);
-            LLLoginResponseRegister.RegisterValue("AllowExportPermission", m_LoginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true));
-            
-            m_DefaultRegionName = m_LoginServerConfig.GetString("DefaultRegion", String.Empty);
-            m_WelcomeMessage = m_LoginServerConfig.GetString("WelcomeMessage", "");
-            m_WelcomeMessageURL = m_LoginServerConfig.GetString("CustomizedMessageURL", "");
+            m_UseTOS = m_loginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
+            m_DefaultHomeRegion = m_loginServerConfig.GetString("DefaultHomeRegion", "");
+            m_DefaultUserAvatarArchive = m_loginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
+            m_AllowAnonymousLogin = m_loginServerConfig.GetBoolean("AllowAnonymousLogin", false);
+            m_AllowDuplicateLogin = m_loginServerConfig.GetBoolean("AllowDuplicateLogin", false);
+            m_TOSLocation = m_loginServerConfig.GetString("FileNameOfTOS", "");
+            LLLoginResponseRegister.RegisterValue("AllowFirstLife", m_loginServerConfig.GetBoolean("AllowFirstLifeInProfile", true) ? "Y" : "N");
+            LLLoginResponseRegister.RegisterValue("TutorialURL", m_loginServerConfig.GetString("TutorialURL", ""));
+            LLLoginResponseRegister.RegisterValue("OpenIDURL", m_loginServerConfig.GetString("OpenIDURL", ""));
+            LLLoginResponseRegister.RegisterValue("SnapshotConfigURL", m_loginServerConfig.GetString("SnapshotConfigURL", ""));
+            LLLoginResponseRegister.RegisterValue("MaxAgentGroups", m_loginServerConfig.GetInt("MaxAgentGroups", 100));
+            LLLoginResponseRegister.RegisterValue("HelpURL", m_loginServerConfig.GetString("HelpURL", ""));
+            LLLoginResponseRegister.RegisterValue("VoiceServerType", m_loginServerConfig.GetString("VoiceServerType", "vivox"));
+            ReadEventValues(m_loginServerConfig);
+            ReadClassifiedValues(m_loginServerConfig);
+            LLLoginResponseRegister.RegisterValue("AllowExportPermission", m_loginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true));
+
+            m_DefaultRegionName = m_loginServerConfig.GetString("DefaultRegion", String.Empty);
+            m_WelcomeMessage = m_loginServerConfig.GetString("WelcomeMessage", "");
+            m_WelcomeMessageURL = m_loginServerConfig.GetString("CustomizedMessageURL", "");
             if (m_WelcomeMessageURL != "")
             {
                 WebClient client = new WebClient();
                 m_WelcomeMessage = client.DownloadString(m_WelcomeMessageURL);
             }
             LLLoginResponseRegister.RegisterValue ("Message", m_WelcomeMessage);
-            m_RequireInventory = m_LoginServerConfig.GetBoolean("RequireInventory", true);
-            m_AllowRemoteSetLoginLevel = m_LoginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
-            m_MinLoginLevel = m_LoginServerConfig.GetInt("MinLoginLevel", 0);
-            LLLoginResponseRegister.RegisterValue ("MapTileURL", m_LoginServerConfig.GetString ("MapTileURL", string.Empty));
-            LLLoginResponseRegister.RegisterValue ("WebProfileURL", m_LoginServerConfig.GetString ("WebProfileURL", string.Empty));
-            LLLoginResponseRegister.RegisterValue ("SearchURL", m_LoginServerConfig.GetString ("SearchURL", string.Empty));
+            m_RequireInventory = m_loginServerConfig.GetBoolean("RequireInventory", true);
+            m_AllowRemoteSetLoginLevel = m_loginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
+            m_MinLoginLevel = m_loginServerConfig.GetInt("MinLoginLevel", 0);
+            LLLoginResponseRegister.RegisterValue("MapTileURL", m_loginServerConfig.GetString("MapTileURL", string.Empty));
+            LLLoginResponseRegister.RegisterValue("WebProfileURL", m_loginServerConfig.GetString("WebProfileURL", string.Empty));
+            LLLoginResponseRegister.RegisterValue("SearchURL", m_loginServerConfig.GetString("SearchURL", string.Empty));
             // if [LoginService] doesn't have the Search URL, try to get it from [GridInfoService]
             if (LLLoginResponseRegister.GetValue("SearchURL").ToString() == string.Empty)
             {
                 IConfig gridInfo = config.Configs["GridInfoService"];
                 LLLoginResponseRegister.RegisterValue ("SearchURL", gridInfo.GetString("search", string.Empty));
             }
-            LLLoginResponseRegister.RegisterValue ("SunTexture", m_LoginServerConfig.GetString ("SunTexture", sunTexture));
-            LLLoginResponseRegister.RegisterValue ("MoonTexture", m_LoginServerConfig.GetString ("MoonTexture", moonTexture));
-            LLLoginResponseRegister.RegisterValue ("CloudTexture", m_LoginServerConfig.GetString ("CloudTexture", cloudTexture));
+            LLLoginResponseRegister.RegisterValue("SunTexture", m_loginServerConfig.GetString("SunTexture", sunTexture));
+            LLLoginResponseRegister.RegisterValue("MoonTexture", m_loginServerConfig.GetString("MoonTexture", moonTexture));
+            LLLoginResponseRegister.RegisterValue("CloudTexture", m_loginServerConfig.GetString("CloudTexture", cloudTexture));
             registry.RegisterModuleInterface<ILoginService> (this);
             m_registry = registry;
         }
@@ -176,7 +175,7 @@ namespace OpenSim.Services.LLLoginService
                 module.Initialize(this, m_config, m_UserAccountService);
             }
 
-            m_log.DebugFormat("[LLOGIN SERVICE]: Starting...");
+            MainConsole.Instance.DebugFormat("[LLOGIN SERVICE]: Starting...");
         }
 
         public void FinishedStartup()
@@ -240,13 +239,13 @@ namespace OpenSim.Services.LLLoginService
                 UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, firstName, lastName);
                 if (account == null)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Set Level failed, user {0} {1} not found", firstName, lastName);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Set Level failed, user {0} {1} not found", firstName, lastName);
                     return response;
                 }
 
                 if (account.UserLevel < 200)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Set Level failed, reason: user level too low");
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Set Level failed, reason: user level too low");
                     return response;
                 }
 
@@ -259,18 +258,18 @@ namespace OpenSim.Services.LLLoginService
                 UUID secureSession = UUID.Zero;
                 if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: SetLevel failed, reason: authentication failed");
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: SetLevel failed, reason: authentication failed");
                     return response;
                 }
             }
             catch (Exception e)
             {
-                m_log.Error("[LLOGIN SERVICE]: SetLevel failed, exception " + e);
+                MainConsole.Instance.Error("[LLOGIN SERVICE]: SetLevel failed, exception " + e);
                 return response;
             }
 
             m_MinLoginLevel = level;
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login level set to {0} by {1} {2}", level, firstName, lastName);
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login level set to {0} by {1} {2}", level, firstName, lastName);
 
             response["success"] = true;
             return response;
@@ -278,7 +277,7 @@ namespace OpenSim.Services.LLLoginService
 
         public LoginResponse VerifyClient(string Name, string authType, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
                 Name);
 
             //
@@ -297,7 +296,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 if (!m_AllowAnonymousLogin)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: user not found");
                     return LLFailedLoginResponse.AccountProblem;
                 }
                 m_UserAccountService.CreateUser(Name, passwd, "");
@@ -319,7 +318,7 @@ namespace OpenSim.Services.LLLoginService
             string token = m_AuthenticationService.Authenticate (account.PrincipalID, authType, passwd, 30);
             if ((token == string.Empty) || (token != string.Empty && !UUID.TryParse(token, out secureSession)))
             {
-                m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
+                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: authentication failed");
                 return LLFailedLoginResponse.AuthenticationProblem;
             }
 
@@ -368,13 +367,13 @@ namespace OpenSim.Services.LLLoginService
 
                 if (account.UserLevel < m_MinLoginLevel)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
                     return LLFailedLoginResponse.LoginBlockedProblem;
                 }
 
                 if ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan)
                 {
-                    m_log.Info("[LLOGIN SERVICE]: Login failed, reason: user is permanently banned.");
+                    MainConsole.Instance.Info("[LLOGIN SERVICE]: Login failed, reason: user is permanently banned.");
                     return LLFailedLoginResponse.PermanentBannedProblem;
                 }
 
@@ -398,7 +397,7 @@ namespace OpenSim.Services.LLLoginService
 
                     if (IsBanned)
                     {
-                        m_log.Info(string.Format("[LLOGIN SERVICE]: Login failed, reason: user is temporarily banned {0}.", until));
+                        MainConsole.Instance.Info(string.Format("[LLOGIN SERVICE]: Login failed, reason: user is temporarily banned {0}.", until));
                         return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, string.Format("You are blocked from connecting to this service{0}.", until), false);
                     }
                 }
@@ -408,7 +407,7 @@ namespace OpenSim.Services.LLLoginService
 
         public LoginResponse VerifyClient (UUID AgentID, string authType, string passwd, UUID scopeID, bool tosExists, string tosAccepted, string mac, string clientVersion, out UUID secureSession)
         {
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
                 AgentID);
 
             //
@@ -438,7 +437,7 @@ namespace OpenSim.Services.LLLoginService
         {
             UUID session = UUID.Random();
 
-            m_log.InfoFormat("[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login request for {0} from {1} with user agent {2} starting in {3}",
                 Name, clientIP.Address, clientVersion, startLocation);
             UserAccount account = m_UserAccountService.GetUserAccount (scopeID, Name);
             try
@@ -469,7 +468,7 @@ namespace OpenSim.Services.LLLoginService
                 //
                 if (m_RequireInventory && m_InventoryService == null)
                 {
-                    m_log.WarnFormat("[LLOGIN SERVICE]: Login failed, reason: inventory service not set up");
+                    MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: Login failed, reason: inventory service not set up");
                     return LLFailedLoginResponse.InventoryProblem;
                 }
                 List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
@@ -479,7 +478,7 @@ namespace OpenSim.Services.LLLoginService
                     inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                     if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                     {
-                        m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
+                        MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
@@ -516,7 +515,7 @@ namespace OpenSim.Services.LLLoginService
 
                 // Get active gestures
                 List<InventoryItemBase> gestures = m_InventoryService.GetActiveGestures(account.PrincipalID);
-                //m_log.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
+                //MainConsole.Instance.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
                 //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
                 m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), true, false, UUID.Zero);
@@ -571,7 +570,7 @@ namespace OpenSim.Services.LLLoginService
                 GridRegion destination = FindDestination (account, scopeID, guinfo, session, startLocation, home, out tpFlags, out where, out position, out lookAt);
                 if (destination == null)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.DeadRegionProblem;
                 }
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
@@ -615,13 +614,13 @@ namespace OpenSim.Services.LLLoginService
                         //Create an appearance for the user if one doesn't exist
                         if (m_DefaultUserAvatarArchive != "")
                         {
-                            m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
+                            MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
                                 ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
                             archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
                         }
                         else
                         {
-                            m_log.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
+                            MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
                             AvatarAppearance appearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
                         }
@@ -641,7 +640,7 @@ namespace OpenSim.Services.LLLoginService
                                     InventoryItemBase invItem = m_InventoryService.GetItem (new InventoryItemBase (item.Value));
                                     if (invItem == null)
                                     {
-                                        m_log.Warn("[LLOGIN SERVICE]: Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
+                                        MainConsole.Instance.Warn("[LLOGIN SERVICE]: Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
                                         messedUp = true;
                                     }
                                 }
@@ -656,7 +655,7 @@ namespace OpenSim.Services.LLLoginService
                                 continue;
                             if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
                             {
-                                m_log.Warn("[LLOGIN SERVICE]: Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
+                                MainConsole.Instance.Warn("[LLOGIN SERVICE]: Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
                                 avappearance = new AvatarAppearance(account.PrincipalID);
                                 m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                                 break;
@@ -676,7 +675,7 @@ namespace OpenSim.Services.LLLoginService
 
                 if (aCircuit == null)
                 {
-                    m_log.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: {0}", reason);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: {0}", reason);
                     return new LLFailedLoginResponse (LoginResponseEnum.InternalError, reason, false);
                 }
 
@@ -685,7 +684,7 @@ namespace OpenSim.Services.LLLoginService
                 if (m_FriendsService != null)
                 {
                     friendsList = m_FriendsService.GetFriends(account.PrincipalID);
-                    //m_log.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
+                    //MainConsole.Instance.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
                 }
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
@@ -719,12 +718,12 @@ namespace OpenSim.Services.LLLoginService
                     where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
                     eventCategories, classifiedCategories, FillOutSeedCap (aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName, m_registry);
 
-                m_log.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
+                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 return response;
             }
             catch (Exception e)
             {
-                m_log.WarnFormat ("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e);
+                MainConsole.Instance.WarnFormat ("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e);
                 if (account != null)
                 {
                     //Revert their logged in status if we got that far
@@ -770,7 +769,7 @@ namespace OpenSim.Services.LLLoginService
 
                 if (home == null)
                 {
-                    m_log.WarnFormat(
+                    MainConsole.Instance.WarnFormat(
                         "[LLOGIN SERVICE]: User {0} {1} tried to login to a 'home' start location but they have none set",
                         account.FirstName, account.LastName);
 
@@ -812,7 +811,7 @@ namespace OpenSim.Services.LLLoginService
                             }
                             else
                             {
-                                m_log.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
+                                MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
                                     account.FirstName, account.LastName);
                                 defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
                                 if (defaults != null && defaults.Count > 0)
@@ -904,7 +903,7 @@ namespace OpenSim.Services.LLLoginService
                     List<GridRegion> regions = m_GridService.GetRegionsByName(scopeID, regionName, 1);
                     if ((regions == null) || (regions.Count == 0))
                     {
-                        m_log.InfoFormat(
+                        MainConsole.Instance.InfoFormat(
                             "[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}. Trying defaults.",
                             startLocation, regionName);
                         regions = m_GridService.GetDefaultRegions(scopeID);
@@ -926,7 +925,7 @@ namespace OpenSim.Services.LLLoginService
                             where = "safe";
                             return safeRegions[0];
                         }
-                        m_log.InfoFormat(
+                        MainConsole.Instance.InfoFormat(
                             "[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.",
                             startLocation);
                         return null;
@@ -937,7 +936,7 @@ namespace OpenSim.Services.LLLoginService
                 string[] parts = regionName.Split(new char[] {'@'});
                 if (parts.Length < 2)
                 {
-                    m_log.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}",
+                    MainConsole.Instance.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}",
                                      startLocation, regionName);
                     return null;
                 }
@@ -982,7 +981,7 @@ namespace OpenSim.Services.LLLoginService
                             where = "safe";
                             return safeRegions[0];
                         }
-                        m_log.InfoFormat(
+                        MainConsole.Instance.InfoFormat(
                             "[LLLOGIN SERVICE]: Got Custom Login URI {0}, Grid does not have any available regions.",
                             startLocation);
                         return null;
@@ -1165,7 +1164,6 @@ namespace AvatarArchives
     using OpenMetaverse.StructuredData;
     public class GridAvatarArchiver : IAvatarAppearanceArchiver
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IUserAccountService UserAccountService;
         private readonly IAvatarService AvatarService;
         private readonly IInventoryService InventoryService;
@@ -1188,7 +1186,7 @@ namespace AvatarArchives
         {
             if (cmdparams.Length < 5)
             {
-                m_log.Info("[AvatarArchive] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
                 return;
             }
             LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
@@ -1197,16 +1195,16 @@ namespace AvatarArchives
         public void LoadAvatarArchive(string FileName, string Name)
         {
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
-            m_log.Info("[AvatarArchive] Loading archive from " + FileName);
+            MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
-                m_log.Error("[AvatarArchive] User not found!");
+                MainConsole.Instance.Error("[AvatarArchive] User not found!");
                 return;
             }
             string file = "";
             if (FileName.EndsWith(".database"))
             {
-                m_log.Info("[AvatarArchive] Loading archive from the database " + FileName);
+                MainConsole.Instance.Info("[AvatarArchive] Loading archive from the database " + FileName);
 
                 FileName = FileName.Substring(0, FileName.Length - 9);
 
@@ -1217,7 +1215,7 @@ namespace AvatarArchives
             }
             else
             {
-                m_log.Info("[AvatarArchive] Loading archive from " + FileName);
+                MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
                 StreamReader reader = new StreamReader(FileName);
                 file = reader.ReadToEnd();
                 reader.Close();
@@ -1229,7 +1227,7 @@ namespace AvatarArchives
             OSD m = OSDParser.DeserializeLLSDXml(file);
             if (m.Type != OSDType.Map)
             {
-                m_log.Warn("[AvatarArchiver]: Failed to load AA from " + FileName + ", text: " + file);
+                MainConsole.Instance.Warn("[AvatarArchiver]: Failed to load AA from " + FileName + ", text: " + file);
                 return;
             }
             OSDMap map = ((OSDMap)m);
@@ -1262,13 +1260,13 @@ namespace AvatarArchives
             }
             catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
+                MainConsole.Instance.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
             }
 
             AvatarData adata = new AvatarData(appearance);
             AvatarService.SetAvatar(account.PrincipalID, adata);
 
-            m_log.Info("[AvatarArchive] Loaded archive from " + FileName);
+            MainConsole.Instance.Info("[AvatarArchive] Loaded archive from " + FileName);
         }
 
         private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item, InventoryFolderBase parentFolder)
@@ -1333,13 +1331,13 @@ namespace AvatarArchives
         {
             if (cmdparams.Length < 7)
             {
-                m_log.Info("[AvatarArchive] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
                 return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
             {
-                m_log.Error("[AvatarArchive] User not found!");
+                MainConsole.Instance.Error("[AvatarArchive] User not found!");
                 return;
             }
 
@@ -1367,7 +1365,7 @@ namespace AvatarArchives
             }
             catch (Exception ex)
             {
-                m_log.Warn("Excpetion: " + ex);
+                MainConsole.Instance.Warn("Excpetion: " + ex);
             }
             try
             {
@@ -1382,7 +1380,7 @@ namespace AvatarArchives
             }
             catch(Exception ex)
             {
-                m_log.Warn("Excpetion: " + ex);
+                MainConsole.Instance.Warn("Excpetion: " + ex);
             }
 
             map.Add("Body", body);
@@ -1403,16 +1401,16 @@ namespace AvatarArchives
 				
                 DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
 
-                m_log.Info("[AvatarArchive] Saved archive to database " + cmdparams[5]);
+                MainConsole.Instance.Info("[AvatarArchive] Saved archive to database " + cmdparams[5]);
             }
             else
             {
-                m_log.Info("[AvatarArchive] Saving archive to " + cmdparams[5]);
+                MainConsole.Instance.Info("[AvatarArchive] Saving archive to " + cmdparams[5]);
                 StreamWriter writer = new StreamWriter(cmdparams[5], false);
                 writer.Write(OSDParser.SerializeLLSDXmlString(map));
                 writer.Close();
                 writer.Dispose();
-                m_log.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
+                MainConsole.Instance.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
             }
         }
 
@@ -1422,14 +1420,14 @@ namespace AvatarArchives
             if (asset != null && AssetID != UUID.Zero)
             {
                 OSDMap assetData = new OSDMap();
-                m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
+                MainConsole.Instance.Info("[AvatarArchive]: Saving asset " + asset.ID);
                 CreateMetaDataMap(asset, assetData);
                 assetData.Add("AssetData", OSD.FromBinary(asset.Data));
                 assetMap[asset.ID.ToString()] = assetData;
             }
             else
             {
-                m_log.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
+                MainConsole.Instance.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
                 return;
             }
         }
@@ -1466,10 +1464,10 @@ namespace AvatarArchives
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
             if (saveItem == null)
             {
-                m_log.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
+                MainConsole.Instance.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
                 return;
             }
-            m_log.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
+            MainConsole.Instance.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
             string serialization = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
             itemMap[ItemID.ToString()] = OSD.FromString(serialization);
 
@@ -1483,7 +1481,7 @@ namespace AvatarArchives
                 UUID AssetID = UUID.Parse(kvp.Key);
                 OSDMap assetMap = (OSDMap)kvp.Value;
                 AssetBase asset = AssetService.Get(AssetID.ToString());
-                m_log.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
+                MainConsole.Instance.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
                 if (asset == null) //Don't overwrite
                 {
                     asset = LoadAssetBase(assetMap);
@@ -1520,7 +1518,7 @@ namespace AvatarArchives
             {
                 string serialization = kvp.Value.AsString();
                 InventoryItemBase item = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
-                m_log.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
+                MainConsole.Instance.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
                 UUID oldID = item.ID;
                 item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
                 litems.Add(item);
@@ -1555,7 +1553,6 @@ namespace AvatarArchives
 
     public class GridAvatarProfileArchiver
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IUserAccountService UserAccountService;
         public GridAvatarProfileArchiver (IUserAccountService UAS)
         {
@@ -1575,7 +1572,7 @@ namespace AvatarArchives
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             StreamReader reader = new StreamReader(cmdparams[5]);
@@ -1617,19 +1614,19 @@ namespace AvatarArchives
                 profileData.UpdateUserProfile(UPI);
             }
 
-            m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
+            MainConsole.Instance.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
         protected void HandleSaveAvatarProfile(string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
             if (account == null)
             {
-                m_log.Info("Account could not be found, stopping now.");
+                MainConsole.Instance.Info("Account could not be found, stopping now.");
                 return;
             }
             IProfileConnector data = DataManager.RequestPlugin<IProfileConnector>();
@@ -1655,7 +1652,7 @@ namespace AvatarArchives
             writer.Write("</profile>\n");
             writer.Close();
             writer.Dispose();
-            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
+            MainConsole.Instance.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
         }
     }
 }

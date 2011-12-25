@@ -47,9 +47,6 @@ namespace Aurora.Modules
 {
     public class AuroraWorldMapModule : INonSharedRegionModule, IWorldMapModule
 	{
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private const string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
         //private static readonly UUID STOP_UUID = UUID.Random();
 
@@ -84,7 +81,7 @@ namespace Aurora.Modules
                         "AuroraWorldMapModule")
                     return;
                 m_Enabled = true;
-                //m_log.Info("[AuroraWorldMap] Initializing");
+                //MainConsole.Instance.Info("[AuroraWorldMap] Initializing");
                 m_config = source;
                 m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
                 minutes = source.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
@@ -212,7 +209,7 @@ namespace Aurora.Modules
 		{
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            m_log.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI + "/index.php?method=" + regionimage);
+            MainConsole.Instance.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
 
@@ -397,7 +394,7 @@ namespace Aurora.Modules
             else
             {
                 if (flag != 2) //Land sales
-                    m_log.Warn("[World Map] : Got new flag, " + flag + " RequestMapBlocks()");
+                    MainConsole.Instance.Warn("[World Map] : Got new flag, " + flag + " RequestMapBlocks()");
             }
 		}
 
@@ -703,7 +700,7 @@ namespace Aurora.Modules
             regionImage = regionImage.Replace("-", "");
             if (keysvals["method"].ToString() != regionImage)
                 return reply;
-            m_log.Debug("[WORLD MAP]: Sending map image jpeg");
+            MainConsole.Instance.Debug("[WORLD MAP]: Sending map image jpeg");
             const int statuscode = 200;
             byte[] jpeg = new byte[0];
 
@@ -745,7 +742,7 @@ namespace Aurora.Modules
                 catch (Exception)
                 {
                     // Dummy!
-                    m_log.Warn("[WORLD MAP]: Unable to generate Map image");
+                    MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
                 }
                 finally
                 {
@@ -809,7 +806,7 @@ namespace Aurora.Modules
 
             string exportPath = cmdparams.Length > 1 ? cmdparams[1] : DEFAULT_WORLD_MAP_EXPORT_PATH;
 
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[WORLD MAP]: Exporting world map for {0} to {1}", m_scene.RegionInfo.RegionName, exportPath);
 
             List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
@@ -858,7 +855,7 @@ namespace Aurora.Modules
 
             mapTexture.Save(exportPath, ImageFormat.Jpeg);
 
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[WORLD MAP]: Successfully exported world map for {0} to {1}",
                 m_scene.RegionInfo.RegionName, exportPath);
         }
@@ -1033,7 +1030,7 @@ namespace Aurora.Modules
             catch (Exception)
             {
                 // Dummy!
-                m_log.Warn("[WORLD MAP]: Unable to generate Map image");
+                MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
             }
             finally
             {

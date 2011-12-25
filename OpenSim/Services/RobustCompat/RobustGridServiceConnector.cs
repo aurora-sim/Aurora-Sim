@@ -41,10 +41,6 @@ namespace OpenSim.Services.RobustCompat
 {
     public class RobustGridServicesConnector : GridServicesConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         #region IGridService
 
         public override GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)

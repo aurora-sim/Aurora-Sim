@@ -48,7 +48,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         private const float ACCELERATION_TOLERANCE = 0.01f;
         private const float ROTATIONAL_VELOCITY_TOLERANCE = 0.01f;
         private const bool SHOULD_DAMP_UPDATES = true;
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string LogHeader = "[BULLETS PRIM]";
         private static readonly Dictionary<ulong, float[]> _hullMeshDictionary = new Dictionary<ulong, float[]>();
 
@@ -101,7 +100,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         public BSPrim(ISceneChildEntity entity, bool isPhysical, BSScene parent_scene)
         {
             _parent_entity = entity;
-            // m_log.DebugFormat("{0}: BSPrim creation of {1}, id={2}", LogHeader, primName, localID);
+            // MainConsole.Instance.DebugFormat("{0}: BSPrim creation of {1}, id={2}", LogHeader, primName, localID);
             _localID = _parent_entity.LocalId;
             _avName = _parent_entity.Name;
             _scene = parent_scene;
@@ -208,7 +207,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 _scene.TaintedObject(delegate()
                 {
                     BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position, _orientation);
-                    // m_log.DebugFormat("{0}: setPosition: id={1}, position={2}", LogHeader, _localID, _position);
+                    // MainConsole.Instance.DebugFormat("{0}: setPosition: id={1}, position={2}", LogHeader, _localID, _position);
                 });
 #else
                 _scene.TaintedObject(() => BulletSimAPI.SetObjectTranslation(_scene.WorldID, _localID, _position,
@@ -284,7 +283,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _orientation = value;
-                // m_log.DebugFormat("{0}: set orientation: id={1}, ori={2}", LogHeader, LocalID, _orientation);
+                // MainConsole.Instance.DebugFormat("{0}: set orientation: id={1}, ori={2}", LogHeader, LocalID, _orientation);
 #if (!ISWIN)
                 _scene.TaintedObject(delegate()
                 {
@@ -387,7 +386,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _rotationalVelocity = value;
-                // m_log.DebugFormat("{0}: RotationalVelocity={1}", LogHeader, _rotationalVelocity);
+                // MainConsole.Instance.DebugFormat("{0}: RotationalVelocity={1}", LogHeader, _rotationalVelocity);
 #if (!ISWIN)
                 _scene.TaintedObject(delegate()
                 {
@@ -493,7 +492,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public void Destroy()
         {
-            // m_log.DebugFormat("{0}: Destroy", LogHeader);
+            // MainConsole.Instance.DebugFormat("{0}: Destroy", LogHeader);
             // Undo any vehicle properties
             _vehicle.ProcessTypeChange(Vehicle.TYPE_NONE);
             _scene.RemoveVehiclePrim(this); // just to make sure
@@ -516,7 +515,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         public override void link(PhysicsObject obj)
         {
             BSPrim parent = (BSPrim) obj;
-            // m_log.DebugFormat("{0}: link {1}/{2} to {3}", LogHeader, _avName, _localID, obj.LocalID);
+            // MainConsole.Instance.DebugFormat("{0}: link {1}/{2} to {3}", LogHeader, _avName, _localID, obj.LocalID);
             // TODO: decide if this parent checking needs to happen at taint time
             if (_parentPrim == null)
             {
@@ -539,7 +538,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                     else
                     {
                         // asking to reparent a prim should not happen
-                        m_log.ErrorFormat("{0}: Reparenting a prim. ", LogHeader);
+                        MainConsole.Instance.ErrorFormat("{0}: Reparenting a prim. ", LogHeader);
                     }
                 }
             }
@@ -551,7 +550,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         {
             // TODO: decide if this parent checking needs to happen at taint time
             // Race condition here: if link() and delink() in same simulation tick, the delink will not happen
-            // m_log.DebugFormat("{0}: delink {1}/{2}", LogHeader, _avName, _localID);
+            // MainConsole.Instance.DebugFormat("{0}: delink {1}/{2}", LogHeader, _avName, _localID);
             if (_parentPrim != null)
             {
                 _parentPrim.RemoveChildFromLinkset(this);
@@ -591,7 +590,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                          }
                                          else
                                          {
-                                             m_log.ErrorFormat(
+                                             MainConsole.Instance.ErrorFormat(
                                                  "{0}: Asked to remove child from linkset that was not in linkset");
                                          }
                                      });
@@ -618,7 +617,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             BulletSimAPI.SetObjectProperties(_scene.WorldID, LocalID, IsStatic, IsSolid, SubscribedEvents(), _mass);
             //Gotta reset this too if we're changing the staticness of the prim
             Buoyancy = _buoyancy;
-            // m_log.DebugFormat("{0}: ID={1}, SetObjectDynamic: IsStatic={2}, IsSolid={3}, mass={4}", LogHeader, _localID, IsStatic, IsSolid, _mass);
+            // MainConsole.Instance.DebugFormat("{0}: ID={1}, SetObjectDynamic: IsStatic={2}, IsSolid={3}, mass={4}", LogHeader, _localID, IsStatic, IsSolid, _mass);
         }
 
         public override void AddForce(Vector3 force, bool pushforce)
@@ -640,7 +639,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
             else
             {
-                m_log.WarnFormat("{0}: Got a NaN force applied to a Prim", LogHeader);
+                MainConsole.Instance.WarnFormat("{0}: Got a NaN force applied to a Prim", LogHeader);
             }
 #if (!ISWIN)
             _scene.TaintedObject(delegate()
@@ -654,7 +653,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override void AddAngularForce(Vector3 force, bool pushforce)
         {
-            // m_log.DebugFormat("{0}: AddAngularForce. f={1}, push={2}", LogHeader, force, pushforce);
+            // MainConsole.Instance.DebugFormat("{0}: AddAngularForce. f={1}, push={2}", LogHeader, force, pushforce);
         }
 
         public override void SubscribeEvents(int ms)
@@ -680,7 +679,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             // Since we're recreating new, get rid of any previously generated shape
             if (_hullKey != 0)
             {
-                // m_log.DebugFormat("{0}: CreateGeom: deleting old hull. Key={1}", LogHeader, _hullKey);
+                // MainConsole.Instance.DebugFormat("{0}: CreateGeom: deleting old hull. Key={1}", LogHeader, _hullKey);
                 BulletSimAPI.DestroyHull(_scene.WorldID, _hullKey);
                 _hullKey = 0;
                 _hulls.Clear();
@@ -693,7 +692,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 {
                     if (_size.X == _size.Y && _size.Y == _size.Z && _size.X == _size.Z)
                     {
-                        // m_log.DebugFormat("{0}: CreateGeom: mesh null. Defaulting to sphere of size {1}", LogHeader, _size);
+                        // MainConsole.Instance.DebugFormat("{0}: CreateGeom: mesh null. Defaulting to sphere of size {1}", LogHeader, _size);
                         _shapeType = ShapeData.PhysicsShapeType.SHAPE_SPHERE;
                         // Bullet native objects are scaled by the Bullet engine so pass the size in
                         _scale = _size;
@@ -701,7 +700,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 }
                 else
                 {
-                    // m_log.DebugFormat("{0}: CreateGeom: mesh null. Defaulting to box. lid={1}, size={2}", LogHeader, LocalID,  _size);
+                    // MainConsole.Instance.DebugFormat("{0}: CreateGeom: mesh null. Defaulting to box. lid={1}, size={2}", LogHeader, LocalID,  _size);
                     _shapeType = ShapeData.PhysicsShapeType.SHAPE_BOX;
                     _scale = _size;
                 }
@@ -720,7 +719,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             if (_hullMeshDictionary.TryGetValue(_hullKey, out convHulls))
             {
                 // create the hull definition in Bullet
-                // m_log.DebugFormat("{0}: CreateGeom: calling CreateHull. lid={1}, key={2}, hulls={3}", LogHeader, _localID, _hullKey, hullCount);
+                // MainConsole.Instance.DebugFormat("{0}: CreateGeom: calling CreateHull. lid={1}, key={2}, hulls={3}", LogHeader, _localID, _hullKey, hullCount);
                 BulletSimAPI.CreateHull(_scene.WorldID, _hullKey, (int) convHulls[0], convHulls);
                 _shapeType = ShapeData.PhysicsShapeType.SHAPE_HULL;
                 // Let the object be scaled by Bullet (the mesh was created as a unit mesh)
@@ -806,7 +805,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
 
             // create the hull definition in Bullet
-            // m_log.DebugFormat("{0}: CreateGeom: calling CreateHull. lid={1}, key={2}, hulls={3}", LogHeader, _localID, _hullKey, hullCount);
+            // MainConsole.Instance.DebugFormat("{0}: CreateGeom: calling CreateHull. lid={1}, key={2}, hulls={3}", LogHeader, _localID, _hullKey, hullCount);
             BulletSimAPI.CreateHull(_scene.WorldID, _hullKey, hullCount, convHulls);
             _shapeType = ShapeData.PhysicsShapeType.SHAPE_HULL;
             // Let the object be scaled by Bullet (the mesh was created as a unit mesh)
@@ -851,13 +850,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             // in the physics engine already. Here we pull together all of those hulls
             // into one shape.
             int totalPrimsInLinkset = _childrenPrims.Count + 1;
-            // m_log.DebugFormat("{0}: CreateLinkset. Root prim={1}, prims={2}", LogHeader, LocalID, totalPrimsInLinkset);
+            // MainConsole.Instance.DebugFormat("{0}: CreateLinkset. Root prim={1}, prims={2}", LogHeader, LocalID, totalPrimsInLinkset);
             ShapeData[] shapes = new ShapeData[totalPrimsInLinkset];
             FillShapeInfo(out shapes[0]);
             int ii = 1;
             foreach (BSPrim prim in _childrenPrims)
             {
-                // m_log.DebugFormat("{0}: CreateLinkset: adding prim {1}", LogHeader, prim.LocalID);
+                // MainConsole.Instance.DebugFormat("{0}: CreateLinkset: adding prim {1}", LogHeader, prim.LocalID);
                 prim.FillShapeInfo(out shapes[ii]);
                 ii++;
             }
@@ -887,18 +886,18 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         // TODO: make this more effeicient: a large linkset gets rebuilt over and over and prims are added
         private void CreateLinksetWithConstraints()
         {
-            // m_log.DebugFormat("{0}: CreateLinkset. Root prim={1}, prims={2}", LogHeader, LocalID, _childrenPrims.Count+1);
+            // MainConsole.Instance.DebugFormat("{0}: CreateLinkset. Root prim={1}, prims={2}", LogHeader, LocalID, _childrenPrims.Count+1);
 
             // remove any constraints that might be in place
             foreach (BSPrim prim in _childrenPrims)
             {
-                // m_log.DebugFormat("{0}: CreateObject: RemoveConstraint between root prim {1} and child prim {2}", LogHeader, LocalID, prim.LocalID);
+                // MainConsole.Instance.DebugFormat("{0}: CreateObject: RemoveConstraint between root prim {1} and child prim {2}", LogHeader, LocalID, prim.LocalID);
                 BulletSimAPI.RemoveConstraint(_scene.WorldID, LocalID, prim.LocalID);
             }
             // create constraints between the root prim and each of the children
             foreach (BSPrim prim in _childrenPrims)
             {
-                // m_log.DebugFormat("{0}: CreateObject: AddConstraint between root prim {1} and child prim {2}", LogHeader, LocalID, prim.LocalID);
+                // MainConsole.Instance.DebugFormat("{0}: CreateObject: AddConstraint between root prim {1} and child prim {2}", LogHeader, LocalID, prim.LocalID);
 
                 // Zero motion for children so they don't interpolate
                 prim.ZeroMotion();
@@ -931,7 +930,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             // if (_scene.NeedsMeshing(_pbs) || IsRootOfLinkset )
             if (_scene.NeedsMeshing(_pbs)) // linksets with constraints don't need a root mesh
             {
-                // m_log.DebugFormat("{0}: RecreateGeomAndObject: creating mesh", LogHeader);
+                // MainConsole.Instance.DebugFormat("{0}: RecreateGeomAndObject: creating mesh", LogHeader);
                 // Make the mesh scaled to 1 and use Bullet's scaling feature to scale it in world
                 Vector3 scaleFactor = new Vector3(1.0f, 1.0f, 1.0f);
                 _mesh = _scene.mesher.CreateMesh(_avName, _pbs, scaleFactor, _scene.MeshLOD, _isPhysical);
@@ -960,14 +959,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 if (!_position.ApproxEquals(entprop.Position, POSITION_TOLERANCE))
                 {
                     _position = entprop.Position;
-                    // m_log.DebugFormat("{0}: UpdateProperties: id={1}, pos = {2}", LogHeader, LocalID, _position);
+                    // MainConsole.Instance.DebugFormat("{0}: UpdateProperties: id={1}, pos = {2}", LogHeader, LocalID, _position);
                     //changed |= UpdatedProperties.Position;
                 }
                 // if (_orientation != entprop.Rotation)
                 if (!_orientation.ApproxEquals(entprop.Rotation, ROTATION_TOLERANCE))
                 {
                     _orientation = entprop.Rotation;
-                    // m_log.DebugFormat("{0}: UpdateProperties: id={1}, rot = {2}", LogHeader, LocalID, _orientation);
+                    // MainConsole.Instance.DebugFormat("{0}: UpdateProperties: id={1}, rot = {2}", LogHeader, LocalID, _orientation);
                     //changed |= UpdatedProperties.Rotation;
                 }
                 // if (_velocity != entprop.Velocity)
@@ -979,13 +978,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                         changed |= UpdatedProperties.Velocity;
                     }
                     _velocity = entprop.Velocity;
-                    // m_log.DebugFormat("{0}: UpdateProperties: velocity = {1}", LogHeader, _velocity);
+                    // MainConsole.Instance.DebugFormat("{0}: UpdateProperties: velocity = {1}", LogHeader, _velocity);
                 }
                 // if (_acceleration != entprop.Acceleration)
                 if (!_acceleration.ApproxEquals(entprop.Acceleration, ACCELERATION_TOLERANCE))
                 {
                     _acceleration = entprop.Acceleration;
-                    // m_log.DebugFormat("{0}: UpdateProperties: acceleration = {1}", LogHeader, _acceleration);
+                    // MainConsole.Instance.DebugFormat("{0}: UpdateProperties: acceleration = {1}", LogHeader, _acceleration);
                     //changed |= UpdatedProperties.Acceleration;
                 }
                 // if (_rotationalVelocity != entprop.RotationalVelocity)
@@ -997,16 +996,16 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                         changed |= UpdatedProperties.RotationalVel;
                     }
                     _rotationalVelocity = entprop.RotationalVelocity;
-                    // m_log.DebugFormat("{0}: UpdateProperties: rotationalVelocity = {1}", LogHeader, _rotationalVelocity);
+                    // MainConsole.Instance.DebugFormat("{0}: UpdateProperties: rotationalVelocity = {1}", LogHeader, _rotationalVelocity);
                 }
                 if (changed != 0)
                 {
-                    // m_log.DebugFormat("{0}: UpdateProperties: id={1}, c={2}, pos={3}, rot={4}", LogHeader, LocalID, changed, _position, _orientation);
+                    // MainConsole.Instance.DebugFormat("{0}: UpdateProperties: id={1}, c={2}, pos={3}, rot={4}", LogHeader, LocalID, changed, _position, _orientation);
                     // Only update the position of single objects and linkset roots
                     if (this._parentPrim == null && _limitedUpdatesCount > 7)
                     {
                         _limitedUpdatesCount = 0;
-                        // m_log.DebugFormat("{0}: RequestTerseUpdate. id={1}, ch={2}, pos={3}, rot={4}", LogHeader, LocalID, changed, _position, _orientation);
+                        // MainConsole.Instance.DebugFormat("{0}: RequestTerseUpdate. id={1}, ch={2}, pos={3}, rot={4}", LogHeader, LocalID, changed, _position, _orientation);
                         base.RequestPhysicsterseUpdate();
                     }
                     else
@@ -1024,7 +1023,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 _velocity = entprop.Velocity;
                 _acceleration = entprop.Acceleration;
                 _rotationalVelocity = entprop.RotationalVelocity;
-                // m_log.DebugFormat("{0}: RequestTerseUpdate. id={1}, ch={2}, pos={3}, rot={4}", LogHeader, LocalID, changed, _position, _orientation);
+                // MainConsole.Instance.DebugFormat("{0}: RequestTerseUpdate. id={1}, ch={2}, pos={3}, rot={4}", LogHeader, LocalID, changed, _position, _orientation);
                 base.RequestPhysicsterseUpdate();
             }
         }*/
@@ -1102,7 +1101,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         public void Collide(uint collidingWith, ActorTypes type, Vector3 contactPoint, Vector3 contactNormal,
                             float pentrationDepth)
         {
-            // m_log.DebugFormat("{0}: Collide: ms={1}, id={2}, with={3}", LogHeader, _subscribedEventsMs, LocalID, collidingWith);
+            // MainConsole.Instance.DebugFormat("{0}: Collide: ms={1}, id={2}, with={3}", LogHeader, _subscribedEventsMs, LocalID, collidingWith);
 
             // The following lines make IsColliding() and IsCollidingGround() work
             _collidingStep = _scene.SimulationStep;

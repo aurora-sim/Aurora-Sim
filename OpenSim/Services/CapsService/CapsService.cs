@@ -42,8 +42,6 @@ namespace OpenSim.Services.CapsService
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         /// A list of all clients and their Client Caps Handlers
         /// </summary>
@@ -120,14 +118,14 @@ namespace OpenSim.Services.CapsService
 #else
             int count = m_RegionCapsServices.Values.SelectMany(regionCaps => regionCaps.GetClients()).Count(clientCaps => (clientCaps.RootAgent || showChildAgents));
 #endif
-            m_log.WarnFormat ("{0} agents found: ", count);
+            MainConsole.Instance.WarnFormat ("{0} agents found: ", count);
             foreach (IClientCapsService clientCaps in m_ClientCapsServices.Values)
             {
                 foreach(IRegionClientCapsService caps in clientCaps.GetCapsServices())
                 {
                     if((caps.RootAgent || showChildAgents))
                     {
-                        m_log.InfoFormat("Region - {0}, User {1}, {2}, {3}", 
+                        MainConsole.Instance.InfoFormat("Region - {0}, User {1}, {2}, {3}", 
                             caps.Region.RegionName, clientCaps.AccountInfo.Name,
                             caps.RootAgent ? "Root Agent" : "Child Agent",
                             caps.Disabled ? "Disabled" : "Not Disabled");
@@ -181,7 +179,7 @@ namespace OpenSim.Services.CapsService
             clientService.RootAgent = IsRootAgent;
 
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UserLogin", AgentID);
-            m_log.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " for agent " + AgentID);
+            MainConsole.Instance.Debug("[CapsService]: Adding Caps URL " + clientService.CapsUrl + " for agent " + AgentID);
             return clientService.CapsUrl;
         }
 

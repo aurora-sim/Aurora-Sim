@@ -43,9 +43,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Fields
 
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly List<ISceneEntity> m_PhysicsReturns = new List<ISceneEntity> ();
         public List<ISceneEntity> PhysicsReturns
         {
@@ -371,7 +368,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Close()
         {
-            m_log.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
+            MainConsole.Instance.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
             SimulationDataService.Shutdown ();
 
@@ -598,7 +595,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Exception e)
                 {
-                    m_log.Error("[REGION]: Failed with exception " + e + " in region: " + RegionInfo.RegionName);
+                    MainConsole.Instance.Error("[REGION]: Failed with exception " + e + " in region: " + RegionInfo.RegionName);
                     return true;
                 }
 
@@ -731,7 +728,7 @@ namespace OpenSim.Region.Framework.Scenes
                             appearance.Appearance = aCircuit.Appearance ?? sp.Scene.AvatarService.GetAppearance(sp.UUID);
                             if (appearance.Appearance == null)
                             {
-                                m_log.Error("[AsyncScene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
+                                MainConsole.Instance.Error("[AsyncScene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
                                 appearance.Appearance = new AvatarAppearance(sp.UUID);
                             }
                         }
@@ -754,7 +751,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch(Exception ex)
                     {
-                        m_log.Warn("[Scene]: Error in AddNewClient: " + ex);
+                        MainConsole.Instance.Warn("[Scene]: Error in AddNewClient: " + ex);
                     }
                 });
         }
@@ -812,15 +809,15 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch(Exception e)
                     {
-                        m_log.Error("[SCENE] Scene.cs:RemoveClient:Presence.Close exception: " + e);
+                        MainConsole.Instance.Error("[SCENE] Scene.cs:RemoveClient:Presence.Close exception: " + e);
                     }
 
                     //Remove any interfaces it might have stored
                     presence.RemoveAllInterfaces();
 
                     AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
-                    //m_log.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
-                    //m_log.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
+                    //MainConsole.Instance.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
+                    //MainConsole.Instance.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
                 });
             return true;
         }

@@ -12,7 +12,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 {
     public class LocalAssetMainConnector : IAssetDataPlugin
     {
-        private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData m_Gd;
 
         #region Implementation of IAuroraDataPlugin
@@ -57,11 +56,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     return LoadAssetFromDataRead(dr);
                 }
-                m_Log.Warn("[LocalAssetDatabase] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
+                MainConsole.Instance.Warn("[LocalAssetDatabase] GetMeta(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -89,13 +88,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     AssetBase oldAsset = GetAsset(asset.ID);
                     if ((oldAsset.Flags & AssetFlags.Rewritable) == AssetFlags.Rewritable)
                     {
-                        m_Log.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
+                        MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
                         Delete(asset.ID, true);
                         InsertAsset(asset, asset.ID);
                     }
                     else
                     {
-                        m_Log.Warn("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
+                        MainConsole.Instance.Warn("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
                         InsertAsset(asset, UUID.Random());
                     }
                 }
@@ -106,7 +105,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
+                MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure creating asset {0} with name \"{1}\". Error: {2}",
                                   asset.ID, asset.Name, e);
             }
             return true;
@@ -128,7 +127,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 catch (Exception e)
                 {
-                    m_Log.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
+                    MainConsole.Instance.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
                 }
             }
             else
@@ -165,7 +164,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
@@ -188,11 +187,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     return LoadAssetFromDataRead(dr);
                 }
                 if (displaywarning)
-                    m_Log.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
+                    MainConsole.Instance.Warn("[LocalAssetDatabase] GetAsset(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -210,11 +209,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
                 if (dr != null)
                     return (byte[]) dr["data"];
-                m_Log.Warn("[LocalAssetDatabase] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
+                MainConsole.Instance.Warn("[LocalAssetDatabase] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
+                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to fetch asset " + uuid + ", " + e);
             }
             finally
             {
@@ -241,7 +240,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             catch (Exception e)
             {
-                m_Log.Error("[LocalAssetDatabase] Error while deleting asset " + e);
+                MainConsole.Instance.Error("[LocalAssetDatabase] Error while deleting asset " + e);
             }
             return true;
         }
@@ -280,7 +279,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 asset.MetaOnly = true;
                 asset.Data = new byte[0];
-                m_Log.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex);
+                MainConsole.Instance.Error("[LocalAssetDatabase]: Failed to cast data for " + asset.ID + ", " + ex);
             }
 
             if (dr["local"].ToString().Equals("1") ||

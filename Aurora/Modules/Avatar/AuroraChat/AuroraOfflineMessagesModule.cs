@@ -41,8 +41,6 @@ namespace Aurora.Modules
 {
     public class AuroraOfflineMessageModule : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private bool enabled = true;
         private readonly List<IScene> m_SceneList = new List<IScene> ();
         IMessageTransferModule m_TransferModule = null;
@@ -100,7 +98,7 @@ namespace Aurora.Modules
                     enabled = false;
                     m_SceneList.Clear();
 
-                    m_log.Error("[OFFLINE MESSAGING] No message transfer module or OfflineMessagesConnector is enabled. Diabling offline messages");
+                    MainConsole.Instance.Error("[OFFLINE MESSAGING] No message transfer module or OfflineMessagesConnector is enabled. Diabling offline messages");
                     return;
                 }
                 m_TransferModule.OnUndeliveredMessage += UndeliveredMessage;
@@ -128,7 +126,7 @@ namespace Aurora.Modules
             if (!enabled)
                 return;
 
-            //m_log.Debug("[OFFLINE MESSAGING] Offline messages enabled");
+            //MainConsole.Instance.Debug("[OFFLINE MESSAGING] Offline messages enabled");
         }
 
         public string Name
@@ -172,7 +170,7 @@ namespace Aurora.Modules
         {
             if (OfflineMessagesConnector == null)
                 return;
-            m_log.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
+            MainConsole.Instance.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
             GridInstantMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 

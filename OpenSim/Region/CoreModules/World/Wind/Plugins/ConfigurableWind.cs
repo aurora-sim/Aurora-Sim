@@ -38,8 +38,6 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 {
     public class ConfigurableWind : IWindModelPlugin
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private float m_avgDirection; // Average direction of the wind in degrees
         private float m_avgStrength = 5.0f; // Average magnitude of the wind vector
 
@@ -210,11 +208,11 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 
         private void LogSettings()
         {
-            m_log.InfoFormat("[ConfigurableWind] Average Strength   : {0}", m_avgStrength);
-            m_log.InfoFormat("[ConfigurableWind] Average Direction  : {0}", m_avgDirection);
-            m_log.InfoFormat("[ConfigurableWind] Varience Strength  : {0}", m_varStrength);
-            m_log.InfoFormat("[ConfigurableWind] Varience Direction : {0}", m_varDirection);
-            m_log.InfoFormat("[ConfigurableWind] Rate Change        : {0}", m_rateChange);
+            MainConsole.Instance.InfoFormat("[ConfigurableWind] Average Strength   : {0}", m_avgStrength);
+            MainConsole.Instance.InfoFormat("[ConfigurableWind] Average Direction  : {0}", m_avgDirection);
+            MainConsole.Instance.InfoFormat("[ConfigurableWind] Varience Strength  : {0}", m_varStrength);
+            MainConsole.Instance.InfoFormat("[ConfigurableWind] Varience Direction : {0}", m_varDirection);
+            MainConsole.Instance.InfoFormat("[ConfigurableWind] Rate Change        : {0}", m_rateChange);
         }
     }
 }

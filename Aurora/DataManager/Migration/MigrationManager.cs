@@ -31,13 +31,12 @@ using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
 using C5;
-using log4net;
+using OpenSim.Framework;
 
 namespace Aurora.DataManager.Migration
 {
     public class MigrationManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IDataConnector genericData;
         private readonly string migratorName;
         private readonly List<Migrator> migrators = new List<Migrator>();
@@ -177,7 +176,7 @@ namespace Aurora.DataManager.Migration
                 {
                     //Try rerunning the migrator and then the validation
                     //prepare restore point if something goes wrong
-                    m_log.Fatal(string.Format("Failed to validate migration {0}-{1}, retrying...",
+                    MainConsole.Instance.Fatal(string.Format("Failed to validate migration {0}-{1}, retrying...",
                                               currentMigrator.MigrationName, currentMigrator.Version));
 
                     if (currentMigrator == null)
@@ -188,7 +187,7 @@ namespace Aurora.DataManager.Migration
                         {
                             Rec<string, ColumnDefinition[]> rec;
                             currentMigrator.DebugTestThatAllTablesValidate(genericData, out rec);
-                            m_log.Fatal(
+                            MainConsole.Instance.Fatal(
                                 string.Format(
                                     "FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}",
                                     currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
@@ -204,7 +203,7 @@ namespace Aurora.DataManager.Migration
                     }
                 }
                 //else
-                //    m_log.Fatal (string.Format ("Failed to validate migration {0}-{1}, continueing...", currentMigrator.MigrationName, currentMigrator.Version));
+                //    MainConsole.Instance.Fatal (string.Format ("Failed to validate migration {0}-{1}, continueing...", currentMigrator.MigrationName, currentMigrator.Version));
 
 
                 bool restoreTaken = false;

@@ -45,9 +45,6 @@ namespace OpenSim.Services.MessagingService
     {
         #region Declares
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IRegistryCore m_registry;
 
         #endregion

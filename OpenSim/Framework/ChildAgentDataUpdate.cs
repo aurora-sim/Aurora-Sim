@@ -221,10 +221,6 @@ namespace OpenSim.Framework
 
     public class AgentData : IAgentData
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         public UUID ActiveGroupID;
         public Byte AgentAccess;
         public bool AlwaysRun;
@@ -274,7 +270,7 @@ namespace OpenSim.Framework
         public virtual OSDMap Pack()
         {
             // DEBUG ON
-            //m_log.WarnFormat("[CHILDAGENTDATAUPDATE] Pack data");
+            //MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] Pack data");
             // DEBUG OFF
 
             OSDMap args = new OSDMap();
@@ -348,7 +344,7 @@ namespace OpenSim.Framework
         public virtual void Unpack(OSDMap args)
         {
             // DEBUG ON
-            //m_log.WarnFormat("[CHILDAGENTDATAUPDATE] Unpack data");
+            //MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] Unpack data");
             // DEBUG OFF
 
             if (args.ContainsKey("region_id"))
@@ -475,7 +471,7 @@ namespace OpenSim.Framework
                     Appearance = new AvatarAppearance(AgentID, (OSDMap) args["packed_appearance"]);
                     // DEBUG ON
                 else
-                    m_log.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
+                    MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
                 // DEBUG OFF
             }
             catch
