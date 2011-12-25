@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using log4net;
+using log4net.Core;
 
 namespace OpenSim.Framework
 {
