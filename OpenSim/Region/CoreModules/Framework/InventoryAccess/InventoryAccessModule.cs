@@ -162,10 +162,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         return FailedPermissionsNotecardCAPSUpdate(UUID.Zero, itemID);
                     }
 
-                    AssetBase asset =
-                    CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                    asset.ID = m_scene.AssetService.Store(asset);
-                    item.AssetID = asset.ID;
+                    UUID newID;
+                    if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID))
+                        item.AssetID = newID;
+                    else
+                        remoteClient.SendAlertMessage("Failed to update notecard asset");
 
                     m_scene.InventoryService.UpdateItem(item);
 
@@ -176,18 +177,18 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     if (!m_scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
 
-                    IScriptModule ScriptEngine = m_scene.RequestModuleInterface<IScriptModule>();
-
-                    AssetBase asset =
-                        CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                    asset.ID = m_scene.AssetService.Store(asset);
-                    item.AssetID = asset.ID;
+                    UUID newID;
+                    if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID))
+                        item.AssetID = newID;
+                    else
+                        remoteClient.SendAlertMessage("Failed to update script asset");
 
                     m_scene.InventoryService.UpdateItem(item);
 
+                    IScriptModule ScriptEngine = m_scene.RequestModuleInterface<IScriptModule>();
                     if (ScriptEngine != null)
                     {
-                        string Errors = ScriptEngine.TestCompileScript(asset.ID, itemID);
+                        string Errors = ScriptEngine.TestCompileScript(item.AssetID, itemID);
                         if (Errors != "")
                             return FailedCompileScriptCAPSUpdate(item.AssetID, itemID, Errors);
                     }
