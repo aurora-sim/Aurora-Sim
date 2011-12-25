@@ -118,6 +118,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region IApplicationPlugin members
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
+
         public void Initialize(ISimulationBase openSim)
         {
             m_OpenSimBase = openSim;

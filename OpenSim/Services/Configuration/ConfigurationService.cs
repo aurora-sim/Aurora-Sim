@@ -56,6 +56,10 @@ namespace OpenSim.Services.ConfigurationService
 
         #region IApplicationPlugin Members
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
+
         public void Initialize(ISimulationBase openSim)
         {
             m_config = openSim.ConfigSource;

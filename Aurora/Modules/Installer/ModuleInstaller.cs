@@ -312,6 +312,7 @@ namespace Aurora.Modules.Installer
             }
             foreach (IApplicationPlugin plugin in appPlugins)
             {
+                plugin.PreStartup(m_registry.RequestModuleInterface<ISimulationBase>());
                 plugin.Initialize(m_registry.RequestModuleInterface<ISimulationBase>());
                 plugin.PostInitialise();
                 plugin.Start();

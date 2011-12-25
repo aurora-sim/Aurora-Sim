@@ -39,6 +39,10 @@ namespace OpenSim.CoreApplicationPlugins
 
         #region IApplicationPlugin Members
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
+
         public void Initialize(ISimulationBase openSim)
         {
             m_openSim = openSim;

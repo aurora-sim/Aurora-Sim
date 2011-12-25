@@ -41,6 +41,10 @@ namespace OpenSim.CoreApplicationPlugins
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private const string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
+
         public void Initialize(ISimulationBase openSim)
         {
             try

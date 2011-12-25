@@ -991,6 +991,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         #region IApplicationPlugin Members
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
+
         public void Initialize(ISimulationBase simulationBase)
         {
             m_simulationBase = simulationBase;

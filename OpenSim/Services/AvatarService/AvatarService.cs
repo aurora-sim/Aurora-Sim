@@ -163,9 +163,10 @@ namespace OpenSim.Services.AvatarService
 
             registry.RegisterModuleInterface<IAvatarService>(this);
 
-            MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
-                                                     "Resets the given avatar's appearance to the default",
-                                                     ResetAvatarAppearance);
+            if(MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
+                                                         "Resets the given avatar's appearance to the default",
+                                                         ResetAvatarAppearance);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

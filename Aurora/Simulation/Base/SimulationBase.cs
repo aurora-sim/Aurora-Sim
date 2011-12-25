@@ -51,9 +51,6 @@ namespace Aurora.Simulation.Base
         protected string m_shutdownCommandsFile;
         protected string m_TimerScriptFileName = "disabled";
         protected int m_TimerScriptTime = 20;
-        protected ICommandConsole m_console;
-        protected OpenSimAppender m_consoleAppender;
-        protected IAppender m_logFileAppender = null;
         protected IHttpServer m_BaseHTTPServer;
         protected Timer m_TimerScriptTimer;
         protected ConfigurationLoader m_configurationLoader;
@@ -147,7 +144,7 @@ namespace Aurora.Simulation.Base
 
             Configuration(configSource);
 
-            SetUpConsole();
+            InitializeModules();
 
             RegisterConsoleCommands();
         }
@@ -245,72 +242,6 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
-        /// Find the console plugin and initialize the logger for it
-        /// </summary>
-        public virtual void SetUpConsole()
-        {
-            List<ICommandConsole> Plugins = AuroraModuleLoader.PickupModules<ICommandConsole>();
-            foreach (ICommandConsole plugin in Plugins)
-            {
-                plugin.Initialize(ConfigSource, this);
-            }
-
-            m_console = m_applicationRegistry.RequestModuleInterface<ICommandConsole>();
-            MainConsole.Instance = m_console;
-            if (m_console == null)
-                m_log.Info("[Console]: No Console located");
-            ILoggerRepository repository = LogManager.GetRepository();
-            IAppender[] appenders = repository.GetAppenders();
-            foreach (IAppender appender in appenders)
-            {
-                if (appender.Name == "Console")
-                {
-                    m_consoleAppender = (OpenSimAppender)appender;
-                    break;
-                }
-            }
-
-            foreach (IAppender appender in appenders)
-            {
-                if (appender.Name == "LogFileAppender")
-                {
-                    m_logFileAppender = appender;
-                }
-            }
-
-            if (null != m_consoleAppender)
-            {
-                m_consoleAppender.Console = m_console;
-                // If there is no threshold set then the threshold is effectively everything.
-                if (null == m_consoleAppender.Threshold)
-                    m_consoleAppender.Threshold = Level.All;
-                repository.Threshold = m_consoleAppender.Threshold;
-                foreach (ILogger log in repository.GetCurrentLoggers())
-                {
-                    log.Level = m_consoleAppender.Threshold;
-                }
-            }
-
-            IConfig startupConfig = m_config.Configs["Startup"];
-            if (m_logFileAppender != null)
-            {
-                if (m_logFileAppender is FileAppender)
-                {
-                    FileAppender appender = (FileAppender)m_logFileAppender;
-                    string fileName = startupConfig.GetString("LogFile", String.Empty);
-                    if (fileName != String.Empty)
-                    {
-                        appender.File = fileName;
-                        appender.ActivateOptions();
-                    }
-                }
-            }
-
-            if (m_consoleAppender != null)
-                m_log.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
-        }
-
-        /// <summary>
         /// Get an HTTPServer on the given port. It will create one if one does not exist
         /// </summary>
         /// <param name="port"></param>
@@ -380,12 +311,20 @@ namespace Aurora.Simulation.Base
             MainServer.Instance = m_BaseHTTPServer;
         }
 
+        public virtual void InitializeModules()
+        {
+            m_applicationPlugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
+            foreach (IApplicationPlugin plugin in m_applicationPlugins)
+            {
+                plugin.PreStartup(this);
+            }
+        }
+
         /// <summary>
         /// Start the application modules
         /// </summary>
         public virtual void StartModules()
         {
-            m_applicationPlugins = AuroraModuleLoader.PickupModules<IApplicationPlugin>();
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
             {
                 plugin.Initialize(this);
@@ -472,65 +411,25 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void RegisterConsoleCommands()
         {
-            if (m_console == null)
+            if (MainConsole.Instance == null)
                 return;
-            m_console.Commands.AddCommand ("quit", "quit", "Quit the application", HandleQuit);
+            MainConsole.Instance.Commands.AddCommand("quit", "quit", "Quit the application", HandleQuit);
 
-            m_console.Commands.AddCommand ("shutdown", "shutdown", "Quit the application", HandleQuit);
+            MainConsole.Instance.Commands.AddCommand("shutdown", "shutdown", "Quit the application", HandleQuit);
 
-            m_console.Commands.AddCommand ("set log level", "set log level [level]", "Set the console logging level", HandleLogLevel);
+            MainConsole.Instance.Commands.AddCommand("show info", "show info", "Show server information (e.g. startup path)", HandleShowInfo);
+            MainConsole.Instance.Commands.AddCommand("show version", "show version", "Show server version", HandleShowVersion);
 
-            m_console.Commands.AddCommand ("show info", "show info", "Show server information (e.g. startup path)", HandleShowInfo);
-            m_console.Commands.AddCommand ("show version", "show version", "Show server version", HandleShowVersion);
+            MainConsole.Instance.Commands.AddCommand("reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
 
-            m_console.Commands.AddCommand ("reload config", "reload config", "Reloads .ini file configuration", HandleConfigRefresh);
+            MainConsole.Instance.Commands.AddCommand("set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
 
-            m_console.Commands.AddCommand ("set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
-
-            m_console.Commands.AddCommand ("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
+            MainConsole.Instance.Commands.AddCommand("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
         }
 
         private void HandleQuit(string[] args)
         {
             Shutdown(true);
-        }
-
-        private void HandleLogLevel(string[] cmd)
-        {
-            if (null == m_consoleAppender)
-            {
-                m_log.Fatal ("No appender named Console found (see the log4net config file for this executable)!");
-                return;
-            }
-
-            string rawLevel = cmd[3];
-
-            ILoggerRepository repository = LogManager.GetRepository();
-            Level consoleLevel = repository.LevelMap[rawLevel];
-            if (consoleLevel != null)
-            {
-                m_consoleAppender.Threshold = consoleLevel;
-                repository.Threshold = consoleLevel;
-                foreach (ILogger log in repository.GetCurrentLoggers())
-                {
-                    log.Level = consoleLevel;
-                }
-            }
-            else
-            {
-                string forms = "";
-                for (int i = 0; i < repository.LevelMap.AllLevels.Count; i++)
-                {
-                    forms += repository.LevelMap.AllLevels[i].Name;
-                    if (i + 1 != repository.LevelMap.AllLevels.Count)
-                        forms += ", ";
-                }
-                m_log.Fatal(
-                    String.Format(
-                        "{0} is not a valid logging level.  Valid logging levels are " + forms,
-                        rawLevel));
-            }
-            m_log.Fatal (String.Format ("Console log level is {0}", m_consoleAppender.Threshold));
         }
 
         /// <summary>
@@ -557,7 +456,7 @@ namespace Aurora.Simulation.Base
                 foreach (string currentCommand in commands)
                 {
                     m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
-                    m_console.RunCommand(currentCommand);
+                    MainConsole.Instance.RunCommand(currentCommand);
                 }
             }
         }

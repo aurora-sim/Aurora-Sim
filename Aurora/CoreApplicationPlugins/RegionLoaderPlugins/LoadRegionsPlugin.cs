@@ -53,6 +53,9 @@ namespace OpenSim.CoreApplicationPlugins
             get { return m_name; }
         }
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
 
         public void Initialize(ISimulationBase openSim)
         {
