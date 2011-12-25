@@ -55,7 +55,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Key llAvatarOnSitTarget();
         LSL_Key llAvatarOnLinkSitTarget();
         LSL_Rotation llAxes2Rot(LSL_Vector fwd, LSL_Vector left, LSL_Vector up);
-        LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, double angle);
+        LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, LSL_Float angle);
         LSL_Integer llBase64ToInteger(string str);
         LSL_String llBase64ToString(string str);
         void llBreakAllLinks();

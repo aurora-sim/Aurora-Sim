@@ -40,7 +40,7 @@ namespace OpenSim.Framework
 
     public interface IMesh
     {
-        bool WasCached { get; }
+        bool WasCached { get; set; }
         ulong Key { get; }
         List<Vector3> getVertexList();
         int[] getIndexListAsInt();

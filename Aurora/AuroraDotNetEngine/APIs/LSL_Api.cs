@@ -5338,7 +5338,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         // Xantor 29/apr/2008
         // Returns rotation described by rotating angle radians about axis.
         // q = cos(a/2) + i (x * sin(a/2)) + j (y * sin(a/2)) + k (z * sin(a/2))
-        public LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, double angle)
+        public LSL_Rotation llAxisAngle2Rot(LSL_Vector axis, LSL_Float angle)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Rotation();
 
@@ -12116,7 +12116,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     dataType == KeyframeAnimation.Data.Rotation)
                 {
                     LSL_Rotation rot = keyframes.GetQuaternionItem(i + (dataType == KeyframeAnimation.Data.Both ? 1 : 0));
-                    rotations.Add(rot.ToQuaternion());
+                    Quaternion quat = rot.ToQuaternion();
+                    quat.Normalize();
+                    rotations.Add(quat);
                 }
                 int time = keyframes.GetLSLIntegerItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
                 times.Add(time);
@@ -12128,7 +12130,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 RotationList = rotations.ToArray(),
                 TimeList = times.ToArray(),
                 CurrentAnimationPosition = 0,
-                InitialPosition = m_host.AbsolutePosition
+                InitialPosition = m_host.AbsolutePosition,
+                InitialRotation = m_host.RotationOffset
             };
             m_host.ParentEntity.AddKeyframedMotion(animation, KeyframeAnimation.Commands.Play);
         }
