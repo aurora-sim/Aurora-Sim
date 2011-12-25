@@ -319,22 +319,37 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             ResetTimer(15000);
             try
             {
+                bool assetDoesExist = ExistsAsset(asset.ID);
                 // this was causing problems with convering the first asset which.. is a zero id.. 
-                if ((asset.ParentID == UUID.Zero) && (asset.ID != UUID.Zero))
+                if (assetDoesExist)
                 {
-                    // most likely this has never been saved before or is some new asset
-                    // otherwise the parent id would hold a value and would have had this check done before
+                    AssetBase oldasset = GetAsset(asset.ID, true, false);
+                    if ((oldasset.Flags & AssetFlags.Rewritable) != AssetFlags.Rewritable)
+                    {
+                        asset.ID = UUID.Random();
+                        asset.CreationDate = DateTime.UtcNow;
+                        assetDoesExist = false;
+                    }
+
+                }
+                
+
+                // Ensure some data is correct
+                
+                if (asset.Name.Length > 64) asset.Name = asset.Name.Substring(0, 64);
+                if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
+
+                // Get the new hashcode if this is not MataOnly Data
+                if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
+                    asset.HashCode = WriteFile(asset.ID, asset.Data);
+
+                if (((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode)) || (!assetDoesExist))
+                {
+                    // check to see if this hash/creator combo already exist
                     List<string> check1 = m_Gd.Query(
                         "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
                         "'", "auroraassets_temp", "id");
-                    if (((check1 != null) && (check1.Count == 0)) || (check1 == null) ||
-                        (asset.CreatorID == new UUID("11111111-1111-0000-0000-000100bba000")))
-                    {
-                        m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
-                                    new object[] { asset.ID, asset.HashCode, asset.CreatorID });
-                        asset.ParentID = asset.ID;
-                    }
-                    else
+                    if ((check1 != null) && (check1.Count >= 1) && (asset.CreatorID != new UUID("11111111-1111-0000-0000-000100bba000")))
                     {
                         successful = true;
                         AssetBase abtemp = GetAsset(UUID.Parse(check1[0]));
@@ -348,26 +363,19 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     new object[] { UUID.Random(), "PARENTCHECK", check1[0] + "|" + asset.ID });
                         asset.ParentID = asset.ID;
                     }
+                    else if (asset.CreatorID != new UUID("11111111-1111-0000-0000-000100bba000"))
+                    {
+                        // was not found so insert it
+                        m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
+                                    new object[] { asset.ID, asset.HashCode, asset.CreatorID });
+                        asset.ParentID = asset.ID;
+                    }
                 }
 
-                // Ensure some data is correct
                 string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
-                if (asset.Name.Length > 63) asset.Name = asset.Name.Substring(0, 63);
-                if (asset.Description.Length > 128) asset.Description = asset.Description.Substring(0, 128);
-
-                // Get the new hashcode if this is not MataOnly Data
-                if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
-                    asset.HashCode = WriteFile(asset.ID, asset.Data);
-
-                if ((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode))
-                {
-                    // Assign the task to check to see if this hash file is being used anymore
-                    m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
-                                new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
-                }
-
                 // Delete and save the asset
-                Delete(asset.ID, false, true, asset);
+                if (assetDoesExist) 
+                    Delete(asset.ID, false, true, asset);
                 m_Gd.Insert(database,
                             new[]
                                 {
