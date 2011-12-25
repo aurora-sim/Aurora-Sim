@@ -301,12 +301,23 @@ namespace OpenSim.Region.Physics.Meshing
                     {
                         OSDMap map = (OSDMap) meshOsd;
                         OSDMap physicsParms = new OSDMap();
+
+                        if (map.ContainsKey("physics_cached"))
+                        {
+                            OSD cachedMeshMap = map["physics_cached"]; // cached data from Aurora
+                            Mesh cachedMesh = new Mesh(key);
+                            cachedMesh.Deserialize(cachedMeshMap);
+                            cachedMesh.WasCached = true;
+                            return cachedMesh;//Return here, we found all of the info right here
+                        }
                         if (map.ContainsKey("physics_shape"))
                             physicsParms = (OSDMap)map["physics_shape"]; // old asset format
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_mesh"))
                             physicsParms = (OSDMap)map["physics_mesh"]; // new asset format
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_convex"))
-                            physicsParms = (OSDMap)map["physics_convex"]; // newest asset format?
+                            // convex hull format, which we can't read, so instead
+                            // read the highest lod that exists, and use it instead
+                            physicsParms = (OSDMap)map["high_lod"]; 
 
                         int physOffset = physicsParms["offset"].AsInteger() + (int) start;
                         int physSize = physicsParms["size"].AsInteger();
@@ -365,8 +376,13 @@ namespace OpenSim.Region.Physics.Meshing
                                     if (subMeshMap.ContainsKey("NoGeometry") && (subMeshMap["NoGeometry"]))
                                         continue;
 
-                                    Vector3 posMax = ((OSDMap) subMeshMap["PositionDomain"])["Max"].AsVector3();
-                                    Vector3 posMin = ((OSDMap) subMeshMap["PositionDomain"])["Min"].AsVector3();
+                                    Vector3 posMax = new Vector3(0.5f, 0.5f, 0.5f);
+                                    Vector3 posMin = new Vector3(-0.5f, -0.5f, -0.5f);
+                                    if (subMeshMap.ContainsKey("PositionDomain"))//Optional, so leave the max and min values otherwise
+                                    {
+                                        posMax = ((OSDMap)subMeshMap["PositionDomain"])["Max"].AsVector3();
+                                        posMin = ((OSDMap)subMeshMap["PositionDomain"])["Min"].AsVector3();
+                                    }
                                     ushort faceIndexOffset = (ushort) coords.Count;
 
                                     byte[] posBytes = subMeshMap["Position"].AsBinary();
@@ -689,21 +705,21 @@ namespace OpenSim.Region.Physics.Meshing
             if (size.Y < 0.01f) size.Y = 0.01f;
             if (size.Z < 0.01f) size.Z = 0.01f;
 
-            mesh = CreateMeshFromPrimMesher(primName, primShape, size, lod, key);
-
-            if (mesh != null)
-            {
-                if ((!isPhysical) && size.X < minSizeForComplexMesh && size.Y < minSizeForComplexMesh &&
+            if ((!isPhysical) && size.X < minSizeForComplexMesh && size.Y < minSizeForComplexMesh &&
                     size.Z < minSizeForComplexMesh)
-                {
+            {
 #if SPAM
                 m_log.Debug("Meshmerizer: prim " + primName + " has a size of " + size.ToString() + " which is below threshold of " + 
                             minSizeForComplexMesh.ToString() + " - creating simple bounding box");
 #endif
-                    mesh = CreateBoundingBoxMesh(mesh, key);
-                    mesh.DumpRaw(baseDir, primName, "Z extruded");
-                }
+                mesh = CreateBoundingBoxMesh(mesh, key);
+                mesh.DumpRaw(baseDir, primName, "Z extruded");
+            }
+            else
+                mesh = CreateMeshFromPrimMesher(primName, primShape, size, lod, key);
 
+            if (mesh != null)
+            {
                 // trim the vertex and triangle lists to free up memory
                 mesh.TrimExcess();
 

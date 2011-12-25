@@ -2446,6 +2446,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void GeneratedMesh(ISceneChildEntity part, IMesh mesh)
+        {
+            if (part.Shape.SculptType == (byte)SculptType.Mesh && !mesh.WasCached)//If it was cached, we don't want to resave it
+            {
+                //We can cache meshes into the mesh itself, saving time generating it next time around
+                OSDMap meshOsd = (OSDMap)OSDParser.DeserializeLLSDBinary(part.Shape.SculptData);
+                meshOsd["physics_cached"] = mesh.Serialize();
+                m_scene.AssetService.UpdateContent(part.Shape.SculptTexture, OSDParser.SerializeLLSDBinary(meshOsd));
+            }
+        }
+
         public void TriggerScriptMovingStartEvent()
         {
             foreach (SceneObjectPart part in ChildrenList)

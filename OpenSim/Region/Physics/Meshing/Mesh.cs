@@ -32,12 +32,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OSDArray = OpenMetaverse.StructuredData.OSDArray;
+using OSD = OpenMetaverse.StructuredData.OSD;
 
 namespace OpenSim.Region.Physics.Meshing
 {
     public class Mesh : IMesh
     {
         private readonly ulong m_key;
+        public bool WasCached { get; set; }
 
         private Vector3 _centroid;
         private int _centroidDiv;
@@ -421,6 +424,32 @@ namespace OpenSim.Region.Physics.Meshing
         public void TrimExcess()
         {
             m_triangles.TrimExcess();
+        }
+
+        public OSD Serialize()
+        {
+            OSDArray array = new OSDArray();
+            foreach (Triangle t in m_triangles)
+            {
+                OSDArray triArray = new OSDArray();
+                triArray.Add(new Vector3(t.v1.X, t.v1.Y, t.v1.Z));
+                triArray.Add(new Vector3(t.v2.X, t.v2.Y, t.v2.Z));
+                triArray.Add(new Vector3(t.v3.X, t.v3.Y, t.v3.Z));
+                array.Add(triArray);
+            }
+            return array;
+        }
+
+        public void Deserialize(OSD cachedMesh)
+        {
+            OSDArray array = (OSDArray)cachedMesh;
+            foreach (OSD triangle in array)
+            {
+                OSDArray triangleArray = (OSDArray)triangle;
+                Add(new Triangle(new Vertex(triangleArray[0].AsVector3()),
+                    new Vertex(triangleArray[1].AsVector3()),
+                    new Vertex(triangleArray[2].AsVector3())));
+            }
         }
 
         #region Nested type: vertexcomp

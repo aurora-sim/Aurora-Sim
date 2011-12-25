@@ -40,6 +40,7 @@ namespace OpenSim.Framework
 
     public interface IMesh
     {
+        bool WasCached { get; }
         ulong Key { get; }
         List<Vector3> getVertexList();
         int[] getIndexListAsInt();
@@ -52,5 +53,7 @@ namespace OpenSim.Framework
         void Append(IMesh newMesh);
         void TransformLinear(float[,] matrix, float[] offset);
         Vector3 GetCentroid();
+
+        OpenMetaverse.StructuredData.OSD Serialize();
     }
 }

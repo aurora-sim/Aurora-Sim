@@ -617,6 +617,8 @@ namespace OpenSim.Framework
         void AddKeyframedMotion(KeyframeAnimation animation, KeyframeAnimation.Commands command);
 
         void UpdateRootPosition(Vector3 pos);
+
+        void GeneratedMesh(ISceneChildEntity _parent_entity, IMesh _mesh);
     }
 
     public class KeyframeAnimation

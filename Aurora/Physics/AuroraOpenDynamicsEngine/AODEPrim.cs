@@ -1350,6 +1350,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Don't need to re-enable body..   it's done in SetMesh
                     _mesh = _parent_scene.mesher.CreateMesh(_parent_entity.Name, _pbs, _size,
                                                             _parent_scene.meshSculptLOD, true);
+
+                    //Tell things above if they want to cache it or something
+                    if(_mesh != null)
+                        _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, _mesh);
                     // createmesh returns null when it's a shape that isn't a cube.
                     // m_log.Debug(m_localID);
                 }
