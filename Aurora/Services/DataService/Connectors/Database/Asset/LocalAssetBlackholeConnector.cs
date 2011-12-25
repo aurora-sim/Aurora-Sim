@@ -343,8 +343,15 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if ((!asset.MetaOnly) || ((asset.Data != null) && (asset.Data.Length >= 1)))
                     asset.HashCode = WriteFile(asset.ID, asset.Data);
 
-                if (((!asset.MetaOnly) && (asset.HashCode != asset.LastHashCode)) || (!assetDoesExist))
+                if ((!asset.MetaOnly) && ((asset.HashCode != asset.LastHashCode) || (!assetDoesExist)))
                 {
+
+                    if (asset.HashCode != asset.LastHashCode)
+                    {
+                        // check if that hash is being used anywhere later
+                        m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" }, new object[] { UUID.Random(), "HASHCHECK", asset.HashCode });
+                    }
+
                     // check to see if this hash/creator combo already exist
                     List<string> check1 = m_Gd.Query(
                         "hash_code = '" + asset.HashCode + "' and creator_id = '" + asset.CreatorID +
