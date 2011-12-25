@@ -366,7 +366,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             HasAsset = true;
 
-            if (asset == null || asset.Data == null)
+            if (asset == null || asset.Data == null || asset.Type == (int)AssetType.Mesh)
             {
                 if (m_imageManager.MissingImage != null)
                 {

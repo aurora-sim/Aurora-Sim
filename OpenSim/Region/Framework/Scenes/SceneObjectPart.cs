@@ -4264,7 +4264,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (asset != null)
                 this.Shape.SculptData = asset.Data; //Set the asset data
 
-            bool isMesh = (asset.Type == (int) AssetType.Mesh);
+            bool isMesh = asset == null ? false : (asset.Type == (int) AssetType.Mesh);
             if (isMesh)
                 this.Shape.SculptType = (byte) SculptType.Mesh;
             if ((bool) sender && this.PhysActor != null) //Update physics
