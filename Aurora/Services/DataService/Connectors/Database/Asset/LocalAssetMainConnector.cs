@@ -84,7 +84,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     asset.Name = asset.Name.Substring(0, 64);
                 if (asset.Description.Length > 128)
                     asset.Description = asset.Description.Substring(0, 128);
-                int now = (int) Utils.DateTimeToUnixTime(DateTime.UtcNow);
                 if (ExistsAsset(asset.ID))
                 {
                     AssetBase oldAsset = GetAsset(asset.ID);
@@ -92,54 +91,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     {
                         m_Log.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
                         Delete(asset.ID, true);
-                        m_Gd.Insert("assets",
-                                    new[]
-                                        {
-                                            "id", "name", "description", "assetType", "local", "temporary", "create_time",
-                                            "access_time", "asset_flags", "creatorID", "data"
-                                        },
-                                    new object[]
-                                        {
-                                            asset.ID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
-                                            (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
-                                            (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
-                                            (int) asset.Flags, asset.CreatorID, asset.Data
-                                        });
+                        InsertAsset(asset, asset.ID);
                     }
                     else
                     {
                         m_Log.Warn("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
-                        asset.ID = UUID.Random();
-                        m_Gd.Insert("assets",
-                                    new[]
-                                        {
-                                            "id", "name", "description", "assetType", "local", "temporary", "create_time",
-                                            "access_time", "asset_flags", "creatorID", "data"
-                                        },
-                                    new object[]
-                                        {
-                                            asset.ID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
-                                            (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
-                                            (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
-                                            (int) asset.Flags, asset.CreatorID, asset.Data
-                                        });
+                        InsertAsset(asset, UUID.Random());
                     }
                 }
                 else
                 {
-                    m_Gd.Insert("assets",
-                                new[]
-                                    {
-                                        "id", "name", "description", "assetType", "local", "temporary", "create_time",
-                                        "access_time", "asset_flags", "creatorID", "data"
-                                    },
-                                new object[]
-                                    {
-                                        asset.ID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
-                                        (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
-                                        (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
-                                        (int) asset.Flags, asset.CreatorID, asset.Data
-                                    });
+                    InsertAsset(asset, asset.ID);
                 }
             }
             catch (Exception e)
@@ -150,16 +112,49 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return true;
         }
 
-        public void UpdateContent(UUID id, byte[] asset)
+        public void UpdateContent(UUID id, byte[] asset, out UUID newID)
         {
-            try
+            newID = id;
+
+            AssetBase oldAsset = GetAsset(id);
+            if (oldAsset == null)
+                return;
+
+            if ((oldAsset.Flags & AssetFlags.Rewritable) == AssetFlags.Rewritable)
             {
-                m_Gd.Update("assets", new object[] {asset}, new[] {"data"}, new[] {"id"}, new object[] {id});
+                try
+                {
+                    m_Gd.Update("assets", new object[] { asset }, new[] { "data" }, new[] { "id" }, new object[] { id });
+                }
+                catch (Exception e)
+                {
+                    m_Log.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
+                }
             }
-            catch (Exception e)
+            else
             {
-                m_Log.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
+                newID = UUID.Random();
+                oldAsset.Data = asset;
+                InsertAsset(oldAsset, newID);
             }
+        }
+
+        private void InsertAsset(AssetBase asset, UUID assetID)
+        {
+            int now = (int)Utils.DateTimeToUnixTime(DateTime.UtcNow);
+            m_Gd.Insert("assets",
+                        new[]
+                                    {
+                                        "id", "name", "description", "assetType", "local", "temporary", "create_time",
+                                        "access_time", "asset_flags", "creatorID", "data"
+                                    },
+                        new object[]
+                                    {
+                                        assetID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
+                                        (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
+                                        (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
+                                        (int) asset.Flags, asset.CreatorID, asset.Data
+                                    });
         }
 
         public bool ExistsAsset(UUID uuid)

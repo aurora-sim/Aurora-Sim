@@ -1356,6 +1356,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, _mesh);
                     // createmesh returns null when it's a shape that isn't a cube.
                     // m_log.Debug(m_localID);
+
+                    // Remove the reference to any JPEG2000 sculpt data so it can be GCed
+                    _pbs.SculptData = null;
                 }
             }
 

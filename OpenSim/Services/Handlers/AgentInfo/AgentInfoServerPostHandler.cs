@@ -63,10 +63,7 @@ namespace OpenSim.Services
         public override byte[] Handle(string path, Stream requestData,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            StreamReader sr = new StreamReader(requestData);
-            string body = sr.ReadToEnd();
-            sr.Close();
-            body = body.Trim();
+            string body = GetBodyAsString(requestData);
 
             //m_log.DebugFormat("[XXX]: query String: {0}", body);
 

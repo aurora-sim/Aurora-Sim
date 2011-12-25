@@ -306,18 +306,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return successful;
         }
 
-        public void UpdateContent(UUID id, byte[] assetdata)
+        public void UpdateContent(UUID id, byte[] assetdata, out UUID newID)
         {
-            ResetTimer(15000);
-            string newHash = WriteFile(id, assetdata);
-            List<string> hashCodeCheck = m_Gd.Query("id", id, "auroraassets_" + id.ToString().ToCharArray()[0],
-                                                    "hash_code");
-            if (hashCodeCheck.Count < 1) return;
-            if (hashCodeCheck[0] == newHash) return;
-            m_Gd.Insert("auroraassets_tasks", new[] { "id", "task_type", "task_values" },
-                        new object[] { UUID.Random(), "HASHCHECK", hashCodeCheck[0] });
-            m_Gd.Update("auroraassets_" + id.ToString().ToCharArray()[0], new object[] { newHash },
-                        new[] { "hash_code" }, new[] { "id" }, new object[] { id });
+            AssetBase asset = GetMeta(id);
+            asset.Data = assetdata;
+            bool success;
+            newID = StoreAsset(asset, out success).ID;
         }
 
         private AssetBase StoreAsset(AssetBase asset, out bool successful)

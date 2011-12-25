@@ -164,9 +164,9 @@ namespace OpenSim.Services.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        public virtual bool UpdateContent(UUID id, byte[] data)
+        public virtual bool UpdateContent(UUID id, byte[] data, out UUID newID)
         {
-            m_database.UpdateContent(id, data);
+            m_database.UpdateContent(id, data, out newID);
             return true;
         }
 

@@ -647,9 +647,6 @@ namespace OpenSim.Region.Physics.Meshing
                 primMesh = null;
             }
 
-            // Remove the reference to any JPEG2000 sculpt data so it can be GCed
-            primShape.SculptData = null;
-
             int numCoords = coords.Count;
             int numFaces = faces.Count;
 

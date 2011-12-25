@@ -109,7 +109,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "id"> </param>
         /// <param name = "data"></param>
         /// <returns></returns>
-        bool UpdateContent(UUID id, byte[] data);
+        bool UpdateContent(UUID id, byte[] data, out UUID newID);
 
         /// <summary>
         ///   Delete an asset
@@ -131,7 +131,7 @@ namespace OpenSim.Services.Interfaces
         AssetBase GetMeta(UUID uuid);
         UUID Store(AssetBase asset);
         bool StoreAsset(AssetBase asset);
-        void UpdateContent(UUID id, byte[] asset);
+        void UpdateContent(UUID id, byte[] asset, out UUID newID);
         bool ExistsAsset(UUID uuid);
         bool Delete(UUID id);
     }

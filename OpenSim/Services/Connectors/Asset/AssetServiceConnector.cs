@@ -31,12 +31,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Aurora.Simulation.Base;
+using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services.Connectors
 {
@@ -297,47 +298,27 @@ namespace OpenSim.Services.Connectors
             return newID;
         }
 
-        public virtual bool UpdateContent(UUID id, byte[] data)
+        public virtual bool UpdateContent(UUID id, byte[] data, out UUID newID)
         {
-            AssetBase asset = null;
-
-            if (m_Cache != null)
-                asset = m_Cache.Get(id.ToString());
-
-            if (asset == null)
-            {
-                asset = Get(id.ToString());
-                if (asset == null)
-                    return false;
-            }
-            asset.Data = data;
+            OSDMap map = new OSDMap();
+            map["Data"] = data;
+            map["ID"] = id;
+            string request = OSDParser.SerializeJsonString(map);
 
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
-#if (!ISWIN)
+
             foreach (string mServerUri in serverURIs)
             {
-                string uri = mServerUri + "/" + id;
-                if (SynchronousRestObjectRequester.MakeRequest<AssetBase, bool>("POST", uri, asset))
-                {
-                    if (m_Cache != null)
-                        m_Cache.Cache(asset);
-
+                string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, request);
+                if (resp == "")
+                    continue;
+                if (UUID.TryParse(resp, out newID))
                     return true;
-                }
             }
-#else
-            if (serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id).Any(uri => SynchronousRestObjectRequester.
-                                                                                        MakeRequest<AssetBase, bool>("POST", uri, asset)))
-            {
-                if (m_Cache != null)
-                    m_Cache.Cache(asset);
-
-                return true;
-            }
-#endif
+            newID = id;
             return false;
         }
 

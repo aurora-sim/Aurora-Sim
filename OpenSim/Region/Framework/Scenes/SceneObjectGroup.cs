@@ -2453,7 +2453,10 @@ namespace OpenSim.Region.Framework.Scenes
                 //We can cache meshes into the mesh itself, saving time generating it next time around
                 OSDMap meshOsd = (OSDMap)OSDParser.DeserializeLLSDBinary(part.Shape.SculptData);
                 meshOsd["physics_cached"] = mesh.Serialize();
-                m_scene.AssetService.UpdateContent(part.Shape.SculptTexture, OSDParser.SerializeLLSDBinary(meshOsd));
+                UUID newSculptTexture;
+                if (m_scene.AssetService.UpdateContent(part.Shape.SculptTexture,
+                    OSDParser.SerializeLLSDBinary(meshOsd), out newSculptTexture))
+                    part.Shape.SculptTexture = newSculptTexture;
             }
         }
 

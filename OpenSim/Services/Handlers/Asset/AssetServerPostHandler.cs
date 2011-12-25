@@ -26,12 +26,14 @@
  */
 
 using System.IO;
+using System.Text;
 using System.Xml.Serialization;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services
 {
@@ -54,29 +56,17 @@ namespace OpenSim.Services
         public override byte[] Handle(string path, Stream request,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
-            AssetBase asset = (AssetBase) xs.Deserialize(request);
-
+            string body = GetBodyAsString(request);
+            OSDMap map = WebUtils.GetOSDMap(body);
             IGridRegistrationService urlModule =
                 m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Update", ThreatLevel.Full))
                     return new byte[0];
-            string[] p = SplitParams(path);
-            if (p.Length > 1)
-            {
-                bool result =
-                    m_AssetService.UpdateContent(UUID.Parse(p[1]), asset.Data);
+            UUID newID;
+            m_AssetService.UpdateContent(map["ID"].AsUUID(), map["Data"].AsBinary(), out newID);
 
-                xs = new XmlSerializer(typeof (bool));
-                return WebUtils.SerializeResult(xs, result);
-            }
-
-            UUID id = m_AssetService.Store(asset);
-            asset.ID = id;
-
-            xs = new XmlSerializer(typeof (string));
-            return WebUtils.SerializeResult(xs, id.ToString());
+            return Encoding.UTF8.GetBytes(newID.ToString());
         }
     }
 }

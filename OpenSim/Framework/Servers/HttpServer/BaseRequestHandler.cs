@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.IO;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
@@ -81,6 +82,15 @@ namespace OpenSim.Framework.Servers.HttpServer
             string param = GetParam(path);
 
             return param.Split(new[] {'/', '?', '&'}, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public string GetBodyAsString(Stream request)
+        {
+            StreamReader sr = new StreamReader(request);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
+            return body;
         }
     }
 }
