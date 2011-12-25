@@ -815,6 +815,25 @@ namespace OpenSim.Framework
             return Convert.ToBase64String(compressedBuffer);
         }
 
+        public static byte[] CompressBytes(byte[] buffer)
+        {
+            MemoryStream memory = new MemoryStream();
+            using (GZipStream compressor = new GZipStream(memory, CompressionMode.Compress, true))
+            {
+                compressor.Write(buffer, 0, buffer.Length);
+            }
+
+            memory.Position = 0;
+
+            byte[] compressed = new byte[memory.Length];
+            memory.Read(compressed, 0, compressed.Length);
+
+            byte[] compressedBuffer = new byte[compressed.Length + 4];
+            Buffer.BlockCopy(compressed, 0, compressedBuffer, 4, compressed.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, compressedBuffer, 0, 4);
+            return compressedBuffer;
+        }
+
         public static string Decompress(string compressedText)
         {
             byte[] compressedBuffer = Convert.FromBase64String(compressedText);
@@ -833,6 +852,60 @@ namespace OpenSim.Framework
 
                 return UTF8.GetString(buffer);
             }
+        }
+
+        public static Stream DecompressStream(Stream compressedStream)
+        {
+            byte[] compressedBuffer = ReadToEnd(compressedStream);
+            using (MemoryStream memory = new MemoryStream())
+            {
+                int msgLength = BitConverter.ToInt32(compressedBuffer, 0);
+                memory.Write(compressedBuffer, 4, compressedBuffer.Length - 4);
+
+                byte[] buffer = new byte[msgLength];
+
+                memory.Position = 0;
+                using (GZipStream decompressor = new GZipStream(memory, CompressionMode.Decompress))
+                {
+                    decompressor.Read(buffer, 0, buffer.Length);
+                }
+
+                return new MemoryStream(buffer);
+            }
+        }
+
+        public static byte[] ReadToEnd(System.IO.Stream stream)
+        {
+            byte[] readBuffer = new byte[4096];
+
+            int totalBytesRead = 0;
+            int bytesRead;
+
+            while ((bytesRead = stream.Read(readBuffer, totalBytesRead, readBuffer.Length - totalBytesRead)) > 0)
+            {
+                totalBytesRead += bytesRead;
+
+                if (totalBytesRead == readBuffer.Length)
+                {
+                    int nextByte = stream.ReadByte();
+                    if (nextByte != -1)
+                    {
+                        byte[] temp = new byte[readBuffer.Length * 2];
+                        Buffer.BlockCopy(readBuffer, 0, temp, 0, readBuffer.Length);
+                        Buffer.SetByte(temp, totalBytesRead, (byte)nextByte);
+                        readBuffer = temp;
+                        totalBytesRead++;
+                    }
+                }
+            }
+
+            byte[] buffer = readBuffer;
+            if (readBuffer.Length != totalBytesRead)
+            {
+                buffer = new byte[totalBytesRead];
+                Buffer.BlockCopy(readBuffer, 0, buffer, 0, totalBytesRead);
+            }
+            return buffer;
         }
 
         public static XmlRpcResponse XmlRpcCommand(string url, string methodName, params object[] args)

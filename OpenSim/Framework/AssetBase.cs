@@ -292,7 +292,8 @@ namespace OpenSim.Framework
         {
             OSDMap assetMap = new OSDMap
                                   {
-                                      {"Flags", OSD.FromInteger((int) Flags)},
+                                      {"AssetFlags", OSD.FromInteger((int) Flags)},
+                                      {"AssetID", ID},
                                       {"CreationDate", OSD.FromDate(CreationDate)},
                                       {"CreatorID", OSD.FromUUID(CreatorID)},
                                       {"Data", OSD.FromBinary(Data)},

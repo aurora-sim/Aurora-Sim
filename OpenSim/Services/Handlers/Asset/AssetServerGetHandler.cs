@@ -119,11 +119,11 @@ namespace OpenSim.Services
                 if (asset != null)
                 {
                     XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
-                    result = WebUtils.SerializeResult(xs, asset);
+                    result = Util.CompressBytes(WebUtils.SerializeResult(xs, asset));
 
                     httpResponse.StatusCode = (int) HttpStatusCode.OK;
                     httpResponse.ContentType =
-                        SLUtil.SLAssetTypeToContentType(asset.Type);
+                        SLUtil.SLAssetTypeToContentType(asset.Type) + "/gzip";
                 }
                 else
                 {

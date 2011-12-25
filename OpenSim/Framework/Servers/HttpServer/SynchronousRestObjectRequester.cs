@@ -95,6 +95,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     if (resp.ContentLength > 0)
                     {
                         Stream respStream = resp.GetResponseStream();
+                        if (resp.ContentType.EndsWith("/gzip"))
+                            respStream = Util.DecompressStream(respStream);
                         XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
                         if (respStream != null)
                         {

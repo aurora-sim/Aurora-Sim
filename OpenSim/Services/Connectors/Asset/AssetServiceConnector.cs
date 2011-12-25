@@ -269,23 +269,17 @@ namespace OpenSim.Services.Connectors
             }
 
             UUID newID = UUID.Zero;
+            string request = asset.CompressedPack();
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string mServerUri in serverURIs)
             {
-                string uri = mServerUri + "/";
-                try
-                {
-                    UUID.TryParse(SynchronousRestObjectRequester.MakeRequest<AssetBase, string>("POST", uri, asset), out newID);
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
-                }
-
-                if (newID != UUID.Zero)
+                string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/", request);
+                if (resp == "")
+                    continue;
+                if (UUID.TryParse(resp, out newID))
                 {
                     // Placing this here, so that this work with old asset servers that don't send any reply back
                     // SynchronousRestObjectRequester returns somethins that is not an empty string
@@ -303,7 +297,8 @@ namespace OpenSim.Services.Connectors
             OSDMap map = new OSDMap();
             map["Data"] = data;
             map["ID"] = id;
-            string request = OSDParser.SerializeJsonString(map);
+            map["Method"] = "UpdateContent";
+            string request = Util.Compress(OSDParser.SerializeJsonString(map));
 
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
@@ -312,7 +307,7 @@ namespace OpenSim.Services.Connectors
 
             foreach (string mServerUri in serverURIs)
             {
-                string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri, request);
+                string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/", request);
                 if (resp == "")
                     continue;
                 if (UUID.TryParse(resp, out newID))

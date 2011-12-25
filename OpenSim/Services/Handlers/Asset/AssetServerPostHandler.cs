@@ -57,14 +57,21 @@ namespace OpenSim.Services
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             string body = GetBodyAsString(request);
-            OSDMap map = WebUtils.GetOSDMap(body);
+            OSDMap map = WebUtils.GetOSDMap(Util.Decompress(body));
             IGridRegistrationService urlModule =
                 m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Update", ThreatLevel.Full))
                     return new byte[0];
             UUID newID;
-            m_AssetService.UpdateContent(map["ID"].AsUUID(), map["Data"].AsBinary(), out newID);
+            if (map.ContainsKey("Method") && map["Method"] == "UpdateContent")
+                m_AssetService.UpdateContent(map["ID"].AsUUID(), map["Data"].AsBinary(), out newID);
+            else
+            {
+                AssetBase asset = new AssetBase();
+                asset = asset.Unpack(map);
+                newID = m_AssetService.Store(asset);
+            }
 
             return Encoding.UTF8.GetBytes(newID.ToString());
         }
