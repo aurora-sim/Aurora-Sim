@@ -2270,74 +2270,6 @@ namespace OpenSim.Region.Framework.Scenes
             ScheduleGroupTerseUpdate();
         }
 
-        public Quaternion slerp(Quaternion source, Quaternion target, float amt)
-        {
-            return AxisAngleToRot(RotToAxis(target /= source), amt * RotToAngle(target)) * source;
-        }
-
-        public float RotToAngle(Quaternion rot)
-        {
-            if (rot.W > 1) // normalization needed
-            {
-                float length = (float)Math.Sqrt(rot.X * rot.X + rot.Y * rot.Y +
-                        rot.Z * rot.Z + rot.W * rot.W);
-
-                if (length == 0)
-                    return 0;
-                rot.W /= length;
-            }
-
-            float angle = 2 * (float)Math.Acos(rot.W);
-
-            return angle;
-        }
-
-        public Vector3 RotToAxis(Quaternion rot)
-        {
-            float x, y, z;
-
-            if (rot.W > 1) // normalization needed
-            {
-                float length = (float)Math.Sqrt(rot.X * rot.X + rot.Y * rot.Y +
-                        rot.Z * rot.Z + rot.W * rot.W);
-                if (length == 0)
-                    return Vector3.Zero;
-                length = 1 / length;
-                rot.W *= length;
-                rot.Y *= length;
-                rot.Z *= length;
-                rot.W *= length;
-            }
-
-            // double angle = 2 * Math.Acos(rot.s);
-            float s = (float)Math.Sqrt(1 - rot.W * rot.W);
-            if (s < 0.001)
-            {
-                x = 1;
-                y = z = 0;
-            }
-            else
-            {
-                s = 1 / s;
-                x = rot.X * s; // normalise axis
-                y = rot.Y * s;
-                z = rot.Z * s;
-            }
-
-            return new Vector3(x, y, z);
-        }
-
-        public Quaternion AxisAngleToRot(Vector3 axis, float angle)
-        {
-            float s = (float)Math.Cos(angle * 0.5);
-            float t = (float)Math.Sin(angle * 0.5);
-            float x = axis.X * t;
-            float y = axis.Y * t;
-            float z = axis.Z * t;
-
-            return new Quaternion(x, y, z, s);
-        }
-
         public void checkAtTargets()
         {
             if (m_scriptListens_atTarget || m_scriptListens_notAtTarget)
@@ -2526,11 +2458,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void GeneratedMesh(ISceneChildEntity part, IMesh mesh)
         {
-            if (part.Shape.SculptType == (byte)SculptType.Mesh && !mesh.WasCached)//If it was cached, we don't want to resave it
+            //This destroys the mesh if it is added... this needs added in a way that won't corrupt the mesh
+            /*if (part.Shape.SculptType == (byte)SculptType.Mesh && !mesh.WasCached)//If it was cached, we don't want to resave it
             {
                 //We can cache meshes into the mesh itself, saving time generating it next time around
                 OSDMap meshOsd = (OSDMap)OSDParser.DeserializeLLSDBinary(part.Shape.SculptData);
-                meshOsd["physics_cached"] = mesh.Serialize();
+                meshOsd["physics_cached"] = new OSDMap();
+                mesh.Serialize();
                 mesh.WasCached = true;
                 UUID newSculptTexture;
                 if (m_scene.AssetService.UpdateContent(part.Shape.SculptTexture,
@@ -2539,7 +2473,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.Shape.SculptTexture = newSculptTexture;
                     HasGroupChanged = true;
                 }
-            }
+            }*/
         }
 
         public void TriggerScriptMovingStartEvent()
