@@ -660,7 +660,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
-                module.StartupComplete();
+                try
+                {
+                    module.StartupComplete();
+                }
+                catch (Exception ex) { MainConsole.Instance.Warn("[SceneManager]: Exception running StartupComplete, " + ex); }
             }
         }
 
