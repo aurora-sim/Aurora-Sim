@@ -120,7 +120,8 @@ namespace Aurora.Services.DataService
                                                   ? 1
                                                   : 0,
                                               args.SnapshotID,
-                                              OSDParser.SerializeLLSDXmlString(args.Bitmap)
+                                              OSDParser.SerializeLLSDXmlString(args.Bitmap),
+                                              (int)args.Category
                                           };
                 //InfoUUID is the missing 'real' Gridwide ParcelID
 
@@ -155,7 +156,8 @@ namespace Aurora.Services.DataService
                                                                        ? 1
                                                                        : 0,
                                                                    args.SnapshotID,
-                                                                   OSDParser.SerializeLLSDXmlString(args.Bitmap)
+                                                                   OSDParser.SerializeLLSDXmlString(args.Bitmap),
+                                                                   (int)args.Category
                                                                }))
             {
                 //InfoUUID is the missing 'real' Gridwide ParcelID
@@ -203,7 +205,7 @@ namespace Aurora.Services.DataService
             //Parse and return
             LandData LandData = new LandData();
             //Add all the parcels belonging to the owner to the list
-            for (int i = 0; i < Query.Count; i += 22)
+            for (int i = 0; i < Query.Count; i += 23)
             {
                 LandData.RegionID = UUID.Parse(Query[i]);
                 LandData.GlobalID = UUID.Parse(Query[i + 1]);
@@ -228,6 +230,7 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
+                LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
                 LandData = new LandData();
@@ -281,7 +284,7 @@ namespace Aurora.Services.DataService
 
             LandData LandData = new LandData();
             //Add all the parcels belonging to the owner to the list
-            for (int i = 0; i < Query.Count; i += 22)
+            for (int i = 0; i < Query.Count; i += 23)
             {
                 LandData.RegionID = UUID.Parse(Query[i]);
                 LandData.GlobalID = UUID.Parse(Query[i + 1]);
@@ -300,6 +303,7 @@ namespace Aurora.Services.DataService
                 LandData.GroupID = UUID.Parse(Query[i + 18]);
                 LandData.SnapshotID = UUID.Parse(Query[i + 20]);
                 LandData.Bitmap = OSDParser.DeserializeLLSDXml(Query[i + 21]);
+                LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
                 LandData = new LandData();
@@ -322,7 +326,7 @@ namespace Aurora.Services.DataService
             string dwell = "";
 
             if (category != "-1") //Check for category
-                categoryString = " PCategory = '" + category + "' &&";
+                categoryString = " Category = '" + category + "' &&";
 
             //If they dwell sort flag is there, sort by dwell going down
             if ((Flags & (uint) DirectoryManager.DirFindFlags.DwellSort) ==
