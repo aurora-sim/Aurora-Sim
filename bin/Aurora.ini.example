@@ -46,9 +46,6 @@
 
 [Network]
 	
-    ;; 127.0.0.1 should be your IP address or DNS
-	Define-<HostName> = 127.0.0.1
-	
 	;; Advanced configs
     http_listener_port = 9000
 	
@@ -66,8 +63,8 @@
 	;; Ssl2 - Specifies that the SSL 2.0 security protocol is the only acceptable secure communications protocol
 	https_ssl_protocol = "Default"
 	
-	;; This doesn't require any changes
-    HostName = <HostName>
+	;; This doesn't require any changes if you wish to use the automatic finding of the external IP
+    ;HostName = 127.0.0.1
 
 [Console]
     ;; Setting for which console log will be used

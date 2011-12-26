@@ -631,7 +631,7 @@ namespace OpenSim.Framework
                     else
                         temp = InternalPrompt(prompt, defaultresponse, options);
 #else
-                    foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
+                    foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
                     {
                         Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
                         itisdone = false;

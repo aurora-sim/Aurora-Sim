@@ -259,7 +259,7 @@ namespace Aurora.Simulation.Base
                 return server;
 
             string hostName =
-                m_config.Configs["Network"].GetString("HostName", "http" + (secure ? "s" : "") + "://127.0.0.1");
+                m_config.Configs["Network"].GetString("HostName", "http" + (secure ? "s" : "") + "://" + Utilities.GetExternalIp());
             //Clean it up a bit
             if (hostName.StartsWith("http://") || hostName.StartsWith("https://"))
                 hostName = hostName.Replace("https://", "").Replace("http://", "");
