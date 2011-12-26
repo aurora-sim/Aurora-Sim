@@ -63,6 +63,7 @@ namespace OpenSim.Framework
                 return;
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help",
                                   "Get a general command list", Help);

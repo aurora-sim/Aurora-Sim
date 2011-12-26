@@ -38,6 +38,7 @@ namespace OpenSim.Framework
         #endregion
 
         public static ICommandConsole Instance { get; set; }
+        public static INotificationService NotificationService { get; set; }
         public static event IncomingLogWrite OnIncomingLogWrite;
 
         public static void TriggerLog(Level level, string text)

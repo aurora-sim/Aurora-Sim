@@ -83,6 +83,7 @@ namespace OpenSim.Framework
                 return;
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
 
             SetServer(m_consolePort == 0 ? MainServer.Instance : baseOpenSim.GetHttpServer(m_consolePort));
 

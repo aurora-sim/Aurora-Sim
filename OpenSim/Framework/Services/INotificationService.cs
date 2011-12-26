@@ -14,6 +14,8 @@ namespace OpenSim.Framework
         Immediate
     }
 
+    public delegate string NotificationRequest(List<string> notificationsToCombine);
+
     public interface INotificationService
     {
         #region Init
@@ -26,6 +28,7 @@ namespace OpenSim.Framework
 
         void AddNotification(AlertLevel level, string message);
         void AddNotification(AlertLevel level, string message, string identifer);
+        void AddNotification(AlertLevel level, string message, string identifer, NotificationRequest notificationCombiner);
 
         #endregion
     }

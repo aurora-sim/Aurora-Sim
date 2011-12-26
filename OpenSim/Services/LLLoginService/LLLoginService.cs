@@ -719,6 +719,7 @@ namespace OpenSim.Services.LLLoginService
                     eventCategories, classifiedCategories, FillOutSeedCap (aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName, m_registry);
 
                 MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
+                AddLoginSuccessNotification(account);
                 return response;
             }
             catch (Exception e)
@@ -733,6 +734,17 @@ namespace OpenSim.Services.LLLoginService
                 return LLFailedLoginResponse.InternalError;
             }
             
+        }
+
+        private void AddLoginSuccessNotification(UserAccount account)
+        {
+            if (MainConsole.NotificationService == null)
+                return;
+            MainConsole.NotificationService.AddNotification(AlertLevel.Low, account.Name + " has logged in successfully.", "LLLoginService",
+                (messages) =>
+                {
+                    return messages.Count + " users have logged in successfully.";
+                });
         }
 
         protected string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)

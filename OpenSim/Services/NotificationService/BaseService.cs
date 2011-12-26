@@ -50,12 +50,6 @@ namespace OpenSim.Services
                 plugin.Init(config, registry);
             }
 
-            MainConsole.Instance = registry.RequestModuleInterface<ICommandConsole>();
-            if (MainConsole.Instance == null)
-            {
-                MainConsole.Instance.Info("[Console]: No Console located");
-                return;
-            }
             ILoggerRepository repository = LogManager.GetRepository();
             IAppender[] appenders = repository.GetAppenders();
             foreach (IAppender appender in appenders)
@@ -101,6 +95,11 @@ namespace OpenSim.Services
                         appender.ActivateOptions();
                     }
                 }
+            }
+            if (MainConsole.Instance == null)
+            {
+                m_log.Info("[Console]: No Console located");
+                return;
             }
 
             if (m_consoleAppender != null)
